@@ -1,0 +1,43 @@
+<html>
+<head>
+<script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+</head>
+<body>
+<title>WordsTrend</title>
+
+<script type="text/javascript">
+$(document).ready(function () {
+    var data = [];
+    var t = new Date();
+
+    for (var i = 10; i >= 0; i--) {
+        var x = new Date(t.getTime() - i * 1000);
+        data.push([x, 0]);
+    }
+
+    var g = new Dygraph(document.getElementById("Graph"), data,
+    {
+        drawPoints: true,
+        showRoller: true,
+        //valueRange: [0.0, 1.2],
+        legend: 'always',
+        title: 'Pastes Queues Monitoring',
+        ylabel: 'Numbers of pastes waiting',
+        xlabel: 'Time',
+    });
+    // It sucks that these things aren't objects, and we need to store state in window.
+    window.intervalId = setInterval(function() {
+        var x = new Date();  // current time
+        var y = 6;
+        data.push([x, y]);
+        g.updateOptions( { 'file': data } );
+        }, 1000);
+    }
+);
+</script>
+
+<div id="Graph" style="width:100%; height:100%;"></div>
+
+</body>
+</html>

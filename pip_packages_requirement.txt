@@ -1,0 +1,26 @@
+#Essential
+redis
+pyzmq
+dnspython
+
+#Graph
+numpy
+matplotlib
+networkx
+
+#Tokeniser
+-U textblob
+nltk
+
+# Hashlib
+crcmod
+mmh3
+
+#Others
+python-magic
+
+
+#optionnal
+ipython
+flask
+texttable

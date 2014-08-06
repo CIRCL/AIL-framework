@@ -1,0 +1,6 @@
+#WordTrending .dygraph-legend > span { display: none; }
+#WordTrending .dygraph-legend > span.highlight { display: inline; }
+
+.dygraph-title { font-size: 42px; text-shadow: 2px 2px 2px gray; }
+
+.dygraph-label { font-size: 18px; text-shadow: -2px 2px 2px gray; }

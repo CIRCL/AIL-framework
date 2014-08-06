@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Analysis Information Leak framework Dashboard</title>
+
+  <!-- Core CSS -->
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='font-awesome-4.1.0/css/font-awesome.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+  
+  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+  <!-- JS -->
+  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+</head>
+<body>
+
+    <div id="wrapper">
+      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+          <div class="navbar-header">
+              <a class="navbar-brand" href="{{ url_for('index') }}">Analysis Information Leak framework.</a>
+          </div>
+          <!-- /.navbar-top-links -->
+          <div class="navbar-default sidebar" role="navigation">
+              <div class="sidebar-collapse">
+                  <ul class="nav" id="side-menu">
+                      <li class="sidebar-search">
+                          <div class="input-group custom-search-form">
+                              <input type="text" class="form-control" placeholder="Search Paste">
+                              <span class="input-group-btn">
+                              <button class="btn btn-default" type="button">
+                                  <i class="fa fa-search"></i>
+                              </button>
+                          </span>
+                          </div>
+                          <!-- /input-group -->
+                      </li>
+                      <li>
+                          <a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+                      </li>
+                      <li>
+                          <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Charts<span class="fa arrow"></span></a>
+                          <ul class="nav nav-second-level">
+                              <li>
+                                  <a href="{{ url_for('wordstrending') }}">WordsTrendings</a>
+                              </li>
+                          </ul>
+                          <!-- /.nav-second-level -->
+                      </li>
+                 </ul>
+                  <!-- /#side-menu -->
+              </div>
+              <!-- /.sidebar-collapse -->
+          </div>
+          <!-- /.navbar-static-side -->
+      </nav>
+        <div id="page-wrapper">
+          <div class="row">
+              <div class="col-lg-12">
+                  <h1 class="page-header">Dashboard</h1>
+              </div>
+              <!-- /.col-lg-12 -->
+          </div>
+            <!-- /.row -->
+            <div class="row">
+                      <div class="col-lg-12">
+                      <div class="panel panel-default">
+                      <div class="panel-heading">
+                        <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
+                      </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-lg-2">
+                                  <div class="table-responsive", id="queueing"></div>
+                                </div>
+                                <div class="col-lg-10" id="Graph" style="height:450px; width:80%;"></div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-8 -->
+        <div class="col-lg-12">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+            <i class="fa fa-tasks fa-fw"></i> Logs
+        </div>
+        <div class="panel-body">
+                <div class="table-responsive", id="logger">
+                    <div class="row">
+                    <div class="col-sm-6">
+                        <div id="dataTables-example_length" class="dataTables_length">
+                        <label>
+                        <select class="form-control input-sm" name="dataTables-example_length" aria-controls="dataTables-example" id="log_select">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        </select>
+                        </label>
+                        </div>
+                    </div>
+                    </div>
+                    <table class="table table-bordered table-hover table-striped" id="table_log">
+                        <thead>
+                        <tr>
+                        <th>Channel</th>
+                        <th>Level</th>
+                        <th>Script Name</th>
+                        <th>Source</th>
+                        <th>Date</th>
+                        <th>Paste name</th>
+                        <th>Message</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tab_body">
+                        </tbody>
+                    <table>
+                </div>
+        </div>
+        </div>
+        </div>
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"></script>
+
+    <script type="text/javascript">
+    initfunc( "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}", {{ request.script_root|tojson|safe }} );
+    </script>
+
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/metisMenu/metisMenu.js') }}"></script>
+
+</body>
+
+</html>
