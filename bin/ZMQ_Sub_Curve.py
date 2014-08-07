@@ -4,24 +4,11 @@
 The ZMQ_Sub_Curve Module
 ============================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q Module.
+This module is consuming the Redis-list created by the ZMQ_Sub_Curve_Q Module.
 
-Each words files created under /files/ are representing categories.
-This modules take these files and compare them to
-the stream of data given by the ZMQ_PubSub_Tokenize_Q  Module.
-
-When a word from a paste match one or more of these words file, the filename of
-the paste is published/forwarded to the next modules.
-
-Each category (each files) are representing a dynamic channel.
-This mean that if you create 1000 files under /files/ you'll have 1000 channels
-where every time there is a matching word to a category, the paste containing
-this word will be pushed to this specific channel.
+This modules update a .csv file used to draw curves representing selected words and their occurency per day.
 
 ..note:: The channel will have the name of the file created.
-
-Implementing modules can start here, create your own category file,
-and then create your own module to treat the specific paste matching this category.
 
 ..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
 the same Subscriber name in both of them.
