@@ -47,7 +47,7 @@ class Paste(object):
 
     def __init__(self, p_path):
 
-        configfile = '../packages/config.cfg'
+        configfile = './packages/config.cfg'
         cfg = ConfigParser.ConfigParser()
         cfg.read(configfile)
 
