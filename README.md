@@ -23,11 +23,16 @@ sudo apt-get install screen
 
 You need to create a variable AILENV that will be the installation path:
 
-``export AILENV="/home/user/ail"``
+``export AILENV="/home/user/AIL-framework"``
+
+Usually the installation path is where the project is cloned.
 
 Then create a Python virtual environment:
 
-``virtualenv AILENV``
+```
+cd $AILENV
+virtualenv AILENV
+```
 
 And install these few more packets:
 ```
