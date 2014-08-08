@@ -56,6 +56,11 @@ class Paste(object):
 
         self.p_size = round(os.path.getsize(self.p_path)/1024.0,2)
 
+        self.cache = redis.StrictRedis(
+            host = cfg.get("Redis_Queues", "host"),
+            port = cfg.getint("Redis_Queues", "port"),
+            db = cfg.getint("Redis_Queues", "db"))
+
         self.p_mime = magic.from_buffer(self.get_p_content(), mime = True)
 
         self.p_encoding = None
@@ -75,11 +80,6 @@ class Paste(object):
         self.p_max_length_line = None
 
         self.p_source = var[-5]
-
-        self.cache = redis.StrictRedis(
-            host = cfg.get("Redis_Queues", "host"),
-            port = cfg.getint("Redis_Queues", "port"),
-            db = cfg.getint("Redis_Queues", "db"))
 
 
     def get_p_content(self):
