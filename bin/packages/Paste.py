@@ -30,10 +30,6 @@ from lib_refine import *
 clean = lambda dirty: ''.join(filter(string.printable.__contains__, dirty))
 """It filters out non-printable characters from the string it receives."""
 
-configfile = './config.cfg'
-cfg = ConfigParser.ConfigParser()
-cfg.read(configfile)
-
 class Paste(object):
     """
     This class representing a Paste as an object.
@@ -50,6 +46,11 @@ class Paste(object):
     """
 
     def __init__(self, p_path):
+
+        configfile = './config.cfg'
+        cfg = ConfigParser.ConfigParser()
+        cfg.read(configfile)
+
         self.p_path = p_path
 
         self.p_name = self.p_path.split('/')[-1]
