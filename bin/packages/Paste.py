@@ -16,7 +16,7 @@ Conditions to fulfill to be able to use this class correctly:
 
 """
 
-import os, magic, gzip, langid, pprint, redis, operator, string, re, json
+import os, magic, gzip, langid, pprint, redis, operator, string, re, json, ConfigParser
 from Date import Date
 from Hash import Hash
 
@@ -29,6 +29,10 @@ from lib_refine import *
 
 clean = lambda dirty: ''.join(filter(string.printable.__contains__, dirty))
 """It filters out non-printable characters from the string it receives."""
+
+configfile = './config.cfg'
+cfg = ConfigParser.ConfigParser()
+cfg.read(configfile)
 
 class Paste(object):
     """
@@ -72,6 +76,11 @@ class Paste(object):
 
         self.p_source = var[-5]
 
+        self.cache = redis.StrictRedis(
+            host = cfg.get("Redis_Queues", "host"),
+            port = cfg.getint("Redis_Queues", "port"),
+            db = cfg.getint("Redis_Queues", "db"))
+
 
     def get_p_content(self):
         """
@@ -82,8 +91,15 @@ class Paste(object):
         PST.get_p_content()
 
         """
-        with gzip.open(self.p_path, 'rb') as F:
-            return F.read()
+        r_serv = self.cache
+
+        if r_serv.exist(self.p_path):
+            paste = r_serv.get(self.p_path)
+        else:
+            with gzip.open(self.p_path, 'rb') as F:
+                paste = r_serv.getset(self.p_path, F.read())
+                r_serv.expire(self.p_path, 300)
+        return paste
 
     def get_lines_info(self):
         """
