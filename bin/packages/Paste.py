@@ -94,7 +94,7 @@ class Paste(object):
         """
         r_serv = self.cache
 
-        if r_serv.exist(self.p_path):
+        if r_serv.exists(self.p_path):
             paste = r_serv.get(self.p_path)
         else:
             with gzip.open(self.p_path, 'rb') as F:
