@@ -22,6 +22,7 @@ source.onmessage = function(event) {
 function create_log_table(obj_json) {
     tableBody = document.getElementById("tab_body")
     var tr = document.createElement('TR')
+    var time = document.createElement('TD')
     var chan = document.createElement('TD')
     var level = document.createElement('TD')
     var scrpt = document.createElement('TD')
@@ -56,15 +57,19 @@ function create_log_table(obj_json) {
 
     src.appendChild(source_link);
 
+    var now = new Date();
+    var timepaste = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+
+    time.appendChild(document.createTextNode(timepaste));
     chan.appendChild(document.createTextNode(chansplit[0]));
     level.appendChild(document.createTextNode(chansplit[1]));
 
     scrpt.appendChild(document.createTextNode(parsedmess[0]));
-    //src.appendChild(document.createTextNode(parsedmess[1]));
     pdate.appendChild(document.createTextNode(parsedmess[2]));
     nam.appendChild(document.createTextNode(parsedmess[3]));
     msage.appendChild(document.createTextNode(parsedmess[4]));
 
+    tr.appendChild(time)
     tr.appendChild(chan);
     tr.appendChild(level);
     tr.appendChild(scrpt);
