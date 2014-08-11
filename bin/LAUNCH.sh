@@ -45,7 +45,7 @@ function helptext {
 }
 
 function launching_redis {
-    conf_dir='/home/adulau/AIL-framework/configs/'
+    conf_dir='/home/user/AIL-framework/configs/'
 
     screen -dmS "Redis"
     sleep 0.1
@@ -60,7 +60,7 @@ function launching_redis {
 function launching_lvldb {
     #Want to launch more level_db?
     lvdbhost='127.0.0.1'
-    lvdbdir='/home/adulau//AIL-framework/LEVEL_DB_DATA/'
+    lvdbdir='/home/user/AIL-framework/LEVEL_DB_DATA/'
     db1_y='2013'
     db2_y='2014'
     nb_db=13
