@@ -19,6 +19,7 @@ mmh3
 
 #Others
 python-magic
+pybloomfiltermmap
 
 ipython
 flask

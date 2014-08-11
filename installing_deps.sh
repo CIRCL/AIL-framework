@@ -61,3 +61,9 @@ mkdir -p LEVEL_DB_DATA
 cd LEVEL_DB_DATA
 mkdir -p 2014
 mkdir -p 2013
+
+cd $AIL_HOME
+test ! -d langid.py/ && git clone https://github.com/saffsd/langid.py.git
+cd langid.py/
+python setup.py install
+
