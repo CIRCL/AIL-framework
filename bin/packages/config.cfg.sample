@@ -59,3 +59,8 @@ adress = tcp://127.0.0.1:5003
 [PubSub_Url]
 adress = tcp://127.0.0.1:5004
 channel = urls
+
+# Indexer configuration
+[Indexer]
+type = whoosh
+path = /home/user/indexdir
