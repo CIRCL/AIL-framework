@@ -45,7 +45,7 @@ function helptext {
 }
 
 function launching_redis {
-    conf_dir='/home/user/AIL/configs/'
+    conf_dir='/home/adulau/AIL-framework/configs/'
 
     screen -dmS "Redis"
     sleep 0.1
@@ -60,7 +60,7 @@ function launching_redis {
 function launching_lvldb {
     #Want to launch more level_db?
     lvdbhost='127.0.0.1'
-    lvdbdir='/home/user/LEVEL_DB_DATA/'
+    lvdbdir='/home/adulau//AIL-framework/LEVEL_DB_DATA/'
     db1_y='2013'
     db2_y='2014'
     nb_db=13
@@ -109,6 +109,8 @@ function launching_queues {
     screen -S "Queue" -X screen -t "Qurls" bash -c './ZMQ_Sub_Urls_Q.py; read x'
     sleep 0.1
     screen -S "Queue" -X screen -t "QCurve" bash -c './ZMQ_Sub_Curve_Q.py; read x'
+    sleep 0.1
+    screen -S "Queue" -X screen -t "QIndexer" bash -c './ZMQ_Sub_Indexer_Q.py; read x'
 }
 
 function launching_scripts {
@@ -138,6 +140,8 @@ function launching_scripts {
     screen -S "Script" -X screen -t "Urls" bash -c './ZMQ_Sub_Urls.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Curve" bash -c './ZMQ_Sub_Curve.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Indexer" bash -c './ZMQ_Sub_Indexer.py; read x'
 }
 
 #If no params, display the help
