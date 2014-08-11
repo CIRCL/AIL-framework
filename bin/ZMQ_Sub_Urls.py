@@ -59,44 +59,47 @@ def main():
     url_regex = "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
 
     while True:
-        if message != None:
-            channel, filename, word, score  = message.split()
+        try:
+            if message != None:
+                channel, filename, word, score  = message.split()
 
-            if prec_filename == None or filename != prec_filename:
-                domains_list = []
-                PST = P.Paste(filename)
+                if prec_filename == None or filename != prec_filename:
+                    domains_list = []
+                    PST = P.Paste(filename)
 
-                for x in PST.get_regex(url_regex):
-                    scheme, credential, subdomain, domain, host, tld, port, resource_path, query_string, f1, f2, f3, f4 = x
-                    domains_list.append(domain)
-                    msg = pubchannel + " " + str(x)
-                    Pub.send_message(msg)
-                    publisher.debug('{0} Published'.format(x))
+                    for x in PST.get_regex(url_regex):
+                        scheme, credential, subdomain, domain, host, tld, port, resource_path, query_string, f1, f2, f3, f4 = x
+                        domains_list.append(domain)
+                        msg = pubchannel + " " + str(x)
+                        Pub.send_message(msg)
+                        publisher.debug('{0} Published'.format(x))
 
-                    if f1 == "onion":
-                        print domain
+                        if f1 == "onion":
+                            print domain
 
-                A_values = lib_refine.checking_A_record(r_serv2, domains_list)
+                    A_values = lib_refine.checking_A_record(r_serv2, domains_list)
 
-                if A_values[0] >= 1:
-                    PST.__setattr__(channel, A_values)
-                    PST.save_attribute_redis(r_serv1, channel, (A_values[0],list(A_values[1])))
+                    if A_values[0] >= 1:
+                        PST.__setattr__(channel, A_values)
+                        PST.save_attribute_redis(r_serv1, channel, (A_values[0],list(A_values[1])))
 
-                    pprint.pprint(A_values)
-                    publisher.info('{0};{1};{2};{3};{4}'.format("Url", PST.p_source, PST.p_date, PST.p_name, str(A_values[0])+" Valid url detected" ))
-            prec_filename = filename
+                        pprint.pprint(A_values)
+                        publisher.info('{0};{1};{2};{3};{4}'.format("Url", PST.p_source, PST.p_date, PST.p_name, str(A_values[0])+" Valid url detected" ))
+                prec_filename = filename
 
-        else:
-            if r_serv.sismember("SHUTDOWN_FLAGS", "Urls"):
-                r_serv.srem("SHUTDOWN_FLAGS", "Urls")
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
-            publisher.debug("Script url is Idling 10s")
-            time.sleep(10)
+            else:
+                if r_serv.sismember("SHUTDOWN_FLAGS", "Urls"):
+                    r_serv.srem("SHUTDOWN_FLAGS", "Urls")
+                    print "Shutdown Flag Up: Terminating"
+                    publisher.warning("Shutdown Flag Up: Terminating.")
+                    break
+                publisher.debug("Script url is Idling 10s")
+                time.sleep(10)
 
-        message = Sub.get_msg_from_queue(r_serv)
-
+            message = Sub.get_msg_from_queue(r_serv)
+        except dns.exception.Timeout:
+            print "dns.exception.Timeout"
+            pass
 
 if __name__ == "__main__":
     main()

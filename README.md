@@ -23,11 +23,16 @@ sudo apt-get install screen
 
 You need to create a variable AILENV that will be the installation path:
 
-``export AILENV="/home/user/ail"``
+``export AILENV="/home/user/AIL-framework"``
+
+Usually the installation path is where the project is cloned.
 
 Then create a Python virtual environment:
 
-``virtualenv AILENV``
+```
+cd $AILENV
+virtualenv AILENV
+```
 
 And install these few more packets:
 ```
@@ -35,6 +40,9 @@ sudo apt-get install g++
 sudo apt-get install python-dev
 sudo apt-get install python-tk
 sudo apt-get install screen
+sudo apt-get install libssl-dev
+sudo apt-get install libfreetype6-dev
+sudo apt-get install python-numpy
 ```
 
 Then these modules need to be install with pip inside the virtual environment:
@@ -54,17 +62,18 @@ That's all the packages you can install with pip:
 
 ```
 pip install redis
+pip install logbook
 pip install networkx
 pip install crcmod
 pip install mmh3
 pip install dnspython
 pip install pyzmq
-pip install texttable ----- Queues Monitoring (Optional)
+pip install texttable
 pip install -U textblob
 python -m textblob.download_corpora
 pip install python-magic
 pip install numpy
-pip install flask ----- (Optional)
+pip install flask
 pip install nltk
 pip install matplotlib ----- (sudo ln -s freetype2/ft2build.h in /usr/include/)
 pip install pybloomfiltermmap ----- (you may need to sudo apt-get install libssl-dev)
@@ -113,6 +122,22 @@ If you installed all the requirements described above, you should be able to sta
 cd $AILENV
 cd bin
 ./LAUNCH.sh
+```
+
+To start with the web interface, you need to fetch the required Javascript/CSS files:
+
+```
+cd $AILENV
+cd var/www/
+bash update_thirdparty.sh
+```
+
+and then you can start the web interface:
+
+```
+cd $AILENV
+cd var/www/
+Flask_server.py
 ```
 
 Then you can browse the status of the AIL framework at the following URL:

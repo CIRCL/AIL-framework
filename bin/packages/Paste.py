@@ -16,7 +16,7 @@ Conditions to fulfill to be able to use this class correctly:
 
 """
 
-import os, magic, gzip, langid, pprint, redis, operator, string, re, json
+import os, magic, gzip, langid, pprint, redis, operator, string, re, json, ConfigParser
 from Date import Date
 from Hash import Hash
 
@@ -46,11 +46,21 @@ class Paste(object):
     """
 
     def __init__(self, p_path):
+
+        configfile = './packages/config.cfg'
+        cfg = ConfigParser.ConfigParser()
+        cfg.read(configfile)
+
         self.p_path = p_path
 
         self.p_name = self.p_path.split('/')[-1]
 
         self.p_size = round(os.path.getsize(self.p_path)/1024.0,2)
+
+        self.cache = redis.StrictRedis(
+            host = cfg.get("Redis_Queues", "host"),
+            port = cfg.getint("Redis_Queues", "port"),
+            db = cfg.getint("Redis_Queues", "db"))
 
         self.p_mime = magic.from_buffer(self.get_p_content(), mime = True)
 
@@ -82,8 +92,15 @@ class Paste(object):
         PST.get_p_content()
 
         """
-        with gzip.open(self.p_path, 'rb') as F:
-            return F.read()
+        r_serv = self.cache
+
+        paste = r_serv.get(self.p_path)
+        if paste is None:
+            with gzip.open(self.p_path, 'rb') as F:
+		paste = F.read()
+		r_serv.set(self.p_path, paste)
+                r_serv.expire(self.p_path, 300)
+        return paste
 
     def get_lines_info(self):
         """
