@@ -47,35 +47,39 @@ def main():
     email_regex = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
 
     while True:
-        if message != None:
-            channel, filename, word, score  = message.split()
+        try:
+            if message != None:
+                channel, filename, word, score  = message.split()
 
-            if prec_filename == None or filename != prec_filename:
-                PST = P.Paste(filename)
-                MX_values = lib_refine.checking_MX_record(r_serv2, PST.get_regex(email_regex))
+                if prec_filename == None or filename != prec_filename:
+                    PST = P.Paste(filename)
+                    MX_values = lib_refine.checking_MX_record(r_serv2, PST.get_regex(email_regex))
 
-                if MX_values[0] >= 1:
+                    if MX_values[0] >= 1:
 
-                    PST.__setattr__(channel, MX_values)
-                    PST.save_attribute_redis(r_serv1, channel, (MX_values[0], list(MX_values[1])))
+                        PST.__setattr__(channel, MX_values)
+                        PST.save_attribute_redis(r_serv1, channel, (MX_values[0], list(MX_values[1])))
 
-                    pprint.pprint(MX_values)
-                    if MX_values[0] > 10:
-                        publisher.warning('{0};{1};{2};{3};{4}'.format("Mails", PST.p_source, PST.p_date, PST.p_name, str(MX_values[0])+ " e-mails detected" ))
-                    else:
-                        publisher.info('{0};{1};{2};{3};{4}'.format("Mails", PST.p_source, PST.p_date, PST.p_name, str(MX_values[0])+ " e-mails detected" ))
-            prec_filename = filename
+                        pprint.pprint(MX_values)
+                        if MX_values[0] > 10:
+                            publisher.warning('{0};{1};{2};{3};{4}'.format("Mails", PST.p_source, PST.p_date, PST.p_name, str(MX_values[0])+ " e-mails detected" ))
+                        else:
+                            publisher.info('{0};{1};{2};{3};{4}'.format("Mails", PST.p_source, PST.p_date, PST.p_name, str(MX_values[0])+ " e-mails detected" ))
+                prec_filename = filename
 
-        else:
-            if r_serv.sismember("SHUTDOWN_FLAGS", "Mails"):
-                r_serv.srem("SHUTDOWN_FLAGS", "Mails")
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
-            publisher.debug("Script Mails is Idling 10s")
-            time.sleep(10)
+            else:
+                if r_serv.sismember("SHUTDOWN_FLAGS", "Mails"):
+                    r_serv.srem("SHUTDOWN_FLAGS", "Mails")
+                    print "Shutdown Flag Up: Terminating"
+                    publisher.warning("Shutdown Flag Up: Terminating.")
+                    break
+                publisher.debug("Script Mails is Idling 10s")
+                time.sleep(10)
 
-        message = Sub.get_msg_from_queue(r_serv)
+            message = Sub.get_msg_from_queue(r_serv)
+        except dns.exception.Timeout:
+            print "dns.exception.Timeout"
+            pass
 
 
 if __name__ == "__main__":
