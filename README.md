@@ -75,6 +75,7 @@ pip install python-magic
 pip install numpy
 pip install flask
 pip install nltk
+pip install whoosh
 pip install matplotlib ----- (sudo ln -s freetype2/ft2build.h in /usr/include/)
 pip install pybloomfiltermmap ----- (you may need to sudo apt-get install libssl-dev)
 ```

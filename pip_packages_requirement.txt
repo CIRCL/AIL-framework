@@ -24,3 +24,6 @@ pybloomfiltermmap
 ipython
 flask
 texttable
+
+#Indexer requirements
+whoosh
