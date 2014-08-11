@@ -74,6 +74,10 @@ def main():
     # FUNCTIONS #
     publisher.info("Script Curve subscribed to channel {0}".format(cfg.get("PubSub_Words", "channel_0")))
 
+    # FILE CURVE SECTION #
+    csv_path = cfg.get("Directories", "wordtrending_csv")
+    wordfile_path = cfg.get("Directories", "wordsfile")
+
     paste_words = []
     message = Sub.get_msg_from_queue(r_serv)
     prec_filename = None
@@ -82,7 +86,7 @@ def main():
             channel, filename, word, score = message.split()
             if prec_filename == None or filename != prec_filename:
                 PST = P.Paste(filename)
-                lib_words.create_curve_with_word_file(r_serv1, "/home/user/AIL/var/www/static/csv/wordstrendingdata", "/home/user/AIL/files/wordfile", int(PST.p_date.year), int(PST.p_date.month))
+                lib_words.create_curve_with_word_file(r_serv1, csv_path, wordfile_path, int(PST.p_date.year), int(PST.p_date.month))
 
             prec_filename = filename
             prev_score = r_serv1.hget(word.lower(), PST.p_date)

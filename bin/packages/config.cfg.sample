@@ -1,6 +1,8 @@
 [Directories]
 bloomfilters = /home/user/Blooms/
 pastes = /home/user/PASTES/
+wordtrending_csv = /home/user/AIL/var/www/static/csv/wordstrendingdata
+wordsfile = /home/user/AIL/files/wordfile
 
 ##### Redis #####
 [Redis_Cache]
