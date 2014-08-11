@@ -24,6 +24,9 @@ indexertype = cfg.get("Indexer", "type")
 
 argParser = argparse.ArgumentParser(description='Fulltext search for AIL')
 argParser.add_argument('-q', action='append', help='query to lookup (one or more)')
+argParser.add_argument('-n', action='store_true', default=False, help='return numbers of indexed documents')
+argParser.add_argument('-t', action='store_true', default=False, help='dump top 500 terms')
+argParser.add_argument('-l', action='store_true', default=False, help='dump all terms encountered in indexed documents')
 args = argParser.parse_args()
 
 from whoosh import index
@@ -33,6 +36,23 @@ schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 ix = index.open_dir(indexpath)
 
 from whoosh.qparser import QueryParser
+
+if args.n:
+    print ix.doc_count_all()
+    exit(0)
+
+if args.l:
+    xr = ix.searcher().reader()
+    for x in xr.lexicon("content"):
+        print (x)
+    exit(0)
+
+if args.t:
+    xr = ix.searcher().reader()
+    for x in xr.most_frequent_terms("content", number=500, prefix=''):
+        print (x)
+    exit(0)
+
 if args.q is None:
     argParser.print_help()
     exit(1)
@@ -41,5 +61,5 @@ with ix.searcher() as searcher:
     query = QueryParser("content", ix.schema).parse(" ".join(args.q))
     results = searcher.search(query, limit=None)
     for x in results:
-        print x
+        print (x)
 
