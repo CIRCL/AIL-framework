@@ -39,6 +39,9 @@ function create_log_table(obj_json) {
     else if ( chansplit[1] == "WARNING" ){
         tr.className = "warning";
     }
+    else if ( chansplit[1] == "CRITICAL"){
+        tr.className = "critical"
+    }
 
     source_link = document.createElement("A");
     if (parsedmess[1] == "slexy.org"){
@@ -70,8 +73,17 @@ function create_log_table(obj_json) {
     tr.appendChild(nam);
     tr.appendChild(msage);
 
+    if (tr.className == document.getElementById("checkbox_log_info").value && document.getElementById("checkbox_log_info").checked  == true) {
+           tableBody.appendChild(tr); 
+       }
+    if (tr.className == document.getElementById("checkbox_log_warning").value && document.getElementById("checkbox_log_warning").checked == true) {
+        tableBody.appendChild(tr);
+    }
+    if (tr.className == document.getElementById("checkbox_log_critical").value && document.getElementById("checkbox_log_critical").checked == true) {
+        tableBody.appendChild(tr);
+    };
+
     var sel = document.getElementById("log_select")
-    tableBody.appendChild(tr);
     if (tableBody.rows.length > sel.options[sel.options.selectedIndex].value){
         while (tableBody.rows.length != sel.options[sel.options.selectedIndex].value){
             tableBody.deleteRow(0);
