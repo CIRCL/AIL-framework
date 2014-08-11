@@ -82,24 +82,24 @@
         <div class="panel panel-default">
         <div class="panel-heading">
             <i class="fa fa-tasks fa-fw"></i> Logs
+            <div class="pull-right">
+                <label style="padding-bottom:2px;">
+		<select class="form-control input-sm" id="log_select">
+		<option value="10">10</option>
+		<option value="25">25</option>
+		<option value="50">50</option>
+		<option value="100">100</option>
+		</select>
+                </label>
+		<input id="checkbox_log_info" type="checkbox" value="info"> INFO
+		<input id="checkbox_log_warning" type="checkbox" value="warning"> WARNING
+		<input id="checkbox_log_critical" type="checkbox" value="critical"> CRITICAL
+ 
+            </div>
         </div>
         <div class="panel-body">
                 <div class="table-responsive", id="logger">
                     <div class="row">
-                    <div class="col-sm-6">
-                        <div id="dataTables-example_length" class="dataTables_length">
-                        <label>
-                        <select class="form-control input-sm" name="dataTables-example_length" aria-controls="dataTables-example" id="log_select">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                        </select>
-                        </label>
-                        </div>
-                        <input type="checkbox">
-                    </div>
-                    </div>
                     <table class="table table-bordered table-hover table-striped" id="table_log">
                         <thead>
                         <tr>
