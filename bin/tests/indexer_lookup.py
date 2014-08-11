@@ -24,6 +24,7 @@ indexertype = cfg.get("Indexer", "type")
 
 argParser = argparse.ArgumentParser(description='Fulltext search for AIL')
 argParser.add_argument('-q', action='append', help='query to lookup (one or more)')
+argParser.add_argument('-n', action='store_true', default=False, help='Return numbers of document indexed')
 args = argParser.parse_args()
 
 from whoosh import index
@@ -33,6 +34,11 @@ schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 ix = index.open_dir(indexpath)
 
 from whoosh.qparser import QueryParser
+
+if args.n:
+    print ix.doc_count_all()
+    exit(0)
+
 if args.q is None:
     argParser.print_help()
     exit(1)
