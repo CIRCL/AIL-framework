@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import redis, zmq, ConfigParser, json, pprint, time
+import dns.exception
 from packages import Paste as P
 from packages import lib_refine
 from packages import ZMQ_PubSub
