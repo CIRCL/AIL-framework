@@ -17,6 +17,17 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+  <script>
+      function update_values() {
+          $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+          $.getJSON($SCRIPT_ROOT+"/_stuff",
+              function(data) {
+                  window.glob_tabvar = data;
+              });
+      };
+      update_values();
+  </script>
+
 </head>
 <body>
 

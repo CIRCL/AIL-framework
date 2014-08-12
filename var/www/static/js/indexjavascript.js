@@ -132,19 +132,32 @@ function create_queue_table() {
 
 $(document).ready(function () {
     var data = [];
+    var tmp_tab = [];
+    var curves_labels = [];
     var x = new Date();
     
-    data.push([x, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    for (i = 0; i < glob_tabvar.row1.length; i++){
+        tmp_tab.push(0);
+        curves_labels.push(glob_tabvar.row1[i][0]);
+    }
+    tmp_tab.unshift(x);
+    curves_labels.unshift("date");
+    data.push(tmp_tab);
+    
+    //data.push([x, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     var g = new Dygraph(document.getElementById("Graph"), data,
     {
+    labels: curves_labels,
     drawPoints: false,
     showRoller: true,
     rollPeriod: 10,
     labelsKMB: true,
     logscale: true,
+    drawGapEdgePoints: true,
+    legend: "always",
     connectSeparatedPoints: true,
     fillGraph: true,
-    stepPlot: true,
+    //stepPlot: true,
     includeZero: true,
     });
 
@@ -158,17 +171,17 @@ $(document).ready(function () {
                 $('#server-name').html(html);
                 setTimeout(function() {
                     var x = new Date();
-                    var youpi = []; 
+                    var tmp_values = []; 
                     refresh();
                     update_values();
                     create_queue_table();
                    
                     
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
-                        youpi.push(glob_tabvar.row1[i][1]);
+                        tmp_values.push(glob_tabvar.row1[i][1]);
                     }
-                    youpi.unshift(x);
-                    data.push(youpi);
+                    tmp_values.unshift(x);
+                    data.push(tmp_values);
 
                     if (data.length > 1800) {
                         data.shift();
