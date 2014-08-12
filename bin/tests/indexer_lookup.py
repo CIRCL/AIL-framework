@@ -13,6 +13,13 @@
 import ConfigParser
 import argparse
 import sys
+import gzip
+
+def readdoc(path=None):
+    if path is None:
+        return False
+    f = gzip.open (path, 'r')
+    return f.read()
 
 configfile = '../packages/config.cfg'
 cfg = ConfigParser.ConfigParser()
@@ -27,10 +34,14 @@ argParser.add_argument('-q', action='append', help='query to lookup (one or more
 argParser.add_argument('-n', action='store_true', default=False, help='return numbers of indexed documents')
 argParser.add_argument('-t', action='store_true', default=False, help='dump top 500 terms')
 argParser.add_argument('-l', action='store_true', default=False, help='dump all terms encountered in indexed documents')
+argParser.add_argument('-f', action='store_true', default=False, help='dump each matching document')
+argParser.add_argument('-s', action='append', help='search similar documents')
+
 args = argParser.parse_args()
 
 from whoosh import index
 from whoosh.fields import *
+import whoosh
 schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
 ix = index.open_dir(indexpath)
@@ -53,6 +64,16 @@ if args.t:
         print (x)
     exit(0)
 
+if args.s:
+    # By default, the index is not storing the vector of the document (Whoosh
+    # document schema). It won't work if you don't change the schema of the
+    # index for the content. It depends of your storage strategy.
+    docnum = ix.searcher().document_number(path=args.s)
+    r = ix.searcher().more_like(docnum, "content")
+    for hit in r:
+            print(hit["path"])
+    exit(0)
+
 if args.q is None:
     argParser.print_help()
     exit(1)
@@ -61,5 +82,8 @@ with ix.searcher() as searcher:
     query = QueryParser("content", ix.schema).parse(" ".join(args.q))
     results = searcher.search(query, limit=None)
     for x in results:
-        print (x)
-
+        if args.f:
+            print (readdoc(path=x.items()[0][1]))
+        else:
+            print (x.items()[0][1])
+        print
