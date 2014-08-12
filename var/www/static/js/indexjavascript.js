@@ -18,6 +18,11 @@ source.onmessage = function(event) {
     create_log_table(feed);
 };
 
+function pad_2(number)
+{
+     return (number < 10 ? '0' : '') + number;
+}
+
 function create_log_table(obj_json) {
     tableBody = document.getElementById("tab_body")
     var tr = document.createElement('TR')
@@ -57,7 +62,7 @@ function create_log_table(obj_json) {
     src.appendChild(source_link);
 
     var now = new Date();
-    var timepaste = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+    var timepaste = pad_2(now.getHours()) + ":" + pad_2(now.getMinutes()) + ":" + pad_2(now.getSeconds());
 
     time.appendChild(document.createTextNode(timepaste));
     chan.appendChild(document.createTextNode(chansplit[0]));
@@ -66,6 +71,16 @@ function create_log_table(obj_json) {
     scrpt.appendChild(document.createTextNode(parsedmess[0]));
     pdate.appendChild(document.createTextNode(parsedmess[2]));
     nam.appendChild(document.createTextNode(parsedmess[3]));
+
+    var iconspan = document.createElement('SPAN');
+    if (parsedmess[4].split(" ")[0] == "Detected"){
+        iconspan.className = "glyphicon glyphicon-eye-open";
+    }
+    else if (parsedmess[4].split(" ")[0] == "Checked"){
+        iconspan.className = "glyphicon glyphicon-thumbs-up";
+    }
+    iconspan.innerHTML = "&nbsp;";
+    msage.appendChild(iconspan);
     msage.appendChild(document.createTextNode(parsedmess[4]));
 
     tr.appendChild(time)
