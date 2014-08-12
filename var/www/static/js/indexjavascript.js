@@ -156,6 +156,7 @@ $(document).ready(function () {
     //drawGapEdgePoints: true,
     //legend: "always",
     //connectSeparatedPoints: true,
+    stackedGraph: true,
     fillGraph: true,
     includeZero: true,
     });
