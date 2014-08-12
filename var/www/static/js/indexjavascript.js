@@ -157,7 +157,7 @@ $(document).ready(function () {
     legend: "always",
     connectSeparatedPoints: true,
     fillGraph: true,
-    //stepPlot: true,
+    stackedGraph: true,
     includeZero: true,
     });
 
