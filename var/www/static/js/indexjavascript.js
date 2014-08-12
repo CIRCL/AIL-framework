@@ -147,19 +147,30 @@ function create_queue_table() {
 
 $(document).ready(function () {
     var data = [];
+    var data2 = [];
     var tmp_tab = [];
+    var tmp_tab2 = [];
     var curves_labels = [];
+    var curves_labels2 = [];
     var x = new Date();
     
     for (i = 0; i < glob_tabvar.row1.length; i++){
-        tmp_tab.push(0);
-        curves_labels.push(glob_tabvar.row1[i][0]);
+        if (glob_tabvar.row1[i][0].substring(0,4) != "word"){
+            tmp_tab.push(0);
+            curves_labels.push(glob_tabvar.row1[i][0]);
+        }
+        else {
+            tmp_tab2.push(0);
+            curves_labels2.push(glob_tabvar.row1[i][0]);
+        }
     }
     tmp_tab.unshift(x);
+    tmp_tab2.unshift(x);
     curves_labels.unshift("date");
+    curves_labels2.unshift("date");
     data.push(tmp_tab);
+    data2.push(tmp_tab2);
     
-    //data.push([x, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     var g = new Dygraph(document.getElementById("Graph"), data,
     {
     labels: curves_labels,
@@ -175,6 +186,23 @@ $(document).ready(function () {
     fillGraph: true,
     includeZero: true,
     });
+    
+    var g2 = new Dygraph(document.getElementById("Graph2"), data2,
+    {
+    labels: curves_labels2,
+    drawPoints: false,
+    showRoller: true,
+    rollPeriod: 10,
+    labelsKMB: true,
+    logscale: true,
+    //drawGapEdgePoints: true,
+    //legend: "always",
+    //connectSeparatedPoints: true,
+    stackedGraph: true,
+    fillGraph: true,
+    includeZero: true,
+    });
+
 
     var interval = 1000;   //number of mili seconds between each call
     var refresh = function() {
@@ -186,22 +214,33 @@ $(document).ready(function () {
                 $('#server-name').html(html);
                 setTimeout(function() {
                     var x = new Date();
-                    var tmp_values = []; 
+                    var tmp_values = [];
+                    var tmp_values2 = []; 
                     refresh();
                     update_values();
                     create_queue_table();
                    
                     
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
-                        tmp_values.push(glob_tabvar.row1[i][1]);
+                        if (glob_tabvar.row1[i][0].substring(0,4) != "word"){
+                            tmp_values.push(glob_tabvar.row1[i][1]);
+                        }
+                        else {
+                            tmp_values2.push(glob_tabvar.row1[i][1]);
+                        }
                     }
                     tmp_values.unshift(x);
                     data.push(tmp_values);
+                    
+                    tmp_values2.unshift(x);
+                    data2.push(tmp_values2);
 
                     if (data.length > 1800) {
                         data.shift();
+                        data2.shift();
                     }
                     g.updateOptions( { 'file': data } );
+                    g2.updateOptions( { 'file': data2 } );
 
                 }, interval);
             }
