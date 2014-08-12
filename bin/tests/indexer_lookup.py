@@ -13,6 +13,13 @@
 import ConfigParser
 import argparse
 import sys
+import gzip
+
+def readdoc(path=None):
+    if path is None:
+        return False
+    f = gzip.open (path, 'r')
+    return f.read()
 
 configfile = '../packages/config.cfg'
 cfg = ConfigParser.ConfigParser()
@@ -27,6 +34,8 @@ argParser.add_argument('-q', action='append', help='query to lookup (one or more
 argParser.add_argument('-n', action='store_true', default=False, help='return numbers of indexed documents')
 argParser.add_argument('-t', action='store_true', default=False, help='dump top 500 terms')
 argParser.add_argument('-l', action='store_true', default=False, help='dump all terms encountered in indexed documents')
+argParser.add_argument('-f', action='store_true', default=False, help='dump each matching document')
+
 args = argParser.parse_args()
 
 from whoosh import index
@@ -61,5 +70,8 @@ with ix.searcher() as searcher:
     query = QueryParser("content", ix.schema).parse(" ".join(args.q))
     results = searcher.search(query, limit=None)
     for x in results:
-        print (x)
-
+        if args.f:
+            print (readdoc(path=x.items()[0][1]))
+        else:
+            print (x.items()[0][1])
+        print
