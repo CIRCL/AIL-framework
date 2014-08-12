@@ -35,11 +35,13 @@ argParser.add_argument('-n', action='store_true', default=False, help='return nu
 argParser.add_argument('-t', action='store_true', default=False, help='dump top 500 terms')
 argParser.add_argument('-l', action='store_true', default=False, help='dump all terms encountered in indexed documents')
 argParser.add_argument('-f', action='store_true', default=False, help='dump each matching document')
+argParser.add_argument('-s', action='append', help='search similar documents')
 
 args = argParser.parse_args()
 
 from whoosh import index
 from whoosh.fields import *
+import whoosh
 schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
 ix = index.open_dir(indexpath)
@@ -60,6 +62,16 @@ if args.t:
     xr = ix.searcher().reader()
     for x in xr.most_frequent_terms("content", number=500, prefix=''):
         print (x)
+    exit(0)
+
+if args.s:
+    # By default, the index is not storing the vector of the document (Whoosh
+    # document schema). It won't work if you don't change the schema of the
+    # index for the content. It depends of your storage strategy.
+    docnum = ix.searcher().document_number(path=args.s)
+    r = ix.searcher().more_like(docnum, "content")
+    for hit in r:
+            print(hit["path"])
     exit(0)
 
 if args.q is None:
