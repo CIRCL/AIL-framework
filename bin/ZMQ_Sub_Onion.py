@@ -92,7 +92,7 @@ def main():
                 pprint.pprint(domains_list)
                 print PST.p_path
                 if len(domains_list) > 0:
-                    publisher.warning('{0};{1};{2};{3};{4}'.format("Onion", PST.p_source, PST.p_date, PST.p_name, str(len(domains_list))+" .onions detected" ))
+                    publisher.warning('{0};{1};{2};{3};{4}'.format("Onion", PST.p_source, PST.p_date, PST.p_name,"Detected " + str(len(domains_list))+" .onion(s)" ))
                 else:
                     publisher.info('{0};{1};{2};{3};{4}'.format("Onion", PST.p_source, PST.p_date, PST.p_name, "Onion related" ))
 

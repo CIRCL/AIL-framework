@@ -69,9 +69,9 @@ def main():
 
                 pprint.pprint(Creditcard_set)
                 if (len(Creditcard_set) > 0):
-                    publisher.warning('{0};{1};{2};{3};{4}'.format("CreditCard", PST.p_source, PST.p_date, PST.p_name, str(len(Creditcard_set))+" Valid number(s)" ))
+                    publisher.critical('{0};{1};{2};{3};{4}'.format("CreditCard", PST.p_source, PST.p_date, PST.p_name,"Checked " + str(len(Creditcard_set))+" valid number(s)" ))
                 else:
-                    publisher.info('{0};{1};{2};{3};{4}'.format("CreditCard", PST.p_source, PST.p_date, PST.p_name, "CreditCard Related" ))
+                    publisher.info('{0};{1};{2};{3};{4}'.format("CreditCard", PST.p_source, PST.p_date, PST.p_name, "CreditCard related" ))
 
             prec_filename = filename
 

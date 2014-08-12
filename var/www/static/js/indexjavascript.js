@@ -153,11 +153,10 @@ $(document).ready(function () {
     rollPeriod: 10,
     labelsKMB: true,
     logscale: true,
-    drawGapEdgePoints: true,
-    legend: "always",
-    connectSeparatedPoints: true,
+    //drawGapEdgePoints: true,
+    //legend: "always",
+    //connectSeparatedPoints: true,
     fillGraph: true,
-    stackedGraph: true,
     includeZero: true,
     });
 

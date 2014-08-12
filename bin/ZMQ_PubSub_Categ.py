@@ -120,7 +120,7 @@ def main():
                     Pub.send_message(msg)
                     #dico_categ.add(categ)
 
-                    publisher.info('{0};{1};{2};{3};{4}'.format("Categ", PST.p_source, PST.p_date, PST.p_name,"Detected "+score+" "+word))
+                    publisher.info('{0};{1};{2};{3};{4}'.format("Categ", PST.p_source, PST.p_date, PST.p_name,"Detected "+score+" "+"\""+word+"\""))
 
         else:
             if r_serv.sismember("SHUTDOWN_FLAGS", "Categ"):
