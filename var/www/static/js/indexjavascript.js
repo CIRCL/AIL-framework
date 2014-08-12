@@ -4,7 +4,6 @@ function initfunc( csvay, scroot) {
 };
 
 function update_values() {
-    //$SCRIPT_ROOT = {{request.script_root|tojson|safe}} ;
   $SCRIPT_ROOT = window.scroot ;
     $.getJSON($SCRIPT_ROOT+"/_stuff",
         function(data) {
@@ -41,7 +40,7 @@ function create_log_table(obj_json) {
         tr.className = "warning";
     }
     else if ( chansplit[1] == "CRITICAL"){
-        tr.className = "critical"
+        tr.className = "danger"
     }
 
     source_link = document.createElement("A");
@@ -96,25 +95,6 @@ function create_log_table(obj_json) {
     }
 }
 
-$(document).ready(function () {
-    var interval = 1000;   //number of mili seconds between each call
-    var refresh = function() {
-        $.ajax({
-            url: "",
-            cache: false,
-            success: function(html) {
-                $('#server-name').html(html);
-                setTimeout(function() {
-                    refresh();
-                    update_values();
-                    create_queue_table();
-                }, interval);
-            }
-        });
-    };
-    refresh();
-});
-
 function create_queue_table() {
     document.getElementById("queueing").innerHTML = "";
     var Tablediv = document.getElementById("queueing")
@@ -153,11 +133,10 @@ function create_queue_table() {
 $(document).ready(function () {
     var data = [];
     var x = new Date();
-    data.push([x, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-
+    
+    data.push([x, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     var g = new Dygraph(document.getElementById("Graph"), data,
     {
-    labels: ["Time", "Duplicate", "CreditCard", "Words", "102", "Mails", "Lines", "Curve", "Onion", "Web", "Tokenize"],
     drawPoints: false,
     showRoller: true,
     rollPeriod: 10,
@@ -169,24 +148,37 @@ $(document).ready(function () {
     includeZero: true,
     });
 
-    // It sucks that these things aren't objects, and we need to store state in window.
-    window.intervalId = setInterval(function() {
-        var x = new Date(); // current time
-        y = glob_tabvar.row1[0][1];
-        a = glob_tabvar.row1[1][1];
-        b = glob_tabvar.row1[2][1];
-        c = glob_tabvar.row1[3][1];
-        d = glob_tabvar.row1[4][1];
-        e = glob_tabvar.row1[5][1];
-        f = glob_tabvar.row1[6][1];
-        k = glob_tabvar.row1[7][1];
-        h = glob_tabvar.row1[8][1];
-        i = glob_tabvar.row1[9][1];
+    var interval = 1000;   //number of mili seconds between each call
+    var refresh = function() {
+        
+        $.ajax({
+            url: "",
+            cache: false,
+            success: function(html) {
+                $('#server-name').html(html);
+                setTimeout(function() {
+                    var x = new Date();
+                    var youpi = []; 
+                    refresh();
+                    update_values();
+                    create_queue_table();
+                   
+                    
+                    for (i = 0; i < (glob_tabvar.row1).length; i++){
+                        youpi.push(glob_tabvar.row1[i][1]);
+                    }
+                    youpi.unshift(x);
+                    data.push(youpi);
 
-        data.push([x, y, a, b, c, d, e, f, k, h, i]);
-        if (data.length > 1800) {
-            data.shift();
-        }
-        g.updateOptions( { 'file': data } );
-    }, 1000);
+                    if (data.length > 1800) {
+                        data.shift();
+                    }
+                    g.updateOptions( { 'file': data } );
+
+                }, interval);
+            }
+        });
+    };
+
+    refresh();
 });
