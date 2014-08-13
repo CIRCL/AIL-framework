@@ -16,7 +16,17 @@ Conditions to fulfill to be able to use this class correctly:
 
 """
 
-import os, magic, gzip, langid, pprint, redis, operator, string, re, json, ConfigParser
+import os
+import magic
+import gzip
+import pprint
+import redis
+import operator
+import string
+import re
+import json
+import ConfigParser
+import cStringIO
 from Date import Date
 from Hash import Hash
 
@@ -25,10 +35,9 @@ from langid.langid import LanguageIdentifier, model
 from nltk.tokenize import RegexpTokenizer
 from textblob import TextBlob
 
-from lib_refine import *
-
 clean = lambda dirty: ''.join(filter(string.printable.__contains__, dirty))
 """It filters out non-printable characters from the string it receives."""
+
 
 class Paste(object):
     """
@@ -50,38 +59,29 @@ class Paste(object):
         configfile = './packages/config.cfg'
         cfg = ConfigParser.ConfigParser()
         cfg.read(configfile)
+        self.cache = redis.StrictRedis(
+            host=cfg.get("Redis_Queues", "host"),
+            port=cfg.getint("Redis_Queues", "port"),
+            db=cfg.getint("Redis_Queues", "db"))
 
         self.p_path = p_path
-
         self.p_name = self.p_path.split('/')[-1]
+        self.p_size = round(os.path.getsize(self.p_path)/1024.0, 2)
+        self.p_mime = magic.from_buffer(self.get_p_content(), mime=True)
 
-        self.p_size = round(os.path.getsize(self.p_path)/1024.0,2)
-
-        self.cache = redis.StrictRedis(
-            host = cfg.get("Redis_Queues", "host"),
-            port = cfg.getint("Redis_Queues", "port"),
-            db = cfg.getint("Redis_Queues", "db"))
-
-        self.p_mime = magic.from_buffer(self.get_p_content(), mime = True)
-
-        self.p_encoding = None
-
-        #Assuming that the paste will alway be in a day folder which is itself
+        # Assuming that the paste will alway be in a day folder which is itself
         # in a month folder which is itself in a year folder.
         # /year/month/day/paste.gz
         var = self.p_path.split('/')
         self.p_date = Date(var[-4], var[-3], var[-2])
-
-        self.p_hash_kind = None
-        self.p_hash = None
-
-        self.p_langage = None
-
-        self.p_nb_lines = None
-        self.p_max_length_line = None
-
         self.p_source = var[-5]
 
+        self.p_encoding = None
+        self.p_hash_kind = None
+        self.p_hash = None
+        self.p_langage = None
+        self.p_nb_lines = None
+        self.p_max_length_line = None
 
     def get_p_content(self):
         """
@@ -92,15 +92,17 @@ class Paste(object):
         PST.get_p_content()
 
         """
-        r_serv = self.cache
 
-        paste = r_serv.get(self.p_path)
+        paste = self.cache.get(self.p_path)
         if paste is None:
-            with gzip.open(self.p_path, 'rb') as F:
-		paste = F.read()
-		r_serv.set(self.p_path, paste)
-                r_serv.expire(self.p_path, 300)
+            with gzip.open(self.p_path, 'rb') as f:
+                paste = f.read()
+                self.cache.set(self.p_path, paste)
+                self.cache.expire(self.p_path, 300)
         return paste
+
+    def get_p_content_as_file(self):
+        return cStringIO.StringIO(self.get_p_content())
 
     def get_lines_info(self):
         """
@@ -112,15 +114,17 @@ class Paste(object):
         :Example: PST.get_lines_info()
 
         """
-        max_length_line = 0
-        with gzip.open(self.p_path, 'rb') as F:
-            for nb_line in enumerate(F):
-                if len(nb_line[1]) >= max_length_line:
-                    max_length_line = len(nb_line[1])
-
-        self.p_nb_lines = nb_line[0]
-        self.p_max_length_line = max_length_line
-        return (nb_line[0], max_length_line)
+        if self.p_nb_lines is None or self.p_max_length_line is None:
+            max_length_line = 0
+            f = self.get_p_content_as_file()
+            for line_id, line in enumerate(f):
+                length = len(line)
+                if length >= max_length_line:
+                    max_length_line = length
+            f.close()
+            self.p_nb_lines = line_id
+            self.p_max_length_line = max_length_line
+        return (self.p_nb_lines, self.p_max_length_line)
 
     def _get_p_encoding(self):
         """
@@ -130,10 +134,9 @@ class Paste(object):
 
         """
         try:
-            return magic.Magic(mime_encoding = True).from_buffer(self.get_p_content())
+            return magic.Magic(mime_encoding=True).from_buffer(self.get_p_content())
         except magic.MagicException:
             pass
-
 
     def _set_p_hash_kind(self, hashkind):
         """
@@ -173,9 +176,7 @@ class Paste(object):
         ..seealso: git@github.com:saffsd/langid.py.git
 
         """
-
         identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
-
         return identifier.classify(self.get_p_content())
 
     def _get_p_hash_kind(self):
@@ -184,7 +185,7 @@ class Paste(object):
     def _get_p_date(self):
         return self.p_date
 
-    def _get_hash_lines(self, min = 1, start = 1, jump = 10):
+    def _get_hash_lines(self, min=1, start=1, jump=10):
         """
         Returning all the lines of the paste hashed.
 
@@ -210,20 +211,17 @@ class Paste(object):
 
         """
         S = set([])
-        with gzip.open(self.p_path, 'rb') as F:
-
-            for num, line in enumerate(F, start):
-
-                if len(line) >= min:
-                    if jump > 1:
-                        if (num % jump) == 1 :
-                            S.add(self.p_hash_kind.Calculate(line))
-                    else:
+        f = self.get_p_content_as_file()
+        for num, line in enumerate(f, start):
+            if len(line) >= min:
+                if jump > 1:
+                    if (num % jump) == 1:
                         S.add(self.p_hash_kind.Calculate(line))
+                else:
+                    S.add(self.p_hash_kind.Calculate(line))
         return S
 
-
-    def is_duplicate(self, obj, min = 1, percent = 50, start = 1, jump = 10):
+    def is_duplicate(self, obj, min=1, percent=50, start=1, jump=10):
         """
         Returning the percent of similarity with another paste.
         ( Using the previous hashing method )
@@ -264,8 +262,7 @@ class Paste(object):
         else:
             return False, var
 
-
-    def save_all_attributes_redis(self, r_serv, key = None):
+    def save_all_attributes_redis(self, r_serv, key=None):
         """
         Saving all the attributes in a "Redis-like" Database (Redis, LevelDB)
 
@@ -281,23 +278,25 @@ class Paste(object):
         PST.save_all_attributes_redis(r_serv)
 
         """
-        #LevelDB Compatibility
-        r_serv.hset(self.p_path, "p_name", self.p_name)
-        r_serv.hset(self.p_path, "p_size", self.p_size)
-        r_serv.hset(self.p_path, "p_mime", self.p_mime)
-        #r_serv.hset(self.p_path, "p_encoding", self.p_encoding)
-        r_serv.hset(self.p_path, "p_date", self._get_p_date())
-        r_serv.hset(self.p_path, "p_hash_kind", self._get_p_hash_kind())
-        r_serv.hset(self.p_path, "p_hash", self.p_hash)
-        #r_serv.hset(self.p_path, "p_langage", self.p_langage)
-        #r_serv.hset(self.p_path, "p_nb_lines", self.p_nb_lines)
-        #r_serv.hset(self.p_path, "p_max_length_line", self.p_max_length_line)
-        #r_serv.hset(self.p_path, "p_categories", self.p_categories)
-        r_serv.hset(self.p_path, "p_source", self.p_source)
-        if key != None:
-            r_serv.sadd(key, self.p_path)
+        # LevelDB Compatibility
+        p = r_serv.pipeline(False)
+        p.hset(self.p_path, "p_name", self.p_name)
+        p.hset(self.p_path, "p_size", self.p_size)
+        p.hset(self.p_path, "p_mime", self.p_mime)
+        # p.hset(self.p_path, "p_encoding", self.p_encoding)
+        p.hset(self.p_path, "p_date", self._get_p_date())
+        p.hset(self.p_path, "p_hash_kind", self._get_p_hash_kind())
+        p.hset(self.p_path, "p_hash", self.p_hash)
+        # p.hset(self.p_path, "p_langage", self.p_langage)
+        # p.hset(self.p_path, "p_nb_lines", self.p_nb_lines)
+        # p.hset(self.p_path, "p_max_length_line", self.p_max_length_line)
+        # p.hset(self.p_path, "p_categories", self.p_categories)
+        p.hset(self.p_path, "p_source", self.p_source)
+        if key is not None:
+            p.sadd(key, self.p_path)
         else:
             pass
+        p.execute()
 
     def save_attribute_redis(self, r_serv, attr_name, value):
         """
@@ -308,11 +307,10 @@ class Paste(object):
         else:
             r_serv.hset(self.p_path, attr_name, json.dumps(value))
 
-    def _get_from_redis(self,r_serv):
+    def _get_from_redis(self, r_serv):
         return r_serv.hgetall(self.p_hash)
 
-
-    def _get_top_words(self, sort = False):
+    def _get_top_words(self, sort=False):
         """
         Tokenising method: Returning a sorted list or a set of paste's words
 
@@ -325,27 +323,22 @@ class Paste(object):
         """
         words = {}
         tokenizer = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
-        gaps = True,
-        discard_empty = True)
+                                    gaps=True, discard_empty=True)
 
-        blob = TextBlob(clean(self.get_p_content()),
-        tokenizer = tokenizer)
+        blob = TextBlob(clean(self.get_p_content()), tokenizer=tokenizer)
 
         for word in blob.tokens:
             if word in words.keys():
                 num = words[word]
             else:
                 num = 0
-
             words[word] = num + 1
-
         if sort:
-            var = sorted(words.iteritems(), key = operator.itemgetter(1), reverse = True)
+            var = sorted(words.iteritems(), key=operator.itemgetter(1), reverse=True)
         else:
             var = words
 
         return var
-
 
     def _get_word(self, word):
         """
@@ -357,7 +350,6 @@ class Paste(object):
 
         """
         return [item for item in self._get_top_words() if item[0] == word]
-
 
     def get_regex(self, regex):
         """
