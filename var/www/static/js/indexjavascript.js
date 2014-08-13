@@ -81,7 +81,10 @@ function create_log_table(obj_json) {
     }
     iconspan.innerHTML = "&nbsp;";
     msage.appendChild(iconspan);
-    msage.appendChild(document.createTextNode(parsedmess[4]));
+    var message = parsedmess[4].split(" ");
+    message.shift();
+
+    msage.appendChild(document.createTextNode(message.join(" ")));
 
     tr.appendChild(time)
     tr.appendChild(chan);
