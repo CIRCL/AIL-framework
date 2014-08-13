@@ -16,6 +16,7 @@
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.tagcanvas.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
   <script>
       function update_values() {
@@ -62,6 +63,14 @@
               </div>
               <!-- /.sidebar-collapse -->
               <div class="table-responsive", id="queueing" style="margin-top:40px;"></div>
+     
+	      <div class="table-responsive" id="myCanvasContainer" style="margin-top:40px;">
+	         <canvas id="myCanvas">
+		      <p>Anything in here will be replaced on browsers that support the canvas element</p>
+		 <ul id="ultag">
+		 </ul>
+		 </canvas>
+	      </div>
           </div>
           <!-- /.navbar-static-side -->
       </nav>
@@ -110,29 +119,26 @@
             </div>
         </div>
         <div class="panel-body">
-                <div class="table-responsive", id="logger">
                     <div class="row">
-                    <div class="col-lg-6">
-                    <table class="table table-bordered table-hover table-striped" id="table_log">
-                        <thead>
-                        <tr>
-                        <th>Time</th>
-                        <th>Channel</th>
-                        <th>Level</th>
-                        <th>Script Name</th>
-                        <th>Source</th>
-                        <th>Date</th>
-                        <th>Paste name</th>
-                        <th>Message</th>
-                        </tr>
-                        </thead>
-                        <tbody id="tab_body">
-                        </tbody>
-                    <table>
-                </div>
-                </div>
-        </div>
-        </div>
+			    <div class="col-lg-12">
+				    <table class="table table-bordered table-hover table-striped" id="table_log">
+					<thead>
+						<tr>
+						<th>Time</th>
+						<th>Channel</th>
+						<th>Level</th>
+						<th>Script Name</th>
+						<th>Source</th>
+						<th>Date</th>
+						<th>Paste name</th>
+						<th>Message</th>
+						</tr>
+					</thead>
+					<tbody id="tab_body">
+					</tbody>
+			            </table>
+			    </div>
+                   </div>
         </div>
             <!-- /.row -->
         </div>

@@ -179,7 +179,7 @@ $(document).ready(function () {
     labels: curves_labels,
     drawPoints: false,
     showRoller: true,
-    rollPeriod: 10,
+    rollPeriod: 30,
     labelsKMB: true,
     logscale: true,
     //drawGapEdgePoints: true,
@@ -195,7 +195,7 @@ $(document).ready(function () {
     labels: curves_labels2,
     drawPoints: false,
     showRoller: true,
-    rollPeriod: 10,
+    rollPeriod: 30,
     labelsKMB: true,
     logscale: true,
     //drawGapEdgePoints: true,
@@ -244,6 +244,9 @@ $(document).ready(function () {
                     }
                     g.updateOptions( { 'file': data } );
                     g2.updateOptions( { 'file': data2 } );
+                    
+                    
+                   // TagCanvas.Reload('myCanvas');
 
                 }, interval);
             }
@@ -251,4 +254,30 @@ $(document).ready(function () {
     };
 
     refresh();
+
+     var ultag = document.getElementById("ultag");
+     for (i=0;i<curves_labels.length;i++){
+         var li = document.createElement('li');
+         var a = document.createElement('a');
+         a.innerHTML = curves_labels[i];
+         a.style.fontSize = glob_tabvar.row1[i][1];
+         li.appendChild(a);
+         ultag.appendChild(li);
+    }
+
+
+    try {
+      var options = {
+      weight:true,
+      weightMode:"both",
+      noMouse:true,
+      textColour: '#2E9AFE'
+      }
+      TagCanvas.Start('myCanvas','',options);
+      TagCanvas.SetSpeed('myCanvas', [0.05, -0.15]);
+    } catch(e) {
+      // something went wrong, hide the canvas container
+      document.getElementById('myCanvasContainer').style.display = 'none';
+    }
+
 });
