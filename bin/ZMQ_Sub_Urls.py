@@ -85,7 +85,7 @@ def main():
                         PST.save_attribute_redis(r_serv1, channel, (A_values[0],list(A_values[1])))
 
                         pprint.pprint(A_values)
-                        publisher.info('{0};{1};{2};{3};{4}'.format("Url", PST.p_source, PST.p_date, PST.p_name, "Checked "+str(A_values[0])+" URL" ))
+                        publisher.info('{0};{1};{2};{3};{4}'.format("Url", PST.p_source, PST.p_date, PST.p_name, "Checked " + str(A_values[0]) + " URL" ))
                 prec_filename = filename
 
             else:

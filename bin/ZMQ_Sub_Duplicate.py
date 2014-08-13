@@ -183,7 +183,7 @@ def main():
                 if dupl != []:
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis(r_serv_merge, "p_duplicate", dupl)
-                    publisher.info('{0};{1};{2};{3};{4}'.format("Duplicate", PST.p_source, PST.p_date, PST.p_name,"Detected " + str(len(dupl)))
+                    publisher.info('{0};{1};{2};{3};{4}'.format("Duplicate", PST.p_source, PST.p_date, PST.p_name,"Detected " + str(len(dupl))))
 
                 y = time.time()
 

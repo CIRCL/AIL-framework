@@ -65,7 +65,7 @@ def main():
                         if MX_values[0] > 10:
                             publisher.warning('{0};{1};{2};{3};{4}'.format("Mails", PST.p_source, PST.p_date, PST.p_name,"Checked "+ str(MX_values[0])+ " e-mails" ))
                         else:
-                            publisher.info('{0};{1};{2};{3};{4}'.format("Mails", PST.p_source, PST.p_date, PST.p_name,"Checked " str(MX_values[0])+ " e-mail(s)" ))
+                            publisher.info('{0};{1};{2};{3};{4}'.format("Mails", PST.p_source, PST.p_date, PST.p_name,"Checked "+ str(MX_values[0])+ " e-mail(s)" ))
                 prec_filename = filename
 
             else:
