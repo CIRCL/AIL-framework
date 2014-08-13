@@ -99,7 +99,7 @@ def main():
 
             message = Sub.get_msg_from_queue(r_serv)
         except dns.exception.Timeout:
-            print "dns.exception.Timeout"
+            print "dns.exception.Timeout", A_values 
             pass
 
 if __name__ == "__main__":
