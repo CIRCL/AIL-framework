@@ -52,8 +52,8 @@ Then these modules need to be install with pip inside the virtual environment:
 ```
 
 You'll need to clone langid:
-[https://github.com/saffsd/langid.py] 
-And install it: 
+[https://github.com/saffsd/langid.py]
+And install it:
 ```
 python setup.py install
 ```
@@ -63,6 +63,7 @@ That's all the packages you can install with pip:
 ```
 pip install redis
 pip install logbook
+pip install pubsublogger
 pip install networkx
 pip install crcmod
 pip install mmh3
@@ -179,7 +180,7 @@ Those two files are there as an example.
 Overview
 --------
 
-Here is a "chained tree" to show how all ZMQ Modules are linked and how the informations 
+Here is a "chained tree" to show how all ZMQ Modules are linked and how the informations
 (mainly the paste) is going through them.
 
 The onion module is interfaced at top down level of this tree (like the ZMQ_Sub_Urls module).

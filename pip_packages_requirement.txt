@@ -3,6 +3,7 @@ redis
 pyzmq
 dnspython
 logbook
+pubsublogger
 
 
 #Graph
