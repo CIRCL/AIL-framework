@@ -1,4 +1,7 @@
-import hashlib, crcmod, mmh3
+import hashlib
+import crcmod
+import mmh3
+
 
 class Hash(object):
     """docstring for Hash"""

@@ -20,12 +20,16 @@ Requirements
 *Need the ZMQ_Feed_Q Module running to be able to work properly.
 
 """
-import redis, zmq, ConfigParser, sys, base64, gzip, os, time
-#import zlib
+import redis
+import ConfigParser
+import base64
+import os
+import time
 from pubsublogger import publisher
 from packages import ZMQ_PubSub
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -34,19 +38,19 @@ def main():
     cfg = ConfigParser.ConfigParser()
     cfg.read(configfile)
 
-    #REDIS
+    # REDIS
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     # ZMQ #
     channel = cfg.get("Feed", "topicfilter")
 
-    #Subscriber
+    # Subscriber
     subscriber_name = "feed"
     subscriber_config_section = "Feed"
-    #Publisher
+    # Publisher
     publisher_name = "pubfed"
     publisher_config_section = "PubSub_Global"
 
@@ -60,13 +64,13 @@ def main():
     while True:
 
         message = Sub.get_msg_from_queue(r_serv)
-        #Recovering the streamed message informations.
-        if message != None:
+        # Recovering the streamed message informations.
+        if message is not None:
             if len(message.split()) == 3:
                 topic, paste, gzip64encoded = message.split()
                 print paste
             else:
-                #TODO Store the name of the empty paste inside a Redis-list.
+                # TODO Store the name of the empty paste inside a Redis-list.
                 print "Empty Paste: not processed"
                 publisher.debug("Empty Paste: {0} not processed".format(paste))
                 continue
@@ -79,17 +83,17 @@ def main():
             print "Empty Queues: Waiting..."
             time.sleep(10)
             continue
-        #Creating the full filepath
+        # Creating the full filepath
         filename = cfg.get("Directories", "pastes") + paste
 
         if not os.path.exists(filename.rsplit("/", 1)[0]):
             os.makedirs(filename.rsplit("/", 1)[0])
         else:
-            #Path already existing
+            # Path already existing
             pass
 
         decoded_gzip = base64.standard_b64decode(gzip64encoded)
-        #paste, zlib.decompress(decoded_gzip, zlib.MAX_WBITS|16)
+        # paste, zlib.decompress(decoded_gzip, zlib.MAX_WBITS|16)
 
         with open(filename, 'wb') as F:
             F.write(decoded_gzip)

@@ -20,10 +20,11 @@ Requirements
 *Need the ZMQ_Feed_Q Module running to be able to work properly.
 
 """
-import redis, ConfigParser
-from pubsublogger import publisher
+import redis
+import ConfigParser
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -32,13 +33,12 @@ def main():
     cfg = ConfigParser.ConfigParser()
     cfg.read(configfile)
 
-    #REDIS
-    r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+    # REDIS
+    r_serv = redis.StrictRedis(host=cfg.get("Redis_Queues", "host"),
+                               port=cfg.getint("Redis_Queues", "port"),
+                               db=cfg.getint("Redis_Queues", "db"))
 
-#### SCRIPTS ####
+    # ### SCRIPTS ####
     r_serv.sadd("SHUTDOWN_FLAGS", "Feed")
     r_serv.sadd("SHUTDOWN_FLAGS", "Categ")
     r_serv.sadd("SHUTDOWN_FLAGS", "Lines")

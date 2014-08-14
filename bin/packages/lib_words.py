@@ -1,23 +1,11 @@
-import redis, gzip
-
-import numpy as np
-import matplotlib.pyplot as plt
-from pylab import *
-
-from textblob import TextBlob
-from nltk.corpus import stopwords
-from nltk.tokenize import RegexpTokenizer
-
-from lib_redis_insert import clean, listdirectory
-from lib_jobs import *
+import os
+import string
 
 from pubsublogger import publisher
 
-import calendar as cal
-from datetime import date, timedelta
+import calendar
+from datetime import date
 from dateutil.rrule import rrule, DAILY
-
-from packages import *
 
 
 def listdirectory(path):
@@ -29,7 +17,7 @@ def listdirectory(path):
     the argument directory.
 
     """
-    fichier=[]
+    fichier = []
     for root, dirs, files in os.walk(path):
 
         for i in files:
@@ -38,13 +26,8 @@ def listdirectory(path):
 
     return fichier
 
-
-
-
 clean = lambda dirty: ''.join(filter(string.printable.__contains__, dirty))
 """It filters out non-printable characters from the string it receives."""
-
-
 
 
 def create_dirfile(r_serv, directory, overwrite):
@@ -62,7 +45,7 @@ def create_dirfile(r_serv, directory, overwrite):
         r_serv.delete("filelist")
 
         for x in listdirectory(directory):
-            r_serv.rpush("filelist",x)
+            r_serv.rpush("filelist", x)
 
         publisher.info("The list was overwritten")
 
@@ -70,17 +53,15 @@ def create_dirfile(r_serv, directory, overwrite):
         if r_serv.llen("filelist") == 0:
 
             for x in listdirectory(directory):
-                r_serv.rpush("filelist",x)
+                r_serv.rpush("filelist", x)
 
             publisher.info("New list created")
         else:
 
             for x in listdirectory(directory):
-                r_serv.rpush("filelist",x)
+                r_serv.rpush("filelist", x)
 
             publisher.info("The list was updated with new elements")
-
-
 
 
 def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month):
@@ -100,23 +81,29 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
 
     """
     a = date(year, month, 01)
-    b = date(year, month, cal.monthrange(year,month)[1])
+    b = date(year, month, calendar.monthrange(year, month)[1])
     days = {}
     words = []
 
     with open(feederfilename, 'rb') as F:
-        for word in F: # words of the files
-            words.append(word[:-1]) # list of words (sorted as in the file)
+        # words of the files
+        for word in F:
+            # list of words (sorted as in the file)
+            words.append(word[:-1])
 
-        for dt in rrule(DAILY, dtstart = a, until = b): # for each days
+        # for each days
+        for dt in rrule(DAILY, dtstart=a, until=b):
 
             mot = []
             mot1 = []
             mot2 = []
 
             days[dt.strftime("%Y%m%d")] = ''
-            for word in sorted(words): # from the 1srt day to the last of the list
-                if r_serv.hexists(word, dt.strftime("%Y%m%d")): # if the word have a value for the day
+            # from the 1srt day to the last of the list
+            for word in sorted(words):
+
+                # if the word have a value for the day
+                if r_serv.hexists(word, dt.strftime("%Y%m%d")):
                     mot1.append(str(word))
                     mot2.append(r_serv.hget(word, dt.strftime("%Y%m%d")))
 
@@ -144,9 +131,9 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
 
     with open(csvfilename+".csv", 'rb') as F:
         h = F.read()
-        h = h.replace("[","")
-        h = h.replace("]","")
-        h = h.replace('\'',"")
+        h = h.replace("[", "")
+        h = h.replace("]", "")
+        h = h.replace('\'', "")
 
     with open(csvfilename+".csv", 'wb') as F:
         F.write(h)

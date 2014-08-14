@@ -1,18 +1,9 @@
-import gzip, string, sys, os, redis, re
+import re
 import dns.resolver
 
 from pubsublogger import publisher
 
-from lib_jobs import *
-from operator import itemgetter
-
-import numpy as np
-import matplotlib.pyplot as plt
-from pylab import *
-
-import calendar as cal
-from datetime import date, timedelta
-from dateutil.rrule import rrule, DAILY
+from datetime import timedelta
 
 
 def is_luhn_valid(card_number):
@@ -23,9 +14,7 @@ def is_luhn_valid(card_number):
 
     """
     r = [int(ch) for ch in str(card_number)][::-1]
-    return (sum(r[0::2]) + sum(sum(divmod(d*2,10)) for d in r[1::2])) % 10 == 0
-
-
+    return (sum(r[0::2]) + sum(sum(divmod(d*2, 10)) for d in r[1::2])) % 10 == 0
 
 
 def checking_MX_record(r_serv, adress_set):
@@ -49,16 +38,16 @@ def checking_MX_record(r_serv, adress_set):
 
             for MXdomain in set(MXdomains):
                 try:
-                    #Already in Redis living.
+                    # Already in Redis living.
                     if r_serv.exists(MXdomain[1:]):
                         score += 1
                         WalidMX.add(MXdomain[1:])
                     # Not already in Redis
                     else:
                         # If I'm Walid MX domain
-                        if dns.resolver.query(MXdomain[1:], rdtype = dns.rdatatype.MX):
+                        if dns.resolver.query(MXdomain[1:], rdtype=dns.rdatatype.MX):
                             # Gonna be added in redis.
-                            r_serv.setex(MXdomain[1:],timedelta(days=1),1)
+                            r_serv.setex(MXdomain[1:], timedelta(days=1), 1)
                             score += 1
                             WalidMX.add(MXdomain[1:])
                         else:
@@ -86,8 +75,6 @@ def checking_MX_record(r_serv, adress_set):
     return (num, WalidMX)
 
 
-
-
 def checking_A_record(r_serv, domains_set):
     score = 0
     num = len(domains_set)
@@ -95,16 +82,16 @@ def checking_A_record(r_serv, domains_set):
 
     for Adomain in domains_set:
         try:
-            #Already in Redis living.
+            # Already in Redis living.
             if r_serv.exists(Adomain):
                 score += 1
                 WalidA.add(Adomain)
             # Not already in Redis
             else:
                 # If I'm Walid domain
-                if dns.resolver.query(Adomain, rdtype = dns.rdatatype.A):
+                if dns.resolver.query(Adomain, rdtype=dns.rdatatype.A):
                     # Gonna be added in redis.
-                    r_serv.setex(Adomain,timedelta(days=1),1)
+                    r_serv.setex(Adomain, timedelta(days=1), 1)
                     score += 1
                     WalidA.add(Adomain)
                 else:

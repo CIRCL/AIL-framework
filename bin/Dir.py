@@ -3,8 +3,8 @@
 
 import argparse
 import redis
-from bin.pubsublogger import publisher
-from bin.packages.lib_words import create_dirfile
+from pubsublogger import publisher
+from packages.lib_words import create_dirfile
 import ConfigParser
 
 

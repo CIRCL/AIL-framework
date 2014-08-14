@@ -4,7 +4,8 @@
 The ZMQ_PubSub_Categ Module
 ============================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q Module.
+This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q
+Module.
 
 Each words files created under /files/ are representing categories.
 This modules take these files and compare them to
@@ -21,7 +22,8 @@ this word will be pushed to this specific channel.
 ..note:: The channel will have the name of the file created.
 
 Implementing modules can start here, create your own category file,
-and then create your own module to treat the specific paste matching this category.
+and then create your own module to treat the specific paste matching this
+category.
 
 ..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
 the same Subscriber name in both of them.
@@ -34,12 +36,16 @@ Requirements
 *Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
-import redis, argparse, zmq, ConfigParser, time
-from packages import Paste as P
+import redis
+import argparse
+import ConfigParser
+import time
 from packages import ZMQ_PubSub
 from pubsublogger import publisher
+from packages import Paste
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -50,23 +56,21 @@ def main():
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
-    description = '''This script is a part of the Analysis Information
-    Leak framework.''',
-    epilog = '''''')
+        description='''This script is a part of the Analysis Information Leak framework.''',
+        epilog='''''')
 
-    parser.add_argument('-l',
-    type = str,
-    default = "../files/list_categ_files",
-    help = 'Path to the list_categ_files (../files/list_categ_files)',
-    action = 'store')
+    parser.add_argument(
+        '-l', type=str, default="../files/list_categ_files",
+        help='Path to the list_categ_files (../files/list_categ_files)',
+        action='store')
 
     args = parser.parse_args()
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     # LOGGING #
     publisher.channel = "Script"
@@ -79,17 +83,20 @@ def main():
     publisher_name = "pubcateg"
     publisher_config_section = "PubSub_Categ"
 
-    Sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-    Pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
+    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel,
+                            subscriber_name)
+    pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section,
+                            publisher_name)
 
     # FUNCTIONS #
-    publisher.info("Script Categ subscribed to channel {0}".format(cfg.get("PubSub_Words", "channel_0")))
+    publisher.info("Script Categ subscribed to channel {0}".format(
+        cfg.get("PubSub_Words", "channel_0")))
 
     with open(args.l, 'rb') as L:
         tmp_dict = {}
 
         for num, fname in enumerate(L):
-            #keywords temp list
+            # keywords temp list
             tmp_list = []
 
             with open(fname[:-1], 'rb') as LS:
@@ -99,16 +106,15 @@ def main():
 
                 tmp_dict[fname.split('/')[-1][:-1]] = tmp_list
 
-    paste_words = []
-    message = Sub.get_msg_from_queue(r_serv)
+    message = sub.get_msg_from_queue(r_serv)
     prec_filename = None
 
     while True:
-        if message != None:
+        if message is not None:
             channel, filename, word, score = message.split()
 
-            if prec_filename == None or filename != prec_filename:
-                PST = P.Paste(filename)
+            if prec_filename is None or filename != prec_filename:
+                PST = Paste.Paste(filename)
 
             prec_filename = filename
 
@@ -117,10 +123,12 @@ def main():
                 if word.lower() in list:
                     channel = categ
                     msg = channel+" "+PST.p_path+" "+word+" "+score
-                    Pub.send_message(msg)
-                    #dico_categ.add(categ)
+                    pub.send_message(msg)
+                    # dico_categ.add(categ)
 
-                    publisher.info('{0};{1};{2};{3};{4}'.format("Categ", PST.p_source, PST.p_date, PST.p_name,"Detected "+score+" "+"\""+word+"\""))
+                    publisher.info(
+                        'Categ;{};{};{};Detected {} "{}"'.format(
+                            PST.p_source, PST.p_date, PST.p_name, score, word))
 
         else:
             if r_serv.sismember("SHUTDOWN_FLAGS", "Categ"):
@@ -131,7 +139,7 @@ def main():
             publisher.debug("Script Categ is Idling 10s")
             time.sleep(10)
 
-        message = Sub.get_msg_from_queue(r_serv)
+        message = sub.get_msg_from_queue(r_serv)
 
 
 if __name__ == "__main__":

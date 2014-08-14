@@ -30,5 +30,3 @@ class Date(object):
 
     def _set_day(self, day):
         self.day = day
-
-

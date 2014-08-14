@@ -5,8 +5,9 @@ The ``ZMQ PubSub`` Modules
 
 """
 
-import zmq, ConfigParser, redis, pprint, os, sys
-#from pubsublogger import publisher
+import zmq
+import ConfigParser
+
 
 class PubSub(object):
     """
@@ -29,14 +30,14 @@ class PubSub(object):
     def __init__(self, file_conf, log_channel, ps_name):
         self._ps_name = ps_name
         self._config_parser = ConfigParser.ConfigParser()
-        self._config_file = file_conf # "./packages/config.cfg"
+        self._config_file = file_conf  # "./packages/config.cfg"
 
         self._config_parser.read(self._config_file)
 
         self._context_zmq = zmq.Context()
 
-        #self._logging_publisher_channel = log_channel # "Default"
-        #publisher.channel(self._logging_publisher_channel)
+        # self._logging_publisher_channel = log_channel # "Default"
+        # publisher.channel(self._logging_publisher_channel)
 
 
 class ZMQPub(PubSub):
@@ -146,7 +147,7 @@ class ZMQSub(PubSub):
         ..note:: This function also create a set named "queue" for monitoring needs
 
         """
-        r_serv.sadd("queues",self._channel+self._ps_name)
+        r_serv.sadd("queues", self._channel+self._ps_name)
         r_serv.lpush(self._channel+self._ps_name, self._subsocket.recv())
 
     def get_msg_from_queue(self, r_serv):
