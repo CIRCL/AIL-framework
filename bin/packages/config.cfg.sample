@@ -61,6 +61,8 @@ adress = tcp://127.0.0.1:5003
 [PubSub_Url]
 adress = tcp://127.0.0.1:5004
 channel = urls
+# country code logged as critical
+cc_critical = DE
 
 # Indexer configuration
 [Indexer]
