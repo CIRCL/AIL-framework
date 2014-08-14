@@ -28,3 +28,7 @@ texttable
 
 #Indexer requirements
 whoosh
+
+#ASN lookup requirements
+http://adns-python.googlecode.com/files/adns-python-1.2.1.tar.gz
+https://github.com/trolldbois/python-cymru-services/archive/master.zip
