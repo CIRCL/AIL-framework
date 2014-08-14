@@ -7,6 +7,12 @@ from packages import lib_refine
 from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
+# Country and ASN lookup
+from cymru.ip2asn.dns import DNSClient as ip2asn
+import socket
+import pycountry
+import ipaddress
+
 configfile = './packages/config.cfg'
 
 def main():
@@ -46,10 +52,11 @@ def main():
     publisher_name = "adress"
     pubchannel = cfg.get("PubSub_Url", "channel")
 
+    #Country to log as critical
+    cc_critical = cfg.get("PubSub_Url", "cc_critical")
+
     Sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, "web_categ", subscriber_name)
     Pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
-
-    #Sub = ZMQ_PubSub.ZMQSub(configfile, "PubSub_Categ", "web_categ", "urls")
 
     # FUNCTIONS #
     publisher.info("Script URL subscribed to channel web_categ")
@@ -67,7 +74,7 @@ def main():
                 if prec_filename == None or filename != prec_filename:
                     domains_list = []
                     PST = P.Paste(filename)
-
+                    client = ip2asn()
                     for x in PST.get_regex(url_regex):
                         scheme, credential, subdomain, domain, host, tld, port, resource_path, query_string, f1, f2, f3, f4 = x
                         domains_list.append(domain)
@@ -78,6 +85,30 @@ def main():
                         if f1 == "onion":
                             print domain
 
+                        hostl = unicode(subdomain+domain)
+                        try:
+                            socket.setdefaulttimeout(2)
+                            ip = socket.gethostbyname(unicode(hostl))
+                        except:
+                            # If the resolver is not giving any IPv4 address,
+                            # ASN/CC lookup is skip.
+                            continue
+
+                        try:
+                            l = client.lookup(socket.inet_aton(ip),qType='IP')
+                        except ipaddress.AddressValueError:
+                            continue
+                        cc = getattr(l,'cc')
+                        asn = getattr(l,'asn')
+
+                        # EU is not an official ISO 3166 code (but used by RIPE
+                        # IP allocation)
+                        if cc is not None and cc != "EU":
+                            print hostl,asn,cc,pycountry.countries.get(alpha2=cc).name
+                            if cc == cc_critical:
+                                publisher.warning('{0};{1};{2};{3};{4}'.format("Url", PST.p_source, PST.p_date, PST.p_name, "Detected " + str(A_values[0]) + " " + hostl + " " + cc))
+                        else:
+                            print hostl,asn,cc
                     A_values = lib_refine.checking_A_record(r_serv2, domains_list)
 
                     if A_values[0] >= 1:
