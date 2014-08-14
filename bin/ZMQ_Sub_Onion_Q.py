@@ -17,11 +17,13 @@ Requirements
 *Should register to the Publisher "ZMQ_PubSub_Categ"
 
 """
-import redis, zmq, ConfigParser
+import redis
+import ConfigParser
 from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -32,21 +34,21 @@ def main():
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     # LOGGING #
     publisher.channel = "Queuing"
 
     # ZMQ #
-    Sub = ZMQ_PubSub.ZMQSub(configfile,"PubSub_Categ", "onion_categ", "tor")
+    sub = ZMQ_PubSub.ZMQSub(configfile, "PubSub_Categ", "onion_categ", "tor")
 
     # FUNCTIONS #
     publisher.info("""Suscribed to channel {0}""".format("onion_categ"))
 
     while True:
-        Sub.get_and_lpush(r_serv)
+        sub.get_and_lpush(r_serv)
 
         if r_serv.sismember("SHUTDOWN_FLAGS", "Onion_Q"):
             r_serv.srem("SHUTDOWN_FLAGS", "Onion_Q")

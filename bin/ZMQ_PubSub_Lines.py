@@ -26,12 +26,16 @@ Requirements
 *Need the ZMQ_PubSub_Line_Q Module running to be able to work properly.
 
 """
-import redis, argparse, zmq, ConfigParser, time
-from packages import Paste as P
+import redis
+import argparse
+import ConfigParser
+import time
+from packages import Paste
 from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -42,62 +46,58 @@ def main():
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
-    description = '''This script is a part of the Analysis Information
-    Leak framework.''',
-    epilog = '''''')
+        description='''This script is a part of the Analysis Information Leak framework.''',
+        epilog='''''')
 
-    parser.add_argument('-max',
-    type = int,
-    default = 500,
-    help = 'The limit between "short lines" and "long lines" (500)',
-    action = 'store')
+    parser.add_argument('-max', type=int, default=500,
+                        help='The limit between "short lines" and "long lines" (500)',
+                        action='store')
 
     args = parser.parse_args()
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Data_Merging", "host"),
-        port = cfg.getint("Redis_Data_Merging", "port"),
-        db = cfg.getint("Redis_Data_Merging", "db"))
+        host=cfg.get("Redis_Data_Merging", "host"),
+        port=cfg.getint("Redis_Data_Merging", "port"),
+        db=cfg.getint("Redis_Data_Merging", "db"))
 
     r_serv1 = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
-
-    p_serv = r_serv.pipeline(False)
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     # LOGGING #
     publisher.channel = "Script"
 
     # ZMQ #
-    #Subscriber
+    # Subscriber
     channel = cfg.get("PubSub_Global", "channel")
     subscriber_name = "line"
     subscriber_config_section = "PubSub_Global"
 
-    #Publisher
+    # Publisher
     publisher_config_section = "PubSub_Longlines"
     publisher_name = "publine"
 
-    Sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
+    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
 
-    Pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
+    pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
 
     channel_0 = cfg.get("PubSub_Longlines", "channel_0")
     channel_1 = cfg.get("PubSub_Longlines", "channel_1")
 
     # FUNCTIONS #
-    publisher.info("""Lines script Subscribed to channel {0} and Start to publish
-    on channel {1}, {2}""".format(cfg.get("PubSub_Global", "channel"),
-    cfg.get("PubSub_Longlines", "channel_0"),
-    cfg.get("PubSub_Longlines", "channel_1")))
+    tmp_string = "Lines script Subscribed to channel {} and Start to publish on channel {}, {}"
+    publisher.info(tmp_string.format(
+        cfg.get("PubSub_Global", "channel"),
+        cfg.get("PubSub_Longlines", "channel_0"),
+        cfg.get("PubSub_Longlines", "channel_1")))
 
     while True:
         try:
-            message = Sub.get_msg_from_queue(r_serv1)
-            if message != None:
-                PST = P.Paste(message.split(" ",-1)[-1])
+            message = sub.get_msg_from_queue(r_serv1)
+            if message is not None:
+                PST = Paste.Paste(message.split(" ", -1)[-1])
             else:
                 if r_serv1.sismember("SHUTDOWN_FLAGS", "Lines"):
                     r_serv1.srem("SHUTDOWN_FLAGS", "Lines")
@@ -113,13 +113,13 @@ def main():
             PST.save_attribute_redis(r_serv, "p_nb_lines", lines_infos[0])
             PST.save_attribute_redis(r_serv, "p_max_length_line", lines_infos[1])
 
-            r_serv.sadd("Pastes_Objects",PST.p_path)
+            r_serv.sadd("Pastes_Objects", PST.p_path)
             if lines_infos[1] >= args.max:
                 msg = channel_0+" "+PST.p_path
             else:
                 msg = channel_1+" "+PST.p_path
 
-            Pub.send_message(msg)
+            pub.send_message(msg)
         except IOError:
             print "CRC Checksum Error on : ", PST.p_path
             pass

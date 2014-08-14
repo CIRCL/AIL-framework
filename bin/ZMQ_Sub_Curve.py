@@ -21,13 +21,16 @@ Requirements
 *Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
-import redis, argparse, zmq, ConfigParser, time
+import redis
+import ConfigParser
+import time
 from packages import Paste as P
 from packages import ZMQ_PubSub
 from pubsublogger import publisher
 from packages import lib_words
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -36,30 +39,16 @@ def main():
     cfg = ConfigParser.ConfigParser()
     cfg.read(configfile)
 
-    # SCRIPT PARSER #
-    parser = argparse.ArgumentParser(
-    description = '''This script is a part of the Analysis Information
-    Leak framework.''',
-    epilog = '''''')
-
-    parser.add_argument('-l',
-    type = str,
-    default = "../files/list_categ_files",
-    help = 'Path to the list_categ_files (../files/list_categ_files)',
-    action = 'store')
-
-    args = parser.parse_args()
-
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     r_serv1 = redis.StrictRedis(
-        host = cfg.get("Redis_Level_DB", "host"),
-        port = cfg.get("Redis_Level_DB", "port"),
-        db = 0)
+        host=cfg.get("Redis_Level_DB", "host"),
+        port=cfg.get("Redis_Level_DB", "port"),
+        db=0)
 
     # LOGGING #
     publisher.channel = "Script"
@@ -69,7 +58,7 @@ def main():
     subscriber_name = "curve"
     subscriber_config_section = "PubSub_Words"
 
-    Sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
+    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
 
     # FUNCTIONS #
     publisher.info("Script Curve subscribed to channel {0}".format(cfg.get("PubSub_Words", "channel_0")))
@@ -78,24 +67,23 @@ def main():
     csv_path = cfg.get("Directories", "wordtrending_csv")
     wordfile_path = cfg.get("Directories", "wordsfile")
 
-    paste_words = []
-    message = Sub.get_msg_from_queue(r_serv)
+    message = sub.get_msg_from_queue(r_serv)
     prec_filename = None
     while True:
-        if message != None:
+        if message is not None:
             channel, filename, word, score = message.split()
-            if prec_filename == None or filename != prec_filename:
+            if prec_filename is None or filename != prec_filename:
                 PST = P.Paste(filename)
                 lib_words.create_curve_with_word_file(r_serv1, csv_path, wordfile_path, int(PST.p_date.year), int(PST.p_date.month))
 
             prec_filename = filename
             prev_score = r_serv1.hget(word.lower(), PST.p_date)
             print prev_score
-            if prev_score != None:
+            if prev_score is not None:
                 r_serv1.hset(word.lower(), PST.p_date, int(prev_score) + int(score))
             else:
                 r_serv1.hset(word.lower(), PST.p_date, score)
-             #r_serv.expire(word,86400) #1day
+             # r_serv.expire(word,86400) #1day
 
         else:
             if r_serv.sismember("SHUTDOWN_FLAGS", "Curve"):
@@ -107,7 +95,7 @@ def main():
             print "sleepin"
             time.sleep(1)
 
-        message = Sub.get_msg_from_queue(r_serv)
+        message = sub.get_msg_from_queue(r_serv)
 
 
 if __name__ == "__main__":

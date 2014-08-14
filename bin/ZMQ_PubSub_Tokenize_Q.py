@@ -17,11 +17,13 @@ Requirements
 *Should register to the Publisher "ZMQ_PubSub_Line" channel 1
 
 """
-import redis, zmq, ConfigParser
+import redis
+import ConfigParser
 from pubsublogger import publisher
 from packages import ZMQ_PubSub
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -32,9 +34,9 @@ def main():
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     # LOGGING #
     publisher.channel = "Queuing"
@@ -44,13 +46,13 @@ def main():
     subscriber_name = "tokenize"
     subscriber_config_section = "PubSub_Longlines"
 
-    Sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
+    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
 
     # FUNCTIONS #
     publisher.info("""Suscribed to channel {0}""".format(channel))
 
     while True:
-        Sub.get_and_lpush(r_serv)
+        sub.get_and_lpush(r_serv)
 
         if r_serv.sismember("SHUTDOWN_FLAGS", "Tokenize_Q"):
             r_serv.srem("SHUTDOWN_FLAGS", "Tokenize_Q")

@@ -21,12 +21,15 @@ Requirements
 *Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
-import redis, zmq, ConfigParser, time
-from packages import Paste as P
+import redis
+import ConfigParser
+import time
+from packages import Paste
 from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -37,9 +40,9 @@ def main():
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     # LOGGING #
     publisher.channel = "Script"
@@ -49,12 +52,12 @@ def main():
     subscriber_name = "tokenize"
     subscriber_config_section = "PubSub_Longlines"
 
-    #Publisher
+    # Publisher
     publisher_config_section = "PubSub_Words"
     publisher_name = "pubtokenize"
 
-    Sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-    Pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
+    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
+    pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
 
     channel_0 = cfg.get("PubSub_Words", "channel_0")
 
@@ -62,10 +65,10 @@ def main():
     publisher.info("Tokeniser subscribed to channel {0}".format(cfg.get("PubSub_Longlines", "channel_1")))
 
     while True:
-        message = Sub.get_msg_from_queue(r_serv)
+        message = sub.get_msg_from_queue(r_serv)
         print message
-        if message != None:
-            PST = P.Paste(message.split(" ",-1)[-1])
+        if message is not None:
+            PST = Paste.Paste(message.split(" ", -1)[-1])
         else:
             if r_serv.sismember("SHUTDOWN_FLAGS", "Tokenize"):
                 r_serv.srem("SHUTDOWN_FLAGS", "Tokenize")
@@ -80,7 +83,7 @@ def main():
         for word, score in PST._get_top_words().items():
             if len(word) >= 4:
                 msg = channel_0+' '+PST.p_path+' '+str(word)+' '+str(score)
-                Pub.send_message(msg)
+                pub.send_message(msg)
                 print msg
             else:
                 pass

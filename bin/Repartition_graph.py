@@ -1,14 +1,13 @@
 #!/usr/bin/python2.7
 # -*-coding:UTF-8 -*
 
-import redis, argparse, zmq, ConfigParser, time, os
+import redis
+import argparse
+import ConfigParser
 from pubsublogger import publisher
-from packages import ZMQ_PubSub
-import texttable
 
-import numpy as np
 import matplotlib.pyplot as plt
-from pylab import *
+
 
 def main():
     """Main Function"""
@@ -19,24 +18,20 @@ def main():
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
-    description = '''This script is a part of the Analysis Information
-    Leak framework.''',
-    epilog = '''''')
+        description='''This script is a part of the Analysis Information Leak framework.''',
+        epilog='''''')
 
-    parser.add_argument('-f',
-    type = str,
-    metavar = "filename",
-    default = "figure",
-    help = 'The absolute path name of the "figure.png"',
-    action = 'store')
+    parser.add_argument('-f', type=str, metavar="filename", default="figure",
+                        help='The absolute path name of the "figure.png"',
+                        action='store')
 
     args = parser.parse_args()
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Level_DB_Hashs", "host"),
-        port = cfg.getint("Redis_Level_DB_Hashs", "port"),
-        db = cfg.getint("Redis_Level_DB_Hashs", "db"))
+        host=cfg.get("Redis_Level_DB_Hashs", "host"),
+        port=cfg.getint("Redis_Level_DB_Hashs", "port"),
+        db=cfg.getint("Redis_Level_DB_Hashs", "db"))
 
     # LOGGING #
     publisher.channel = "Graph"
@@ -68,12 +63,11 @@ def main():
         pastie_list.append(pastie)
         pastebin_list.append(pastebin)
 
-    codepad_list.sort(reverse = True)
-    pastie_list.sort(reverse = True)
-    pastebin_list.sort(reverse = True)
+    codepad_list.sort(reverse=True)
+    pastie_list.sort(reverse=True)
+    pastebin_list.sort(reverse=True)
 
-    total_list.sort(reverse = True)
-
+    total_list.sort(reverse=True)
 
     plt.plot(codepad_list, 'b', label='Codepad.org')
     plt.plot(pastebin_list, 'g', label='Pastebin.org')
@@ -89,9 +83,9 @@ def main():
     plt.tight_layout()
 
     plt.savefig(args.f+".png", dpi=None, facecolor='w', edgecolor='b',
-        orientation='portrait', papertype=None, format="png",
-        transparent=False, bbox_inches=None, pad_inches=0.1,
-        frameon=True)
+                orientation='portrait', papertype=None, format="png",
+                transparent=False, bbox_inches=None, pad_inches=0.1,
+                frameon=True)
 
 if __name__ == "__main__":
     main()

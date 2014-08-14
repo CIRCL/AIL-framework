@@ -21,12 +21,16 @@ Requirements
 *Need the ZMQ_Sub_Onion_Q Module running to be able to work properly.
 
 """
-import redis, zmq, ConfigParser, json, pprint, time
-from packages import Paste as P
+import redis
+import ConfigParser
+import pprint
+import time
+from packages import Paste
 from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
 configfile = './packages/config.cfg'
+
 
 def main():
     """Main Function"""
@@ -37,20 +41,14 @@ def main():
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host = cfg.get("Redis_Queues", "host"),
-        port = cfg.getint("Redis_Queues", "port"),
-        db = cfg.getint("Redis_Queues", "db"))
+        host=cfg.get("Redis_Queues", "host"),
+        port=cfg.getint("Redis_Queues", "port"),
+        db=cfg.getint("Redis_Queues", "db"))
 
     r_serv1 = redis.StrictRedis(
-        host = cfg.get("Redis_Data_Merging", "host"),
-        port = cfg.getint("Redis_Data_Merging", "port"),
-        db = cfg.getint("Redis_Data_Merging", "db"))
-
-    r_serv2 = redis.StrictRedis(
-        host = cfg.get("Redis_Cache", "host"),
-        port = cfg.getint("Redis_Cache", "port"),
-        db = cfg.getint("Redis_Cache", "db"))
-
+        host=cfg.get("Redis_Data_Merging", "host"),
+        port=cfg.getint("Redis_Data_Merging", "port"),
+        db=cfg.getint("Redis_Data_Merging", "db"))
 
     # LOGGING #
     publisher.channel = "Script"
@@ -61,40 +59,40 @@ def main():
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
 
-
-    #Getting the first message from redis.
+    # Getting the first message from redis.
     message = Sub.get_msg_from_queue(r_serv)
     prec_filename = None
 
-    #Thanks to Faup project for this regex
+    # Thanks to Faup project for this regex
     # https://github.com/stricaud/faup
     url_regex = "([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|onion|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
 
     while True:
-        if message != None:
-            channel, filename, word, score  = message.split()
+        if message is not None:
+            channel, filename, word, score = message.split()
 
             # "For each new paste"
-            if prec_filename == None or filename != prec_filename:
+            if prec_filename is None or filename != prec_filename:
                 domains_list = []
-                PST = P.Paste(filename)
+                PST = Paste.Paste(filename)
 
                 for x in PST.get_regex(url_regex):
-                    #Extracting url with regex
+                    # Extracting url with regex
                     credential, subdomain, domain, host, tld, port, resource_path, query_string, f1, f2, f3, f4 = x
 
                     if f1 == "onion":
                         domains_list.append(domain)
 
-                #Saving the list of extracted onion domains.
+                # Saving the list of extracted onion domains.
                 PST.__setattr__(channel, domains_list)
                 PST.save_attribute_redis(r_serv1, channel, domains_list)
                 pprint.pprint(domains_list)
                 print PST.p_path
+                to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date, PST.p_name)
                 if len(domains_list) > 0:
-                    publisher.warning('{0};{1};{2};{3};{4}'.format("Onion", PST.p_source, PST.p_date, PST.p_name,"Detected " + str(len(domains_list))+" .onion(s)" ))
+                    publisher.warning('{}Detected {} .onion(s)'.format(to_print, len(domains_list)))
                 else:
-                    publisher.info('{0};{1};{2};{3};{4}'.format("Onion", PST.p_source, PST.p_date, PST.p_name, "Onion related" ))
+                    publisher.info('{}Onion related'.format(to_print))
 
             prec_filename = filename
 

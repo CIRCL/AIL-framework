@@ -12,13 +12,13 @@
 
 import ConfigParser
 import argparse
-import sys
 import gzip
+
 
 def readdoc(path=None):
     if path is None:
         return False
-    f = gzip.open (path, 'r')
+    f = gzip.open(path, 'r')
     return f.read()
 
 configfile = '../packages/config.cfg'
@@ -40,8 +40,8 @@ argParser.add_argument('-s', action='append', help='search similar documents')
 args = argParser.parse_args()
 
 from whoosh import index
-from whoosh.fields import *
-import whoosh
+from whoosh.fields import Schema, TEXT, ID
+
 schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
 ix = index.open_dir(indexpath)
