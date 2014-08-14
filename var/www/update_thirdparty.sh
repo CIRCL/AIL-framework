@@ -22,6 +22,8 @@ wget https://collabdev.googlecode.com/svn-history/r5/trunk/static/js/jquery.time
 #Here to fix an error about an hard dependency in a obscur script of bootstrap..
 wget http://code.jquery.com/jquery-1.4.2.js -O ./static/js/jquery-1.4.2.js
 
+wget http://www.goat1000.com/jquery.tagcanvas.js?2.5 -O ./static/js/jquery.tagcanvas.js
+
 rm -rf ./static/js/plugins
 mv temp/${filename}/js/* ./static/js/
 
