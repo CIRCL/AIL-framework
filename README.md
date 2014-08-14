@@ -43,6 +43,8 @@ sudo apt-get install screen
 sudo apt-get install libssl-dev
 sudo apt-get install libfreetype6-dev
 sudo apt-get install python-numpy
+sudo apt-get install libadns1
+sudo apt-get install libadns1-dev
 ```
 
 Then these modules need to be install with pip inside the virtual environment:
@@ -79,6 +81,9 @@ pip install nltk
 pip install whoosh
 pip install matplotlib ----- (sudo ln -s freetype2/ft2build.h in /usr/include/)
 pip install pybloomfiltermmap ----- (you may need to sudo apt-get install libssl-dev)
+pip install ipaddress
+pip install http://adns-python.googlecode.com/files/adns-python-1.2.1.tar.gz
+pip install https://github.com/trolldbois/python-cymru-services/archive/master.zip
 ```
 
 Installing Redis & Level DB
