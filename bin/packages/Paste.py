@@ -117,6 +117,7 @@ class Paste(object):
         if self.p_nb_lines is None or self.p_max_length_line is None:
             max_length_line = 0
             f = self.get_p_content_as_file()
+            line_id = 0
             for line_id, line in enumerate(f):
                 length = len(line)
                 if length >= max_length_line:
