@@ -1,0 +1,6 @@
+*.swp
+
+# Install Dirs
+AILENV
+redis-leveldb
+redis

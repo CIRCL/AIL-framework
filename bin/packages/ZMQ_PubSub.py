@@ -6,7 +6,6 @@ The ``ZMQ PubSub`` Modules
 """
 
 import zmq
-import ConfigParser
 
 
 class PubSub(object):
@@ -14,7 +13,7 @@ class PubSub(object):
     The PubSub class is a ``Virtual Class`` which regroup the shared attribute
     of a Publisher ZeroMQ and a Subcriber ZeroMQ
 
-    :param file_conf: -- (str) The filepath of the configuration file used (.cfg)
+    :param config: -- (ConfigParser) Handle on the parsed config file
     :param log_channel: -- (str) The channel used as a log channel
     :param ps_name: -- (str) The "ID" of the Publisher/Subcriber
 
@@ -27,17 +26,12 @@ class PubSub(object):
     ..todo:: Create Implementing a log channel as an attribute of this virtual class.
 
     """
-    def __init__(self, file_conf, log_channel, ps_name):
+    def __init__(self, config, log_channel, ps_name):
         self._ps_name = ps_name
-        self._config_parser = ConfigParser.ConfigParser()
-        self._config_file = file_conf  # "./packages/config.cfg"
 
-        self._config_parser.read(self._config_file)
+        self._config_parser = config
 
         self._context_zmq = zmq.Context()
-
-        # self._logging_publisher_channel = log_channel # "Default"
-        # publisher.channel(self._logging_publisher_channel)
 
 
 class ZMQPub(PubSub):
@@ -63,14 +57,14 @@ class ZMQPub(PubSub):
     instantiated correctly.
 
     """
-    def __init__(self, file_conf, pub_config_section, ps_name):
-        super(ZMQPub, self).__init__(file_conf, "Default", ps_name)
+    def __init__(self, config, pub_config_section, ps_name):
+        super(ZMQPub, self).__init__(config, "Default", ps_name)
 
         self._pub_config_section = pub_config_section
         self._pubsocket = self._context_zmq.socket(zmq.PUB)
         self._pub_adress = self._config_parser.get(self._pub_config_section, "adress")
 
-        self._pubsocket.bind(self._config_parser.get(self._pub_config_section, "adress"))
+        self._pubsocket.bind(self._pub_adress)
 
     def send_message(self, message):
         """Send a message throught the publisher socket"""
@@ -120,14 +114,14 @@ class ZMQSub(PubSub):
     ..note:: If you don't want any redis buffering simply use the "get_message" method
 
     """
-    def __init__(self, file_conf, sub_config_section, channel, ps_name):
-        super(ZMQSub, self).__init__(file_conf, "Default", ps_name)
+    def __init__(self, config, sub_config_section, channel, ps_name):
+        super(ZMQSub, self).__init__(config, "Default", ps_name)
 
         self._sub_config_section = sub_config_section
         self._subsocket = self._context_zmq.socket(zmq.SUB)
         self._sub_adress = self._config_parser.get(self._sub_config_section, "adress")
 
-        self._subsocket.connect(self._config_parser.get(self._sub_config_section, "adress"))
+        self._subsocket.connect(self._sub_adress)
 
         self._channel = channel
         self._subsocket.setsockopt(zmq.SUBSCRIBE, self._channel)

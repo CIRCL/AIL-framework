@@ -17,48 +17,18 @@ Requirements
 *Should register to the Publisher "ZMQ_PubSub_Line" channel 1
 
 """
-import redis
-import ConfigParser
+
 from pubsublogger import publisher
-from packages import ZMQ_PubSub
 
-configfile = './packages/config.cfg'
+import Helper
 
-
-def main():
-    """Main Function"""
-
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
-
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    # LOGGING #
-    publisher.channel = "Queuing"
-
-    # ZMQ #
-    channel = cfg.get("PubSub_Longlines", "channel_1")
-    subscriber_name = "tokenize"
-    subscriber_config_section = "PubSub_Longlines"
-
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-
-    # FUNCTIONS #
-    publisher.info("""Suscribed to channel {0}""".format(channel))
-
-    while True:
-        sub.get_and_lpush(r_serv)
-
-        if r_serv.sismember("SHUTDOWN_FLAGS", "Tokenize_Q"):
-            r_serv.srem("SHUTDOWN_FLAGS", "Tokenize_Q")
-            print "Shutdown Flag Up: Terminating"
-            publisher.warning("Shutdown Flag Up: Terminating.")
-            break
 
 if __name__ == "__main__":
-    main()
+    publisher.channel = "Queuing"
+
+    config_section = 'PubSub_Longlines'
+    config_channel = 'channel_1'
+    subscriber_name = 'tokenize'
+
+    h = Helper.Queues()
+    h.queue_subscribe(publisher, config_section, config_channel, subscriber_name)
