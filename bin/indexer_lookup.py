@@ -21,7 +21,7 @@ def readdoc(path=None):
     f = gzip.open(path, 'r')
     return f.read()
 
-configfile = '../packages/config.cfg'
+configfile = './packages/config.cfg'
 cfg = ConfigParser.ConfigParser()
 cfg.read(configfile)
 
