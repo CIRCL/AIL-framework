@@ -38,6 +38,7 @@ def main():
                                port=cfg.getint("Redis_Queues", "port"),
                                db=cfg.getint("Redis_Queues", "db"))
 
+    # FIXME: automatic based on the queue name.
     # ### SCRIPTS ####
     r_serv.sadd("SHUTDOWN_FLAGS", "Feed")
     r_serv.sadd("SHUTDOWN_FLAGS", "Categ")

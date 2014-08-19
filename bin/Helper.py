@@ -19,7 +19,7 @@ import zmq
 
 class Redis_Queues(object):
 
-    def __init__(self, zmq_conf_section, zmq_conf_channel, subscriber_name):
+    def __init__(self, conf_section, conf_channel, subscriber_name):
         configfile = os.path.join(os.environ('AIL_BIN'), 'packages/config.cfg')
         if not os.path.exists(configfile):
             raise Exception('Unable to find the configuration file. \
@@ -29,13 +29,7 @@ class Redis_Queues(object):
         self.config.read(configfile)
         self.subscriber_name = subscriber_name
 
-        # ZMQ subscriber
-        self.sub_channel = self.config.get(zmq_conf_section, zmq_conf_channel)
-        sub_address = self.config.get(zmq_conf_section, 'adress')
-        context = zmq.Context()
-        self.sub_socket = context.socket(zmq.SUB)
-        self.sub_socket.connect(sub_address)
-        self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.sub_channel)
+        self.sub_channel = self.config.get(conf_section, conf_channel)
 
         # Redis Queue
         config_section = "Redis_Queues"
@@ -43,10 +37,15 @@ class Redis_Queues(object):
             host=self.config.get(config_section, "host"),
             port=self.config.getint(config_section, "port"),
             db=self.config.getint(config_section, "db"))
-        self.redis_channel = self.sub_channel + subscriber_name
+
+    def zmq_sub(self, conf_section):
+        sub_address = self.config.get(conf_section, 'adress')
+        context = zmq.Context()
+        self.sub_socket = context.socket(zmq.SUB)
+        self.sub_socket.connect(sub_address)
+        self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.sub_channel)
 
     def zmq_pub(self, config_section):
-        # FIXME: should probably go somewhere else
         context = zmq.Context()
         self.pub_socket = context.socket(zmq.PUB)
         self.pub_socket.bind(self.config.get(config_section, 'adress'))
@@ -60,6 +59,7 @@ class Redis_Queues(object):
         return self.r_queues.srem('SHUTDOWN_FLAGS', flag)
 
     def redis_queue_subscribe(self, publisher):
+        self.redis_channel = self.sub_channel + self.subscriber_name
         publisher.info("Suscribed to channel {}".format(self.sub_channel))
         while True:
             msg = self.sub_socket.recv()
