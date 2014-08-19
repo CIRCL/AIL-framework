@@ -4,3 +4,6 @@
 AILENV
 redis-leveldb
 redis
+
+# Local config
+bin/packages/config.cfg

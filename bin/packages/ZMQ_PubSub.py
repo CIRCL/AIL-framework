@@ -28,7 +28,6 @@ class PubSub(object):
     """
     def __init__(self, config, log_channel, ps_name):
         self._ps_name = ps_name
-
         self._config_parser = config
 
         self._context_zmq = zmq.Context()
@@ -60,9 +59,8 @@ class ZMQPub(PubSub):
     def __init__(self, config, pub_config_section, ps_name):
         super(ZMQPub, self).__init__(config, "Default", ps_name)
 
-        self._pub_config_section = pub_config_section
         self._pubsocket = self._context_zmq.socket(zmq.PUB)
-        self._pub_adress = self._config_parser.get(self._pub_config_section, "adress")
+        self._pub_adress = self._config_parser.get(pub_config_section, "adress")
 
         self._pubsocket.bind(self._pub_adress)
 
@@ -117,32 +115,13 @@ class ZMQSub(PubSub):
     def __init__(self, config, sub_config_section, channel, ps_name):
         super(ZMQSub, self).__init__(config, "Default", ps_name)
 
-        self._sub_config_section = sub_config_section
         self._subsocket = self._context_zmq.socket(zmq.SUB)
-        self._sub_adress = self._config_parser.get(self._sub_config_section, "adress")
+        self._sub_adress = self._config_parser.get(sub_config_section, "adress")
 
         self._subsocket.connect(self._sub_adress)
 
         self._channel = channel
         self._subsocket.setsockopt(zmq.SUBSCRIBE, self._channel)
-
-    def get_message(self):
-        """
-        Get the first sent message from a Publisher.
-        :return: (str) Message from Publisher
-
-        """
-        return self._subsocket.recv()
-
-    def get_and_lpush(self, r_serv):
-        """
-        Get the first sent message from a Publisher and storing it in redis
-
-        ..note:: This function also create a set named "queue" for monitoring needs
-
-        """
-        r_serv.sadd("queues", self._channel+self._ps_name)
-        r_serv.lpush(self._channel+self._ps_name, self._subsocket.recv())
 
     def get_msg_from_queue(self, r_serv):
         """

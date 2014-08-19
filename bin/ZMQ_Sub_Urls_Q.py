@@ -13,5 +13,5 @@ if __name__ == "__main__":
     config_channel = 'channel_3'
     subscriber_name = 'web_categ'
 
-    h = Helper.Queues()
-    h.queue_subscribe(publisher, config_section, config_channel, subscriber_name)
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    h.redis_queue_subscribe(publisher)

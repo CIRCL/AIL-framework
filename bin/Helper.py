@@ -10,52 +10,64 @@ into a Redis-list waiting to be popped later by others scripts.
 ..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
 the same Subscriber name in both of them.
 
-Requirements
-------------
-
-*Running Redis instances.
-*Should register to the Publisher "ZMQ_PubSub_Line" channel 1
-
 """
 import redis
 import ConfigParser
 import os
-from packages import ZMQ_PubSub
+import zmq
 
 
-class Queues(object):
+class Redis_Queues(object):
 
-    def __init__(self):
-        configfile = os.join(os.environ('AIL_BIN'), 'packages/config.cfg')
-        if not os.exists(configfile):
-            raise Exception('Unable to find the configuration file. Did you set environment variables? Or activate the virtualenv.')
+    def __init__(self, zmq_conf_section, zmq_conf_channel, subscriber_name):
+        configfile = os.path.join(os.environ('AIL_BIN'), 'packages/config.cfg')
+        if not os.path.exists(configfile):
+            raise Exception('Unable to find the configuration file. \
+                            Did you set environment variables? \
+                            Or activate the virtualenv.')
         self.config = ConfigParser.ConfigParser()
-        self.config.read(self.configfile)
+        self.config.read(configfile)
+        self.subscriber_name = subscriber_name
 
-    def _queue_init_redis(self):
+        # ZMQ subscriber
+        self.sub_channel = self.config.get(zmq_conf_section, zmq_conf_channel)
+        sub_address = self.config.get(zmq_conf_section, 'adress')
+        context = zmq.Context()
+        self.sub_socket = context.socket(zmq.SUB)
+        self.sub_socket.connect(sub_address)
+        self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.sub_channel)
+
+        # Redis Queue
         config_section = "Redis_Queues"
         self.r_queues = redis.StrictRedis(
             host=self.config.get(config_section, "host"),
             port=self.config.getint(config_section, "port"),
             db=self.config.getint(config_section, "db"))
+        self.redis_channel = self.sub_channel + subscriber_name
 
-    def _queue_shutdown(self):
-        # FIXME: Why not just a key?
-        if self.r_queues.sismember("SHUTDOWN_FLAGS", "Feed_Q"):
-            self.r_queues.srem("SHUTDOWN_FLAGS", "Feed_Q")
-            return True
-        return False
+    def zmq_pub(self, config_section):
+        # FIXME: should probably go somewhere else
+        context = zmq.Context()
+        self.pub_socket = context.socket(zmq.PUB)
+        self.pub_socket.bind(self.config.get(config_section, 'adress'))
 
-    def queue_subscribe(self, publisher, config_section, channel,
-                        subscriber_name):
-        channel = self.config.get(config_section, channel)
-        zmq_sub = ZMQ_PubSub.ZMQSub(self.config, config_section,
-                                    channel, subscriber_name)
-        publisher.info("""Suscribed to channel {}""".format(channel))
-        self._queue_init_redis()
+    def redis_queue_shutdown(self, is_queue=False):
+        if is_queue:
+            flag = self.subscriber_name + '_Q'
+        else:
+            flag = self.subscriber_name
+        # srem returns False if the element does not exists
+        return self.r_queues.srem('SHUTDOWN_FLAGS', flag)
+
+    def redis_queue_subscribe(self, publisher):
+        publisher.info("Suscribed to channel {}".format(self.sub_channel))
         while True:
-            zmq_sub.get_and_lpush(self.r_queues)
-            if self._queues_shutdown():
+            msg = self.sub_socket.recv()
+            p = self.r_queues.pipeline()
+            p.sadd("queues", self.redis_channel)
+            p.lpush(self.redis_channel, msg)
+            p.execute()
+            if self.redis_queue_shutdown(True):
                 print "Shutdown Flag Up: Terminating"
                 publisher.warning("Shutdown Flag Up: Terminating.")
                 break
