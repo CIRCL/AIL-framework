@@ -196,6 +196,15 @@ If you want to create a general module (e.g. using all pastes), this module need
 
 ![ZMQTree](./doc/dia/ZMQ_Queuing_Tree.jpg?raw=true "ZMQ Tree")
 
+Redis and LevelDB overview
+--------------------------
+
+    * Redis on TCP port 6379 - DB 1 - Paste meta-data
+    *                          DB 0 - Cache hostname/dns
+    * Redis on TCP port 6380 - Redis Pub-Sub only
+    * Redis on TCP port 6381 - DB 0 - Queue and Paste content LRU cache
+    * LevelDB on TCP port <year> - Lines duplicate
+
 LICENSE
 -------
 
