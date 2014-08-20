@@ -97,16 +97,15 @@ if __name__ == "__main__":
                             print hostl, asn, cc, \
                                 pycountry.countries.get(alpha2=cc).name
                             if cc == cc_critical:
-                                # FIXME: That's going to fail.
                                 publisher.warning(
-                                    'Url;{};{};{};Detected {} {} {}'.format(
+                                    'Url;{};{};{};Detected {} {}'.format(
                                         PST.p_source, PST.p_date, PST.p_name,
-                                        A_values[0], hostl, cc))
+                                        hostl, cc))
                         else:
                             print hostl, asn, cc
+
                     A_values = lib_refine.checking_A_record(r_serv2,
                                                             domains_list)
-
                     if A_values[0] >= 1:
                         PST.__setattr__(channel, A_values)
                         PST.save_attribute_redis(r_serv1, channel,
