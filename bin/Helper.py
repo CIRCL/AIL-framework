@@ -30,6 +30,7 @@ class Redis_Queues(object):
         self.subscriber_name = subscriber_name
 
         self.sub_channel = self.config.get(conf_section, conf_channel)
+        self.redis_channel = self.sub_channel + self.subscriber_name
 
         # Redis Queue
         config_section = "Redis_Queues"
@@ -61,7 +62,7 @@ class Redis_Queues(object):
         self.pub_socket.send('{} {}'.format(self.pub_channel, msg))
 
     def redis_rpop(self):
-        return self.r_queues.rpop(self.sub_channel + self.subscriber_name)
+        return self.r_queues.rpop(self.redis_channel)
 
     def redis_queue_shutdown(self, is_queue=False):
         if is_queue:
@@ -72,7 +73,6 @@ class Redis_Queues(object):
         return self.r_queues.srem('SHUTDOWN_FLAGS', flag)
 
     def redis_queue_subscribe(self, publisher):
-        self.redis_channel = self.sub_channel + self.subscriber_name
         publisher.info("Suscribed to channel {}".format(self.sub_channel))
         while True:
             msg = self.sub_socket.recv()

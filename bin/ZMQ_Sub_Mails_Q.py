@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     config_section = 'PubSub_Categ'
     config_channel = 'channel_1'
-    subscriber_name = 'mails_categ'
+    subscriber_name = 'emails'
 
     h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
     h.zmq_sub(config_section)

@@ -50,13 +50,12 @@ if __name__ == "__main__":
 
     config_section = 'PubSub_Words'
     config_channel = 'channel_0'
-    subscriber_name = 'pubcateg'
+    subscriber_name = 'categ'
 
     h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
     # Publisher
     pub_config_section = 'PubSub_Categ'
-
     h.zmq_pub(pub_config_section, None)
 
     # SCRIPT PARSER #
