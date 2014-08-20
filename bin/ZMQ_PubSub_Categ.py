@@ -48,16 +48,16 @@ import Helper
 if __name__ == "__main__":
     publisher.channel = "Script"
 
-    # Publisher
-    pub_config_section = 'PubSub_Categ'
-
     config_section = 'PubSub_Words'
     config_channel = 'channel_0'
     subscriber_name = 'pubcateg'
 
     h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
-    h.zmq_pub(pub_config_section)
+    # Publisher
+    pub_config_section = 'PubSub_Categ'
+
+    h.zmq_pub(pub_config_section, None)
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     prec_filename = None
 
     while True:
-        message = h.r_queues.rpop(h.sub_channel + h.subscriber_name)
+        message = h.redis_rpop()
         if message is not None:
             channel, filename, word, score = message.split()
 
@@ -97,8 +97,8 @@ if __name__ == "__main__":
             for categ, words_list in tmp_dict.items():
 
                 if word.lower() in words_list:
-                    h.pub_socket.send('{} {} {} {}'.format(
-                        categ, PST.p_path, word, score))
+                    h.pub_channel = categ
+                    h.zmq_pub_send('{} {} {}'.format(PST.p_path, word, score))
 
                     publisher.info(
                         'Categ;{};{};{};Detected {} "{}"'.format(

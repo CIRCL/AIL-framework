@@ -6,8 +6,8 @@ The ZMQ_Sub_Onion Module
 
 This module is consuming the Redis-list created by the ZMQ_Sub_Onion_Q Module.
 
-It trying to extract url from paste and returning only ones which are tor related
-(.onion)
+It trying to extract url from paste and returning only ones which are tor
+related (.onion)
 
     ..seealso:: Paste method (get_regex)
 
@@ -22,45 +22,37 @@ Requirements
 
 """
 import redis
-import ConfigParser
 import pprint
 import time
 from packages import Paste
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
-configfile = './packages/config.cfg'
 
+import Helper
 
-def main():
-    """Main Function"""
-
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
-
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    r_serv1 = redis.StrictRedis(
-        host=cfg.get("Redis_Data_Merging", "host"),
-        port=cfg.getint("Redis_Data_Merging", "port"),
-        db=cfg.getint("Redis_Data_Merging", "db"))
-
-    # LOGGING #
+if __name__ == "__main__":
     publisher.channel = "Script"
 
-    # ZMQ #
-    Sub = ZMQ_PubSub.ZMQSub(configfile, "PubSub_Categ", "onion_categ", "tor")
+    config_section = 'PubSub_Categ'
+    config_channel = 'channel_2'
+    subscriber_name = 'tor'
+
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+
+    # Subscriber
+    h.zmq_sub(config_section)
+
+    # REDIS #
+    r_serv1 = redis.StrictRedis(
+        host=h.config.get("Redis_Data_Merging", "host"),
+        port=h.config.getint("Redis_Data_Merging", "port"),
+        db=h.config.getint("Redis_Data_Merging", "db"))
 
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
 
     # Getting the first message from redis.
-    message = Sub.get_msg_from_queue(r_serv)
+    message = h.redis_rpop()
     prec_filename = None
 
     # Thanks to Faup project for this regex
@@ -78,7 +70,8 @@ def main():
 
                 for x in PST.get_regex(url_regex):
                     # Extracting url with regex
-                    credential, subdomain, domain, host, tld, port, resource_path, query_string, f1, f2, f3, f4 = x
+                    credential, subdomain, domain, host, tld, port, \
+                        resource_path, query_string, f1, f2, f3, f4 = x
 
                     if f1 == "onion":
                         domains_list.append(domain)
@@ -88,25 +81,22 @@ def main():
                 PST.save_attribute_redis(r_serv1, channel, domains_list)
                 pprint.pprint(domains_list)
                 print PST.p_path
-                to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date, PST.p_name)
+                to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date,
+                                                    PST.p_name)
                 if len(domains_list) > 0:
-                    publisher.warning('{}Detected {} .onion(s)'.format(to_print, len(domains_list)))
+                    publisher.warning('{}Detected {} .onion(s)'.format(
+                        to_print, len(domains_list)))
                 else:
                     publisher.info('{}Onion related'.format(to_print))
 
             prec_filename = filename
 
         else:
-            if r_serv.sismember("SHUTDOWN_FLAGS", "Onion"):
-                r_serv.srem("SHUTDOWN_FLAGS", "Onion")
+            if h.redis_queue_shutdown():
                 print "Shutdown Flag Up: Terminating"
                 publisher.warning("Shutdown Flag Up: Terminating.")
                 break
             publisher.debug("Script url is Idling 10s")
             time.sleep(10)
 
-        message = Sub.get_msg_from_queue(r_serv)
-
-
-if __name__ == "__main__":
-    main()
+        message = h.redis_rpop()

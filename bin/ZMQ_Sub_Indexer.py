@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     while True:
         try:
-            message = h.r_queues.rpop(h.sub_channel + h.subscriber_name)
+            message = h.redis_rpop()
 
             if message is not None:
                 PST = Paste.Paste(message.split(" ", -1)[-1])

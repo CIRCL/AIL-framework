@@ -37,17 +37,17 @@ if __name__ == "__main__":
 
     # Publisher
     pub_config_section = 'PubSub_Global'
-    h.zmq_pub(pub_config_section)
-    pub_channel = h.config.get(pub_config_section, "channel")
+    pub_config_channel = 'channel'
+    h.zmq_pub(pub_config_section, pub_config_channel)
 
     # LOGGING #
     publisher.info("Starting to publish.")
 
     while True:
-        filename = h.r_queues.lpop(h.sub_channel)
+        filename = h.redis_rpop()
 
         if filename is not None:
-            h.pub_socket.send('{} {}'.format(pub_channel, filename))
+            h.zmq_pub_send(filename)
         else:
             time.sleep(10)
             publisher.debug("Nothing to publish")

@@ -45,10 +45,23 @@ class Redis_Queues(object):
         self.sub_socket.connect(sub_address)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.sub_channel)
 
-    def zmq_pub(self, config_section):
+    def zmq_pub(self, config_section, config_channel):
         context = zmq.Context()
         self.pub_socket = context.socket(zmq.PUB)
         self.pub_socket.bind(self.config.get(config_section, 'adress'))
+        if config_channel is not None:
+            self.pub_channel = self.config.get(config_section, config_channel)
+        else:
+            # The publishing channel is defined dynamically
+            self.pub_channel = None
+
+    def zmq_pub_send(self, msg):
+        if self.pub_channel is None:
+            raise Exception('A channel is reqired to send a message.')
+        self.pub_socket.send('{} {}'.format(self.pub_channel, msg))
+
+    def redis_rpop(self):
+        return self.r_queues.rpop(self.sub_channel + self.subscriber_name)
 
     def redis_queue_shutdown(self, is_queue=False):
         if is_queue:

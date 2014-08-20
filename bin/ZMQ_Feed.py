@@ -39,15 +39,15 @@ if __name__ == "__main__":
 
     # Publisher
     pub_config_section = "PubSub_Global"
-    h.zmq_pub(pub_config_section)
-    pub_channel = h.config.get(pub_config_section, "channel")
+    pub_config_channel = 'channel'
+    h.zmq_pub(pub_config_section, pub_config_channel)
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")
 
     while True:
 
-        message = h.r_queues.rpop(h.sub_channel + h.subscriber_name)
+        message = h.redis_rpop()
         # Recovering the streamed message informations.
         if message is not None:
             if len(message.split()) == 3:
@@ -76,4 +76,4 @@ if __name__ == "__main__":
         with open(filename, 'wb') as f:
             f.write(base64.standard_b64decode(gzip64encoded))
 
-        h.pub_socket.send('{} {}'.format(pub_channel, filename))
+        h.zmq_pub_send(filename)

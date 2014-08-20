@@ -45,7 +45,7 @@ def create_dirfile(r_serv, directory, overwrite):
         r_serv.delete("filelist")
 
         for x in listdirectory(directory):
-            r_serv.rpush("filelist", x)
+            r_serv.lpush("filelist", x)
 
         publisher.info("The list was overwritten")
 
@@ -53,13 +53,13 @@ def create_dirfile(r_serv, directory, overwrite):
         if r_serv.llen("filelist") == 0:
 
             for x in listdirectory(directory):
-                r_serv.rpush("filelist", x)
+                r_serv.lpush("filelist", x)
 
             publisher.info("New list created")
         else:
 
             for x in listdirectory(directory):
-                r_serv.rpush("filelist", x)
+                r_serv.lpush("filelist", x)
 
             publisher.info("The list was updated with new elements")
 
