@@ -9,38 +9,37 @@ The ZMQ_Sub_Indexer modules is fetching the list of files to be processed
 and index each file with a full-text indexer (Whoosh until now).
 
 """
-import redis
-import ConfigParser
 import time
 from packages import Paste
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
 import os
 
-configfile = './packages/config.cfg'
+import Helper
 
 
-def main():
-    """Main Function"""
+if __name__ == "__main__":
+    publisher.channel = "Script"
 
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
+    # Subscriber
+    sub_config_section = 'PubSub_Global'
+    sub_name = 'indexer'
 
-    # Redis
-    r_serv1 = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
+    config_section = 'PubSub_Global'
+    config_channel = 'channel'
+    subscriber_name = 'indexer'
+
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
     # Indexer configuration - index dir and schema setup
-    indexpath = cfg.get("Indexer", "path")
-    indexertype = cfg.get("Indexer", "type")
+    indexpath = h.config.get("Indexer", "path")
+    indexertype = h.config.get("Indexer", "type")
     if indexertype == "whoosh":
-        schema = Schema(title=TEXT(stored=True), path=ID(stored=True, unique=True), content=TEXT)
+        schema = Schema(title=TEXT(stored=True), path=ID(stored=True,
+                                                         unique=True),
+                        content=TEXT)
         if not os.path.exists(indexpath):
             os.mkdir(indexpath)
         if not exists_in(indexpath):
@@ -49,29 +48,16 @@ def main():
             ix = open_dir(indexpath)
 
     # LOGGING #
-    publisher.channel = "Script"
-
-    # ZMQ #
-    # Subscriber
-    channel = cfg.get("PubSub_Global", "channel")
-    subscriber_name = "indexer"
-    subscriber_config_section = "PubSub_Global"
-
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-
-    # FUNCTIONS #
     publisher.info("""ZMQ Indexer is Running""")
 
     while True:
         try:
-            message = sub.get_msg_from_queue(r_serv1)
+            message = h.redis_rpop()
 
             if message is not None:
                 PST = Paste.Paste(message.split(" ", -1)[-1])
             else:
-                if r_serv1.sismember("SHUTDOWN_FLAGS", "Indexer"):
-                    r_serv1.srem("SHUTDOWN_FLAGS", "Indexer")
-                    publisher.warning("Shutdown Flag Up: Terminating.")
+                if h.redis_queue_shutdown():
                     break
                 publisher.debug("Script Indexer is idling 10s")
                 time.sleep(1)
@@ -88,9 +74,5 @@ def main():
                 indexwriter.commit()
         except IOError:
             print "CRC Checksum Failed on :", PST.p_path
-            publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(PST.p_source, PST.p_date, PST.p_name))
-            pass
-
-
-if __name__ == "__main__":
-    main()
+            publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
+                PST.p_source, PST.p_date, PST.p_name))

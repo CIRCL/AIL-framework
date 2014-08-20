@@ -13,6 +13,7 @@
 import ConfigParser
 import argparse
 import gzip
+import os
 
 
 def readdoc(path=None):
@@ -21,7 +22,7 @@ def readdoc(path=None):
     f = gzip.open(path, 'r')
     return f.read()
 
-configfile = './packages/config.cfg'
+configfile = os.path.join(os.environ('AIL_BIN'), 'packages/config.cfg')
 cfg = ConfigParser.ConfigParser()
 cfg.read(configfile)
 

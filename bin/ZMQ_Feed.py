@@ -20,50 +20,34 @@ Requirements
 *Need the ZMQ_Feed_Q Module running to be able to work properly.
 
 """
-import redis
-import ConfigParser
 import base64
 import os
 import time
 from pubsublogger import publisher
-from packages import ZMQ_PubSub
 
-configfile = './packages/config.cfg'
+import Helper
 
 
-def main():
-    """Main Function"""
+if __name__ == "__main__":
+    publisher.channel = "Script"
 
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
+    config_section = 'Feed'
+    config_channel = 'topicfilter'
+    subscriber_name = 'feed'
 
-    # REDIS
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
-    # ZMQ #
-    channel = cfg.get("Feed", "topicfilter")
-
-    # Subscriber
-    subscriber_name = "feed"
-    subscriber_config_section = "Feed"
     # Publisher
-    publisher_name = "pubfed"
-    publisher_config_section = "PubSub_Global"
-
-    Sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-    PubGlob = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
+    pub_config_section = "PubSub_Global"
+    pub_config_channel = 'channel'
+    h.zmq_pub(pub_config_section, pub_config_channel)
 
     # LOGGING #
-    publisher.channel = "Script"
     publisher.info("Feed Script started to receive & publish.")
 
     while True:
 
-        message = Sub.get_msg_from_queue(r_serv)
+        message = h.redis_rpop()
         # Recovering the streamed message informations.
         if message is not None:
             if len(message.split()) == 3:
@@ -75,8 +59,7 @@ def main():
                 publisher.debug("Empty Paste: {0} not processed".format(paste))
                 continue
         else:
-            if r_serv.sismember("SHUTDOWN_FLAGS", "Feed"):
-                r_serv.srem("SHUTDOWN_FLAGS", "Feed")
+            if h.redis_queue_shutdown():
                 print "Shutdown Flag Up: Terminating"
                 publisher.warning("Shutdown Flag Up: Terminating.")
                 break
@@ -84,24 +67,13 @@ def main():
             time.sleep(10)
             continue
         # Creating the full filepath
-        filename = cfg.get("Directories", "pastes") + paste
+        filename = os.path.join(os.environ('AIL_BIN'),
+                                h.config.get("Directories", "pastes"), paste)
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
 
-        if not os.path.exists(filename.rsplit("/", 1)[0]):
-            os.makedirs(filename.rsplit("/", 1)[0])
-        else:
-            # Path already existing
-            pass
+        with open(filename, 'wb') as f:
+            f.write(base64.standard_b64decode(gzip64encoded))
 
-        decoded_gzip = base64.standard_b64decode(gzip64encoded)
-        # paste, zlib.decompress(decoded_gzip, zlib.MAX_WBITS|16)
-
-        with open(filename, 'wb') as F:
-            F.write(decoded_gzip)
-
-        msg = cfg.get("PubSub_Global", "channel")+" "+filename
-        PubGlob.send_message(msg)
-        publisher.debug("{0} Published".format(msg))
-
-
-if __name__ == "__main__":
-    main()
+        h.zmq_pub_send(filename)

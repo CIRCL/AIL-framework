@@ -27,56 +27,41 @@ Requirements
 
 """
 import redis
-import ConfigParser
 import time
 from packages import Paste
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
-configfile = './packages/config.cfg'
+import Helper
 
+if __name__ == "__main__":
+    publisher.channel = "Script"
 
-def main():
-    """Main Function"""
+    config_section = 'PubSub_Global'
+    config_channel = 'channel'
+    subscriber_name = 'attributes'
 
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+
+    # Subscriber
+    h.zmq_sub(config_section)
 
     # REDIS #
     r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Data_Merging", "host"),
-        port=cfg.getint("Redis_Data_Merging", "port"),
-        db=cfg.getint("Redis_Data_Merging", "db"))
-
-    r_serv1 = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    # LOGGING #
-    publisher.channel = "Script"
-
-    # ZMQ #
-    # Subscriber
-    channel = cfg.get("PubSub_Global", "channel")
-    subscriber_name = "attributes"
-    subscriber_config_section = "PubSub_Global"
-
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
+        host=h.config.get("Redis_Data_Merging", "host"),
+        port=h.config.getint("Redis_Data_Merging", "port"),
+        db=h.config.getint("Redis_Data_Merging", "db"))
 
     # FUNCTIONS #
     publisher.info("""ZMQ Attribute is Running""")
 
     while True:
         try:
-            message = sub.get_msg_from_queue(r_serv1)
+            message = h.redis_rpop()
 
             if message is not None:
                 PST = Paste.Paste(message.split(" ", -1)[-1])
             else:
-                if r_serv1.sismember("SHUTDOWN_FLAGS", "Attributes"):
-                    r_serv1.srem("SHUTDOWN_FLAGS", "Attributes")
+                if h.redis_queue_shutdown():
                     print "Shutdown Flag Up: Terminating"
                     publisher.warning("Shutdown Flag Up: Terminating.")
                     break
@@ -95,9 +80,6 @@ def main():
             PST.save_all_attributes_redis(r_serv)
         except IOError:
             print "CRC Checksum Failed on :", PST.p_path
-            publisher.error('{0};{1};{2};{3};{4}'.format("Duplicate", PST.p_source, PST.p_date, PST.p_name, "CRC Checksum Failed"))
-            pass
-
-
-if __name__ == "__main__":
-    main()
+            publisher.error('{0};{1};{2};{3};{4}'.format(
+                "Duplicate", PST.p_source, PST.p_date, PST.p_name,
+                "CRC Checksum Failed"))

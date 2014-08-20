@@ -21,49 +21,33 @@ Requirements
 *Need running Redis instances. (Redis)
 
 """
-import redis
-import ConfigParser
 import time
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
-configfile = './packages/config.cfg'
+import Helper
 
-
-def main():
-    """Main Function"""
-
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read('./packages/config.cfg')
-
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    # LOGGING #
+if __name__ == "__main__":
     publisher.channel = "Global"
 
-    # ZMQ #
-    pub_glob = ZMQ_PubSub.ZMQPub(configfile, "PubSub_Global", "global")
+    config_section = 'PubSub_Global'
+    config_channel = 'channel'
+    subscriber_name = 'global'
 
-    # FONCTIONS #
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+
+    # Publisher
+    pub_config_section = 'PubSub_Global'
+    pub_config_channel = 'channel'
+    h.zmq_pub(pub_config_section, pub_config_channel)
+
+    # LOGGING #
     publisher.info("Starting to publish.")
 
     while True:
-        filename = r_serv.lpop("filelist")
+        filename = h.redis_rpop()
 
         if filename is not None:
-
-            msg = cfg.get("PubSub_Global", "channel")+" "+filename
-            pub_glob.send_message(msg)
-            publisher.debug("{0} Published".format(msg))
+            h.zmq_pub_send(filename)
         else:
             time.sleep(10)
             publisher.debug("Nothing to publish")
-
-
-if __name__ == "__main__":
-    main()
