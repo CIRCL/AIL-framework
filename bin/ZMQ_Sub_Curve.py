@@ -27,6 +27,7 @@ import time
 from packages import Paste
 from pubsublogger import publisher
 from packages import lib_words
+import os
 
 import Helper
 
@@ -52,8 +53,10 @@ if __name__ == "__main__":
     publisher.info("Script Curve subscribed to {}".format(h.sub_channel))
 
     # FILE CURVE SECTION #
-    csv_path = h.config.get("Directories", "wordtrending_csv")
-    wordfile_path = h.config.get("Directories", "wordsfile")
+    csv_path = os.path.join(os.environ('AIL_HOME'),
+                            h.config.get("Directories", "wordtrending_csv"))
+    wordfile_path = os.path.join(os.environ('AIL_HOME'),
+                                 h.config.get("Directories", "wordsfile"))
 
     message = h.redis_rpop()
     prec_filename = None

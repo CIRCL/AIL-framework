@@ -67,7 +67,7 @@ if __name__ == "__main__":
             time.sleep(10)
             continue
         # Creating the full filepath
-        filename = os.path.join(os.environ('AIL_BIN'),
+        filename = os.path.join(os.environ('AIL_HOME'),
                                 h.config.get("Directories", "pastes"), paste)
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):

@@ -1,8 +1,8 @@
 [Directories]
-bloomfilters = /home/user/Blooms/
+bloomfilters = Blooms
 pastes = PASTES
-wordtrending_csv = /home/user/AIL/var/www/static/csv/wordstrendingdata
-wordsfile = /home/user/AIL/files/wordfile
+wordtrending_csv = var/www/static/csv/wordstrendingdata
+wordsfile = files/wordfile
 
 ##### Redis #####
 [Redis_Cache]
@@ -70,4 +70,4 @@ cc_critical = DE
 # Indexer configuration
 [Indexer]
 type = whoosh
-path = /home/user/indexdir
+path = indexdir

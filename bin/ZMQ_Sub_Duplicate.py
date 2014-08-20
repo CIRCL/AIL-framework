@@ -54,7 +54,7 @@ if __name__ == "__main__":
         h.config.get("PubSub_Global", "channel")))
 
     set_limit = 100
-    bloompath = os.path.join(os.environ('AIL_BIN'),
+    bloompath = os.path.join(os.environ('AIL_HOME'),
                              h.config.get("Directories", "bloomfilters"))
 
     bloop_path_set = set()

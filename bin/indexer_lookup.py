@@ -27,7 +27,7 @@ cfg = ConfigParser.ConfigParser()
 cfg.read(configfile)
 
 # Indexer configuration - index dir and schema setup
-indexpath = cfg.get("Indexer", "path")
+indexpath = os.path.join(os.environ('AIL_HOME'), cfg.get("Indexer", "path"))
 indexertype = cfg.get("Indexer", "type")
 
 argParser = argparse.ArgumentParser(description='Fulltext search for AIL')
