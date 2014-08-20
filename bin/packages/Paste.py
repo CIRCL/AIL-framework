@@ -134,10 +134,7 @@ class Paste(object):
         :Example: PST._set_p_encoding()
 
         """
-        try:
-            return magic.Magic(mime_encoding=True).from_buffer(self.get_p_content())
-        except magic.MagicException:
-            pass
+        return self.p_mime
 
     def _set_p_hash_kind(self, hashkind):
         """
