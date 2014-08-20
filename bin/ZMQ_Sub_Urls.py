@@ -109,12 +109,11 @@ def main():
                         if cc is not None and cc != "EU":
                             print hostl, asn, cc, pycountry.countries.get(alpha2=cc).name
                             if cc == cc_critical:
-                                # FIXME: That's going to fail.
-                                publisher.warning('{0};{1};{2};{3};{4}'.format("Url", PST.p_source, PST.p_date, PST.p_name, "Detected " + str(A_values[0]) + " " + hostl + " " + cc))
+                                publisher.warning('{0};{1};{2};{3};{4}'.format("Url", PST.p_source, PST.p_date, PST.p_name, "Detected " + hostl + " " + cc))
                         else:
                             print hostl, asn, cc
-                    A_values = lib_refine.checking_A_record(r_serv2, domains_list)
 
+                    A_values = lib_refine.checking_A_record(r_serv2, domains_list)
                     if A_values[0] >= 1:
                         PST.__setattr__(channel, A_values)
                         PST.save_attribute_redis(r_serv1, channel, (A_values[0], list(A_values[1])))

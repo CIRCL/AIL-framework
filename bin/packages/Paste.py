@@ -117,6 +117,7 @@ class Paste(object):
         if self.p_nb_lines is None or self.p_max_length_line is None:
             max_length_line = 0
             f = self.get_p_content_as_file()
+            line_id = 0
             for line_id, line in enumerate(f):
                 length = len(line)
                 if length >= max_length_line:
@@ -133,10 +134,7 @@ class Paste(object):
         :Example: PST._set_p_encoding()
 
         """
-        try:
-            return magic.Magic(mime_encoding=True).from_buffer(self.get_p_content())
-        except magic.MagicException:
-            pass
+        return self.p_mime
 
     def _set_p_hash_kind(self, hashkind):
         """
