@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
-import redis
 import pprint
 import time
 from packages import Paste
@@ -20,12 +19,6 @@ if __name__ == "__main__":
 
     # Subscriber
     h.zmq_sub(config_section)
-
-    # REDIS #
-    r_serv1 = redis.StrictRedis(
-        host=h.config.get("Redis_Data_Merging", "host"),
-        port=h.config.getint("Redis_Data_Merging", "port"),
-        db=h.config.getint("Redis_Data_Merging", "db"))
 
     # FUNCTIONS #
     publisher.info("Creditcard script subscribed to channel creditcard_categ")
@@ -57,7 +50,7 @@ if __name__ == "__main__":
                         creditcard_set.add(x)
 
                 PST.__setattr__(channel, creditcard_set)
-                PST.save_attribute_redis(r_serv1, channel, creditcard_set)
+                PST.save_attribute_redis(channel, creditcard_set)
 
                 pprint.pprint(creditcard_set)
                 to_print = 'CreditCard;{};{};{};'.format(

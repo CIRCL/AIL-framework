@@ -27,7 +27,6 @@ Requirements
 *Need the ZMQ_PubSub_Line_Q Module running to be able to work properly.
 
 """
-import redis
 import argparse
 import time
 from packages import Paste
@@ -63,13 +62,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # REDIS #
-    # FIXME move it in the Paste object
-    r_serv = redis.StrictRedis(
-        host=h.config.get("Redis_Data_Merging", "host"),
-        port=h.config.getint("Redis_Data_Merging", "port"),
-        db=h.config.getint("Redis_Data_Merging", "db"))
-
     channel_0 = h.config.get("PubSub_Longlines", "channel_0")
     channel_1 = h.config.get("PubSub_Longlines", "channel_1")
 
@@ -94,11 +86,10 @@ if __name__ == "__main__":
 
             lines_infos = PST.get_lines_info()
 
-            PST.save_attribute_redis(r_serv, "p_nb_lines", lines_infos[0])
-            PST.save_attribute_redis(r_serv, "p_max_length_line",
-                                     lines_infos[1])
+            PST.save_attribute_redis("p_nb_lines", lines_infos[0])
+            PST.save_attribute_redis("p_max_length_line", lines_infos[1])
 
-            r_serv.sadd("Pastes_Objects", PST.p_path)
+            PST.store.sadd("Pastes_Objects", PST.p_path)
             if lines_infos[1] >= args.max:
                 h.pub_channel = channel_0
             else:

@@ -34,11 +34,6 @@ if __name__ == "__main__":
     h.zmq_sub(config_section)
 
     # REDIS #
-    r_serv1 = redis.StrictRedis(
-        host=h.config.get("Redis_Data_Merging", "host"),
-        port=h.config.getint("Redis_Data_Merging", "port"),
-        db=h.config.getint("Redis_Data_Merging", "db"))
-
     r_serv2 = redis.StrictRedis(
         host=h.config.get("Redis_Cache", "host"),
         port=h.config.getint("Redis_Cache", "port"),
@@ -108,9 +103,8 @@ if __name__ == "__main__":
                                                             domains_list)
                     if A_values[0] >= 1:
                         PST.__setattr__(channel, A_values)
-                        PST.save_attribute_redis(r_serv1, channel,
-                                                 (A_values[0],
-                                                  list(A_values[1])))
+                        PST.save_attribute_redis(channel, (A_values[0],
+                                                 list(A_values[1])))
 
                         pprint.pprint(A_values)
                         publisher.info('Url;{};{};{};Checked {} URL'.format(

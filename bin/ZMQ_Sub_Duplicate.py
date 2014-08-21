@@ -34,12 +34,6 @@ if __name__ == "__main__":
     h.zmq_sub(config_section)
 
     # REDIS #
-    r_serv_merge = redis.StrictRedis(
-        host=h.config.get("Redis_Data_Merging", "host"),
-        port=h.config.getint("Redis_Data_Merging", "port"),
-        db=h.config.getint("Redis_Data_Merging", "db"))
-
-    # REDIS #
     # DB OBJECT & HASHS ( DISK )
     # FIXME increase flexibility
     dico_redis = {}
@@ -168,7 +162,7 @@ if __name__ == "__main__":
                     PST.p_source, PST.p_date, PST.p_name)
                 if dupl != []:
                     PST.__setattr__("p_duplicate", dupl)
-                    PST.save_attribute_redis(r_serv_merge, "p_duplicate", dupl)
+                    PST.save_attribute_redis("p_duplicate", dupl)
                     publisher.info('{}Detected {}'.format(to_print, len(dupl)))
 
                 y = time.time()

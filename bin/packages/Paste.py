@@ -44,7 +44,8 @@ class Paste(object):
     This class representing a Paste as an object.
     When created, the object will have by default some "main attributes"
     such as the size or the date of the paste already calculated, whereas other
-    attributes are not set and need to be "asked to be calculated" by their methods.
+    attributes are not set and need to be "asked to be calculated" by their
+    methods.
     It was design like this because some attributes take time to be calculated
     such as the langage or the duplicate...
 
@@ -56,16 +57,25 @@ class Paste(object):
 
     def __init__(self, p_path):
 
-        configfile = './packages/config.cfg'
+        configfile = os.path.join(os.environ('AIL_BIN'), 'packages/config.cfg')
+        if not os.path.exists(configfile):
+            raise Exception('Unable to find the configuration file. \
+                            Did you set environment variables? \
+                            Or activate the virtualenv.')
+
         cfg = ConfigParser.ConfigParser()
         cfg.read(configfile)
         self.cache = redis.StrictRedis(
             host=cfg.get("Redis_Queues", "host"),
             port=cfg.getint("Redis_Queues", "port"),
             db=cfg.getint("Redis_Queues", "db"))
+        self.store = redis.StrictRedis(
+            host=cfg.get("Redis_Data_Merging", "host"),
+            port=cfg.getint("Redis_Data_Merging", "port"),
+            db=cfg.getint("Redis_Data_Merging", "db"))
 
         self.p_path = p_path
-        self.p_name = self.p_path.split('/')[-1]
+        self.p_name = os.path.basename(self.p_path)
         self.p_size = round(os.path.getsize(self.p_path)/1024.0, 2)
         self.p_mime = magic.from_buffer(self.get_p_content(), mime=True)
 
@@ -260,7 +270,7 @@ class Paste(object):
         else:
             return False, var
 
-    def save_all_attributes_redis(self, r_serv, key=None):
+    def save_all_attributes_redis(self, key=None):
         """
         Saving all the attributes in a "Redis-like" Database (Redis, LevelDB)
 
@@ -277,7 +287,7 @@ class Paste(object):
 
         """
         # LevelDB Compatibility
-        p = r_serv.pipeline(False)
+        p = self.store.pipeline(False)
         p.hset(self.p_path, "p_name", self.p_name)
         p.hset(self.p_path, "p_size", self.p_size)
         p.hset(self.p_path, "p_mime", self.p_mime)
@@ -296,14 +306,14 @@ class Paste(object):
             pass
         p.execute()
 
-    def save_attribute_redis(self, r_serv, attr_name, value):
+    def save_attribute_redis(self, attr_name, value):
         """
         Save an attribute as a field
         """
         if type(value) == set:
-            r_serv.hset(self.p_path, attr_name, json.dumps(list(value)))
+            self.store.hset(self.p_path, attr_name, json.dumps(list(value)))
         else:
-            r_serv.hset(self.p_path, attr_name, json.dumps(value))
+            self.store.hset(self.p_path, attr_name, json.dumps(value))
 
     def _get_from_redis(self, r_serv):
         return r_serv.hgetall(self.p_hash)

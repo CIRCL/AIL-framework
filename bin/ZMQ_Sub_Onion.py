@@ -21,7 +21,6 @@ Requirements
 *Need the ZMQ_Sub_Onion_Q Module running to be able to work properly.
 
 """
-import redis
 import pprint
 import time
 from packages import Paste
@@ -41,12 +40,6 @@ if __name__ == "__main__":
 
     # Subscriber
     h.zmq_sub(config_section)
-
-    # REDIS #
-    r_serv1 = redis.StrictRedis(
-        host=h.config.get("Redis_Data_Merging", "host"),
-        port=h.config.getint("Redis_Data_Merging", "port"),
-        db=h.config.getint("Redis_Data_Merging", "db"))
 
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
@@ -78,7 +71,7 @@ if __name__ == "__main__":
 
                 # Saving the list of extracted onion domains.
                 PST.__setattr__(channel, domains_list)
-                PST.save_attribute_redis(r_serv1, channel, domains_list)
+                PST.save_attribute_redis(channel, domains_list)
                 pprint.pprint(domains_list)
                 print PST.p_path
                 to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date,
