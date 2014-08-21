@@ -84,11 +84,12 @@ if __name__ == "__main__":
                 time.sleep(10)
                 continue
 
+            # FIXME do it in the paste class
             lines_infos = PST.get_lines_info()
-
             PST.save_attribute_redis("p_nb_lines", lines_infos[0])
             PST.save_attribute_redis("p_max_length_line", lines_infos[1])
 
+            # FIXME Not used.
             PST.store.sadd("Pastes_Objects", PST.p_path)
             if lines_infos[1] >= args.max:
                 h.pub_channel = channel_0

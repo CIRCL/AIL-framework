@@ -62,17 +62,14 @@ if __name__ == "__main__":
                 time.sleep(10)
                 continue
 
-            encoding = PST._get_p_encoding()
-            language = PST._get_p_language()
-
-            PST.save_attribute_redis("p_encoding", encoding)
-            PST.save_attribute_redis("p_language", language)
-
-            PST.store.sadd("Pastes_Objects", PST.p_path)
-
+            # FIXME do it directly in the class
+            PST.save_attribute_redis("p_encoding", PST._get_p_encoding())
+            PST.save_attribute_redis("p_language", PST._get_p_language())
+            # FIXME why not all saving everything there.
             PST.save_all_attributes_redis()
+            # FIXME Not used.
+            PST.store.sadd("Pastes_Objects", PST.p_path)
         except IOError:
             print "CRC Checksum Failed on :", PST.p_path
-            publisher.error('{0};{1};{2};{3};{4}'.format(
-                "Duplicate", PST.p_source, PST.p_date, PST.p_name,
-                "CRC Checksum Failed"))
+            publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
+                PST.p_source, PST.p_date, PST.p_name))
