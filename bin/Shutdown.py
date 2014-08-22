@@ -22,8 +22,9 @@ Requirements
 """
 import redis
 import ConfigParser
+import os
 
-configfile = './packages/config.cfg'
+configfile = os.path.join(os.environ('AIL_BIN'), './packages/config.cfg')
 
 
 def main():

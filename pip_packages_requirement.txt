@@ -4,7 +4,7 @@ pyzmq
 dnspython
 logbook
 pubsublogger
-
+textblob
 
 #Graph
 numpy

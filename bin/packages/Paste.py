@@ -19,7 +19,6 @@ Conditions to fulfill to be able to use this class correctly:
 import os
 import magic
 import gzip
-import pprint
 import redis
 import operator
 import string
@@ -376,8 +375,3 @@ class Paste(object):
             if match != '' and len(match) < 100:
                 matchs.append(match)
         return matchs
-
-
-if __name__ == "__main__":
-    pp = pprint.PrettyPrinter(indent=4)
-    main()
