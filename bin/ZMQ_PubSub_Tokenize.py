@@ -4,9 +4,11 @@
 The ZMQ_PubSub_Lines Module
 ============================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q Module.
+This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q
+Module.
 
-It tokenize the content of the paste and publish the result in the following format:
+It tokenize the content of the paste and publish the result in the following
+format:
     channel_name+' '+/path/of/the/paste.gz+' '+tokenized_word+' '+scoring
 
     ..seealso:: Paste method (_get_top_words)
@@ -21,72 +23,44 @@ Requirements
 *Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
-import redis
-import ConfigParser
 import time
 from packages import Paste
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
-configfile = './packages/config.cfg'
+import Helper
 
-
-def main():
-    """Main Function"""
-
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
-
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    # LOGGING #
+if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
-    # ZMQ #
-    channel = cfg.get("PubSub_Longlines", "channel_1")
-    subscriber_name = "tokenize"
-    subscriber_config_section = "PubSub_Longlines"
+    config_section = 'PubSub_Longlines'
+    config_channel = 'channel_1'
+    subscriber_name = 'tokenize'
+
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
     # Publisher
-    publisher_config_section = "PubSub_Words"
-    publisher_name = "pubtokenize"
+    pub_config_section = 'PubSub_Words'
+    pub_config_channel = 'channel_0'
+    h.zmq_pub(pub_config_section, pub_config_channel)
 
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-    pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
-
-    channel_0 = cfg.get("PubSub_Words", "channel_0")
-
-    # FUNCTIONS #
-    publisher.info("Tokeniser subscribed to channel {0}".format(cfg.get("PubSub_Longlines", "channel_1")))
+    # LOGGING #
+    publisher.info("Tokeniser subscribed to channel {}".format(h.sub_channel))
 
     while True:
-        message = sub.get_msg_from_queue(r_serv)
+        message = h.redis_rpop()
         print message
         if message is not None:
-            PST = Paste.Paste(message.split(" ", -1)[-1])
+            paste = Paste.Paste(message.split(" ", -1)[-1])
+            for word, score in paste._get_top_words().items():
+                if len(word) >= 4:
+                    h.zmq_pub_send('{} {} {}'.format(paste.p_path, word,
+                                                     score))
         else:
-            if r_serv.sismember("SHUTDOWN_FLAGS", "Tokenize"):
-                r_serv.srem("SHUTDOWN_FLAGS", "Tokenize")
+            if h.redis_queue_shutdown():
                 print "Shutdown Flag Up: Terminating"
                 publisher.warning("Shutdown Flag Up: Terminating.")
                 break
             publisher.debug("Tokeniser is idling 10s")
             time.sleep(10)
             print "sleepin"
-            continue
-
-        for word, score in PST._get_top_words().items():
-            if len(word) >= 4:
-                msg = channel_0+' '+PST.p_path+' '+str(word)+' '+str(score)
-                pub.send_message(msg)
-                print msg
-            else:
-                pass
-
-if __name__ == "__main__":
-    main()

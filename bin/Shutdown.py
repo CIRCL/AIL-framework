@@ -22,8 +22,9 @@ Requirements
 """
 import redis
 import ConfigParser
+import os
 
-configfile = './packages/config.cfg'
+configfile = os.path.join(os.environ['AIL_BIN'], './packages/config.cfg')
 
 
 def main():
@@ -38,6 +39,7 @@ def main():
                                port=cfg.getint("Redis_Queues", "port"),
                                db=cfg.getint("Redis_Queues", "db"))
 
+    # FIXME: automatic based on the queue name.
     # ### SCRIPTS ####
     r_serv.sadd("SHUTDOWN_FLAGS", "Feed")
     r_serv.sadd("SHUTDOWN_FLAGS", "Categ")

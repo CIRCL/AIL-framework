@@ -36,111 +36,77 @@ Requirements
 *Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
-import redis
+import os
 import argparse
-import ConfigParser
 import time
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 from packages import Paste
 
-configfile = './packages/config.cfg'
+import Helper
 
+if __name__ == "__main__":
+    publisher.port = 6380
+    publisher.channel = "Script"
 
-def main():
-    """Main Function"""
+    config_section = 'PubSub_Words'
+    config_channel = 'channel_0'
+    subscriber_name = 'categ'
 
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+
+    # Publisher
+    pub_config_section = 'PubSub_Categ'
+    h.zmq_pub(pub_config_section, None)
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
-        description='''This script is a part of the Analysis Information Leak framework.''',
-        epilog='''''')
+        description='This script is a part of the Analysis Information \
+                    Leak framework.')
 
     parser.add_argument(
-        '-l', type=str, default="../files/list_categ_files",
-        help='Path to the list_categ_files (../files/list_categ_files)',
+        '-d', type=str, default="../files/",
+        help='Path to the directory containing the category files.',
         action='store')
 
     args = parser.parse_args()
 
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    # LOGGING #
-    publisher.channel = "Script"
-
-    # ZMQ #
-    channel = cfg.get("PubSub_Words", "channel_0")
-    subscriber_name = "categ"
-    subscriber_config_section = "PubSub_Words"
-
-    publisher_name = "pubcateg"
-    publisher_config_section = "PubSub_Categ"
-
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel,
-                            subscriber_name)
-    pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section,
-                            publisher_name)
-
     # FUNCTIONS #
-    publisher.info("Script Categ subscribed to channel {0}".format(
-        cfg.get("PubSub_Words", "channel_0")))
+    publisher.info(
+        "Script Categ subscribed to channel {}".format(h.sub_channel))
 
-    with open(args.l, 'rb') as L:
-        tmp_dict = {}
+    tmp_dict = {}
+    for filename in os.listdir(args.d):
+        bname = os.path.basename(filename)
+        tmp_dict[bname] = []
+        with open(os.path.join(args.d, filename), 'r') as f:
+            for l in f:
+                tmp_dict[bname].append(l.strip())
 
-        for num, fname in enumerate(L):
-            # keywords temp list
-            tmp_list = []
-
-            with open(fname[:-1], 'rb') as LS:
-
-                for num, kword in enumerate(LS):
-                    tmp_list.append(kword[:-1])
-
-                tmp_dict[fname.split('/')[-1][:-1]] = tmp_list
-
-    message = sub.get_msg_from_queue(r_serv)
     prec_filename = None
 
     while True:
+        message = h.redis_rpop()
         if message is not None:
             channel, filename, word, score = message.split()
 
             if prec_filename is None or filename != prec_filename:
                 PST = Paste.Paste(filename)
+                prec_filename = filename
 
-            prec_filename = filename
+            for categ, words_list in tmp_dict.items():
 
-            for categ, list in tmp_dict.items():
-
-                if word.lower() in list:
-                    channel = categ
-                    msg = channel+" "+PST.p_path+" "+word+" "+score
-                    pub.send_message(msg)
-                    # dico_categ.add(categ)
+                if word.lower() in words_list:
+                    h.pub_channel = categ
+                    h.zmq_pub_send('{} {} {}'.format(PST.p_path, word, score))
 
                     publisher.info(
                         'Categ;{};{};{};Detected {} "{}"'.format(
                             PST.p_source, PST.p_date, PST.p_name, score, word))
 
         else:
-            if r_serv.sismember("SHUTDOWN_FLAGS", "Categ"):
-                r_serv.srem("SHUTDOWN_FLAGS", "Categ")
+            if h.redis_queue_shutdown():
                 print "Shutdown Flag Up: Terminating"
                 publisher.warning("Shutdown Flag Up: Terminating.")
                 break
             publisher.debug("Script Categ is Idling 10s")
             time.sleep(10)
-
-        message = sub.get_msg_from_queue(r_serv)
-
-
-if __name__ == "__main__":
-    main()

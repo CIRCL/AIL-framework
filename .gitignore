@@ -1,0 +1,21 @@
+# Temp files
+*.swp
+*.pyc
+
+# Install Dirs
+AILENV
+redis-leveldb
+redis
+Blooms
+LEVEL_DB_DATA
+PASTES
+bin/indexdir/
+logs/
+
+# Webstuff
+var/www/static/
+!var/www/static/css/dygraph_gallery.css
+!var/www/static/js/indexjavascript.js
+
+# Local config
+bin/packages/config.cfg

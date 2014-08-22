@@ -5,10 +5,11 @@
 The ZMQ_PubSub_Lines Module
 ============================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Line_Q Module.
+This module is consuming the Redis-list created by the ZMQ_PubSub_Line_Q
+Module.
 
-It perform a sorting on the line's length and publish/forward them to differents
-channels:
+It perform a sorting on the line's length and publish/forward them to
+differents channels:
 
 *Channel 1 if max length(line) < max
 *Channel 2 if max length(line) > max
@@ -26,81 +27,57 @@ Requirements
 *Need the ZMQ_PubSub_Line_Q Module running to be able to work properly.
 
 """
-import redis
 import argparse
-import ConfigParser
 import time
 from packages import Paste
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
-configfile = './packages/config.cfg'
+import Helper
 
+if __name__ == "__main__":
+    publisher.port = 6380
+    publisher.channel = "Script"
 
-def main():
-    """Main Function"""
+    config_section = 'PubSub_Global'
+    config_channel = 'channel'
+    subscriber_name = 'line'
 
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+
+    # Publisher
+    pub_config_section = 'PubSub_Longlines'
+    h.zmq_pub(pub_config_section, None)
+
+    # Subscriber
+    h.zmq_sub(config_section)
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
-        description='''This script is a part of the Analysis Information Leak framework.''',
-        epilog='''''')
+        description='''This script is a part of the Analysis Information \
+                Leak framework.''')
 
-    parser.add_argument('-max', type=int, default=500,
-                        help='The limit between "short lines" and "long lines" (500)',
-                        action='store')
+    parser.add_argument(
+        '-max', type=int, default=500,
+        help='The limit between "short lines" and "long lines"',
+        action='store')
 
     args = parser.parse_args()
 
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Data_Merging", "host"),
-        port=cfg.getint("Redis_Data_Merging", "port"),
-        db=cfg.getint("Redis_Data_Merging", "db"))
-
-    r_serv1 = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    # LOGGING #
-    publisher.channel = "Script"
-
-    # ZMQ #
-    # Subscriber
-    channel = cfg.get("PubSub_Global", "channel")
-    subscriber_name = "line"
-    subscriber_config_section = "PubSub_Global"
-
-    # Publisher
-    publisher_config_section = "PubSub_Longlines"
-    publisher_name = "publine"
-
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-
-    pub = ZMQ_PubSub.ZMQPub(configfile, publisher_config_section, publisher_name)
-
-    channel_0 = cfg.get("PubSub_Longlines", "channel_0")
-    channel_1 = cfg.get("PubSub_Longlines", "channel_1")
+    channel_0 = h.config.get("PubSub_Longlines", "channel_0")
+    channel_1 = h.config.get("PubSub_Longlines", "channel_1")
 
     # FUNCTIONS #
-    tmp_string = "Lines script Subscribed to channel {} and Start to publish on channel {}, {}"
-    publisher.info(tmp_string.format(
-        cfg.get("PubSub_Global", "channel"),
-        cfg.get("PubSub_Longlines", "channel_0"),
-        cfg.get("PubSub_Longlines", "channel_1")))
+    tmp_string = "Lines script Subscribed to channel {} and Start to publish \
+            on channel {}, {}"
+    publisher.info(tmp_string.format(h.sub_channel, channel_0, channel_1))
 
     while True:
         try:
-            message = sub.get_msg_from_queue(r_serv1)
+            message = h.redis_rpop()
             if message is not None:
                 PST = Paste.Paste(message.split(" ", -1)[-1])
             else:
-                if r_serv1.sismember("SHUTDOWN_FLAGS", "Lines"):
-                    r_serv1.srem("SHUTDOWN_FLAGS", "Lines")
+                if h.redis_queue_shutdown():
                     print "Shutdown Flag Up: Terminating"
                     publisher.warning("Shutdown Flag Up: Terminating.")
                     break
@@ -108,21 +85,17 @@ def main():
                 time.sleep(10)
                 continue
 
+            # FIXME do it in the paste class
             lines_infos = PST.get_lines_info()
+            PST.save_attribute_redis("p_nb_lines", lines_infos[0])
+            PST.save_attribute_redis("p_max_length_line", lines_infos[1])
 
-            PST.save_attribute_redis(r_serv, "p_nb_lines", lines_infos[0])
-            PST.save_attribute_redis(r_serv, "p_max_length_line", lines_infos[1])
-
-            r_serv.sadd("Pastes_Objects", PST.p_path)
+            # FIXME Not used.
+            PST.store.sadd("Pastes_Objects", PST.p_path)
             if lines_infos[1] >= args.max:
-                msg = channel_0+" "+PST.p_path
+                h.pub_channel = channel_0
             else:
-                msg = channel_1+" "+PST.p_path
-
-            pub.send_message(msg)
+                h.pub_channel = channel_1
+            h.zmq_pub_send(PST.p_path)
         except IOError:
             print "CRC Checksum Error on : ", PST.p_path
-            pass
-
-if __name__ == "__main__":
-    main()

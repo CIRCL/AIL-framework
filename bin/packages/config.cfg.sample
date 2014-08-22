@@ -1,8 +1,8 @@
 [Directories]
-bloomfilters = /home/user/Blooms/
-pastes = /home/user/PASTES/
-wordtrending_csv = /home/user/AIL/var/www/static/csv/wordstrendingdata
-wordsfile = /home/user/AIL/files/wordfile
+bloomfilters = Blooms
+pastes = PASTES
+wordtrending_csv = var/www/static/csv/wordstrendingdata
+wordsfile = files/wordfile
 
 ##### Redis #####
 [Redis_Cache]
@@ -56,7 +56,10 @@ channel_0 = words
 
 [PubSub_Categ]
 adress = tcp://127.0.0.1:5003
-#Channels are dynamic (1 channel per categ)
+channel_0 = creditcard_categ
+channel_1 = mails_categ
+channel_2 = onion_categ
+channel_3 = web_categ
 
 [PubSub_Url]
 adress = tcp://127.0.0.1:5004
@@ -67,4 +70,4 @@ cc_critical = DE
 # Indexer configuration
 [Indexer]
 type = whoosh
-path = /home/user/indexdir
+path = indexdir

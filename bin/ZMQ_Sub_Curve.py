@@ -6,7 +6,8 @@ The ZMQ_Sub_Curve Module
 
 This module is consuming the Redis-list created by the ZMQ_Sub_Curve_Q Module.
 
-This modules update a .csv file used to draw curves representing selected words and their occurency per day.
+This modules update a .csv file used to draw curves representing selected
+words and their occurency per day.
 
 ..note:: The channel will have the name of the file created.
 
@@ -22,72 +23,64 @@ Requirements
 
 """
 import redis
-import ConfigParser
 import time
-from packages import Paste as P
-from packages import ZMQ_PubSub
+from packages import Paste
 from pubsublogger import publisher
 from packages import lib_words
+import os
 
-configfile = './packages/config.cfg'
+import Helper
 
-
-def main():
-    """Main Function"""
-
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
-
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    r_serv1 = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB", "host"),
-        port=cfg.get("Redis_Level_DB", "port"),
-        db=0)
-
-    # LOGGING #
+if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
-    # ZMQ #
-    channel = cfg.get("PubSub_Words", "channel_0")
+    config_section = 'PubSub_Words'
+    config_channel = 'channel_0'
     subscriber_name = "curve"
-    subscriber_config_section = "PubSub_Words"
 
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+
+    # Subscriber
+    h.zmq_sub(config_section)
+
+    # REDIS #
+    r_serv1 = redis.StrictRedis(
+        host=h.config.get("Redis_Level_DB", "host"),
+        port=h.config.get("Redis_Level_DB", "port"),
+        db=h.config.get("Redis_Level_DB", "db"))
 
     # FUNCTIONS #
-    publisher.info("Script Curve subscribed to channel {0}".format(cfg.get("PubSub_Words", "channel_0")))
+    publisher.info("Script Curve subscribed to {}".format(h.sub_channel))
 
     # FILE CURVE SECTION #
-    csv_path = cfg.get("Directories", "wordtrending_csv")
-    wordfile_path = cfg.get("Directories", "wordsfile")
+    csv_path = os.path.join(os.environ['AIL_HOME'],
+                            h.config.get("Directories", "wordtrending_csv"))
+    wordfile_path = os.path.join(os.environ['AIL_HOME'],
+                                 h.config.get("Directories", "wordsfile"))
 
-    message = sub.get_msg_from_queue(r_serv)
+    message = h.redis_rpop()
     prec_filename = None
     while True:
         if message is not None:
             channel, filename, word, score = message.split()
             if prec_filename is None or filename != prec_filename:
-                PST = P.Paste(filename)
-                lib_words.create_curve_with_word_file(r_serv1, csv_path, wordfile_path, int(PST.p_date.year), int(PST.p_date.month))
+                PST = Paste.Paste(filename)
+                lib_words.create_curve_with_word_file(
+                    r_serv1, csv_path, wordfile_path, int(PST.p_date.year),
+                    int(PST.p_date.month))
 
             prec_filename = filename
             prev_score = r_serv1.hget(word.lower(), PST.p_date)
             print prev_score
             if prev_score is not None:
-                r_serv1.hset(word.lower(), PST.p_date, int(prev_score) + int(score))
+                r_serv1.hset(word.lower(), PST.p_date,
+                             int(prev_score) + int(score))
             else:
                 r_serv1.hset(word.lower(), PST.p_date, score)
-             # r_serv.expire(word,86400) #1day
 
         else:
-            if r_serv.sismember("SHUTDOWN_FLAGS", "Curve"):
-                r_serv.srem("SHUTDOWN_FLAGS", "Curve")
+            if h.redis_queue_shutdown():
                 print "Shutdown Flag Up: Terminating"
                 publisher.warning("Shutdown Flag Up: Terminating.")
                 break
@@ -95,8 +88,4 @@ def main():
             print "sleepin"
             time.sleep(1)
 
-        message = sub.get_msg_from_queue(r_serv)
-
-
-if __name__ == "__main__":
-    main()
+        message = h.redis_rpop()

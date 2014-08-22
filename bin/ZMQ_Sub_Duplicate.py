@@ -13,61 +13,46 @@ Requirements:
 
 """
 import redis
-import ConfigParser
 import os
 import time
 from packages import Paste
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 from pybloomfilter import BloomFilter
 
-configfile = './packages/config.cfg'
+import Helper
 
+if __name__ == "__main__":
+    publisher.port = 6380
+    publisher.channel = "Script"
 
-def main():
-    """Main Function"""
+    config_section = 'PubSub_Global'
+    config_channel = 'channel'
+    subscriber_name = 'duplicate'
 
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
-    # REDIS #
-    # DB QUEUE ( MEMORY )
-    r_Q_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    r_serv_merge = redis.StrictRedis(
-        host=cfg.get("Redis_Data_Merging", "host"),
-        port=cfg.getint("Redis_Data_Merging", "port"),
-        db=cfg.getint("Redis_Data_Merging", "db"))
+    # Subscriber
+    h.zmq_sub(config_section)
 
     # REDIS #
     # DB OBJECT & HASHS ( DISK )
+    # FIXME increase flexibility
     dico_redis = {}
     for year in xrange(2013, 2015):
         for month in xrange(0, 16):
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
-                host=cfg.get("Redis_Level_DB", "host"),
-                port=year,
+                host=h.config.get("Redis_Level_DB", "host"), port=year,
                 db=month)
 
-    # LOGGING #
-    publisher.channel = "Script"
-
-    # ZMQ #
-    channel = cfg.get("PubSub_Global", "channel")
-    subscriber_name = "duplicate"
-    subscriber_config_section = "PubSub_Global"
-
-    sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
-
     # FUNCTIONS #
-    publisher.info("""Script duplicate subscribed to channel {0}""".format(cfg.get("PubSub_Global", "channel")))
+    publisher.info("""Script duplicate subscribed to channel {0}""".format(
+        h.config.get("PubSub_Global", "channel")))
 
     set_limit = 100
+    bloompath = os.path.join(os.environ['AIL_HOME'],
+                             h.config.get("Directories", "bloomfilters"))
 
+    bloop_path_set = set()
     while True:
         try:
             super_dico = {}
@@ -77,15 +62,14 @@ def main():
 
             x = time.time()
 
-            message = sub.get_msg_from_queue(r_Q_serv)
+            message = h.redis_rpop()
             if message is not None:
                 path = message.split(" ", -1)[-1]
                 PST = Paste.Paste(path)
             else:
                 publisher.debug("Script Attribute is idling 10s")
                 time.sleep(10)
-                if r_Q_serv.sismember("SHUTDOWN_FLAGS", "Duplicate"):
-                    r_Q_serv.srem("SHUTDOWN_FLAGS", "Duplicate")
+                if h.redis_queue_shutdown():
                     print "Shutdown Flag Up: Terminating"
                     publisher.warning("Shutdown Flag Up: Terminating.")
                     break
@@ -97,19 +81,14 @@ def main():
             r_serv1 = dico_redis[PST.p_date.year + PST.p_date.month]
 
             # Creating the bloom filter name: bloomyyyymm
-            bloomname = 'bloom' + PST.p_date.year + PST.p_date.month
-
-            bloompath = cfg.get("Directories", "bloomfilters")
-
-            filebloompath = bloompath + bloomname
-
-            # datetime.date(int(PST.p_date.year),int(PST.p_date.month),int(PST.p_date.day)).timetuple().tm_yday % 7
+            filebloompath = os.path.join(bloompath, 'bloom' + PST.p_date.year +
+                                         PST.p_date.month)
 
             if os.path.exists(filebloompath):
                 bloom = BloomFilter.open(filebloompath)
             else:
                 bloom = BloomFilter(100000000, 0.01, filebloompath)
-                r_Q_serv.sadd("bloomlist", filebloompath)
+                bloop_path_set.add(filebloompath)
 
             # UNIQUE INDEX HASHS TABLE
             r_serv0 = dico_redis["201300"]
@@ -121,45 +100,43 @@ def main():
 
             # For each bloom filter
             opened_bloom = []
-            for bloo in r_Q_serv.smembers("bloomlist"):
+            for bloo in bloop_path_set:
                 # Opening blooms
                 opened_bloom.append(BloomFilter.open(bloo))
 
             # For each hash of the paste
-            for hash in PST._get_hash_lines(min=5, start=1, jump=0):
+            for line_hash in PST._get_hash_lines(min=5, start=1, jump=0):
                 nb_hash_current += 1
 
                 # Adding the hash in Redis & limiting the set
-                if r_serv1.scard(hash) <= set_limit:
-                    r_serv1.sadd(hash, index)
-                    r_serv1.sadd("HASHS", hash)
+                if r_serv1.scard(line_hash) <= set_limit:
+                    r_serv1.sadd(line_hash, index)
+                    r_serv1.sadd("HASHS", line_hash)
                 # Adding the hash in the bloom of the month
-                bloom.add(hash)
+                bloom.add(line_hash)
 
                 # Go throught the Database of the bloom filter (of the month)
                 for bloo in opened_bloom:
-                    if hash in bloo:
+                    if line_hash in bloo:
                         db = bloo.name[-6:]
-                        # Go throught the Database of the bloom filter (of the month)
+                        # Go throught the Database of the bloom filter (month)
                         r_serv_bloom = dico_redis[db]
 
                         # set of index paste: set([1,2,4,65])
-                        hash_current = r_serv_bloom.smembers(hash)
+                        hash_current = r_serv_bloom.smembers(line_hash)
                         # removing itself from the list
                         hash_current = hash_current - set([index])
 
-                        # if the hash is present at least in 1 files (already processed)
+                        # if the hash is present at least in 1 files
+                        # (already processed)
                         if len(hash_current) != 0:
-                            hash_dico[hash] = hash_current
+                            hash_dico[line_hash] = hash_current
 
                         # if there is data in this dictionnary
                         if len(hash_dico) != 0:
                             super_dico[index] = hash_dico
-                    else:
-                        # The hash is not in this bloom
-                        pass
 
-    ###########################################################################################
+    ###########################################################################
 
             # if there is data in this dictionnary
             if len(super_dico) != 0:
@@ -171,7 +148,8 @@ def main():
 
                         for p_fname in pset:
                             occur_dico.setdefault(p_fname, 0)
-                            # Count how much hash is similar per file occuring in the dictionnary
+                            # Count how much hash is similar per file occuring
+                            # in the dictionnary
                             if occur_dico[p_fname] >= 0:
                                 occur_dico[p_fname] = occur_dico[p_fname] + 1
 
@@ -181,10 +159,11 @@ def main():
                         dupl.append((paste, percentage))
 
                 # Creating the object attribute and save it.
-                to_print = 'Duplicate;{};{};{};'.format(PST.p_source, PST.p_date, PST.p_name)
+                to_print = 'Duplicate;{};{};{};'.format(
+                    PST.p_source, PST.p_date, PST.p_name)
                 if dupl != []:
                     PST.__setattr__("p_duplicate", dupl)
-                    PST.save_attribute_redis(r_serv_merge, "p_duplicate", dupl)
+                    PST.save_attribute_redis("p_duplicate", dupl)
                     publisher.info('{}Detected {}'.format(to_print, len(dupl)))
 
                 y = time.time()
@@ -193,7 +172,3 @@ def main():
         except IOError:
             print "CRC Checksum Failed on :", PST.p_path
             publisher.error('{}CRC Checksum Failed'.format(to_print))
-            pass
-
-if __name__ == "__main__":
-    main()

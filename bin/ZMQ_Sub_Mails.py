@@ -2,52 +2,42 @@
 # -*-coding:UTF-8 -*
 
 import redis
-import ConfigParser
 import pprint
 import time
 import dns.exception
-from packages import Paste as P
+from packages import Paste
 from packages import lib_refine
-from packages import ZMQ_PubSub
 from pubsublogger import publisher
 
-configfile = './packages/config.cfg'
+import Helper
 
-
-def main():
-    """Main Function"""
-
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
-
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    r_serv1 = redis.StrictRedis(
-        host=cfg.get("Redis_Data_Merging", "host"),
-        port=cfg.getint("Redis_Data_Merging", "port"),
-        db=cfg.getint("Redis_Data_Merging", "db"))
-
-    r_serv2 = redis.StrictRedis(
-        host=cfg.get("Redis_Cache", "host"),
-        port=cfg.getint("Redis_Cache", "port"),
-        db=cfg.getint("Redis_Cache", "db"))
-
-    # LOGGING #
+if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
-    # ZMQ #
-    sub = ZMQ_PubSub.ZMQSub(configfile, "PubSub_Categ", "mails_categ", "emails")
+    config_section = 'PubSub_Categ'
+    config_channel = 'channel_1'
+    subscriber_name = 'emails'
+
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+
+    # Subscriber
+    h.zmq_sub(config_section)
+
+    # REDIS #
+    r_serv2 = redis.StrictRedis(
+        host=h.config.get("Redis_Cache", "host"),
+        port=h.config.getint("Redis_Cache", "port"),
+        db=h.config.getint("Redis_Cache", "db"))
 
     # FUNCTIONS #
     publisher.info("Suscribed to channel mails_categ")
 
-    message = sub.get_msg_from_queue(r_serv)
+    message = h.redis_rpop()
     prec_filename = None
+
+    # Log as critical if there are more that that amout of valid emails
+    is_critical = 10
 
     email_regex = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
 
@@ -57,36 +47,35 @@ def main():
                 channel, filename, word, score = message.split()
 
                 if prec_filename is None or filename != prec_filename:
-                    PST = P.Paste(filename)
-                    MX_values = lib_refine.checking_MX_record(r_serv2, PST.get_regex(email_regex))
+                    PST = Paste.Paste(filename)
+                    MX_values = lib_refine.checking_MX_record(
+                        r_serv2, PST.get_regex(email_regex))
 
                     if MX_values[0] >= 1:
 
                         PST.__setattr__(channel, MX_values)
-                        PST.save_attribute_redis(r_serv1, channel, (MX_values[0], list(MX_values[1])))
+                        PST.save_attribute_redis(channel, (MX_values[0],
+                                                 list(MX_values[1])))
 
                         pprint.pprint(MX_values)
-                        to_print = 'Mails;{};{};{};Checked {} e-mail(s)'.format(PST.p_source, PST.p_date, PST.p_name, MX_values[0])
-                        if MX_values[0] > 10:
+                        to_print = 'Mails;{};{};{};Checked {} e-mail(s)'.\
+                            format(PST.p_source, PST.p_date, PST.p_name,
+                                   MX_values[0])
+                        if MX_values[0] > is_critical:
                             publisher.warning(to_print)
                         else:
                             publisher.info(to_print)
                 prec_filename = filename
 
             else:
-                if r_serv.sismember("SHUTDOWN_FLAGS", "Mails"):
-                    r_serv.srem("SHUTDOWN_FLAGS", "Mails")
+                if h.redis_queue_shutdown():
                     print "Shutdown Flag Up: Terminating"
                     publisher.warning("Shutdown Flag Up: Terminating.")
                     break
                 publisher.debug("Script Mails is Idling 10s")
                 time.sleep(10)
 
-            message = sub.get_msg_from_queue(r_serv)
+            message = h.redis_rpop()
         except dns.exception.Timeout:
+            # FIXME retry!
             print "dns.exception.Timeout"
-            pass
-
-
-if __name__ == "__main__":
-    main()

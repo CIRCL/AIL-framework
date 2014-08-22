@@ -9,10 +9,13 @@ WHITE="\\033[0;02m"
 YELLOW="\\033[1;33m"
 CYAN="\\033[1;36m"
 
-#Modify these PATH
-export PATH=$(pwd):$PATH
-export PATH=/opt/redis-2.8.12/src/:$PATH
-export PATH=/opt/redis-leveldb/:$PATH
+[ -z "$AIL_HOME" ] && echo "Needs the env var AIL_HOME. Run the script from the virtual environment." && exit 1;
+[ -z "$AIL_REDIS" ] && echo "Needs the env var AIL_REDIS. Run the script from the virtual environment." && exit 1;
+[ -z "$AIL_LEVELDB" ] && echo "Needs the env var AIL_LEVELDB. Run the script from the virtual environment." && exit 1;
+
+export PATH=$AIL_HOME:$PATH
+export PATH=$AIL_REDIS:$PATH
+export PATH=$AIL_LEVELDB:$PATH
 
 function helptext {
     echo -e $YELLOW"
@@ -45,7 +48,7 @@ function helptext {
 }
 
 function launching_redis {
-    conf_dir='/home/user/AIL-framework/configs/'
+    conf_dir="${AIL_HOME}/configs/"
 
     screen -dmS "Redis"
     sleep 0.1
@@ -60,7 +63,7 @@ function launching_redis {
 function launching_lvldb {
     #Want to launch more level_db?
     lvdbhost='127.0.0.1'
-    lvdbdir='/home/user/AIL-framework/LEVEL_DB_DATA/'
+    lvdbdir="${AIL_HOME}/LEVEL_DB_DATA/"
     db1_y='2013'
     db2_y='2014'
     nb_db=13

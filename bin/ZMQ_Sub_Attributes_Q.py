@@ -18,47 +18,19 @@ Requirements
 
 """
 
-import redis
-import ConfigParser
 from pubsublogger import publisher
-from packages import ZMQ_PubSub
 
-configfile = './packages/config.cfg'
+import Helper
 
-
-def main():
-    """Main Function"""
-
-    # CONFIG #
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(configfile)
-
-    # REDIS #
-    r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
-
-    # LOGGING #
-    publisher.channel = "Queuing"
-
-    # ZMQ #
-    channel = cfg.get("PubSub_Global", "channel")
-    subscriber_name = "attributes"
-
-    sub = ZMQ_PubSub.ZMQSub(configfile, "PubSub_Global", channel, subscriber_name)
-
-    # FUNCTIONS #
-    publisher.info("""Suscribed to channel {0}""".format(channel))
-
-    while True:
-        sub.get_and_lpush(r_serv)
-
-        if r_serv.sismember("SHUTDOWN_FLAGS", "Attributes_Q"):
-            r_serv.srem("SHUTDOWN_FLAGS", "Attributes_Q")
-            print "Shutdown Flag Up: Terminating"
-            publisher.warning("Shutdown Flag Up: Terminating.")
-            break
 
 if __name__ == "__main__":
-    main()
+    publisher.port = 6380
+    publisher.channel = "Queuing"
+
+    config_section = 'PubSub_Global'
+    config_channel = 'channel'
+    subscriber_name = 'attributes'
+
+    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    h.zmq_sub(config_section)
+    h.redis_queue_subscribe(publisher)

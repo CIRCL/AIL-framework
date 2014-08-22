@@ -4,7 +4,7 @@ pyzmq
 dnspython
 logbook
 pubsublogger
-
+textblob
 
 #Graph
 numpy
@@ -28,6 +28,9 @@ texttable
 
 #Indexer requirements
 whoosh
+
+ipaddress
+pycountry
 
 #ASN lookup requirements
 http://adns-python.googlecode.com/files/adns-python-1.2.1.tar.gz
