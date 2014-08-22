@@ -32,6 +32,7 @@ import os
 import Helper
 
 if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
     config_section = 'PubSub_Words'
@@ -53,9 +54,9 @@ if __name__ == "__main__":
     publisher.info("Script Curve subscribed to {}".format(h.sub_channel))
 
     # FILE CURVE SECTION #
-    csv_path = os.path.join(os.environ('AIL_HOME'),
+    csv_path = os.path.join(os.environ['AIL_HOME'],
                             h.config.get("Directories", "wordtrending_csv"))
-    wordfile_path = os.path.join(os.environ('AIL_HOME'),
+    wordfile_path = os.path.join(os.environ['AIL_HOME'],
                                  h.config.get("Directories", "wordsfile"))
 
     message = h.redis_rpop()

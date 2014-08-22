@@ -22,6 +22,7 @@ from pybloomfilter import BloomFilter
 import Helper
 
 if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
     config_section = 'PubSub_Global'
@@ -48,7 +49,7 @@ if __name__ == "__main__":
         h.config.get("PubSub_Global", "channel")))
 
     set_limit = 100
-    bloompath = os.path.join(os.environ('AIL_HOME'),
+    bloompath = os.path.join(os.environ['AIL_HOME'],
                              h.config.get("Directories", "bloomfilters"))
 
     bloop_path_set = set()

@@ -29,6 +29,7 @@ import Helper
 
 
 if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
     config_section = 'Feed'
@@ -67,7 +68,7 @@ if __name__ == "__main__":
             time.sleep(10)
             continue
         # Creating the full filepath
-        filename = os.path.join(os.environ('AIL_HOME'),
+        filename = os.path.join(os.environ['AIL_HOME'],
                                 h.config.get("Directories", "pastes"), paste)
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):

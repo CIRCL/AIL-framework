@@ -56,7 +56,7 @@ class Paste(object):
 
     def __init__(self, p_path):
 
-        configfile = os.path.join(os.environ('AIL_BIN'), 'packages/config.cfg')
+        configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
         if not os.path.exists(configfile):
             raise Exception('Unable to find the configuration file. \
                             Did you set environment variables? \

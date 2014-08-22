@@ -38,6 +38,7 @@ def main():
                                port=cfg.getint("Redis_Queues", "port"),
                                db=cfg.getint("Redis_Queues", "db"))
 
+    publisher.port = 6380
     publisher.channel = "Script"
 
     create_dirfile(r_serv, args.directory, args.ow)

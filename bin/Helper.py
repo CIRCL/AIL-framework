@@ -20,7 +20,8 @@ import zmq
 class Redis_Queues(object):
 
     def __init__(self, conf_section, conf_channel, subscriber_name):
-        configfile = os.path.join(os.environ('AIL_BIN'), 'packages/config.cfg')
+        configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+        print configfile
         if not os.path.exists(configfile):
             raise Exception('Unable to find the configuration file. \
                             Did you set environment variables? \

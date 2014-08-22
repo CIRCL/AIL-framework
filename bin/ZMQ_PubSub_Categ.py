@@ -36,7 +36,6 @@ Requirements
 *Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
-import glob
 import os
 import argparse
 import time
@@ -46,6 +45,7 @@ from packages import Paste
 import Helper
 
 if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
     config_section = 'PubSub_Words'
@@ -75,10 +75,10 @@ if __name__ == "__main__":
         "Script Categ subscribed to channel {}".format(h.sub_channel))
 
     tmp_dict = {}
-    for filename in glob.glob(args.d):
+    for filename in os.listdir(args.d):
         bname = os.path.basename(filename)
         tmp_dict[bname] = []
-        with open(filename, 'r') as f:
+        with open(os.path.join(args.d, filename), 'r') as f:
             for l in f:
                 tmp_dict[bname].append(l.strip())
 

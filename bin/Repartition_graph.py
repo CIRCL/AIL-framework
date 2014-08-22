@@ -34,6 +34,7 @@ def main():
         db=cfg.getint("Redis_Level_DB_Hashs", "db"))
 
     # LOGGING #
+    publisher.port = 6380
     publisher.channel = "Graph"
 
     # FUNCTIONS #

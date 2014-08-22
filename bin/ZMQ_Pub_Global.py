@@ -27,6 +27,7 @@ from pubsublogger import publisher
 import Helper
 
 if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Global"
 
     config_section = 'PubSub_Global'

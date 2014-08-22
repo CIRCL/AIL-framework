@@ -21,6 +21,7 @@ import Helper
 
 
 if __name__ == "__main__":
+    publisher.port = 6380
     publisher.channel = "Script"
 
     # Subscriber

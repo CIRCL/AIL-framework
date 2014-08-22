@@ -33,6 +33,7 @@ def main():
         db=cfg.getint("Redis_Queues", "db"))
 
     # LOGGING #
+    publisher.port = 6380
     publisher.channel = "Queuing"
 
     # ZMQ #
