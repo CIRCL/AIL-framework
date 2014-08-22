@@ -29,6 +29,7 @@ test ! -d redis-leveldb/ && git clone https://github.com/KDr2/redis-leveldb.git
 pushd redis-leveldb/
 git submodule init
 git submodule update
+make
 popd
 
 virtualenv AILENV
