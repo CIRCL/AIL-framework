@@ -81,7 +81,7 @@ if __name__ == "__main__":
                             continue
 
                         try:
-                            l = client.lookup(socket.inet_aton(ip), qType='IP')
+                            l = client.lookup(ip, qType='IP')
                         except ipaddress.AddressValueError:
                             continue
                         cc = getattr(l, 'cc')
