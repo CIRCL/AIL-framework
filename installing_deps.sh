@@ -32,6 +32,10 @@ git submodule update
 make
 popd
 
+if [ ! -f bin/packages/config.cfg ]; then
+    cp bin/packages/config.cfg.sample bin/packages/config.cfg
+fi
+
 virtualenv AILENV
 
 echo export AIL_HOME=$(pwd) >> ./AILENV/bin/activate
