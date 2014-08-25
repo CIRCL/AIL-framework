@@ -6,13 +6,16 @@ set -x
 sudo apt-get update
 
 sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
-    screen g++ python-tk
+    screen g++ python-tk unzip
 
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python-numpy
 
 # DNS deps
 sudo apt-get install libadns1 libadns1-dev
+
+#Needed for redis-lvlDB
+sudo apt-get install libev-dev libgmp-dev
 
 #needed for mathplotlib
 test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
