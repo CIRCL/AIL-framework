@@ -11,6 +11,23 @@ AIL is a modular framework to analyse potential information leak from unstructur
 Requirements & Installation
 ---------------------------
 
+Auto installation
+-----------------
+Type these commands lines for a fully automated installation and start AIL-framework
+```
+git clone https://github.com/CIRCL/AIL-framework.git
+cd AIL-framework
+./installing_deps.sh
+cd var/www/
+./update_thirdparty.sh
+cd ~/AIL-framework/
+. ./AILENV/bin/activate
+cd bin/
+./LAUNCH.sh
+```
+
+Manual installation
+-------------------
 Obviously:
 ``sudo apt-get install python2.7``
 
@@ -19,6 +36,7 @@ But also pip, virtualenv and screen.
 sudo apt-get install python-pip
 sudo pip install virtualenv
 sudo apt-get install screen
+sudo apt-get install unzip
 ```
 
 You need to create a variable AILENV that will be the installation path:
@@ -45,6 +63,8 @@ sudo apt-get install libfreetype6-dev
 sudo apt-get install python-numpy
 sudo apt-get install libadns1
 sudo apt-get install libadns1-dev
+sudo apt-get install libev-dev (redis-levelDB dependency)
+sudp apt-get install libgmp-dev (redis-levelDB dependency)
 ```
 
 Then these modules need to be install with pip inside the virtual environment:
