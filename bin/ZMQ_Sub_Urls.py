@@ -26,11 +26,6 @@ if __name__ == "__main__":
 
     h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
-    # Publisher
-    pub_config_section = "PubSub_Url"
-    pub_config_channel = 'channel'
-    h.zmq_pub(pub_config_section, pub_config_channel)
-
     # Subscriber
     h.zmq_sub(config_section)
 
@@ -65,7 +60,7 @@ if __name__ == "__main__":
                             port, resource_path, query_string, f1, f2, f3, \
                             f4 = x
                         domains_list.append(domain)
-                        h.zmq_pub_send(str(x))
+                        print (str(x))
                         publisher.debug('{} Published'.format(x))
 
                         if f1 == "onion":
@@ -122,4 +117,4 @@ if __name__ == "__main__":
 
             message = h.redis_rpop()
         except dns.exception.Timeout:
-            print "dns.exception.Timeout", A_values
+            print "dns.exception.Timeout ", hostl
