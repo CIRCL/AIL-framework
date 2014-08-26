@@ -31,6 +31,7 @@ class Redis_Queues(object):
         self.subscriber_name = subscriber_name
 
         self.sub_channel = self.config.get(conf_section, conf_channel)
+        self.sub_address = self.config.get(conf_section, 'address')
         self.redis_channel = self.sub_channel + self.subscriber_name
 
         # Redis Queue
@@ -40,11 +41,10 @@ class Redis_Queues(object):
             port=self.config.getint(config_section, "port"),
             db=self.config.getint(config_section, "db"))
 
-    def zmq_sub(self, conf_section):
-        sub_address = self.config.get(conf_section, 'adress')
+    def zmq_sub(self):
         context = zmq.Context()
         self.sub_socket = context.socket(zmq.SUB)
-        self.sub_socket.connect(sub_address)
+        self.sub_socket.connect(self.sub_address)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.sub_channel)
 
     def zmq_pub(self, config_section, config_channel):
@@ -74,6 +74,7 @@ class Redis_Queues(object):
         return self.r_queues.srem('SHUTDOWN_FLAGS', flag)
 
     def redis_queue_subscribe(self, publisher):
+        self.zmq_sub()
         publisher.info("Suscribed to channel {}".format(self.sub_channel))
         while True:
             msg = self.sub_socket.recv()

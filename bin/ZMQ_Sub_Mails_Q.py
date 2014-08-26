@@ -14,5 +14,4 @@ if __name__ == "__main__":
     subscriber_name = 'emails'
 
     h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
-    h.zmq_sub(config_section)
     h.redis_queue_subscribe(publisher)

@@ -31,9 +31,6 @@ if __name__ == "__main__":
 
     h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
-    # Subscriber
-    h.zmq_sub(config_section)
-
     # REDIS #
     # DB OBJECT & HASHS ( DISK )
     # FIXME increase flexibility

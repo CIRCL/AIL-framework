@@ -48,9 +48,6 @@ if __name__ == "__main__":
     pub_config_section = 'PubSub_Longlines'
     h.zmq_pub(pub_config_section, None)
 
-    # Subscriber
-    h.zmq_sub(config_section)
-
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
         description='''This script is a part of the Analysis Information \

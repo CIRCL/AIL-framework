@@ -31,9 +31,6 @@ if __name__ == "__main__":
     pub_config_channel = 'channel'
     h.zmq_pub(pub_config_section, pub_config_channel)
 
-    # Subscriber
-    h.zmq_sub(config_section)
-
     # REDIS #
     r_serv2 = redis.StrictRedis(
         host=h.config.get("Redis_Cache", "host"),

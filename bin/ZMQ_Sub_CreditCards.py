@@ -18,9 +18,6 @@ if __name__ == "__main__":
 
     h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
 
-    # Subscriber
-    h.zmq_sub(config_section)
-
     # FUNCTIONS #
     publisher.info("Creditcard script subscribed to channel creditcard_categ")
 
