@@ -6,10 +6,17 @@ import ConfigParser
 import json
 from flask import Flask, render_template, jsonify
 import flask
+import os
 
 # CONFIG #
+configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+if not os.path.exists(configfile):
+    raise Exception('Unable to find the configuration file. \
+                    Did you set environment variables? \
+                    Or activate the virtualenv.')
+
 cfg = ConfigParser.ConfigParser()
-cfg.read('../../bin/packages/config.cfg')
+cfg.read(configfile)
 
 # REDIS #
 r_serv = redis.StrictRedis(
@@ -35,6 +42,11 @@ def event_stream():
             yield 'data: %s\n\n' % json.dumps(msg)
 
 
+def get_queues(r):
+    # We may want to put the llen in a pipeline to do only one query.
+    return [(queue, r.llen(queue)) for queue in r.smembers("queues")]
+
+
 @app.route("/_logs")
 def logs():
     return flask.Response(event_stream(), mimetype="text/event-stream")
@@ -42,18 +54,11 @@ def logs():
 
 @app.route("/_stuff", methods=['GET'])
 def stuff():
-    row1 = []
-    for queue in r_serv.smembers("queues"):
-        row1.append((queue, r_serv.llen(queue)))
-    return jsonify(row1=row1)
+    return jsonify(row1=get_queues(r_serv))
 
 
 @app.route("/")
 def index():
-    row = []
-    for queue in r_serv.smembers("queues"):
-        row.append((queue, r_serv.llen(queue)))
-
     return render_template("index.html")
 
 
