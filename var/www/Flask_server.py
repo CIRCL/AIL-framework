@@ -54,7 +54,7 @@ def index():
     for queue in r_serv.smembers("queues"):
         row.append((queue, r_serv.llen(queue)))
 
-    return render_template("index.html", queues_name=row)
+    return render_template("index.html")
 
 
 @app.route("/monitoring/")
