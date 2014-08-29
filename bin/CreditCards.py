@@ -6,25 +6,26 @@ from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Categ'
-    config_channel = 'channel_0'
-    subscriber_name = 'cards'
+    config_section = 'CreditCards'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    p = Process(config_section)
 
     # FUNCTIONS #
     publisher.info("Creditcard script subscribed to channel creditcard_categ")
 
-    message = h.redis_rpop()
+    message = p.get_from_set()
     prec_filename = None
 
     creditcard_regex = "4[0-9]{12}(?:[0-9]{3})?"
+
+    # FIXME For retro compatibility
+    channel = 'creditcard_categ'
 
     # mastercard_regex = "5[1-5]\d{2}([\ \-]?)\d{4}\1\d{4}\1\d{4}"
     # visa_regex = "4\d{3}([\ \-]?)\d{4}\1\d{4}\1\d{4}"
@@ -37,7 +38,7 @@ if __name__ == "__main__":
 
     while True:
         if message is not None:
-            channel, filename, word, score = message.split()
+            filename, word, score = message.split()
 
             if prec_filename is None or filename != prec_filename:
                 creditcard_set = set([])
@@ -62,11 +63,8 @@ if __name__ == "__main__":
             prec_filename = filename
 
         else:
-            if h.redis_queue_shutdown():
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
             publisher.debug("Script creditcard is idling 1m")
+            print 'Sleeping'
             time.sleep(60)
 
-        message = h.redis_rpop()
+        message = p.get_from_set()

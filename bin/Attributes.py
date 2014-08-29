@@ -30,34 +30,28 @@ import time
 from packages import Paste
 from pubsublogger import publisher
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Global'
-    config_channel = 'channel'
-    subscriber_name = 'attributes'
+    config_section = 'Attributes'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    p = Process(config_section)
 
     # FUNCTIONS #
-    publisher.info("""ZMQ Attribute is Running""")
+    publisher.info("Attribute is Running")
 
     while True:
         try:
-            message = h.redis_rpop()
+            message = p.get_from_set()
 
             if message is not None:
-                PST = Paste.Paste(message.split(" ", -1)[-1])
+                PST = Paste.Paste(message)
             else:
-                if h.redis_queue_shutdown():
-                    print "Shutdown Flag Up: Terminating"
-                    publisher.warning("Shutdown Flag Up: Terminating.")
-                    break
-                publisher.debug("Script Attribute is idling 10s")
-                time.sleep(10)
+                publisher.debug("Script Attribute is idling 1s")
+                time.sleep(1)
                 continue
 
             # FIXME do it directly in the class

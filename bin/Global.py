@@ -25,56 +25,44 @@ import os
 import time
 from pubsublogger import publisher
 
-import Helper
+from Helper import Process
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     publisher.port = 6380
-    publisher.channel = "Script"
+    publisher.channel = 'Script'
 
-    config_section = 'Feed'
-    config_channel = 'topicfilter'
-    subscriber_name = 'feed'
+    config_section = 'Global'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
-
-    # Publisher
-    pub_config_section = "PubSub_Global"
-    pub_config_channel = 'channel'
-    h.zmq_pub(pub_config_section, pub_config_channel)
+    p = Process(config_section)
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")
 
     while True:
 
-        message = h.redis_rpop()
+        message = p.get_from_set()
         # Recovering the streamed message informations.
         if message is not None:
-            if len(message.split()) == 3:
-                topic, paste, gzip64encoded = message.split()
-                print paste
+            splitted = message.split()
+            if len(splitted) == 2:
+                paste, gzip64encoded = splitted
             else:
                 # TODO Store the name of the empty paste inside a Redis-list.
                 print "Empty Paste: not processed"
                 publisher.debug("Empty Paste: {0} not processed".format(paste))
                 continue
         else:
-            if h.redis_queue_shutdown():
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
             print "Empty Queues: Waiting..."
-            time.sleep(10)
+            time.sleep(1)
             continue
         # Creating the full filepath
         filename = os.path.join(os.environ['AIL_HOME'],
-                                h.config.get("Directories", "pastes"), paste)
+                                p.config.get("Directories", "pastes"), paste)
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
         with open(filename, 'wb') as f:
             f.write(base64.standard_b64decode(gzip64encoded))
-
-        h.zmq_pub_send(filename)
+        p.populate_set_out(filename)

@@ -14,36 +14,32 @@ import socket
 import pycountry
 import ipaddress
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Categ'
-    config_channel = 'channel_3'
-    subscriber_name = "urls"
+    config_section = 'Web'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
-
-    # Publisher
-    pub_config_section = "PubSub_Url"
-    pub_config_channel = 'channel'
-    h.zmq_pub(pub_config_section, pub_config_channel)
+    p = Process(config_section)
 
     # REDIS #
     r_serv2 = redis.StrictRedis(
-        host=h.config.get("Redis_Cache", "host"),
-        port=h.config.getint("Redis_Cache", "port"),
-        db=h.config.getint("Redis_Cache", "db"))
+        host=p.config.get("Redis_Cache", "host"),
+        port=p.config.getint("Redis_Cache", "port"),
+        db=p.config.getint("Redis_Cache", "db"))
 
     # Country to log as critical
-    cc_critical = h.config.get("PubSub_Url", "cc_critical")
+    cc_critical = p.config.get("PubSub_Url", "cc_critical")
 
     # FUNCTIONS #
     publisher.info("Script URL subscribed to channel web_categ")
 
-    message = h.redis_rpop()
+    # FIXME For retro compatibility
+    channel = 'web_categ'
+
+    message = p.get_from_set()
     prec_filename = None
 
     url_regex = "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
@@ -51,7 +47,7 @@ if __name__ == "__main__":
     while True:
         try:
             if message is not None:
-                channel, filename, word, score = message.split()
+                filename, word, score = message.split()
 
                 if prec_filename is None or filename != prec_filename:
                     domains_list = []
@@ -62,7 +58,7 @@ if __name__ == "__main__":
                             port, resource_path, query_string, f1, f2, f3, \
                             f4 = x
                         domains_list.append(domain)
-                        h.zmq_pub_send(str(x))
+                        p.populate_set_out(x, 'Url')
                         publisher.debug('{} Published'.format(x))
 
                         if f1 == "onion":
@@ -110,13 +106,10 @@ if __name__ == "__main__":
                 prec_filename = filename
 
             else:
-                if h.redis_queue_shutdown():
-                    print "Shutdown Flag Up: Terminating"
-                    publisher.warning("Shutdown Flag Up: Terminating.")
-                    break
                 publisher.debug("Script url is Idling 10s")
+                print 'Sleeping'
                 time.sleep(10)
 
-            message = h.redis_rpop()
+            message = p.get_from_set()
         except dns.exception.Timeout:
             print "dns.exception.Timeout", A_values

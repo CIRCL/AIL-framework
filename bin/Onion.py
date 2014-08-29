@@ -27,32 +27,34 @@ from packages import Paste
 from pubsublogger import publisher
 
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Categ'
-    config_channel = 'channel_2'
-    subscriber_name = 'tor'
+    config_section = 'Onion'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    p = Process(config_section)
 
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
 
+    # FIXME For retro compatibility
+    channel = 'onion_categ'
+
     # Getting the first message from redis.
-    message = h.redis_rpop()
+    message = p.get_from_set()
     prec_filename = None
 
     # Thanks to Faup project for this regex
     # https://github.com/stricaud/faup
-    url_regex = "([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|onion|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
+    url_regex = "([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
 
     while True:
         if message is not None:
-            channel, filename, word, score = message.split()
+            print message
+            filename, word, score = message.split()
 
             # "For each new paste"
             if prec_filename is None or filename != prec_filename:
@@ -64,8 +66,7 @@ if __name__ == "__main__":
                     credential, subdomain, domain, host, tld, port, \
                         resource_path, query_string, f1, f2, f3, f4 = x
 
-                    if f1 == "onion":
-                        domains_list.append(domain)
+                    domains_list.append(domain)
 
                 # Saving the list of extracted onion domains.
                 PST.__setattr__(channel, domains_list)
@@ -83,11 +84,8 @@ if __name__ == "__main__":
             prec_filename = filename
 
         else:
-            if h.redis_queue_shutdown():
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
             publisher.debug("Script url is Idling 10s")
+            print 'Sleeping'
             time.sleep(10)
 
-        message = h.redis_rpop()
+        message = p.get_from_set()

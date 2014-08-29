@@ -44,7 +44,8 @@ def event_stream():
 
 def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
-    return [(queue, r.llen(queue)) for queue in r.smembers("queues")]
+    return [(queue, int(card)) for queue, card in
+            r.hgetall("queues").iteritems()]
 
 
 @app.route("/_logs")
@@ -54,6 +55,7 @@ def logs():
 
 @app.route("/_stuff", methods=['GET'])
 def stuff():
+    print get_queues(r_serv)
     return jsonify(row1=get_queues(r_serv))
 
 

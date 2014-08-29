@@ -27,40 +27,28 @@ import time
 from packages import Paste
 from pubsublogger import publisher
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Longlines'
-    config_channel = 'channel_1'
-    subscriber_name = 'tokenize'
-
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
-
-    # Publisher
-    pub_config_section = 'PubSub_Words'
-    pub_config_channel = 'channel_0'
-    h.zmq_pub(pub_config_section, pub_config_channel)
+    config_section = 'Tokenize'
+    p = Process(config_section)
 
     # LOGGING #
-    publisher.info("Tokeniser subscribed to channel {}".format(h.sub_channel))
+    publisher.info("Tokeniser started")
 
     while True:
-        message = h.redis_rpop()
+        message = p.get_from_set()
         print message
         if message is not None:
-            paste = Paste.Paste(message.split(" ", -1)[-1])
+            paste = Paste.Paste(message)
             for word, score in paste._get_top_words().items():
                 if len(word) >= 4:
-                    h.zmq_pub_send('{} {} {}'.format(paste.p_path, word,
-                                                     score))
+                    msg = '{} {} {}'.format(paste.p_path, word, score)
+                    p.populate_set_out(msg)
         else:
-            if h.redis_queue_shutdown():
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
             publisher.debug("Tokeniser is idling 10s")
             time.sleep(10)
             print "sleepin"

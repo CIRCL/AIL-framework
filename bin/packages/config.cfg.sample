@@ -18,7 +18,8 @@ db = 0
 [Redis_Queues]
 host = localhost
 port = 6381
-db = 0
+db_sub = 0
+db_pub = 1
 
 [Redis_Data_Merging]
 host = localhost
@@ -71,3 +72,18 @@ cc_critical = DE
 [Indexer]
 type = whoosh
 path = indexdir
+
+###############################################################################
+
+[ZMQ_Global]
+address = tcp://crf.circl.lu:5556
+channel = 102
+
+[ZMQ_Url]
+address = tcp://127.0.0.1:5004
+channel = urls
+
+[RedisPubSub]
+host = localhost
+port = 6381
+db = 0

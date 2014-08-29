@@ -29,38 +29,35 @@ from pubsublogger import publisher
 from packages import lib_words
 import os
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Words'
-    config_channel = 'channel_0'
-    subscriber_name = "curve"
-
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    config_section = 'Curve'
+    p = Process(config_section)
 
     # REDIS #
     r_serv1 = redis.StrictRedis(
-        host=h.config.get("Redis_Level_DB", "host"),
-        port=h.config.get("Redis_Level_DB", "port"),
-        db=h.config.get("Redis_Level_DB", "db"))
+        host=p.config.get("Redis_Level_DB", "host"),
+        port=p.config.get("Redis_Level_DB", "port"),
+        db=p.config.get("Redis_Level_DB", "db"))
 
     # FUNCTIONS #
-    publisher.info("Script Curve subscribed to {}".format(h.sub_channel))
+    publisher.info("Script Curve started")
 
     # FILE CURVE SECTION #
     csv_path = os.path.join(os.environ['AIL_HOME'],
-                            h.config.get("Directories", "wordtrending_csv"))
+                            p.config.get("Directories", "wordtrending_csv"))
     wordfile_path = os.path.join(os.environ['AIL_HOME'],
-                                 h.config.get("Directories", "wordsfile"))
+                                 p.config.get("Directories", "wordsfile"))
 
-    message = h.redis_rpop()
+    message = p.get_from_set()
     prec_filename = None
     while True:
         if message is not None:
-            channel, filename, word, score = message.split()
+            filename, word, score = message.split()
             if prec_filename is None or filename != prec_filename:
                 PST = Paste.Paste(filename)
                 lib_words.create_curve_with_word_file(
@@ -69,7 +66,6 @@ if __name__ == "__main__":
 
             prec_filename = filename
             prev_score = r_serv1.hget(word.lower(), PST.p_date)
-            print prev_score
             if prev_score is not None:
                 r_serv1.hset(word.lower(), PST.p_date,
                              int(prev_score) + int(score))
@@ -77,12 +73,7 @@ if __name__ == "__main__":
                 r_serv1.hset(word.lower(), PST.p_date, score)
 
         else:
-            if h.redis_queue_shutdown():
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
             publisher.debug("Script Curve is Idling")
-            print "sleepin"
+            print "sleeping"
             time.sleep(1)
-
-        message = h.redis_rpop()
+        message = p.get_from_set()

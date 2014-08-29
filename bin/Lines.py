@@ -32,26 +32,19 @@ import time
 from packages import Paste
 from pubsublogger import publisher
 
-import Helper
+from Helper import Process
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     publisher.port = 6380
-    publisher.channel = "Script"
+    publisher.channel = 'Script'
 
-    config_section = 'PubSub_Global'
-    config_channel = 'channel'
-    subscriber_name = 'line'
-
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
-
-    # Publisher
-    pub_config_section = 'PubSub_Longlines'
-    h.zmq_pub(pub_config_section, None)
+    config_section = 'Lines'
+    p = Process(config_section)
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
-        description='''This script is a part of the Analysis Information \
-                Leak framework.''')
+        description='This script is a part of the Analysis Information \
+                Leak framework.')
 
     parser.add_argument(
         '-max', type=int, default=500,
@@ -60,24 +53,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    channel_0 = h.config.get("PubSub_Longlines", "channel_0")
-    channel_1 = h.config.get("PubSub_Longlines", "channel_1")
-
     # FUNCTIONS #
     tmp_string = "Lines script Subscribed to channel {} and Start to publish \
-            on channel {}, {}"
-    publisher.info(tmp_string.format(h.sub_channel, channel_0, channel_1))
+            on channel Longlines, Shortlines"
+    publisher.info(tmp_string)
 
     while True:
         try:
-            message = h.redis_rpop()
+            message = p.get_from_set()
+            print message
             if message is not None:
-                PST = Paste.Paste(message.split(" ", -1)[-1])
+                PST = Paste.Paste(message)
             else:
-                if h.redis_queue_shutdown():
-                    print "Shutdown Flag Up: Terminating"
-                    publisher.warning("Shutdown Flag Up: Terminating.")
-                    break
                 publisher.debug("Tokeniser is idling 10s")
                 time.sleep(10)
                 continue
@@ -89,10 +76,9 @@ if __name__ == "__main__":
 
             # FIXME Not used.
             PST.store.sadd("Pastes_Objects", PST.p_path)
-            if lines_infos[1] >= args.max:
-                h.pub_channel = channel_0
+            if lines_infos[1] < args.max:
+                p.populate_set_out(PST.p_path, 'LinesShort')
             else:
-                h.pub_channel = channel_1
-            h.zmq_pub_send(PST.p_path)
+                p.populate_set_out(PST.p_path, 'LinesLong')
         except IOError:
             print "CRC Checksum Error on : ", PST.p_path

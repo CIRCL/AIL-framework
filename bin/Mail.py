@@ -9,28 +9,29 @@ from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Categ'
-    config_channel = 'channel_1'
-    subscriber_name = 'emails'
+    config_section = 'Mail'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    p = Process(config_section)
 
     # REDIS #
     r_serv2 = redis.StrictRedis(
-        host=h.config.get("Redis_Cache", "host"),
-        port=h.config.getint("Redis_Cache", "port"),
-        db=h.config.getint("Redis_Cache", "db"))
+        host=p.config.get("Redis_Cache", "host"),
+        port=p.config.getint("Redis_Cache", "port"),
+        db=p.config.getint("Redis_Cache", "db"))
 
     # FUNCTIONS #
     publisher.info("Suscribed to channel mails_categ")
 
-    message = h.redis_rpop()
+    # FIXME For retro compatibility
+    channel = 'mails_categ'
+
+    message = p.get_from_set()
     prec_filename = None
 
     # Log as critical if there are more that that amout of valid emails
@@ -41,7 +42,8 @@ if __name__ == "__main__":
     while True:
         try:
             if message is not None:
-                channel, filename, word, score = message.split()
+                print message
+                filename, word, score = message.split()
 
                 if prec_filename is None or filename != prec_filename:
                     PST = Paste.Paste(filename)
@@ -65,14 +67,11 @@ if __name__ == "__main__":
                 prec_filename = filename
 
             else:
-                if h.redis_queue_shutdown():
-                    print "Shutdown Flag Up: Terminating"
-                    publisher.warning("Shutdown Flag Up: Terminating.")
-                    break
                 publisher.debug("Script Mails is Idling 10s")
+                print 'Sleeping'
                 time.sleep(10)
 
-            message = h.redis_rpop()
+            message = p.get_from_set()
         except dns.exception.Timeout:
             # FIXME retry!
             print "dns.exception.Timeout"

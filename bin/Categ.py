@@ -42,21 +42,15 @@ import time
 from pubsublogger import publisher
 from packages import Paste
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Words'
-    config_channel = 'channel_0'
-    subscriber_name = 'categ'
+    config_section = 'Categ'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
-
-    # Publisher
-    pub_config_section = 'PubSub_Categ'
-    h.zmq_pub(pub_config_section, None)
+    p = Process(config_section)
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(
@@ -71,11 +65,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # FUNCTIONS #
-    publisher.info(
-        "Script Categ subscribed to channel {}".format(h.sub_channel))
+    publisher.info("Script Categ started")
 
+    categories = ['CreditCards', 'Mail', 'Onion', 'Web']
     tmp_dict = {}
-    for filename in os.listdir(args.d):
+    for filename in categories:
         bname = os.path.basename(filename)
         tmp_dict[bname] = []
         with open(os.path.join(args.d, filename), 'r') as f:
@@ -85,9 +79,9 @@ if __name__ == "__main__":
     prec_filename = None
 
     while True:
-        message = h.redis_rpop()
+        message = p.get_from_set()
         if message is not None:
-            channel, filename, word, score = message.split()
+            filename, word, score = message.split()
 
             if prec_filename is None or filename != prec_filename:
                 PST = Paste.Paste(filename)
@@ -96,17 +90,14 @@ if __name__ == "__main__":
             for categ, words_list in tmp_dict.items():
 
                 if word.lower() in words_list:
-                    h.pub_channel = categ
-                    h.zmq_pub_send('{} {} {}'.format(PST.p_path, word, score))
+                    msg = '{} {} {}'.format(PST.p_path, word, score)
+                    p.populate_set_out(msg, categ)
 
                     publisher.info(
                         'Categ;{};{};{};Detected {} "{}"'.format(
                             PST.p_source, PST.p_date, PST.p_name, score, word))
 
         else:
-            if h.redis_queue_shutdown():
-                print "Shutdown Flag Up: Terminating"
-                publisher.warning("Shutdown Flag Up: Terminating.")
-                break
             publisher.debug("Script Categ is Idling 10s")
+            print 'Sleeping'
             time.sleep(10)

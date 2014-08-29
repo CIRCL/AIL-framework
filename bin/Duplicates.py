@@ -19,17 +19,15 @@ from packages import Paste
 from pubsublogger import publisher
 from pybloomfilter import BloomFilter
 
-import Helper
+from Helper import Process
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'PubSub_Global'
-    config_channel = 'channel'
-    subscriber_name = 'duplicate'
+    config_section = 'Duplicates'
 
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    p = Process(config_section)
 
     # REDIS #
     # DB OBJECT & HASHS ( DISK )
@@ -38,16 +36,15 @@ if __name__ == "__main__":
     for year in xrange(2013, 2015):
         for month in xrange(0, 16):
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
-                host=h.config.get("Redis_Level_DB", "host"), port=year,
+                host=p.config.get("Redis_Level_DB", "host"), port=year,
                 db=month)
 
     # FUNCTIONS #
-    publisher.info("""Script duplicate subscribed to channel {0}""".format(
-        h.config.get("PubSub_Global", "channel")))
+    publisher.info("Script duplicate started")
 
     set_limit = 100
     bloompath = os.path.join(os.environ['AIL_HOME'],
-                             h.config.get("Directories", "bloomfilters"))
+                             p.config.get("Directories", "bloomfilters"))
 
     bloop_path_set = set()
     while True:
@@ -59,17 +56,13 @@ if __name__ == "__main__":
 
             x = time.time()
 
-            message = h.redis_rpop()
+            message = p.get_from_set()
             if message is not None:
-                path = message.split(" ", -1)[-1]
+                path = message
                 PST = Paste.Paste(path)
             else:
                 publisher.debug("Script Attribute is idling 10s")
                 time.sleep(10)
-                if h.redis_queue_shutdown():
-                    print "Shutdown Flag Up: Terminating"
-                    publisher.warning("Shutdown Flag Up: Terminating.")
-                    break
                 continue
 
             PST._set_p_hash_kind("md5")

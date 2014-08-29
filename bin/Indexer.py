@@ -17,26 +17,21 @@ from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
 import os
 
-import Helper
+from Helper import Process
 
 
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    # Subscriber
-    sub_config_section = 'PubSub_Global'
-    sub_name = 'indexer'
+    config_section = 'Indexer'
 
-    config_section = 'PubSub_Global'
-    config_channel = 'channel'
-    subscriber_name = 'indexer'
-
-    h = Helper.Redis_Queues(config_section, config_channel, subscriber_name)
+    p = Process(config_section)
 
     # Indexer configuration - index dir and schema setup
-    indexpath = h.config.get("Indexer", "path")
-    indexertype = h.config.get("Indexer", "type")
+    indexpath = os.path.join(os.environ['AIL_HOME'],
+                             p.config.get("Indexer", "path"))
+    indexertype = p.config.get("Indexer", "type")
     if indexertype == "whoosh":
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True,
                                                          unique=True),
@@ -49,18 +44,16 @@ if __name__ == "__main__":
             ix = open_dir(indexpath)
 
     # LOGGING #
-    publisher.info("""ZMQ Indexer is Running""")
+    publisher.info("ZMQ Indexer is Running")
 
     while True:
         try:
-            message = h.redis_rpop()
+            message = p.get_from_set()
 
             if message is not None:
-                PST = Paste.Paste(message.split(" ", -1)[-1])
+                PST = Paste.Paste(message)
             else:
-                if h.redis_queue_shutdown():
-                    break
-                publisher.debug("Script Indexer is idling 10s")
+                publisher.debug("Script Indexer is idling 1s")
                 time.sleep(1)
                 continue
             docpath = message.split(" ", -1)[-1]

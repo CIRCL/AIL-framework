@@ -96,7 +96,7 @@ function create_log_table(obj_json) {
     tr.appendChild(msage);
 
     if (tr.className == document.getElementById("checkbox_log_info").value && document.getElementById("checkbox_log_info").checked  == true) {
-           tableBody.appendChild(tr); 
+           tableBody.appendChild(tr);
        }
     if (tr.className == document.getElementById("checkbox_log_warning").value && document.getElementById("checkbox_log_warning").checked == true) {
         tableBody.appendChild(tr);
@@ -156,15 +156,15 @@ $(document).ready(function () {
     var curves_labels = [];
     var curves_labels2 = [];
     var x = new Date();
-    
+
     for (i = 0; i < glob_tabvar.row1.length; i++){
-        if (glob_tabvar.row1[i][0].substring(0,4) != "word"){
-            tmp_tab.push(0);
-            curves_labels.push(glob_tabvar.row1[i][0]);
-        }
-        else {
+        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
             tmp_tab2.push(0);
             curves_labels2.push(glob_tabvar.row1[i][0]);
+        }
+        else {
+            tmp_tab.push(0);
+            curves_labels.push(glob_tabvar.row1[i][0]);
         }
     }
     tmp_tab.unshift(x);
@@ -173,7 +173,7 @@ $(document).ready(function () {
     curves_labels2.unshift("date");
     data.push(tmp_tab);
     data2.push(tmp_tab2);
-    
+
     var g = new Dygraph(document.getElementById("Graph"), data,
     {
     labels: curves_labels,
@@ -189,7 +189,7 @@ $(document).ready(function () {
     fillGraph: true,
     includeZero: true,
     });
-    
+
     var g2 = new Dygraph(document.getElementById("Graph2"), data2,
     {
     labels: curves_labels2,
@@ -209,7 +209,7 @@ $(document).ready(function () {
 
     var interval = 1000;   //number of mili seconds between each call
     var refresh = function() {
-        
+
         $.ajax({
             url: "",
             cache: false,
@@ -218,23 +218,23 @@ $(document).ready(function () {
                 setTimeout(function() {
                     var x = new Date();
                     var tmp_values = [];
-                    var tmp_values2 = []; 
+                    var tmp_values2 = [];
                     refresh();
                     update_values();
                     create_queue_table();
-                   
-                    
+
+
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
-                        if (glob_tabvar.row1[i][0].substring(0,4) != "word"){
-                            tmp_values.push(glob_tabvar.row1[i][1]);
+                        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
+                            tmp_values2.push(glob_tabvar.row1[i][1]);
                         }
                         else {
-                            tmp_values2.push(glob_tabvar.row1[i][1]);
+                            tmp_values.push(glob_tabvar.row1[i][1]);
                         }
                     }
                     tmp_values.unshift(x);
                     data.push(tmp_values);
-                    
+
                     tmp_values2.unshift(x);
                     data2.push(tmp_values2);
 
@@ -244,8 +244,8 @@ $(document).ready(function () {
                     }
                     g.updateOptions( { 'file': data } );
                     g2.updateOptions( { 'file': data2 } );
-                    
-                    
+
+
                    // TagCanvas.Reload('myCanvas');
 
                 }, interval);
