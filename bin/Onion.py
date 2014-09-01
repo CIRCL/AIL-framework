@@ -29,12 +29,15 @@ import datetime
 import os
 import base64
 import subprocess
+import redis
 
 from Helper import Process
 
 
-def fetch(p, urls, domains, path):
+def fetch(p, r_cache, urls, domains, path):
     for url, domain in zip(urls, domains):
+        if r_cache.exists(url):
+            continue
         to_fetch = base64.standard_b64encode(url)
         process = subprocess.Popen(["python", './tor_fetcher.py', to_fetch],
                                    stdout=subprocess.PIPE)
@@ -42,6 +45,8 @@ def fetch(p, urls, domains, path):
             time.sleep(1)
 
         if process.returncode == 0:
+            r_cache.setbit(url, 0, 1)
+            r_cache.expire(url, 3600)
             tempfile = process.stdout.read().strip()
             with open(tempfile, 'r') as f:
                 filename = path + domain
@@ -54,7 +59,9 @@ def fetch(p, urls, domains, path):
                     os.makedirs(dirname)
                 with open(save_path, 'w') as ff:
                     ff.write(content)
-                p.populate_set_out(save_path)
+                p.populate_set_out(save_path, 'Global')
+                p.populate_set_out(url, 'ValidOnion')
+                yield url
             os.unlink(tempfile)
         else:
             print 'Failed at downloading', url
@@ -71,6 +78,10 @@ if __name__ == "__main__":
     config_section = 'Onion'
 
     p = Process(config_section)
+    r_cache = redis.StrictRedis(
+        host=p.config.get("Redis_Cache", "host"),
+        port=p.config.getint("Redis_Cache", "port"),
+        db=p.config.getint("Redis_Cache", "db"))
 
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
@@ -121,7 +132,11 @@ if __name__ == "__main__":
                                         str(now.month).zfill(2),
                                         str(now.day).zfill(2),
                                         str(int(time.mktime(now.utctimetuple()))))
-                    fetch(p, urls, domains_list, path)
+                    to_print = 'Onion;{};{};{};'.format(PST.p_source,
+                                                        PST.p_date,
+                                                        PST.p_name)
+                    for url in fetch(p, r_cache, urls, domains_list, path):
+                        publisher.warning('{}Valid: {}'.format(to_print, url))
                 else:
                     publisher.info('{}Onion related'.format(to_print))
 
