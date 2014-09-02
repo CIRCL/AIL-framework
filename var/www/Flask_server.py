@@ -55,7 +55,6 @@ def logs():
 
 @app.route("/_stuff", methods=['GET'])
 def stuff():
-    print get_queues(r_serv)
     return jsonify(row1=get_queues(r_serv))
 
 

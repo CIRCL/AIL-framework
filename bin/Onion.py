@@ -35,8 +35,9 @@ from Helper import Process
 
 
 def fetch(p, r_cache, urls, domains, path):
+    failed = []
     for url, domain in zip(urls, domains):
-        if r_cache.exists(url):
+        if r_cache.exists(url) or url in failed:
             continue
         to_fetch = base64.standard_b64encode(url)
         process = subprocess.Popen(["python", './tor_fetcher.py', to_fetch],
@@ -64,6 +65,7 @@ def fetch(p, r_cache, urls, domains, path):
                 yield url
             os.unlink(tempfile)
         else:
+            failed.append(url)
             print 'Failed at downloading', url
             print process.stdout.read()
 
@@ -136,7 +138,7 @@ if __name__ == "__main__":
                                                         PST.p_date,
                                                         PST.p_name)
                     for url in fetch(p, r_cache, urls, domains_list, path):
-                        publisher.warning('{}Valid: {}'.format(to_print, url))
+                        publisher.warning('{}Checked {}'.format(to_print, url))
                 else:
                     publisher.info('{}Onion related'.format(to_print))
 

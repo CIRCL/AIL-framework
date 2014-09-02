@@ -90,30 +90,8 @@ function launching_queues {
     screen -dmS "Queue"
     sleep 0.1
 
-    echo -e $GREEN"\t* Launching redis ZMQ queues"$DEFAULT
-    screen -S "Queue" -X screen -t "QFeed" bash -c './ZMQ_Feed_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "QDuplicate" bash -c './ZMQ_Sub_Duplicate_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "QAttributes" bash -c './ZMQ_Sub_Attributes_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "Qlines" bash -c './ZMQ_PubSub_Lines_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "QCateg" bash -c './ZMQ_PubSub_Categ_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "QTokenize" bash -c './ZMQ_PubSub_Tokenize_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "Qcreditcard" bash -c './ZMQ_Sub_CreditCards_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "QOnion" bash -c './ZMQ_Sub_Onion_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "Qmails" bash -c './ZMQ_Sub_Mails_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "Qurls" bash -c './ZMQ_Sub_Urls_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "QCurve" bash -c './ZMQ_Sub_Curve_Q.py; read x'
-    sleep 0.1
-    screen -S "Queue" -X screen -t "QIndexer" bash -c './ZMQ_Sub_Indexer_Q.py; read x'
+    echo -e $GREEN"\t* Launching all the queues"$DEFAULT
+    screen -S "Queue" -X screen -t "Queues" bash -c './launch_queues.py; read x'
 }
 
 function launching_scripts {
@@ -122,29 +100,29 @@ function launching_scripts {
 
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
-    screen -S "Script" -X screen -t "Feed" bash -c './ZMQ_Feed.py; read x'
+    screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Duplicate" bash -c './ZMQ_Sub_Duplicate.py; read x'
+    screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Attributes" bash -c './ZMQ_Sub_Attributes.py; read x'
+    screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Lines" bash -c './ZMQ_PubSub_Lines.py; read x'
+    screen -S "Script" -X screen -t "Line" bash -c './Line.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Categ" bash -c './ZMQ_PubSub_Categ.py; read x'
+    screen -S "Script" -X screen -t "Categ" bash -c './Categ.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Tokenize" bash -c './ZMQ_PubSub_Tokenize.py; read x'
+    screen -S "Script" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Creditcard" bash -c './ZMQ_Sub_CreditCards.py; read x'
+    screen -S "Script" -X screen -t "CreditCard" bash -c './CreditCard.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Onion" bash -c './ZMQ_Sub_Onion.py; read x'
+    screen -S "Script" -X screen -t "Onion" bash -c './Onion.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Mails" bash -c './ZMQ_Sub_Mails.py; read x'
+    screen -S "Script" -X screen -t "Mail" bash -c './Mail.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Urls" bash -c './ZMQ_Sub_Urls.py; read x'
+    screen -S "Script" -X screen -t "Url" bash -c './Url.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Curve" bash -c './ZMQ_Sub_Curve.py; read x'
+    screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Indexer" bash -c './ZMQ_Sub_Indexer.py; read x'
+    screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
 }
 
 #If no params, display the help

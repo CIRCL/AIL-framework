@@ -45,9 +45,8 @@ class PubSub(object):
                 host=self.config.get('RedisPubSub', 'host'),
                 port=self.config.get('RedisPubSub', 'port'),
                 db=self.config.get('RedisPubSub', 'db'))
-            self.subscriber = r.pubsub()
+            self.subscriber = r.pubsub(ignore_subscribe_messages=True)
             self.subscriber.psubscribe(channel)
-            self.subscriber.get_message()
         elif conn_name.startswith('ZMQ'):
             self.zmq_sub = True
             context = zmq.Context()
