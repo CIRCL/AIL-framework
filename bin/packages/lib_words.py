@@ -6,6 +6,7 @@ from pubsublogger import publisher
 import calendar
 from datetime import date
 from dateutil.rrule import rrule, DAILY
+import csv
 
 
 def listdirectory(path):
@@ -80,60 +81,30 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
     to keep the timeline of the curve correct.
 
     """
-    a = date(year, month, 01)
-    b = date(year, month, calendar.monthrange(year, month)[1])
-    days = {}
+    first_day = date(year, month, 01)
+    last_day = date(year, month, calendar.monthrange(year, month)[1])
     words = []
 
-    with open(feederfilename, 'rb') as F:
+    with open(feederfilename, 'rb') as f:
         # words of the files
-        for word in F:
-            # list of words (sorted as in the file)
-            words.append(word[:-1])
+        words = sorted([word.strip() for word in f])
+
+    headers = ['Date'] + words
+    with open(csvfilename+'.csv', 'wb') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
 
         # for each days
-        for dt in rrule(DAILY, dtstart=a, until=b):
-
-            mot = []
-            mot1 = []
-            mot2 = []
-
-            days[dt.strftime("%Y%m%d")] = ''
+        for dt in rrule(DAILY, dtstart=first_day, until=last_day):
+            row = []
+            curdate = dt.strftime("%Y%m%d")
+            row.append(curdate)
             # from the 1srt day to the last of the list
-            for word in sorted(words):
-
-                # if the word have a value for the day
-                if r_serv.hexists(word, dt.strftime("%Y%m%d")):
-                    mot1.append(str(word))
-                    mot2.append(r_serv.hget(word, dt.strftime("%Y%m%d")))
-
-                    mot = zip(mot1, mot2)
-
-                    days[dt.strftime("%Y%m%d")] = mot
+            for word in words:
+                value = r_serv.hget(word, curdate)
+                if value is None:
+                    row.append(0)
                 else:
-
-                    mot1.append(str(word))
-                    mot2.append(0)
-
-                    mot = zip(mot1, mot2)
-
-                    days[dt.strftime("%Y%m%d")] = mot
-
-    with open(csvfilename+".csv", 'wb') as F:
-        F.write("Date," + ",".join(sorted(words)) + '\n')
-
-        for x, s in days.items():
-            val = []
-            for y in s:
-                val.append(y[1])
-
-            F.write(x + ',' + str(val) + '\n')
-
-    with open(csvfilename+".csv", 'rb') as F:
-        h = F.read()
-        h = h.replace("[", "")
-        h = h.replace("]", "")
-        h = h.replace('\'', "")
-
-    with open(csvfilename+".csv", 'wb') as F:
-        F.write(h)
+                    # if the word have a value for the day
+                    row.append(value)
+            writer.writerow(row)

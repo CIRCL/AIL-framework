@@ -24,10 +24,10 @@ Requirements
 """
 import redis
 import time
-from packages import Paste
 from pubsublogger import publisher
 from packages import lib_words
 import os
+import datetime
 
 from Helper import Process
 
@@ -57,23 +57,31 @@ if __name__ == "__main__":
     prec_filename = None
     while True:
         if message is not None:
-            filename, word, score = message.split()
-            if prec_filename is None or filename != prec_filename:
-                PST = Paste.Paste(filename)
-                lib_words.create_curve_with_word_file(
-                    r_serv1, csv_path, wordfile_path, int(PST.p_date.year),
-                    int(PST.p_date.month))
+            generate_new_graph = True
 
-            prec_filename = filename
-            prev_score = r_serv1.hget(word.lower(), PST.p_date)
+            filename, word, score = message.split()
+            temp = filename.split('/')
+            date = temp[-4] + temp[-3] + temp[-2]
+
+            low_word = word.lower()
+            prev_score = r_serv1.hget(low_word, date)
             if prev_score is not None:
-                r_serv1.hset(word.lower(), PST.p_date,
-                             int(prev_score) + int(score))
+                r_serv1.hset(low_word, date, int(prev_score) + int(score))
             else:
-                r_serv1.hset(word.lower(), PST.p_date, score)
+                r_serv1.hset(low_word, date, score)
 
         else:
+            if generate_new_graph:
+                generate_new_graph = False
+                print 'Building graph'
+                today = datetime.date.today()
+                year = today.year
+                month = today.month
+                lib_words.create_curve_with_word_file(r_serv1, csv_path,
+                                                      wordfile_path, year,
+                                                      month)
+
             publisher.debug("Script Curve is Idling")
             print "sleeping"
-            time.sleep(1)
+            time.sleep(10)
         message = p.get_from_set()
