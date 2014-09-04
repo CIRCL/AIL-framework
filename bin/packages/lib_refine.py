@@ -33,7 +33,9 @@ def checking_MX_record(r_serv, adress_set):
     WalidMX = set([])
     # Transforming the set into a string
     MXdomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", str(adress_set).lower())
-
+    resolver = dns.resolver.Resolver()
+    resolver.timeout = 5
+    resolver.lifetime = 2
     if MXdomains != []:
 
             for MXdomain in set(MXdomains):
@@ -45,9 +47,9 @@ def checking_MX_record(r_serv, adress_set):
                     # Not already in Redis
                     else:
                         # If I'm Walid MX domain
-                        if dns.resolver.query(MXdomain[1:], rdtype=dns.rdatatype.MX):
+                        if resolver.query(MXdomain[1:], rdtype=dns.rdatatype.MX):
                             # Gonna be added in redis.
-                            r_serv.setex(MXdomain[1:], timedelta(days=1), 1)
+                            r_serv.setex(MXdomain[1:], 1, timedelta(days=1))
                             score += 1
                             WalidMX.add(MXdomain[1:])
                         else:
@@ -63,13 +65,17 @@ def checking_MX_record(r_serv, adress_set):
                     publisher.debug('SyntaxError: EmptyLabel')
 
                 except dns.resolver.NXDOMAIN:
+                    r_serv.setex(MXdomain[1:], 1, timedelta(days=1))
                     publisher.debug('The query name does not exist.')
 
                 except dns.name.LabelTooLong:
                     publisher.debug('The Label is too long')
 
-                finally:
-                    pass
+                except dns.resolver.Timeout:
+                    r_serv.setex(MXdomain[1:], 1, timedelta(days=1))
+
+                except Exception as e:
+                    print e
 
     publisher.debug("emails before: {0} after: {1} (valid)".format(num, score))
     return (num, WalidMX)
@@ -79,6 +85,9 @@ def checking_A_record(r_serv, domains_set):
     score = 0
     num = len(domains_set)
     WalidA = set([])
+    resolver = dns.resolver.Resolver()
+    resolver.timeout = 5
+    resolver.lifetime = 2
 
     for Adomain in domains_set:
         try:
@@ -89,9 +98,9 @@ def checking_A_record(r_serv, domains_set):
             # Not already in Redis
             else:
                 # If I'm Walid domain
-                if dns.resolver.query(Adomain, rdtype=dns.rdatatype.A):
+                if resolver.query(Adomain, rdtype=dns.rdatatype.A):
                     # Gonna be added in redis.
-                    r_serv.setex(Adomain, timedelta(days=1), 1)
+                    r_serv.setex(Adomain, 1, timedelta(days=1))
                     score += 1
                     WalidA.add(Adomain)
                 else:
@@ -107,13 +116,14 @@ def checking_A_record(r_serv, domains_set):
             publisher.debug('SyntaxError: EmptyLabel')
 
         except dns.resolver.NXDOMAIN:
+            r_serv.setex(Adomain[1:], 1, timedelta(days=1))
             publisher.debug('The query name does not exist.')
 
         except dns.name.LabelTooLong:
             publisher.debug('The Label is too long')
 
-        finally:
-            pass
+        except Exception as e:
+            print e
 
     publisher.debug("URLs before: {0} after: {1} (valid)".format(num, score))
     return (num, WalidA)
