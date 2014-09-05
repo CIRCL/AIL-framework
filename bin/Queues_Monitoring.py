@@ -36,12 +36,6 @@ def main():
     publisher.port = 6380
     publisher.channel = "Queuing"
 
-    # ZMQ #
-    channel = cfg.get("PubSub_Global", "channel")
-
-    # FUNCTIONS #
-    publisher.info("""Suscribed to channel {0}""".format(channel))
-
     while True:
         table = texttable.Texttable()
         table.header(["Queue name", "#Items"])

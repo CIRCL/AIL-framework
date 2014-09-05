@@ -55,6 +55,7 @@ if __name__ == "__main__":
 
     message = p.get_from_set()
     prec_filename = None
+    generate_new_graph = False
     while True:
         if message is not None:
             generate_new_graph = True

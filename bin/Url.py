@@ -31,7 +31,7 @@ if __name__ == "__main__":
         db=p.config.getint("Redis_Cache", "db"))
 
     # Country to log as critical
-    cc_critical = p.config.get("PubSub_Url", "cc_critical")
+    cc_critical = p.config.get("Url", "cc_critical")
 
     # FUNCTIONS #
     publisher.info("Script URL subscribed to channel web_categ")
