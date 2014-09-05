@@ -5,6 +5,8 @@ import time
 from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
+import re
+
 
 from Helper import Process
 
@@ -19,52 +21,54 @@ if __name__ == "__main__":
     # FUNCTIONS #
     publisher.info("Creditcard script subscribed to channel creditcard_categ")
 
-    message = p.get_from_set()
-    prec_filename = None
 
     creditcard_regex = "4[0-9]{12}(?:[0-9]{3})?"
 
     # FIXME For retro compatibility
     channel = 'creditcard_categ'
 
-    # mastercard_regex = "5[1-5]\d{2}([\ \-]?)\d{4}\1\d{4}\1\d{4}"
-    # visa_regex = "4\d{3}([\ \-]?)\d{4}\1\d{4}\1\d{4}"
-    # discover_regex = "6(?:011\d\d|5\d{4}|4[4-9]\d{3}|22(?:1(?:2[6-9]|
-    #                   [3-9]\d)|[2-8]\d\d|9(?:[01]\d|2[0-5])))\d{10}"
-    # jcb_regex = "35(?:2[89]|[3-8]\d)([\ \-]?)\d{4}\1\d{4}\1\d{4}"
-    # amex_regex = "3[47]\d\d([\ \-]?)\d{6}\1\d{5}"
-    # chinaUP_regex = "62[0-5]\d{13,16}"
-    # maestro_regex = "(?:5[0678]\d\d|6304|6390|67\d\d)\d{8,15}"
+    # Source: http://www.richardsramblings.com/regex/credit-card-numbers/
+    cards = [
+        r'4\d{3}(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}',  # 16-digit VISA, with separators
+        r'5[1-5]\d{2}(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}',  # 16 digits MasterCard
+        r'6(?:011|22(?:(?=[\ \-]?(?:2[6-9]|[3-9]))|[2-8]|9(?=[\ \-]?(?:[01]|2[0-5])))|4[4-9]\d|5\d\d)(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}',  # Discover Card
+        r'35(?:2[89]|[3-8]\d)(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}(?:[\ \-]?)\d{4}',  # Japan Credit Bureau (JCB)
+        r'3[47]\d\d(?:[\ \-]?)\d{6}(?:[\ \-]?)\d{5}',  # American Express
+        r'(?:5[0678]\d\d|6304|6390|67\d\d)\d{8,15}',  # Maestro
+        ]
+
+    regex = re.compile('|'.join(cards))
 
     while True:
+        message = p.get_from_set()
         if message is not None:
-            filename, word, score = message.split()
-
-            if prec_filename is None or filename != prec_filename:
+            filename, score = message.split()
+            paste = Paste.Paste(filename)
+            content = paste.get_p_content()
+            all_cards = re.findall(regex, content)
+            if len(all_cards) > 0:
+                print 'All matching', all_cards
                 creditcard_set = set([])
-                PST = Paste.Paste(filename)
 
-                for x in PST.get_regex(creditcard_regex):
-                    if lib_refine.is_luhn_valid(x):
-                        creditcard_set.add(x)
+                for card in all_cards:
+                    clean_card = re.sub('[^0-9]', '', card)
+                    if lib_refine.is_luhn_valid(clean_card):
+                        print clean_card, 'is valid'
+                        creditcard_set.add(clean_card)
 
-                PST.__setattr__(channel, creditcard_set)
-                PST.save_attribute_redis(channel, creditcard_set)
+                paste.__setattr__(channel, creditcard_set)
+                paste.save_attribute_redis(channel, creditcard_set)
 
                 pprint.pprint(creditcard_set)
                 to_print = 'CreditCard;{};{};{};'.format(
-                    PST.p_source, PST.p_date, PST.p_name)
+                    paste.p_source, paste.p_date, paste.p_name)
                 if (len(creditcard_set) > 0):
-                    publisher.critical('{}Checked {} valid number(s)'.format(
+                    publisher.warning('{}Checked {} valid number(s)'.format(
                         to_print, len(creditcard_set)))
                 else:
                     publisher.info('{}CreditCard related'.format(to_print))
-
-            prec_filename = filename
-
         else:
             publisher.debug("Script creditcard is idling 1m")
             print 'Sleeping'
-            time.sleep(60)
+            time.sleep(10)
 
-        message = p.get_from_set()

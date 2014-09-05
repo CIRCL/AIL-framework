@@ -102,7 +102,7 @@ if __name__ == "__main__":
     while True:
         if message is not None:
             print message
-            filename, word, score = message.split()
+            filename, score = message.split()
 
             # "For each new paste"
             if prec_filename is None or filename != prec_filename:

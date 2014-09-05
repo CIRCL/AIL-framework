@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     while True:
         if message is not None:
-            filename, word, score = message.split()
+            filename, score = message.split()
 
             if prec_filename is None or filename != prec_filename:
                 domains_list = []

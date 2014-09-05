@@ -41,7 +41,7 @@ if __name__ == "__main__":
     MX_values = None
     while True:
         if message is not None:
-            filename, word, score = message.split()
+            filename, score = message.split()
 
             if prec_filename is None or filename != prec_filename:
                 PST = Paste.Paste(filename)

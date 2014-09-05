@@ -39,6 +39,7 @@ Requirements
 import os
 import argparse
 import time
+import re
 from pubsublogger import publisher
 from packages import Paste
 
@@ -73,29 +74,29 @@ if __name__ == "__main__":
         bname = os.path.basename(filename)
         tmp_dict[bname] = []
         with open(os.path.join(args.d, filename), 'r') as f:
-            for l in f:
-                tmp_dict[bname].append(l.strip())
+            patterns = [r'%s' % re.escape(s.strip()) for s in f]
+            tmp_dict[bname] = re.compile('|'.join(patterns), re.IGNORECASE)
 
     prec_filename = None
 
     while True:
-        message = p.get_from_set()
-        if message is not None:
-            filename, word, score = message.split()
+        filename = p.get_from_set()
+        if filename is not None:
 
-            if prec_filename is None or filename != prec_filename:
-                PST = Paste.Paste(filename)
-                prec_filename = filename
+            paste = Paste.Paste(filename)
+            content = paste.get_p_content()
 
-            for categ, words_list in tmp_dict.items():
-
-                if word.lower() in words_list:
-                    msg = '{} {} {}'.format(PST.p_path, word, score)
+            for categ, pattern in tmp_dict.items():
+                found = re.findall(pattern, content)
+                if len(found) > 0:
+                    msg = '{} {}'.format(paste.p_path, len(found))
+                    print msg, categ
                     p.populate_set_out(msg, categ)
 
                     publisher.info(
-                        'Categ;{};{};{};Detected {} "{}"'.format(
-                            PST.p_source, PST.p_date, PST.p_name, score, word))
+                        'Categ;{};{};{};Detected {} as {}'.format(
+                            paste.p_source, paste.p_date, paste.p_name,
+                            len(found), categ))
 
         else:
             publisher.debug("Script Categ is Idling 10s")
