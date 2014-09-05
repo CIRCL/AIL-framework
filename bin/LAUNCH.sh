@@ -108,6 +108,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Line" bash -c './Line.py; read x'
     sleep 0.1
+    screen -S "Script" -X screen -t "DomainClassifier" bash -c './DomClassifier.py; read x'
+    sleep 0.1
     screen -S "Script" -X screen -t "Categ" bash -c './Categ.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'

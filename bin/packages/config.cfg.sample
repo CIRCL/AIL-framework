@@ -10,16 +10,10 @@ host = localhost
 port = 6379
 db = 0
 
-[Redis_Log]
-host = localhost
-port = 6380
-db = 0
-
 [Redis_Queues]
 host = localhost
 port = 6381
-db_sub = 0
-db_pub = 1
+db = 0
 
 [Redis_Data_Merging]
 host = localhost
@@ -37,35 +31,7 @@ host = localhost
 port = 2013
 db = 1
 
-# PUB / SUB : ZMQ
-[Feed]
-address = tcp://crf.circl.lu:5556
-topicfilter = 102
-
-[PubSub_Global]
-address = tcp://127.0.0.1:5000
-channel = filelist
-
-[PubSub_Longlines]
-address = tcp://127.0.0.1:5001
-channel_0 = Longlines
-channel_1 = Shortlines
-
-[PubSub_Words]
-address = tcp://127.0.0.1:5002
-channel_0 = words
-
-[PubSub_Categ]
-address = tcp://127.0.0.1:5003
-channel_0 = creditcard_categ
-channel_1 = mails_categ
-channel_2 = onion_categ
-channel_3 = web_categ
-
-[PubSub_Url]
-address = tcp://127.0.0.1:5004
-channel = urls
-# country code logged as critical
+[Url]
 cc_critical = DE
 
 # Indexer configuration
