@@ -67,6 +67,10 @@ channel = urls
 # country code logged as critical
 cc_critical = DE
 
+[PubSub_DomainClassifier]
+cc = DE
+cc_tld = r'\.de$'
+
 # Indexer configuration
 [Indexer]
 type = whoosh
