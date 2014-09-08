@@ -36,6 +36,8 @@ from Helper import Process
 
 def fetch(p, r_cache, urls, domains, path):
     failed = []
+    downloaded = []
+    print len(urls), 'Urls to fetch.'
     for url, domain in zip(urls, domains):
         if r_cache.exists(url) or url in failed:
             continue
@@ -47,10 +49,11 @@ def fetch(p, r_cache, urls, domains, path):
 
         if process.returncode == 0:
             r_cache.setbit(url, 0, 1)
-            r_cache.expire(url, 3600)
+            r_cache.expire(url, 360000)
+            downloaded.append(url)
             tempfile = process.stdout.read().strip()
             with open(tempfile, 'r') as f:
-                filename = path + domain
+                filename = path + domain + '.gz'
                 content = base64.standard_b64decode(f.read())
                 save_path = os.path.join(os.environ['AIL_HOME'],
                                          p.config.get("Directories", "pastes"),
@@ -65,9 +68,12 @@ def fetch(p, r_cache, urls, domains, path):
                 yield url
             os.unlink(tempfile)
         else:
+            r_cache.setbit(url, 0, 0)
+            r_cache.expire(url, 3600)
             failed.append(url)
             print 'Failed at downloading', url
             print process.stdout.read()
+    print 'Failed:', len(failed), 'Downloaded:', len(downloaded)
 
 
 if __name__ == "__main__":
@@ -121,8 +127,6 @@ if __name__ == "__main__":
                 # Saving the list of extracted onion domains.
                 PST.__setattr__(channel, domains_list)
                 PST.save_attribute_redis(channel, domains_list)
-                pprint.pprint(domains_list)
-                print PST.p_path
                 to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date,
                                                     PST.p_name)
                 if len(domains_list) > 0:

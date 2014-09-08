@@ -27,6 +27,7 @@ def main():
 
     publisher.info("""ZMQ DomainClassifier is Running""")
 
+    c = DomainClassifier.domainclassifier.Extract(rawtext="")
     while True:
         try:
             message = p.get_from_set()
@@ -40,7 +41,7 @@ def main():
             paste = PST.get_p_content()
             mimetype = PST._get_p_encoding()
             if mimetype == "text/plain":
-                c = DomainClassifier.domainclassifier.Extract(rawtext=paste)
+                c.text(rawtext=paste)
                 c.potentialdomain()
                 c.validdomain(rtype=['A'], extended=True)
                 localizeddomains = c.include(expression=r'\.lu$')
