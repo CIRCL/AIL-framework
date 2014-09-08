@@ -26,6 +26,8 @@ ipython
 flask
 texttable
 
+#DomainClassifier
+DomainClassifier
 #Indexer requirements
 whoosh
 
