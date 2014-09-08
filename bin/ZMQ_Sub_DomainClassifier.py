@@ -44,6 +44,9 @@ def main():
     subscriber_name = "DomainClassifier"
     subscriber_config_section = "PubSub_Global"
 
+    cc = cfg.get("PubSub_DomainClassifier", "cc")
+    cc_tld = cfg.get("PubSub_DomainClassifier", "cc_tld")
+
     sub = ZMQ_PubSub.ZMQSub(configfile, subscriber_config_section, channel, subscriber_name)
 
     # FUNCTIONS #
@@ -71,10 +74,10 @@ def main():
                 c.text(rawtext=paste)
                 c.potentialdomain()
                 c.validdomain(rtype=['A'],extended=True)
-                localizeddomains = c.include(expression=r'\.lu$')
+                localizeddomains = c.include(expression=cc_tld)
                 if localizeddomains:
                     print (localizeddomains)
-                localizeddomains =  c.localizedomain(cc='LU')
+                localizeddomains =  c.localizedomain(cc=cc)
                 if localizeddomains:
                     print (localizeddomains)
         except IOError:
