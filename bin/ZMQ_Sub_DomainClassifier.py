@@ -76,10 +76,12 @@ def main():
                 c.validdomain(rtype=['A'],extended=True)
                 localizeddomains = c.include(expression=cc_tld)
                 if localizeddomains:
-                    print (localizeddomains)
+                    print(localizeddomains)
+                    publisher.warning('DomainC;{};{};{};Checked {} located in {}'.format( PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc_tld))
                 localizeddomains =  c.localizedomain(cc=cc)
                 if localizeddomains:
-                    print (localizeddomains)
+                    print(localizeddomains)
+                    publisher.warning('DomainC;{};{};{};Checked {} located in {}'.format( PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc))
         except IOError:
             print "CRC Checksum Failed on :", PST.p_path
             publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(PST.p_source, PST.p_date, PST.p_name))
