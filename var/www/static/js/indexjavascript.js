@@ -255,17 +255,6 @@ $(document).ready(function () {
 
     refresh();
 
-     var ultag = document.getElementById("ultag");
-     for (i=0;i<curves_labels.length;i++){
-         var li = document.createElement('li');
-         var a = document.createElement('a');
-         a.innerHTML = curves_labels[i];
-         a.style.fontSize = glob_tabvar.row1[i][1];
-         li.appendChild(a);
-         ultag.appendChild(li);
-    }
-
-
     try {
       var options = {
       weight:true,
