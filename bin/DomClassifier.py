@@ -28,6 +28,10 @@ def main():
     publisher.info("""ZMQ DomainClassifier is Running""")
 
     c = DomainClassifier.domainclassifier.Extract(rawtext="")
+
+    cc = p.config.get("DomClassifier", "cc")
+    cc_tld = p.config.get("DomClassifier", "cc_tld")
+
     while True:
         try:
             message = p.get_from_set()
@@ -44,12 +48,16 @@ def main():
                 c.text(rawtext=paste)
                 c.potentialdomain()
                 c.validdomain(rtype=['A'], extended=True)
-                localizeddomains = c.include(expression=r'\.lu$')
+                localizeddomains = c.include(expression=cc_tld)
                 if localizeddomains:
-                    print (localizeddomains)
-                localizeddomains = c.localizedomain(cc='LU')
+                    print(localizeddomains)
+                    publisher.warning('DomainC;{};{};{};Checked {} located in {}'.format(
+                        PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc_tld))
+                localizeddomains = c.localizedomain(cc=cc)
                 if localizeddomains:
-                    print (localizeddomains)
+                    print(localizeddomains)
+                    publisher.warning('DomainC;{};{};{};Checked {} located in {}'.format(
+                        PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc))
         except IOError:
             print "CRC Checksum Failed on :", PST.p_path
             publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(

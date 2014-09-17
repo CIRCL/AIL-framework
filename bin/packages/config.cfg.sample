@@ -34,6 +34,10 @@ db = 1
 [Url]
 cc_critical = DE
 
+[DomClassifier]
+cc = DE
+cc_tld = r'\.de$'
+
 # Indexer configuration
 [Indexer]
 type = whoosh
