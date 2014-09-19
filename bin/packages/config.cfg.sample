@@ -38,6 +38,8 @@ db = 1
 
 # PUB / SUB : ZMQ
 [Feed]
+# if you use the pystemon-feeder.py change the configuration
+# where the feeder is listening. Usually it's 127.0.0.1:5556
 adress = tcp://crf.circl.lu:5556
 topicfilter = 102
 
