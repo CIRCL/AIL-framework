@@ -8,7 +8,7 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 ![Dashboard](./doc/screenshots/DashboardAIL.png?raw=true "AIL framework dashboard")
 ![Trending](./doc/screenshots/WordtrendingAIL.png?raw=true "AIL framework wordtrending")
 
-![AIL framework screencast](https://www.youtube.com/watch?v=9idfHCIMzBY)
+AIL framework screencast: https://www.youtube.com/watch?v=9idfHCIMzBY
 
 Requirements & Installation
 ---------------------------
