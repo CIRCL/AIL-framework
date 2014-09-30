@@ -53,6 +53,10 @@ channel = 102
 address = tcp://127.0.0.1:5004
 channel = urls
 
+[ZMQ_FetchedOnion]
+address = tcp://127.0.0.1:5005
+channel = FetchedOnion
+
 [RedisPubSub]
 host = localhost
 port = 6381

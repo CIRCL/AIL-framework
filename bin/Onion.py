@@ -54,7 +54,8 @@ def fetch(p, r_cache, urls, domains, path):
             tempfile = process.stdout.read().strip()
             with open(tempfile, 'r') as f:
                 filename = path + domain + '.gz'
-                content = base64.standard_b64decode(f.read())
+                fetched = f.read()
+                content = base64.standard_b64decode(fetched)
                 save_path = os.path.join(os.environ['AIL_HOME'],
                                          p.config.get("Directories", "pastes"),
                                          filename)
@@ -65,6 +66,7 @@ def fetch(p, r_cache, urls, domains, path):
                     ff.write(content)
                 p.populate_set_out(save_path, 'Global')
                 p.populate_set_out(url, 'ValidOnion')
+                p.populate_set_out(fetched, 'FetchedOnion')
                 yield url
             os.unlink(tempfile)
         else:
