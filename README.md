@@ -1,7 +1,7 @@
 AIL
 ===
 
-AIL framework - Analysis Information Leak framework
+AIL framework - Framework for Analysis of Information Leaks
 
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
 
