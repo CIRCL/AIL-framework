@@ -23,7 +23,8 @@
     <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
           <div class="navbar-header">
-              <a class="navbar-brand" href="{{ url_for('index') }}">Analysis Information Leak framework.</a>
+          <ul class="nav navbar-nav">
+           <li><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li class="active"><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a><li></ul>
           </div>
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
@@ -40,16 +41,11 @@
                           </div>
                           <!-- /input-group -->
                       </li>
-                      <li>
-                          <a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
-                      </li>
-                      <li>
-                          <a href="{{ url_for('wordstrending') }}">WordsTrendings</a>
-                      </li>
                  </ul>
                   <!-- /#side-menu -->
               </div>
               <!-- /.sidebar-collapse -->
+           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
       </nav>

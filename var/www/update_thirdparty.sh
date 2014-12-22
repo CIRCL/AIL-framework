@@ -36,3 +36,9 @@ rm -rf ./static/css/plugins/
 mv temp/${filename}/css/* ./static/css/
 
 rm -rf temp/
+mkdir -p ./static/image
+cd static/image
+wget https://www.circl.lu/assets/images/logos/AIL.png -O AIL.png
+
+cd ../..
+

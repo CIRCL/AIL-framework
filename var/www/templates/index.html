@@ -11,7 +11,6 @@
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='font-awesome-4.1.0/css/font-awesome.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
-  
   <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
@@ -35,13 +34,15 @@
     <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
           <div class="navbar-header">
-              <a class="navbar-brand" href="{{ url_for('index') }}">Analysis Information Leak framework -- Dashboard</a>
-          </div>
+           <ul class="nav navbar-nav">
+           <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a><li></ul>
+        </div>
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
               <div class="sidebar-collapse">
                   <ul class="nav" id="side-menu">
                       <li class="sidebar-search">
+                          <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
                           <div class="input-group custom-search-form">
                               <input type="text" class="form-control" placeholder="Search Paste">
                               <span class="input-group-btn">
@@ -52,18 +53,12 @@
                           </div>
                           <!-- /input-group -->
                       </li>
-                      <li>
-                          <a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
-                      </li>
-                      <li>
-                          <a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a>
-                       </li>
                  </ul>
                   <!-- /#side-menu -->
               </div>
               <!-- /.sidebar-collapse -->
               <div class="table-responsive", id="queueing" style="margin-top:40px;"></div>
-
+             <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
       </nav>
