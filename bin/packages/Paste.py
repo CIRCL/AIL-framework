@@ -104,10 +104,14 @@ class Paste(object):
 
         paste = self.cache.get(self.p_path)
         if paste is None:
-            with gzip.open(self.p_path, 'rb') as f:
-                paste = f.read()
-                self.cache.set(self.p_path, paste)
-                self.cache.expire(self.p_path, 300)
+            try:
+                with gzip.open(self.p_path, 'rb') as f:
+                    paste = f.read()
+                    self.cache.set(self.p_path, paste)
+                    self.cache.expire(self.p_path, 300)
+            except:
+                return ''
+                pass
         return paste
 
     def get_p_content_as_file(self):

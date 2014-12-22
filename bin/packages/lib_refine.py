@@ -34,6 +34,7 @@ def checking_MX_record(r_serv, adress_set):
     # Transforming the set into a string
     MXdomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", str(adress_set).lower())
     resolver = dns.resolver.Resolver()
+    resolver.nameservers = ['149.13.33.69']
     resolver.timeout = 5
     resolver.lifetime = 2
     if MXdomains != []:
@@ -86,6 +87,7 @@ def checking_A_record(r_serv, domains_set):
     num = len(domains_set)
     WalidA = set([])
     resolver = dns.resolver.Resolver()
+    resolver.nameservers = ['149.13.33.69']
     resolver.timeout = 5
     resolver.lifetime = 2
 
