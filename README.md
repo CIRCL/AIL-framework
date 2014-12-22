@@ -1,19 +1,21 @@
 AIL
 ===
 
-AIL framework - Analysis Information Leak framework
+AIL framework - Framework for Analysis of Information Leaks
 
-AIL is a modular framework to analyse potential information leak from unstructured data source like pastes from Pastebin or similar services. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
+AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
 
 ![Dashboard](./doc/screenshots/DashboardAIL.png?raw=true "AIL framework dashboard")
 ![Trending](./doc/screenshots/WordtrendingAIL.png?raw=true "AIL framework wordtrending")
+
+AIL framework screencast: https://www.youtube.com/watch?v=9idfHCIMzBY
 
 Requirements & Installation
 ---------------------------
 
 Auto installation
 -----------------
-Type these commands lines for a fully automated installation and start AIL-framework
+Type these command lines for a fully automated installation and start AIL framework
 ```
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
@@ -28,10 +30,10 @@ cd bin/
 
 Manual installation
 -------------------
-Obviously:
+As AIL is based on python, obviously an installation of python is a requirement:
 ``sudo apt-get install python2.7``
 
-But also pip, virtualenv and screen.
+In addition pip, virtualenv and screen are needed:
 ```
 sudo apt-get install python-pip
 sudo pip install virtualenv
@@ -80,7 +82,7 @@ And install it:
 python setup.py install
 ```
 
-That's all the packages you can install with pip:
+These are all the packages you can install with pip:
 
 ```
 pip install redis
@@ -167,34 +169,33 @@ cd var/www/
 Flask_server.py
 ```
 
-Then you can browse the status of the AIL framework at the following URL:
+Eventually you can browse the status of the AIL framework at the following URL:
 
         ``http://localhost:7000/``
 
 Create a new module
 -------------------
 
-Assuming you already download the project and configure everything:
+Assuming you already downloaded the project and configured everything:
 
 * Redis databases [http://redis.io/]
 * Redis Level DB [https://github.com/KDr2/redis-leveldb]
 
-This module will be recover from a stream all the Tor .onion addresses:
-"http://3g2upl4pq6kufc4m.onion/" Which look like this.
+This module will recover from a streams all the Tor .onion addresses, which look like this:
+"http://3g2upl4pq6kufc4m.onion/"
 
-Basically we want to match all paste in with ``.onion`` addresses inside.
+Basically we want to match all pastes in with ``.onion`` addresses inside.
 
 For that you can already use the module ``ZMQ_PubSub_Categ`` and just
 create your own category file in: ``/file/`` here it will be ``/file/onion_categ``.
 
-You need also to link this file inside another file (list_categ_files).
+You also need to link this file inside another file (list_categ_files).
 
 Inside the file "onion_categ", you will add the word "onion" (don't forget the carriage return).
 
-Once it's done, at the launch of the AIL framework, every paste with the word onion inside them
-will be forwarded on a specific channel (onion_categ).
+Once it's done, after the launch of AIL framework, every paste with the word onion inside will be forwarded on a specific channel (onion_categ).
 
-Then what you want to do it's recovering these pastes to extract these .onion addresses.
+Then what you want to do is to identify these pastes to extract the .onion addresses.
 
 To do that, you'll need to create 2 scripts:
 	``ZMQ_Sub_Onion_Q.py`` (Redis bufferizing)
@@ -205,14 +206,14 @@ Those two files are there as an example.
 Overview
 --------
 
-Here is a "chained tree" to show how all ZMQ Modules are linked and how the informations
-(mainly the paste) is going through them.
+Here is a "chained tree" to show how all ZMQ Modules that are linked and how the information
+(mainly the paste) is flowing between them.
 
 The onion module is interfaced at top down level of this tree (like the ZMQ_Sub_Urls module).
 
 All modules that you want to create using the "tokenization method" and the "categories system" need to be created at this level.
 
-If you want to create a general module (e.g. using all pastes), this module need to be created at the same level than ZMQ_Sub_Duplicate.
+If you want to create a general module (e.g. using all pastes), this module needs to be created at the same level than ZMQ_Sub_Duplicate.
 
 ![ZMQTree](./doc/dia/ZMQ_Queuing_Tree.jpg?raw=true "ZMQ Tree")
 
@@ -230,7 +231,9 @@ LICENSE
 
 ```
     Copyright (C) 2014 Jules Debra
-    Copyright (C) 2014 CIRCL - Computer Incident Response Center Luxembourg (℅ smile gie)
+    Copyright (C) 2014 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014 Raphaël Vinot
+    Copyright (c) 2014 Alexandre Dulaunoy
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
