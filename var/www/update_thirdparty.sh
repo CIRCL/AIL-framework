@@ -10,9 +10,9 @@ filename="sb-admin-${SBADMIN_VERSION}"
 rm -rf temp
 mkdir temp
 
-wget http://startbootstrap.com/downloads/${filename}".zip" -O temp/${filename}".zip"
-
+wget https://github.com/IronSummitMedia/startbootstrap-sb-admin-2/archive/v1.0.2.zip -O temp/${filename}".zip"
 unzip temp/${filename}".zip" -d temp/
+mv temp/startbootstrap-sb-admin-2-1.0.2 temp/sb-admin-2
 
 JQVERSION="1.11.1"
 wget http://code.jquery.com/jquery-${JQVERSION}.js -O ./static/js/jquery.js
@@ -30,7 +30,7 @@ mv temp/${filename}/js/* ./static/js/
 rm -rf ./static/fonts/ ./static/font-awesome-4.1.0/
 
 mv temp/${filename}/fonts/ ./static/
-mv temp/${filename}/font-awesome-4.1.0/ ./static/
+mv temp/${filename}/font-awesome/ ./static/
 
 rm -rf ./static/css/plugins/
 mv temp/${filename}/css/* ./static/css/
