@@ -10,6 +10,11 @@ host = localhost
 port = 6379
 db = 0
 
+[Redis_Log]
+host = localhost
+port = 6380
+db = 0
+
 [Redis_Queues]
 host = localhost
 port = 6381
