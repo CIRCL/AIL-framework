@@ -4,9 +4,10 @@
 import redis
 import ConfigParser
 import json
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import flask
 import os
+
 
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -57,6 +58,27 @@ def logs():
 def stuff():
     return jsonify(row1=get_queues(r_serv))
 
+
+@app.route("/search", methods=['POST'])
+def search():
+    query = request.form['query']
+    q = []
+    q.append(query)
+    r = []
+    # Search
+    from whoosh import index
+    from whoosh.fields import Schema, TEXT, ID
+    schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
+
+    indexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
+    ix = index.open_dir(indexpath)
+    from whoosh.qparser import QueryParser
+    with ix.searcher() as searcher:
+        query = QueryParser("content", ix.schema).parse(" ".join(q))
+        results = searcher.search(query, limit=None)
+        for x in results:
+            r.append(x.items()[0][1])
+    return render_template("search.html", r=r)
 
 @app.route("/")
 def index():

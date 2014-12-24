@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Analysis Information Leak framework Dashboard</title>
+
+  <!-- Core CSS -->
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+  <!-- JS -->
+  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+
+</head>
+<body>
+
+    <div id="wrapper">
+      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+          <div class="navbar-header">
+          <ul class="nav navbar-nav">
+           <li><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a><li></ul>
+          </div>
+          <!-- /.navbar-top-links -->
+          <div class="navbar-default sidebar" role="navigation">
+              <div class="sidebar-collapse">
+                  <ul class="nav" id="side-menu">
+                 {% include 'searchbox.html' %}
+                 </ul>
+                  <!-- /#side-menu -->
+              </div>
+              <!-- /.sidebar-collapse -->
+           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+          </div>
+          <!-- /.navbar-static-side -->
+      </nav>
+        <div id="page-wrapper">
+            <!-- /.row -->
+            <div class="row"> </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="glyphicon glyphicon-search"></i> {{ r|length }} Results
+                            <div class="pull-right">
+                            
+                            </div>
+                        </div>
+                        <!-- /.panel-heading -->
+                          <div class="panel-body">
+                          <table class="table">
+                          {% for result in r %}
+                                <tr><td>{{ result }}</td></tr>
+                          {% endfor %}
+                          </table>
+                          </div>
+                        <!-- /.panel-body -->
+                    </div>
+                </div>
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</body>
+
+</html>
