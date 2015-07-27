@@ -19,6 +19,7 @@ sudo apt-get install libev-dev libgmp-dev
 
 #needed for mathplotlib
 test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
+sudo easy_install -U distribute
 
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
