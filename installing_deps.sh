@@ -6,7 +6,7 @@ set -x
 sudo apt-get update
 
 sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
-    screen g++ python-tk unzip
+    screen g++ python-tk unzip libsnappy-dev
 
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python-numpy

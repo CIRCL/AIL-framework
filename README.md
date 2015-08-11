@@ -66,7 +66,7 @@ sudo apt-get install python-numpy
 sudo apt-get install libadns1
 sudo apt-get install libadns1-dev
 sudo apt-get install libev-dev (redis-levelDB dependency)
-sudp apt-get install libgmp-dev (redis-levelDB dependency)
+sudo apt-get install libgmp-dev (redis-levelDB dependency)
 ```
 
 Then these modules need to be install with pip inside the virtual environment:
