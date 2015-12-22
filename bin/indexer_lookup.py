@@ -36,6 +36,7 @@ argParser.add_argument('-n', action='store_true', default=False, help='return nu
 argParser.add_argument('-t', action='store_true', default=False, help='dump top 500 terms')
 argParser.add_argument('-l', action='store_true', default=False, help='dump all terms encountered in indexed documents')
 argParser.add_argument('-f', action='store_true', default=False, help='dump each matching document')
+argParser.add_argument('-v', action='store_true', default=False, help='Include filepath')
 argParser.add_argument('-s', action='append', help='search similar documents')
 
 args = argParser.parse_args()
@@ -84,6 +85,8 @@ with ix.searcher() as searcher:
     results = searcher.search(query, limit=None)
     for x in results:
         if args.f:
+            if args.v:
+                print (x.items()[0][1])
             print (readdoc(path=x.items()[0][1]))
         else:
             print (x.items()[0][1])
