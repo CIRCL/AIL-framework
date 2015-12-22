@@ -6,7 +6,7 @@ set -x
 sudo apt-get update
 
 sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
-    screen g++ python-tk unzip
+    screen g++ python-tk unzip libsnappy-dev
 
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python-numpy
@@ -19,6 +19,7 @@ sudo apt-get install libev-dev libgmp-dev
 
 #needed for mathplotlib
 test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
+sudo easy_install -U distribute
 
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
