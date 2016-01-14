@@ -1,0 +1,83 @@
+language: python
+
+python:
+    - "2.7"
+    - "3.3"
+    - "3.4"
+    - "3.5"
+    - "nightly"
+
+sudo: required
+
+dist: trusty
+
+group: edge
+
+addons:
+    apt:
+        packages:
+            # General dependencies
+            - python-pip
+            - python-virtualenv
+            - python-dev
+            - g++
+            - python-tk
+            - unzip
+            - libsnappy-dev
+            # Needed for bloomfilters
+            - libssl-dev
+            - python-numpy
+            - libfreetype6-dev
+            # Leveldb
+            - libgmp-dev
+            - libev-dev
+
+env:
+    - AIL_HOME=$(pwd)
+    - AIL_BIN=$(pwd)/bin/
+    - AIL_FLASK=$(pwd)/var/www/
+    - AIL_REDIS=$(pwd)/redis/src/
+    - AIL_LEVELDB=$(pwd)/redis-leveldb/
+
+
+
+install:
+    - pip install --user -U pip
+    # DNS
+    - sudo apt-get install libadns1 libadns1-dev
+    # required for mathplotlib
+    - test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
+    - pip install --user distribute
+    # Redis
+    - test ! -d redis/ && git clone https://github.com/antirez/redis.git
+    - pushd redis
+    - git checkout 3.0
+    - make
+    - popd
+    # Redis leveldb
+    - test ! -d redis-leveldb/ && git clone https://github.com/KDr2/redis-leveldb.git
+    - pushd redis-leveldb/
+    - git submodule init
+    - git submodule update
+    - make
+    - popd
+    # Set config
+    - cp bin/packages/config.cfg.sample bin/packages/config.cfg
+    - mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
+    - mkdir -p $AIL_HOME/LEVEL_DB_DATA/{2016,2015,2014,2013}
+    - pip install --user -r pip_packages_requirement.txt
+    - python -m textblob.download_corpora
+
+
+script:
+    - exit 0
+    #- coverage run setup.py test
+
+notifications:
+    email:
+        on_success: change
+        on_failure: change
+
+after_success:
+    - coveralls
+    - codecov
