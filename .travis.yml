@@ -1,0 +1,83 @@
+language: python
+
+python:
+    - "2.7"
+
+sudo: required
+
+dist: trusty
+
+group: edge
+
+addons:
+    apt:
+        packages:
+            # General dependencies
+            - python-pip
+            - python-virtualenv
+            - python-dev
+            - g++
+            - python-tk
+            - unzip
+            - libsnappy-dev
+            # Needed for bloomfilters
+            - libssl-dev
+            - python-numpy
+            - libfreetype6-dev
+            # Leveldb
+            - libgmp-dev
+            - libev-dev
+
+env:
+    - AIL_HOME=$TRAVIS_BUILD_DIR AIL_BIN=$TRAVIS_BUILD_DIR/bin/ \
+      AIL_FLASK=$TRAVIS_BUILD_DIR/var/www/ AIL_REDIS=$TRAVIS_BUILD_DIR/redis/src/ \
+      AIL_LEVELDB=$TRAVIS_BUILD_DIR/redis-leveldb/ PATH=$AIL_HOME:$AIL_REDIS:$AIL_LEVELDB:$PATH
+
+
+
+install:
+    - pip install -U pip
+    # DNS
+    - sudo apt-get install libadns1 libadns1-dev screen
+    # required for mathplotlib
+    - test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
+    - pip install distribute
+    # Redis
+    - test ! -d redis/ && git clone https://github.com/antirez/redis.git
+    - pushd redis
+    - git checkout 3.0
+    - make
+    - popd
+    # Redis leveldb
+    - test ! -d redis-leveldb/ && git clone https://github.com/KDr2/redis-leveldb.git
+    - pushd redis-leveldb/
+    - git submodule init
+    - git submodule update
+    - make
+    - popd
+    # Set config
+    - cp bin/packages/config.cfg.sample bin/packages/config.cfg
+    - mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
+    - mkdir -p $AIL_HOME/LEVEL_DB_DATA/{2016,2015,2014,2013}
+    - pip install -r pip_packages_requirement.txt
+    - python -m textblob.download_corpora
+    - pushd var/www/
+    - ./update_thirdparty.sh
+    - popd
+
+
+script:
+    - pushd bin
+    - ./launch_redis.sh
+    - ./launch_lvldb.sh
+    - ./launch_logs.sh
+    - ./launch_queues.sh
+    - ./launch_scripts.sh
+    - sleep 120
+    - ./Shutdown.py
+    - popd
+
+notifications:
+    email:
+        on_success: change
+        on_failure: change
