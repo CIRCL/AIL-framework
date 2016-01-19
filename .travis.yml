@@ -76,6 +76,7 @@ script:
     - sleep 120
     - ./Shutdown.py
     - popd
+    - find logs/* -exec cat {} \;
 
 notifications:
     email:
