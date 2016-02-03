@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/CIRCL/AIL-framework.svg?branch=master)](https://travis-ci.org/CIRCL/AIL-framework)
+
 AIL
 ===
 
