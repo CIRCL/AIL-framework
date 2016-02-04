@@ -51,7 +51,8 @@ path = indexdir
 ###############################################################################
 
 [ZMQ_Global]
-address = tcp://crf.circl.lu:5556
+#address = tcp://crf.circl.lu:5556
+address = tcp://127.0.0.1:5556
 channel = 102
 
 [ZMQ_Url]
