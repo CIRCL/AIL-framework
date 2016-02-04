@@ -15,11 +15,5 @@ screen -dmS "LevelDB"
 sleep 0.1
 echo -e $GREEN"\t* Launching Levels DB servers"$DEFAULT
 #Add lines here with appropriates options.
-screen -S "LevelDB" -X screen -t "2013" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2013/ -P '$db1_y' -M '$nb_db'; read x'
-sleep 0.1
-screen -S "LevelDB" -X screen -t "2014" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2014/ -P '$db2_y' -M '$nb_db'; read x'
-sleep 0.1
-screen -S "LevelDB" -X screen -t "2015" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2015/ -P '$db2_y' -M '$nb_db'; read x'
-sleep 0.1
-screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db2_y' -M '$nb_db'; read x'
+screen -S "LevelDB" -X screen -t "2016" bash -c '../redis-leveldb/redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db2_y' -M '$nb_db'; read x'
 
