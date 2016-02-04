@@ -24,7 +24,7 @@ sudo easy_install -U distribute
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/
-git checkout 2.8
+git checkout 3.0
 make
 popd
 
@@ -51,8 +51,9 @@ echo export AIL_LEVELDB=$(pwd)/redis-leveldb/ >> ./AILENV/bin/activate
 . ./AILENV/bin/activate
 
 mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
-mkdir -p $AIL_HOME/LEVEL_DB_DATA/{2014,2013}
+mkdir -p $AIL_HOME/LEVEL_DB_DATA/2016
 
+pip install -U pip
 pip install -r pip_packages_requirement.txt
 
 # Download the necessary NLTK corpora
