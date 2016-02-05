@@ -3,10 +3,11 @@
 set -e
 set -x
 
-sudo apt-get update
+sudo pacman -Syu
 
-sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
-    screen g++ python-tk unzip libsnappy-dev
+sudo pacman -S python2-pip screen gcc unzip freetype2 python2 git --needed
+sudo yaourt -S snappy --needed
+sudo pip2 install virtualenv
 
 #Needed for bloom filters
 sudo pacman -S openssl python2-numpy --needed
