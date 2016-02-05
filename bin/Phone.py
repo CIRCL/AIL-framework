@@ -17,7 +17,7 @@ def search_phone(message):
     paste = Paste.Paste(message)
     content = paste.get_p_content()
     # regex to find phone numbers, may raise many false positives (shalt thou seek optimization, upgrading is required)
-    reg_phone = re.compile(r'(\+\d{1,3}\(\d{1,2}\)\d?)?(\d{2,4}[\W\D\s]?){4,6} ')
+    reg_phone = re.compile(r'(\+\d{1,4}(\(\d\))?\d?|0\d?)(\d{6,8}|([-/\. ]{1}\d{2,3}){3,4})')
     # list of the regex results in the Paste, may be null
     results = reg_phone.findall(content)
 
