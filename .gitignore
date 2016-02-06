@@ -19,3 +19,6 @@ var/www/static/
 
 # Local config
 bin/packages/config.cfg
+
+# installed files
+nltk_data/
