@@ -175,49 +175,16 @@ Eventually you can browse the status of the AIL framework at the following URL:
 
         ``http://localhost:7000/``
 
-Create a new module
--------------------
+How to create a new module
+--------------------------
 
-Assuming you already downloaded the project and configured everything:
+If you want to add a new processing or analysis module in AIL, it's simple.
 
-* Redis databases [http://redis.io/]
-* Redis Level DB [https://github.com/KDr2/redis-leveldb]
+1. Add your module name in [bin/packages/modules.cfg](/CIRCL/AIL-framework/blob/master/bin/packages/modules.cfg) and subscribe to the Redis_Global at minimum.
 
-This module will recover from a streams all the Tor .onion addresses, which look like this:
-"http://3g2upl4pq6kufc4m.onion/"
+2. Use [bin/template.py](/CIRCL/AIL-framework/blob/master/bin/) as a sample module and create a new file in bin/ with the module name used in the modules.cfg configuration.
 
-Basically we want to match all pastes in with ``.onion`` addresses inside.
 
-For that you can already use the module ``ZMQ_PubSub_Categ`` and just
-create your own category file in: ``/file/`` here it will be ``/file/onion_categ``.
-
-You also need to link this file inside another file (list_categ_files).
-
-Inside the file "onion_categ", you will add the word "onion" (don't forget the carriage return).
-
-Once it's done, after the launch of AIL framework, every paste with the word onion inside will be forwarded on a specific channel (onion_categ).
-
-Then what you want to do is to identify these pastes to extract the .onion addresses.
-
-To do that, you'll need to create 2 scripts:
-	``ZMQ_Sub_Onion_Q.py`` (Redis bufferizing)
-	``ZMQ_Sub_Onion.py`` (The extraction)
-
-Those two files are there as an example.
-
-Overview
---------
-
-Here is a "chained tree" to show how all ZMQ Modules that are linked and how the information
-(mainly the paste) is flowing between them.
-
-The onion module is interfaced at top down level of this tree (like the ZMQ_Sub_Urls module).
-
-All modules that you want to create using the "tokenization method" and the "categories system" need to be created at this level.
-
-If you want to create a general module (e.g. using all pastes), this module needs to be created at the same level than ZMQ_Sub_Duplicate.
-
-![ZMQTree](./doc/dia/ZMQ_Queuing_Tree.jpg?raw=true "ZMQ Tree")
 
 Redis and LevelDB overview
 --------------------------
@@ -233,9 +200,9 @@ LICENSE
 
 ```
     Copyright (C) 2014 Jules Debra
-    Copyright (C) 2014 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
-    Copyright (c) 2014 Raphaël Vinot
-    Copyright (c) 2014 Alexandre Dulaunoy
+    Copyright (C) 2014-2016 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014-2016 Raphaël Vinot
+    Copyright (c) 2014-2016 Alexandre Dulaunoy
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
