@@ -14,6 +14,20 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 
 AIL framework screencast: https://www.youtube.com/watch?v=9idfHCIMzBY
 
+Features
+--------
+
+* Modular architecture to handle stream of unstructured or structured information
+* Default support for external ZMQ feeds as provided by CIRCL or other providers
+* Each modules can process and reprocess the information already processed by AIL
+* Detecting and extracting URLs including their geographical location (e.g. IP addresses location)
+* Extracting and validating potential leak of credit cards numbers
+* Extracting and validating email addresses leaked including DNS MX validation
+* Module for extracting Tor .onion addresses (to be further processed for analysis)
+* Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
+* A full-text indexer module to index unstructured information
+* Many more modules for extracting phone numbers, credentials, ...
+
 Installation
 ------------
 
