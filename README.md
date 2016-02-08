@@ -180,9 +180,9 @@ How to create a new module
 
 If you want to add a new processing or analysis module in AIL, it's simple.
 
-1. Add your module name in [bin/packages/modules.cfg](/CIRCL/AIL-framework/blob/master/bin/packages/modules.cfg) and subscribe to the Redis_Global at minimum.
+1. Add your module name in [./bin/packages/modules.cfg](./bin/packages/modules.cfg) and subscribe to the Redis_Global at minimum.
 
-2. Use [bin/template.py](/CIRCL/AIL-framework/blob/master/bin/) as a sample module and create a new file in bin/ with the module name used in the modules.cfg configuration.
+2. Use [./bin/template.py](./bin/template.py) as a sample module and create a new file in bin/ with the module name used in the modules.cfg configuration.
 
 
 
