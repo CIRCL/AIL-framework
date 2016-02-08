@@ -81,6 +81,12 @@ If you want to add a new processing or analysis module in AIL, it's simple.
 
 2. Use [./bin/template.py](./bin/template.py) as a sample module and create a new file in bin/ with the module name used in the modules.cfg configuration.
 
+How to contribute a module
+--------------------------
+
+Feel free to fork the code, play with it, make some patches or add additional analysis modules.
+
+To contribute your module, feel free to pull your contribution.
 
 Redis and LevelDB overview
 --------------------------
