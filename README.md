@@ -17,16 +17,16 @@ AIL framework screencast: https://www.youtube.com/watch?v=9idfHCIMzBY
 Features
 --------
 
-* Modular architecture to handle stream of unstructured or structured information
-* Default support for external ZMQ feeds as provided by CIRCL or other providers
-* Each modules can process and reprocess the information already processed by AIL
-* Detecting and extracting URLs including their geographical location (e.g. IP addresses location)
+* Modular architecture to handle streams of unstructured or structured information
+* Default support for external ZMQ feeds, such as provided by CIRCL or other providers
+* Each module can process and reprocess the information already processed by AIL
+* Detecting and extracting URLs including their geographical location (e.g. IP address location)
 * Extracting and validating potential leak of credit cards numbers
 * Extracting and validating email addresses leaked including DNS MX validation
 * Module for extracting Tor .onion addresses (to be further processed for analysis)
 * Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
 * A full-text indexer module to index unstructured information
-* Many more modules for extracting phone numbers, credentials, ...
+* Many more modules for extracting phone numbers, credentials and others
 
 Installation
 ------------
@@ -43,16 +43,15 @@ cd ~/AIL-framework/
 cd bin/
 ./LAUNCH.sh
 ```
-The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distribution. For Arch
-linux based distribution, you can replace it with [installing_deps_archlinux.sh](./installing_deps_archlinux.sh).
+The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distributions. For Arch
+linux based distributions, you can replace it with [installing_deps_archlinux.sh](./installing_deps_archlinux.sh).
 
-There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other
-systems.
+There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
 Starting AIL web interface
 --------------------------
 
-To start with the web interface, you need to fetch the required Javascript/CSS files:
+To start the web interface, you first need to fetch the required Javascript/CSS files:
 
 ```
 cd $AILENV
@@ -60,7 +59,7 @@ cd var/www/
 bash update_thirdparty.sh
 ```
 
-and then you can start the web interface:
+and then you can start the web interface python script:
 
 ```
 cd $AILENV
@@ -68,14 +67,14 @@ cd var/www/
 Flask_server.py
 ```
 
-Eventually you can browse the status of the AIL framework at the following URL:
+Eventually you can browse the status of the AIL framework website at the following URL:
 
         ``http://localhost:7000/``
 
 How to create a new module
 --------------------------
 
-If you want to add a new processing or analysis module in AIL, it's simple.
+If you want to add a new processing or analysis module in AIL, follow these simple steps:
 
 1. Add your module name in [./bin/packages/modules.cfg](./bin/packages/modules.cfg) and subscribe to the Redis_Global at minimum.
 
