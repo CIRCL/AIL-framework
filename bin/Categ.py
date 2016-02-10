@@ -54,9 +54,7 @@ if __name__ == "__main__":
     p = Process(config_section)
 
     # SCRIPT PARSER #
-    parser = argparse.ArgumentParser(
-        description='This script is a part of the Analysis Information \
-                    Leak framework.')
+    parser = argparse.ArgumentParser(description='Start Categ module on files.')
 
     parser.add_argument(
         '-d', type=str, default="../files/",
@@ -68,7 +66,7 @@ if __name__ == "__main__":
     # FUNCTIONS #
     publisher.info("Script Categ started")
 
-    categories = ['CreditCards', 'Mail', 'Onion', 'Web']
+    categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential']
     tmp_dict = {}
     for filename in categories:
         bname = os.path.basename(filename)
@@ -81,24 +79,23 @@ if __name__ == "__main__":
 
     while True:
         filename = p.get_from_set()
-        if filename is not None:
-
-            paste = Paste.Paste(filename)
-            content = paste.get_p_content()
-
-            for categ, pattern in tmp_dict.items():
-                found = re.findall(pattern, content)
-                if len(found) > 0:
-                    msg = '{} {}'.format(paste.p_path, len(found))
-                    print msg, categ
-                    p.populate_set_out(msg, categ)
-
-                    publisher.info(
-                        'Categ;{};{};{};Detected {} as {}'.format(
-                            paste.p_source, paste.p_date, paste.p_name,
-                            len(found), categ))
-
-        else:
+        if filename is None:
             publisher.debug("Script Categ is Idling 10s")
             print 'Sleeping'
             time.sleep(10)
+            continue
+
+        paste = Paste.Paste(filename)
+        content = paste.get_p_content()
+
+        for categ, pattern in tmp_dict.items():
+            found = set(re.findall(pattern, content))
+            if len(found) > 0:
+                msg = '{} {}'.format(paste.p_path, len(found))
+                print msg, categ
+                p.populate_set_out(msg, categ)
+
+                publisher.info(
+                    'Categ;{};{};{};Detected {} as {}'.format(
+                        paste.p_source, paste.p_date, paste.p_name,
+                        len(found), categ))
