@@ -5,10 +5,8 @@
 """
 
 import time
-import pprint
 import re
 from packages import Paste
-from packages import lib_refine
 from pubsublogger import publisher
 from Helper import Process
 
@@ -22,11 +20,11 @@ def search_phone(message):
     results = reg_phone.findall(content)
 
     # if the list is greater than 4, we consider the Paste may contain a list of phone numbers
-    if len(results) > 4 :
+    if len(results) > 4:
         print results
         publisher.warning('{} contains PID (phone numbers)'.format(paste.p_name))
 
-	if __name__ == '__main__':
+if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
     # Port of the redis instance used by pubsublogger
     publisher.port = 6380
@@ -53,4 +51,3 @@ def search_phone(message):
 
         # Do something with the message from the queue
         search_phone(message)
-        
