@@ -122,6 +122,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Url" bash -c './Url.py; read x'
     sleep 0.1
+    screen -S "Script" -X screen -t "Credential" bash -c './Credential.py; read x'
+    sleep 0.1
     screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
