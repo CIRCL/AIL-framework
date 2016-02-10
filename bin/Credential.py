@@ -13,16 +13,22 @@ if __name__ == "__main__":
     p = Process(config_section)
     publisher.info("Find credentials")
 
-    critical = 10
+    critical = 8
 
     regex_web = "/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/"
     regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
     while True:
-        filepath = p.get_from_set()
-        if filepath is None:
+        message = p.get_from_set()
+        if message is None:
             publisher.debug("Script Credential is Idling 10s")
             print('Sleeping')
             time.sleep(10)
+            continue
+
+        filepath, count = message.split()
+
+        if count < 5:
+            # Less than 5 matches from the top password list, false positive.
             continue
 
         paste = Paste.Paste(filepath)
@@ -42,7 +48,7 @@ if __name__ == "__main__":
         print('\n '.join(creds))
 
         if len(creds) > critical:
-            print("========> Found more than 10 credentials on this file : {}".format(filepath))
+            print("========> Found more than 10 credentials in this file : {}".format(filepath))
             publisher.warning(to_print)
             if sites:
                 print("=======> Probably on : {}".format(', '.join(sites)))
