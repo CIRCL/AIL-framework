@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     critical = 8
 
-    regex_web = "/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/"
+    regex_web = "((?:https?:\/\/)[-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
     regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
     while True:
         message = p.get_from_set()
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
         sites = set(re.findall(regex_web, content))
 
-        message = '{} credentials found.'.format(len(creds))
+        message = 'Checked {} credentials found.'.format(len(creds))
         if sites:
             message += ' Related websites: {}'.format(', '.join(sites))
 
