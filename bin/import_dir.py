@@ -5,7 +5,7 @@ import zmq
 import base64
 import argparse
 import os
-
+import time
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Take files from a directory and push them into a 0MQ feed.')
@@ -24,3 +24,4 @@ if __name__ == "__main__":
             messagedata = open(os.path.join(dirname, filename)).read()
             print(os.path.join(dirname, filename))
             socket.send('{} {} {}'.format(args.channel, filename, base64.b64encode(messagedata)))
+            time.sleep(.1)
