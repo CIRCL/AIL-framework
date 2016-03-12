@@ -3,4 +3,7 @@ exploit
 vulnerability
 payload
 uname
-gcc
+chmod
+adduser
+base64_decode
+gzinflate

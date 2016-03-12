@@ -13,8 +13,9 @@ if __name__ == "__main__":
     p = Process(config_section)
     publisher.info("Finding Source Code")
 
-    critical = 0 # AS TO BE IMPORTANT
+    critical = 0 # AS TO BE IMPORTANT, MIGHT BE REMOVED
 
+    #RELEVANTS LANGUAGES
     shell = "[a-zA-Z0-9]+@[a-zA-Z0-9\-]+\:\~\$"
     c = "\#include\ \<[a-z\/]+.h\>"
     php = "\<\?php"
@@ -23,6 +24,7 @@ if __name__ == "__main__":
     javascript = "function\(\)"
     ruby = "require \ [\w]+"
     adr = "0x[a-f0-9]{2}"
+
     #asm = "\"((?s).{1}x[0-9a-f]{2}){3,}" ISSUES WITH FINDALL, pattern like \x54\xaf\x23\..
  
     languages = [shell, c, php, bash, python, javascript, bash, ruby, adr]
@@ -32,7 +34,7 @@ if __name__ == "__main__":
     while True:
         message = p.get_from_set()
         if message is None:
-            publisher.debug("Script Credential is Idling 10s")
+            publisher.debug("Script Source Code is Idling 10s")
             print('Sleeping')
             time.sleep(10)
             continue
@@ -46,9 +48,6 @@ if __name__ == "__main__":
             continue
 
         to_print = 'SourceCode;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message)
-
-	print filepath
-	print(match_set)
 
         if len(match_set) > critical:
             publisher.warning(to_print)

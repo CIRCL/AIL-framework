@@ -1,0 +1,8 @@
+SourceCode listens to Global and select only keywords that are relevants to AIL's purpose (CVE, Exploits, Vulnerability,...), then send matching file to a new queue.
+
+SourceCode.py search for differents languages such as C, PHP, Python, BASH and some Unix shells with default configuration.
+
+Every records is send to the warning log because filters are high enough (hence the critical var set to 0 but can be changed).
+
+FOR NOW : Still have troubles detecting ASM 
+
