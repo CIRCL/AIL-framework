@@ -1,9 +1,9 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 """
-	module for specific text analysis
-	aim is to detect an attempt of: Ransom, Phishing, Social Engineering, etc.
-	Here, only RANSOM is sought for now
+	Module for specific text analysis
+	More global aim is to detect an attempt of: Ransom, Phishing, Social Engineering, etc.
+	Here, only RANSOM is sought for now, and on every Paste.
 """
 
 import time
@@ -16,15 +16,16 @@ from Helper import Process
 """
 	Forme du module :
 	- analyser si ca contient du texte en langage naturel
-	- Lower-Case les textes test?s
-	- ouvrir le fichier "dictionnaire", garder le contenu dans une liste en memoire locale, fermer le fichier
+	- Lower-Case les textes testes
+	- ouvrir le fichier "dictionnaire", garder le contenu dans une variable dict["mot": poids] en memoire locale
 	- analyser les mots significatifs
+	- ignorer les repetitions (sinon, "database" augmenterait N fois le taux de menace, alors qu'il a un poids de seulement 1)
 	- faire une somme des indices de "menaces"
-	- ne lever une alerte qu'en cas de menace > x (avec x = seuil arbitraire)
+	- ne lever une alerte qu'en cas de menace superieure a un seuil (arbitraire)
 """
 
 # Dictionnaire contenant les mots a chercher (indicatifs de RANSOMWARE seulement)
-dict_ransom = []
+dict_ransom = {}
 
 # Fonction de recherche de mots-cles de rancons, encore peu optimisee
 def search_ransom(message):
@@ -33,13 +34,15 @@ def search_ransom(message):
 	paste = Paste.Paste(message)
 	content = paste.get_p_content()
 	for word in content.split():
+		word = word.lower()
 		if word in dict_ransom:
-			counter++
+			counter += dict_ransom[word]
 
 			#for debugging! Delete ASAP
 			str_DEBUG += (word+'\t')
+			print counter
 	print str_DEBUG
-	print dict_ransom
+	print counter
 
 	# if the list is greater than 4, we consider the Paste may contain a list of phone numbers
 	if counter > 10 :
@@ -66,11 +69,11 @@ if __name__ == '__main__':
 	# Sent to the logging a description of the module
 	publisher.info("Run Ransom module")
 
-	# Getting the dictionary in memory
-	with open('dict_ransom.txt') as file:
-	for line in file:
-	for part in line.split():
-		dict_ransom.append(part.strip())
+	# Getting the dictionary from a file to the memory
+	with open('nltk_data/corpora/dict/ransom.dic') as file:
+		for line in file:
+			k, v = line.split()
+			dict_ransom[k] = v
 
 	# Endless loop getting messages from the input queue
 	while True:
