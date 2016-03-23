@@ -90,3 +90,4 @@ if __name__ == '__main__':
 
 		# Do something with the message from the queue
 		search_ransom(message)
+

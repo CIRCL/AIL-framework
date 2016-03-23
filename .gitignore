@@ -3,13 +3,13 @@
 *.pyc
 
 # Install Dirs
-AILENV
-redis-leveldb
-redis
-Blooms
-LEVEL_DB_DATA
+# AILENV
+# redis-leveldb
+# redis
+# Blooms
+# LEVEL_DB_DATA
 PASTES
-bin/indexdir/
+# bin/indexdir/
 logs/
 
 # Webstuff
@@ -22,3 +22,4 @@ bin/packages/config.cfg
 
 # installed files
 nltk_data/
+!nltk_data/corpora/wordnet/
