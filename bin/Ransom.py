@@ -29,30 +29,35 @@ dict_ransom = {}
 
 # Function looking for keywords related to a Ransom or Ransomware in a given Paste
 def search_ransom(message):
+	# Variables to be set for every new Paste:
+	# List of the found words
+	threat_words = []
+	# Counter based on the (arbitrary) weight of each found word 
 	counter = 0
-	str_DEBUG = ''
+	# Content of the Paste
 	paste = Paste.Paste(message)
 	content = paste.get_p_content()
+
+# DEBUG_START, for the time being (delete ASAP):
+	publisher.debug('!!starting ransom search for {} '.format(paste.p_name))
+# DEBUG_END
+
+	# Check the content of the Paste:
 	for word in content.split():
 		word = word.lower()
-		#if a keyword is found, we add its weight to the total counter
+		#if the word has been found already, ignore the repetition
+		if word in threat_words:
+			continue
+		#if a keyword is found to match our dictionary, we add its weight to the total counter
 		if word in dict_ransom:
 			counter += dict_ransom[word]
+			#add the word to the list of found threatening words, in order to ignore later repetitions
+			threat_words.append(word)
 
-			#for debugging! Delete ASAP
-			str_DEBUG += (word+'\t')
-	#for debugging! Delete ASAP
-	print str_DEBUG
-	#for debugging! Delete ASAP
-	print counter
-
-	# if the sum of threat indices is greater than 42, we consider that the Paste may be related to a Ransom or Ransomware
-	if counter > 42 :
-
-		#for debugging! Delete ASAP
-		print str_DEBUG
-
-		publisher.warning('{} may be a Ransom!'.format(paste.p_name))
+	# if the sum of threat indices is greater than 42 (totally random number),
+	# we consider that the Paste may be related to a Ransom or Ransomware:
+	if counter > 12 :
+		publisher.info('{} may be a Ransom!'.format(paste.p_name))
 	return None
 
 # Module's main function
@@ -88,6 +93,6 @@ if __name__ == '__main__':
 			time.sleep(1)
 			continue
 
-		# Do something with the message from the queue
+		# With the message from the queue, we call the above-defined "search_ransom" function:
 		search_ransom(message)
 
