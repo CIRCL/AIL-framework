@@ -74,7 +74,7 @@ if __name__ == '__main__':
 	publisher.info("Run Ransom module")
 
 	# Getting the dictionary from a file to the memory
-	with open('nltk_data/corpora/dict/ransom.dic') as dict_file:
+	with open('../nltk_data/corpora/dict/ransom.dic') as dict_file:
 		for line in dict_file:
 			k, v = line.split()
 			dict_ransom[k] = int(v)
