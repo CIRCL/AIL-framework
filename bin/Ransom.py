@@ -45,13 +45,18 @@ def search_ransom(message):
 	# Check the content of the Paste:
 	for word in content.split():
 		word = word.lower()
-		#if the word has been found already, ignore the repetition
+
+		# If the word has been found already:
+		#	either add only 1 to the counter (minimize the effects of repetitions)
+		#	or ignore the repetition
 		if word in threat_words:
+			# counter+=1
 			continue
-		#if a keyword is found to match our dictionary, we add its weight to the total counter
+
+		# if a keyword is found to match our dictionary, we add its weight to the total counter
 		if word in dict_ransom:
 			counter += dict_ransom[word]
-			#add the word to the list of found threatening words, in order to ignore later repetitions
+			# add the word to the list of found threatening words, to ignore later repetitions
 			threat_words.append(word)
 
 	# if the sum of threat indices is greater than 42 (totally random number),
