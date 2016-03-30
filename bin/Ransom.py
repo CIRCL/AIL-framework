@@ -13,7 +13,7 @@
 	- tested texts are lowercased
 	- compare the text and look for the keywords from "dict_ransom"
 	- add the weight of those keywords in a "counter" variable (representing the probability of an actual threatining ransom)
-	- ignore repetitions (otherwise, "database" would increase N times the counter, even if it has a weight of 1 and is barely relevant)
+	- lower the weight of repetitions (increase R times the counter, instead of R*W, for barely relevant occurrences; R=repeats; W=weight)
 	- raise an alert only if the threat of an actual ransom message is higher than an (arbitrary) threshold
 """
 
@@ -61,7 +61,7 @@ def search_ransom(message):
 
 	# if the sum of threat indices is greater than 42 (totally random number),
 	# we consider that the Paste may be related to a Ransom or Ransomware:
-	if counter > 12 :
+	if counter > 2 :
 		publisher.info('{} may be a Ransom!'.format(paste.p_name))
 	return None
 
@@ -84,6 +84,7 @@ if __name__ == '__main__':
 	publisher.info("Run Ransom module")
 
 	# Getting the dictionary from a file to the memory
+	# Only in English for now, add here dictionaries in FR, DE, RU, etc. !
 	with open('../nltk_data/corpora/dict/ransom.dic') as dict_file:
 		for line in dict_file:
 			k, v = line.split()
