@@ -38,8 +38,8 @@ def search_ransom(message):
 	paste = Paste.Paste(message)
 	content = paste.get_p_content()
 
-# DEBUG_START, for the time being (delete ASAP):
-	publisher.debug('!!starting ransom search for {} '.format(paste.p_name))
+# DEBUG_START, for the time being (delete or comment ASAP):
+#	publisher.debug('!!starting ransom search for {} '.format(paste.p_name))
 # DEBUG_END
 
 	# Check the content of the Paste:
@@ -61,7 +61,7 @@ def search_ransom(message):
 
 	# if the sum of threat indices is greater than 42 (totally random number),
 	# we consider that the Paste may be related to a Ransom or Ransomware:
-	if counter > 2 :
+	if counter > 42 :
 		publisher.info('{} may be a Ransom!'.format(paste.p_name))
 	return None
 
