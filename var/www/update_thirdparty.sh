@@ -17,7 +17,7 @@ mv temp/startbootstrap-sb-admin-2-1.0.2 temp/sb-admin-2
 JQVERSION="1.11.1"
 wget http://code.jquery.com/jquery-${JQVERSION}.js -O ./static/js/jquery.js
 
-wget https://collabdev.googlecode.com/svn-history/r5/trunk/static/js/jquery.timers-1.0.0.js -O ./static/js/jquery.timers-1.0.0.js
+#wget https://collabdev.googlecode.com/svn-history/r5/trunk/static/js/jquery.timers-1.0.0.js -O ./static/js/jquery.timers-1.0.0.js
 
 #Here to fix an error about an hard dependency in a obscur script of bootstrap..
 wget http://code.jquery.com/jquery-1.4.2.js -O ./static/js/jquery-1.4.2.js

@@ -57,7 +57,21 @@ if __name__ == "__main__":
                         port, resource_path, query_string, f1, f2, f3, \
                         f4 = x
                     domains_list.append(domain)
-                    p.populate_set_out(x, 'Url')
+#                    p.populate_set_out(x, 'Url')
+                    temp_x = ()
+                    for i in range(0,13):
+                        if x[i] == '':
+                            temp_x += ('None', )
+                        else:
+                            temp_x += (x[i], )
+                    temp_scheme, temp_credential, temp_subdomain, temp_domain, temp_host, temp_tld, \
+                        temp_port, temp_resource_path, temp_query_string, temp_f1, temp_f2, temp_f3, \
+                        temp_f4 = temp_x
+
+                    to_send = '{} {} {} {} {} {} {} {} {} {} {} {} {} {}'.format(temp_scheme, \
+                        temp_subdomain, temp_credential, temp_domain, temp_host, temp_tld, temp_port, temp_resource_path,\
+                        temp_query_string, temp_f1, temp_f2, temp_f3, temp_f4, PST._get_p_date())
+                    p.populate_set_out(to_send , 'Url')
                     publisher.debug('{} Published'.format(x))
 
                     if f1 == "onion":

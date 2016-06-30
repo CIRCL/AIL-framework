@@ -66,6 +66,7 @@ function launching_lvldb {
     lvdbdir="${AIL_HOME}/LEVEL_DB_DATA/"
     db1_y='2013'
     db2_y='2014'
+    db3_y='2016'
     nb_db=13
 
     screen -dmS "LevelDB"
@@ -75,6 +76,8 @@ function launching_lvldb {
     screen -S "LevelDB" -X screen -t "2013" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2013/ -P '$db1_y' -M '$nb_db'; read x'
     sleep 0.1
     screen -S "LevelDB" -X screen -t "2014" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2014/ -P '$db2_y' -M '$nb_db'; read x'
+    sleep 0.1
+    screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db3_y' -M '$nb_db'; read x'
 }
 
 function launching_logs {
@@ -104,11 +107,11 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
+    #screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Line" bash -c './Line.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "DomainClassifier" bash -c './DomClassifier.py; read x'
+    #screen -S "Script" -X screen -t "DomainClassifier" bash -c './DomClassifier.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Categ" bash -c './Categ.py; read x'
     sleep 0.1
@@ -127,6 +130,16 @@ function launching_scripts {
     screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Keys" bash -c './Keys.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Phone" bash -c './Phone.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Release" bash -c './Release.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Cve" bash -c './Cve.py; read x'
+    sleep 0.1
+    #screen -S "Script" -X screen -t "WebStats" bash -c './WebStats.py; read x'
 }
 
 #If no params, display the help
