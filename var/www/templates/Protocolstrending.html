@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Analysis Information Leak framework Dashboard</title>
+
+  <!-- Core CSS -->
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+  <!-- JS -->
+  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+
+</head>
+<body>
+
+    <div id="wrapper">
+      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+          <div class="navbar-header">
+          <ul class="nav navbar-nav">
+           <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a><li><a href="{{ url_for('protocolsstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a><li></ul>
+          </div>
+          <!-- /.navbar-top-links -->
+          <div class="navbar-default sidebar" role="navigation">
+              <div class="sidebar-collapse">
+                  <ul class="nav" id="side-menu">
+                      <li class="sidebar-search">
+                          <div class="input-group custom-search-form">
+                              <input type="text" class="form-control" placeholder="Search Paste">
+                              <span class="input-group-btn">
+                              <button class="btn btn-default" type="button">
+                                  <i class="fa fa-search"></i>
+                              </button>
+                          </span>
+                          </div>
+                          <!-- /input-group -->
+                      </li>
+                 </ul>
+                  <!-- /#side-menu -->
+              </div>
+              <!-- /.sidebar-collapse -->
+           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+          </div>
+          <!-- /.navbar-static-side -->
+      </nav>
+        <div id="page-wrapper">
+          <div class="row">
+              <div class="col-lg-12">
+                  <h1 class="page-header">ProtocolsTrendings</h1>
+              </div>
+              <!-- /.col-lg-12 -->
+          </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> Protocols Trend
+                            <div class="pull-right">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                                        Actions
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu pull-right" role="menu">
+                                        <li><a href="#" id="linear">Linear Scale</a>
+                                        </li>
+                                        <li><a href="#" id="log">Log Scale</a>
+                                        </li>
+                                        <li><a href="#" id="unzoom" onclick="unzoomGraph()">Unzoom</a>
+                                        </li>
+                                        <li class="divider"></li>
+                                        <li><a href="#" id="edit_graph">Edit graph words</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.panel-heading -->
+                          <div class="panel-body">
+                             <!-- <div id="WordTrending" style="width:100%;"></div> -->
+                              <div id="WordTrending" style="width:100%; height:800px;"></div>
+                          </div>
+                        <!-- /.panel-body -->
+                    </div>
+                </div>
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+            <script type="text/javascript">
+g2 = new Dygraph(
+    document.getElementById("WordTrending"),
+    // path to CSV file
+    "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}",
+    //"../csv/wordstrendingdata.csv",
+    //window.csv,
+    {
+    rollPeriod: 1,
+    showRoller: true,
+    //drawPoints: true,
+    //fillGraph: true,
+    logscale: true,
+    animatedZooms: true,
+    labelsKMB: true,
+    highlightCircleSize: 3,
+    highlightSeriesOpts: {
+        strokeWidth: 3,
+        strokeBorderWidth: 1,
+        highlightCircleSize: 5,
+    },
+    underlayCallback: function(canvas, area, g) {
+    canvas.fillStyle = "rgba(255, 193, 37, 0.5)";
+
+    function highlight_period(x_start, x_end) {
+        var canvas_left_x = g.toDomXCoord(x_start);
+        var canvas_right_x = g.toDomXCoord(x_end);
+        var canvas_width = canvas_right_x - canvas_left_x;
+        canvas.fillRect(canvas_left_x, area.y, canvas_width, area.h);
+    }
+
+    var min_data_x = g.getValue(0,0);
+    var max_data_x = g.getValue(g.numRows()-1,0);
+
+    // get day of week
+    var d = new Date(min_data_x);
+    var dow = d.getUTCDay();
+    var ds = d.toUTCString();
+
+    var w = min_data_x;
+    // starting on Sunday is a special case
+    if (dow == 0) {
+        highlight_period(w,w+12*3600*1000);
+    }
+    // find first saturday
+    while (dow != 5) {
+        w += 24*3600*1000;
+        d = new Date(w);
+        dow = d.getUTCDay();
+    }
+
+    // shift back 1/2 day to center highlight around the point for the day
+    w -= 12*3600*1000;
+    while (w < max_data_x) {
+        var start_x_highlight = w;
+        var end_x_highlight = w + 2*24*3600*1000;
+        // make sure we don't try to plot outside the graph
+        if (start_x_highlight < min_data_x) {
+            start_x_highlight = min_data_x;
+        }
+        if (end_x_highlight > max_data_x) {
+            end_x_highlight = max_data_x;
+        }
+        highlight_period(start_x_highlight,end_x_highlight);
+        // calculate start of highlight for next Saturday
+        w += 7*24*3600*1000;
+    }
+    }
+});
+
+onclick = function(ev) {
+    if (g2.isSeriesLocked()) {
+        g2.clearSelection();
+    }
+    else {
+        g2.setSelection(g2.getSelection(), g2.getHighlightSeries(), true);
+    }
+};
+g2.updateOptions({clickCallback: onclick}, true);
+
+var linear = document.getElementById("linear");
+var log = document.getElementById("log");
+linear.onclick = function() { setLog(false); }
+log.onclick = function() { setLog(true); }
+var setLog = function(val) {
+    g2.updateOptions({ logscale: val });
+    linear.disabled = !val;
+    log.disabled = val;
+    }
+function unzoomGraph() {
+    g2.updateOptions({
+        dateWindow:null,
+        valueRange:null
+    });
+}
+</script>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</body>
+
+</html>
