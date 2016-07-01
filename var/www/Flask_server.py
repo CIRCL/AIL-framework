@@ -96,5 +96,14 @@ def wordstrending():
     return render_template("Wordstrending.html")
 
 
+@app.route("/protocolstrending/")
+def protocolstrending():
+    return render_template("Protocolstrending.html")
+
+@app.route("/tldstrending/")
+def tldstrending():
+    return render_template("Tldstrending.html")
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=7000, threaded=True)

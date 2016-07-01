@@ -7,6 +7,8 @@ import dns.exception
 from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
+from pyfaup.faup import Faup
+import re
 
 # Country and ASN lookup
 from cymru.ip2asn.dns import DNSClient as ip2asn
@@ -15,6 +17,12 @@ import pycountry
 import ipaddress
 
 from Helper import Process
+
+def avoidNone(str):
+    if str is None:
+        return ""
+    else:
+        return str
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -41,6 +49,7 @@ if __name__ == "__main__":
 
     message = p.get_from_set()
     prec_filename = None
+    faup = Faup()
 
     url_regex = "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
 
@@ -53,33 +62,27 @@ if __name__ == "__main__":
                 PST = Paste.Paste(filename)
                 client = ip2asn()
                 for x in PST.get_regex(url_regex):
-                    scheme, credential, subdomain, domain, host, tld, \
-                        port, resource_path, query_string, f1, f2, f3, \
-                        f4 = x
-                    domains_list.append(domain)
-#                    p.populate_set_out(x, 'Url')
-                    temp_x = ()
-                    for i in range(0,13):
-                        if x[i] == '':
-                            temp_x += ('None', )
-                        else:
-                            temp_x += (x[i], )
-                    temp_scheme, temp_credential, temp_subdomain, temp_domain, temp_host, temp_tld, \
-                        temp_port, temp_resource_path, temp_query_string, temp_f1, temp_f2, temp_f3, \
-                        temp_f4 = temp_x
+                    matching_url = re.search(url_regex, PST.get_p_content())
+                    url = matching_url.group(0)
 
-                    to_send = '{} {} {} {} {} {} {} {} {} {} {} {} {} {}'.format(temp_scheme, \
-                        temp_subdomain, temp_credential, temp_domain, temp_host, temp_tld, temp_port, temp_resource_path,\
-                        temp_query_string, temp_f1, temp_f2, temp_f3, temp_f4, PST._get_p_date())
-                    p.populate_set_out(to_send , 'Url')
-                    publisher.debug('{} Published'.format(x))
+                    to_send = "{} {}".format(url, PST._get_p_date())
+                    p.populate_set_out(to_send, 'Url')
+
+                    faup.decode(url)
+                    domain = faup.get_domain()
+                    subdomain = faup.get_subdomain()
+                    f1 = None
+
+                    domains_list.append(domain)
+
+                    publisher.debug('{} Published'.format(url))
 
                     if f1 == "onion":
                         print domain
 
-                    hostl = unicode(subdomain+domain)
+                    hostl = unicode(avoidNone(subdomain)+avoidNone(domain))
                     try:
-                        socket.setdefaulttimeout(2)
+                        socket.setdefaulttimeout(1)
                         ip = socket.gethostbyname(unicode(hostl))
                     except:
                         # If the resolver is not giving any IPv4 address,

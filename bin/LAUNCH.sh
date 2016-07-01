@@ -107,11 +107,11 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate.py; read x'
     sleep 0.1
-    #screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
+    screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Line" bash -c './Line.py; read x'
     sleep 0.1
-    #screen -S "Script" -X screen -t "DomainClassifier" bash -c './DomClassifier.py; read x'
+    screen -S "Script" -X screen -t "DomainClassifier" bash -c './DomClassifier.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Categ" bash -c './Categ.py; read x'
     sleep 0.1
@@ -139,7 +139,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Cve" bash -c './Cve.py; read x'
     sleep 0.1
-    #screen -S "Script" -X screen -t "WebStats" bash -c './WebStats.py; read x'
+    screen -S "Script" -X screen -t "WebStats" bash -c './WebStats.py; read x'
 }
 
 #If no params, display the help
