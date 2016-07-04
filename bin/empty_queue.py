@@ -2,10 +2,10 @@
 # -*-coding:UTF-8 -*
 
 """
-The Duplicate module
+The Empty queue module
 ====================
 
-This huge module is, in short term, checking duplicates.
+This simple module can be used to clean all queues.
 
 Requirements:
 -------------

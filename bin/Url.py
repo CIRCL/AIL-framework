@@ -18,6 +18,7 @@ import ipaddress
 
 from Helper import Process
 
+# Used to prevent concat with empty fields due to url parsing
 def avoidNone(str):
     if str is None:
         return ""
