@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Paste information</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+  <h2> Paste: </h2>
+  <h3> {{ request.args.get('paste') }} </h3>
+
+  <hr></br>
+
+  <table class="table table-condensed">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Source</th>
+        <th>Encoding</th>
+        <th>Language</th>
+        <th>Size</th>
+        <th>Mime</th>
+        <th>Number of line</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>John</td>
+        <td>Doe</td>
+        <td>john@example.com</td>
+      </tr>
+      <tr>
+        <td>Mary</td>
+        <td>Moe</td>
+        <td>mary@example.com</td>
+      </tr>
+      <tr>
+        <td>July</td>
+        <td>Dooley</td>
+        <td>july@example.com</td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
+

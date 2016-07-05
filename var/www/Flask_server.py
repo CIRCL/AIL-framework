@@ -7,7 +7,9 @@ import json
 from flask import Flask, render_template, jsonify, request
 import flask
 import os
-
+import sys
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Paste
 
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -18,6 +20,7 @@ if not os.path.exists(configfile):
 
 cfg = ConfigParser.ConfigParser()
 cfg.read(configfile)
+max_preview_char = 500
 
 # REDIS #
 r_serv = redis.StrictRedis(
@@ -49,6 +52,10 @@ def get_queues(r):
             r.hgetall("queues").iteritems()]
 
 
+def list_len(s):
+    return len(s)
+app.jinja_env.filters['list_len'] = list_len
+
 @app.route("/_logs")
 def logs():
     return flask.Response(event_stream(), mimetype="text/event-stream")
@@ -65,6 +72,7 @@ def search():
     q = []
     q.append(query)
     r = []
+    c = []
     # Search
     from whoosh import index
     from whoosh.fields import Schema, TEXT, ID
@@ -78,7 +86,10 @@ def search():
         results = searcher.search(query, limit=None)
         for x in results:
             r.append(x.items()[0][1])
-    return render_template("search.html", r=r)
+            content = Paste.Paste(x.items()[0][1]).get_p_content()
+            content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+            c.append(content[0:content_range]) 
+    return render_template("search.html", r=r, c=c)
 
 @app.route("/")
 def index():
@@ -103,6 +114,10 @@ def protocolstrending():
 @app.route("/tldstrending/")
 def tldstrending():
     return render_template("Tldstrending.html")
+
+@app.route("/showsavedpaste/")
+def showsavedpaste():
+    return render_template("show_saved_paste.html")
 
 
 if __name__ == "__main__":

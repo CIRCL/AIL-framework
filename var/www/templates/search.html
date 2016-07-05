@@ -16,6 +16,16 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <style> 
+      .tooltip-inner {
+         text-align: left;
+         height: 200%;
+         width: 200%;
+         max-width: 500px;
+         max-height: 500px;
+         font-size: 13px;
+      }
+  </style>
 
 </head>
 <body>
@@ -39,6 +49,26 @@
           </div>
           <!-- /.navbar-static-side -->
       </nav>
+
+
+      <!-- Modal -->
+      <div id="mymodal" class="modal fade" role="dialog">
+        <div class="modal-dialog modal-lg">
+
+          <!-- Modal content-->
+          <div id="mymodalcontent" class="modal-content">
+            <div id="mymodalbody" class="modal-body">
+              <p>Some text in the modal.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+      
+        </div>
+      </div>
+
+
         <div id="page-wrapper">
             <!-- /.row -->
             <div class="row"> </div>
@@ -53,10 +83,26 @@
                         </div>
                         <!-- /.panel-heading -->
                           <div class="panel-body">
-                          <table class="table">
-                          {% for result in r %}
-                                <tr><td>{{ result }}</td></tr>
+                          <table class="table table-hover">
+                              <thead>
+                                   <tr>
+                                      <th>#</th>
+                                      <th>Path</th>
+                                      <th>Action</th>
+                                   </tr>
+                              </thead>
+                              <tbody>
+                          {% set i = 0 %}
+                          {% for path in r %}
+                              {% set prev_content = c[i] %}
+                                <tr>
+                                    <td>{{ i + 1 }}</td>
+                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}"> {{ path }}</a></td>
+                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ prev_content }}"></span> <button type="button" class="btn-link" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                </tr>
+                              {% set i = i + 1 %}
                           {% endfor %}
+                              </tbody>
                           </table>
                           </div>
                         <!-- /.panel-body -->
@@ -69,4 +115,23 @@
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 </body>
 
+<!-- enable tooltip -->
+<script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+
+<!-- Dynamically update the modal -->
+<script type="text/javascript">
+    // On click, get html content from url and update the corresponding modal
+    $("[data-toggle='modal']").on("click", function (event) {
+        event.preventDefault();
+        var url = $(this).attr('data-url');
+        var modal_id = $(this).attr('data-target');
+        $.get(url, function (data) {
+            $("#mymodalbody").html(data);
+        });
+    });
+</script>
 </html>
