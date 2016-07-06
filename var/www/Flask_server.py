@@ -20,7 +20,10 @@ if not os.path.exists(configfile):
 
 cfg = ConfigParser.ConfigParser()
 cfg.read(configfile)
-max_preview_char = 500
+
+max_preview_char = cfg.get("Flask", "max_preview_char")
+max_preview_modal = cfg.get("Flask", "max_preview_modal")
+
 
 # REDIS #
 r_serv = redis.StrictRedis(
@@ -86,7 +89,7 @@ def search():
         results = searcher.search(query, limit=None)
         for x in results:
             r.append(x.items()[0][1])
-            content = Paste.Paste(x.items()[0][1]).get_p_content()
+            content = Paste.Paste(x.items()[0][1]).get_p_content().decode('utf8', 'ignore')
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             c.append(content[0:content_range]) 
     return render_template("search.html", r=r, c=c)
@@ -117,7 +120,33 @@ def tldstrending():
 
 @app.route("/showsavedpaste/")
 def showsavedpaste():
-    return render_template("show_saved_paste.html")
+    requested_path = request.args.get('paste', '')
+    paste = Paste.Paste(requested_path)
+    p_date = str(paste._get_p_date())
+    p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+    p_source = paste.p_source
+    p_encoding = paste._get_p_encoding()
+    p_language = paste._get_p_language()
+    p_size = paste.p_size
+    p_mime = paste.p_mime
+    p_lineinfo = paste.get_lines_info()
+    p_content = paste.get_p_content().decode('utf-8', 'ignore')
+    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content)
+
+@app.route("/showpreviewpaste/")
+def showpreviewpaste():
+    requested_path = request.args.get('paste', '')
+    paste = Paste.Paste(requested_path)
+    p_date = str(paste._get_p_date())
+    p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+    p_source = paste.p_source
+    p_encoding = paste._get_p_encoding()
+    p_language = paste._get_p_language()
+    p_size = paste.p_size
+    p_mime = paste.p_mime
+    p_lineinfo = paste.get_lines_info()
+    p_content = paste.get_p_content()[0:max_preview_modal].decode('utf-8', 'ignore')
+    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content)
 
 
 if __name__ == "__main__":

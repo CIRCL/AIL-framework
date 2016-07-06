@@ -7,7 +7,7 @@
 </head>
 <body>
 
-  <h2> Paste: </h2>
+  <h2> Paste: {{ request.args.get('num') }}</h2>
   <h3> {{ request.args.get('paste') }} </h3>
 
   <hr></br>
@@ -19,30 +19,28 @@
         <th>Source</th>
         <th>Encoding</th>
         <th>Language</th>
-        <th>Size</th>
+        <th>Size (Kb)</th>
         <th>Mime</th>
-        <th>Number of line</th>
+        <th>Number of lines</th>
+        <th>Max line length</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>John</td>
-        <td>Doe</td>
-        <td>john@example.com</td>
-      </tr>
-      <tr>
-        <td>Mary</td>
-        <td>Moe</td>
-        <td>mary@example.com</td>
-      </tr>
-      <tr>
-        <td>July</td>
-        <td>Dooley</td>
-        <td>july@example.com</td>
+      <td>{{ date }}</td>
+      <td>{{ source }}</td>
+      <td>{{ encoding }}</td>
+      <td>{{ language }}</td>
+      <td>{{ size }}</td>
+      <td>{{ mime }}</td>
+      <td>{{ lineinfo.0 }}</td>
+      <td>{{ lineinfo.1 }}</td>
       </tr>
     </tbody>
   </table>
 
+  <h4> Content: </h4>
+  <p id="paste_content"> <xmp> {{ content }} </xmp> </p>
+
 </body>
 </html>
-

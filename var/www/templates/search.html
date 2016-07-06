@@ -25,6 +25,13 @@
          max-height: 500px;
          font-size: 13px;
       }
+      xmp {
+         white-space:pre-wrap;
+         word-wrap:break-word;
+      }
+      .modal-backdrop.fade {
+         opacity: 0;
+      }
   </style>
 
 </head>
@@ -57,14 +64,14 @@
 
           <!-- Modal content-->
           <div id="mymodalcontent" class="modal-content">
-            <div id="mymodalbody" class="modal-body">
-              <p>Some text in the modal.</p>
+            <div id="mymodalbody" class="modal-body" max-width="850px">
+              <p>Loading paste information...</p>
             </div>
             <div class="modal-footer">
+              <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
           </div>
-      
         </div>
       </div>
 
@@ -98,7 +105,7 @@
                                 <tr>
                                     <td>{{ i + 1 }}</td>
                                     <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}"> {{ path }}</a></td>
-                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ prev_content }}"></span> <button type="button" class="btn-link" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ prev_content }}"></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
                                 </tr>
                               {% set i = i + 1 %}
                           {% endfor %}
@@ -119,6 +126,7 @@
 <script>
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
+    $("#button_show_path").hide();
 });
 </script>
 
@@ -127,11 +135,17 @@ $(document).ready(function(){
     // On click, get html content from url and update the corresponding modal
     $("[data-toggle='modal']").on("click", function (event) {
         event.preventDefault();
-        var url = $(this).attr('data-url');
-        var modal_id = $(this).attr('data-target');
+        var modal=$(this)
+        var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
         $.get(url, function (data) {
             $("#mymodalbody").html(data);
+            $("#button_show_path").attr('href', $(modal).attr('data-url'));
+            $("#button_show_path").show('fast');
         });
+    });
+    $("#mymodal").on('hidden.bs.modal', function () {
+            $("#mymodalbody").html("<p>Loading paste information...</p>");
+            $("#button_show_path").attr('href', '');
     });
 </script>
 </html>
