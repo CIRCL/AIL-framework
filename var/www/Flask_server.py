@@ -23,7 +23,7 @@ cfg.read(configfile)
 
 max_preview_char = int(cfg.get("Flask", "max_preview_char"))
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal"))
-
+index_prev = 0 # used if the user want to load more paste content
 
 # REDIS #
 r_serv = redis.StrictRedis(
@@ -148,6 +148,19 @@ def showpreviewpaste():
     p_content = paste.get_p_content()[0:max_preview_modal].decode('utf-8', 'ignore')
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content)
 
+@app.route("/getmoredata/")
+def getmoredata():
+    requested_path = request.args.get('paste', '')
+    index_prev = int(request.args.get('index', ''))
+    paste = Paste.Paste(requested_path)
+    
+    p_content = paste.get_p_content().decode('utf-8', 'ignore')
+    final_index = (index_prev+1)*max_preview_modal
+    if final_index > len(p_content)-1: # prevent out of bound
+        final_index = len(p_content)-1
+    
+    to_return = p_content[index_prev*max_preview_modal:final_index]
+    return to_return 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=7000, threaded=True)
