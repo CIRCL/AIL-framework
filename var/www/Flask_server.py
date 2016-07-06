@@ -21,8 +21,8 @@ if not os.path.exists(configfile):
 cfg = ConfigParser.ConfigParser()
 cfg.read(configfile)
 
-max_preview_char = cfg.get("Flask", "max_preview_char")
-max_preview_modal = cfg.get("Flask", "max_preview_modal")
+max_preview_char = int(cfg.get("Flask", "max_preview_char"))
+max_preview_modal = int(cfg.get("Flask", "max_preview_modal"))
 
 
 # REDIS #
