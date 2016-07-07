@@ -76,6 +76,8 @@ def search():
     q.append(query)
     r = []
     c = []
+    paste_date = []
+    paste_size = []
     # Search
     from whoosh import index
     from whoosh.fields import Schema, TEXT, ID
@@ -89,10 +91,13 @@ def search():
         results = searcher.search(query, limit=None)
         for x in results:
             r.append(x.items()[0][1])
-            content = Paste.Paste(x.items()[0][1]).get_p_content().decode('utf8', 'ignore')
+            paste = Paste.Paste(x.items()[0][1])
+            content = paste.get_p_content().decode('utf8', 'ignore')
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             c.append(content[0:content_range]) 
-    return render_template("search.html", r=r, c=c, char_to_display=max_preview_modal)
+            paste_date.append(paste._get_p_date()) 
+            paste_size.append(paste._get_p_size()) 
+    return render_template("search.html", r=r, c=c, paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
 
 @app.route("/")
 def index():
@@ -156,14 +161,6 @@ def getmoredata():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
-    '''final_index = (index_prev+1)*max_preview_modal
-    if final_index > len(p_content)-1: # prevent out of bound
-        final_index = len(p_content)-1
-   ''' 
-    #to_return = p_content[index_prev*max_preview_modal:final_index]
-
-    #correct_index = len(p_content) if max_preview_modal > len(p_content) else max_preview_modal
-    #to_return = str(p_content[correct_index:])
     to_return = p_content[max_preview_modal:]
     return to_return 
 

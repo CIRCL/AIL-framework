@@ -198,6 +198,9 @@ class Paste(object):
     def _get_p_date(self):
         return self.p_date
 
+    def _get_p_size(self):
+        return self.p_size
+
     def _get_hash_lines(self, min=1, start=1, jump=10):
         """
         Returning all the lines of the paste hashed.
