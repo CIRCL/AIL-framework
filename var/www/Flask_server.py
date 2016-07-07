@@ -92,7 +92,7 @@ def search():
             content = Paste.Paste(x.items()[0][1]).get_p_content().decode('utf8', 'ignore')
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             c.append(content[0:content_range]) 
-    return render_template("search.html", r=r, c=c)
+    return render_template("search.html", r=r, c=c, char_to_display=max_preview_modal)
 
 @app.route("/")
 def index():
@@ -145,21 +145,26 @@ def showpreviewpaste():
     p_size = paste.p_size
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
-    p_content = paste.get_p_content()[0:max_preview_modal].decode('utf-8', 'ignore')
-    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content)
+    #p_content = paste.get_p_content()[0:max_preview_modal].decode('utf-8', 'ignore')
+    p_content = paste.get_p_content().decode('utf-8', 'ignore')
+    p_content = p_content[0:max_preview_modal]
+    p_initsize = len(p_content)
+    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=p_initsize)
 
 @app.route("/getmoredata/")
 def getmoredata():
     requested_path = request.args.get('paste', '')
-    index_prev = int(request.args.get('index', ''))
     paste = Paste.Paste(requested_path)
-    
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
-    final_index = (index_prev+1)*max_preview_modal
+    '''final_index = (index_prev+1)*max_preview_modal
     if final_index > len(p_content)-1: # prevent out of bound
         final_index = len(p_content)-1
-    
-    to_return = p_content[index_prev*max_preview_modal:final_index]
+   ''' 
+    #to_return = p_content[index_prev*max_preview_modal:final_index]
+
+    #correct_index = len(p_content) if max_preview_modal > len(p_content) else max_preview_modal
+    #to_return = str(p_content[correct_index:])
+    to_return = p_content[max_preview_modal:]
     return to_return 
 
 if __name__ == "__main__":

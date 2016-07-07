@@ -124,17 +124,19 @@
 
 <!-- enable tooltip -->
 <script>
-$(document).ready(function(){
-    $('[data-toggle="tooltip"]').tooltip();
-    $("#button_show_path").hide();
-});
+    $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
+        $("#button_show_path").hide();
+    });
 </script>
 
 <!-- Dynamically update the modal -->
 <script type="text/javascript">
     // static data
-    var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong>The full paste is displayed.</div>';
-   
+    var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
+    var complete_paste = null;
+    var char_to_display = {{ char_to_display }};
+    var current_index = 0;
 
     // On click, get html content from url and update the corresponding modal
     $("[data-toggle='modal']").on("click", function (event) {
@@ -143,40 +145,61 @@ $(document).ready(function(){
         var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
         $.get(url, function (data) {
             $("#mymodalbody").html(data);
-            var button = '<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>';
+            var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
+            button.tooltip();
             $("#mymodalbody").children(".panel-default").append(button);
 
             $("#button_show_path").attr('href', $(modal).attr('data-url'));
             $("#button_show_path").show('fast');
-            
-            var index_preview = 1 // used for load more preview
-            
+            if ($("[data-initsize]").attr('data-initsize') < char_to_display) {
+                nothing_to_display();
+            }
             // On load more content click, replace paste content
             $("#load-more-button").on("click", function (event) {
-                $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path')+"&index="+index_preview, function(data, status){
-                    index_preview++;
-                    if (data != "") {
-                        var new_content = $('<p><xmp>'+data+'</xmp></p>').hide();
-                        $("#mymodalbody").find("#panel-body").append(new_content);
-                        new_content.show('fast');
-                    } else { // no more data
-                        var new_content = $(alert_message).hide();
-                        $("#mymodalbody").find("#panel-body").append(new_content);
-                        new_content.show('fast');
-                        $("#load-more-button").hide();
-                    }
-                });
+                if (complete_paste == null) {
+                    $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                        complete_paste = data;
+                        update_preview();
+                    });
+                } else {
+                    update_preview();
+                }               
             });
         });
     });
 
     // When the modal goes out, refresh it to normal content
     $("#mymodal").on('hidden.bs.modal', function () {
-            $("#mymodalbody").html("<p>Loading paste information...</p>");
-            $("#button_show_path").attr('href', '');
-            $("#button_show_path").hide();
+        $("#mymodalbody").html("<p>Loading paste information...</p>");
+        $("#button_show_path").attr('href', '');
+        $("#button_show_path").hide();
+        complete_paste = null;
+        current_index = 0;
     });
     
-    
+   // Update the paste preview in the modal
+   function update_preview() {
+       if (current_index + char_to_display > complete_paste.length-1){
+           var final_index = complete_paste.length-1;
+           var flag_stop = true;	// if there is no more data.
+       } else {
+           var final_index = current_index + char_to_display;
+       }
+       if (final_index != current_index){
+           $("#mymodalbody").find("#paste-holder").append(complete_paste.substring(current_index+1, final_index+1));
+           current_index = final_index; 
+           if (flag_stop)
+               nothing_to_display();
+       } else {
+          nothing_to_display(); 
+      }
+   } 
+   // Update the modal when there is no more data
+   function nothing_to_display() {
+       var new_content = $(alert_message).hide();
+       $("#mymodalbody").find("#panel-body").append(new_content);
+       new_content.show('fast');
+       $("#load-more-button").hide();
+   }
 </script>
 </html>
