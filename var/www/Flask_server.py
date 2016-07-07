@@ -97,7 +97,7 @@ def search():
             c.append(content[0:content_range]) 
             paste_date.append(paste._get_p_date()) 
             paste_size.append(paste._get_p_size()) 
-    return render_template("search.html", r=r, c=c, paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
+    return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
 
 @app.route("/")
 def index():
