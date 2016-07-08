@@ -141,9 +141,9 @@ def protocolstrending():
     return render_template("Protocolstrending.html")
 
 
-@app.route("/tldstrending/")
-def tldstrending():
-    return render_template("Tldstrending.html")
+@app.route("/trending/")
+def trending():
+    return render_template("Trending.html")
 
 
 @app.route("/showsavedpaste/") #completely shows the paste in a new tab

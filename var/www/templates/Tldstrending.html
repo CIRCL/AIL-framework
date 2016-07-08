@@ -24,7 +24,7 @@
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
           <div class="navbar-header">
           <ul class="nav navbar-nav">
-              <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a></li><li><a href="{{ url_for('protocolstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a></li><li><a href="{{ url_for('tldstrending') }}"><i class="glyphicon glyphicon-stats"></i> Top Level Domain Trending</a></li></ul>
+              <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a></li><li><a href="{{ url_for('protocolstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a></li><li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li></ul>
           </div>
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
@@ -52,13 +52,22 @@
         <div id="page-wrapper">
           <div class="row">
               <div class="col-lg-12">
-                  <h1 class="page-header">Top Level Domain Trending</h1>
+                  <h1 class="page-header">Trending charts</h1>
               </div>
               <!-- /.col-lg-12 -->
           </div>
             <!-- /.row -->
             <div class="row">
-                <div class="col-lg-12">
+            
+            <!-- /.nav-tabs -->
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tld-tab" data-pannel="TldsTrending" data-path="../static//csv/tldstrendingdata.csv">Top level domains</a></li>
+                <li><a data-toggle="tab" href="#domain-tab" data-pannel="DomainTrending" data-path="../static//csv/domainstrendingdata.csv">Domains</a></li>
+            </ul>
+            </br>
+              
+            <div class="tab-content">  
+                <div class="col-lg-12 tab-pane fade in active" id="tld-tab" >
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <i class="fa fa-bar-chart-o fa-fw"></i> Top Level Domain Trending
@@ -90,7 +99,7 @@
                         <!-- /.panel-body -->
                     </div>
                 </div>
-		<div class="col-lg-12">
+                <div class="col-lg-12 tab-pane fade" id="domain-tab">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <i class="fa fa-bar-chart-o fa-fw"></i> Top Domain Trending 
@@ -122,16 +131,29 @@
                         <!-- /.panel-body -->
                     </div>
                 </div>
+            </div> <!-- tab-content -->
             <!-- /.row -->
         </div>
         <!-- /#page-wrapper -->
-            <!-- import graph function -->
-	    <script src="{{ url_for('static', filename='js/plot-graph.js') }}"></script>
-	    <!-- instanciate and plot graphs -->
-	    <script type="text/javascript">
-		var graph_tld = new Graph("TldsTrending", "../static//csv/tldstrendingdata.csv");
-		var graph_domain = new Graph("DomainTrending", "../static//csv/domainstrendingdata.csv");
-	    </script>
+
+        <!-- import graph function -->
+        <script src="{{ url_for('static', filename='js/plot-graph.js') }}"></script>
+
+        <!-- instanciate and plot graphs -->
+        <script type="text/javascript">
+            $('.nav-tabs a').on('shown.bs.tab', function(event){
+                console.log($(event.target).attr('data-pannel'));       // active tab
+                console.log($(event.target).attr('data-path'));         // active tab
+                var graph_domain = new Graph($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));
+            });
+        </script>
+
+        <script>
+            $(document).ready(function(){
+                var graph_tld = new Graph("TldsTrending", "../static//csv/tldstrendingdata.csv");
+            });
+        </script>
+
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 </body>
