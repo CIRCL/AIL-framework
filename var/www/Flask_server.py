@@ -95,7 +95,9 @@ def search():
             content = paste.get_p_content().decode('utf8', 'ignore')
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             c.append(content[0:content_range]) 
-            paste_date.append(paste._get_p_date()) 
+            curr_date = str(paste._get_p_date())
+            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+            paste_date.append(curr_date) 
             paste_size.append(paste._get_p_size()) 
     return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
 
@@ -143,7 +145,7 @@ def showpreviewpaste():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
     p_date = str(paste._get_p_date())
-    p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+    p_date = p_date[0:4]+'/'+p_date[4:6]+'/'+p_date[6:]
     p_source = paste.p_source
     p_encoding = paste._get_p_encoding()
     p_language = paste._get_p_language()
