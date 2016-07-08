@@ -161,7 +161,7 @@ def getmoredata():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
-    to_return = p_content[max_preview_modal:]
+    to_return = p_content[max_preview_modal-1:]
     return to_return 
 
 

@@ -70,6 +70,7 @@
           <div id="mymodalcontent" class="modal-content">
             <div id="mymodalbody" class="modal-body" max-width="850px">
               <p>Loading paste information...</p>
+              <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
             </div>
             <div class="modal-footer">
               <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
@@ -160,6 +161,7 @@
 
             $("#button_show_path").attr('href', $(modal).attr('data-url'));
             $("#button_show_path").show('fast');
+            $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
             if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
                 nothing_to_display();
             }
@@ -180,6 +182,8 @@
     // When the modal goes out, refresh it to normal content
     $("#mymodal").on('hidden.bs.modal', function () {
         $("#mymodalbody").html("<p>Loading paste information...</p>");
+        var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
+        $("#mymodalbody").append(loading_gif); // Show the loading GIF
         $("#button_show_path").attr('href', '');
         $("#button_show_path").hide();
         complete_paste = null;
