@@ -19,7 +19,7 @@
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
-
+  <!-- Custom style -->
   <style> 
       .tooltip-inner {
          text-align: left;
@@ -108,13 +108,12 @@
                               <tbody>
                           {% set i = 0 %}
                           {% for path in r %}
-                              {% set prev_content = c[i] %}
                                 <tr>
                                     <td>{{ i + 1 }}</td>
-                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}"> {{ path }}</a></td>
+                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}"> {{ path }}</a></td>
                                     <td>{{ paste_date[i] }}</td>
                                     <td>{{ paste_size[i] }}</td>
-                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ prev_content }}"></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[i] }}"></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
                                 </tr>
                               {% set i = i + 1 %}
                           {% endfor %}
@@ -131,7 +130,7 @@
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 </body>
 
-<!-- enable tooltip -->
+<!-- enable tooltip and dataTable -->
 <script>
     $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
@@ -146,7 +145,7 @@
     var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
     var complete_paste = null;
     var char_to_display = {{ char_to_display }};
-    var current_index = 0;
+    var start_index = 0;
 
     // On click, get html content from url and update the corresponding modal
     $("[data-toggle='modal']").on("click", function (event) {
@@ -161,12 +160,12 @@
 
             $("#button_show_path").attr('href', $(modal).attr('data-url'));
             $("#button_show_path").show('fast');
-            if ($("[data-initsize]").attr('data-initsize') < char_to_display) {
+            if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
                 nothing_to_display();
             }
-            // On load more content click, replace paste content
+            // On click, donwload all paste's content
             $("#load-more-button").on("click", function (event) {
-                if (complete_paste == null) {
+                if (complete_paste == null) { //Donwload only once
                     $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
                         complete_paste = data;
                         update_preview();
@@ -184,20 +183,21 @@
         $("#button_show_path").attr('href', '');
         $("#button_show_path").hide();
         complete_paste = null;
-        current_index = 0;
+        start_index = 0;
     });
     
    // Update the paste preview in the modal
    function update_preview() {
-       if (current_index + char_to_display > complete_paste.length-1){
+       if (start_index + char_to_display > complete_paste.length-1){ // end of paste reached
            var final_index = complete_paste.length-1;
-           var flag_stop = true;	// if there is no more data.
+           var flag_stop = true;
        } else {
-           var final_index = current_index + char_to_display;
+           var final_index = start_index + char_to_display;
        }
-       if (final_index != current_index){
-           $("#mymodalbody").find("#paste-holder").append(complete_paste.substring(current_index+1, final_index+1));
-           current_index = final_index; 
+
+       if (final_index != start_index){ // still have data to display
+           $("#mymodalbody").find("#paste-holder").append(complete_paste.substring(start_index+1, final_index+1)); // Append the new content
+           start_index = final_index; 
            if (flag_stop)
                nothing_to_display();
        } else {
