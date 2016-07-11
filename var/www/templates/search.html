@@ -12,14 +12,10 @@
   <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
-  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
-  <!-- Custom style -->
   <style> 
       .tooltip-inner {
          text-align: left;
@@ -28,13 +24,6 @@
          max-width: 500px;
          max-height: 500px;
          font-size: 13px;
-      }
-      xmp {
-         white-space:pre-wrap;
-         word-wrap:break-word;
-      }
-      .modal-backdrop.fade {
-         opacity: 0;
       }
   </style>
 
@@ -45,7 +34,7 @@
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
           <div class="navbar-header">
           <ul class="nav navbar-nav">
-               <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a></li><li><a href="{{ url_for('protocolstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a></li><li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li></ul>
+               <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a></li><li><a href="{{ url_for('protocolstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a></li><li><a href="{{ url_for('tldstrending') }}"><i class="glyphicon glyphicon-stats"></i> Top Level Domain Trending</a></li></ul>
           </div>
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
@@ -68,15 +57,14 @@
 
           <!-- Modal content-->
           <div id="mymodalcontent" class="modal-content">
-            <div id="mymodalbody" class="modal-body" max-width="850px">
-              <p>Loading paste information...</p>
-              <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
+            <div id="mymodalbody" class="modal-body">
+              <p>Some text in the modal.</p>
             </div>
             <div class="modal-footer">
-              <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
           </div>
+      
         </div>
       </div>
 
@@ -86,35 +74,31 @@
             <div class="row"> </div>
             <div class="row">
                 <div class="col-lg-12">
-                    </br>
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <i class="glyphicon glyphicon-search"></i> {{ r|length }} Results for "<strong>{{ query }}</strong>"
+                            <i class="glyphicon glyphicon-search"></i> {{ r|length }} Results
                             <div class="pull-right">
                             
                             </div>
                         </div>
                         <!-- /.panel-heading -->
                           <div class="panel-body">
-                          <table class="table table-striped table-bordered table-hover" id="myTable">
+                          <table class="table table-hover">
                               <thead>
                                    <tr>
                                       <th>#</th>
-                                      <th style="max-width: 800px;">Path</th>
-                                      <th>Date</th>
-                                      <th>Size (Kb)</th>
+                                      <th>Path</th>
                                       <th>Action</th>
                                    </tr>
                               </thead>
                               <tbody>
                           {% set i = 0 %}
                           {% for path in r %}
+                              {% set prev_content = c[i] %}
                                 <tr>
                                     <td>{{ i + 1 }}</td>
-                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}"> {{ path }}</a></td>
-                                    <td>{{ paste_date[i] }}</td>
-                                    <td>{{ paste_size[i] }}</td>
-                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[i] }}"></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}"> {{ path }}</a></td>
+                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ prev_content }}"></span> <button type="button" class="btn-link" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
                                 </tr>
                               {% set i = i + 1 %}
                           {% endfor %}
@@ -131,89 +115,23 @@
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 </body>
 
-<!-- enable tooltip and dataTable -->
+<!-- enable tooltip -->
 <script>
-    $(document).ready(function(){
-        $('[data-toggle="tooltip"]').tooltip();
-        $("#button_show_path").hide();
-	$('#myTable').dataTable();
-    });
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
 </script>
 
 <!-- Dynamically update the modal -->
 <script type="text/javascript">
-    // static data
-    var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
-    var complete_paste = null;
-    var char_to_display = {{ char_to_display }};
-    var start_index = 0;
-
     // On click, get html content from url and update the corresponding modal
     $("[data-toggle='modal']").on("click", function (event) {
         event.preventDefault();
-        var modal=$(this);
-        var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
+        var url = $(this).attr('data-url');
+        var modal_id = $(this).attr('data-target');
         $.get(url, function (data) {
             $("#mymodalbody").html(data);
-            var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
-            button.tooltip();
-            $("#mymodalbody").children(".panel-default").append(button);
-
-            $("#button_show_path").attr('href', $(modal).attr('data-url'));
-            $("#button_show_path").show('fast');
-            $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
-            if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
-                nothing_to_display();
-            }
-            // On click, donwload all paste's content
-            $("#load-more-button").on("click", function (event) {
-                if (complete_paste == null) { //Donwload only once
-                    $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
-                        complete_paste = data;
-                        update_preview();
-                    });
-                } else {
-                    update_preview();
-                }               
-            });
         });
     });
-
-    // When the modal goes out, refresh it to normal content
-    $("#mymodal").on('hidden.bs.modal', function () {
-        $("#mymodalbody").html("<p>Loading paste information...</p>");
-        var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
-        $("#mymodalbody").append(loading_gif); // Show the loading GIF
-        $("#button_show_path").attr('href', '');
-        $("#button_show_path").hide();
-        complete_paste = null;
-        start_index = 0;
-    });
-    
-   // Update the paste preview in the modal
-   function update_preview() {
-       if (start_index + char_to_display > complete_paste.length-1){ // end of paste reached
-           var final_index = complete_paste.length-1;
-           var flag_stop = true;
-       } else {
-           var final_index = start_index + char_to_display;
-       }
-
-       if (final_index != start_index){ // still have data to display
-           $("#mymodalbody").find("#paste-holder").append(complete_paste.substring(start_index+1, final_index+1)); // Append the new content
-           start_index = final_index; 
-           if (flag_stop)
-               nothing_to_display();
-       } else {
-          nothing_to_display(); 
-      }
-   } 
-   // Update the modal when there is no more data
-   function nothing_to_display() {
-       var new_content = $(alert_message).hide();
-       $("#mymodalbody").find("#panel-body").append(new_content);
-       new_content.show('fast');
-       $("#load-more-button").hide();
-   }
 </script>
 </html>

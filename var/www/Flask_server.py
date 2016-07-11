@@ -143,7 +143,8 @@ def protocolstrending():
 
 @app.route("/trending/")
 def trending():
-    return render_template("Trending.html")
+    default_display = cfg.get("Flask", "default_display")
+    return render_template("Trending.html", default_display = default_display)
 
 
 @app.route("/showsavedpaste/") #completely shows the paste in a new tab

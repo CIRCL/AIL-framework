@@ -16,6 +16,10 @@
 	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
 	  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
 	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+          <script> 
+              var default_display = {{ default_display }};
+              var current_displayed_graph;
+          </script>
 
 	</head>
 	<body>
@@ -71,6 +75,7 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <i class="fa fa-bar-chart-o fa-fw"></i> Top Level Domain Trending
+
                             <div class="pull-right">
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
@@ -89,7 +94,15 @@
                                         </li>
                                     </ul>
                                 </div>
+                            </div> 
+                           <span> </span>
+                           <div class="btn-group btn-group-xs pull-right" style="margin-right: 5px;">
+                                <button type="button" class="btn btn-primary" onclick="myScript(5);">5</button>
+                                <button type="button" class="btn btn-primary" onclick="myScript(10);">10</button>
+                                <button type="button" class="btn btn-primary" onclick="myScript(15);">15</button>
+                                <button type="button" class="btn btn-primary" onclick="myScript(0);">...</button>
                             </div>
+
                         </div>
                         <!-- /.panel-heading -->
                           <div class="panel-body">
@@ -103,6 +116,14 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <i class="fa fa-bar-chart-o fa-fw"></i> Top Domain Trending 
+
+                            <div class="btn-group btn-group-lg">
+                                <button type="button" class="btn btn-primary">5</button>
+                                <button type="button" class="btn btn-primary">10</button>
+                                <button type="button" class="btn btn-primary">15</button>
+                                <button type="button" class="btn btn-primary">...</button>
+                            </div>
+
                             <div class="pull-right">
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
@@ -147,9 +168,10 @@
                 $.get(path, function(myContentFile) {
                     var lines = myContentFile.split("\r\n");
                     var header_size = lines[0].split(',').length-1;
-                    var graph_obj = new Graph(pannel, path, header_size);
-                    setTimeout(function() { graph_obj.setVisibility(10)}, 300);
+                    current_displayed_graph = new Graph(pannel, path, header_size);
+                    setTimeout(function() { current_displayed_graph.set_Visibility(default_display)}, 300);
                 }, 'text');
+                
             }
 
             // When a pannel is shown, create_and_plot.
@@ -163,6 +185,11 @@
                 // Create the graph when the page has just loaded
                 create_and_plot("TldsTrending", '../static//csv/tldstrendingdata.csv') 
             });
+ 
+            function myScript(new_display){
+                current_displayed_graph.set_Visibility_andHide(new_display, default_display);
+                default_display = new_display;
+            }
             
         </script>
 

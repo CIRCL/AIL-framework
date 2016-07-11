@@ -81,7 +81,8 @@ function Graph(id_pannel, path, header_size){
             visibility: false_tab
 	});
         this.graph = g2;
-        this.setVisibility = setVis;
+        this.set_Visibility = setVis;
+        this.set_Visibility_andHide = setVis_andHide;
 
 	onclick = function(ev) {
 	    if (g2.isSeriesLocked()) {
@@ -124,11 +125,17 @@ function Graph(id_pannel, path, header_size){
                 });
 
             }
-            //var no_display_list = sorted_list.slice(10, sorted_list.length+1);
             var display_list = sorted_list.slice(0, max_display);
             for( i=0; i<display_list.length; i++){
                 this.graph.setVisibility(display_list[i].index, true);
             }
+            return sorted_list.slice(0, sorted_list.length);
+       }
+       function setVis_andHide(max_display, old_display){
+           display_list = this.set_Visibility(max_display);
+           for(i=max_display; i<old_display; i++) {
+               this.graph.setVisibility(display_list[i].index, false);
+           } 
        }
 
 }
