@@ -1,8 +1,15 @@
-function Graph(id_pannel, path){
+function Graph(id_pannel, path, header_size){
 	this.path = path;
 	this.id_pannel = id_pannel;
 
-	g2 = new Dygraph(
+        // Hide every header during initialisation
+        var false_tab = [];
+        for(i=0; i<header_size; i++){
+            false_tab[i] = false;
+        }
+        this.false_tab = false_tab;
+
+        g2 = new Dygraph(
 	    document.getElementById(this.id_pannel),
 	    // path to CSV file
 	    //"{{ url_for('static', filename='csv/tldstrendingdata.csv') }}",
@@ -15,6 +22,7 @@ function Graph(id_pannel, path){
 	    //drawPoints: true,
 	    //fillGraph: true,
 	    logscale: true,
+            
 	    animatedZooms: true,
 	    labelsKMB: true,
 	    highlightCircleSize: 3,
@@ -69,8 +77,11 @@ function Graph(id_pannel, path){
 		// calculate start of highlight for next Saturday
 		w += 7*24*3600*1000;
 	    }
-	    }
+	    },
+            visibility: false_tab
 	});
+        this.graph = g2;
+        this.setVisibility = setVis;
 
 	onclick = function(ev) {
 	    if (g2.isSeriesLocked()) {
@@ -97,4 +108,27 @@ function Graph(id_pannel, path){
 		valueRange:null
 	    });
 	}
+
+        // display the top headers
+        function setVis(max_display){
+            headings = this.graph.getLabels();
+            headings.splice(0,1);
+            var sorted_list = new Array();
+            today = new Date().getDate();
+            for( i=0; i<headings.length; i++){
+                the_heading = headings[i];
+                //console.log('heading='+the_heading+' tab['+(today-1)+']['+(parseInt(i)+1)+']='+g.getValue(today-1, parseInt(i)+1));
+                sorted_list.push({dom: the_heading, val: this.graph.getValue(today-1, parseInt(i)+1), index: parseInt(i)});
+                sorted_list.sort(function(a,b) {
+                    return b.val - a.val;
+                });
+
+            }
+            //var no_display_list = sorted_list.slice(10, sorted_list.length+1);
+            var display_list = sorted_list.slice(0, max_display);
+            for( i=0; i<display_list.length; i++){
+                this.graph.setVisibility(display_list[i].index, true);
+            }
+       }
+
 }

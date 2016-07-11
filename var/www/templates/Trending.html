@@ -1,30 +1,30 @@
-<!DOCTYPE html>
-<html>
+	<!DOCTYPE html>
+	<html>
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Analysis Information Leak framework Dashboard</title>
+	  <title>Analysis Information Leak framework Dashboard</title>
 
-  <!-- Core CSS -->
-  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
-  <!-- JS -->
-  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
-  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 
-</head>
-<body>
+	</head>
+	<body>
 
-    <div id="wrapper">
-      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-          <div class="navbar-header">
-          <ul class="nav navbar-nav">
-              <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a></li><li><a href="{{ url_for('protocolstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a></li><li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li></ul>
+	    <div id="wrapper">
+	      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+		  <div class="navbar-header">
+		  <ul class="nav navbar-nav">
+		      <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a></li><li><a href="{{ url_for('protocolstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a></li><li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li></ul>
           </div>
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
@@ -141,17 +141,29 @@
 
         <!-- instanciate and plot graphs -->
         <script type="text/javascript">
+            // Create, plot and set the limit of displayed headers
+            function create_and_plot(pannel, path){
+                //var graph_domain = new Graph($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));
+                $.get(path, function(myContentFile) {
+                    var lines = myContentFile.split("\r\n");
+                    var header_size = lines[0].split(',').length-1;
+                    var graph_obj = new Graph(pannel, path, header_size);
+                    setTimeout(function() { graph_obj.setVisibility(10)}, 300);
+                }, 'text');
+            }
+
+            // When a pannel is shown, create_and_plot.
             $('.nav-tabs a').on('shown.bs.tab', function(event){
-                console.log($(event.target).attr('data-pannel'));       // active tab
-                console.log($(event.target).attr('data-path'));         // active tab
-                var graph_domain = new Graph($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));
+                create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));    
             });
         </script>
 
         <script>
             $(document).ready(function(){
-                var graph_tld = new Graph("TldsTrending", "../static//csv/tldstrendingdata.csv");
+                // Create the graph when the page has just loaded
+                create_and_plot("TldsTrending", '../static//csv/tldstrendingdata.csv') 
             });
+            
         </script>
 
     </div>
