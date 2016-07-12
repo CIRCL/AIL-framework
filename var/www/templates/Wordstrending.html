@@ -16,8 +16,12 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-
+  <script> 
+      var default_display = {{ default_display }};
+      var current_displayed_graph;
+ </script>
 </head>
+
 <body>
 
     <div id="wrapper">
@@ -81,6 +85,14 @@
                                     </ul>
                                 </div>
                             </div>
+
+                            <div class="btn-group btn-group-xs pull-right" style="margin-right: 5px;">
+                                <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(0);">...</button>
+                            </div>
+
                         </div>
                         <!-- /.panel-heading -->
                           <div class="panel-body">
@@ -97,10 +109,36 @@
         <!-- import graph function -->
         <script src="{{ url_for('static', filename='js/plot-graph.js') }}"></script>
 
+        <script type="text/javascript">
+            // Create, plot and set the limit of displayed headers
+            function create_and_plot(pannel, path){
+                //var graph_domain = new Graph($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));
+                $.get(path, function(myContentFile) {
+                    var lines = myContentFile.split("\r\n");
+                    var header_size = lines[0].split(',').length-1;
+                    current_displayed_graph = new Graph(pannel, path, header_size);
+                    setTimeout(function() { current_displayed_graph.set_Visibility(default_display)}, 300);
+                }, 'text');
+                
+            }
+
+            // When a pannel is shown, create_and_plot.
+            $('.nav-tabs a').on('shown.bs.tab', function(event){
+                create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));    
+            });
+        </script>
+
         <script>
             $(document).ready(function(){
-                var graph_tld = new Graph("WordTrending", "../static//csv/wordstrendingdata.csv");
+                // Create the graph when the page has just loaded
+                create_and_plot("WordTrending", '../static//csv/wordstrendingdata.csv') 
             });
+ 
+            function take_top(new_display){
+                current_displayed_graph.set_Visibility_andHide(new_display, default_display);
+                default_display = new_display;
+            }
+            
         </script>
 
 </script>

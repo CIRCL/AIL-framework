@@ -95,12 +95,11 @@
                                     </ul>
                                 </div>
                             </div> 
-                           <span> </span>
                            <div class="btn-group btn-group-xs pull-right" style="margin-right: 5px;">
-                                <button type="button" class="btn btn-primary" onclick="myScript(5);">5</button>
-                                <button type="button" class="btn btn-primary" onclick="myScript(10);">10</button>
-                                <button type="button" class="btn btn-primary" onclick="myScript(15);">15</button>
-                                <button type="button" class="btn btn-primary" onclick="myScript(0);">...</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(0);">...</button>
                             </div>
 
                         </div>
@@ -116,14 +115,6 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <i class="fa fa-bar-chart-o fa-fw"></i> Top Domain Trending 
-
-                            <div class="btn-group btn-group-lg">
-                                <button type="button" class="btn btn-primary">5</button>
-                                <button type="button" class="btn btn-primary">10</button>
-                                <button type="button" class="btn btn-primary">15</button>
-                                <button type="button" class="btn btn-primary">...</button>
-                            </div>
-
                             <div class="pull-right">
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
@@ -143,6 +134,14 @@
                                     </ul>
                                 </div>
                             </div>
+
+                            <div class="btn-group btn-group-xs pull-right" style="margin-right: 5px;">
+                                <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(0);">...</button>
+                            </div>
+
                         </div>
                         <!-- /.panel-heading -->
                           <div class="panel-body">
@@ -186,7 +185,7 @@
                 create_and_plot("TldsTrending", '../static//csv/tldstrendingdata.csv') 
             });
  
-            function myScript(new_display){
+            function take_top(new_display){
                 current_displayed_graph.set_Visibility_andHide(new_display, default_display);
                 default_display = new_display;
             }

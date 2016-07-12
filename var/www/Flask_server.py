@@ -133,12 +133,14 @@ def monitoring():
 
 @app.route("/wordstrending/")
 def wordstrending():
-    return render_template("Wordstrending.html")
+    default_display = cfg.get("Flask", "default_display")
+    return render_template("Wordstrending.html", default_display = default_display)
 
 
 @app.route("/protocolstrending/")
 def protocolstrending():
-    return render_template("Protocolstrending.html")
+    default_display = cfg.get("Flask", "default_display")
+    return render_template("Protocolstrending.html", default_display = default_display)
 
 
 @app.route("/trending/")

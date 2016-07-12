@@ -115,7 +115,7 @@ function Graph(id_pannel, path, header_size){
             headings = this.graph.getLabels();
             headings.splice(0,1);
             var sorted_list = new Array();
-            today = new Date().getDate();
+            today = new Date().getDate()-1; // Take the top from yesterday so that we can see the current evolution
             for( i=0; i<headings.length; i++){
                 the_heading = headings[i];
                 //console.log('heading='+the_heading+' tab['+(today-1)+']['+(parseInt(i)+1)+']='+g.getValue(today-1, parseInt(i)+1));
