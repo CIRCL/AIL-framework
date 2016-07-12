@@ -39,7 +39,7 @@ def main():
             if message is not None:
                 PST = Paste.Paste(message)
             else:
-                publisher.debug("Script DomClassifier is idling 10s")
+                publisher.debug("Script DomClassifier is idling 1s")
                 time.sleep(1)
                 continue
             paste = PST.get_p_content()

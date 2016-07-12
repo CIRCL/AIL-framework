@@ -33,11 +33,12 @@ if __name__ == "__main__":
     # DB OBJECT & HASHS ( DISK )
     # FIXME increase flexibility
     dico_redis = {}
-    for year in xrange(2013, 2015):
+    for year in xrange(2013, 2017):
         for month in xrange(0, 16):
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
                 host=p.config.get("Redis_Level_DB", "host"), port=year,
                 db=month)
+	    #print("dup: "+str(year)+str(month).zfill(2)+"\n")
 
     # FUNCTIONS #
     publisher.info("Script duplicate started")
@@ -81,7 +82,7 @@ if __name__ == "__main__":
                 bloop_path_set.add(filebloompath)
 
             # UNIQUE INDEX HASHS TABLE
-            r_serv0 = dico_redis["201300"]
+            r_serv0 = dico_redis["201600"]
             r_serv0.incr("current_index")
             index = r_serv0.get("current_index")+str(PST.p_date)
             # HASHTABLES PER MONTH (because of r_serv1 changing db)
