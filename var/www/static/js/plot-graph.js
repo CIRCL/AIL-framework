@@ -120,11 +120,11 @@ function Graph(id_pannel, path, header_size){
                 the_heading = headings[i];
                 //console.log('heading='+the_heading+' tab['+(today-1)+']['+(parseInt(i)+1)+']='+g.getValue(today-1, parseInt(i)+1));
                 sorted_list.push({dom: the_heading, val: this.graph.getValue(today-1, parseInt(i)+1), index: parseInt(i)});
-                sorted_list.sort(function(a,b) {
-                    return b.val - a.val;
-                });
-
             }
+            sorted_list.sort(function(a,b) {
+                    return b.val - a.val;
+            });
+
             var display_list = sorted_list.slice(0, max_display);
             for( i=0; i<display_list.length; i++){
                 this.graph.setVisibility(display_list[i].index, true);

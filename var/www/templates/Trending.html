@@ -99,7 +99,6 @@
                                 <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
                                 <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
                                 <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
-                                <button type="button" class="btn btn-primary" onclick="take_top(0);">...</button>
                             </div>
 
                         </div>
@@ -139,7 +138,6 @@
                                 <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
                                 <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
                                 <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
-                                <button type="button" class="btn btn-primary" onclick="take_top(0);">...</button>
                             </div>
 
                         </div>
@@ -185,6 +183,7 @@
                 create_and_plot("TldsTrending", '../static//csv/tldstrendingdata.csv') 
             });
  
+            // Used when we modify the number of displayed curves
             function take_top(new_display){
                 current_displayed_graph.set_Visibility_andHide(new_display, default_display);
                 default_display = new_display;

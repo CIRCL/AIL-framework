@@ -133,19 +133,20 @@ if __name__ == '__main__':
                 today = datetime.date.today()
                 year = today.year
                 month = today.month
-                print 'b1' 
+
                 lib_words.create_curve_with_word_file(r_serv1, csv_path_proto,
                                                       protocolsfile_path, year,
                                                       month)
-                print 'b2'
+
                 lib_words.create_curve_with_word_file(r_serv1, csv_path_tld,
                                                       tldsfile_path, year,
                                                       month)
-                print 'b3'
+
                 lib_words.create_curve_with_list(r_serv2, csv_path_domain,
                                                       to_plot, year,
                                                       month)
                 print 'end building'
+
             publisher.debug("{} queue is empty, waiting".format(config_section))
             print 'sleeping'
             time.sleep(5)
@@ -161,5 +162,3 @@ if __name__ == '__main__':
             analyse(r_serv1, 'scheme')	#Scheme analysis
             analyse(r_serv1, 'tld')	#Tld analysis
 	    analyse_and_progression(r_serv2, 'domain')	#Domain analysis
-            print "to_plot:"
-            print to_plot
