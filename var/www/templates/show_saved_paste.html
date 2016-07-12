@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Paste information</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+  <h2> Paste: {{ request.args.get('num') }}</h2>
+  <h3> {{ request.args.get('paste') }} </h3>
+
+  <hr></br>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <table class="table table-condensed">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Encoding</th>
+          <th>Language</th>
+          <th>Size (Kb)</th>
+          <th>Mime</th>
+          <th>Number of lines</th>
+          <th>Max line length</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+        <td>{{ date }}</td>
+        <td>{{ source }}</td>
+        <td>{{ encoding }}</td>
+        <td>{{ language }}</td>
+        <td>{{ size }}</td>
+        <td>{{ mime }}</td>
+        <td>{{ lineinfo.0 }}</td>
+        <td>{{ lineinfo.1 }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="panel-body" id="panel-body">
+  <h4> Content: </h4>
+  <p data-initsize="{{ initsize }}"> <xmp id="paste-holder">{{ content }}</xmp></p>
+  </div>
+</div>
+
+
+</body>
+</html>

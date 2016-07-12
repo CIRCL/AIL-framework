@@ -1,0 +1,199 @@
+	<!DOCTYPE html>
+	<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+          <script> 
+              var default_display = {{ default_display }};
+              var current_displayed_graph;
+          </script>
+
+	</head>
+	<body>
+
+	    <div id="wrapper">
+	      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+		  <div class="navbar-header">
+		  <ul class="nav navbar-nav">
+		      <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li><li><a href="{{ url_for('wordstrending') }}"><i class="glyphicon glyphicon-stats"></i> WordsTrendings</a></li><li><a href="{{ url_for('protocolstrending') }}"><i class="glyphicon glyphicon-stats"></i> ProtocolsTrendings</a></li><li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li></ul>
+          </div>
+          <!-- /.navbar-top-links -->
+          <div class="navbar-default sidebar" role="navigation">
+              <div class="sidebar-collapse">
+                  <ul class="nav" id="side-menu">
+                      <li class="sidebar-search">
+                          <div class="input-group custom-search-form">
+                              <input type="text" class="form-control" placeholder="Search Paste">
+                              <span class="input-group-btn">
+                              <button class="btn btn-default" type="button">
+                                  <i class="fa fa-search"></i>
+                              </button>
+                          </span>
+                          </div>
+                          <!-- /input-group -->
+                      </li>
+                 </ul>
+                  <!-- /#side-menu -->
+              </div>
+              <!-- /.sidebar-collapse -->
+           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+          </div>
+          <!-- /.navbar-static-side -->
+      </nav>
+        <div id="page-wrapper">
+          <div class="row">
+              <div class="col-lg-12">
+                  <h1 class="page-header">Trending charts</h1>
+              </div>
+              <!-- /.col-lg-12 -->
+          </div>
+            <!-- /.row -->
+            <div class="row">
+            
+            <!-- /.nav-tabs -->
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tld-tab" data-pannel="TldsTrending" data-path="../static//csv/tldstrendingdata.csv">Top level domains</a></li>
+                <li><a data-toggle="tab" href="#domain-tab" data-pannel="DomainTrending" data-path="../static//csv/domainstrendingdata.csv">Domains</a></li>
+            </ul>
+            </br>
+              
+            <div class="tab-content">  
+                <div class="col-lg-12 tab-pane fade in active" id="tld-tab" >
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> Top Level Domain Trending
+
+                            <div class="pull-right">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                                        Actions
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu pull-right" role="menu">
+                                        <li><a href="#" id="linear">Linear Scale</a>
+                                        </li>
+                                        <li><a href="#" id="log">Log Scale</a>
+                                        </li>
+                                        <li><a href="#" id="unzoom" onclick="unzoomGraph()">Unzoom</a>
+                                        </li>
+                                        <li class="divider"></li>
+                                        <li><a href="#" id="edit_graph">Edit graph words</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div> 
+                           <div class="btn-group btn-group-xs pull-right" style="margin-right: 5px;">
+                                <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(0);">...</button>
+                            </div>
+
+                        </div>
+                        <!-- /.panel-heading -->
+                          <div class="panel-body">
+                             <!-- <div id="TldsTrending" style="width:100%;"></div> -->
+                              <div id="TldsTrending" style="width:100%; height:800px;"></div>
+                          </div>
+                        <!-- /.panel-body -->
+                    </div>
+                </div>
+                <div class="col-lg-12 tab-pane fade" id="domain-tab">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> Top Domain Trending 
+                            <div class="pull-right">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                                        Actions
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu pull-right" role="menu">
+                                        <li><a href="#" id="linear">Linear Scale</a>
+                                        </li>
+                                        <li><a href="#" id="log">Log Scale</a>
+                                        </li>
+                                        <li><a href="#" id="unzoom" onclick="unzoomGraph()">Unzoom</a>
+                                        </li>
+                                        <li class="divider"></li>
+                                        <li><a href="#" id="edit_graph">Edit graph words</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="btn-group btn-group-xs pull-right" style="margin-right: 5px;">
+                                <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
+                                <button type="button" class="btn btn-primary" onclick="take_top(0);">...</button>
+                            </div>
+
+                        </div>
+                        <!-- /.panel-heading -->
+                          <div class="panel-body">
+                             <!-- <div id="DomainTrending" style="width:100%;"></div> -->
+                              <div id="DomainTrending" style="width:100%; height:800px;"></div>
+                          </div>
+                        <!-- /.panel-body -->
+                    </div>
+                </div>
+            </div> <!-- tab-content -->
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+
+        <!-- import graph function -->
+        <script src="{{ url_for('static', filename='js/plot-graph.js') }}"></script>
+
+        <!-- instanciate and plot graphs -->
+        <script type="text/javascript">
+            // Create, plot and set the limit of displayed headers
+            function create_and_plot(pannel, path){
+                //var graph_domain = new Graph($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));
+                $.get(path, function(myContentFile) {
+                    var lines = myContentFile.split("\r\n");
+                    var header_size = lines[0].split(',').length-1;
+                    current_displayed_graph = new Graph(pannel, path, header_size);
+                    setTimeout(function() { current_displayed_graph.set_Visibility(default_display)}, 300);
+                }, 'text');
+                
+            }
+
+            // When a pannel is shown, create_and_plot.
+            $('.nav-tabs a').on('shown.bs.tab', function(event){
+                create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));    
+            });
+        </script>
+
+        <script>
+            $(document).ready(function(){
+                // Create the graph when the page has just loaded
+                create_and_plot("TldsTrending", '../static//csv/tldstrendingdata.csv') 
+            });
+ 
+            function take_top(new_display){
+                current_displayed_graph.set_Visibility_andHide(new_display, default_display);
+                default_display = new_display;
+            }
+            
+        </script>
+
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</body>
+
+</html>
