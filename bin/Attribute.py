@@ -51,12 +51,13 @@ if __name__ == "__main__":
                 PST = Paste.Paste(message)
             else:
                 publisher.debug("Script Attribute is idling 1s")
+                print 'sleeping'
                 time.sleep(1)
                 continue
 
             # FIXME do it directly in the class
             PST.save_attribute_redis("p_encoding", PST._get_p_encoding())
-            PST.save_attribute_redis("p_language", PST._get_p_language())
+            #PST.save_attribute_redis("p_language", PST._get_p_language())
             # FIXME why not all saving everything there.
             PST.save_all_attributes_redis()
             # FIXME Not used.
