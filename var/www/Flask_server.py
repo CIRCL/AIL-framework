@@ -122,7 +122,8 @@ def search():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    default_minute = cfg.get("Flask", "minute_processed_paste")
+    return render_template("index.html", default_minute = default_minute)
 
 
 @app.route("/monitoring/")

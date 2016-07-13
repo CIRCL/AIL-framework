@@ -1,3 +1,54 @@
+// Plot and update the number of processed pastes
+$(function() {
+    var data = [];
+    var totalPoints = 60*10; //60s*10m
+    var curr_max = 0;
+    
+    function getData() {
+        if (data.length > 0){
+             curr_max = curr_max == data[0] ? Math.max.apply(null, data) : curr_max;
+        	data = data.slice(1);
+        }
+        
+        while (data.length < totalPoints) {
+        	var y = (typeof window.paste_num_tabvar !== "undefined") ? window.paste_num_tabvar : 0;
+             curr_max = curr_max < y ? y : curr_max;
+        	data.push(y);
+        }
+        
+        // Zip the generated y values with the x values
+        var res = [];
+        for (var i = 0; i < data.length; ++i) {
+            res.push([i, data[i]])
+        }
+        return res;
+    }
+
+    var updateInterval = 1000;
+    var options = {
+        series: { shadowSize: 1 },
+        lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
+        yaxis: { min: 0, max: 40 },
+        xaxis: { show: false },
+        colors: ["#F4A506"],
+        grid: {
+                  tickColor: "#dddddd",
+                  borderWidth: 0 
+        },
+    };
+    var plot = $.plot("#realtimechart", [ getData() ], options);
+    
+    function update() {
+console.log(curr_max);
+        plot.setData([getData()]);
+        plot.getOptions().yaxes[0].max = curr_max;
+        plot.setupGrid();
+        plot.draw();
+        setTimeout(update, updateInterval);
+    }
+    update();
+});
+
 function initfunc( csvay, scroot) {
   window.csv = csvay;
   window.scroot = scroot;
@@ -37,6 +88,13 @@ function create_log_table(obj_json) {
 
     var chansplit = obj_json.channel.split('.');
     var parsedmess = obj_json.data.split(';');
+
+    if (parsedmess[0] == "Global"){
+        var paste_processed = parsedmess[4].split(" ")[2];
+        console.log(paste_processed)
+        window.paste_num_tabvar = paste_processed;
+        return;
+    }
 
     if( chansplit[1] == "INFO" ){
         tr.className = "info";
@@ -270,3 +328,5 @@ $(document).ready(function () {
     }
 
 });
+
+
