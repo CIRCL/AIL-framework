@@ -31,6 +31,8 @@ from Helper import Process
 if __name__ == '__main__':
     publisher.port = 6380
     publisher.channel = 'Script'
+    processed_paste = 0
+    time_1 = time.time()
 
     config_section = 'Global'
 
@@ -54,6 +56,12 @@ if __name__ == '__main__':
                 continue
         else:
             print "Empty Queues: Waiting..."
+            if int(time.time() - time_1) > 30:
+                to_print = 'Global; ; ; ;glob Processed {0} paste(s)'.format(processed_paste)
+                print to_print
+                publisher.info(to_print)
+                time_1 = time.time()
+                processed_paste = 0
             time.sleep(1)
             continue
         # Creating the full filepath
@@ -66,3 +74,4 @@ if __name__ == '__main__':
         with open(filename, 'wb') as f:
             f.write(base64.standard_b64decode(gzip64encoded))
         p.populate_set_out(filename)
+        processed_paste+=1
