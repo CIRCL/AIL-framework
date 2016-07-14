@@ -1,6 +1,7 @@
 # Temp files
 *.swp
 *.pyc
+*.swo
 
 # Install Dirs
 AILENV

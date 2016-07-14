@@ -186,7 +186,9 @@ class Paste(object):
         if the paste doesn't contain any human dictionnary words
         ..seealso: git@github.com:saffsd/langid.py.git
 
-        """
+        FIXME: This procedure is using more than 20% of CPU
+
+	"""
         identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
         return identifier.classify(self.get_p_content())
 
@@ -195,6 +197,9 @@ class Paste(object):
 
     def _get_p_date(self):
         return self.p_date
+
+    def _get_p_size(self):
+        return self.p_size
 
     def _get_hash_lines(self, min=1, start=1, jump=10):
         """

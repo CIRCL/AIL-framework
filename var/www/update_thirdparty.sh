@@ -24,6 +24,11 @@ wget http://code.jquery.com/jquery-1.4.2.js -O ./static/js/jquery-1.4.2.js
 
 wget http://www.goat1000.com/jquery.tagcanvas.js?2.5 -O ./static/js/jquery.tagcanvas.js
 
+#Ressources for dataTable
+wget https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js -O ./static/js/jquery.dataTables.min.js
+wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.css -O ./static/css/dataTables.bootstrap.css
+wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.js -O ./static/js/dataTables.bootstrap.js
+
 rm -rf ./static/js/plugins
 mv temp/${filename}/js/* ./static/js/
 

@@ -19,11 +19,11 @@ import ipaddress
 from Helper import Process
 
 # Used to prevent concat with empty fields due to url parsing
-def avoidNone(str):
-    if str is None:
+def avoidNone(a_string):
+    if a_string is None:
         return ""
     else:
-        return str
+        return a_string
 
 if __name__ == "__main__":
     publisher.port = 6380
