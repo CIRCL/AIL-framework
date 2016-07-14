@@ -6,16 +6,16 @@ $(function() {
     
     function getData() {
         if (data.length > 0){
-             curr_max = curr_max == data[0] ? Math.max.apply(null, data) : curr_max;
-        	data = data.slice(1);
+             var data_old = data[0];
+             data = data.slice(1);
+             curr_max = curr_max == data_old ? Math.max.apply(null, data) : curr_max;
         }
         
         while (data.length < totalPoints) {
-        	var y = (typeof window.paste_num_tabvar !== "undefined") ? window.paste_num_tabvar : 0;
-             curr_max = curr_max < y ? y : curr_max;
-        	data.push(y);
+            var y = (typeof window.paste_num_tabvar !== "undefined") ? parseInt(window.paste_num_tabvar) : 0;
+            curr_max = y > curr_max ? y : curr_max;
+            data.push(y);
         }
-        
         // Zip the generated y values with the x values
         var res = [];
         for (var i = 0; i < data.length; ++i) {
@@ -29,17 +29,15 @@ $(function() {
         series: { shadowSize: 1 },
         lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
         yaxis: { min: 0, max: 40 },
-        xaxis: { show: false },
-        colors: ["#F4A506"],
+        colors: ["#a971ff"],
         grid: {
-                  tickColor: "#dddddd",
-                  borderWidth: 0 
+            tickColor: "#dddddd",
+            borderWidth: 0 
         },
     };
     var plot = $.plot("#realtimechart", [ getData() ], options);
     
     function update() {
-console.log(curr_max);
         plot.setData([getData()]);
         plot.getOptions().yaxes[0].max = curr_max;
         plot.setupGrid();
@@ -91,7 +89,6 @@ function create_log_table(obj_json) {
 
     if (parsedmess[0] == "Global"){
         var paste_processed = parsedmess[4].split(" ")[2];
-        console.log(paste_processed)
         window.paste_num_tabvar = paste_processed;
         return;
     }
