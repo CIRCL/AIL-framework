@@ -19,6 +19,7 @@
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
   <script>
+      window.default_minute = {{ default_minute }};
       function update_values() {
           $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
           $.getJSON($SCRIPT_ROOT+"/_stuff",

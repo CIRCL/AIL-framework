@@ -1,7 +1,8 @@
 // Plot and update the number of processed pastes
 $(function() {
     var data = [];
-    var totalPoints = 60*10; //60s*10m
+    var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
+    var totalPoints = 60*parseInt(default_minute); //60s*minute
     var curr_max = 0;
     
     function getData() {
@@ -24,7 +25,7 @@ $(function() {
         return res;
     }
 
-    var updateInterval = 1000;
+    var updateInterval = 1000; //1s
     var options = {
         series: { shadowSize: 1 },
         lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
