@@ -4,6 +4,11 @@ pastes = PASTES
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile
 
+##### Flask #####
+[Flask]
+#Number of minutes displayed for the number of processed pastes.
+minute_processed_paste = 10
+
 ##### Redis #####
 [Redis_Cache]
 host = localhost
