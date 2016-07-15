@@ -17,6 +17,7 @@ nltk
 # Hashlib
 crcmod
 mmh3
+simhash
 
 #Others
 python-magic
