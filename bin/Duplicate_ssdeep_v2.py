@@ -6,8 +6,10 @@ The Duplicate module
 ====================
 
 This huge module is, in short term, checking duplicates.
+Its input comes from other modules, namely:
+    Credential, CreditCard, Keys, Mails and Phone
 
-This one differ from v1 by only using redis and not json file on disk
+This one differ from v1 by only using redis and not json file stored on disk
 
 Requirements:
 -------------
@@ -117,8 +119,7 @@ if __name__ == "__main__":
                             if paste_path != None:
                                 hash_dico[dico_hash] = (paste_path, percent)
 
-                            print 'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent)
-                            #print '   '+ PST.p_path[44:]  +', '+ paste_path[44:] + ', ' + str(percent)
+                            #print 'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent)
                     except:
                         # ssdeep hash not comparable
                         print 'ssdeep hash not comparable' 
@@ -146,7 +147,7 @@ if __name__ == "__main__":
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis("p_duplicate", dupl)
                     publisher.info('{}Detected {}'.format(to_print, len(dupl)))
-                    #print '{}Detected {}'.format(to_print, len(dupl))
+                    print '{}Detected {}'.format(to_print, len(dupl))
 
                 y = time.time()
 
