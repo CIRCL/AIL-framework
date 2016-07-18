@@ -4,6 +4,13 @@ pastes = PASTES
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile
 
+#### Modules #### 
+[Modules_Duplicates]
+#Number of month to look back
+maximum_month_range = 3
+#The value where two pastes are considerate duplicate.
+threshold_duplicate = 50
+
 ##### Redis #####
 [Redis_Cache]
 host = localhost

@@ -20,7 +20,6 @@ import json
 import ssdeep
 from packages import Paste
 from pubsublogger import publisher
-from pybloomfilter import BloomFilter
 
 from Helper import Process
 
@@ -29,10 +28,10 @@ if __name__ == "__main__":
     publisher.channel = "Script"
 
     config_section = 'Duplicates'
-    saved_dico_and_reload = 1 #min
+    save_dico_and_reload = 1 #min
     time_1 = time.time()
-    flag_reload = True
-    flag_to_disk = False
+    flag_reload_from_disk = True
+    flag_write_to_disk = False
 
     p = Process(config_section)
 
@@ -81,18 +80,16 @@ if __name__ == "__main__":
             filedicopath_today = filedicopath
 
             # Save I/O
-            if time.time() - time_1 > saved_dico_and_reload*60:
-                flag_to_disk = True
+            if time.time() - time_1 > save_dico_and_reload*60:
+                flag_write_to_disk = True
 
             if os.path.exists(filedicopath):
-                if flag_reload == True:
-                    flag_reload = False
+                if flag_reload_from_disk == True:
+                    flag_reload_from_disk = False
                     print 'Reloading'
-                    time_1 = time.time()
                     with open(filedicopath, 'r') as fp:
                         today_dico = json.load(fp)
             else:
-                time_1 = time.time()
                 today_dico = {}
                 with open(filedicopath, 'w') as fp:
                     json.dump(today_dico, fp)
@@ -105,44 +102,47 @@ if __name__ == "__main__":
             r_serv0 = dico_redis[yearly_index]
             r_serv0.incr("current_index")
             index = r_serv0.get("current_index")+str(PST.p_date)
-            # HASHTABLES PER MONTH (because of r_serv1 changing db)
-            r_serv1.set(index, PST.p_path)
-            r_serv1.sadd("INDEX", index)
+            
             # For each dico
             opened_dico = []
             for dico in dico_path_set:
                 # Opening dico
                 if dico == filedicopath_today:
                     opened_dico.append([dico, today_dico])
-                with open(dico, 'r') as fp:
-                    opened_dico.append([dico, json.load(fp)])
+                else:
+                    with open(dico, 'r') as fp:
+                        opened_dico.append([dico, json.load(fp)])
 
               
             #retrieve hash from paste
             paste_hash = PST._get_p_hash()
-            # Adding the hash in Redis
-            r_serv1.set(paste_hash, index)
-            r_serv1.sadd("HASHS", paste_hash)
+            
             # Go throught the Database of the dico (of the month)
-            threshold_dup = 10 
+            threshold_dup = 99 
             for dico_name, dico in opened_dico:
                 for dico_key, dico_hash in dico.items():
                     percent = ssdeep.compare(dico_hash, paste_hash)
                     if percent > threshold_dup:
                         db = dico_name[-6:]
-                        # Go throught the Database of the bloom filter (month)
+                        # Go throught the Database of the dico filter (month)
                         r_serv_dico = dico_redis[db]
                         
                         # index of paste
-                        # FIXME Use r_serv_dico and do not consider only 1 server!!
-                        index_current = r_serv1.get(dico_hash)
-                        paste_path = r_serv1.get(index_current)
+                        index_current = r_serv_dico.get(dico_hash)
+                        paste_path = r_serv_dico.get(index_current)
                         if paste_path != None:
                             hash_dico[dico_hash] = (paste_path, percent)
 
-                        print 'comparing: ' + str(dico_hash[:20]) + '  and  ' + str(paste_hash[:20]) + ' percentage: ' + str(percent)
-                        print '   '+ PST.p_path[44:]  +', '+ paste_path[44:]
+                        #print 'comparing: ' + str(dico_hash[:20]) + '  and  ' + str(paste_hash[:20]) + ' percentage: ' + str(percent)
+                        print '   '+ PST.p_path[44:]  +', '+ paste_path[44:] + ', ' + str(percent)
 
+            # Add paste in DB to prevent its analyse twice
+            # HASHTABLES PER MONTH (because of r_serv1 changing db)
+            r_serv1.set(index, PST.p_path)
+            r_serv1.sadd("INDEX", index)
+            # Adding the hash in Redis
+            r_serv1.set(paste_hash, index)
+            r_serv1.sadd("HASHS", paste_hash)
     ##################### Similarity found  #######################
 
             # if there is data in this dictionnary
@@ -168,9 +168,11 @@ if __name__ == "__main__":
             # Adding the hash in the dico of the month
             today_dico[index] = paste_hash
 
-            if flag_to_disk:
-                flag_to_disk = False
-                flag_reload = True
+            if flag_write_to_disk:
+                time_1 = time.time()
+                flag_write_to_disk = False
+                flag_reload_from_disk = True
+                print 'writing'
                 with open(filedicopath, 'w') as fp:
                     json.dump(today_dico, fp)
         except IOError:

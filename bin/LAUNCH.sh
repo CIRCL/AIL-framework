@@ -105,7 +105,7 @@ function launching_scripts {
 
     screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate_ssdeep.py; read x'
+    screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate_ssdeep_v2.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
     sleep 0.1
