@@ -37,7 +37,7 @@ env:
 install:
     - pip install -U pip
     # DNS
-    - sudo apt-get install libadns1 libadns1-dev screen
+    - sudo apt-get install -y libadns1 libadns1-dev screen
     # required for mathplotlib
     - test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
     - pip install distribute
