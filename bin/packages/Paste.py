@@ -91,6 +91,7 @@ class Paste(object):
         self.p_langage = None
         self.p_nb_lines = None
         self.p_max_length_line = None
+        self.p_duplicate = None
 
     def get_p_content(self):
         """
@@ -277,6 +278,10 @@ class Paste(object):
             return True, var
         else:
             return False, var
+    
+    def _get_p_duplicate(self):
+        self.p_duplicate = self.store.hget(self.p_path, "p_duplicate")
+        return self.p_duplicate if self.p_duplicate is not None else []
 
     def save_all_attributes_redis(self, key=None):
         """

@@ -58,6 +58,21 @@ def list_len(s):
     return len(s)
 app.jinja_env.filters['list_len'] = list_len
 
+def parseStringToList(the_string):
+    strList = ""
+    elemList = []
+    for c in the_string:
+        if c != ']':
+            if c != '[' and c !=' ' and c != '"':
+                strList += c
+        else:
+            the_list = strList.split(',')
+            if len(the_list) == 2:
+               elemList.append(the_list)
+            elif len(the_list) > 1:
+               elemList.append(the_list[1:])
+            strList = ""
+    return elemList
 
 def showpaste(content_range):    
     requested_path = request.args.get('paste', '')
@@ -71,10 +86,19 @@ def showpaste(content_range):
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
+    p_duplicate_full_list = parseStringToList(paste._get_p_duplicate())
+    p_duplicate_list = []
+    p_simil_list = []
+
+    for dup_list in p_duplicate_full_list:
+        path, simil_percent = dup_list
+        p_duplicate_list.append(path)
+        p_simil_list.append(simil_percent)
+
     if content_range != 0:
        p_content = p_content[0:content_range] 
 
-    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content))
+    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list)
 
 
 @app.route("/_logs")
