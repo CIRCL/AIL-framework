@@ -14,9 +14,8 @@
 	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
 	  <!-- JS -->
 	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
-	  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
 	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-          <script> 
+          <script>
               var default_display = {{ default_display }};
               var current_displayed_graph;
           </script>
@@ -56,7 +55,7 @@
           </div>
             <!-- /.row -->
             <div class="row">
-            
+
             <!-- /.nav-tabs -->
             <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#tld-tab" data-pannel="TldTrending" data-path="../static//csv/tldstrendingdata.csv">Top level domains</a></li>
@@ -65,8 +64,8 @@
                 <li><a data-toggle="tab" href="#protocol-tab" data-pannel="ProtocolTrending" data-path="../static//csv/protocolstrendingdata.csv">Protocols</a></li>
             </ul>
             </br>
-              
-            <div class="tab-content">  
+
+            <div class="tab-content">
                 <div class="col-lg-12 tab-pane fade in active" id="tld-tab" >
                      {% include 'trending_graphs/Tldstrending.html' %}
                 </div>
@@ -75,7 +74,7 @@
                 </div>
                 <div class="col-lg-12 tab-pane fade" id="words-tab">
                      {% include 'trending_graphs/Wordstrending.html' %}
-                </div> 
+                </div>
                 <div class="col-lg-12 tab-pane fade" id="protocol-tab">
                      {% include 'trending_graphs/Protocolstrending.html' %}
                 </div>
@@ -98,27 +97,27 @@
                     current_displayed_graph = new Graph(pannel, path, header_size);
                     setTimeout(function() { current_displayed_graph.set_Visibility(default_display)}, 300);
                 }, 'text');
-                
+
             }
 
             // When a pannel is shown, create_and_plot.
             $('.nav-tabs a').on('shown.bs.tab', function(event){
-                create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));    
+                create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));
             });
         </script>
 
         <script>
             $(document).ready(function(){
                 // Create the graph when the page has just loaded
-                create_and_plot("TldTrending", '../static//csv/tldstrendingdata.csv') 
+                create_and_plot("TldTrending", '../static//csv/tldstrendingdata.csv')
             });
- 
+
             // Used when we modify the number of displayed curves
             function take_top(new_display){
                 current_displayed_graph.set_Visibility_andHide(new_display, default_display);
                 default_display = new_display;
             }
-            
+
         </script>
 
     </div>

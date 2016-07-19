@@ -14,15 +14,8 @@ wget https://github.com/IronSummitMedia/startbootstrap-sb-admin-2/archive/v1.0.2
 unzip temp/${filename}".zip" -d temp/
 mv temp/startbootstrap-sb-admin-2-1.0.2 temp/sb-admin-2
 
-JQVERSION="1.11.1"
+JQVERSION="1.12.4"
 wget http://code.jquery.com/jquery-${JQVERSION}.js -O ./static/js/jquery.js
-
-#wget https://collabdev.googlecode.com/svn-history/r5/trunk/static/js/jquery.timers-1.0.0.js -O ./static/js/jquery.timers-1.0.0.js
-
-#Here to fix an error about an hard dependency in a obscur script of bootstrap..
-wget http://code.jquery.com/jquery-1.4.2.js -O ./static/js/jquery-1.4.2.js
-
-wget http://www.goat1000.com/jquery.tagcanvas.js?2.5 -O ./static/js/jquery.tagcanvas.js
 
 #Ressources for dataTable
 wget https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js -O ./static/js/jquery.dataTables.min.js
