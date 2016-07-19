@@ -7,8 +7,6 @@ sudo: required
 
 dist: trusty
 
-group: edge
-
 addons:
     apt:
         packages:
@@ -27,6 +25,7 @@ addons:
             # Leveldb
             - libgmp-dev
             - libev-dev
+            - cmake
 
 env:
     - AIL_HOME=$TRAVIS_BUILD_DIR AIL_BIN=$TRAVIS_BUILD_DIR/bin/ \
@@ -45,16 +44,30 @@ install:
     # Redis
     - test ! -d redis/ && git clone https://github.com/antirez/redis.git
     - pushd redis
-    - git checkout 3.0
+    - git checkout 3.2
     - make
     - popd
     # Redis leveldb
     - test ! -d redis-leveldb/ && git clone https://github.com/KDr2/redis-leveldb.git
-    - pushd redis-leveldb/
-    - git submodule init
-    - git submodule update
-    - make
-    - popd
+      pushd redis-leveldb/
+      git submodule init
+      git submodule update
+      make
+      popd
+    # Faup
+    - test ! -d faup && git clone https://github.com/stricaud/faup.git
+      pushd faup/
+      test ! -d build && mkdir build
+      cd build
+      cmake .. && make
+      sudo make install
+      echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/faup.conf
+      sudo ldconfig
+      popd
+    # PyFaup
+    - pushd faup/src/lib/bindings/python/
+      python setup.py install
+      popd
     # Set config
     - cp bin/packages/config.cfg.sample bin/packages/config.cfg
     - mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
