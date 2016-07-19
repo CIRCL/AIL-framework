@@ -29,6 +29,10 @@ wget https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js -O ./static/
 wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.css -O ./static/css/dataTables.bootstrap.css
 wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.js -O ./static/js/dataTables.bootstrap.js
 
+#Ressource for graph
+wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.js -O ./static/js/jquery.flot.js
+wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.pie.js -O ./static/js/jquery.flot.pie.js
+
 rm -rf ./static/js/plugins
 mv temp/${filename}/js/* ./static/js/
 
