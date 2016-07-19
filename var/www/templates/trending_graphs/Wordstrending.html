@@ -1,0 +1,37 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <i class="fa fa-bar-chart-o fa-fw"></i> Words Trend
+        <div class="pull-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                    Actions
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    <li><a href="#" id="linear">Linear Scale</a>
+                    </li>
+                    <li><a href="#" id="log">Log Scale</a>
+                    </li>
+                    <li><a href="#" id="unzoom" onclick="unzoomGraph()">Unzoom</a>
+                    </li>
+                    <li class="divider"></li>
+                    <li><a href="#" id="edit_graph">Edit graph words</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="btn-group btn-group-xs pull-right" style="margin-right: 5px;">
+            <button type="button" class="btn btn-primary" onclick="take_top(5);">5</button>
+            <button type="button" class="btn btn-primary" onclick="take_top(10);">10</button>
+            <button type="button" class="btn btn-primary" onclick="take_top(15);">15</button>
+        </div>
+
+    </div>
+    <!-- /.panel-heading -->
+      <div class="panel-body">
+         <!-- <div id="WordTrending" style="width:100%;"></div> -->
+          <div id="WordTrending" style="width:100%; height:800px;"></div>
+      </div>
+    <!-- /.panel-body -->
+</div>
