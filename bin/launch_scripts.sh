@@ -35,4 +35,5 @@ sleep 0.1
 screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
 sleep 0.1
 screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
-
+sleep 0.1
+screen -S "Script" -X screen -t "WebStats" bash -c './WebStats.py; read x'
