@@ -9,7 +9,7 @@ protocolstrending_csv = var/www/static/csv/protocolstrendingdata
 protocolsfile = files/protocolsfile
 
 tldstrending_csv = var/www/static/csv/tldstrendingdata
-tldsfile = AILENV/lib/faup/src/data/mozilla.tlds
+tldsfile = AILENV/faup/src/data/mozilla.tlds
 
 domainstrending_csv = var/www/static/csv/domainstrendingdata
 
