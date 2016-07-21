@@ -1,3 +1,17 @@
+function initfunc( csvay, scroot) {
+  window.csv = csvay;
+  window.scroot = scroot;
+};
+
+function update_values() {
+  $SCRIPT_ROOT = window.scroot ;
+    $.getJSON($SCRIPT_ROOT+"/_stuff",
+        function(data) {
+            window.glob_tabvar = data;
+        });
+    };
+
+
 // Plot and update the number of processed pastes
 $(function() {
     var data = [];
