@@ -15,12 +15,11 @@
   <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
   <!-- Custom style -->
-  <style> 
+  <style>
       .tooltip-inner {
          text-align: left;
          height: 200%;
@@ -93,7 +92,7 @@
                         <div class="panel-heading">
                             <i class="glyphicon glyphicon-search"></i> {{ r|length }} Results for "<strong>{{ query }}</strong>"
                             <div class="pull-right">
-                            
+
                             </div>
                         </div>
                         <!-- /.panel-heading -->
@@ -176,7 +175,7 @@
                     });
                 } else {
                     update_preview();
-                }               
+                }
             });
         });
     });
@@ -191,7 +190,7 @@
         complete_paste = null;
         start_index = 0;
     });
-    
+
    // Update the paste preview in the modal
    function update_preview() {
        if (start_index + char_to_display > complete_paste.length-1){ // end of paste reached
@@ -203,13 +202,13 @@
 
        if (final_index != start_index){ // still have data to display
            $("#mymodalbody").find("#paste-holder").append(complete_paste.substring(start_index+1, final_index+1)); // Append the new content
-           start_index = final_index; 
+           start_index = final_index;
            if (flag_stop)
                nothing_to_display();
        } else {
-          nothing_to_display(); 
+          nothing_to_display();
       }
-   } 
+   }
    // Update the modal when there is no more data
    function nothing_to_display() {
        var new_content = $(alert_message).hide();

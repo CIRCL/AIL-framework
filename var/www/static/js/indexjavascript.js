@@ -1,52 +1,11 @@
 // Plot and update the number of processed pastes
 $(function() {
     var data = [];
-    var totalPoints = 60*10; //60s*10m
+    var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
+    var totalPoints = 60*parseInt(default_minute); //60s*minute
     var curr_max = 0;
     
     function getData() {
-        if (data.length > 0){
-             var data_old = data[0];
-             data = data.slice(1);
-             curr_max = curr_max == data_old ? Math.max.apply(null, data) : curr_max;
-        }
-        
-        while (data.length < totalPoints) {
-            var y = (typeof window.paste_num_tabvar !== "undefined") ? parseInt(window.paste_num_tabvar) : 0;
-            curr_max = y > curr_max ? y : curr_max;
-            data.push(y);
-        }
-        // Zip the generated y values with the x values
-        var res = [];
-        for (var i = 0; i < data.length; ++i) {
-            res.push([i, data[i]])
-        }
-        return res;
-    }
-
-    var updateInterval = 1000;
-    var options = {
-        series: { shadowSize: 1 },
-        lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
-        yaxis: { min: 0, max: 40 },
-        colors: ["#a971ff"],
-        grid: {
-            tickColor: "#dddddd",
-            borderWidth: 0 
-        },
-    };
-    var plot = $.plot("#realtimechart", [ getData() ], options);
-    
-    function update() {
-        plot.setData([getData()]);
-        plot.getOptions().yaxes[0].max = curr_max;
-        plot.setupGrid();
-        plot.draw();
-        setTimeout(update, updateInterval);
-    }
-    update();
-});
-
 function initfunc( csvay, scroot) {
   window.csv = csvay;
   window.scroot = scroot;

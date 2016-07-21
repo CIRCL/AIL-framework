@@ -1,8 +1,29 @@
 [Directories]
 bloomfilters = Blooms
 pastes = PASTES
+
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile
+
+protocolstrending_csv = var/www/static/csv/protocolstrendingdata
+protocolsfile = files/protocolsfile
+
+tldstrending_csv = var/www/static/csv/tldstrendingdata
+tldsfile = AILENV/faup/src/data/mozilla.tlds
+
+domainstrending_csv = var/www/static/csv/domainstrendingdata
+
+##### Flask #####
+[Flask]
+#Number of minutes displayed for the number of processed pastes.
+minute_processed_paste = 10
+
+#Maximum number of character to display in the toolip
+max_preview_char = 250
+#Maximum number of character to display in the modal
+max_preview_modal = 800
+#Default number of header to display in trending graphs
+default_display = 10
 
 ##### Redis #####
 [Redis_Cache]
@@ -28,12 +49,17 @@ db = 1
 ##### LevelDB #####
 [Redis_Level_DB]
 host = localhost
-port = 2013
+port = 2016
 db = 0
+
+[Redis_Level_DB_Domain]
+host = localhost
+port = 2016
+db = 3
 
 [Redis_Level_DB_Hashs]
 host = localhost
-port = 2013
+port = 2016
 db = 1
 
 [Url]

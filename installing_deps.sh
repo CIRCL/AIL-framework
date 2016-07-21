@@ -6,7 +6,7 @@ set -x
 sudo apt-get update
 
 sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
-    screen g++ python-tk unzip libsnappy-dev
+    screen g++ python-tk unzip libsnappy-dev cmake
 
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python-numpy
@@ -24,8 +24,19 @@ sudo easy_install -U distribute
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/
-git checkout 3.0
+git checkout 3.2
 make
+popd
+
+# Faup
+test ! -d faup && git clone https://github.com/stricaud/faup.git
+pushd faup/
+test ! -d build && mkdir build
+cd build
+cmake .. && make
+sudo make install
+echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/faup.conf
+sudo ldconfig
 popd
 
 # REDIS LEVEL DB #
@@ -55,6 +66,12 @@ mkdir -p $AIL_HOME/LEVEL_DB_DATA/2016
 
 pip install -U pip
 pip install -r pip_packages_requirement.txt
+
+# Pyfaup
+pushd faup/src/lib/bindings/python/
+python setup.py install
+popd
+
 
 # Download the necessary NLTK corpora
 HOME=$(pwd) python -m textblob.download_corpora
