@@ -25,6 +25,16 @@ max_preview_modal = 800
 #Default number of header to display in trending graphs
 default_display = 10
 
+#### Modules #### 
+[Modules_Duplicates]
+#Number of month to look back
+maximum_month_range = 3
+#The value where two pastes are considerate duplicate.
+threshold_duplicate = 50
+#Minimum size of the paste considered
+min_paste_size = 0.3
+
+
 ##### Redis #####
 [Redis_Cache]
 host = localhost

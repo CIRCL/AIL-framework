@@ -65,6 +65,8 @@ if __name__ == "__main__":
                 if (len(creditcard_set) > 0):
                     publisher.warning('{}Checked {} valid number(s)'.format(
                         to_print, len(creditcard_set)))
+                    #Send to duplicate
+                    p.populate_set_out(filename)
                 else:
                     publisher.info('{}CreditCard related'.format(to_print))
         else:
