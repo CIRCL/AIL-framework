@@ -16,6 +16,9 @@
 	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
 	  <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
 	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
           <script> 
               var default_display = {{ default_display }};
               var current_displayed_graph;
@@ -59,13 +62,21 @@
             
             <!-- /.nav-tabs -->
             <ul class="nav nav-tabs">
-                <li class="active"><a data-toggle="tab" href="#tld-tab" data-pannel="TldTrending" data-path="../static//csv/tldstrendingdata.csv">Top level domains</a></li>
-                <li><a data-toggle="tab" href="#domain-tab" data-pannel="DomainTrending" data-path="../static//csv/domainstrendingdata.csv">Domains</a></li>
+                <li class="active"><a data-toggle="tab" href="#tld-tab"  data-attribute-name="tld" data-pannel="TldTrending" data-path="../static//csv/tldstrendingdata.csv">Top level domains</a></li>
+                <li><a data-toggle="tab" href="#domain-tab" data-attribute-name="domain" data-pannel="DomainTrending" data-path="../static//csv/domainstrendingdata.csv">Domains</a></li>
                 <li><a data-toggle="tab" href="#words-tab" data-pannel="WordTrending" data-path="../static//csv/wordstrendingdata.csv">Words</a></li>
-                <li><a data-toggle="tab" href="#protocol-tab" data-pannel="ProtocolTrending" data-path="../static//csv/protocolstrendingdata.csv">Protocols</a></li>
+                <li><a data-toggle="tab" href="#protocol-tab" data-attribute-name="scheme" data-pannel="ProtocolTrending" data-path="../static//csv/protocolstrendingdata.csv">Protocols</a></li>
             </ul>
             </br>
               
+<script>
+var chart_1_num_day = 5;
+var chart_2_num_day = 15;
+$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/trendingchart.js')}}"></script>
+
             <div class="tab-content">  
                 <div class="col-lg-12 tab-pane fade in active" id="tld-tab" >
                      {% include 'trending_graphs/Tldstrending.html' %}
@@ -87,6 +98,24 @@
         <!-- import graph function -->
         <script src="{{ url_for('static', filename='js/plot-graph.js') }}"></script>
 
+        <script type="text/javascript">
+            var refresh_interval = 1000*60*2;   //number of miliseconds between each call
+            var launched_refresher = [];    //Avoid launching mutliple refresher
+            var active_tab_name = "tld";    //Avoid a redraw of the graph is the tab is not active
+            function refresh_top_chart(attr_name, immediate){
+                if (immediate){
+                    plot_top_graph(attr_name);
+                }
+                setTimeout(function() {
+                    $("[flash-"+attr_name+"]").css('color', '#fece00');
+                    setTimeout(function() { $("[flash-"+attr_name+"]").css('color', 'black'); }, 1000);
+                    refresh_top_chart(attr_name, false);
+                    if (active_tab_name == attr_name) 
+                        plot_top_graph(attr_name);
+                }, refresh_interval);
+            }
+        </script>
+
         <!-- instanciate and plot graphs -->
         <script type="text/javascript">
             // Create, plot and set the limit of displayed headers
@@ -99,11 +128,18 @@
                     setTimeout(function() { current_displayed_graph.set_Visibility(default_display)}, 300);
                 }, 'text');
                 
+                // RETREIVE AND UPDATE CONERNING TOP PROGRESSION
             }
 
             // When a pannel is shown, create_and_plot.
             $('.nav-tabs a').on('shown.bs.tab', function(event){
                 create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));    
+                active_tab_name = $(event.target).attr('data-attribute-name')
+                //Top progression chart
+                if(launched_refresher.indexOf($(event.target).attr('data-attribute-name')) == -1){
+                    launched_refresher.push($(event.target).attr('data-attribute-name'));
+                    refresh_top_chart($(event.target).attr('data-attribute-name'), true);
+                }
             });
         </script>
 
@@ -111,6 +147,8 @@
             $(document).ready(function(){
                 // Create the graph when the page has just loaded
                 create_and_plot("TldTrending", '../static//csv/tldstrendingdata.csv') 
+                //Top progression chart
+                refresh_top_chart("tld", true);
             });
  
             // Used when we modify the number of displayed curves

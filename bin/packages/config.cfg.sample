@@ -49,10 +49,10 @@ host = localhost
 port = 2013
 db = 0
 
-[Redis_Level_DB_Domain]
+[Redis_Level_DB_Trending]
 host = localhost
 port = 2016
-db = 3
+db = 0
 
 [Redis_Level_DB_Hashs]
 host = localhost

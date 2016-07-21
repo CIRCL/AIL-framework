@@ -14,9 +14,10 @@
   <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-1.4.2.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
   <script>
       function update_values() {
           $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
@@ -134,7 +135,6 @@
     initfunc( "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}", {{ request.script_root|tojson|safe }} );
     </script>
 
-    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/plugins/metisMenu/metisMenu.js') }}"></script>
 
