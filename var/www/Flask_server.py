@@ -4,12 +4,14 @@
 import redis
 import ConfigParser
 import json
+import datetime
 from flask import Flask, render_template, jsonify, request
 import flask
 import os
 import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Paste
+from Date import Date
 
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -34,6 +36,11 @@ r_serv_log = redis.StrictRedis(
     host=cfg.get("Redis_Log", "host"),
     port=cfg.getint("Redis_Log", "port"),
     db=cfg.getint("Redis_Log", "db"))
+
+r_serv_charts = redis.StrictRedis(
+    host=cfg.get("Redis_Level_DB_Trending", "host"),
+    port=cfg.getint("Redis_Level_DB_Trending", "port"),
+    db=cfg.getint("Redis_Level_DB_Trending", "db"))
 
 
 app = Flask(__name__, static_url_path='/static/')
@@ -100,6 +107,20 @@ def showpaste(content_range):
 
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list)
 
+def get_date_range(num_day):
+    curr_date = datetime.date.today()
+    date = Date(str(curr_date.year)+str(curr_date.month).zfill(2)+str(curr_date.day).zfill(2))
+    date_list = []
+
+    for i in range(0, num_day+1):
+        date_list.append(date.substract_day(i))
+    return date_list
+
+
+
+
+
+# ============ ROUTES ============
 
 @app.route("/_logs")
 def logs():
@@ -110,6 +131,38 @@ def logs():
 def stuff():
     return jsonify(row1=get_queues(r_serv))
 
+@app.route("/_progressionCharts", methods=['GET'])
+def progressionCharts():
+    #To be used later
+    attribute_name = request.args.get('attributeName')
+    trending_name = request.args.get('trendingName')
+    bar_requested = True if request.args.get('bar') == "true" else False
+    
+    if (bar_requested):
+        num_day = int(request.args.get('days'))
+        bar_values = []
+
+	date_range = get_date_range(num_day) 
+        # Retreive all data from the last num_day
+        for date in date_range:
+            curr_value = r_serv_charts.hget(attribute_name, date)
+            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
+        return jsonify(bar_values)
+ 
+    else:
+        redis_progression_name = 'top_progression_'+trending_name
+        redis_progression_name_set = 'top_progression_'+trending_name+'_set'
+
+        member_set = []
+        for keyw in r_serv_charts.smembers(redis_progression_name_set):
+            keyw_value = r_serv_charts.hget(redis_progression_name, keyw)
+            keyw_value = keyw_value if keyw_value is not None else 0
+            member_set.append((keyw, int(keyw_value)))
+        member_set.sort(key=lambda tup: tup[1], reverse=True)
+        if len(member_set) == 0:
+            member_set.append(("No relevant data", int(100)))
+        return jsonify(member_set)
+    
 
 @app.route("/search", methods=['POST'])
 def search():
