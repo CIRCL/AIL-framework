@@ -122,8 +122,8 @@ if __name__ == "__main__":
                             #print 'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent)
                     except:
                         # ssdeep hash not comparable
-                        print 'ssdeep hash not comparable' 
-                        publisher.error('ssdeep hash not comparable')
+                        print 'ssdeep hash not comparable, cleaning bad hash: '+dico_hash
+                        curr_dico_redis.srem('HASHS', dico_hash)
 
             # Add paste in DB after checking to prevent its analysis twice
             # hash_i -> index_i  AND  index_i -> PST.PATH
