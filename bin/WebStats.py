@@ -20,15 +20,12 @@ threshold_increase = 1.0  # The percentage representing the keyword occurence si
 max_set_cardinality = 10  # The cardinality of the progression set
 num_day_to_look = 5       # the detection of the progression start num_day_to_look in the past
 
+def analyse(server, field_name, date, url_parsed):
     field = url_parsed[field_name]
     if field is not None:
         prev_score = server.hget(field, date)
         if prev_score is not None:
-            print field + ' prev_score:' + prev_score
             server.hset(field, date, int(prev_score) + 1)
-            if int(prev_score) + 1 > threshold_need_to_look:  # threshold for false possitive
-                if(check_for_progression(server, field, date)):
-                    to_plot.add(field)
         else:
             server.hset(field, date, 1)
             if field_name == "domain": #save domain in a set for the monthly plot
