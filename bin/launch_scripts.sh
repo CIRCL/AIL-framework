@@ -9,8 +9,8 @@ sleep 0.1
 echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
 screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
-sleep 0.1
-screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate.py; read x'
+#sleep 0.1
+#screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate.py; read x'
 sleep 0.1
 screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
 sleep 0.1
