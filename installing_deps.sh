@@ -17,6 +17,9 @@ sudo apt-get install libadns1 libadns1-dev
 #Needed for redis-lvlDB
 sudo apt-get install libev-dev libgmp-dev
 
+# ssdeep
+sudo apt-get install libfuzzy-dev
+
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/
