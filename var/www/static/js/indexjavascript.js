@@ -1,3 +1,17 @@
+function initfunc( csvay, scroot) {
+  window.csv = csvay;
+  window.scroot = scroot;
+};
+
+function update_values() {
+  $SCRIPT_ROOT = window.scroot ;
+    $.getJSON($SCRIPT_ROOT+"/_stuff",
+        function(data) {
+            window.glob_tabvar = data;
+        });
+    };
+
+
 // Plot and update the number of processed pastes
 $(function() {
     var data = [];
@@ -25,7 +39,7 @@ $(function() {
         return res;
     }
 
-    var updateInterval = 1000; //1s
+    var updateInterval = 1000;
     var options = {
         series: { shadowSize: 1 },
         lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},

@@ -60,6 +60,8 @@ if __name__ == "__main__":
                                MX_values[0])
                     if MX_values[0] > is_critical:
                         publisher.warning(to_print)
+                        #Send to duplicate
+                        p.populate_set_out(filename)
                     else:
                         publisher.info(to_print)
             prec_filename = filename

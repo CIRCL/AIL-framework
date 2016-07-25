@@ -16,6 +16,8 @@ def search_gpg(message):
     content = paste.get_p_content()
     if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
+        #Send to duplicate
+        p.populate_set_out(message)
 
 
 if __name__ == '__main__':

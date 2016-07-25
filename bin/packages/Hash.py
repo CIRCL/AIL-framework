@@ -1,6 +1,7 @@
 import hashlib
 import crcmod
 import mmh3
+import ssdeep
 
 
 class Hash(object):
@@ -31,5 +32,8 @@ class Hash(object):
 
         elif self.name == "murmur":
             hash = mmh3.hash(string)
+
+        elif self.name == "ssdeep":
+            hash = ssdeep.hash(string)
 
         return hash

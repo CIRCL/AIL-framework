@@ -74,9 +74,9 @@ if __name__ == "__main__":
             # Creating the bloom filter name: bloomyyyymm
             filebloompath = os.path.join(bloompath, 'bloom' + PST.p_date.year +
                                          PST.p_date.month)
-
             if os.path.exists(filebloompath):
                 bloom = BloomFilter.open(filebloompath)
+                bloop_path_set.add(filebloompath)
             else:
                 bloom = BloomFilter(100000000, 0.01, filebloompath)
                 bloop_path_set.add(filebloompath)
@@ -94,7 +94,6 @@ if __name__ == "__main__":
             for bloo in bloop_path_set:
                 # Opening blooms
                 opened_bloom.append(BloomFilter.open(bloo))
-
             # For each hash of the paste
             for line_hash in PST._get_hash_lines(min=5, start=1, jump=0):
                 nb_hash_current += 1
@@ -105,7 +104,6 @@ if __name__ == "__main__":
                     r_serv1.sadd("HASHS", line_hash)
                 # Adding the hash in the bloom of the month
                 bloom.add(line_hash)
-
                 # Go throught the Database of the bloom filter (of the month)
                 for bloo in opened_bloom:
                     if line_hash in bloo:
@@ -148,6 +146,8 @@ if __name__ == "__main__":
                     percentage = round((count/float(nb_hash_current))*100, 2)
                     if percentage >= 50:
                         dupl.append((paste, percentage))
+                    else:
+                        print 'percentage: ' + str(percentage)
 
                 # Creating the object attribute and save it.
                 to_print = 'Duplicate;{};{};{};'.format(
@@ -156,6 +156,7 @@ if __name__ == "__main__":
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis("p_duplicate", dupl)
                     publisher.info('{}Detected {}'.format(to_print, len(dupl)))
+                    print '{}Detected {}'.format(to_print, len(dupl))
 
                 y = time.time()
 

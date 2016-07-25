@@ -50,6 +50,8 @@ if __name__ == "__main__":
         if len(creds) > critical:
             print("========> Found more than 10 credentials in this file : {}".format(filepath))
             publisher.warning(to_print)
+            #Send to duplicate
+            p.populate_set_out(filepath)
             if sites:
                 print("=======> Probably on : {}".format(', '.join(sites)))
         else:

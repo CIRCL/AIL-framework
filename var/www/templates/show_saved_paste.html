@@ -42,7 +42,17 @@
     </table>
   </div>
   <div class="panel-body" id="panel-body">
-  <h4> Content: </h4>
+  {% if  duplicate_list|length == 0 %}
+      <h4> No Duplicate </h4>
+  {% else %}
+      <h4> Duplicate list: </h4>
+      {% set i = 0 %}
+      {% for dup_path in duplicate_list %}
+          Similarity: {{ simil_list[i] }}% - <a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ dup_path }}" id='dup_path'>{{ dup_path }}</a></br>
+          {% set i = i + 1 %}
+      {% endfor %}
+  {% endif %}
+    <h4> Content: </h4>
   <p data-initsize="{{ initsize }}"> <xmp id="paste-holder">{{ content }}</xmp></p>
   </div>
 </div>
