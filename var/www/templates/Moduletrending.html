@@ -1,0 +1,145 @@
+	<!DOCTYPE html>
+	<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+
+	</head>
+	<body>
+
+	    <div id="wrapper">
+	      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+		  <div class="navbar-header">
+		  <ul class="nav navbar-nav">
+		      <li><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
+                      <li class="active"><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
+                      <li class="active"><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
+                  </ul>
+          </div>
+          <!-- /.navbar-top-links -->
+          <div class="navbar-default sidebar" role="navigation">
+              <div class="sidebar-collapse">
+                  <ul class="nav" id="side-menu">
+                      <li class="sidebar-search">
+                          {% include 'searchbox.html' %}
+                      </li>
+                 </ul>
+                  <!-- /#side-menu -->
+              </div>
+              <!-- /.sidebar-collapse -->
+           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+          </div>
+          <!-- /.navbar-static-side -->
+      </nav>
+        <div id="page-wrapper">
+           </br>
+           {% include 'trending_graphs/Moduletrending.html' %}
+        </div>
+        <!-- /#page-wrapper -->
+
+        <script>
+            $(document).ready(function(){
+                /* Already defined variable (Before the input)
+                * 
+                * var chart_1_num_day = 5;
+                * var chart_2_num_day = 15;
+                *
+                */
+                
+                plot_top_graph("credential");
+                plot_top_graph("mail");
+                plot_top_graph("size");
+            });
+        </script>
+        
+        <script>
+            var chart_1_num_day = 5;
+            var chart_2_num_day = 15;
+            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+
+            function plot_top_graph(module_name){
+                /**** Flot Pie Chart ****/
+                var options = {
+                                  series: {  pie: {  show: true  } },
+                                  grid: { hoverable: true, clickable: true },
+                                  legend: { show: false  }
+                              };
+                
+                
+                moduleCharts = "size" == module_name ? "sizeCharts" : "moduleCharts";
+                // Graph1
+                $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
+                    function(data) {
+                              temp_data_pie = [];
+                              for(i=0; i<data.length; i++){
+                                  temp_data_pie.push({label: data[i][0], data: data[i][1]});
+                              }
+                              $.plot($("#flot-pie-chart-"+module_name), temp_data_pie, options);
+            
+                              setTimeout(function() { 
+                                 $("#flot-pie-chart-"+module_name).bind("plotclick", function (event, pos, item) {
+                                     if (item == null)
+                                         return; 
+                                     var clicked_label = item.series.label;
+                                     update_bar_chart("#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
+                                 });
+                              }, 500);
+                });
+                
+                    
+                // flot bar char
+                function update_bar_chart(chartID, involved_item, serie_color, num_day, timeformat){
+                    var barOptions = {
+                        series: {
+                            bars: { show: true, barWidth: 82800000 }
+                        },
+                        xaxis: {
+                            mode: "time",
+                            timeformat: timeformat,
+                            tickSize: [1, 'day'],
+                            minTickSize: [1, "day"]
+                        },
+                        grid: { hoverable: true },
+                        legend: { show: true },
+                        tooltip: true,
+                        tooltipOpts: { content: "x: %x, y: %y" }
+                    };
+                
+                    $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
+                        function(data) {
+                            var temp_data_bar = []
+                            for(i=0; i<data.length; i++){
+                                var curr_date = data[i][0].split('/');
+                                temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]), data[i][1]]);
+                            }
+                            var barData = {
+                                label: involved_item,
+                                data: temp_data_bar,
+                                color: serie_color
+                            };
+                            $.plot($(chartID), [barData], barOptions);
+                        });
+                };
+            };
+        </script>
+
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</body>
+
+</html>

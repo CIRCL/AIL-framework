@@ -61,9 +61,15 @@ if __name__ == "__main__":
                     if MX_values[0] > is_critical:
                         publisher.warning(to_print)
                         #Send to duplicate
-                        p.populate_set_out(filename)
+                        p.populate_set_out(filename, 'Duplicate')
+                        
                     else:
                         publisher.info(to_print)
+                #Send to ModuleStats 
+                for mail in MX_values[1]:
+                    print 'mail;{};{};{}'.format(1, mail, PST.p_date)
+                    p.populate_set_out('mail;{};{};{}'.format(1, mail, PST.p_date), 'ModuleStats')
+
             prec_filename = filename
 
         else:

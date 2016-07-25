@@ -66,7 +66,7 @@ if __name__ == "__main__":
                     publisher.warning('{}Checked {} valid number(s)'.format(
                         to_print, len(creditcard_set)))
                     #Send to duplicate
-                    p.populate_set_out(filename)
+                    p.populate_set_out(filepath, 'Redis_Duplicate')
                 else:
                     publisher.info('{}CreditCard related'.format(to_print))
         else:

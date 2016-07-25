@@ -163,6 +163,72 @@ def progressionCharts():
             member_set.append(("No relevant data", int(100)))
         return jsonify(member_set)
     
+@app.route("/_moduleCharts", methods=['GET'])
+def modulesCharts():
+    #To be used later
+    keyword_name = request.args.get('keywordName')
+    module_name = request.args.get('moduleName')
+    bar_requested = True if request.args.get('bar') == "true" else False
+    
+    if (bar_requested):
+        num_day = int(request.args.get('days'))
+        bar_values = []
+
+	date_range = get_date_range(num_day) 
+        # Retreive all data from the last num_day
+        for date in date_range:
+            curr_value = r_serv_charts.hget(date, module_name+'-'+keyword_name)
+            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
+        return jsonify(bar_values)
+ 
+    else:
+        redis_progression_name_set = 'top_'+ module_name +'_set'
+
+        member_set = []
+        for keyw in r_serv_charts.smembers(redis_progression_name_set):
+            redis_progression_name = module_name+'-'+keyw
+            keyw_value = r_serv_charts.hget(get_date_range(0)[0] ,redis_progression_name)
+            keyw_value = keyw_value if keyw_value is not None else 0
+            member_set.append((keyw, int(keyw_value)))
+        member_set.sort(key=lambda tup: tup[1], reverse=True)
+        if len(member_set) == 0:
+            member_set.append(("No relevant data", int(100)))
+        return jsonify(member_set)
+
+
+@app.route("/_sizeCharts", methods=['GET'])
+def sizeCharts():
+    #To be used later
+    keyword_name = request.args.get('keywordName')
+    module_name = request.args.get('moduleName')
+    bar_requested = True if request.args.get('bar') == "true" else False
+    
+    if (bar_requested):
+        num_day = int(request.args.get('days'))
+        bar_values = []
+
+	date_range = get_date_range(num_day) 
+        # Retreive all data from the last num_day
+        for date in date_range:
+            curr_value = r_serv_charts.hget(keyword_name+'_size', date)
+            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], float(curr_value if curr_value is not None else 0)])
+        return jsonify(bar_values)
+ 
+    else:
+        redis_progression_name_set = 'top_size_set'
+
+        member_set = []
+        for keyw in r_serv_charts.smembers(redis_progression_name_set):
+            redis_progression_name = keyw+'_size'
+            keyw_value = r_serv_charts.hget(redis_progression_name, get_date_range(0)[0])
+            keyw_value = keyw_value if keyw_value is not None else 0
+            member_set.append((keyw, float(keyw_value)))
+        member_set.sort(key=lambda tup: tup[1], reverse=True)
+        if len(member_set) == 0:
+            member_set.append(("No relevant data", float(100)))
+        return jsonify(member_set)
+
+
 
 @app.route("/search", methods=['POST'])
 def search():
@@ -225,6 +291,11 @@ def protocolstrending():
 def trending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Trending.html", default_display = default_display)
+
+
+@app.route("/moduletrending/")
+def moduletrending():
+    return render_template("Moduletrending.html")
 
 
 @app.route("/showsavedpaste/") #completely shows the paste in a new tab
