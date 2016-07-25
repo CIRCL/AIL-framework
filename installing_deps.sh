@@ -17,10 +17,6 @@ sudo apt-get install libadns1 libadns1-dev
 #Needed for redis-lvlDB
 sudo apt-get install libev-dev libgmp-dev
 
-#needed for mathplotlib
-test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
-sudo easy_install -U distribute
-
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/
@@ -51,9 +47,6 @@ if [ ! -f bin/packages/config.cfg ]; then
     cp bin/packages/config.cfg.sample bin/packages/config.cfg
 fi
 
-mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
-mkdir -p $AIL_HOME/LEVEL_DB_DATA/2016
-
 pushd var/www/
 ./update_thirdparty.sh
 popd
@@ -71,6 +64,9 @@ if [ -z "$VIRTUAL_ENV" ]; then
     . ./AILENV/bin/activate
 
 fi
+
+mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
+mkdir -p $AIL_HOME/LEVEL_DB_DATA/2016
 
 pip install -U pip
 pip install -U -r pip_packages_requirement.txt
