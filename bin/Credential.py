@@ -1,10 +1,12 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 import time
+import sys
 from packages import Paste
 from pubsublogger import publisher
 from Helper import Process
 import re
+from pyfaup.faup import Faup
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -38,16 +40,12 @@ if __name__ == "__main__":
         if len(creds) == 0:
             continue
 
-        sites_for_stats = []
-        for elem in re.findall(regex_site_for_stats, content):
-            sites.append(elem[1:-1])
-
-        sites = set(re.findall(regex_web, content))
-        sites_for_stats = set(sites_for_stats)
+        sites= re.findall(regex_web, content) #Use to count occurences
+        sites_set = set(re.findall(regex_web, content))
 
         message = 'Checked {} credentials found.'.format(len(creds))
-        if sites:
-            message += ' Related websites: {}'.format(', '.join(sites))
+        if sites_set:
+            message += ' Related websites: {}'.format(', '.join(sites_set))
 
         to_print = 'Credential;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message)
 
@@ -59,21 +57,21 @@ if __name__ == "__main__":
             #Send to duplicate
             p.populate_set_out(filepath, 'Duplicate')
             
-            #Put in form, then send to moduleStats
+            #Put in form, count occurences, then send to moduleStats
             creds_sites = {}
-            for cred in creds:
-                user_and_site, password = cred.split(':')
-                site = user_web.split('@')[1]
-                if site in sites: # if the parsing went fine
-                    if site in creds_sites.keys(): # check if the key already exists
-                        creds_sites[site] = creds_sites[web]+1
-                    else:
-                        creds_sites[site] = 1
-            for site, num in creds_sites.iteritems(): # Send for each different site to moduleStats
-               print 'Credential;{};{};{}'.format(num, site, paste.p_date)
-               #p.populate_set_out('Credential;{};{};{}'.format(num, site, paste.p_date), 'ModuleStats')
+            faup = Faup()
+            for url in sites:
+                faup.decode(url)
+                domain = faup.get()['domain']
+                if domain in creds_sites.keys():
+                    creds_sites[domain] += 1
+                else:
+                    creds_sites[domain] = 1
 
-            if sites:
-                print("=======> Probably on : {}".format(', '.join(sites)))
+            for site, num in creds_sites.iteritems(): # Send for each different site to moduleStats
+               p.populate_set_out('credential;{};{};{}'.format(num, site, paste.p_date), 'ModuleStats')
+
+            if sites_set:
+                print("=======> Probably on : {}".format(', '.join(sites_set)))
         else:
             publisher.info(to_print)

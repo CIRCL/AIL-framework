@@ -81,11 +81,11 @@
                               };
                 
                 
-                moduleCharts = "size" == module_name ? "sizeCharts" : "moduleCharts";
+                var moduleCharts = "size" == module_name ? "sizeCharts" : "moduleCharts";
                 // Graph1
                 $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
                     function(data) {
-                              temp_data_pie = [];
+                              var temp_data_pie = [];
                               for(i=0; i<data.length; i++){
                                   temp_data_pie.push({label: data[i][0], data: data[i][1]});
                               }
@@ -96,14 +96,14 @@
                                      if (item == null)
                                          return; 
                                      var clicked_label = item.series.label;
-                                     update_bar_chart("#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
+                                     update_bar_chart(moduleCharts, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
                                  });
                               }, 500);
                 });
                 
                     
                 // flot bar char
-                function update_bar_chart(chartID, involved_item, serie_color, num_day, timeformat){
+                function update_bar_chart(chartUrl, chartID, involved_item, serie_color, num_day, timeformat){
                     var barOptions = {
                         series: {
                             bars: { show: true, barWidth: 82800000 }
@@ -120,7 +120,7 @@
                         tooltipOpts: { content: "x: %x, y: %y" }
                     };
                 
-                    $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
+                    $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
                         function(data) {
                             var temp_data_bar = []
                             for(i=0; i<data.length; i++){

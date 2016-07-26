@@ -32,7 +32,6 @@ def compute_most_posted(server, message, num_day):
     module, num, keyword, paste_date = message.split(';')
 
     redis_progression_name_set = 'top_'+ module +'_set'
-
     # Add/Update in Redis
     prev_score = server.hget(paste_date, module+'-'+keyword)
     if prev_score is not None:
@@ -55,7 +54,9 @@ def compute_most_posted(server, message, num_day):
         #Check value for all members
         member_set = []
         for keyw in server.smembers(redis_progression_name_set):
-            member_set.append((keyw, int(server.hget(paste_date, module+'-'+keyw))))
+            keyw_value = server.hget(paste_date, module+'-'+keyw)
+            if keyw_value is not None:
+                member_set.append((keyw, int(keyw_value)))
         member_set.sort(key=lambda tup: tup[1])
         if member_set[0][1] < keyword_total_sum:
             #remove min from set and add the new one
@@ -111,10 +112,8 @@ def compute_provider_size(server, path, num_day_to_look):
         #    for date in date_range:
             curr_size = server.hget(provider+'_size', paste_date)
             curr_num = server.hget(provider+'_num', paste_date)
-            print curr_size
             if (curr_size is not None) and (curr_num is not None):
                 curr_avg += float(curr_size) / float(curr_num)
-                print str(curr_avg)
             member_set.append((provider, curr_avg))
         member_set.sort(key=lambda tup: tup[1])
         if member_set[0][1] < new_avg:
@@ -156,12 +155,11 @@ if __name__ == '__main__':
         if message is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
             print 'sleeping'
-            time.sleep(2)
+            time.sleep(20)
             continue
 
         else:
             # Do something with the message from the queue
-            print message.split(';')
             if len(message.split(';')) > 1:
                 compute_most_posted(r_serv_trend, message, num_day_to_look)
             else:
