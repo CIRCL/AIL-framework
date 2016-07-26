@@ -91,11 +91,11 @@
                                      if (data[0][1] > 0 && data[0][1] < 7){
                                          $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
                                          $("#panel-"+module_name).removeClass("panel-default")
-                                         $("#panel-"+module_name).addClass("panel-warning")
+                                         $("#panel-"+module_name).addClass("panel-info")
                                      } else if (data[0][1] > 6) {
                                          $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
                                          $("#panel-"+module_name).removeClass("panel-default")
-                                         $("#panel-"+module_name).addClass("panel-danger")
+                                         $("#panel-"+module_name).addClass("panel-warning")
                                      }
                                   } else {
                                       temp_data_pie.push({label: data[i][0], data: data[i][1]});
