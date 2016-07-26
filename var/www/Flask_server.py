@@ -116,7 +116,23 @@ def get_date_range(num_day):
         date_list.append(date.substract_day(i))
     return date_list
 
-
+def get_top_relevant_data(server, module_name):
+    redis_progression_name_set = 'top_'+ module_name +'_set'
+    days = 0 
+    for date in get_date_range(15):
+        member_set = []
+        for keyw in server.smembers(redis_progression_name_set):
+            redis_progression_name = module_name+'-'+keyw
+            keyw_value = server.hget(date ,redis_progression_name)
+            keyw_value = keyw_value if keyw_value is not None else 0
+            member_set.append((keyw, int(keyw_value)))
+        member_set.sort(key=lambda tup: tup[1], reverse=True)
+        if member_set[0][1] == 0: #No data for this date
+            days += 1
+            continue
+        else:
+            member_set.insert(0, ("passed_days", days))
+            return member_set
 
 
 
@@ -182,15 +198,7 @@ def modulesCharts():
         return jsonify(bar_values)
  
     else:
-        redis_progression_name_set = 'top_'+ module_name +'_set'
-
-        member_set = []
-        for keyw in r_serv_charts.smembers(redis_progression_name_set):
-            redis_progression_name = module_name+'-'+keyw
-            keyw_value = r_serv_charts.hget(get_date_range(0)[0] ,redis_progression_name)
-            keyw_value = keyw_value if keyw_value is not None else 0
-            member_set.append((keyw, int(keyw_value)))
-        member_set.sort(key=lambda tup: tup[1], reverse=True)
+        member_set = get_top_relevant_data(r_serv_charts, module_name)
         if len(member_set) == 0:
             member_set.append(("No relevant data", int(100)))
         return jsonify(member_set)

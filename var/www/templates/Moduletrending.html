@@ -87,7 +87,19 @@
                     function(data) {
                               var temp_data_pie = [];
                               for(i=0; i<data.length; i++){
-                                  temp_data_pie.push({label: data[i][0], data: data[i][1]});
+                                  if (i==0 && data[0][0] == "passed_days"){ //If there is no data today, take it from the past
+                                     if (data[0][1] > 0 && data[0][1] < 7){
+                                         $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
+                                         $("#panel-"+module_name).removeClass("panel-default")
+                                         $("#panel-"+module_name).addClass("panel-warning")
+                                     } else if (data[0][1] > 6) {
+                                         $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
+                                         $("#panel-"+module_name).removeClass("panel-default")
+                                         $("#panel-"+module_name).addClass("panel-danger")
+                                     }
+                                  } else {
+                                      temp_data_pie.push({label: data[i][0], data: data[i][1]});
+                                  }
                               }
                               $.plot($("#flot-pie-chart-"+module_name), temp_data_pie, options);
             
