@@ -18,6 +18,7 @@
           <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
 
 	</head>
 	<body>
@@ -72,16 +73,41 @@
             var chart_2_num_day = 15;
             $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 
+
+function labelFormatter(label, series) {
+    return "<div style='font-size:8pt; text-align:center; padding:2px; color:white;'>"
++ label + "<br/>" + Math.round(series.percent) + "%</div>";
+}
+
             function plot_top_graph(module_name){
                 /**** Flot Pie Chart ****/
                 var options = {
-                                  series: {  pie: {  show: true  } },
+                                  series: {  pie: {  show: true,
+                                                     radius: 3/5,
+                                                     combine: {
+                                                         color: '#999',
+                                                         threshold: 0.05
+                                                     },
+                                                     label: {
+                                                         show: true,
+                                                         radius: 1,
+                                                         formatter: labelFormatter,
+                                                         background: {
+                                                             opacity: 0.5,
+                                                             color: '#000'
+                                                         }
+                                                     }
+                                             }
+                                  },
                                   grid: { hoverable: true, clickable: true },
-                                  legend: { show: false  }
+                                  legend: { show: false  },
+                                  
                               };
                 
                 
                 var moduleCharts = "size" == module_name ? "sizeCharts" : "moduleCharts";
+                var tot_sum = 0;
+                var data_other = [];
                 // Graph1
                 $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
                     function(data) {
@@ -90,19 +116,23 @@
                                   if (i==0 && data[0][0] == "passed_days"){ //If there is no data today, take it from the past
                                      if (data[0][1] > 0 && data[0][1] < 7){
                                          $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
-                                         $("#panel-"+module_name).removeClass("panel-default")
-                                         $("#panel-"+module_name).addClass("panel-info")
+                                         $("#panel-"+module_name).removeClass("panel-green")
+                                         $("#panel-"+module_name).addClass("panel-yellow")
                                      } else if (data[0][1] > 6) {
                                          $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
-                                         $("#panel-"+module_name).removeClass("panel-default")
-                                         $("#panel-"+module_name).addClass("panel-warning")
+                                         $("#panel-"+module_name).removeClass("panel-green")
+                                         $("#panel-"+module_name).addClass("panel-red")
                                      }
                                   } else {
                                       temp_data_pie.push({label: data[i][0], data: data[i][1]});
+                                      tot_sum += data[i][1]
                                   }
                               }
+                              for(i=0; i<temp_data_pie.length; i++){
+                                  if (parseInt(temp_data_pie[i].data) / tot_sum < 0.05)
+                                      data_other.push(temp_data_pie[i].label);
+                              }
                               $.plot($("#flot-pie-chart-"+module_name), temp_data_pie, options);
-            
                               setTimeout(function() { 
                                  $("#flot-pie-chart-"+module_name).bind("plotclick", function (event, pos, item) {
                                      if (item == null)
@@ -127,25 +157,77 @@
                             minTickSize: [1, "day"]
                         },
                         grid: { hoverable: true },
-                        legend: { show: true },
+                        legend: { show: true,
+                                  noColumns: 0,
+                                  position: "nw"
+                        },
                         tooltip: true,
                         tooltipOpts: { content: "x: %x, y: %y" }
                     };
-                
-                    $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
-                        function(data) {
-                            var temp_data_bar = []
-                            for(i=0; i<data.length; i++){
-                                var curr_date = data[i][0].split('/');
-                                temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]), data[i][1]]);
-                            }
+
+                    if (involved_item == "Other"){
+                        var all_other_temp_data = []
+                        var temp_data_bar = []
+                        for(i=0; i<data_other.length; i++){
+                            $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+data_other[i]+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
+                                function(data) {
+                                    temp_data_bar = []
+                                    for(i=0; i<data.length; i++){
+                                        var curr_date = data[i][0].split('/');
+                                        temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]), data[i][1]]);
+                                    }
+                                all_other_temp_data.push(temp_data_bar);
+                                });
                             var barData = {
                                 label: involved_item,
-                                data: temp_data_bar,
+                                data: all_other_temp_data,
                                 color: serie_color
                             };
-                            $.plot($(chartID), [barData], barOptions);
-                        });
+                        }
+                        
+                        setTimeout(function() { 
+                            var dataBar = []
+                            for(i=0; i<data_other.length; i++)
+                                dataBar.push({label: data_other[i], data: all_other_temp_data[i]})
+                            $.plot($(chartID), dataBar, {
+		    		series: {
+		    			stack: true,
+		    			lines: { show: false, fill: true, steps: false },
+		    			bars: { show: true, barWidth: 82800000 },
+		    		},
+                                xaxis: {
+                                    mode: "time",
+                                    timeformat: timeformat,
+                                    tickSize: [1, 'day'],
+                                    minTickSize: [1, "day"]
+                                },
+                                grid: { hoverable: true },
+                                legend: { show: true,
+                                  noColumns: 1,
+                                  position: "nw"
+                                },
+                                tooltip: true,
+                                tooltipOpts: { content: "x: %x, y: %y" }
+        		    });
+                        }, 750);
+        
+                    } else {
+
+                        $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
+                            function(data) {
+                                var temp_data_bar = []
+                                for(i=0; i<data.length; i++){
+                                    var curr_date = data[i][0].split('/');
+                                    temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]), data[i][1]]);
+                                }
+                                var barData = {
+                                    label: involved_item,
+                                    data: temp_data_bar,
+                                    color: serie_color
+                                };
+                                $.plot($(chartID), [barData], barOptions);
+                            });
+                    }
                 };
             };
         </script>
