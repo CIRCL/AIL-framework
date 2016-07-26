@@ -47,6 +47,9 @@ def compute_most_posted(server, message, num_day):
         curr_value = server.hget(date, module+'-'+keyword)
         keyword_total_sum += int(curr_value) if curr_value is not None else 0
         
+    if keyword in server.smembers(redis_progression_name_set): # if it is already in the set
+        return
+
     if (server.scard(redis_progression_name_set) < max_set_cardinality):
         server.sadd(redis_progression_name_set, keyword)
 
@@ -91,25 +94,19 @@ def compute_provider_size(server, path, num_day_to_look):
         server.hset(paste_provider+'_num', paste_date, 1)
 
     # Compute Most Posted
-    #date_range = get_date_range(num_day_to_look) 
     # check if this keyword is eligible for progression
-    provider_total_sum = 0 
-    #for date in date_range:
-    #    curr_value = server.hget(paste_provider+'_size', date)
-    #    provider_total_sum += int(curr_value) if curr_value is not None else 0
         
-    #if paste_provider in server.smembers(redis_progression_name_set): # if it is already in the set
-    #    return
+    if paste_provider in server.smembers(redis_progression_name_set): # if it is already in the set
+        return
 
-    if (server.scard(redis_progression_name_set) < max_set_cardinality):
+    elif (server.scard(redis_progression_name_set) < max_set_cardinality):
         server.sadd(redis_progression_name_set, paste_provider)
 
-    else: #not in the set
+    else: #set full capacity
         #Check value for all members
         member_set = []
         for provider in server.smembers(redis_progression_name_set):
             curr_avg = 0.0
-        #    for date in date_range:
             curr_size = server.hget(provider+'_size', paste_date)
             curr_num = server.hget(provider+'_num', paste_date)
             if (curr_size is not None) and (curr_num is not None):
@@ -119,7 +116,6 @@ def compute_provider_size(server, path, num_day_to_look):
         if member_set[0][1] < new_avg:
             #remove min from set and add the new one
             print 'Adding ' +paste_provider+ '(' +str(new_avg)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
-            server.srem(redis_progression_name_set, member_set[0][0])
             server.srem(redis_progression_name_set, member_set[0][0])
             server.sadd(redis_progression_name_set, paste_provider)
 
