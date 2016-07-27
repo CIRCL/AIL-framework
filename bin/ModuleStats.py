@@ -68,9 +68,10 @@ def compute_most_posted(server, message, num_day):
             server.sadd(redis_progression_name_set, keyword)
 
 
-def compute_provider_size(server, path, num_day_to_look):
+def compute_provider_info(server, path, num_day_to_look):
     
-    redis_progression_name_set = 'top_size_set'
+    redis_avg_size_name_set = 'top_size_set'
+    redis_providers_name_set = 'providers_set'
     paste = Paste.Paste(path)
     
     paste_size = paste._get_p_size()
@@ -79,6 +80,7 @@ def compute_provider_size(server, path, num_day_to_look):
     new_avg = paste_size
 
     # Add/Update in Redis
+    server.sadd(redis_providers_name_set, paste_provider)
     prev_num_paste = server.hget(paste_provider+'_num', paste_date)
     if prev_num_paste is not None:
         server.hset(paste_provider+'_num', paste_date, int(prev_num_paste)+1)
@@ -96,16 +98,16 @@ def compute_provider_size(server, path, num_day_to_look):
     # Compute Most Posted
     # check if this keyword is eligible for progression
         
-    if paste_provider in server.smembers(redis_progression_name_set): # if it is already in the set
+    if paste_provider in server.smembers(redis_avg_size_name_set): # if it is already in the set
         return
 
-    elif (server.scard(redis_progression_name_set) < max_set_cardinality):
-        server.sadd(redis_progression_name_set, paste_provider)
+    elif (server.scard(redis_avg_size_name_set) < max_set_cardinality):
+        server.sadd(redis_avg_size_name_set, paste_provider)
 
     else: #set full capacity
         #Check value for all members
         member_set = []
-        for provider in server.smembers(redis_progression_name_set):
+        for provider in server.smembers(redis_avg_size_name_set):
             curr_avg = 0.0
             curr_size = server.hget(provider+'_size', paste_date)
             curr_num = server.hget(provider+'_num', paste_date)
@@ -116,8 +118,8 @@ def compute_provider_size(server, path, num_day_to_look):
         if member_set[0][1] < new_avg:
             #remove min from set and add the new one
             print 'Adding ' +paste_provider+ '(' +str(new_avg)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
-            server.srem(redis_progression_name_set, member_set[0][0])
-            server.sadd(redis_progression_name_set, paste_provider)
+            server.srem(redis_avg_size_name_set, member_set[0][0])
+            server.sadd(redis_avg_size_name_set, paste_provider)
 
 
 
@@ -159,4 +161,4 @@ if __name__ == '__main__':
             if len(message.split(';')) > 1:
                 compute_most_posted(r_serv_trend, message, num_day_to_look)
             else:
-                compute_provider_size(r_serv_trend, message, num_day_to_look)
+                compute_provider_info(r_serv_trend, message, num_day_to_look)

@@ -65,6 +65,7 @@
                 plot_top_graph("credential");
                 plot_top_graph("mail");
                 plot_top_graph("size");
+                plot_top_graph("number");
             });
         </script>
         
@@ -105,7 +106,7 @@ function labelFormatter(label, series) {
                               };
                 
                 
-                var moduleCharts = "size" == module_name ? "sizeCharts" : "moduleCharts";
+                var moduleCharts = "size" == module_name ? "sizeCharts" : ("number" == module_name ? "numberChart" : "moduleCharts");
                 var tot_sum = 0;
                 var data_other = [];
                 // Graph1
