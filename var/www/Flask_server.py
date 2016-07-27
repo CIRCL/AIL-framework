@@ -116,6 +116,8 @@ def get_date_range(num_day):
         date_list.append(date.substract_day(i))
     return date_list
 
+# Iterate over elements in the module provided and return the today data or the last data
+# return format: [('passed_days', num_of_passed_days), ('elem_name1', elem_value1), ('elem_name2', elem_value2)]]
 def get_top_relevant_data(server, module_name):
     redis_progression_name_set = 'top_'+ module_name +'_set'
     days = 0 
@@ -149,7 +151,6 @@ def stuff():
 
 @app.route("/_progressionCharts", methods=['GET'])
 def progressionCharts():
-    #To be used later
     attribute_name = request.args.get('attributeName')
     trending_name = request.args.get('trendingName')
     bar_requested = True if request.args.get('bar') == "true" else False
@@ -169,6 +170,7 @@ def progressionCharts():
         redis_progression_name = 'top_progression_'+trending_name
         redis_progression_name_set = 'top_progression_'+trending_name+'_set'
 
+        # Iterate over element in top_x_set and retreive their value
         member_set = []
         for keyw in r_serv_charts.smembers(redis_progression_name_set):
             keyw_value = r_serv_charts.hget(redis_progression_name, keyw)
@@ -181,7 +183,6 @@ def progressionCharts():
     
 @app.route("/_moduleCharts", methods=['GET'])
 def modulesCharts():
-    #To be used later
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
     bar_requested = True if request.args.get('bar') == "true" else False
@@ -204,9 +205,8 @@ def modulesCharts():
         return jsonify(member_set)
 
 
-@app.route("/_sizeCharts", methods=['GET'])
-def sizeCharts():
-    #To be used later
+@app.route("/_providersChart", methods=['GET'])
+def providersChart():
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
     bar_requested = True if request.args.get('bar') == "true" else False
@@ -218,56 +218,25 @@ def sizeCharts():
 	date_range = get_date_range(num_day) 
         # Retreive all data from the last num_day
         for date in date_range:
-            curr_value = r_serv_charts.hget(keyword_name+'_size', date)
-            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], float(curr_value if curr_value is not None else 0)])
+            curr_value = r_serv_charts.hget(keyword_name+'_'+module_name, date)
+            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], float(curr_value if curr_value is not None else 0.0)])
         return jsonify(bar_values)
  
     else:
-        redis_progression_name_set = 'top_size_set'
+        redis_provider_name_set = 'top_size_set' if module_name == "size" else 'providers_set'
 
+        # Iterate over element in top_x_set and retreive their value
         member_set = []
-        for keyw in r_serv_charts.smembers(redis_progression_name_set):
-            redis_progression_name = keyw+'_size'
-            keyw_value = r_serv_charts.hget(redis_progression_name, get_date_range(0)[0])
-            keyw_value = keyw_value if keyw_value is not None else 0
+        for keyw in r_serv_charts.smembers(redis_provider_name_set):
+            redis_provider_name = keyw+'_'+module_name
+            keyw_value = r_serv_charts.hget(redis_provider_name, get_date_range(0)[0])
+            keyw_value = keyw_value if keyw_value is not None else 0.0
             member_set.append((keyw, float(keyw_value)))
         member_set.sort(key=lambda tup: tup[1], reverse=True)
         if len(member_set) == 0:
             member_set.append(("No relevant data", float(100)))
         return jsonify(member_set)
 
-
-@app.route("/_numberChart", methods=['GET'])
-def numberChart():
-    #To be used later
-    keyword_name = request.args.get('keywordName')
-    module_name = request.args.get('moduleName')
-    bar_requested = True if request.args.get('bar') == "true" else False
-    
-    if (bar_requested):
-        num_day = int(request.args.get('days'))
-        bar_values = []
-
-	date_range = get_date_range(num_day) 
-        # Retreive all data from the last num_day
-        for date in date_range:
-            curr_value = r_serv_charts.hget(keyword_name+'_num', date)
-            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
-        return jsonify(bar_values)
- 
-    else:
-        redis_provider_name_set = 'providers_set'
-
-        member_set = []
-        for keyw in r_serv_charts.smembers(redis_provider_name_set):
-            redis_provider_name = keyw+'_num'
-            keyw_value = r_serv_charts.hget(redis_provider_name, get_date_range(0)[0])
-            keyw_value = keyw_value if keyw_value is not None else 0
-            member_set.append((keyw, int(keyw_value)))
-        member_set.sort(key=lambda tup: tup[1], reverse=True)
-        if len(member_set) == 0:
-            member_set.append(("No relevant data", int(100)))
-        return jsonify(member_set)
 
 
 @app.route("/search", methods=['POST'])

@@ -39,7 +39,7 @@ function plot_top_graph(module_name){
     /**** Pie Chart ****/
     
     // moduleCharts is used the decide the url to request data
-    var moduleCharts = "size" == module_name ? "sizeCharts" : ("number" == module_name ? "numberChart" : "moduleCharts");
+    var moduleCharts = "size" == module_name ? "providersChart" : ("num" == module_name ? "providersChart" : "moduleCharts");
     var tot_sum = 0; // used to detect elements putted in 'Other' pie's part
     var data_other = []; // used to detect elements putted in 'Other' pie's part
 
