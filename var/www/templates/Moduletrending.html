@@ -28,7 +28,7 @@
 		  <div class="navbar-header">
 		  <ul class="nav navbar-nav">
 		      <li><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-                      <li class="active"><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
+                      <li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
                       <li class="active"><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
                   </ul>
           </div>
@@ -62,18 +62,18 @@
         <script src="{{ url_for('static', filename='js/moduleTrending.js') }}"></script>
         <script>
             $(document).ready(function(){
-               refreshPlot(); 
+               refreshPlot(true); 
             });
 
-            function refreshPlot(){
+            function refreshPlot(init){
                 refreshAnimation();
 
-                plot_top_graph("credential");
-                plot_top_graph("mail");
-                plot_top_graph("size");
-                plot_top_graph("num");
+                plot_top_graph("credential", init);
+                plot_top_graph("mail", init);
+                plot_top_graph("size", init);
+                plot_top_graph("num", init);
 
-                setTimeout(refreshPlot, 10000);
+                setTimeout(function(){ refreshPlot(false); }, 10000);
             }
 
             function refreshAnimation(){

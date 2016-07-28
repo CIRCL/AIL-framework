@@ -34,17 +34,17 @@ function labelFormatter(label, series) {
 }
 
 
-function plot_top_graph(module_name){
+function plot_top_graph(module_name, init){
 
     /**** Pie Chart ****/
     
     // moduleCharts is used the decide the url to request data
     var moduleCharts = "size" == module_name ? "providersChart" : ("num" == module_name ? "providersChart" : "moduleCharts");
-    var tot_sum = 0; // used to detect elements putted in 'Other' pie's part
-    var data_other = []; // used to detect elements putted in 'Other' pie's part
+    var tot_sum = 0; // used to detect elements placed in 'Other' pie's part
+    var data_other = []; // used to detect elements placed in 'Other' pie's part
 
 
-    $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
+    var createPie = $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
         function(data) {
                   var temp_data_pie = [];
                   for(i=0; i<data.length; i++){
@@ -70,12 +70,14 @@ function plot_top_graph(module_name){
 
                   $.plot($("#flot-pie-chart-"+module_name), temp_data_pie, options);
 
-                  $("#flot-pie-chart-"+module_name).bind("plotclick", function (event, pos, item) {
-                      if (item == null)
-                          return; 
-                      var clicked_label = item.series.label;
-                      update_bar_chart(moduleCharts, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
-                  });
+                  if (init){
+                      $("#flot-pie-chart-"+module_name).bind("plotclick", function (event, pos, item) {
+                          if (item == null)
+                              return; 
+                          var clicked_label = item.series.label;
+                          update_bar_chart(moduleCharts, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
+                      });
+                  }
     });
     
         
@@ -84,8 +86,8 @@ function plot_top_graph(module_name){
     function update_bar_chart(chartUrl, chartID, involved_item, serie_color, num_day, timeformat){
         var barOptions = {
             series: {
-                bars: { show: false, barWidth: 82800000 },
-                lines: { show: true, fill: true }
+                bars: { show: true, barWidth: 82800000 },
+                lines: { show: false, fill: true }
             },
             xaxis: {
                 mode: "time",
@@ -106,36 +108,33 @@ function plot_top_graph(module_name){
             var all_other_temp_data = [];
             var temp_data_bar = [];
             var promises = []; // Use to plot when everything have been received
+            var involved_item
             for(i=0; i<data_other.length; i++){ // Get data for elements summed up in the part 'Other'
-                promises.push(
-                    $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+data_other[i]+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
+                involved_item = data_other[i];
+                var request = $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
                         function(data) {
                             temp_data_bar = []
-                            for(i=0; i<data.length; i++){
+                            for(i=1; i<data.length; i++){
                                 var curr_date = data[i][0].split('/');
-                                temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]), data[i][1]]);
+                                var offset = (data_other.length/2 - data_other.indexOf(data[0]))*10000000
+                                temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset, data[i][1]]);
                             }
-                        all_other_temp_data.push(temp_data_bar);
+                            all_other_temp_data.push([ data[0], temp_data_bar ]); 
                         }
-                    )
-                );
-                var barData = {
-                    label: involved_item,
-                    data: all_other_temp_data,
-                    color: serie_color
-                };
+                )
+                promises.push(request);
             }
 
-            $.when.apply($, promises).done( function () {
+            $.when.apply($, promises).done( function (arg) {
                 var dataBar = []
-                for(i=0; i<data_other.length; i++) //format data for the plot
-                    dataBar.push({label: data_other[i], data: all_other_temp_data[i]})
-            
+                for(i=0; i<all_other_temp_data.length; i++) //format data for the plot
+                    dataBar.push({bars: { barWidth: 8280000 }, label: all_other_temp_data[i][0], data: all_other_temp_data[i][1]})
+
                 $.plot($(chartID), dataBar, {
                 	series: {
-                		stack: true,
-                		lines: { show: true, fill: true, steps: false },
-                		bars: { show: false, barWidth: 82800000 },
+                		stack: false,
+                		lines: { show: false, fill: true, steps: false },
+                		bars: { show: true},
                 	},
                     xaxis: {
                         mode: "time",
@@ -158,7 +157,7 @@ function plot_top_graph(module_name){
             $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
                 function(data) {
                     var temp_data_bar = []
-                    for(i=0; i<data.length; i++){
+                    for(i=1; i<data.length; i++){
                         var curr_date = data[i][0].split('/');
                         temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]), data[i][1]]);
                     }

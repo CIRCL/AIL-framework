@@ -196,6 +196,7 @@ def modulesCharts():
         for date in date_range:
             curr_value = r_serv_charts.hget(date, module_name+'-'+keyword_name)
             bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
+        bar_values.insert(0, keyword_name)
         return jsonify(bar_values)
  
     else:
@@ -220,6 +221,7 @@ def providersChart():
         for date in date_range:
             curr_value = r_serv_charts.hget(keyword_name+'_'+module_name, date)
             bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], float(curr_value if curr_value is not None else 0.0)])
+        bar_values.insert(0, keyword_name)
         return jsonify(bar_values)
  
     else:
