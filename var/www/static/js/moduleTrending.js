@@ -76,6 +76,21 @@ function plot_top_graph(module_name, init){
                               return; 
                           var clicked_label = item.series.label;
                           update_bar_chart(moduleCharts, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
+
+
+                          $("#flot-bar-chart-"+module_name).bind("plothover", function (event, pos, item) {
+                             if (item) {
+                                 var x = item.datapoint[0].toFixed(2);
+                                 var y = item.datapoint[1].toFixed(2);
+                                 var date = new Date(parseInt(x));
+                                 date = date.getMonth()+'/'+date.getDate();
+                          
+                                 $("#tooltip_graph-"+module_name).html(item.series.label + " of " + date + " = <b>" + y+"</b>")
+                                     .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
+                                     .fadeIn(200);
+                             } else {
+                             }
+                          });
                       });
                   }
     });
@@ -100,8 +115,6 @@ function plot_top_graph(module_name, init){
                       noColumns: 0,
                       position: "nw"
             },
-            tooltip: true,
-            tooltipOpts: { content: "x: %x, y: %y" }
         };
 
         if (involved_item == "Other"){ // If part 'Other' has been clicked
@@ -142,6 +155,9 @@ function plot_top_graph(module_name, init){
                         tickSize: [1, 'day'],
                         minTickSize: [1, "day"]
                     },
+                    yaxis: {
+                        transform: function (v) { return v < 1 ? v : Math.log(v); }
+                    },
                     grid: { hoverable: true },
                     legend: { show: true,
                       noColumns: 1,
@@ -149,7 +165,10 @@ function plot_top_graph(module_name, init){
                     },
                     tooltip: true,
                     tooltipOpts: { content: "x: %x, y: %y" }
-                });
+                })
+
+                
+
             });
 
         } else { // Normal pie's part clicked
