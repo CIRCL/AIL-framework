@@ -28,6 +28,9 @@ var options = {
          legend: { show: false  },
      };
 
+var plot_data_old = []
+var plot_old = []
+
 function labelFormatter(label, series) {
     return "<div style='font-size:8pt; text-align:center; padding:2px; color:white;'>"
                + label + "<br/>" + Math.round(series.percent) + "%</div>";
@@ -42,7 +45,6 @@ function plot_top_graph(module_name, init){
     var moduleCharts = "size" == module_name ? "providersChart" : ("num" == module_name ? "providersChart" : "moduleCharts");
     var tot_sum = 0; // used to detect elements placed in 'Other' pie's part
     var data_other = []; // used to detect elements placed in 'Other' pie's part
-
 
     var createPie = $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
         function(data) {
@@ -75,22 +77,17 @@ function plot_top_graph(module_name, init){
                           if (item == null)
                               return; 
                           var clicked_label = item.series.label;
-                          update_bar_chart(moduleCharts, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
-
-
-                          $("#flot-bar-chart-"+module_name).bind("plothover", function (event, pos, item) {
-                             if (item) {
-                                 var x = item.datapoint[0].toFixed(2);
-                                 var y = item.datapoint[1].toFixed(2);
-                                 var date = new Date(parseInt(x));
-                                 date = date.getMonth()+'/'+date.getDate();
                           
-                                 $("#tooltip_graph-"+module_name).html(item.series.label + " of " + date + " = <b>" + y+"</b>")
-                                     .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
-                                     .fadeIn(200);
-                             } else {
-                             }
-                          });
+                          if (module_name == "size"){
+                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d", false);
+                              update_bar_chart(moduleCharts, "num", "#flot-bar-chart-"+"num", clicked_label, item.series.color, chart_1_num_day, "%m/%d", true);
+                          }
+                          else if (module_name == "num"){
+                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d", false);
+                              update_bar_chart(moduleCharts, "size", "#flot-bar-chart-"+"size", clicked_label, item.series.color, chart_1_num_day, "%m/%d", true);
+                          } else {
+                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label, item.series.color, chart_1_num_day, "%m/%d", true);
+                          }                          
                       });
                   }
     });
@@ -98,7 +95,7 @@ function plot_top_graph(module_name, init){
         
     /**** Bar Chart ****/
 
-    function update_bar_chart(chartUrl, chartID, involved_item, serie_color, num_day, timeformat){
+    function update_bar_chart(chartUrl, module_name, chartID, involved_item, serie_color, num_day, timeformat, can_bind){
         var barOptions = {
             series: {
                 bars: { show: true, barWidth: 82800000 },
@@ -167,8 +164,6 @@ function plot_top_graph(module_name, init){
                     tooltipOpts: { content: "x: %x, y: %y" }
                 })
 
-                
-
             });
 
         } else { // Normal pie's part clicked
@@ -185,8 +180,79 @@ function plot_top_graph(module_name, init){
                         data: temp_data_bar,
                         color: serie_color
                     };
-                    $.plot($(chartID), [barData], barOptions);
+                    var plot = $.plot($(chartID), [barData], barOptions);
+                    if (plot_data_old.length<2){
+                        plot_data_old.push(plot.getData()); 
+                        plot_old.push(plot); 
+                    } else {
+                        plot_data_old = [];
+                        plot_old = [];
+                        plot_data_old.push(plot.getData());
+                        plot_old.push(plot);
+                    }
+                    if (can_bind){
+                        binder(module_name);
+                        if (module_name == "size")
+                            binder("num");
+                        else if (module_name == "num")
+                            binder("size");
+                    }
                 });
         }
     };
+}
+
+function binder(module_name){
+console.log(module_name);
+console.log(plot_data_old);
+    $("#flot-bar-chart-"+module_name).bind("plothover", function (event, pos, item) {
+       if (item) {
+           var x = item.datapoint[0]
+           var y = item.datapoint[1]
+           var date = new Date(parseInt(x));
+           var formated_date = date.getMonth()+'/'+date.getDate();
+    
+           $("#tooltip_graph-"+module_name).html(item.series.label + " of " + formated_date + " = <b>" + y+"</b>")
+               .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
+               .fadeIn(200);
+
+           var plot_other = plot_data_old[0];
+           if (plot_other.length > 0){
+               var data_other = plot_other[0].data;
+               for(i=0; i<data_other.length; i++){
+                   if (data_other[i][0].getTime() == date.getTime())
+                       if(y == data_other[i][1]){ // Avoid swap due to race condition
+                           var other_graph_plot = plot_old[1];
+                           var curr_data_other = plot_data_old[1][0].data[i][1];
+                           var datapoint = i;
+                       } else {
+                           var other_graph_plot = plot_old[0];
+                           var curr_data_other = data_other[i][1];
+                           var datapoint = i;
+                       }
+               }
+               if (module_name == "size"){
+                   $("#tooltip_graph-"+"num").html(item.series.label + " of " + formated_date + " = <b>" + curr_data_other+"</b>")
+                       .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
+                       .fadeIn(200);
+                   for(i=0; i<data_other.length; i++)
+                       other_graph_plot.unhighlight(0, i);
+                   other_graph_plot.highlight(0, datapoint);
+               }
+               else if (module_name == "num"){
+                   $("#tooltip_graph-"+"size").html(item.series.label + " of " + formated_date + " = <b>" + curr_data_other+"</b>")
+                       .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
+                       .fadeIn(200);
+                   for(i=0; i<data_other.length; i++)
+                       other_graph_plot.unhighlight(0, i);
+                   other_graph_plot.highlight(0, datapoint);
+               }
+           } else {
+           }
+       } else {
+           for(i=0; i<plot_old.length; i++)
+               for(j=0; j<plot_data_old[0][0].data.length; j++)
+                   plot_old[i].unhighlight(0, j);
+       }
+    });
 }
