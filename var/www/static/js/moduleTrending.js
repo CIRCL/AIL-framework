@@ -67,7 +67,7 @@ function plot_top_graph(module_name, init){
                   }
                   for(i=0; i<temp_data_pie.length; i++){ // Detect element below a certain threshold
                       if (parseInt(temp_data_pie[i].data) / tot_sum < pie_threshold)
-                          data_other.push(temp_data_pie[i].label);
+                          data_other.splice(i, 0, temp_data_pie[i].label);
                   }
 
                   $.plot($("#flot-pie-chart-"+module_name), temp_data_pie, options);
@@ -127,25 +127,23 @@ function plot_top_graph(module_name, init){
                             for(i=1; i<data.length; i++){
                                 var curr_date = data[i][0].split('/');
                                 var offset = (data_other.length/2 - data_other.indexOf(data[0]))*10000000
-                                temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset, data[i][1]]);
+                                temp_data_bar.splice(i, 0, [new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset, data[i][1]]);
                             }
-                            all_other_temp_data.push([ data[0], temp_data_bar ]); 
+                            all_other_temp_data.splice(data_other.indexOf(data[0]), 0, [ data[0], temp_data_bar, data_other.indexOf(data[0])]); 
                         }
                 )
-                promises.push(request);
+                promises.splice(i, 0, request);
             }
-
             $.when.apply($, promises).done( function (arg) {
                 var dataBar = []
                 for(i=0; i<all_other_temp_data.length; i++) //format data for the plot
-                    dataBar.push({bars: { barWidth: 8280000 }, label: all_other_temp_data[i][0], data: all_other_temp_data[i][1]})
-
-                $.plot($(chartID), dataBar, {
-                	series: {
-                		stack: false,
-                		lines: { show: false, fill: true, steps: false },
-                		bars: { show: true},
-                	},
+                    dataBar.splice(i, 0, {bars: { barWidth: 8280000, order: all_other_temp_data[i][2] }, label: all_other_temp_data[i][0], data: all_other_temp_data[i][1]});
+                var plot = $.plot($(chartID), dataBar, {
+                    series: {
+                    	stack: false,
+                    	lines: { show: false, fill: true, steps: false },
+                    	bars: { show: true},
+                    },
                     xaxis: {
                         mode: "time",
                         timeformat: timeformat,
@@ -161,8 +159,25 @@ function plot_top_graph(module_name, init){
                       position: "nw"
                     },
                     tooltip: true,
-                    tooltipOpts: { content: "x: %x, y: %y" }
+                    tooltipOpts: { content: "x: %x, y: %y" },
+                    colors: ["#72a555", "#ab62c0", "#c57c3c", "#638ccc", "#ca5670"]
                 })
+                if (plot_data_old.length<2){
+                    plot_data_old.push(plot.getData()); 
+                    plot_old.push(plot); 
+                } else {
+                    plot_data_old = [];
+                    plot_old = [];
+                    plot_data_old.push(plot.getData());
+                    plot_old.push(plot);
+                }
+                if (can_bind){
+                    binder(module_name);
+                    if (module_name == "size")
+                        binder("num");
+                    else if (module_name == "num")
+                        binder("size");
+                }
 
             });
 
@@ -173,7 +188,7 @@ function plot_top_graph(module_name, init){
                     var temp_data_bar = []
                     for(i=1; i<data.length; i++){
                         var curr_date = data[i][0].split('/');
-                        temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]), data[i][1]]);
+                        temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime(), data[i][1]]);
                     }
                     var barData = {
                         label: involved_item,
@@ -203,8 +218,6 @@ function plot_top_graph(module_name, init){
 }
 
 function binder(module_name){
-console.log(module_name);
-console.log(plot_data_old);
     $("#flot-bar-chart-"+module_name).bind("plothover", function (event, pos, item) {
        if (item) {
            var x = item.datapoint[0]
@@ -215,39 +228,42 @@ console.log(plot_data_old);
            $("#tooltip_graph-"+module_name).html(item.series.label + " of " + formated_date + " = <b>" + y+"</b>")
                .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
                .fadeIn(200);
-
-           var plot_other = plot_data_old[0];
-           if (plot_other.length > 0){
-               var data_other = plot_other[0].data;
+           var plot_obj = plot_data_old[0]; //contain series
+           for(serie=0; serie<plot_obj.length; serie++){
+               var data_other = plot_obj[serie].data;
                for(i=0; i<data_other.length; i++){
-                   if (data_other[i][0].getTime() == date.getTime())
+                   if (data_other[i][0] == date.getTime()){
                        if(y == data_other[i][1]){ // Avoid swap due to race condition
                            var other_graph_plot = plot_old[1];
-                           var curr_data_other = plot_data_old[1][0].data[i][1];
+                           var curr_data_other = plot_data_old[1][serie].data[i][1];
                            var datapoint = i;
+                           var the_serie = serie;
                        } else {
                            var other_graph_plot = plot_old[0];
                            var curr_data_other = data_other[i][1];
                            var datapoint = i;
+                           var the_serie = serie;
                        }
+                   }
                }
-               if (module_name == "size"){
-                   $("#tooltip_graph-"+"num").html(item.series.label + " of " + formated_date + " = <b>" + curr_data_other+"</b>")
-                       .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
-                       .fadeIn(200);
-                   for(i=0; i<data_other.length; i++)
-                       other_graph_plot.unhighlight(0, i);
-                   other_graph_plot.highlight(0, datapoint);
-               }
-               else if (module_name == "num"){
-                   $("#tooltip_graph-"+"size").html(item.series.label + " of " + formated_date + " = <b>" + curr_data_other+"</b>")
-                       .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
-                       .fadeIn(200);
-                   for(i=0; i<data_other.length; i++)
-                       other_graph_plot.unhighlight(0, i);
-                   other_graph_plot.highlight(0, datapoint);
-               }
-           } else {
+           }
+           if (module_name == "size"){
+               $("#tooltip_graph-"+"num").html(item.series.label + " of " + formated_date + " = <b>" + curr_data_other+"</b>")
+                   .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
+                   .fadeIn(200);
+               for(i=0; i<data_other.length; i++)
+                   for(s=0; s<plot_obj.length; s++)
+                       other_graph_plot.unhighlight(s, i);
+               other_graph_plot.highlight(the_serie, datapoint);
+           }
+           else if (module_name == "num"){
+               $("#tooltip_graph-"+"size").html(item.series.label + " of " + formated_date + " = <b>" + curr_data_other+"</b>")
+                   .css({padding: "2px", width: 'auto', 'background-color': 'white', 'border': "3px solid "+item.series.color})
+                   .fadeIn(200);
+               for(i=0; i<data_other.length; i++)
+                   for(s=0; s<plot_obj.length; s++)
+                       other_graph_plot.unhighlight(s, i);
+               other_graph_plot.highlight(the_serie, datapoint);
            }
        } else {
            for(i=0; i<plot_old.length; i++)

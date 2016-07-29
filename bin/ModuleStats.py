@@ -61,11 +61,12 @@ def compute_most_posted(server, message, num_day):
             if keyw_value is not None:
                 member_set.append((keyw, int(keyw_value)))
         member_set.sort(key=lambda tup: tup[1])
-        if member_set[0][1] < keyword_total_sum:
-            #remove min from set and add the new one
-            print module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
-            server.srem(redis_progression_name_set, member_set[0][0])
-            server.sadd(redis_progression_name_set, keyword)
+        if len(member_set) > 0:
+            if member_set[0][1] < keyword_total_sum:
+                #remove min from set and add the new one
+                print module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+                server.srem(redis_progression_name_set, member_set[0][0])
+                server.sadd(redis_progression_name_set, keyword)
 
 
 def compute_provider_info(server, path, num_day_to_look):
