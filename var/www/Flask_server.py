@@ -219,8 +219,16 @@ def providersChart():
 	date_range = get_date_range(num_day) 
         # Retreive all data from the last num_day
         for date in date_range:
-            curr_value = r_serv_charts.hget(keyword_name+'_'+module_name, date)
-            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], float(curr_value if curr_value is not None else 0.0)])
+            curr_value_size = r_serv_charts.hget(keyword_name+'_'+'size', date)
+            curr_value_num = r_serv_charts.hget(keyword_name+'_'+'num', date)
+            if module_name == "size":
+                curr_value_num = curr_value_num if curr_value_num is not None else 0
+                curr_value_num = curr_value_num if int(curr_value_num) != 0 else 10000000000
+                curr_value = float(curr_value_size if curr_value_size is not None else 0.0) / float(curr_value_num)
+            else:
+                curr_value = float(curr_value_num if curr_value_num is not None else 0.0)
+
+            bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], curr_value])
         bar_values.insert(0, keyword_name)
         return jsonify(bar_values)
  
@@ -230,10 +238,16 @@ def providersChart():
         # Iterate over element in top_x_set and retreive their value
         member_set = []
         for keyw in r_serv_charts.smembers(redis_provider_name_set):
-            redis_provider_name = keyw+'_'+module_name
-            keyw_value = r_serv_charts.hget(redis_provider_name, get_date_range(0)[0])
-            keyw_value = keyw_value if keyw_value is not None else 0.0
-            member_set.append((keyw, float(keyw_value)))
+            redis_provider_name_size = keyw+'_'+'size'
+            redis_provider_name_num = keyw+'_'+'num'
+            keyw_value_size = r_serv_charts.hget(redis_provider_name_size, get_date_range(0)[0])
+            keyw_value_size = keyw_value_size if keyw_value_size is not None else 0.0
+            keyw_value_num = r_serv_charts.hget(redis_provider_name_num, get_date_range(0)[0])
+            keyw_value_num = keyw_value_num if keyw_value_num is not None else 0.0
+            if module_name == "size":
+                member_set.append((keyw, float(keyw_value_size)/float(keyw_value_num)))
+            else:
+                member_set.append((keyw, float(keyw_value_num)))
         member_set.sort(key=lambda tup: tup[1], reverse=True)
         if len(member_set) == 0:
             member_set.append(("No relevant data", float(100)))

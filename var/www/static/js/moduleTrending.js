@@ -143,7 +143,7 @@ function plot_top_graph(module_name, init){
                             for(i=1; i<data.length; i++){
                                 var curr_date = data[i][0].split('/');
                                 var offset = (data_other.length/2 - data_other.indexOf(data[0]))*10000000
-                                temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset, data[i][1]]);
+                                temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset, data[i][1].toFixed(2)]);
                             }
                             // Insert temp_data_bar in order so that color and alignement correspond for the provider graphs
                             all_other_temp_data.splice(data_other.indexOf(data[0]), 0, [ data[0], temp_data_bar, data_other.indexOf(data[0])]); 
@@ -172,7 +172,7 @@ function plot_top_graph(module_name, init){
                         minTickSize: [1, "day"]
                     },
                     yaxis: {
-                        transform: function (v) { return v < 1 ? v : Math.log(v); }
+                        //transform: function (v) { return v < 1 ? v : Math.log(v); }
                     },
                     grid: { hoverable: true },
                     legend: { show: true,
@@ -210,7 +210,7 @@ function plot_top_graph(module_name, init){
                     var temp_data_bar = []
                     for(i=1; i<data.length; i++){
                         var curr_date = data[i][0].split('/');
-                        temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime(), data[i][1]]);
+                        temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime(), data[i][1].toFixed(2)]);
                     }
                     var barData = {
                         label: involved_item,
