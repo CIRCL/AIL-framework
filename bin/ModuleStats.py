@@ -132,8 +132,6 @@ def compute_provider_info(server, path):
                 curr_num = server.hget(provider+'_num', paste_date)
                 member_set.append((provider, int(curr_num)))
             member_set.sort(key=lambda tup: tup[1])
-            print '------------------------------'
-            print member_set
             if member_set[0][1] < int(prev_num_paste)+1:
                 #remove min from set and add the new one
                 print 'Num - adding ' +paste_provider+ '(' +str(int(prev_num_paste)+1)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
