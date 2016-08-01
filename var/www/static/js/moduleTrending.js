@@ -220,12 +220,14 @@ function plot_top_graph(module_name, init){
                     plot = $.plot($(chartID), [barData], barOptions);
 
                     /* rememeber the data for the two graph */
-                    if (plot_data_old.length>1){ // avoid adding plot_data for previous clicked pie part
-                        plot_data_old = [];
-                        plot_old = [];
+                    if ((module_name == "size") || (module_name == "num")) { // Add only for the provider graph
+                        if (plot_data_old.length>1){ // avoid adding plot_data for previous clicked pie part
+                            plot_data_old = [];
+                            plot_old = [];
+                        }
+                        plot_data_old.push(plot.getData());
+                        plot_old.push(plot);
                     }
-                    plot_data_old.push(plot.getData());
-                    plot_old.push(plot);
 
                     if (can_bind){ // avoid binding two listener for provider graphs
                         $("#flot-bar-chart-"+module_name).unbind( "plothover.customHandler" );
