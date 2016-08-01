@@ -93,6 +93,7 @@ def compute_provider_info(server, path):
 
     else:
         ok = server.hset(paste_provider+'_num', paste_date, 1)
+        prev_num_paste = 0
 
     #
     # Compute Most Posted
@@ -129,14 +130,17 @@ def compute_provider_info(server, path):
             #Check value for all members
             member_set = []
             for provider in server.smembers(redis_providers_name_set):
+                curr_num = 0
                 curr_num = server.hget(provider+'_num', paste_date)
-                member_set.append((provider, int(curr_num)))
+                if curr_num is not None:
+                    member_set.append((provider, int(curr_num)))
             member_set.sort(key=lambda tup: tup[1])
-            if member_set[0][1] < int(prev_num_paste)+1:
-                #remove min from set and add the new one
-                print 'Num - adding ' +paste_provider+ '(' +str(int(prev_num_paste)+1)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
-                server.srem(redis_providers_name_set, member_set[0][0])
-                server.sadd(redis_providers_name_set, paste_provider)
+            if len(member_set) > 0:
+                if member_set[0][1] < int(prev_num_paste)+1:
+                    #remove min from set and add the new one
+                    print 'Num - adding ' +paste_provider+ '(' +str(int(prev_num_paste)+1)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+                    server.srem(redis_providers_name_set, member_set[0][0])
+                    server.sadd(redis_providers_name_set, paste_provider)
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
