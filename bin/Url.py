@@ -66,7 +66,7 @@ if __name__ == "__main__":
                     matching_url = re.search(url_regex, PST.get_p_content())
                     url = matching_url.group(0)
 
-                    to_send = "{} {}".format(url, PST._get_p_date())
+                    to_send = "{} {} {}".format(url, PST._get_p_date(), filename)
                     p.populate_set_out(to_send, 'Url')
 
                     faup.decode(url)
