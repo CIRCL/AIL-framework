@@ -219,6 +219,11 @@ function create_queue_table() {
 }
 
 $(document).ready(function () {
+    if (typeof glob_tabvar == "undefined")
+        location.reload();
+    if (typeof glob_tabvar.row1 == "undefined")
+        location.reload();
+
     var data = [];
     var data2 = [];
     var tmp_tab = [];
