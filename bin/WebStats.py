@@ -159,7 +159,7 @@ if __name__ == '__main__':
         else:
             generate_new_graph = True
             # Do something with the message from the queue
-            url, date = message.split()
+            url, date, path = message.split()
             faup.decode(url)
             url_parsed = faup.get()
             
