@@ -185,13 +185,15 @@ function plot_top_graph(module_name, init){
                 })
 
  
-                /* rememeber the data for the two graph */
-                if (plot_data_old.length>1){ // avoid adding plot_data for previous clicked pie part
-                    plot_data_old = [];
-                    plot_old = [];
+                /* rememeber the data for the two provider graph */
+                if (chartUrl == "providersChart"){
+                    if (plot_data_old.length>1){ // avoid adding plot_data for previous clicked pie part
+                        plot_data_old = [];
+                        plot_old = [];
+                    }
+                    plot_data_old.push(plot.getData());
+                    plot_old.push(plot);
                 }
-                plot_data_old.push(plot.getData());
-                plot_old.push(plot);
 
                 if (can_bind){ // avoid binding two listener for provider graphs
                     binder(module_name);
