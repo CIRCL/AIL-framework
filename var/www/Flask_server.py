@@ -243,7 +243,8 @@ def providersChart():
             keyw_value_size = r_serv_charts.hget(redis_provider_name_size, get_date_range(0)[0])
             keyw_value_size = keyw_value_size if keyw_value_size is not None else 0.0
             keyw_value_num = r_serv_charts.hget(redis_provider_name_num, get_date_range(0)[0])
-            keyw_value_num = keyw_value_num if keyw_value_num is not None else 0.0
+            keyw_value_num = keyw_value_num if keyw_value_num is not None else 0
+            keyw_value_num = keyw_value_num if int(keyw_value_num) != 0 else 10000000000
             if module_name == "size":
                 member_set.append((keyw, float(keyw_value_size)/float(keyw_value_num)))
             else:

@@ -61,6 +61,8 @@
         <script src="{{ url_for('static', filename='js/moduleTrending.js') }}"></script>
         <script>
             $(document).ready(function(){
+                $("[align]").css({padding: "2px", width: 'auto', 'background': "rgba(102, 102, 102, 0.15)" , 'border': "3px solid rgb(102, 102, 102)"})
+
                refreshPlot(true); 
             });
 
