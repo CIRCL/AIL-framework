@@ -71,12 +71,12 @@ def analyse(url, path):
         paste = Paste.Paste(path)
         if (result_path > 1) or (result_query > 1):
             print "Detected SQL in URL: "
-            print url
+            print urllib2.unquote(url)
             to_print = 'SQLInjection;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL")
             publisher.warning(to_print)
         else: 
             print "Potential SQL injection:"
-            print url
+            print urllib2.unquote(url)
             to_print = 'SQLInjection;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Potential SQL injection")
             publisher.info(to_print)
     
