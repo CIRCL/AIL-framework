@@ -165,7 +165,7 @@ class Paste(object):
         """
         Setting the hash of the paste as a kind of "uniq" identificator
 
-        :return: hash string (md5, sha1....)
+        :return: a dictionnary of hash string (md5, sha1....)
 
         :Example: PST._get_p_hash()
 

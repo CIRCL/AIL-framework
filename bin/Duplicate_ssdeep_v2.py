@@ -11,6 +11,8 @@ Its input comes from other modules, namely:
 
 This one differ from v1 by only using redis and not json file stored on disk
 
+Perform comparisions with ssdeep and tlsh
+
 Requirements:
 -------------
 
@@ -130,18 +132,17 @@ if __name__ == "__main__":
                                 print '['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent)
                         except Exception,e:
                             print str(e)
-                            # ssdeep hash not comparable
                             #print 'hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash
-                            #curr_dico_redis.srem('HASHS', dico_hash)
 
             # Add paste in DB after checking to prevent its analysis twice
-            # hash_i -> index_i  AND  index_i -> PST.PATH
+            # hash_type_i -> index_i  AND  index_i -> PST.PATH
             r_serv1.set(index, PST.p_path)
             r_serv1.sadd("INDEX", index)
-            # Adding the hash in Redis
+            # Adding hashes in Redis
             for hash_type, paste_hash in paste_hashes.iteritems():
                 r_serv1.set(paste_hash, index)
                 r_serv1.sadd("HASHS_"+hash_type, paste_hash)
+
     ##################### Similarity found  #######################
 
             # if there is data in this dictionnary

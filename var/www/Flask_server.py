@@ -14,7 +14,7 @@ import Paste
 from Date import Date
 
 # CONFIG #
-tlsh_to_percent = 1000.0
+tlsh_to_percent = 1000.0 #Use to display the estimated percentage instead of a raw value
 
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
 if not os.path.exists(configfile):
@@ -124,6 +124,7 @@ def showpaste(content_range):
             
     p_duplicate_full_list.sort(lambda x,y: cmp(x[2], y[2]), reverse=True)
 
+    # Combine multiple duplicate paste name and format for display
     new_dup_list = []
     dup_list_removed = []
     for dup_list_index in range(0, len(p_duplicate_full_list)):
@@ -141,6 +142,7 @@ def showpaste(content_range):
         comp_vals = str(comp_vals).replace("[","").replace("]","") if len(comp_vals)==1 else str(comp_vals)
         new_dup_list.append([hash_types.replace("'", ""), p_duplicate_full_list[dup_list_index][1], comp_vals])
 
+    # Create the list to pass to the webpage
     for dup_list in new_dup_list:
         hash_type, path, simil_percent = dup_list
         p_duplicate_list.append(path)
