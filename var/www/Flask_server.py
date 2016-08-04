@@ -14,6 +14,8 @@ import Paste
 from Date import Date
 
 # CONFIG #
+tlsh_to_percent = 1000.0
+
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
 if not os.path.exists(configfile):
     raise Exception('Unable to find the configuration file. \
@@ -74,12 +76,27 @@ def parseStringToList(the_string):
                 strList += c
         else:
             the_list = strList.split(',')
-            if len(the_list) == 2:
+            if len(the_list) == 3:
+               elemList = elemList + the_list
+            elif len(the_list) == 2:
                elemList.append(the_list)
             elif len(the_list) > 1:
                elemList.append(the_list[1:])
             strList = ""
     return elemList
+
+def parseStringToList2(the_string):
+    res = []
+    tab_str = the_string.split('], [')
+    tab_str[0] = tab_str[0][1:]+']'
+    tab_str[len(tab_str)-1] = '['+tab_str[len(tab_str)-1][:-1]
+    res.append(parseStringToList(tab_str[0]))
+    for i in range(1, len(tab_str)-2):
+        tab_str[i] = '['+tab_str[i]+']'
+        res.append(parseStringToList(tab_str[i]))
+    res.append(parseStringToList(tab_str[len(tab_str)-1]))
+    return res
+
 
 def showpaste(content_range):    
     requested_path = request.args.get('paste', '')
@@ -93,19 +110,47 @@ def showpaste(content_range):
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
-    p_duplicate_full_list = parseStringToList(paste._get_p_duplicate())
+    p_duplicate_full_list = parseStringToList2(paste._get_p_duplicate())
     p_duplicate_list = []
     p_simil_list = []
+    p_hashtype_list = []
+
 
     for dup_list in p_duplicate_full_list:
-        path, simil_percent = dup_list
+        if dup_list[0] == "tlsh":
+            dup_list[2] = int(((tlsh_to_percent - float(dup_list[2])) / tlsh_to_percent)*100)
+        else:
+            dup_list[2] = int(dup_list[2])
+            
+    p_duplicate_full_list.sort(lambda x,y: cmp(x[2], y[2]), reverse=True)
+
+    new_dup_list = []
+    dup_list_removed = []
+    for dup_list_index in range(0, len(p_duplicate_full_list)):
+        if dup_list_index in dup_list_removed:
+            continue
+        indices = [i for i, x in enumerate(p_duplicate_full_list) if x[1] == p_duplicate_full_list[dup_list_index][1]]
+        hash_types = []
+        comp_vals = []
+        for i in indices:
+            hash_types.append(p_duplicate_full_list[i][0])
+            comp_vals.append(p_duplicate_full_list[i][2])
+            dup_list_removed.append(i)
+
+        hash_types = str(hash_types).replace("[","").replace("]","") if len(hash_types)==1 else str(hash_types)
+        comp_vals = str(comp_vals).replace("[","").replace("]","") if len(comp_vals)==1 else str(comp_vals)
+        new_dup_list.append([hash_types.replace("'", ""), p_duplicate_full_list[dup_list_index][1], comp_vals])
+
+    for dup_list in new_dup_list:
+        hash_type, path, simil_percent = dup_list
         p_duplicate_list.append(path)
         p_simil_list.append(simil_percent)
+        p_hashtype_list.append(hash_type)
 
     if content_range != 0:
        p_content = p_content[0:content_range] 
 
-    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list)
+    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list)
 
 def get_date_range(num_day):
     curr_date = datetime.date.today()

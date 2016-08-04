@@ -86,8 +86,8 @@ class Paste(object):
         self.p_source = var[-5]
 
         self.p_encoding = None
-        self.p_hash_kind = None
-        self.p_hash = None
+        self.p_hash_kind = {}
+        self.p_hash = {}
         self.p_langage = None
         self.p_nb_lines = None
         self.p_max_length_line = None
@@ -159,7 +159,7 @@ class Paste(object):
         .. seealso:: Hash.py Object to get the available hashs.
 
         """
-        self.p_hash_kind = Hash(hashkind)
+        self.p_hash_kind[hashkind] = (Hash(hashkind))
 
     def _get_p_hash(self):
         """
@@ -174,7 +174,8 @@ class Paste(object):
         .. seealso:: _set_p_hash_kind("md5")
 
         """
-        self.p_hash = self.p_hash_kind.Calculate(self.get_p_content())
+        for hash_name, the_hash in self.p_hash_kind.iteritems():
+            self.p_hash[hash_name] = the_hash.Calculate(self.get_p_content())
         return self.p_hash
 
     def _get_p_language(self):
@@ -201,42 +202,6 @@ class Paste(object):
 
     def _get_p_size(self):
         return self.p_size
-
-    def _get_hash_lines(self, min=1, start=1, jump=10):
-        """
-        Returning all the lines of the paste hashed.
-
-        :param min: -- (int) Minimum line length to be hashed.
-        :param start: -- (int) Number the line where to start.
-        :param jump: -- (int) Granularity of the hashing 0 or 1 means no jumps
-        (Maximum Granularity)
-
-        :return: a set([]) of hash.
-
-        .. warning:: Using a set here mean that this function will only return uniq hash.
-
-        If the paste is composed with 1000 time the same line, this function will return
-        just once the line.
-
-        This choice was made to avoid a certain redundancy and useless hash checking.
-
-        :Example: PST._get_hash_lines(1, 1, 0)
-
-        .. note:: You need first to "declare which kind of hash you want to use
-        before using this function
-        .. seealso:: _set_p_hash_kind("md5")
-
-        """
-        S = set([])
-        f = self.get_p_content_as_file()
-        for num, line in enumerate(f, start):
-            if len(line) >= min:
-                if jump > 1:
-                    if (num % jump) == 1:
-                        S.add(self.p_hash_kind.Calculate(line))
-                else:
-                    S.add(self.p_hash_kind.Calculate(line))
-        return S
 
     def is_duplicate(self, obj, min=1, percent=50, start=1, jump=10):
         """
@@ -329,7 +294,10 @@ class Paste(object):
             self.store.hset(self.p_path, attr_name, json.dumps(value))
 
     def _get_from_redis(self, r_serv):
-        return r_serv.hgetall(self.p_hash)
+        ans = {}
+        for hash_name, the_hash in self.p_hash:
+            ans[hash_name] = r_serv.hgetall(the_hash)
+        return ans
 
     def _get_top_words(self, sort=False):
         """

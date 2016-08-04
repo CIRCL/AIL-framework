@@ -2,6 +2,7 @@ import hashlib
 import crcmod
 import mmh3
 import ssdeep
+import tlsh
 
 
 class Hash(object):
@@ -35,5 +36,8 @@ class Hash(object):
 
         elif self.name == "ssdeep":
             hash = ssdeep.hash(string)
+
+        elif self.name == "tlsh":
+            hash = tlsh.hash(string)
 
         return hash

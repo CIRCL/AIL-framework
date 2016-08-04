@@ -43,16 +43,25 @@
   </div>
   <div class="panel-body" id="panel-body">
   {% if  duplicate_list|length == 0 %}
-      <h4> No Duplicate </h4>
+      <h3> No Duplicate </h3>
   {% else %}
-      <h4> Duplicate list: </h4>
+      <h3> Duplicate list: </h3>
+      <table style="width:100%">
       {% set i = 0 %}
+      <tr>
+          <th style="text-align:left;">Hash type</th><th style="text-align:left;">Paste info</th>
+      </tr>
       {% for dup_path in duplicate_list %}
-          Similarity: {{ simil_list[i] }}% - <a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ dup_path }}" id='dup_path'>{{ dup_path }}</a></br>
+          <tr>
+              <td>{{ hashtype_list[i] }}</td>
+              <td>Similarity: {{ simil_list[i] }}%</td>
+              <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ dup_path }}" id='dup_path'>{{ dup_path }}</a></td>
+          </tr>
           {% set i = i + 1 %}
       {% endfor %}
+      </table>
   {% endif %}
-    <h4> Content: </h4>
+    <h3> Content: </h3>
   <p data-initsize="{{ initsize }}"> <xmp id="paste-holder">{{ content }}</xmp></p>
   </div>
 </div>
