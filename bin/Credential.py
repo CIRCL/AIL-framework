@@ -24,7 +24,6 @@ if __name__ == "__main__":
         message = p.get_from_set()
         if message is None:
             publisher.debug("Script Credential is Idling 10s")
-            print('Sleeping')
             time.sleep(10)
             continue
 

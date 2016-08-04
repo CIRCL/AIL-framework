@@ -86,16 +86,19 @@ def parseStringToList(the_string):
     return elemList
 
 def parseStringToList2(the_string):
-    res = []
-    tab_str = the_string.split('], [')
-    tab_str[0] = tab_str[0][1:]+']'
-    tab_str[len(tab_str)-1] = '['+tab_str[len(tab_str)-1][:-1]
-    res.append(parseStringToList(tab_str[0]))
-    for i in range(1, len(tab_str)-2):
-        tab_str[i] = '['+tab_str[i]+']'
-        res.append(parseStringToList(tab_str[i]))
-    res.append(parseStringToList(tab_str[len(tab_str)-1]))
-    return res
+    if the_string == []:
+        return []
+    else:
+        res = []
+        tab_str = the_string.split('], [')
+        tab_str[0] = tab_str[0][1:]+']'
+        tab_str[len(tab_str)-1] = '['+tab_str[len(tab_str)-1][:-1]
+        res.append(parseStringToList(tab_str[0]))
+        for i in range(1, len(tab_str)-2):
+            tab_str[i] = '['+tab_str[i]+']'
+            res.append(parseStringToList(tab_str[i]))
+        res.append(parseStringToList(tab_str[len(tab_str)-1]))
+        return res
 
 
 def showpaste(content_range):    
@@ -153,6 +156,12 @@ def showpaste(content_range):
        p_content = p_content[0:content_range] 
 
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list)
+
+def getPastebyType(module_name):
+    all_path = []
+    all_path.append("/home/mokaddem/AIL-framework/PASTES/archive/paste.debian.net/2016/06/30/771058.gz")
+    return all_path
+
 
 def get_date_range(num_day):
     curr_date = datetime.date.today()
@@ -364,6 +373,29 @@ def protocolstrending():
 def trending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Trending.html", default_display = default_display)
+
+@app.route("/browseImportantPaste/", methods=['GET'])
+def browseImportantPaste():
+    module_name = request.args.get('moduleName')
+
+    all_content = []
+    paste_date = []
+    paste_linenum = []
+    all_path = []
+
+    for path in getPastebyType(module_name):
+        all_path.append(path)
+        paste = Paste.Paste(path)
+        content = paste.get_p_content().decode('utf8', 'ignore')
+        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+        all_content.append(content[0:content_range]) 
+        curr_date = str(paste._get_p_date())
+        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+        paste_date.append(curr_date) 
+        paste_linenum.append(paste.get_lines_info()[0]) 
+
+    return render_template("browse_important_paste.html", all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal)
+
 
 
 @app.route("/moduletrending/")
