@@ -57,11 +57,19 @@ if __name__ == "__main__":
             publisher.warning(to_print)
             #Send to duplicate
             p.populate_set_out(filepath, 'Duplicate')
-            #send to Browse_warning_paste
+            #Send to BrowseWarningPaste
             p.populate_set_out('credential;{}'.format(filepath), 'BrowseWarningPaste')
             
             #Put in form, count occurences, then send to moduleStats
             creds_sites = {}
+            site_occurence = re.findall(regex_site_for_stats, content)
+            for site in site_occurence:
+                site_domain = site[1:-1]
+                if site_domain in creds_sites.keys():
+                    creds_sites[site_domain] += 1
+                else:
+                    creds_sites[site_domain] = 1
+
             for url in sites:
                 faup.decode(url)
                 domain = faup.get()['domain']
@@ -71,7 +79,8 @@ if __name__ == "__main__":
                     creds_sites[domain] = 1
 
             for site, num in creds_sites.iteritems(): # Send for each different site to moduleStats
-               p.populate_set_out('credential;{};{};{}'.format(num, site, paste.p_date), 'ModuleStats')
+                print 'credential;{};{};{}'.format(num, site, paste.p_date)
+                p.populate_set_out('credential;{};{};{}'.format(num, site, paste.p_date), 'ModuleStats')
 
             if sites_set:
                 print("=======> Probably on : {}".format(', '.join(sites_set)))

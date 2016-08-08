@@ -31,6 +31,7 @@ def compute_most_posted(server, message):
     module, num, keyword, paste_date = message.split(';')
 
     redis_progression_name_set = 'top_'+ module +'_set'
+
     # Add/Update in Redis
     prev_score = server.hget(paste_date, module+'-'+keyword)
     if prev_score is not None:
@@ -39,7 +40,7 @@ def compute_most_posted(server, message):
         ok = server.hset(paste_date, module+'-'+keyword, int(num))
 
     # Compute Most Posted
-    date = get_date_range(0) 
+    date = get_date_range(0)[0]
     # check if this keyword is eligible for progression
     keyword_total_sum = 0 
 
@@ -59,6 +60,8 @@ def compute_most_posted(server, message):
             keyw_value = server.hget(paste_date, module+'-'+keyw)
             if keyw_value is not None:
                 member_set.append((keyw, int(keyw_value)))
+            else: #No data for this set for today
+                member_set.append((keyw, int(0)))
         member_set.sort(key=lambda tup: tup[1])
         if len(member_set) > 0:
             if member_set[0][1] < keyword_total_sum:
