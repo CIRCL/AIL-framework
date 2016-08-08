@@ -144,6 +144,8 @@ function launching_scripts {
     screen -S "Script" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Browse_warning_paste" bash -c './Browse_warning_paste.py; read x'
 }
 
 #If no params, display the help

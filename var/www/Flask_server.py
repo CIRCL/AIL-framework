@@ -44,6 +44,10 @@ r_serv_charts = redis.StrictRedis(
     port=cfg.getint("Redis_Level_DB_Trending", "port"),
     db=cfg.getint("Redis_Level_DB_Trending", "db"))
 
+r_serv_db = redis.StrictRedis(
+    host=cfg.get("Redis_Level_DB", "host"),
+    port=cfg.getint("Redis_Level_DB", "port"),
+    db=cfg.getint("Redis_Level_DB", "db"))
 
 app = Flask(__name__, static_url_path='/static/')
 
@@ -157,9 +161,11 @@ def showpaste(content_range):
 
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list)
 
-def getPastebyType(module_name):
+def getPastebyType(server, module_name):
     all_path = []
-    all_path.append("/home/mokaddem/AIL-framework/PASTES/archive/paste.debian.net/2016/06/30/771058.gz")
+    for path in server.smembers('WARNING_'+module_name):
+        #all_path.append("/home/mokaddem/AIL-framework/PASTES/archive/paste.debian.net/2016/06/30/771058.gz")
+        all_path.append(path)
     return all_path
 
 
@@ -377,13 +383,19 @@ def trending():
 @app.route("/browseImportantPaste/", methods=['GET'])
 def browseImportantPaste():
     module_name = request.args.get('moduleName')
+    return render_template("browse_important_paste.html")
+
+
+@app.route("/importantPasteByModule/", methods=['GET'])
+def importantPasteByModule():
+    module_name = request.args.get('moduleName')
 
     all_content = []
     paste_date = []
     paste_linenum = []
     all_path = []
 
-    for path in getPastebyType(module_name):
+    for path in getPastebyType(r_serv_db, module_name):
         all_path.append(path)
         paste = Paste.Paste(path)
         content = paste.get_p_content().decode('utf8', 'ignore')
@@ -394,9 +406,7 @@ def browseImportantPaste():
         paste_date.append(curr_date) 
         paste_linenum.append(paste.get_lines_info()[0]) 
 
-    return render_template("browse_important_paste.html", all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal)
-
-
+    return render_template("important_paste_by_module.html", all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal)
 
 @app.route("/moduletrending/")
 def moduletrending():

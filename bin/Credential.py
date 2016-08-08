@@ -15,6 +15,8 @@ if __name__ == "__main__":
     p = Process(config_section)
     publisher.info("Find credentials")
 
+    faup = Faup()
+
     critical = 8
 
     regex_web = "((?:https?:\/\/)[-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
@@ -55,10 +57,11 @@ if __name__ == "__main__":
             publisher.warning(to_print)
             #Send to duplicate
             p.populate_set_out(filepath, 'Duplicate')
+            #send to Browse_warning_paste
+            p.populate_set_out('credential;{}'.format(filepath), 'BrowseWarningPaste')
             
             #Put in form, count occurences, then send to moduleStats
             creds_sites = {}
-            faup = Faup()
             for url in sites:
                 faup.decode(url)
                 domain = faup.get()['domain']

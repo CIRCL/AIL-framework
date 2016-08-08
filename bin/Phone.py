@@ -23,8 +23,10 @@ def search_phone(message):
     if len(results) > 4:
         print results
         publisher.warning('{} contains PID (phone numbers)'.format(paste.p_name))
+        #send to Browse_warning_paste
+        p.populate_set_out('phone;{}'.format(message), 'BrowseWarningPaste')
         #Send to duplicate
-        p.populate_set_out(message)
+        p.populate_set_out(message, 'Duplicate')
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)

@@ -67,6 +67,8 @@ if __name__ == "__main__":
                         to_print, len(creditcard_set)))
                     #Send to duplicate
                     p.populate_set_out(filepath, 'Redis_Duplicate')
+                    #send to Browse_warning_paste
+                    p.populate_set_out('creditCard;{}'.format(filename), 'BrowseWarningPaste')
                 else:
                     publisher.info('{}CreditCard related'.format(to_print))
         else:

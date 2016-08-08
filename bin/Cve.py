@@ -53,5 +53,8 @@ if __name__ == '__main__':
         # Do something with the message from the queue
         search_cve(message)
 
-        # (Optional) Send that thing to the next queue
-        #p.populate_set_out(something_has_been_done)
+        #send to Browse_warning_paste
+        filepath, count = message.split()
+        p.populate_set_out('cve;{}'.format(filepath), 'BrowseWarningPaste')
+        #Send to duplicate
+        p.populate_set_out(filepath, 'Duplicate')

@@ -74,6 +74,10 @@ def analyse(url, path):
             print urllib2.unquote(url)
             to_print = 'SQLInjection;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL")
             publisher.warning(to_print)
+            #Send to duplicate
+            p.populate_set_out(path, 'Duplicate')
+            #send to Browse_warning_paste
+            p.populate_set_out('sqlInjectionDetection;{}'.format(path), 'BrowseWarningPaste')
         else: 
             print "Potential SQL injection:"
             print urllib2.unquote(url)
