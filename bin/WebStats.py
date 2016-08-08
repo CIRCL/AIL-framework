@@ -49,15 +49,24 @@ def compute_progression(server, field_name, num_day, url_parsed):
     keyword = url_parsed[field_name]
     if keyword is not None:
         date_range = get_date_range(num_day) 
+
         # check if this keyword is eligible for progression
         keyword_total_sum = 0 
         value_list = []
-        for date in date_range:
+        for date in date_range: # get value up to date_range
             curr_value = server.hget(keyword, date)
             value_list.append(int(curr_value if curr_value is not None else 0))
             keyword_total_sum += int(curr_value) if curr_value is not None else 0
         oldest_value = value_list[-1] if value_list[-1] != 0 else 1 #Avoid zero division
-        keyword_increase = value_list[0] / oldest_value
+
+        # The progression is based on the ratio: value[i] / value[i-1]
+        keyword_increase = 0
+        value_list_reversed = value_list[:]
+        value_list_reversed.reverse()
+        for i in range(1, len(value_list_reversed)):
+            divisor = value_list_reversed[i-1] if value_list_reversed[i-1] != 0 else 1
+            keyword_increase += value_list_reversed[i] / divisor
+
         
         # filter
         if (keyword_total_sum > threshold_total_sum) and (keyword_increase > threshold_increase):
@@ -66,7 +75,7 @@ def compute_progression(server, field_name, num_day, url_parsed):
                 server.hset(redis_progression_name, keyword, keyword_increase) #update its value
 
             elif (server.scard(redis_progression_name_set) < max_set_cardinality):
-                    server.sadd(redis_progression_name_set, keyword)
+                server.sadd(redis_progression_name_set, keyword)
 
             else: #not in the set
                 #Check value for all members

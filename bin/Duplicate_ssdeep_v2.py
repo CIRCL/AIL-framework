@@ -120,6 +120,7 @@ if __name__ == "__main__":
                             percent = 100-ssdeep.compare(dico_hash, paste_hash) if hash_type == 'ssdeep' else tlsh.diffxlen(dico_hash, paste_hash)
                             threshold_duplicate = threshold_set[hash_type]
                             if percent < threshold_duplicate:
+                                percent = 100 - percent if hash_type == 'ssdeep' else percent #recovert the correct percent value for ssdeep
                                 # Go throught the Database of the dico filter (month)
                                 r_serv_dico = dico_redis[curr_dico_name]
 
