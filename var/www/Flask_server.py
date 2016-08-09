@@ -164,7 +164,6 @@ def showpaste(content_range):
 def getPastebyType(server, module_name):
     all_path = []
     for path in server.smembers('WARNING_'+module_name):
-        #all_path.append("/home/mokaddem/AIL-framework/PASTES/archive/paste.debian.net/2016/06/30/771058.gz")
         all_path.append(path)
     return all_path
 
@@ -198,7 +197,16 @@ def get_top_relevant_data(server, module_name):
             member_set.insert(0, ("passed_days", days))
             return member_set
 
-
+# ========= CACHE CONTROL ========
+@app.after_request
+def add_header(response):
+    """
+    Add headers to both force latest IE rendering engine or Chrome Frame,
+    and also to cache the rendered page for 10 minutes.
+    """
+    response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
+    response.headers['Cache-Control'] = 'public, max-age=0'
+    return response
 
 # ============ ROUTES ============
 

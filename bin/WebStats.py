@@ -26,6 +26,7 @@ def analyse(server, field_name, date, url_parsed):
         prev_score = server.hget(field, date)
         if prev_score is not None:
             server.hset(field, date, int(prev_score) + 1)
+
         else:
             server.hset(field, date, 1)
             if field_name == "domain": #save domain in a set for the monthly plot
@@ -67,7 +68,6 @@ def compute_progression(server, field_name, num_day, url_parsed):
             divisor = value_list_reversed[i-1] if value_list_reversed[i-1] != 0 else 1
             keyword_increase += value_list_reversed[i] / divisor
 
-        
         # filter
         if (keyword_total_sum > threshold_total_sum) and (keyword_increase > threshold_increase):
             

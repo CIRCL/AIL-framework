@@ -3,6 +3,7 @@
 import redis
 import pprint
 import time
+import os
 import dns.exception
 from packages import Paste
 from packages import lib_refine
@@ -39,6 +40,10 @@ if __name__ == "__main__":
         port=p.config.getint("Redis_Cache", "port"),
         db=p.config.getint("Redis_Cache", "db"))
 
+    # Protocol file path
+    protocolsfile_path = os.path.join(os.environ['AIL_HOME'],
+                         p.config.get("Directories", "protocolsfile"))
+
     # Country to log as critical
     cc_critical = p.config.get("Url", "cc_critical")
 
@@ -52,7 +57,14 @@ if __name__ == "__main__":
     prec_filename = None
     faup = Faup()
 
-    url_regex = "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
+    # Get all uri from protocolsfile (Used for Curve)
+    uri_scheme = ""
+    with open(protocolsfile_path, 'r') as scheme_file:
+        for scheme in scheme_file:
+            uri_scheme += scheme[:-1]+"|"
+    uri_scheme = uri_scheme[:-1]
+
+    url_regex = "("+uri_scheme+")\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
 
     while True:
         if message is not None:
