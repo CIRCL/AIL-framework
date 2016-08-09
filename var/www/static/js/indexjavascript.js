@@ -2,7 +2,6 @@ var time_since_last_pastes_num;
 
 //If we do not received info from global, set pastes_num to 0
 function checkIfReceivedData(){
-    console.log(new Date().getTime() - time_since_last_pastes_num);
     if ((new Date().getTime() - time_since_last_pastes_num) > 45*1000)
         window.paste_num_tabvar = 0;
     setTimeout(checkIfReceivedData, 45*1000);
