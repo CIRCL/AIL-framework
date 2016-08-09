@@ -153,7 +153,7 @@ $('.nav-tabs a').on('shown.bs.tab', function(event){
     var dataPath = $(event.target).attr('data-attribute-name');
     $.get("{{ url_for('importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
         var currentTab = $('[name].active').children();
-        $('#'+previous_tab.attr('data-attribute-name')+'-tab').html("");
+        $('#'+previous_tab.attr('data-attribute-name')+'-tab').html(loading_gif);
         currentTab.removeClass( "active" );
 
         $('#'+dataPath+'-tab').html(data);
