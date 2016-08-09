@@ -117,7 +117,11 @@ if __name__ == "__main__":
                 for hash_type, paste_hash in paste_hashes.iteritems():
                     for dico_hash in curr_dico_redis.smembers('HASHS_'+hash_type):
                         try:
-                            percent = 100-ssdeep.compare(dico_hash, paste_hash) if hash_type == 'ssdeep' else tlsh.diffxlen(dico_hash, paste_hash)
+                            if hash_type == 'ssdeep':
+                                percent = 100-ssdeep.compare(dico_hash, paste_hash)  
+                            else:
+                                percent = tlsh.diffxlen(dico_hash, paste_hash)
+
                             threshold_duplicate = threshold_set[hash_type]
                             if percent < threshold_duplicate:
                                 percent = 100 - percent if hash_type == 'ssdeep' else percent #recovert the correct percent value for ssdeep

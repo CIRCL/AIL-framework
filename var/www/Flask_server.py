@@ -101,7 +101,8 @@ def parseStringToList2(the_string):
         for i in range(1, len(tab_str)-2):
             tab_str[i] = '['+tab_str[i]+']'
             res.append(parseStringToList(tab_str[i]))
-        res.append(parseStringToList(tab_str[len(tab_str)-1]))
+        if len(tab_str) > 1:
+            res.append(parseStringToList(tab_str[len(tab_str)-1]))
         return res
 
 
