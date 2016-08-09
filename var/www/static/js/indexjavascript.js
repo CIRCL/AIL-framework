@@ -1,3 +1,15 @@
+var time_since_last_pastes_num;
+
+//If we do not received info from global, set pastes_num to 0
+function checkIfReceivedData(){
+    console.log(new Date().getTime() - time_since_last_pastes_num);
+    if ((new Date().getTime() - time_since_last_pastes_num) > 45*1000)
+        window.paste_num_tabvar = 0;
+    setTimeout(checkIfReceivedData, 45*1000);
+}
+
+setTimeout(checkIfReceivedData, 45*1000);
+
 function initfunc( csvay, scroot) {
   window.csv = csvay;
   window.scroot = scroot;
@@ -102,9 +114,11 @@ function create_log_table(obj_json) {
     var chansplit = obj_json.channel.split('.');
     var parsedmess = obj_json.data.split(';');
 
+
     if (parsedmess[0] == "Global"){
         var paste_processed = parsedmess[4].split(" ")[2];
         window.paste_num_tabvar = paste_processed;
+        time_since_last_pastes_num = new Date().getTime();
         return;
     }
 
