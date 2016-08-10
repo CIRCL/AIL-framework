@@ -1,15 +1,11 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 """
-    Template for new modules
+    Sql Injection module
 """
 
 import time
-import sys
 import string
-import datetime
-import redis
-import os
 import urllib2
 import re
 from pubsublogger import publisher
@@ -21,6 +17,7 @@ from pyfaup.faup import Faup
 
 regex_injection = []
 word_injection = []
+word_injection_suspect = []
 
 # Classic atome injection
 regex_injection1 = "([[AND |OR ]+[\'|\"]?[0-9a-zA-Z]+[\'|\"]?=[\'|\"]?[0-9a-zA-Z]+[\'|\"]?])"
@@ -35,21 +32,21 @@ regex_injection.append(regex_injection2)
 word_injection1 = [" IF ", " ELSE ", " CASE ", " WHEN ", " END ", " UNION ", "SELECT ", " FROM ", " ORDER BY ", " WHERE ", " DELETE ", " DROP ", " UPDATE ", " EXEC "]
 word_injection.append(word_injection1)
 
-# Comment
-word_injection2 = ["--", "#", "/*"]
+# Database special keywords
+word_injection2 = ["@@version", "POW(", "BITAND(", "SQUARE("]
 word_injection.append(word_injection2)
 
-# Database special keywords
-word_injection3 = ["@@version", "POW(", "BITAND(", "SQUARE("]
+# Html keywords
+word_injection3 = ["<script>"]
 word_injection.append(word_injection3)
 
-# Html keywords
-word_injection4 = ["<script>"]
-word_injection.append(word_injection4)
-
 # Suspect char
-word_injection_suspect = ["\'", "\"", ";", "<", ">"]
+word_injection_suspect1 = ["\'", "\"", ";", "<", ">"]
+word_injection_suspect.append(word_injection_suspect1)
 
+# Comment
+word_injection_suspect2 = ["--", "#", "/*"]
+word_injection_suspect.append(word_injection_suspect2)
 
 def analyse(url, path):
     faup.decode(url)
@@ -78,13 +75,15 @@ def analyse(url, path):
             p.populate_set_out(path, 'Duplicate')
             #send to Browse_warning_paste
             p.populate_set_out('sqlinjection;{}'.format(path), 'BrowseWarningPaste')
-        else: 
+        else:
             print "Potential SQL injection:"
             print urllib2.unquote(url)
             to_print = 'SQLInjection;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Potential SQL injection")
             publisher.info(to_print)
-    
 
+
+# Try to detect if the url passed might be an sql injection by appliying the regex
+# defined above on it.
 def is_sql_injection(url_parsed):
     line = urllib2.unquote(url_parsed)
     line = string.upper(line)
@@ -134,13 +133,6 @@ if __name__ == '__main__':
     # Sent to the logging a description of the module
     publisher.info("Try to detect SQL injection")
 
-    # REDIS #
-    r_serv1 = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB", "host"),
-        port=p.config.get("Redis_Level_DB", "port"),
-        db=p.config.get("Redis_Level_DB", "db"))
- 
-
     faup = Faup()
 
     # Endless loop getting messages from the input queue
@@ -156,4 +148,4 @@ if __name__ == '__main__':
         else:
             # Do something with the message from the queue
             url, date, path = message.split()
-            analyse(url, path)	#Scheme analysis
+            analyse(url, path)
