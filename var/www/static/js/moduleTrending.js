@@ -315,6 +315,3 @@ function binder(module_name){
        }
     });
 }
-function plot_finished(module_name){
-        
-    }

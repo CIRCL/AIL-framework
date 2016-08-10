@@ -74,7 +74,7 @@ function plot_top_graph(trendingName, init){
     
         
     // flot bar char
-    function update_bar_chart(chartID, involved_item, serie_color, num_day, timeformat){
+    function update_bar_chart(chartID, involved_item, serie_color, num_day, timeformat, can_bind){
         var barOptions = {
             series: {
                 bars: { show: true, barWidth: 82800000 }
@@ -171,3 +171,41 @@ function plot_top_graph(trendingName, init){
         }// end else
     };
 };
+
+
+// Bar chart hover binder for the 2 graphs
+function binder(module_name){
+    $("#flot-bar-chart1-"+module_name).bind("plothover.customHandler", function (event, pos, item) {
+       if (item) { // a correct item is hovered
+           var x = item.datapoint[0]
+           var y = item.datapoint[1]
+           var date = new Date(parseInt(x));
+           var formated_date = date.getMonth()+'/'+date.getDate();
+           var color = item.series.color;
+           var color_opac = "rgba" +  color.slice(3, color.length-1)+",0.15)";
+    
+           // display the hovered value in the chart div
+           $("#tooltip_graph1-"+module_name).html(item.series.label + " of " + formated_date + " = <b>" + y+"</b>")
+               .css({padding: "2px", width: 'auto', 'background': color_opac , 'border': "3px solid "+color})
+               .fadeIn(200);
+
+        }
+    });
+    
+    $("#flot-bar-chart2-"+module_name).bind("plothover.customHandler", function (event, pos, item) {
+       if (item) { // a correct item is hovered
+           var x = item.datapoint[0]
+           var y = item.datapoint[1]
+           var date = new Date(parseInt(x));
+           var formated_date = date.getMonth()+'/'+date.getDate();
+           var color = item.series.color;
+           var color_opac = "rgba" +  color.slice(3, color.length-1)+",0.15)";
+    
+           // display the hovered value in the chart div
+           $("#tooltip_graph2-"+module_name).html(item.series.label + " of " + formated_date + " = <b>" + y+"</b>")
+               .css({padding: "2px", width: 'auto', 'background': color_opac , 'border': "3px solid "+color})
+               .fadeIn(200);
+
+        }
+    });
+}
