@@ -235,6 +235,7 @@ def progressionCharts():
         for date in date_range:
             curr_value = r_serv_charts.hget(attribute_name, date)
             bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
+        bar_values.insert(0, attribute_name)
         return jsonify(bar_values)
  
     else:

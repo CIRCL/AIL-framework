@@ -109,14 +109,14 @@ $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
             var active_tab_name = "tld";    //Avoid a redraw of the graph is the tab is not active
             function refresh_top_chart(attr_name, immediate){
                 if (immediate){
-                    plot_top_graph(attr_name);
+                    plot_top_graph(attr_name, true);
                 }
                 setTimeout(function() {
                     $("[flash-"+attr_name+"]").css('color', '#fece00');
                     setTimeout(function() { $("[flash-"+attr_name+"]").css('color', 'black'); }, 1000);
                     refresh_top_chart(attr_name, false);
                     if (active_tab_name == attr_name) 
-                        plot_top_graph(attr_name);
+                        plot_top_graph(attr_name, false);
                 }, refresh_interval);
             }
         </script>

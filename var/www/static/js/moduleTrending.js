@@ -59,16 +59,16 @@ function plot_top_graph(module_name, init){
                       if (i==0 && data[0][0] == "passed_days"){ // If there is no data today, take it from the past
                          if (data[0][1] > 0 && data[0][1] < 7){ // If data is [1:6] day(s) old, put the panel in yellow
                              $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
-                             $("#panel-"+module_name).removeClass("panel-green")
-                             $("#panel-"+module_name).addClass("panel-yellow")
+                             $("#panel-"+module_name).removeClass("panel-green");
+                             $("#panel-"+module_name).addClass("panel-yellow");
                          } else if (data[0][1] > 6) { // data old of more than 7 days, put the panel in red
                              $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
-                             $("#panel-"+module_name).removeClass("panel-green")
-                             $("#panel-"+module_name).addClass("panel-red")
+                             $("#panel-"+module_name).removeClass("panel-green");
+                             $("#panel-"+module_name).addClass("panel-red");
                          }
                       } else {
                           temp_data_pie.push({label: data[i][0], data: data[i][1]});
-                          tot_sum += data[i][1]
+                          tot_sum += data[i][1];
                       }
                   }
                   for(i=0; i<temp_data_pie.length; i++){ // Detect element below a certain threshold
