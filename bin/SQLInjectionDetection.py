@@ -42,11 +42,11 @@ word_injection.append(word_injection3)
 
 # Suspect char
 word_injection_suspect1 = ["\'", "\"", ";", "<", ">"]
-word_injection_suspect.append(word_injection_suspect1)
+word_injection_suspect += word_injection_suspect1
 
 # Comment
 word_injection_suspect2 = ["--", "#", "/*"]
-word_injection_suspect.append(word_injection_suspect2)
+word_injection_suspect += word_injection_suspect2
 
 def analyse(url, path):
     faup.decode(url)
