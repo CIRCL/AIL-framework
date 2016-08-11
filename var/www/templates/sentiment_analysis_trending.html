@@ -11,16 +11,56 @@
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.sparkline.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/FlexGauge.js') }}"></script>
+
+  <style>
+      strong {
+          font-size: 16px;
+      }
+
+      .sparkLineStats ul {
+          padding-left:0;
+          list-style:none
+      }
+
+      .sparkLineStats {
+          position: relative;
+          margin-bottom: -4px;
+      }
+
+      .sparkLineStats ul li {
+          margin-bottom: 8px;
+          line-height: 60px;
+          padding-top: 3px;
+          font-size: 12px;
+      }
+
+      .sparkLineStats ul li div {
+          float: left;
+      }
+
+      .sparkLineStats ul li div:first-child {
+          margin-right: 5px;
+      }
+
+      .fg-dial-label {
+          font-size: 100%;
+          font-weight: bold;
+          left: 0;
+          position: relative;
+          text-align: center;
+          top: -60px;
+          width: 100%;
+      }
+  </style>
 
 </head>
 <body>
 
-    <div id="wrapper">
+   <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
       {% include 'header.html' %}
       <!-- /.navbar-top-links -->
@@ -38,7 +78,7 @@
           </div>
           <!-- /.navbar-static-side -->
       </nav>
-
+   </div>
 
 <div id="page-wrapper">
   <div class="row">
@@ -50,10 +90,74 @@
     <!-- /.row -->
     <div class="row">
 
+    <!-- Pannel TODAY -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div id="panel-today" class="panel panel-default">
+                        <div class="panel-heading">
+                            <strong>Today's mood</strong>
+                        </div>
+                        <div class="panel-body">
+                            <!-- left column -->
+                            <div class="col-lg-9">
+                                <!-- providers charts -->
+                                <div class="col-lg-6">
+                                   <div class="sparkLineStats">
+                                       <ul>
+                                           <li><div class="sparkLineStats1"></div><strong>Graph 1</strong></li>
+                                           <li><div class="sparkLineStats2"></div><strong>Graph 2</strong></li>
+                                           <li><div class="sparkLineStats3"></div><strong>Graph 3</strong></li>
+                                           <li><div class="sparkLineStats4"></div><strong>Graph 4</strong></li>
+                                           <li><div class="sparkLineStats5"></div><strong>Graph 5</strong></li>
+                                       </ul>
+                                   </div>
+                                </div>
+                                <div class="col-lg-6">
+                                   <div class="sparkLineStats">
+                                       <ul>
+                                           <li><div class="sparkLineStats1"></div><strong>Graph 1</strong></li>
+                                           <li><div class="sparkLineStats2"></div><strong>Graph 2</strong></li>
+                                           <li><div class="sparkLineStats3"></div><strong>Graph 3</strong></li>
+                                           <li><div class="sparkLineStats4"></div><strong>Graph 4</strong></li>
+                                           <li><div class="sparkLineStats5"></div><strong>Graph 5</strong></li>
+                                       </ul>
+                                   </div>
+                                </div> 
+                            </div>
+                            <!-- right column -->
+                            <div class="col-lg-3">
+                                <div class="well text-center" style="padding: 0px;">
+                                    <div id="gauge_today_last_hour"></div>
+                                </div>
+                                <div class="well text-center" style="padding: 0px;">
+                                    <div id="gauge_today_last_days"></div>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                </div>
+                <!-- /.panel -->
+            </div>
+            <!-- /.panel -->
+        </div>
+    </div>
+
+    <!-- Pannel LAST X DAYS -->
+    <div class="row">
+    </div>
+
+
+
     
     <!-- /.row -->
-</div>
+    </div>
 <!-- /#page-wrapper -->
+</div>
+
 
 <!-- import graph function -->
 <script>
@@ -61,12 +165,78 @@
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
 
+
+        /* ---------------- Gauge ---------------- */
+        var gaugeOptions = {
+            animateEasing: true,
+
+            elementWidth: 200,
+            elementHeight: 150,
+
+            arcFillStart: 10,
+            arcFillEnd: 12,
+            arcFillTotal: 20,
+
+            inc: 1.0,
+            incTot: 1.0,
+            arcBgColorLight: 200,
+            arcBgColorSat: 50,
+
+            colorArcFg: '#FF3300',
+            animateSpeed: 1,
+
+        };
+        var gaugeOptions2 = jQuery.extend(true, {}, gaugeOptions);
+
+        gaugeOptions.appendTo = '#gauge_today_last_hour';
+        gaugeOptions.dialLabel = 'Last hour';
+        gaugeOptions.elementId = 'gauge1';
+        console.log(gaugeOptions);
+        var gauge_today_last_hour = new FlexGauge(gaugeOptions);
+        
+        gaugeOptions2.appendTo = '#gauge_today_last_days';
+        gaugeOptions2.dialLabel = 'Today';
+        gaugeOptions2.elementId = 'gauge2';
+        console.log(gaugeOptions2);
+        var gauge_today_last_days = new FlexGauge(gaugeOptions2);
+
+
+        /* ---------- Sparkline Charts ---------- */
+        //generate random number for charts
+        randNum = function(){
+            //return Math.floor(Math.random()*101);
+            return (Math.floor( Math.random()* (1+40-20) ) ) + 20;
+        }
+        
+        var chartColours = ['#2FABE9', '#FA5833', '#b9e672', '#bbdce3', '#9a3b1b', '#5a8022', '#2c7282'];
+        
+        //sparklines (making loop with random data for all 7 sparkline)
+        i=1;
+        for (i=1; i<9; i++) {
+            var data = [[1, 3+randNum()], [2, 5+randNum()], [3, 8+randNum()], [4, 11+randNum()],[5, 14+randNum()],[6, 17+randNum()],[7, 20+randNum()], [8, 15+randNum()], [9, 18+randNum()], [10, 22+randNum()]];
+            placeholder = '.sparkLineStats' + i;
+
+		
+            $(placeholder).sparkline(data, {
+                width: 200,//Width of the chart - Defaults to 'auto' - May be any valid css width - 1.5em, 20px, etc (using a number without a unit specifier won't do what you want) - This option does nothing for bar and tristate chars (see barWidth)
+                height: 60,//Height of the chart - Defaults to 'auto' (line height of the containing tag)
+                lineColor: '#2FABE9',//Used by line and discrete charts to specify the colour of the line drawn as a CSS values string
+                fillColor: '#f2f7f9',//Specify the colour used to fill the area under the graph as a CSS value. Set to false to disable fill
+                spotColor: '#467e8c',//The CSS colour of the final value marker. Set to false or an empty string to hide it
+                maxSpotColor: '#b9e672',//The CSS colour of the marker displayed for the maximum value. Set to false or an empty string to hide it
+                minSpotColor: '#FA5833',//The CSS colour of the marker displayed for the mimum value. Set to false or an empty string to hide it
+                spotRadius: 2,//Radius of all spot markers, In pixels (default: 1.5) - Integer
+                lineWidth: 1//In pixels (default: 1) - Integer
+            });
+
+}
+
+
+
+
+
    });
 </script>
 
-
-
-</div>
 </body>
-
 </html>
