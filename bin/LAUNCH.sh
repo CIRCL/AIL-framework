@@ -67,6 +67,7 @@ function launching_lvldb {
     db1_y='2013'
     db2_y='2014'
     db3_y='2016'
+    db4_y='3016'
     nb_db=13
 
     screen -dmS "LevelDB"
@@ -78,6 +79,10 @@ function launching_lvldb {
     screen -S "LevelDB" -X screen -t "2014" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2014/ -P '$db2_y' -M '$nb_db'; read x'
     sleep 0.1
     screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db3_y' -M '$nb_db'; read x'
+
+    # For Curve
+    sleep 0.1
+    screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$db4_y' -M '$nb_db'; read x'
 }
 
 function launching_logs {
@@ -140,6 +145,12 @@ function launching_scripts {
     screen -S "Script" -X screen -t "Cve" bash -c './Cve.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "WebStats" bash -c './WebStats.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Browse_warning_paste" bash -c './Browse_warning_paste.py; read x'
 }
 
 #If no params, display the help

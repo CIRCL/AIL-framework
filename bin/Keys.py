@@ -17,7 +17,9 @@ def search_gpg(message):
     if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
         #Send to duplicate
-        p.populate_set_out(message)
+        p.populate_set_out(message, 'Duplicate')
+        #send to Browse_warning_paste
+        p.populate_set_out('keys;{}'.format(message), 'BrowseWarningPaste')
 
 
 if __name__ == '__main__':
@@ -49,4 +51,3 @@ if __name__ == '__main__':
         search_gpg(message)
 
         # (Optional) Send that thing to the next queue
-        #p.populate_set_out(something_has_been_done)

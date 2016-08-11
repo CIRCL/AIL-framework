@@ -1,5 +1,7 @@
 [Directories]
 bloomfilters = Blooms
+#Duplicate_ssdeep
+dicofilters = Dicos
 pastes = PASTES
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
@@ -15,22 +17,23 @@ domainstrending_csv = var/www/static/csv/domainstrendingdata
 
 ##### Flask #####
 [Flask]
-#Number of minutes displayed for the number of processed pastes.
-minute_processed_paste = 10
-
 #Maximum number of character to display in the toolip
-max_preview_char = 250
+max_preview_char = 250 
 #Maximum number of character to display in the modal
-max_preview_modal = 800
+max_preview_modal = 800 
 #Default number of header to display in trending graphs
 default_display = 10
+#Number of minutes displayed for the number of processed pastes.
+minute_processed_paste = 10
 
 #### Modules #### 
 [Modules_Duplicates]
 #Number of month to look back
 maximum_month_range = 3
-#The value where two pastes are considerate duplicate.
-threshold_duplicate = 50
+#The value where two pastes are considerate duplicate for ssdeep.
+threshold_duplicate_ssdeep = 50
+#The value where two pastes are considerate duplicate for tlsh.
+threshold_duplicate_tlsh = 100
 #Minimum size of the paste considered
 min_paste_size = 0.3
 
@@ -57,15 +60,20 @@ port = 6379
 db = 1
 
 ##### LevelDB #####
+[Redis_Level_DB_Curve]
+host = localhost
+port = 3016
+db = 0
+
 [Redis_Level_DB]
 host = localhost
 port = 2016
 db = 0
 
-[Redis_Level_DB_Domain]
+[Redis_Level_DB_Trending]
 host = localhost
 port = 2016
-db = 3
+db = 0
 
 [Redis_Level_DB_Hashs]
 host = localhost

@@ -88,7 +88,7 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
 
     with open(feederfilename, 'rb') as f:
         # words of the files
-        words = sorted([word.strip() for word in f if word.strip()[0:2]!='//' ])
+        words = sorted([word.strip() for word in f if word.strip()[0:2]!='//' and word.strip()!='' ])
 
     headers = ['Date'] + words
     with open(csvfilename+'.csv', 'wb') as f:
@@ -112,7 +112,7 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
                         row.append(value)
             writer.writerow(row)
 
-def create_curve_with_list(server, csvfilename, to_plot, year, month):
+def create_curve_from_redis_set(server, csvfilename, set_to_plot, year, month):
     """Create a csv file used with dygraph.
 
     :param r_serv: -- connexion to redis database
@@ -122,15 +122,17 @@ def create_curve_with_list(server, csvfilename, to_plot, year, month):
     :param month: -- (integer) The month to process
 
     This function create a .csv file using datas in redis.
-    It's checking if the words contained in to_plot and
+    It's checking if the words contained in set_to_plot and
     their respectives values by days exists.
 
     """
 
     first_day = date(year, month, 01)
     last_day = date(year, month, calendar.monthrange(year, month)[1])
-    words = sorted(to_plot)
-
+    
+    redis_set_name = set_to_plot + "_set_" + str(year) + str(month).zfill(2)
+    words = list(server.smembers(redis_set_name))
+    
     headers = ['Date'] + words
     with open(csvfilename+'.csv', 'wb') as f:
         writer = csv.writer(f)

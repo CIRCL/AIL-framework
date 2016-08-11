@@ -25,6 +25,11 @@ def search_cve(message):
         print('{} contains CVEs'.format(paste.p_name))
         publisher.warning('{} contains CVEs'.format(paste.p_name))
 
+        #send to Browse_warning_paste
+        p.populate_set_out('cve;{}'.format(filepath), 'BrowseWarningPaste')
+        #Send to duplicate
+        p.populate_set_out(filepath, 'Duplicate')
+
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
     # Port of the redis instance used by pubsublogger
@@ -53,5 +58,3 @@ if __name__ == '__main__':
         # Do something with the message from the queue
         search_cve(message)
 
-        # (Optional) Send that thing to the next queue
-        #p.populate_set_out(something_has_been_done)

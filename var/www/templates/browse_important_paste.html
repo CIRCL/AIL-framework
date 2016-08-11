@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Analysis Information Leak framework Dashboard</title>
+
+  <!-- Core CSS -->
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+
+  <style>
+      .tooltip-inner {
+         text-align: left;
+         height: 200%;
+         width: 200%;
+         max-width: 500px;
+         max-height: 500px;
+         font-size: 13px;
+      }
+      xmp {
+         white-space:pre-wrap;
+         word-wrap:break-word;
+      }
+      .modal-backdrop.fade {
+         opacity: 0;
+      }
+  </style>
+
+</head>
+<body>
+
+    <div id="wrapper">
+      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+          <div class="navbar-header">
+              <ul class="nav navbar-nav">
+                  <li><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
+                  <li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
+                  <li><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
+                  <li class="active"><a href="{{ url_for('browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
+              </ul>
+          </div>
+      <!-- /.navbar-top-links -->
+          <div class="navbar-default sidebar" role="navigation">
+              <div class="sidebar-collapse">
+                  <ul class="nav" id="side-menu">
+                      <li class="sidebar-search">
+                          {% include 'searchbox.html' %}
+                      </li>
+                 </ul>
+                  <!-- /#side-menu -->
+              </div>
+              <!-- /.sidebar-collapse -->
+           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+          </div>
+          <!-- /.navbar-static-side -->
+      </nav>
+
+<!-- Modal -->
+<div id="mymodal" class="modal fade" role="dialog">
+  <div class="modal-dialog modal-lg">
+
+    <!-- Modal content-->
+    <div id="mymodalcontent" class="modal-content">
+      <div id="mymodalbody" class="modal-body" max-width="850px">
+        <p>Loading paste information...</p>
+        <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
+      </div>
+      <div class="modal-footer">
+        <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="page-wrapper">
+  <div class="row">
+      <div class="col-lg-12">
+          <h1 class="page-header">Browse important pastes</h1>
+      </div>
+      <!-- /.col-lg-12 -->
+  </div>
+    <!-- /.row -->
+    <div class="row">
+
+    <!-- /.nav-tabs -->
+    <ul class="nav nav-tabs">
+        <li name='nav-pan' class="active"><a data-toggle="tab" href="#credential-tab" data-attribute-name="credential" data-panel="credential-panel">Credentials</a></li>
+        <li name='nav-pan'><a data-toggle="tab" href="#creditcard-tab" data-attribute-name="creditcard" data-panel="creditcard-panel">Credit cards</a></li>
+        <li name='nav-pan'><a data-toggle="tab" href="#sqlinjection-tab" data-attribute-name="sqlinjection" data-panel="sqlinjection-panel">SQL injections</a></li>
+        <li name='nav-pan'><a data-toggle="tab" href="#cve-tab" data-attribute-name="cve" data-panel="cve-panel">CVEs</a></li>
+        <li name='nav-pan'><a data-toggle="tab" href="#keys-tab" data-attribute-name="keys" data-panel="keys-panel">Keys</a></li>
+        <li name='nav-pan'><a data-toggle="tab" href="#mail-tab" data-attribute-name="mail" data-panel="mail-panel">Mails</a></li>
+        <li name='nav-pan'><a data-toggle="tab" href="#phone-tab" data-attribute-name="phone" data-panel="phone-panel">Phones</a></li>
+    </ul>
+    </br>
+
+
+    <div class="tab-content">
+        <div class="col-lg-12 tab-pane fade in active" id="credential-tab" >
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" style="margin: 4px;">
+        </div>
+        <div class="col-lg-12 tab-pane fade" id="creditcard-tab">
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" style="margin: 4px;">
+        </div>
+        <div class="col-lg-12 tab-pane fade" id="sqlinjection-tab">
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" style="margin: 4px;">
+        </div>
+        <div class="col-lg-12 tab-pane fade" id="cve-tab">
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" style="margin: 4px;">
+        </div>
+        <div class="col-lg-12 tab-pane fade" id="keys-tab">
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" style="margin: 4px;">
+        </div>
+        <div class="col-lg-12 tab-pane fade" id="mail-tab">
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" style="margin: 4px;">
+        </div>
+        <div class="col-lg-12 tab-pane fade" id="phone-tab">
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" style="margin: 4px;">
+        </div>
+    </div> <!-- tab-content -->
+    <!-- /.row -->
+</div>
+<!-- /#page-wrapper -->
+
+<!-- import graph function -->
+<script>
+    $(document).ready(function(){
+        var dataPath = 'credential';
+        $.get("{{ url_for('importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
+            $('#'+dataPath+'-tab').html(data);
+        });
+    });
+</script>
+
+
+<script>
+// When a pannel is shown, create the data-table.
+var previous_tab = $('[data-attribute-name="credential');
+var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
+
+$('.nav-tabs a').on('shown.bs.tab', function(event){
+    var dataPath = $(event.target).attr('data-attribute-name');
+    $.get("{{ url_for('importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
+        var currentTab = $('[name].active').children();
+        $('#'+previous_tab.attr('data-attribute-name')+'-tab').html(loading_gif);
+        currentTab.removeClass( "active" );
+
+        $('#'+dataPath+'-tab').html(data);
+
+        $(event.target).parent().addClass( "active" );
+        previous_tab = currentTab;
+    });
+});
+</script>
+
+
+    </div>
+</body>
+
+</html>
