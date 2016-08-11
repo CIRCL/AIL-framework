@@ -40,14 +40,7 @@
 
     <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-          <div class="navbar-header">
-              <ul class="nav navbar-nav">
-                  <li><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-                  <li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
-                  <li><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
-                  <li class="active"><a href="{{ url_for('browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
-              </ul>
-          </div>
+      {% include 'header.html' %}
       <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
               <div class="sidebar-collapse">
@@ -86,7 +79,7 @@
 <div id="page-wrapper">
   <div class="row">
       <div class="col-lg-12">
-          <h1 class="page-header">Browse important pastes</h1>
+          <h1 class="page-header" data-page="page-browse" >Browse important pastes</h1>
       </div>
       <!-- /.col-lg-12 -->
   </div>
@@ -136,6 +129,9 @@
 <!-- import graph function -->
 <script>
     $(document).ready(function(){
+        activePage = $('h1.page-header').attr('data-page');
+        $("#"+activePage).addClass("active");
+
         var dataPath = 'credential';
         $.get("{{ url_for('importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
             $('#'+dataPath+'-tab').html(data);
