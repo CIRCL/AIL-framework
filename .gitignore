@@ -17,6 +17,9 @@ logs/
 var/www/static/
 !var/www/static/css/dygraph_gallery.css
 !var/www/static/js/indexjavascript.js
+!var/www/static/js/moduleTrending.js
+!var/www/static/js/plot-graph.js
+!var/www/static/js/trendingchart.js
 
 # Local config
 bin/packages/config.cfg

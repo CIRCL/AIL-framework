@@ -40,9 +40,9 @@ if __name__ == "__main__":
 
     # REDIS #
     r_serv1 = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB", "host"),
-        port=p.config.get("Redis_Level_DB", "port"),
-        db=p.config.get("Redis_Level_DB", "db"))
+        host=p.config.get("Redis_Level_DB_Curve", "host"),
+        port=p.config.get("Redis_Level_DB_Curve", "port"),
+        db=p.config.get("Redis_Level_DB_Curve", "db"))
 
     # FUNCTIONS #
     publisher.info("Script Curve started")

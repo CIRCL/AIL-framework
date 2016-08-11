@@ -52,7 +52,7 @@ if __name__ == '__main__':
             else:
                 # TODO Store the name of the empty paste inside a Redis-list.
                 print "Empty Paste: not processed"
-                publisher.debug("Empty Paste: {0} not processed".format(paste))
+                publisher.debug("Empty Paste: {0} not processed".format(message))
                 continue
         else:
             print "Empty Queues: Waiting..."

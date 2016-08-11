@@ -3,6 +3,7 @@
 import redis
 import pprint
 import time
+import os
 import dns.exception
 from packages import Paste
 from packages import lib_refine
@@ -39,6 +40,10 @@ if __name__ == "__main__":
         port=p.config.getint("Redis_Cache", "port"),
         db=p.config.getint("Redis_Cache", "db"))
 
+    # Protocol file path
+    protocolsfile_path = os.path.join(os.environ['AIL_HOME'],
+                         p.config.get("Directories", "protocolsfile"))
+
     # Country to log as critical
     cc_critical = p.config.get("Url", "cc_critical")
 
@@ -52,7 +57,14 @@ if __name__ == "__main__":
     prec_filename = None
     faup = Faup()
 
-    url_regex = "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
+    # Get all uri from protocolsfile (Used for Curve)
+    uri_scheme = ""
+    with open(protocolsfile_path, 'r') as scheme_file:
+        for scheme in scheme_file:
+            uri_scheme += scheme[:-1]+"|"
+    uri_scheme = uri_scheme[:-1]
+
+    url_regex = "("+uri_scheme+")\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*"
 
     while True:
         if message is not None:
@@ -66,7 +78,7 @@ if __name__ == "__main__":
                     matching_url = re.search(url_regex, PST.get_p_content())
                     url = matching_url.group(0)
 
-                    to_send = "{} {}".format(url, PST._get_p_date())
+                    to_send = "{} {} {}".format(url, PST._get_p_date(), filename)
                     p.populate_set_out(to_send, 'Url')
 
                     faup.decode(url)
@@ -103,10 +115,11 @@ if __name__ == "__main__":
                         print hostl, asn, cc, \
                             pycountry.countries.get(alpha2=cc).name
                         if cc == cc_critical:
-                            publisher.warning(
-                                'Url;{};{};{};Detected {} {}'.format(
+                            to_print = 'Url;{};{};{};Detected {} {}'.format(
                                     PST.p_source, PST.p_date, PST.p_name,
-                                    hostl, cc))
+                                    hostl, cc)
+                            #publisher.warning(to_print)
+                            print to_print
                     else:
                         print hostl, asn, cc
 

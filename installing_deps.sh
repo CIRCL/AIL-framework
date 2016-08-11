@@ -39,6 +39,12 @@ echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/faup.conf
 sudo ldconfig
 popd
 
+# tlsh
+test ! -d tlsh && git clone git://github.com/trendmicro/tlsh.git
+pushd tlsh/
+./make
+popd
+
 # REDIS LEVEL DB #
 test ! -d redis-leveldb/ && git clone https://github.com/KDr2/redis-leveldb.git
 pushd redis-leveldb/
@@ -72,6 +78,10 @@ pushd faup/src/lib/bindings/python/
 python setup.py install
 popd
 
+# Py tlsh
+pushd tlsh/py_ext
+python setup.py build
+python setup.py install
 
 # Download the necessary NLTK corpora
 HOME=$(pwd) python -m textblob.download_corpora

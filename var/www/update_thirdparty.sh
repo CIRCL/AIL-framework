@@ -36,6 +36,7 @@ wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTabl
 #Ressource for graph
 wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.js -O ./static/js/jquery.flot.js
 wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.pie.js -O ./static/js/jquery.flot.pie.js
+wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.time.js -O ./static/js/jquery.flot.time.js
 
 mkdir -p ./static/image
 pushd static/image
