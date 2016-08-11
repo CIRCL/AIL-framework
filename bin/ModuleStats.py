@@ -15,7 +15,7 @@ from Helper import Process
 from packages import Paste
 
 # Config Var
-max_set_cardinality = 7
+max_set_cardinality = 8
 
 def get_date_range(num_day):
     curr_date = datetime.date.today()
