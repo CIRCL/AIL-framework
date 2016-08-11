@@ -429,6 +429,14 @@ def importantPasteByModule():
 def moduletrending():
     return render_template("Moduletrending.html")
 
+@app.route("/sentiment_analysis_trending/")
+def sentiment_analysis_trending():
+    return render_template("sentiment_analysis_trending.html")
+
+@app.route("/sentiment_analysis_plot_tool/")
+def sentiment_analysis_plot_tool():
+    return render_template("sentiment_analysis_plot_tool.html")
+
 
 @app.route("/showsavedpaste/") #completely shows the paste in a new tab
 def showsavedpaste():

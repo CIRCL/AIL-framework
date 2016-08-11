@@ -4,5 +4,12 @@
         <li id='page-trendingchart'><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
         <li id='page-modulestats'><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
         <li id='page-browse'><a href="{{ url_for('browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
+        <li id='page-sentiment'><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-search-plus "></i> Sentiment Analysis
+            <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('sentiment_analysis_trending') }}">Trending</a></li>
+              <li><a href="{{ url_for('sentiment_analysis_plot_tool') }}">Plot Tool</a></li>
+            </ul>
+        </li>
     </ul>
 </div>
