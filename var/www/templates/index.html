@@ -34,14 +34,7 @@
 
     <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-          <div class="navbar-header">
-           <ul class="nav navbar-nav">
-              <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-              <li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
-              <li><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
-              <li><a href="{{ url_for('browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
-           </ul>
-        </div>
+          {% include 'header.html' %}
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
               <div class="sidebar-collapse">
@@ -142,8 +135,13 @@
     </div>
     <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"></script>
 
+    <script>
+        activePage = "page-index";
+        $("#"+activePage).addClass("active");
+    </script>
+
     <script type="text/javascript">
-    initfunc( "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}", {{ request.script_root|tojson|safe }} );
+        initfunc( "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}", {{ request.script_root|tojson|safe }} );
     </script>
 
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
