@@ -24,14 +24,7 @@
 
 	    <div id="wrapper">
 	      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-		  <div class="navbar-header">
-		  <ul class="nav navbar-nav">
-		      <li><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-                      <li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
-                      <li class="active"><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
-                      <li><a href="{{ url_for('browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
-                  </ul>
-          </div>
+              {% include 'header.html' %}
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
               <div class="sidebar-collapse">
@@ -62,6 +55,9 @@
         <script src="{{ url_for('static', filename='js/moduleTrending.js') }}"></script>
         <script>
             $(document).ready(function(){
+                activePage = "page-modulestats"
+                $("#"+activePage).addClass("active");
+
                 $("[align]").css({padding: "2px", width: 'auto', 'background': "rgba(102, 102, 102, 0.15)" , 'border': "3px solid rgb(102, 102, 102)"})
 
                refreshPlot(true); 
