@@ -107,20 +107,20 @@
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsToday1"></div><strong>Graph 1</strong></li>
-                                           <li><div class="sparkLineStatsToday2"></div><strong>Graph 2</strong></li>
-                                           <li><div class="sparkLineStatsToday3"></div><strong>Graph 3</strong></li>
-                                           <li><div class="sparkLineStatsToday4"></div><strong>Graph 4</strong></li>
+                                           <li><div class="sparkLineStatsToday1"></div><div id="line_today_graph1"></div><strong id="provider-today1">Graph 1</strong></li>
+                                           <li><div class="sparkLineStatsToday2"></div><div id="line_today_graph2"></div><strong id="provider-today2">Graph 2</strong></li>
+                                           <li><div class="sparkLineStatsToday3"></div><div id="line_today_graph3"></div><strong id="provider-today3">Graph 3</strong></li>
+                                           <li><div class="sparkLineStatsToday4"></div><div id="line_today_graph4"></div><strong id="provider-today4">Graph 4</strong></li>
                                        </ul>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsToday6"></div><strong>Graph 1</strong></li>
-                                           <li><div class="sparkLineStatsToday7"></div><strong>Graph 2</strong></li>
-                                           <li><div class="sparkLineStatsToday8"></div><strong>Graph 3</strong></li>
-                                           <li><div class="sparkLineStatsToday9"></div><strong>Graph 4</strong></li>
+                                           <li><div class="sparkLineStatsToday6"></div><div id="line_today_graph5"></div><strong id="provider-today5">Graph 5</strong></li>
+                                           <li><div class="sparkLineStatsToday7"></div><div id="line_today_graph6"></div><strong id="provider-today6">Graph 6</strong></li>
+                                           <li><div class="sparkLineStatsToday8"></div><div id="line_today_graph7"></div><strong id="provider-today7">Graph 7</strong></li>
+                                           <li><div class="sparkLineStatsToday9"></div><div id="line_today_graph8"></div><strong id="provider-today8">Graph 8</strong></li>
                                        </ul>
                                    </div>
                                 </div> 
@@ -129,9 +129,11 @@
                             <div class="col-lg-3">
                                 <div class="well text-center" style="padding: 0px;">
                                     <div id="gauge_today_last_hour"></div>
+                                    <div id="bar_today_last_hour"></div>
                                 </div>
                                 <div class="well text-center" style="padding: 0px;">
                                     <div id="gauge_today_last_days"></div>
+                                    <div id="bar_today_last_hour"></div>
                                 </div>
                             </div>
                             <!-- /.row -->
@@ -161,20 +163,20 @@
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsWeek1"></div><strong>Graph 1</strong></li>
-                                           <li><div class="sparkLineStatsWeek2"></div><strong>Graph 2</strong></li>
-                                           <li><div class="sparkLineStatsWeek3"></div><strong>Graph 3</strong></li>
-                                           <li><div class="sparkLineStatsWeek4"></div><strong>Graph 4</strong></li>
+                                           <li><div class="sparkLineStatsWeek1"></div><div id="line_week_graph1"></div><strong id="provider-today1">Graph 1</strong></li>
+                                           <li><div class="sparkLineStatsWeek2"></div><div id="line_week_graph2"></div><strong id="provider-today2">Graph 2</strong></li>
+                                           <li><div class="sparkLineStatsWeek3"></div><div id="line_week_graph3"></div><strong id="provider-today3">Graph 3</strong></li>
+                                           <li><div class="sparkLineStatsWeek4"></div><div id="line_week_graph4"></div><strong id="provider-today4">Graph 4</strong></li>
                                        </ul>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsWeek6"></div><strong>Graph 1</strong></li>
-                                           <li><div class="sparkLineStatsWeek7"></div><strong>Graph 2</strong></li>
-                                           <li><div class="sparkLineStatsWeek8"></div><strong>Graph 3</strong></li>
-                                           <li><div class="sparkLineStatsWeek9"></div><strong>Graph 4</strong></li>
+                                           <li><div class="sparkLineStatsWeek6"></div><div id="line_week_graph5"></div><strong id="provider-today5">Graph 5</strong></li>
+                                           <li><div class="sparkLineStatsWeek7"></div><div id="line_week_graph6"></div><strong id="provider-today6">Graph 6</strong></li>
+                                           <li><div class="sparkLineStatsWeek8"></div><div id="line_week_graph7"></div><strong id="provider-today7">Graph 7</strong></li>
+                                           <li><div class="sparkLineStatsWeek9"></div><div id="line_week_graph8"></div><strong id="provider-today8">Graph 8</strong></li>
                                        </ul>
                                    </div>
                                 </div> 
@@ -238,104 +240,11 @@
 
 
 <!-- import graph function -->
+<script src="{{ url_for('static', filename='js/sentiment_trending.js') }}"></script>
 <script>
     $(document).ready(function(){
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
-
-
-        /* ---------------- Gauge ---------------- */
-        var gaugeOptions = {
-            animateEasing: true,
-
-            elementWidth: 200,
-            elementHeight: 125,
-
-            arcFillStart: 10,
-            arcFillEnd: 12,
-            arcFillTotal: 20,
-
-            inc: -0.7,
-            incTot: 1.0,
-            arcBgColorLight: 200,
-            arcBgColorSat: 50,
-
-            colorArcFg: '#FF3300',
-            animateSpeed: 1,
-
-        };
-        var gaugeOptions2 = jQuery.extend(true, {}, gaugeOptions);
-        var gaugeOptions3 = jQuery.extend(true, {}, gaugeOptions);
-
-        gaugeOptions.appendTo = '#gauge_today_last_hour';
-        gaugeOptions.dialLabel = 'Last hour';
-        gaugeOptions.elementId = 'gauge1';
-        var gauge_today_last_hour = new FlexGauge(gaugeOptions);
-        
-        gaugeOptions2.appendTo = '#gauge_today_last_days';
-        gaugeOptions2.dialLabel = 'Today';
-        gaugeOptions2.elementId = 'gauge2';
-        var gauge_today_last_days = new FlexGauge(gaugeOptions2);
-
-        gaugeOptions3.appendTo = '#gauge_week';
-        gaugeOptions3.dialLabel = 'Week';
-        gaugeOptions3.elementId = 'gauge3';
-        var gauge_today_last_days = new FlexGauge(gaugeOptions3);
-
-
-
-
-
-
-
-
-
-        /* ---------- Sparkline Charts ---------- */
-         var sparklineOptions = {
-                width: 250,//Width of the chart - Defaults to 'auto' - May be any valid css width - 1.5em, 20px, etc (using a number without a unit specifier won't do what you want) - This option does nothing for bar and tristate chars (see barWidth)
-                height: 80,//Height of the chart - Defaults to 'auto' (line height of the containing tag)
-                lineColor: '#2FABE9',//Used by line and discrete charts to specify the colour of the line drawn as a CSS values string
-                fillColor: '#f2f7f9',//Specify the colour used to fill the area under the graph as a CSS value. Set to false to disable fill
-                spotColor: '#467e8c',//The CSS colour of the final value marker. Set to false or an empty string to hide it
-                maxSpotColor: '#b9e672',//The CSS colour of the marker displayed for the maximum value. Set to false or an empty string to hide it
-                minSpotColor: '#FA5833',//The CSS colour of the marker displayed for the mimum value. Set to false or an empty string to hide it
-                spotRadius: 2,//Radius of all spot markers, In pixels (default: 1.5) - Integer
-                lineWidth: 1//In pixels (default: 1) - Integer
-            };
-
-
-        //generate random number for charts
-        randNum = function(){
-            var num = Math.random();
-            if(num > 0.5)
-                num = -1+num;
-            console.log(Math.floor(num*101));
-            return Math.floor(num*101);
-            //return (Math.floor( Math.random()* (1+40-20) ) ) + 20;
-        }
-        
-        var chartColours = ['#2FABE9', '#FA5833', '#b9e672', '#bbdce3', '#9a3b1b', '#5a8022', '#2c7282'];
-        
-        //sparklines (making loop with random data for all 10 sparkline)
-        i=1;
-        for (i=1; i<10; i++) {
-            var data = [[1, 3+randNum()], [2, 5+randNum()], [3, 8+randNum()], [4, 11+randNum()],[5, 14+randNum()],[6, 17+randNum()],[7, 20+randNum()], [8, 15+randNum()], [9, 18+randNum()], [10, 22+randNum()]];
-            placeholder = '.sparkLineStatsToday' + i;
-		
-            $(placeholder).sparkline(data, sparklineOptions);
-
-        }
-
-        //sparklines (making loop with random data for all 10 sparkline)
-        i=1;
-        for (i=1; i<10; i++) {
-            var data = [[1, 3+randNum()], [2, 5+randNum()], [3, 8+randNum()], [4, 11+randNum()],[5, 14+randNum()],[6, 17+randNum()],[7, 20+randNum()], [8, 15+randNum()], [9, 18+randNum()], [10, 22+randNum()]];
-            placeholder = '.sparkLineStatsWeek' + i;
-
-            $(placeholder).sparkline(data, sparklineOptions);
-
-        }
-
 
 
    });
