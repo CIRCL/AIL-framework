@@ -13,8 +13,9 @@
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.sparkline.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/FlexGauge.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.sparkline.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.canvasjs.min.js') }}"></script>
 
   <style>
       strong {
@@ -34,7 +35,6 @@
       .sparkLineStats ul li {
           margin-bottom: 8px;
           line-height: 90px;
-          padding-top: 3px;
           font-size: 12px;
       }
 
@@ -44,6 +44,11 @@
 
       .sparkLineStats ul li div:first-child {
           margin-right: 5px;
+      }
+      
+      .wellInside {
+          background-color: #dedede;
+          padding: 12px;
       }
 
       .fg-dial-label {
@@ -102,25 +107,25 @@
                         </div>
                         <div class="panel-body">
                             <!-- left column -->
-                            <div class="col-lg-9">
+                            <div class="col-lg-9 well">
                                 <!-- providers charts -->
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsToday1"></div><div id="line_today_graph1"></div><strong id="provider-today1">Graph 1</strong></li>
-                                           <li><div class="sparkLineStatsToday2"></div><div id="line_today_graph2"></div><strong id="provider-today2">Graph 2</strong></li>
-                                           <li><div class="sparkLineStatsToday3"></div><div id="line_today_graph3"></div><strong id="provider-today3">Graph 3</strong></li>
-                                           <li><div class="sparkLineStatsToday4"></div><div id="line_today_graph4"></div><strong id="provider-today4">Graph 4</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday1"></div><div id="line_today_graph1"></div><strong id="providerToday1">Graph 1</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday2"></div><div id="line_today_graph2"></div><strong id="providerToday2">Graph 2</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday3"></div><div id="line_today_graph3"></div><strong id="providerToday3">Graph 3</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday4"></div><div id="line_today_graph4"></div><strong id="providerToday4">Graph 4</strong></li>
                                        </ul>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsToday6"></div><div id="line_today_graph5"></div><strong id="provider-today5">Graph 5</strong></li>
-                                           <li><div class="sparkLineStatsToday7"></div><div id="line_today_graph6"></div><strong id="provider-today6">Graph 6</strong></li>
-                                           <li><div class="sparkLineStatsToday8"></div><div id="line_today_graph7"></div><strong id="provider-today7">Graph 7</strong></li>
-                                           <li><div class="sparkLineStatsToday9"></div><div id="line_today_graph8"></div><strong id="provider-today8">Graph 8</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday6"></div><div id="line_today_graph5"></div><strong id="providerToday5">Graph 5</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday7"></div><div id="line_today_graph6"></div><strong id="providerToday6">Graph 6</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday8"></div><div id="line_today_graph7"></div><strong id="providerToday7">Graph 7</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsToday9"></div><div id="line_today_graph8"></div><strong id="providerToday8">Graph 8</strong></li>
                                        </ul>
                                    </div>
                                 </div> 
@@ -128,12 +133,16 @@
                             <!-- right column -->
                             <div class="col-lg-3">
                                 <div class="well text-center" style="padding: 0px;">
+                                    <strong>Mood value</strong>
                                     <div id="gauge_today_last_hour"></div>
-                                    <div id="bar_today_last_hour"></div>
+                                    <strong>Compound by mood</strong>
+                                    <div id="bar_today_last_hour" style="height: 70px; width: 100%;"></div>
                                 </div>
                                 <div class="well text-center" style="padding: 0px;">
+                                    <strong>Mood value</strong>
                                     <div id="gauge_today_last_days"></div>
-                                    <div id="bar_today_last_hour"></div>
+                                    <strong>Compound by mood</strong>
+                                    <div id="bar_today_last_days" style="height: 70px; width: 100%;"></div>
                                 </div>
                             </div>
                             <!-- /.row -->
@@ -158,25 +167,25 @@
                         </div>
                         <div class="panel-body">
                             <!-- left column -->
-                            <div class="col-lg-9">
+                            <div class="col-lg-9 well">
                                 <!-- providers charts -->
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsWeek1"></div><div id="line_week_graph1"></div><strong id="provider-today1">Graph 1</strong></li>
-                                           <li><div class="sparkLineStatsWeek2"></div><div id="line_week_graph2"></div><strong id="provider-today2">Graph 2</strong></li>
-                                           <li><div class="sparkLineStatsWeek3"></div><div id="line_week_graph3"></div><strong id="provider-today3">Graph 3</strong></li>
-                                           <li><div class="sparkLineStatsWeek4"></div><div id="line_week_graph4"></div><strong id="provider-today4">Graph 4</strong></li>
-                                       </ul>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek1"></div><div id="line_week_graph1"></div><strong id="providerWeek1">Graph 1</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek2"></div><div id="line_week_graph2"></div><strong id="providerWeek2">Graph 2</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek3"></div><div id="line_week_graph3"></div><strong id="providerWeek3">Graph 3</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek4"></div><div id="line_week_graph4"></div><strong id="providerWeek4">Graph 4</strong></li>
+                                        </ul>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="sparkLineStatsWeek6"></div><div id="line_week_graph5"></div><strong id="provider-today5">Graph 5</strong></li>
-                                           <li><div class="sparkLineStatsWeek7"></div><div id="line_week_graph6"></div><strong id="provider-today6">Graph 6</strong></li>
-                                           <li><div class="sparkLineStatsWeek8"></div><div id="line_week_graph7"></div><strong id="provider-today7">Graph 7</strong></li>
-                                           <li><div class="sparkLineStatsWeek9"></div><div id="line_week_graph8"></div><strong id="provider-today8">Graph 8</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek5"></div><div id="line_week_graph5"></div><strong id="providerWeek5">Graph 5</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek6"></div><div id="line_week_graph6"></div><strong id="providerWeek6">Graph 6</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek7"></div><div id="line_week_graph7"></div><strong id="providerWeek7">Graph 7</strong></li>
+                                           <li class="well wellInside"><div class="sparkLineStatsWeek8"></div><div id="line_week_graph8"></div><strong id="providerWeek8">Graph 8</strong></li>
                                        </ul>
                                    </div>
                                 </div> 
@@ -184,6 +193,7 @@
                             <!-- right column -->
                             <div class="col-lg-3">
                                 <div class="well text-center" style="padding: 0px;">
+                                    <strong>Mood value</strong>
                                     <div id="gauge_week"></div>
                                 </div>
                                 <div class="well text-center" style="padding: 0px;">
