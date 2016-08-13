@@ -21,12 +21,16 @@
       strong {
           font-size: 16px;
       }
+      
+      .table {
+          margin-bottom: 0px;
+      }
 
       .sparkLineStats ul {
           padding-left:0;
           list-style:none
       }
-
+      
       .sparkLineStats {
           position: relative;
           margin-bottom: -4px;
@@ -46,9 +50,8 @@
           margin-right: 5px;
       }
       
-      .wellInside {
-          background-color: #dedede;
-          padding: 12px;
+      .panelInside {
+          padding: 5px;
       }
 
       .fg-dial-label {
@@ -107,26 +110,134 @@
                         </div>
                         <div class="panel-body">
                             <!-- left column -->
-                            <div class="col-lg-9 well">
+                            <div class="col-lg-9" style="padding-left: 0px;">
                                 <!-- providers charts -->
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
-                                       <ul>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday1"></div><div id="line_today_graph1"></div><strong id="providerToday1">Graph 1</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday2"></div><div id="line_today_graph2"></div><strong id="providerToday2">Graph 2</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday3"></div><div id="line_today_graph3"></div><strong id="providerToday3">Graph 3</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday4"></div><div id="line_today_graph4"></div><strong id="providerToday4">Graph 4</strong></li>
-                                       </ul>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 1</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday1"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday1b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 2</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday2"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday2b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 3</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday3"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday3b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                        </div>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 4</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday4"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday4b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                        </div>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
-                                       <ul>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday6"></div><div id="line_today_graph5"></div><strong id="providerToday5">Graph 5</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday7"></div><div id="line_today_graph6"></div><strong id="providerToday6">Graph 6</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday8"></div><div id="line_today_graph7"></div><strong id="providerToday7">Graph 7</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsToday9"></div><div id="line_today_graph8"></div><strong id="providerToday8">Graph 8</strong></li>
-                                       </ul>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 5</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday5"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday5b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                        </div>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 6</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday6"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday6b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                        </div>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 7</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday7"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday7b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                        </div>
+                                       <div id="panel-today" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 8</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday8"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsToday8b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                        </div>
                                    </div>
                                 </div> 
                             </div>
@@ -167,26 +278,134 @@
                         </div>
                         <div class="panel-body">
                             <!-- left column -->
-                            <div class="col-lg-9 well">
+                            <div class="col-lg-9" style="padding-left: 0px;">
                                 <!-- providers charts -->
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
-                                       <ul>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek1"></div><div id="line_week_graph1"></div><strong id="providerWeek1">Graph 1</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek2"></div><div id="line_week_graph2"></div><strong id="providerWeek2">Graph 2</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek3"></div><div id="line_week_graph3"></div><strong id="providerWeek3">Graph 3</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek4"></div><div id="line_week_graph4"></div><strong id="providerWeek4">Graph 4</strong></li>
-                                        </ul>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 1</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek1"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek1b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 2</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek2"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek2b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 3</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek3"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek3b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 4</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek4"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek4b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
-                                       <ul>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek5"></div><div id="line_week_graph5"></div><strong id="providerWeek5">Graph 5</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek6"></div><div id="line_week_graph6"></div><strong id="providerWeek6">Graph 6</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek7"></div><div id="line_week_graph7"></div><strong id="providerWeek7">Graph 7</strong></li>
-                                           <li class="well wellInside"><div class="sparkLineStatsWeek8"></div><div id="line_week_graph8"></div><strong id="providerWeek8">Graph 8</strong></li>
-                                       </ul>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 5</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek5"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek5b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 6</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek6"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek6b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 7</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek7"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek7b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
+                                       <div id="panel-week" class="panel panel-default">
+                                           <div class="panel-heading">
+                                               <strong>Graph 8</strong>
+                                           </div>
+                                           <div class="panel-body panelInside">
+                                               <table class="table">
+                                                   <tbody>
+                                                       <tr>
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek8"></div></td> 
+                                                           <td style="border-top: 0px solid #ddd;"><div class="sparkLineStatsWeek8b"></div></td> 
+                                                       </tr>
+                                                    </tbody>
+                                               </table>
+                                           </div>
+                                       </div>
                                    </div>
                                 </div> 
                             </div>
@@ -252,6 +471,7 @@
 <!-- import graph function -->
 <script src="{{ url_for('static', filename='js/sentiment_trending.js') }}"></script>
 <script>
+
     $(document).ready(function(){
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");

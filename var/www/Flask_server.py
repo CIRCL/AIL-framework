@@ -5,6 +5,7 @@ import redis
 import ConfigParser
 import json
 import datetime
+import calendar
 from flask import Flask, render_template, jsonify, request
 import flask
 import os
@@ -49,6 +50,12 @@ r_serv_db = redis.StrictRedis(
     port=cfg.getint("Redis_Level_DB", "port"),
     db=cfg.getint("Redis_Level_DB", "db"))
 
+r_serv_sentiment = redis.StrictRedis(
+        host=cfg.get("Redis_Level_DB_Sentiment", "host"),
+        port=cfg.getint("Redis_Level_DB_Sentiment", "port"),
+        db=cfg.getint("Redis_Level_DB_Sentiment", "db"))
+
+ 
 app = Flask(__name__, static_url_path='/static/')
 
 
@@ -432,6 +439,36 @@ def moduletrending():
 @app.route("/sentiment_analysis_trending/")
 def sentiment_analysis_trending():
     return render_template("sentiment_analysis_trending.html")
+
+
+@app.route("/sentiment_analysis_getplotdata/")
+def sentiment_analysis_getplotdata():
+    # Get the top providers based on number of pastes
+    oneHour = 60*60
+    sevenDays = oneHour*24*7
+    dateStart = datetime.datetime.now()
+    dateStart = dateStart.replace(minute=0, second=0, microsecond=0)
+    dateStart_timestamp = calendar.timegm(dateStart.timetuple())
+
+    to_return = {}
+    for cur_provider in r_serv_charts.smembers('providers_set'):
+       cur_provider_name = cur_provider + '_' 
+       list_date = {}
+       for cur_timestamp in range(int(dateStart_timestamp), int(dateStart_timestamp)-sevenDays-oneHour, -oneHour):
+           cur_set_name = cur_provider_name + str(cur_timestamp)
+           
+           list_value = []
+           for cur_id in r_serv_sentiment.smembers(cur_set_name):
+               cur_value = r_serv_sentiment.get(cur_id)
+               list_value.append(cur_value)
+           list_date[cur_timestamp] = list_value
+       to_return[cur_provider] = list_date
+
+    return jsonify(to_return)
+
+
+
+
 
 @app.route("/sentiment_analysis_plot_tool/")
 def sentiment_analysis_plot_tool():
