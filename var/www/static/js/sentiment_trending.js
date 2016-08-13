@@ -30,8 +30,9 @@ randNum = function(){
 $.getJSON("/sentiment_analysis_getplotdata/",
     function(data) {
         //console.log(data);
-        var all_plot_data = [];
+        var all_data = [];
         var plot_data = [];
+        var graph_avg = [];
         var array_provider = Object.keys(data);
         var dates_providers = Object.keys(data[array_provider[0]]);
         var dateStart = parseInt(dates_providers[0]);
@@ -42,8 +43,10 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             var graph_data = [];
             var spark_data = [];
             var curr_provider = array_provider[graphNum];
+            var curr_sum = 0.0;
+            var day_sum = 0.0;
 
-            for(curr_date=dateStart; curr_date<dateStart+oneWeek+oneHour; curr_date+=oneHour){
+            for(curr_date=dateStart; curr_date<dateStart+oneWeek; curr_date+=oneHour){
                 var data_array = data[curr_provider][curr_date];
 
                 if (data_array.length == 0){
@@ -73,19 +76,41 @@ $.getJSON("/sentiment_analysis_getplotdata/",
 
                     graph_data.push({'neg': neg, 'neu': neu, 'pos': pos, 'compoundPos': compPosAvg, 'compoundNeg': compNegAvg});
                     spark_data.push(pos-neg);
+                    curr_sum += (pos-neg);
+
+                    if(curr_date >= dateStart+oneWeek-24*oneHour){
+                        day_sum += (pos-neg);
+                    }
+
                 }
             }
+            var curr_avg = curr_sum / (oneWeek/oneHour); 
+            graph_avg.push(curr_avg);
             plot_data.push(spark_data);
-            all_plot_data.push(graph_data);
+            all_data.push(graph_data);
         
+            // print week
             var num = graphNum + 1;
-            placeholder = '.sparkLineStatsWeek' + num;
-            //$(placeholder).sparkline([1,2,3,9], sparklineOptions);
+            var placeholder = '.sparkLineStatsWeek' + num;
             $(placeholder).sparkline(plot_data[graphNum], sparklineOptions);
-            console.log(plot_data[graphNum]);
+            //console.log(plot_data[graphNum]);
         
             sparklineOptions.barWidth = 7;
-            $(placeholder+'b').sparkline([0.7], sparklineOptions);
+            $(placeholder+'b').sparkline([curr_avg], sparklineOptions);
+            sparklineOptions.barWidth = 2;
+
+            // print today
+            var data_length = plot_data[graphNum].length;
+            var data_today = plot_data[graphNum].slice(data_length-24*2, data_length-24*1);
+
+            placeholder = '.sparkLineStatsToday' + num;
+            sparklineOptions.barWidth = 14;
+            $(placeholder).sparkline(data_today, sparklineOptions);
+
+            //console.log(day_sum);
+            sparklineOptions.barWidth = 7;
+            $(placeholder+'b').sparkline([day_sum/24], sparklineOptions);
+            //$(placeholder+'b').sparkline(10, sparklineOptions);
             sparklineOptions.barWidth = 2;
 
         }//for loop
@@ -95,20 +120,6 @@ $.getJSON("/sentiment_analysis_getplotdata/",
 
 
 
-
-
-//sparklines (making loop with random data for all 10 sparkline)
-i=1;
-for (i=1; i<10; i++) {
-    var data = [3+randNum(), 5+randNum(), 8+randNum()];
-    placeholder = '.sparkLineStatsToday' + i;
-
-  $(placeholder).sparkline(data, sparklineOptions);
-
-  sparklineOptions.barWidth = 7;
-  $(placeholder+'b').sparkline([0.7], sparklineOptions);
-  sparklineOptions.barWidth = 2;
-}
 
 
 
