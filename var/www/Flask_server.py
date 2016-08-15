@@ -474,18 +474,23 @@ def sentiment_analysis_plot_tool():
 
 
 
-@app.route("/sentiment_analysis_plot_tool_getdata/")
+@app.route("/sentiment_analysis_plot_tool_getdata/", methods=['GET'])
 def sentiment_analysis_plot_tool_getdata():
     getProviders = request.args.get('getProviders')
 
-    if getProviders:
+    if getProviders == 'True':
         providers = []
         for cur_provider in r_serv_charts.smembers('providers_set'):
             providers.append(cur_provider)
         return jsonify(providers)
 
     else:
-        return 0
+        query = request.args.get('query')
+        Qdate = request.args.get('Qdate')
+        print query
+        print Qdate
+        data = [[1,12], [2,32], [3,11]]
+        return jsonify(data)
 
 
 
