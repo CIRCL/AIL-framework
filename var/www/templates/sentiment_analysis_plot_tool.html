@@ -173,8 +173,8 @@
 
         function plotData(){
             var query = $( "input:checked" ).map(function () {return this.value;}).get().join(",");
-            var Qdate = 2;
-
+            var Qdate = new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +'-'+ new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString()
+                
             $.getJSON('/sentiment_analysis_plot_tool_getdata/?getProviders=False&query='+query+'&Qdate='+Qdate, function(data){
                 console.log(data);
             });

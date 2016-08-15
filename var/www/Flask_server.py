@@ -486,11 +486,37 @@ def sentiment_analysis_plot_tool_getdata():
 
     else:
         query = request.args.get('query')
+        query = query.split(',')
         Qdate = request.args.get('Qdate')
         print query
         print Qdate
-        data = [[1,12], [2,32], [3,11]]
-        return jsonify(data)
+
+        date1 = (Qdate.split('-')[0]).split('.')
+        date1 = datetime.date(int(date1[2]), int(date1[1]), int(date1[0]))
+
+        date2 = (Qdate.split('-')[1]).split('.')
+        date2 = datetime.date(int(date2[2]), int(date2[1]), int(date2[0]))
+        
+        timestamp1 = calendar.timegm(date1.timetuple())
+        timestamp2 = calendar.timegm(date2.timetuple())
+        oneHour = 60*60
+        print timestamp1, timestamp2
+
+        to_return = {}
+        for cur_provider in query:
+            list_date = {}
+            cur_provider_name = cur_provider + '_' 
+            for cur_timestamp in range(int(timestamp1), int(timestamp2), oneHour):
+                cur_set_name = cur_provider_name + str(cur_timestamp)
+                
+                list_value = []
+                for cur_id in r_serv_sentiment.smembers(cur_set_name):
+                    cur_value = r_serv_sentiment.get(cur_id)
+                    list_value.append(cur_value)
+                list_date[cur_timestamp] = list_value
+            to_return[cur_provider] = list_date
+
+        return jsonify(to_return)
 
 
 
