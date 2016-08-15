@@ -75,21 +75,13 @@
                                 <!-- providers charts -->
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
-                                       <ul>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 1</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 2</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 3</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 4</label></li>
+                                       <ul id="providerList1">
                                        </ul>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
-                                       <ul>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 5</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 6</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 7</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 8</label></li>
+                                       <ul id="providerList2">
                                        </ul>
                                    </div>
                                 </div> 
@@ -147,6 +139,17 @@
     $(document).ready(function(){
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
+        var li_text = "<li><div class='checkbox'></div><label class='provider'><input value='' type='checkbox'></input> "
+        var li_text_end = "</label></li>"
+
+        $.getJSON('/sentiment_analysis_plot_tool_getdata/?getProviders=True', function(data){
+            console.log(data); 
+            for(i=0; i<data.length; i++){
+                var providerList = i%2 == 0 ? '#providerList1' : '#providerList2';
+                $(providerList).append(li_text + data[i] + li_text_end);
+            }
+        });
+
 
         var today = Date.now();
         var old_day = today - (31*24*60*60)*1000;

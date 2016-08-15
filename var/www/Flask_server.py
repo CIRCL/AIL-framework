@@ -468,11 +468,25 @@ def sentiment_analysis_getplotdata():
 
 
 
-
-
 @app.route("/sentiment_analysis_plot_tool/")
 def sentiment_analysis_plot_tool():
     return render_template("sentiment_analysis_plot_tool.html")
+
+
+
+@app.route("/sentiment_analysis_plot_tool_getdata/")
+def sentiment_analysis_plot_tool_getdata():
+    getProviders = request.args.get('getProviders')
+
+    if getProviders:
+        providers = []
+        for cur_provider in r_serv_charts.smembers('providers_set'):
+            providers.append(cur_provider)
+        return jsonify(providers)
+
+    else:
+        return 0
+
 
 
 @app.route("/showsavedpaste/") #completely shows the paste in a new tab
