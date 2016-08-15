@@ -76,20 +76,20 @@
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 1</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 2</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 3</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 4</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 1</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 2</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 3</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 4</label></li>
                                        </ul>
                                    </div>
                                 </div>
                                 <div class="col-lg-6">
                                    <div class="sparkLineStats">
                                        <ul>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 1</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 2</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 3</label></li>
-                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input>Provider 4</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 5</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 6</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 7</label></li>
+                                           <li><div class="checkbox"></div><label><input value="" type="checkbox"></input> Provider 8</label></li>
                                        </ul>
                                    </div>
                                 </div> 
@@ -97,7 +97,7 @@
                             <!-- right column -->
                             <div class="col-lg-3">
                                  <div aria-disabled="false" class="slider sliderRange sliderBlue ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" style="margin-bottom: 5px;"></div>
-                                 <strong>Date:</strong><i>10/09/15</i> - <i>15/09/16</i>
+                                 <strong>Date:</strong> <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
                             </div>
                             </div>
                             <!-- /.row -->
@@ -148,19 +148,25 @@
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
 
-	$( ".sliderRange" ).slider({
-		range: true,
-		min: 0,
-		max: 500,
-		values: [ 192, 470 ],
-		slide: function( event, ui ) {
-			$( ".sliderRangeLabel" ).html( "$" + ui.values[ 0 ] + " - $" + ui.values[ 1 ] );
-		}
-	});
+        var today = Date.now();
+        var old_day = today - (31*24*60*60)*1000;
+        $( ".sliderRange" ).slider({
+            range: true,
+            min: old_day,
+            max: today,
+            values: [ today - (7*24*60*60)*1000, today ],
+            step: 24*60*60*1000,
+            slide: function( event, ui ) {
+                $( "#amount" ).val( new Date(ui.values[ 0 ]).toLocaleDateString() + " - " + new Date(ui.values[ 1 ]).toLocaleDateString() );
+            }
+        });
 
-        function randNum(){
-            return ((Math.floor( Math.random()* (1+40-20) ) ) + 20)* 1200;
-        }
+        $( "#amount" ).val( new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +
+          " - " + new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString() );
+
+    function randNum(){
+        return ((Math.floor( Math.random()* (1+40-20) ) ) + 20)* 1200;
+    }
 
 
 
