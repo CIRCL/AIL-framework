@@ -18,6 +18,10 @@
   <script src="{{ url_for('static', filename='js/jquery.canvasjs.min.js') }}"></script>
 
   <style>
+      .jqstooltip{
+          box-sizing: content-box;
+      }
+
       strong {
           font-size: 16px;
       }
@@ -116,7 +120,7 @@
                                    <div class="sparkLineStats">
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 1</strong>
+                                               <strong class="sparkLineStatsToday1t">Graph 1</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -131,7 +135,7 @@
                                        </div>
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 2</strong>
+                                               <strong class="sparkLineStatsToday2t">Graph 2</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -146,7 +150,7 @@
                                        </div>
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 3</strong>
+                                               <strong class="sparkLineStatsToday3t">Graph 3</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -161,7 +165,7 @@
                                         </div>
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 4</strong>
+                                               <strong class="sparkLineStatsToday4t">Graph 4</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -180,7 +184,7 @@
                                    <div class="sparkLineStats">
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 5</strong>
+                                               <strong class="sparkLineStatsToday5t">Graph 5</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -195,7 +199,7 @@
                                         </div>
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 6</strong>
+                                               <strong class="sparkLineStatsToday6t">Graph 6</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -210,7 +214,7 @@
                                         </div>
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 7</strong>
+                                               <strong class="sparkLineStatsToday7t">Graph 7</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -225,7 +229,7 @@
                                         </div>
                                        <div id="panel-today" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 8</strong>
+                                               <strong class="sparkLineStatsToday8t">Graph 8</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -284,7 +288,8 @@
                                    <div class="sparkLineStats">
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 1</strong>
+                                               <strong class="sparkLineStatsWeek1t">Graph 1</strong>
+                                               <strong class="sparkLineStatsWeek1s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -299,7 +304,8 @@
                                        </div>
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 2</strong>
+                                               <strong class="sparkLineStatsWeek2t">Graph 2</strong>
+                                               <strong class="sparkLineStatsWeek2s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -314,7 +320,8 @@
                                        </div>
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 3</strong>
+                                               <strong class="sparkLineStatsWeek3t">Graph 3</strong>
+                                               <strong class="sparkLineStatsWeek3s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -329,7 +336,8 @@
                                        </div>
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 4</strong>
+                                               <strong class="sparkLineStatsWeek4t">Graph 4</strong>
+                                               <strong class="sparkLineStatsWeek4s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -348,7 +356,8 @@
                                    <div class="sparkLineStats">
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 5</strong>
+                                               <strong class="sparkLineStatsWeek5t">Graph 5</strong>
+                                               <strong class="sparkLineStatsWeek5s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -363,7 +372,8 @@
                                        </div>
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 6</strong>
+                                               <strong class="sparkLineStatsWeek6t">Graph 6</strong>
+                                               <strong class="sparkLineStatsWeek6s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -378,7 +388,8 @@
                                        </div>
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 7</strong>
+                                               <strong class="sparkLineStatsWeek7t">Graph 7</strong>
+                                               <strong class="sparkLineStatsWeek7s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -393,7 +404,8 @@
                                        </div>
                                        <div id="panel-week" class="panel panel-default">
                                            <div class="panel-heading">
-                                               <strong>Graph 8</strong>
+                                               <strong class="sparkLineStatsWeek8t">Graph 8</strong>
+                                               <strong class="sparkLineStatsWeek8s pull-right">Avg</strong>
                                            </div>
                                            <div class="panel-body panelInside">
                                                <table class="table">
@@ -425,24 +437,24 @@
                                         </thead>
                                         <tbody>
                                           <tr>
-                                              <td>Pastebin</td>
-                                              <td>Ideone</td>
+                                              <td class="worst1">Pastebin</td>
+                                              <td class="best1">Ideone</td>
                                           </tr>
                                           <tr>
-                                              <td>Pastebin</td>
-                                              <td>Ideone</td>
+                                              <td class="worst2">Pastebin</td>
+                                              <td class="best2">Ideone</td>
                                           </tr>
                                           <tr>
-                                              <td>Pastebin</td>
-                                              <td>Ideone</td>
+                                              <td class="worst3">Pastebin</td>
+                                              <td class="best3">Ideone</td>
                                           </tr>
                                           <tr>
-                                              <td>Pastebin</td>
-                                              <td>Ideone</td>
+                                              <td class="worst4">Pastebin</td>
+                                              <td class="best4">Ideone</td>
                                           </tr>
                                           <tr>
-                                              <td>Pastebin</td>
-                                              <td>Ideone</td>
+                                              <td class="worst5">Pastebin</td>
+                                              <td class="best5">Ideone</td>
                                           </tr>
                                         </tbody>
                                     </table>

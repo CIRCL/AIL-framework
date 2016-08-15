@@ -1,16 +1,4 @@
 
-/* ---------- Sparkline Charts ---------- */
-//generate random number for charts
-randNum = function(){
-    var num = Math.random();
-    if(num > 0.5)
-        num = -1+num;
-    //console.log(Math.floor(num*101));
-    return Math.floor(num*101);
-    //return (Math.floor( Math.random()* (1+40-20) ) ) + 20;
-}
-
-
 
  var sparklineOptions = {
         height: 80,//Height of the chart - Defaults to 'auto' (line height of the containing tag)
@@ -23,7 +11,8 @@ randNum = function(){
         barWidth: 2,
         barColor: '#00bf5f',
         negBarColor: '#f22929',
-        zeroColor: '#ffff00'
+        zeroColor: '#ffff00',
+            
 };
 
 
@@ -39,12 +28,17 @@ $.getJSON("/sentiment_analysis_getplotdata/",
         var oneHour = 60*60;
         var oneWeek = oneHour*24*7;
 
+        var all_graph_day_sum = 0.0;
+        var all_graph_hour_sum = 0.0;
+
         for (graphNum=0; graphNum<8; graphNum++) {
+            var max_value = 0.0;
             var graph_data = [];
             var spark_data = [];
             var curr_provider = array_provider[graphNum];
             var curr_sum = 0.0;
             var day_sum = 0.0;
+            var hour_sum = 0.0;
 
             for(curr_date=dateStart; curr_date<dateStart+oneWeek; curr_date+=oneHour){
                 var data_array = data[curr_provider][curr_date];
@@ -52,7 +46,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                 if (data_array.length == 0){
                     graph_data.push({'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compoundPos': 0.0, 'compoundNeg': 0.0});
                     spark_data.push(0);
-                } else { //compute avg
+                } else { //compute avg for a given date for a given graph
                     var compPosAvg = 0;
                     var compNegAvg = 0;
                     var pos = 0;
@@ -77,23 +71,35 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                     graph_data.push({'neg': neg, 'neu': neu, 'pos': pos, 'compoundPos': compPosAvg, 'compoundNeg': compNegAvg});
                     spark_data.push(pos-neg);
                     curr_sum += (pos-neg);
+                    max_value = Math.abs(pos-neg) > max_value ? Math.abs(pos-neg) : max_value;
 
                     if(curr_date >= dateStart+oneWeek-24*oneHour){
                         day_sum += (pos-neg);
                     }
+                    if(curr_date >= dateStart+oneWeek-oneHour){
+                        hour_sum += (pos-neg);
+                    }
 
                 }
             }
+            all_graph_day_sum += day_sum;
+            all_graph_hour_sum += hour_sum;
+
             var curr_avg = curr_sum / (oneWeek/oneHour); 
-            graph_avg.push(curr_avg);
+            //var curr_avg = curr_sum / (spark_data.length); 
+            graph_avg.push([curr_provider, curr_avg]);
             plot_data.push(spark_data);
             all_data.push(graph_data);
         
+
+            sparklineOptions.chartRangeMax = max_value;
+            sparklineOptions.chartRangeMin = -max_value;
             // print week
             var num = graphNum + 1;
             var placeholder = '.sparkLineStatsWeek' + num;
             $(placeholder).sparkline(plot_data[graphNum], sparklineOptions);
-            //console.log(plot_data[graphNum]);
+            $(placeholder+'t').text(curr_provider);
+            $(placeholder+'s').text(curr_avg.toFixed(5));
         
             sparklineOptions.barWidth = 7;
             $(placeholder+'b').sparkline([curr_avg], sparklineOptions);
@@ -106,14 +112,166 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             placeholder = '.sparkLineStatsToday' + num;
             sparklineOptions.barWidth = 14;
             $(placeholder).sparkline(data_today, sparklineOptions);
+            $(placeholder+'t').text(curr_provider);
 
-            //console.log(day_sum);
             sparklineOptions.barWidth = 7;
             $(placeholder+'b').sparkline([day_sum/24], sparklineOptions);
-            //$(placeholder+'b').sparkline(10, sparklineOptions);
             sparklineOptions.barWidth = 2;
 
         }//for loop
+
+
+
+        /* ---------------- Gauge ---------------- */
+        var gaugeOptions = {
+            animateEasing: true,
+        
+            elementWidth: 200,
+            elementHeight: 125,
+        
+            arcFillStart: 10,
+            arcFillEnd: 12,
+            arcFillTotal: 20,
+            incTot: 1.0,
+        
+            arcBgColorLight: 200,
+            arcBgColorSat: 0,
+            arcStrokeFg: 20,
+            arcStrokeBg: 30,
+        
+            colorArcFg: '#FF3300',
+            animateSpeed: 1,
+        
+        };
+        // Clone object
+        var gaugeOptions2 = jQuery.extend(true, {}, gaugeOptions);
+        var gaugeOptions3 = jQuery.extend(true, {}, gaugeOptions);
+        
+        
+        
+        gaugeOptions.appendTo = '#gauge_today_last_hour';
+        gaugeOptions.dialLabel = 'Last hour';
+        gaugeOptions.elementId = 'gauge1';
+        gaugeOptions.inc = all_graph_hour_sum / 8;
+        var gauge_today_last_hour = new FlexGauge(gaugeOptions);
+        
+        gaugeOptions2.appendTo = '#gauge_today_last_days';
+        gaugeOptions2.dialLabel = 'Today';
+        gaugeOptions2.elementId = 'gauge2';
+        gaugeOptions2.inc = all_graph_day_sum / 8;
+        var gauge_today_last_days = new FlexGauge(gaugeOptions2);
+        
+        gaugeOptions3.appendTo = '#gauge_week';
+        gaugeOptions3.dialLabel = 'Week';
+        gaugeOptions3.elementId = 'gauge3';
+
+        var graph_avg_sum = 0.0;
+        for (i=0; i<graph_avg.length; i++)
+            graph_avg_sum += graph_avg[i][1];
+
+        gaugeOptions3.inc = graph_avg_sum / graph_avg.length;
+        var gauge_today_last_days = new FlexGauge(gaugeOptions3);
+
+
+        /* --------- Sort providers -------- */
+
+        graph_avg.sort(function(a, b){return b[1]-a[1]});
+
+        for (i=1; i<6; i++){
+            $('.worst'+i).text(graph_avg[7-(i-1)][0]);
+            $('.best'+i).text(graph_avg[i-1][0]);
+        }
+
+        /* ----------- CanvasJS ------------ */
+
+        var gauge_data = graph_data.slice(graph_data.length-24*2, graph_data.length-24*1);
+        var comp_sum_day_pos = 0.0;
+        var comp_sum_day_neg = 0.0;
+        var comp_sum_hour_pos = 0.0;
+        var comp_sum_hour_neg = 0.0;
+        for (i=1; i< gauge_data.length; i++){
+            comp_sum_day_pos += gauge_data[i].compoundPos;
+            comp_sum_day_neg += gauge_data[i].compoundNeg;
+
+            if(i >= 24){
+                comp_sum_hour_pos += gauge_data[i].compoundPos;
+                comp_sum_hour_neg += gauge_data[i].compoundNeg;
+            }
+        }
+
+
+        var options_canvasJS_1 = {
+          
+            animationEnabled: true,
+            axisY: {
+                tickThickness: 0,
+                lineThickness: 0,
+                valueFormatString: " ",
+                gridThickness: 0              
+            },
+            axisX: {
+                tickThickness: 0,
+                lineThickness: 0,
+                labelFontSize: 0.1,
+            },
+            data: [
+            {
+                type: "bar",
+                color: "green",
+                dataPoints: [
+                    {y: comp_sum_hour_pos/8}
+                ]
+            },
+            {
+                type: "bar",
+                color: "red",
+                dataPoints: [
+                    {y: comp_sum_hour_neg/8}
+                ]
+            }
+            ]
+        };
+        
+        var chart_canvas1 = new CanvasJS.Chart("bar_today_last_hour", options_canvasJS_1);
+
+        var options_canvasJS_2 = {
+          
+            animationEnabled: true,
+            axisY: {
+                tickThickness: 0,
+                lineThickness: 0,
+                valueFormatString: " ",
+                gridThickness: 0              
+            },
+            axisX: {
+                tickThickness: 0,
+                lineThickness: 0,
+                labelFontSize: 0.1,
+            },
+            data: [
+            {
+                type: "bar",
+                color: "green",
+                dataPoints: [
+                    {y: comp_sum_day_pos/8}
+                ]
+            },
+            {
+                type: "bar",
+                color: "red",
+                dataPoints: [
+                    {y: comp_sum_day_neg/8}
+                ]
+            }
+            ]
+        };
+
+        var chart_canvas2 = new CanvasJS.Chart("bar_today_last_days", options_canvasJS_2);
+        
+        chart_canvas1.render();
+        chart_canvas2.render();
+
+
     }
 );
 
@@ -124,94 +282,9 @@ $.getJSON("/sentiment_analysis_getplotdata/",
 
 
 
-/* ---------------- Gauge ---------------- */
-var gaugeOptions = {
-    animateEasing: true,
-
-    elementWidth: 200,
-    elementHeight: 125,
-
-    arcFillStart: 10,
-    arcFillEnd: 12,
-    arcFillTotal: 20,
-    incTot: 1.0,
-
-    arcBgColorLight: 200,
-    arcBgColorSat: 0,
-    arcStrokeFg: 20,
-    arcStrokeBg: 30,
-
-    colorArcFg: '#FF3300',
-    animateSpeed: 1,
-
-};
-// Clone object
-var gaugeOptions2 = jQuery.extend(true, {}, gaugeOptions);
-var gaugeOptions3 = jQuery.extend(true, {}, gaugeOptions);
-
-
-
-gaugeOptions.appendTo = '#gauge_today_last_hour';
-gaugeOptions.dialLabel = 'Last hour';
-gaugeOptions.elementId = 'gauge1';
-gaugeOptions.inc = -0.9;
-var gauge_today_last_hour = new FlexGauge(gaugeOptions);
-
-gaugeOptions2.appendTo = '#gauge_today_last_days';
-gaugeOptions2.dialLabel = 'Today';
-gaugeOptions2.elementId = 'gauge2';
-gaugeOptions2.inc = 0.4;
-var gauge_today_last_days = new FlexGauge(gaugeOptions2);
-
-gaugeOptions3.appendTo = '#gauge_week';
-gaugeOptions3.dialLabel = 'Week';
-gaugeOptions3.elementId = 'gauge3';
-gaugeOptions3.inc = -0.3;
-var gauge_today_last_days = new FlexGauge(gaugeOptions3);
 
 
 
 
 
-
-
-
-/* ----------- CanvasJS ------------ */
-var options_canvasJS = {
-  
-    animationEnabled: true,
-    axisY: {
-        tickThickness: 0,
-        lineThickness: 0,
-        valueFormatString: " ",
-        gridThickness: 0              
-    },
-    axisX: {
-        tickThickness: 0,
-        lineThickness: 0,
-        labelFontSize: 0.1,
-    },
-    data: [
-    {
-        type: "bar",
-        color: "green",
-        dataPoints: [
-            {y: 25}
-        ]
-    },
-    {
-        type: "bar",
-        color: "red",
-        dataPoints: [
-            {y: -13}
-        ]
-    }
-    ]
-};
-
-var chart_canvas1 = new CanvasJS.Chart("bar_today_last_hour", options_canvasJS);
-var chart_canvas2 = new CanvasJS.Chart("bar_today_last_days", options_canvasJS);
-
-chart_canvas1.render();
-chart_canvas2.render();
 
