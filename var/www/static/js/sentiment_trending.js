@@ -1,4 +1,26 @@
 
+ function generate_offset_to_time(num){
+     var to_ret = {};
+     for(i=0; i<=num; i++)
+         to_ret[i] = new Date().getHours()-(23-i)+'h';
+     return to_ret;
+ };
+
+ function generate_offset_to_date(day){
+     var now = new Date();
+     var to_ret = {};
+     for(i=0; i<day; i++){
+         for(j=0; j<24; j++){
+             var t1 =now.getDate()-i + ":"; 
+             var t2 =now.getHours()-(23-j)+"h";
+             to_ret[j+24*i] = t1+t2;
+         }
+     }
+     return to_ret;
+ };
+
+ var offset_to_time = generate_offset_to_time(23);
+ var offset_to_date = generate_offset_to_date(7);
 
  var sparklineOptions = {
         height: 80,//Height of the chart - Defaults to 'auto' (line height of the containing tag)
@@ -13,6 +35,7 @@
         negBarColor: '#f22929',
         zeroColor: '#ffff00',
             
+        tooltipFormat: '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>',
 };
 
 
@@ -37,7 +60,9 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             var spark_data = [];
             var curr_provider = array_provider[graphNum];
             var curr_sum = 0.0;
+            var curr_sum_elem = 0.0;
             var day_sum = 0.0;
+            var day_sum_elem = 0.0;
             var hour_sum = 0.0;
 
             for(curr_date=dateStart; curr_date<dateStart+oneWeek; curr_date+=oneHour){
@@ -71,10 +96,12 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                     graph_data.push({'neg': neg, 'neu': neu, 'pos': pos, 'compoundPos': compPosAvg, 'compoundNeg': compNegAvg});
                     spark_data.push(pos-neg);
                     curr_sum += (pos-neg);
+                    curr_sum_elem++;
                     max_value = Math.abs(pos-neg) > max_value ? Math.abs(pos-neg) : max_value;
 
                     if(curr_date >= dateStart+oneWeek-24*oneHour){
                         day_sum += (pos-neg);
+                        day_sum_elem++;
                     }
                     if(curr_date >= dateStart+oneWeek-oneHour){
                         hour_sum += (pos-neg);
@@ -85,7 +112,8 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             all_graph_day_sum += day_sum;
             all_graph_hour_sum += hour_sum;
 
-            var curr_avg = curr_sum / (oneWeek/oneHour); 
+            var curr_avg = curr_sum / (curr_sum_elem); 
+            //var curr_avg = curr_sum / (oneWeek/oneHour); 
             //var curr_avg = curr_sum / (spark_data.length); 
             graph_avg.push([curr_provider, curr_avg]);
             plot_data.push(spark_data);
@@ -94,6 +122,8 @@ $.getJSON("/sentiment_analysis_getplotdata/",
 
             sparklineOptions.chartRangeMax = max_value;
             sparklineOptions.chartRangeMin = -max_value;
+            sparklineOptions.tooltipValueLookups = { names: offset_to_date};
+
             // print week
             var num = graphNum + 1;
             var placeholder = '.sparkLineStatsWeek' + num;
@@ -102,12 +132,15 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             $(placeholder+'s').text(curr_avg.toFixed(5));
         
             sparklineOptions.barWidth = 18;
+            sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> Avg: {{value}} </span>'
             $(placeholder+'b').sparkline([curr_avg], sparklineOptions);
+            sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
             sparklineOptions.barWidth = 2;
+            sparklineOptions.tooltipValueLookups = { names: offset_to_time};
 
             // print today
             var data_length = plot_data[graphNum].length;
-            var data_today = plot_data[graphNum].slice(data_length-24, data_length-1);
+            var data_today = plot_data[graphNum].slice(data_length-24, data_length);
 
             placeholder = '.sparkLineStatsToday' + num;
             sparklineOptions.barWidth = 14;
@@ -115,9 +148,13 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             $(placeholder+'t').text(curr_provider);
 
             sparklineOptions.barWidth = 18;
-            $(placeholder+'b').sparkline([day_sum/24], sparklineOptions);
+            sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> Avg: {{value}} </span>'
+            //var day_avg = day_sum/24;
+            var day_avg = day_sum/day_sum_elem;
+            $(placeholder+'b').sparkline([day_avg], sparklineOptions);
+            sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
             sparklineOptions.barWidth = 2;
-            $(placeholder+'s').text((day_sum/24).toFixed(5));
+            $(placeholder+'s').text((day_avg).toFixed(5));
 
         }//for loop
 
@@ -153,13 +190,15 @@ $.getJSON("/sentiment_analysis_getplotdata/",
         gaugeOptions.appendTo = '#gauge_today_last_hour';
         gaugeOptions.dialLabel = 'Last hour';
         gaugeOptions.elementId = 'gauge1';
-        gaugeOptions.inc = all_graph_hour_sum / 8;
+        var piePercent = (all_graph_hour_sum / 8) / max_value;
+        gaugeOptions.inc = piePercent;
         var gauge_today_last_hour = new FlexGauge(gaugeOptions);
         
         gaugeOptions2.appendTo = '#gauge_today_last_days';
         gaugeOptions2.dialLabel = 'Today';
         gaugeOptions2.elementId = 'gauge2';
-        gaugeOptions2.inc = all_graph_day_sum / 8;
+        piePercent = (all_graph_day_sum / (8*24)) / max_value;
+        gaugeOptions2.inc = piePercent;
         var gauge_today_last_days = new FlexGauge(gaugeOptions2);
         
         gaugeOptions3.appendTo = '#gauge_week';
@@ -167,10 +206,14 @@ $.getJSON("/sentiment_analysis_getplotdata/",
         gaugeOptions3.elementId = 'gauge3';
 
         var graph_avg_sum = 0.0;
-        for (i=0; i<graph_avg.length; i++)
+        var temp_max_val = 0.0;
+        for (i=0; i<graph_avg.length; i++){
             graph_avg_sum += graph_avg[i][1];
+            temp_max_val = Math.abs(graph_avg[i][1]) > temp_max_val ? Math.abs(graph_avg[i][1]) : temp_max_val;
+        }
 
-        gaugeOptions3.inc = graph_avg_sum / graph_avg.length;
+        piePercent = (graph_avg_sum / graph_avg.length) / temp_max_val;
+        gaugeOptions3.inc = piePercent;
         var gauge_today_last_days = new FlexGauge(gaugeOptions3);
 
 
@@ -185,21 +228,24 @@ $.getJSON("/sentiment_analysis_getplotdata/",
 
         /* ----------- CanvasJS ------------ */
 
-        var gauge_data = graph_data.slice(graph_data.length-24*2, graph_data.length-24*1);
         var comp_sum_day_pos = 0.0;
         var comp_sum_day_neg = 0.0;
         var comp_sum_hour_pos = 0.0;
         var comp_sum_hour_neg = 0.0;
-        for (i=1; i< gauge_data.length; i++){
-            comp_sum_day_pos += gauge_data[i].compoundPos;
-            comp_sum_day_neg += gauge_data[i].compoundNeg;
+        for(graphNum=0; graphNum<8; graphNum++){
+            curr_graphData = all_data[graphNum];
+            var gauge_data = curr_graphData.slice(curr_graphData.length-24, curr_graphData.length);
+            for (i=1; i< gauge_data.length; i++){
+                comp_sum_day_pos += gauge_data[i].compoundPos;
+                comp_sum_day_neg += gauge_data[i].compoundNeg;
 
-            if(i >= 24){
-                comp_sum_hour_pos += gauge_data[i].compoundPos;
-                comp_sum_hour_neg += gauge_data[i].compoundNeg;
+                if(i == 23){
+                    comp_sum_hour_pos += gauge_data[i].compoundPos;
+                    comp_sum_hour_neg += gauge_data[i].compoundNeg;
+                }
             }
-        }
 
+        }
 
         var options_canvasJS_1 = {
           
@@ -216,20 +262,20 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                 labelFontSize: 0.1,
             },
             data: [
-            {
-                type: "bar",
-                color: "green",
-                dataPoints: [
-                    {y: comp_sum_hour_pos/8}
-                ]
-            },
-            {
-                type: "bar",
-                color: "red",
-                dataPoints: [
-                    {y: comp_sum_hour_neg/8}
-                ]
-            }
+                {
+                    type: "bar",
+                    color: "green",
+                    dataPoints: [
+                        {y: comp_sum_hour_pos/8}
+                    ]
+                },
+                {
+                    type: "bar",
+                    color: "red",
+                    dataPoints: [
+                        {y: comp_sum_hour_neg/8}
+                    ]
+                }
             ]
         };
         

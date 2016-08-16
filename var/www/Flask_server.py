@@ -497,7 +497,7 @@ def sentiment_analysis_plot_tool_getdata():
         
         timestamp1 = calendar.timegm(date1.timetuple())
         timestamp2 = calendar.timegm(date2.timetuple())
-        print timestamp2
+
         oneHour = 60*60
         oneDay = oneHour*24
 
