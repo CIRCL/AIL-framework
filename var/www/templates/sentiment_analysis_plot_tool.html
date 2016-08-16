@@ -19,6 +19,8 @@
   <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
 
   <style>
       .sparkLineStats ul {
@@ -139,96 +141,9 @@
     $(document).ready(function(){
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
-        var li_text = "<li><div class='checkbox'></div><label class='provider'><input value='" 
-        var li_text_mid = "' type='checkbox'></input> "
-        var li_text_end = "</label></li>"
-
-        $.getJSON('/sentiment_analysis_plot_tool_getdata/?getProviders=True', function(data){
-            for(i=0; i<data.length; i++){
-                var providerList = i%2 == 0 ? '#providerList1' : '#providerList2';
-                $(providerList).append(li_text + data[i] + li_text_mid + data[i] + li_text_end);
-            }
-        });
-
-
-        var today = Date.now();
-        var old_day = today - (31*24*60*60)*1000;
-        $( ".sliderRange" ).slider({
-            range: true,
-            min: old_day,
-            max: today,
-            values: [ today - (7*24*60*60)*1000, today ],
-            step: 24*60*60*1000,
-            slide: function( event, ui ) {
-                $( "#amount" ).val( new Date(ui.values[ 0 ]).toLocaleDateString() + " - " + new Date(ui.values[ 1 ]).toLocaleDateString() );
-            }
-        });
-
-        $( "#amount" ).val( new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +
-          " - " + new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString() );
-
-
-        $('#plot_btn').click(plotData); 
-
-
-        function plotData(){
-            var query = $( "input:checked" ).map(function () {return this.value;}).get().join(",");
-            var Qdate = new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +'-'+ new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString()
-                
-            $.getJSON('/sentiment_analysis_plot_tool_getdata/?getProviders=False&query='+query+'&Qdate='+Qdate, function(data){
-                console.log(data);
-            });
-        }
-
-
-
-
-
-
-
-
-
-
-    function randNum(){
-        return ((Math.floor( Math.random()* (1+40-20) ) ) + 20)* 1200;
-    }
-
-
-
-
-var likes = [[1, 5+randNum()], [2, 10+randNum()], [3, 15+randNum()], [4, 20+randNum()],[5, 25+randNum()],[6, 30+randNum()],[7, 35+randNum()],[8, 40+randNum()],[9, 45+randNum()],[10, 50+randNum()],[11, 55+randNum()],[12, 60+randNum()],[13, 65+randNum()],[14, 70+randNum()],[15, 75+randNum()],[16, 80+randNum()],[17, 85+randNum()],[18, 90+randNum()],[19, 85+randNum()],[20, 80+randNum()],[21, 75+randNum()],[22, 80+randNum()],[23, 75+randNum()],[24, 70+randNum()],[25, 65+randNum()],[26, 75+randNum()],[27,80+randNum()],[28, 85+randNum()],[29, 90+randNum()], [30, 95+randNum()]];
-var likes2 = [[1, 5+randNum()], [2, 10+randNum()], [3, 15+randNum()], [4, 20+randNum()],[5, 25+randNum()],[6, 30+randNum()],[7, 35+randNum()],[8, 40+randNum()],[9, 45+randNum()],[10, 50+randNum()],[11, 55+randNum()],[12, 60+randNum()],[13, 65+randNum()],[14, 70+randNum()],[15, 75+randNum()],[16, 80+randNum()],[17, 85+randNum()],[18, 90+randNum()],[19, 85+randNum()],[20, 80+randNum()],[21, 75+randNum()],[22, 80+randNum()],[23, 75+randNum()],[24, 70+randNum()],[25, 65+randNum()],[26, 75+randNum()],[27,80+randNum()],[28, 85+randNum()],[29, 90+randNum()], [30, 95+randNum()]];
-
-		var plot = $.plot($("#graph"),
-			   [ { data: likes, label: "Fans"}, { data: likes2, label: "Fans"} ], {
-				   series: {
-					   lines: { show: true,
-								lineWidth: 2,
-								fill: true, fillColor: { colors: [ { opacity: 0.5 }, { opacity: 0.2 } ] }
-							 },
-					   points: { show: true, 
-								 lineWidth: 2 
-							 },
-					   shadowSize: 0
-				   },
-				   grid: { hoverable: true, 
-						   clickable: true, 
-						   tickColor: "#f9f9f9",
-						   borderWidth: 0
-						 },
-				   colors: ["#3B5998"],
-					xaxis: {ticks:6, tickDecimals: 0},
-					yaxis: {ticks:3, tickDecimals: 0},
-				 });
-
-
-
-
-
-
-
    });
 </script>
+<script src="{{ url_for('static', filename='js/sentiment_plot.js') }}"></script>
 
 </body>
 </html>
