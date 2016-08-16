@@ -31,13 +31,12 @@ $( "#amount" ).val( new Date($( ".sliderRange" ).slider( "values", 0 )).toLocale
 
 $('#plot_btn').click(plotData); 
 
-
 /* Plot the requested data (if available) stored in slider and checkboxes */
-
 function plotData(){
+
     var graph_options = {
                             series: {
-            	                stack: true,
+            	                stack: $('#checkbox_stacked').prop('checked'),
                                 lines: { show: false,
                                 lineWidth: 2,
                                 fill: true, fillColor: { colors: [ { opacity: 0.5 }, { opacity: 0.2 } ] }
@@ -60,8 +59,8 @@ function plotData(){
                                 autoscaleMargin: 0.1,
                             },
                         }
-    var query = $( "input:checked" ).map(function () {return this.value;}).get().join(",");
-    var Qdate = new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +'-'+ new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString()
+    var query = $( "input:checked[value]" ).map(function () {return this.value;}).get().join(",");
+    var Qdate = new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +'-'+ new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString();
         
 
     // retreive the data from the server
