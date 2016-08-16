@@ -101,22 +101,23 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             $(placeholder+'t').text(curr_provider);
             $(placeholder+'s').text(curr_avg.toFixed(5));
         
-            sparklineOptions.barWidth = 7;
+            sparklineOptions.barWidth = 18;
             $(placeholder+'b').sparkline([curr_avg], sparklineOptions);
             sparklineOptions.barWidth = 2;
 
             // print today
             var data_length = plot_data[graphNum].length;
-            var data_today = plot_data[graphNum].slice(data_length-24*2, data_length-24*1);
+            var data_today = plot_data[graphNum].slice(data_length-24, data_length-1);
 
             placeholder = '.sparkLineStatsToday' + num;
             sparklineOptions.barWidth = 14;
             $(placeholder).sparkline(data_today, sparklineOptions);
             $(placeholder+'t').text(curr_provider);
 
-            sparklineOptions.barWidth = 7;
+            sparklineOptions.barWidth = 18;
             $(placeholder+'b').sparkline([day_sum/24], sparklineOptions);
             sparklineOptions.barWidth = 2;
+            $(placeholder+'s').text((day_sum/24).toFixed(5));
 
         }//for loop
 
