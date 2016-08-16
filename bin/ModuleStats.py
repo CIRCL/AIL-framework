@@ -72,6 +72,7 @@ def compute_most_posted(server, message):
 
 
 def compute_provider_info(server, path):
+    redis_all_provider = 'all_provider_set'
     
     redis_avg_size_name_set = 'top_size_set'
     redis_providers_name_set = 'providers_set'
@@ -83,6 +84,7 @@ def compute_provider_info(server, path):
     new_avg = paste_size
 
     # Add/Update in Redis
+    server.sadd(redis_all_provider, paste_provider)
     prev_num_paste = server.hget(paste_provider+'_num', paste_date)
     if prev_num_paste is not None:
         ok = server.hset(paste_provider+'_num', paste_date, int(prev_num_paste)+1)

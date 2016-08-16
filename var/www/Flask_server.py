@@ -480,7 +480,7 @@ def sentiment_analysis_plot_tool_getdata():
 
     if getProviders == 'True':
         providers = []
-        for cur_provider in r_serv_charts.smembers('providers_set'):
+        for cur_provider in r_serv_charts.smembers('all_provider_set'):
             providers.append(cur_provider)
         return jsonify(providers)
 
@@ -488,8 +488,6 @@ def sentiment_analysis_plot_tool_getdata():
         query = request.args.get('query')
         query = query.split(',')
         Qdate = request.args.get('Qdate')
-        print query
-        print Qdate
 
         date1 = (Qdate.split('-')[0]).split('.')
         date1 = datetime.date(int(date1[2]), int(date1[1]), int(date1[0]))
@@ -499,14 +497,15 @@ def sentiment_analysis_plot_tool_getdata():
         
         timestamp1 = calendar.timegm(date1.timetuple())
         timestamp2 = calendar.timegm(date2.timetuple())
+        print timestamp2
         oneHour = 60*60
-        print timestamp1, timestamp2
+        oneDay = oneHour*24
 
         to_return = {}
         for cur_provider in query:
             list_date = {}
             cur_provider_name = cur_provider + '_' 
-            for cur_timestamp in range(int(timestamp1), int(timestamp2), oneHour):
+            for cur_timestamp in range(int(timestamp1), int(timestamp2)+oneDay, oneHour):
                 cur_set_name = cur_provider_name + str(cur_timestamp)
                 
                 list_value = []
