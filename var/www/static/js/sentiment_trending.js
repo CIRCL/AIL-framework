@@ -7,13 +7,14 @@
  };
 
  function generate_offset_to_date(day){
+     day = day-1;
      var now = new Date();
      var to_ret = {};
-     for(i=0; i<day; i++){
+     for(i=day; i>=0; i--){
          for(j=0; j<24; j++){
              var t1 =now.getDate()-i + ":"; 
              var t2 =now.getHours()-(23-j)+"h";
-             to_ret[j+24*i] = t1+t2;
+             to_ret[j+24*(day-i)] = t1+t2;
          }
      }
      return to_ret;
@@ -53,6 +54,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
 
         var all_graph_day_sum = 0.0;
         var all_graph_hour_sum = 0.0;
+        var all_day_avg = 0.0;
 
         for (graphNum=0; graphNum<8; graphNum++) {
             var max_value = 0.0;
@@ -65,7 +67,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             var day_sum_elem = 0.0;
             var hour_sum = 0.0;
 
-            for(curr_date=dateStart; curr_date<dateStart+oneWeek; curr_date+=oneHour){
+            for(curr_date=dateStart+oneHour; curr_date<=dateStart+oneWeek; curr_date+=oneHour){
                 var data_array = data[curr_provider][curr_date];
 
                 if (data_array.length == 0){
@@ -99,7 +101,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                     curr_sum_elem++;
                     max_value = Math.abs(pos-neg) > max_value ? Math.abs(pos-neg) : max_value;
 
-                    if(curr_date >= dateStart+oneWeek-24*oneHour){
+                    if(curr_date >= dateStart+oneWeek-23*oneHour){
                         day_sum += (pos-neg);
                         day_sum_elem++;
                     }
@@ -150,11 +152,13 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             sparklineOptions.barWidth = 18;
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> Avg: {{value}} </span>'
             //var day_avg = day_sum/24;
-            var day_avg = day_sum/day_sum_elem;
+            var day_avg = isNaN(day_sum/day_sum_elem) ? 0 : day_sum/day_sum_elem;
+            var day_avg_text = isNaN(day_sum/day_sum_elem) ? 'No data' : (day_avg).toFixed(5);
+            all_day_avg += day_avg;
             $(placeholder+'b').sparkline([day_avg], sparklineOptions);
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
             sparklineOptions.barWidth = 2;
-            $(placeholder+'s').text((day_avg).toFixed(5));
+            $(placeholder+'s').text(day_avg_text);
 
         }//for loop
 
@@ -197,7 +201,8 @@ $.getJSON("/sentiment_analysis_getplotdata/",
         gaugeOptions2.appendTo = '#gauge_today_last_days';
         gaugeOptions2.dialLabel = 'Today';
         gaugeOptions2.elementId = 'gauge2';
-        piePercent = (all_graph_day_sum / (8*24)) / max_value;
+        //piePercent = (all_graph_day_sum / (8*24)) / max_value;
+        piePercent = (all_day_avg / 8) / max_value;
         gaugeOptions2.inc = piePercent;
         var gauge_today_last_days = new FlexGauge(gaugeOptions2);
         
