@@ -12,6 +12,7 @@
   <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+  <link href="{{ url_for('static', filename='css/switch_checkbox.css') }}" rel="stylesheet" type="text/css" />
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
@@ -57,6 +58,14 @@
                   </div>
               </div>
                   <!-- <div id="Graph_paste_num" style="height:90px; width:100%;"></div> -->
+              <div class='pull_right'>
+                  <label class="switch">
+                      <input id="button-toggle-queues" class="switch-input" type="checkbox" checked>
+                      <span class="switch-label" data-on="On" data-off="Off"></span>
+                      <span class="switch-handle"></span>
+                  </label>
+                  <strong style="top: 3px; position: relative;">Display queues</strong>
+              <div>
               <div class="table-responsive", id="queueing" style="margin-top:10px;"></div>
              <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>

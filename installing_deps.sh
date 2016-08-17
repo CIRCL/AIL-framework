@@ -42,7 +42,7 @@ popd
 # tlsh
 test ! -d tlsh && git clone git://github.com/trendmicro/tlsh.git
 pushd tlsh/
-./make
+./make.sh
 popd
 
 # REDIS LEVEL DB #

@@ -90,7 +90,6 @@ var source = new EventSource('/_logs');
 
 source.onmessage = function(event) {
     var feed = jQuery.parseJSON( event.data );
-    create_log_table(feed);
 };
 
 function pad_2(number)
@@ -309,7 +308,11 @@ $(document).ready(function () {
                     var tmp_values2 = [];
                     refresh();
                     update_values();
-                    create_queue_table();
+
+                    if($('#button-toggle-queues').prop('checked'))
+                        create_queue_table();
+                    else
+                        $("#queueing").html('');
 
 
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
