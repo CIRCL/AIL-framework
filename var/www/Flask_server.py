@@ -55,7 +55,7 @@ r_serv_sentiment = redis.StrictRedis(
         port=cfg.getint("Redis_Level_DB_Sentiment", "port"),
         db=cfg.getint("Redis_Level_DB_Sentiment", "db"))
 
- 
+
 app = Flask(__name__, static_url_path='/static/')
 
 
@@ -113,7 +113,7 @@ def parseStringToList2(the_string):
         return res
 
 
-def showpaste(content_range):    
+def showpaste(content_range):
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
     p_date = str(paste._get_p_date())
@@ -136,7 +136,7 @@ def showpaste(content_range):
             dup_list[2] = int(((tlsh_to_percent - float(dup_list[2])) / tlsh_to_percent)*100)
         else:
             dup_list[2] = int(dup_list[2])
-            
+
     p_duplicate_full_list.sort(lambda x,y: cmp(x[2], y[2]), reverse=True)
 
     # Combine multiple duplicate paste name and format for display
@@ -165,7 +165,7 @@ def showpaste(content_range):
         p_hashtype_list.append(hash_type)
 
     if content_range != 0:
-       p_content = p_content[0:content_range] 
+       p_content = p_content[0:content_range]
 
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list)
 
@@ -189,7 +189,7 @@ def get_date_range(num_day):
 # return format: [('passed_days', num_of_passed_days), ('elem_name1', elem_value1), ('elem_name2', elem_value2)]]
 def get_top_relevant_data(server, module_name):
     redis_progression_name_set = 'top_'+ module_name +'_set'
-    days = 0 
+    days = 0
     for date in get_date_range(15):
         member_set = []
         for keyw in server.smembers(redis_progression_name_set):
@@ -232,19 +232,19 @@ def progressionCharts():
     attribute_name = request.args.get('attributeName')
     trending_name = request.args.get('trendingName')
     bar_requested = True if request.args.get('bar') == "true" else False
-    
+
     if (bar_requested):
         num_day = int(request.args.get('days'))
         bar_values = []
 
-	date_range = get_date_range(num_day) 
+        date_range = get_date_range(num_day)
         # Retreive all data from the last num_day
         for date in date_range:
             curr_value = r_serv_charts.hget(attribute_name, date)
             bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
         bar_values.insert(0, attribute_name)
         return jsonify(bar_values)
- 
+
     else:
         redis_progression_name = 'top_progression_'+trending_name
         redis_progression_name_set = 'top_progression_'+trending_name+'_set'
@@ -259,25 +259,25 @@ def progressionCharts():
         if len(member_set) == 0:
             member_set.append(("No relevant data", int(100)))
         return jsonify(member_set)
-    
+
 @app.route("/_moduleCharts", methods=['GET'])
 def modulesCharts():
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
     bar_requested = True if request.args.get('bar') == "true" else False
-    
+
     if (bar_requested):
         num_day = int(request.args.get('days'))
         bar_values = []
 
-	date_range = get_date_range(num_day) 
+        date_range = get_date_range(num_day)
         # Retreive all data from the last num_day
         for date in date_range:
             curr_value = r_serv_charts.hget(date, module_name+'-'+keyword_name)
             bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
         bar_values.insert(0, keyword_name)
         return jsonify(bar_values)
- 
+
     else:
         member_set = get_top_relevant_data(r_serv_charts, module_name)
         if len(member_set) == 0:
@@ -290,12 +290,12 @@ def providersChart():
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
     bar_requested = True if request.args.get('bar') == "true" else False
-    
+
     if (bar_requested):
         num_day = int(request.args.get('days'))
         bar_values = []
 
-	date_range = get_date_range(num_day) 
+        date_range = get_date_range(num_day)
         # Retreive all data from the last num_day
         for date in date_range:
             curr_value_size = r_serv_charts.hget(keyword_name+'_'+'size', date)
@@ -310,7 +310,7 @@ def providersChart():
             bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], curr_value])
         bar_values.insert(0, keyword_name)
         return jsonify(bar_values)
- 
+
     else:
         redis_provider_name_set = 'top_size_set' if module_name == "size" else 'providers_set'
 
@@ -322,7 +322,7 @@ def providersChart():
             keyw_value_size = r_serv_charts.hget(redis_provider_name_size, get_date_range(0)[0])
             keyw_value_size = keyw_value_size if keyw_value_size is not None else 0.0
             keyw_value_num = r_serv_charts.hget(redis_provider_name_num, get_date_range(0)[0])
-            
+
             if keyw_value_num is not None:
                 keyw_value_num = int(keyw_value_num)
             else:
@@ -351,7 +351,21 @@ def search():
     c = [] #preview of the paste content
     paste_date = []
     paste_size = []
-    # Search
+    # Search filename
+    from os import walk
+    for (dirpath, dirnames, filenames) in walk(os.path.join(os.environ['AIL_HOME'], 'PASTES/')):
+        if q[0] in filenames:
+            r.append(dirpath+'/'+q[0])
+            paste = Paste.Paste(dirpath+'/'+q[0])
+            content = paste.get_p_content().decode('utf8', 'ignore')
+            content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+            c.append(content[0:content_range])
+            curr_date = str(paste._get_p_date())
+            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+            paste_date.append(curr_date)
+            paste_size.append(paste._get_p_size())
+
+    # Search full line
     from whoosh import index
     from whoosh.fields import Schema, TEXT, ID
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
@@ -367,11 +381,11 @@ def search():
             paste = Paste.Paste(x.items()[0][1])
             content = paste.get_p_content().decode('utf8', 'ignore')
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-            c.append(content[0:content_range]) 
+            c.append(content[0:content_range])
             curr_date = str(paste._get_p_date())
             curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
-            paste_date.append(curr_date) 
-            paste_size.append(paste._get_p_size()) 
+            paste_date.append(curr_date)
+            paste_size.append(paste._get_p_size())
     return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
 
 
@@ -424,11 +438,11 @@ def importantPasteByModule():
         paste = Paste.Paste(path)
         content = paste.get_p_content().decode('utf8', 'ignore')
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-        all_content.append(content[0:content_range]) 
+        all_content.append(content[0:content_range])
         curr_date = str(paste._get_p_date())
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
-        paste_date.append(curr_date) 
-        paste_linenum.append(paste.get_lines_info()[0]) 
+        paste_date.append(curr_date)
+        paste_linenum.append(paste.get_lines_info()[0])
 
     return render_template("important_paste_by_module.html", all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal)
 
@@ -452,11 +466,11 @@ def sentiment_analysis_getplotdata():
 
     to_return = {}
     for cur_provider in r_serv_charts.smembers('providers_set'):
-       cur_provider_name = cur_provider + '_' 
+       cur_provider_name = cur_provider + '_'
        list_date = {}
        for cur_timestamp in range(int(dateStart_timestamp), int(dateStart_timestamp)-sevenDays-oneHour, -oneHour):
            cur_set_name = cur_provider_name + str(cur_timestamp)
-           
+
            list_value = []
            for cur_id in r_serv_sentiment.smembers(cur_set_name):
                cur_value = r_serv_sentiment.get(cur_id)
@@ -494,7 +508,7 @@ def sentiment_analysis_plot_tool_getdata():
 
         date2 = (Qdate.split('-')[1]).split('.')
         date2 = datetime.date(int(date2[2]), int(date2[1]), int(date2[0]))
-        
+
         timestamp1 = calendar.timegm(date1.timetuple())
         timestamp2 = calendar.timegm(date2.timetuple())
 
@@ -504,10 +518,10 @@ def sentiment_analysis_plot_tool_getdata():
         to_return = {}
         for cur_provider in query:
             list_date = {}
-            cur_provider_name = cur_provider + '_' 
+            cur_provider_name = cur_provider + '_'
             for cur_timestamp in range(int(timestamp1), int(timestamp2)+oneDay, oneHour):
                 cur_set_name = cur_provider_name + str(cur_timestamp)
-                
+
                 list_value = []
                 for cur_id in r_serv_sentiment.smembers(cur_set_name):
                     cur_value = r_serv_sentiment.get(cur_id)
@@ -535,7 +549,7 @@ def getmoredata():
     paste = Paste.Paste(requested_path)
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
     to_return = p_content[max_preview_modal-1:]
-    return to_return 
+    return to_return
 
 
 if __name__ == "__main__":
