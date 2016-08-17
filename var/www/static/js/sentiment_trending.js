@@ -54,10 +54,13 @@ $.getJSON("/sentiment_analysis_getplotdata/",
 
         var all_graph_day_sum = 0.0;
         var all_graph_hour_sum = 0.0;
+        var all_graph_hour_maxVal = 0.0;
         var all_day_avg = 0.0;
+        var all_day_avg_maxVal = 0.0;
 
         for (graphNum=0; graphNum<8; graphNum++) {
             var max_value = 0.0;
+            var max_value_day = 0.0;
             var graph_data = [];
             var spark_data = [];
             var curr_provider = array_provider[graphNum];
@@ -102,10 +105,11 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                     max_value = Math.abs(pos-neg) > max_value ? Math.abs(pos-neg) : max_value;
 
                     if(curr_date >= dateStart+oneWeek-23*oneHour){
+                        max_value_day = Math.abs(pos-neg) > max_value_day ? Math.abs(pos-neg) : max_value_day;
                         day_sum += (pos-neg);
                         day_sum_elem++;
                     }
-                    if(curr_date >= dateStart+oneWeek-oneHour){
+                    if(curr_date > dateStart+oneWeek-2*oneHour && curr_date <=dateStart+oneWeek-oneHour){
                         hour_sum += (pos-neg);
                     }
 
@@ -113,6 +117,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             }
             all_graph_day_sum += day_sum;
             all_graph_hour_sum += hour_sum;
+            all_graph_hour_maxVal = Math.abs(hour_sum) > all_graph_hour_maxVal ? Math.abs(hour_sum) : all_graph_hour_maxVal;
 
             var curr_avg = curr_sum / (curr_sum_elem); 
             //var curr_avg = curr_sum / (oneWeek/oneHour); 
@@ -138,7 +143,11 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             $(placeholder+'b').sparkline([curr_avg], sparklineOptions);
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
             sparklineOptions.barWidth = 2;
+
+
             sparklineOptions.tooltipValueLookups = { names: offset_to_time};
+            sparklineOptions.chartRangeMax = max_value_day;
+            sparklineOptions.chartRangeMin = -max_value_day;
 
             // print today
             var data_length = plot_data[graphNum].length;
@@ -155,6 +164,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             var day_avg = isNaN(day_sum/day_sum_elem) ? 0 : day_sum/day_sum_elem;
             var day_avg_text = isNaN(day_sum/day_sum_elem) ? 'No data' : (day_avg).toFixed(5);
             all_day_avg += day_avg;
+            all_day_avg_maxVal = Math.abs(day_avg) > all_day_avg_maxVal ? Math.abs(day_avg) : all_day_avg_maxVal;
             $(placeholder+'b').sparkline([day_avg], sparklineOptions);
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
             sparklineOptions.barWidth = 2;
@@ -194,7 +204,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
         gaugeOptions.appendTo = '#gauge_today_last_hour';
         gaugeOptions.dialLabel = 'Last hour';
         gaugeOptions.elementId = 'gauge1';
-        var piePercent = (all_graph_hour_sum / 8) / max_value;
+        var piePercent = (all_graph_hour_sum / 8) / all_graph_hour_maxVal;
         gaugeOptions.inc = piePercent;
         var gauge_today_last_hour = new FlexGauge(gaugeOptions);
         
@@ -202,7 +212,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
         gaugeOptions2.dialLabel = 'Today';
         gaugeOptions2.elementId = 'gauge2';
         //piePercent = (all_graph_day_sum / (8*24)) / max_value;
-        piePercent = (all_day_avg / 8) / max_value;
+        piePercent = (all_day_avg / 8) / all_day_avg_maxVal;
         gaugeOptions2.inc = piePercent;
         var gauge_today_last_days = new FlexGauge(gaugeOptions2);
         
@@ -268,6 +278,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             },
             data: [
                 {
+                    toolTipContent: "<span style='\"'color: {color};'\"'><strong>Positive: </strong></span><span><strong>{y}</strong></span>",
                     type: "bar",
                     color: "green",
                     dataPoints: [
@@ -275,6 +286,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                     ]
                 },
                 {
+                    toolTipContent: "<span style='\"'color: {color};'\"'><strong>Negative: </strong></span><span><strong>{y}</strong></span>",
                     type: "bar",
                     color: "red",
                     dataPoints: [
@@ -302,6 +314,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             },
             data: [
             {
+                toolTipContent: "<span style='\"'color: {color};'\"'><strong>Positive: </strong></span><span><strong>{y}</strong></span>",
                 type: "bar",
                 color: "green",
                 dataPoints: [
@@ -309,6 +322,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
                 ]
             },
             {
+                toolTipContent: "<span style='\"'color: {color};'\"'><strong>Negative: </strong></span><span><strong>{y}</strong></span>",
                 type: "bar",
                 color: "red",
                 dataPoints: [

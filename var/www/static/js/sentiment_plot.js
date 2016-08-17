@@ -65,7 +65,6 @@ function plotData(){
 
     // retreive the data from the server
     $.getJSON('/sentiment_analysis_plot_tool_getdata/?getProviders=False&query='+query+'&Qdate='+Qdate, function(data){
-        console.log(data);
         var to_plot = [];
         for (provider in data){
             var nltk_data = Object.keys(data[provider]).map(function (key) { return data[provider][key]; });

@@ -157,7 +157,7 @@ class Paste(object):
             self.p_nb_lines = line_id
             self.p_max_length_line = max_length_line
 
-        return (self.p_nb_lines, self.p_max_length_line, array_line_above_threshold)
+        return (self.p_nb_lines, self.p_max_length_line)
 
     def _get_p_encoding(self):
         """
