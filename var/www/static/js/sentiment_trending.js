@@ -42,7 +42,7 @@
 
 $.getJSON("/sentiment_analysis_getplotdata/",
     function(data) {
-        //console.log(data);
+        console.log(data);
         var all_data = [];
         var plot_data = [];
         var graph_avg = [];
@@ -136,7 +136,8 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             var placeholder = '.sparkLineStatsWeek' + num;
             $(placeholder).sparkline(plot_data[graphNum], sparklineOptions);
             $(placeholder+'t').text(curr_provider);
-            $(placeholder+'s').text(curr_avg.toFixed(5));
+            var curr_avg_text = isNaN(curr_avg) ? "No data" : curr_avg.toFixed(5); 
+            $(placeholder+'s').text(curr_avg_text);
         
             sparklineOptions.barWidth = 18;
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> Avg: {{value}} </span>'
@@ -144,10 +145,22 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
             sparklineOptions.barWidth = 2;
 
-
             sparklineOptions.tooltipValueLookups = { names: offset_to_time};
             sparklineOptions.chartRangeMax = max_value_day;
             sparklineOptions.chartRangeMin = -max_value_day;
+
+            var avgName = ".pannelWeek" + num;
+            if (curr_avg > 0) {
+                $(avgName).addClass("panel-success")
+            } else if(curr_avg < 0) {
+                $(avgName).addClass("panel-danger")
+            } else if(isNaN(curr_avg)) {
+                $(avgName).addClass("panel-info")
+            } else {
+                $(avgName).addClass("panel-warning")
+            }
+
+
 
             // print today
             var data_length = plot_data[graphNum].length;
@@ -169,6 +182,17 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
             sparklineOptions.barWidth = 2;
             $(placeholder+'s').text(day_avg_text);
+
+            avgName = ".pannelToday" + num;
+            if (day_avg > 0) {
+                $(avgName).addClass("panel-success")
+            } else if(day_avg < 0) {
+                $(avgName).addClass("panel-danger")
+            } else if(isNaN(day_sum/day_sum_elem)) {
+                $(avgName).addClass("panel-info")
+            } else {
+                $(avgName).addClass("panel-warning")
+            }
 
         }//for loop
 
@@ -336,6 +360,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
         
         chart_canvas1.render();
         chart_canvas2.render();
+
 
 
     }

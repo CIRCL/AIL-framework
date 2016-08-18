@@ -30,14 +30,10 @@ def get_date_range(num_day):
 def compute_most_posted(server, message):
     module, num, keyword, paste_date = message.split(';')
 
-    redis_progression_name_set = 'top_'+ module +'_set'
+    redis_progression_name_set = 'top_'+ module +'_set_' + paste_date
 
     # Add/Update in Redis
-    prev_score = server.hget(paste_date, module+'-'+keyword)
-    if prev_score is not None:
-        ok = server.hset(paste_date, module+'-'+keyword, int(prev_score) + int(num))
-    else:
-        ok = server.hset(paste_date, module+'-'+keyword, int(num))
+    server.hincrby(paste_date, module+'-'+keyword, int(num))
 
     # Compute Most Posted
     date = get_date_range(0)[0]
@@ -47,44 +43,64 @@ def compute_most_posted(server, message):
     curr_value = server.hget(date, module+'-'+keyword)
     keyword_total_sum += int(curr_value) if curr_value is not None else 0
         
-    if keyword in server.smembers(redis_progression_name_set): # if it is already in the set
-        return
+    if server.zcard(redis_progression_name_set) < max_set_cardinality:
+        server.zadd(redis_progression_name_set, float(keyword_total_sum), keyword)
 
-    if (server.scard(redis_progression_name_set) < max_set_cardinality):
-        server.sadd(redis_progression_name_set, keyword)
+    else: # not in set
+        member_set = server.zrangebyscore(redis_progression_name_set, '-inf', '+inf', withscores=True, start=0, num=1)
+        # Member set is a list of (value, score) pairs
+        if int(member_set[0][1]) < keyword_total_sum:
+            #remove min from set and add the new one
+            print module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+            server.zrem(redis_progression_name_set, member_set[0][0])
+            server.zadd(redis_progression_name_set, float(keyword_total_sum), keyword)
+            print redis_progression_name_set
 
-    else: #not in the set
-        #Check value for all members
-        member_set = []
-        for keyw in server.smembers(redis_progression_name_set):
-            keyw_value = server.hget(paste_date, module+'-'+keyw)
-            if keyw_value is not None:
-                member_set.append((keyw, int(keyw_value)))
-            else: #No data for this set for today
-                member_set.append((keyw, int(0)))
-        member_set.sort(key=lambda tup: tup[1])
-        if len(member_set) > 0:
-            if member_set[0][1] < keyword_total_sum:
-                #remove min from set and add the new one
-                print module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
-                server.srem(redis_progression_name_set, member_set[0][0])
-                server.sadd(redis_progression_name_set, keyword)
+#    if keyword in server.smembers(redis_progression_name_set): # if it is already in the set
+#        return
+#
+#    if (server.scard(redis_progression_name_set) < max_set_cardinality):
+#        server.sadd(redis_progression_name_set, keyword)
+
+#    else: #not in the set
+#        #Check value for all members
+#        member_set = []
+#        for keyw in server.smembers(redis_progression_name_set):
+#            keyw_value = server.hget(paste_date, module+'-'+keyw)
+#            if keyw_value is not None:
+#                member_set.append((keyw, int(keyw_value)))
+#            else: #No data for this set for today
+#                member_set.append((keyw, int(0)))
+#        member_set.sort(key=lambda tup: tup[1])
+#        if len(member_set) > 0:
+#            if member_set[0][1] < keyword_total_sum:
+#                #remove min from set and add the new one
+#                print module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+#                server.srem(redis_progression_name_set, member_set[0][0])
+#                server.sadd(redis_progression_name_set, keyword)
 
 
 def compute_provider_info(server, path):
     redis_all_provider = 'all_provider_set'
     
-    redis_avg_size_name_set = 'top_size_set'
-    redis_providers_name_set = 'providers_set'
     paste = Paste.Paste(path)
     
     paste_size = paste._get_p_size()
     paste_provider = paste.p_source
-    paste_date = paste._get_p_date()
-    new_avg = paste_size
+    paste_date = str(paste._get_p_date())
+    redis_sum_size_set = 'top_size_set_' + paste_date
+    redis_avg_size_name_set = 'top_avg_size_set_' + paste_date
+    redis_providers_name_set = 'providers_set_' + paste_date
 
     # Add/Update in Redis
     server.sadd(redis_all_provider, paste_provider)
+
+    num_paste = int(server.hincrby(paste_provider+'_num', paste_date, 1))
+    sum_size = float(server.hincrbyfloat(paste_provider+'_size', paste_date, paste_size))
+    new_avg = float(sum_size) / float(num_paste)
+    server.hset(paste_provider +'_avg', paste_date, new_avg)
+
+    '''
     prev_num_paste = server.hget(paste_provider+'_num', paste_date)
     if prev_num_paste is not None:
         ok = server.hset(paste_provider+'_num', paste_date, int(prev_num_paste)+1)
@@ -99,12 +115,28 @@ def compute_provider_info(server, path):
     else:
         ok = server.hset(paste_provider+'_num', paste_date, 1)
         prev_num_paste = 0
+    '''
 
     #
     # Compute Most Posted
     #
         
     # Size
+    if server.zcard(redis_sum_size_set) < max_set_cardinality or server.zscore(redis_sum_size_set, paste_provider) != "nil":
+        server.zadd(redis_sum_size_set, float(num_paste), paste_provider)
+        server.zadd(redis_avg_size_name_set, float(new_avg), paste_provider)
+    else: #set full capacity
+        member_set = server.zrangebyscore(redis_sum_size_set, '-inf', '+inf', withscores=True, start=0, num=1)
+        # Member set is a list of (value, score) pairs
+        if float(member_set[0][1]) < new_avg:
+            #remove min from set and add the new one
+            print 'Size - adding ' +paste_provider+ '(' +str(new_avg)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+            server.zrem(redis_sum_size_set, member_set[0][0])
+            server.zadd(redis_sum_size_set, float(sum_size), paste_provider)
+            server.zrem(redis_avg_size_name_set, member_set[0][0])
+            server.zadd(redis_avg_size_name_set, float(new_avg), paste_provider)
+
+    '''
     if paste_provider not in server.smembers(redis_avg_size_name_set): # if it is already in the set
         if (server.scard(redis_avg_size_name_set) < max_set_cardinality):
             server.sadd(redis_avg_size_name_set, paste_provider)
@@ -125,8 +157,22 @@ def compute_provider_info(server, path):
                 print 'Size - adding ' +paste_provider+ '(' +str(new_avg)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
                 server.srem(redis_avg_size_name_set, member_set[0][0])
                 server.sadd(redis_avg_size_name_set, paste_provider)
+    '''
 
     # Num
+    # if set not full or provider already present
+    if server.zcard(redis_providers_name_set) < max_set_cardinality or server.zscore(redis_providers_name_set, paste_provider) != "nil":
+        server.zadd(redis_providers_name_set, float(num_paste), paste_provider)
+    else: #set at full capacity
+        member_set = server.zrangebyscore(redis_providers_name_set, '-inf', '+inf', withscores=True, start=0, num=1)
+        # Member set is a list of (value, score) pairs
+        if int(member_set[0][1]) < num_paste:
+            #remove min from set and add the new one
+            print 'Num - adding ' +paste_provider+ '(' +str(num_paste)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+            server.zrem(member_set[0][0])
+            server.zadd(redis_providers_name_set, float(num_paste), paste_provider)
+
+    '''
     if paste_provider not in server.smembers(redis_providers_name_set): # if it is already in the set
         if (server.scard(redis_providers_name_set) < max_set_cardinality):
             server.sadd(redis_providers_name_set, paste_provider)
@@ -146,6 +192,7 @@ def compute_provider_info(server, path):
                     print 'Num - adding ' +paste_provider+ '(' +str(int(prev_num_paste)+1)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
                     server.srem(redis_providers_name_set, member_set[0][0])
                     server.sadd(redis_providers_name_set, paste_provider)
+    '''
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)

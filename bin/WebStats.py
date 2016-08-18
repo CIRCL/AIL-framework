@@ -23,16 +23,11 @@ num_day_to_look = 5       # the detection of the progression start num_day_to_lo
 def analyse(server, field_name, date, url_parsed):
     field = url_parsed[field_name]
     if field is not None:
-        prev_score = server.hget(field, date)
-        if prev_score is not None:
-            server.hset(field, date, int(prev_score) + 1)
-
-        else:
-            server.hset(field, date, 1)
-            if field_name == "domain": #save domain in a set for the monthly plot
-                domain_set_name = "domain_set_" + date[0:6]
-                server.sadd(domain_set_name, field)
-                print "added in " + domain_set_name +": "+ field
+        server.hincrby(field, date, 1)
+        if field_name == "domain": #save domain in a set for the monthly plot
+            domain_set_name = "domain_set_" + date[0:6]
+            server.sadd(domain_set_name, field)
+            print "added in " + domain_set_name +": "+ field
 
 def get_date_range(num_day):
     curr_date = datetime.date.today()
@@ -84,7 +79,7 @@ def compute_progression(server, field_name, num_day, url_parsed):
                     member_set.append((keyw, int(server.hget(redis_progression_name, keyw))))
                 print member_set
                 member_set.sort(key=lambda tup: tup[1])
-                if member_set[0] < keyword_increase:
+                if member_set[0][1] < keyword_increase:
                     #remove min from set and add the new one
                     server.srem(redis_progression_name_set, member_set[0])
                     server.sadd(redis_progression_name_set, keyword)
@@ -107,11 +102,6 @@ if __name__ == '__main__':
     publisher.info("Makes statistics about valid URL")
 
     # REDIS #
-    r_serv1 = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB", "host"),
-        port=p.config.get("Redis_Level_DB", "port"),
-        db=p.config.get("Redis_Level_DB", "db"))
- 
     r_serv_trend = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_Trending", "host"),
         port=p.config.get("Redis_Level_DB_Trending", "port"),

@@ -28,8 +28,23 @@ from pubsublogger import publisher
 from packages import lib_words
 import os
 import datetime
+import calendar
 
 from Helper import Process
+
+# Config Variables
+top_term_freq_max_set_cardinality = 50 # Max cardinality of the terms frequences set
+
+
+def getValueOverRange(word, startDate, num_day):
+    oneDay = 60*60*24
+    to_return = 0
+    for timestamp in range(startDate, startDate - num_day*oneDay, -oneDay):
+        value = server_term.hget(timestamp, word)
+        to_return += int(value) if value is not None else 0
+    return to_return
+
+
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -44,6 +59,11 @@ if __name__ == "__main__":
         port=p.config.get("Redis_Level_DB_Curve", "port"),
         db=p.config.get("Redis_Level_DB_Curve", "db"))
 
+    server_term = redis.StrictRedis(
+        host=p.config.get("Redis_Level_DB_TermFreq", "host"),
+        port=p.config.get("Redis_Level_DB_TermFreq", "port"),
+        db=p.config.get("Redis_Level_DB_TermFreq", "db"))
+
     # FUNCTIONS #
     publisher.info("Script Curve started")
 
@@ -56,6 +76,7 @@ if __name__ == "__main__":
     message = p.get_from_set()
     prec_filename = None
     generate_new_graph = False
+    iii = 0
     while True:
         if message is not None:
             generate_new_graph = True
@@ -65,11 +86,49 @@ if __name__ == "__main__":
             date = temp[-4] + temp[-3] + temp[-2]
 
             low_word = word.lower()
-            prev_score = r_serv1.hget(low_word, date)
-            if prev_score is not None:
-                r_serv1.hset(low_word, date, int(prev_score) + int(score))
+            r_serv1.hincrby(low_word, date, int(score))
+
+            # Term Frequency
+            top_termFreq_setName_day = ["TopTermFreq_set_day", 1]
+            top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
+            top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
+            top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
+            timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
+
+            # Update redis
+            curr_word_value = int(server_term.hincrby(timestamp, low_word, int(score)))
+            
+#            print '+----------------------------------------------------------------'
+            # Manage Top set
+            for curr_set, curr_num_day in top_termFreq_set_array:
+
+                if server_term.scard(curr_set) < top_term_freq_max_set_cardinality:
+                    server_term.sadd(curr_set, low_word)
+                elif server_term.sismember(curr_set, low_word):
+                    continue
+
+                else:
+                    top_termFreq = server_term.smembers(curr_set)
+                    sorted_top_termFreq_set = []
+                    for word in top_termFreq:
+                        word_value = getValueOverRange(word, timestamp, curr_num_day)
+                        sorted_top_termFreq_set.append((word, word_value))
+
+                    sorted_top_termFreq_set.sort(key=lambda tup: tup[1])
+#                    if curr_num_day == 1:
+#                        print sorted_top_termFreq_set
+                    curr_word_value = getValueOverRange(low_word, timestamp, curr_num_day)
+
+                    if curr_word_value > int(sorted_top_termFreq_set[0][1]):
+                        print str(curr_num_day)+':', low_word, curr_word_value, '\t', sorted_top_termFreq_set[0][0], sorted_top_termFreq_set[0][1], '\t', curr_word_value > sorted_top_termFreq_set[0][1]
+                        #print sorted_top_termFreq_set
+                        server_term.srem(curr_set, sorted_top_termFreq_set[0][0])
+                        server_term.sadd(curr_set, low_word)
+            if iii == 2:
+                iii-=1
             else:
-                r_serv1.hset(low_word, date, score)
+                iii+=1
+
 
         else:
             if generate_new_graph:

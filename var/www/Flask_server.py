@@ -188,22 +188,30 @@ def get_date_range(num_day):
 # Iterate over elements in the module provided and return the today data or the last data
 # return format: [('passed_days', num_of_passed_days), ('elem_name1', elem_value1), ('elem_name2', elem_value2)]]
 def get_top_relevant_data(server, module_name):
-    redis_progression_name_set = 'top_'+ module_name +'_set'
     days = 0
     for date in get_date_range(15):
-        member_set = []
-        for keyw in server.smembers(redis_progression_name_set):
-            redis_progression_name = module_name+'-'+keyw
-            keyw_value = server.hget(date ,redis_progression_name)
-            keyw_value = keyw_value if keyw_value is not None else 0
-            member_set.append((keyw, int(keyw_value)))
-        member_set.sort(key=lambda tup: tup[1], reverse=True)
-        if member_set[0][1] == 0: #No data for this date
+        redis_progression_name_set = 'top_'+ module_name +'_set_' + date
+        member_set = server.zrevrangebyscore(redis_progression_name_set, '+inf', '-inf', withscores=True)
+        #print member_set
+        if len(member_set) == 0: #No data for this date
             days += 1
-            continue
         else:
             member_set.insert(0, ("passed_days", days))
             return member_set
+
+#        member_set = []
+#        for keyw in server.smembers(redis_progression_name_set):
+#            redis_progression_name = module_name+'-'+keyw
+#            keyw_value = server.hget(date ,redis_progression_name)
+#            keyw_value = keyw_value if keyw_value is not None else 0
+#            member_set.append((keyw, int(keyw_value)))
+#        member_set.sort(key=lambda tup: tup[1], reverse=True)
+#        if member_set[0][1] == 0: #No data for this date
+#            days += 1
+#            continue
+#        else:
+#            member_set.insert(0, ("passed_days", days))
+#            return member_set
 
 # ========= CACHE CONTROL ========
 @app.after_request
@@ -300,10 +308,12 @@ def providersChart():
         for date in date_range:
             curr_value_size = r_serv_charts.hget(keyword_name+'_'+'size', date)
             curr_value_num = r_serv_charts.hget(keyword_name+'_'+'num', date)
+            curr_value_size_avg = r_serv_charts.hget(keyword_name+'_'+'avg', date)
             if module_name == "size":
-                curr_value_num = curr_value_num if curr_value_num is not None else 0
-                curr_value_num = curr_value_num if int(curr_value_num) != 0 else 10000000000
-                curr_value = float(curr_value_size if curr_value_size is not None else 0.0) / float(curr_value_num)
+                curr_value = float(curr_value_size_avg if curr_value_size_avg is not None else 0)
+                #curr_value_num = curr_value_num if curr_value_num is not None else 0
+                #curr_value_num = curr_value_num if int(curr_value_num) != 0 else 10000000000
+                #curr_value = float(curr_value_size if curr_value_size is not None else 0.0) / float(curr_value_num)
             else:
                 curr_value = float(curr_value_num if curr_value_num is not None else 0.0)
 
@@ -312,8 +322,18 @@ def providersChart():
         return jsonify(bar_values)
 
     else:
-        redis_provider_name_set = 'top_size_set' if module_name == "size" else 'providers_set'
+        #redis_provider_name_set = 'top_size_set' if module_name == "size" else 'providers_set'
+        redis_provider_name_set = 'top_avg_size_set_' if module_name == "size" else 'providers_set_'
+        redis_provider_name_set = redis_provider_name_set + get_date_range(0)[0]
+        
+        member_set = r_serv_charts.zrangebyscore(redis_provider_name_set, '-inf', '+inf', withscores=True, start=0, num=8)
+        # Member set is a list of (value, score) pairs
+        if len(member_set) == 0:
+            member_set.append(("No relevant data", float(100)))
+        return jsonify(member_set)
 
+
+'''
         # Iterate over element in top_x_set and retreive their value
         member_set = []
         for keyw in r_serv_charts.smembers(redis_provider_name_set):
@@ -339,7 +359,7 @@ def providersChart():
         if len(member_set) == 0:
             member_set.append(("No relevant data", float(100)))
         return jsonify(member_set)
-
+'''
 
 
 @app.route("/search", methods=['POST'])
@@ -465,18 +485,18 @@ def sentiment_analysis_getplotdata():
     dateStart_timestamp = calendar.timegm(dateStart.timetuple())
 
     to_return = {}
-    for cur_provider in r_serv_charts.smembers('providers_set'):
-       cur_provider_name = cur_provider + '_'
-       list_date = {}
-       for cur_timestamp in range(int(dateStart_timestamp), int(dateStart_timestamp)-sevenDays-oneHour, -oneHour):
-           cur_set_name = cur_provider_name + str(cur_timestamp)
+    for cur_provider in r_serv_charts.zrangebyscore('providers_set_'+ get_date_range(0)[0], '-inf', '+inf', start=0, num=8):
+        cur_provider_name = cur_provider + '_'
+        list_date = {}
+        for cur_timestamp in range(int(dateStart_timestamp), int(dateStart_timestamp)-sevenDays-oneHour, -oneHour):
+            cur_set_name = cur_provider_name + str(cur_timestamp)
 
-           list_value = []
-           for cur_id in r_serv_sentiment.smembers(cur_set_name):
-               cur_value = r_serv_sentiment.get(cur_id)
-               list_value.append(cur_value)
-           list_date[cur_timestamp] = list_value
-       to_return[cur_provider] = list_date
+            list_value = []
+            for cur_id in r_serv_sentiment.smembers(cur_set_name):
+                cur_value = r_serv_sentiment.get(cur_id)
+                list_value.append(cur_value)
+            list_date[cur_timestamp] = list_value
+        to_return[cur_provider] = list_date
 
     return jsonify(to_return)
 
@@ -530,6 +550,37 @@ def sentiment_analysis_plot_tool_getdata():
             to_return[cur_provider] = list_date
 
         return jsonify(to_return)
+
+
+@app.route("/test/") #completely shows the paste in a new tab
+def test():
+
+    server = redis.StrictRedis(
+        host=cfg.get("Redis_Level_DB_TermFreq", "host"),
+        port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
+        db=cfg.getint("Redis_Level_DB_TermFreq", "db"))
+
+    array1 = []
+    for w in server.smembers('TopTermFreq_set_day'):
+        val = server.hget('1471478400', w)
+        val = val if val is not None else 0
+        val2 = server.hget('1471392000', w)
+        val2 = val2 if val2 is not None else 0
+        array1.append((w, (int(val), int(val2))))
+
+#    array2 = []
+#    for w in server.smembers('TopTermFreq_set_week'):
+#        array2.append((w, int(server.hget('1471478400', w))))
+
+    array1.sort(key=lambda tup: tup[1][0]+tup[1][1])
+    stri = "<h1> day </h1>"
+    for e in array1:
+        stri += "<p>"+ e[0] + "\t" + str(e[1]) +"</p>"
+#    stri += "<h1> week </h1>"
+#    for e in array2:
+#        stri += "<p>"+ e[0] + "\t" + str(e[1]) +"</p>"
+
+    return stri
 
 
 

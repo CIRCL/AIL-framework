@@ -24,6 +24,7 @@ if __name__ == "__main__":
     publisher.channel = "Script"
 
     config_section = ['Global', 'Duplicates', 'Indexer', 'Attributes', 'Lines', 'DomClassifier', 'Tokenize', 'Curve', 'Categ', 'CreditCards', 'Mail', 'Onion', 'DumpValidOnion', 'Web',  'WebStats', 'Release', 'Credential', 'Cve', 'Phone', 'SourceCode', 'Keys']
+    config_section = ['Curve']
 
     for queue in config_section:
         print 'dropping: ' + queue
