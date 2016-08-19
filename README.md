@@ -104,6 +104,7 @@ LICENSE
     Copyright (C) 2014-2016 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
     Copyright (c) 2014-2016 Raphaël Vinot
     Copyright (c) 2014-2016 Alexandre Dulaunoy
+    Copyright (c) 2016 Sami Mokaddem
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by

@@ -55,6 +55,11 @@ r_serv_sentiment = redis.StrictRedis(
         port=cfg.getint("Redis_Level_DB_Sentiment", "port"),
         db=cfg.getint("Redis_Level_DB_Sentiment", "db"))
 
+r_serv_term = redis.StrictRedis(
+        host=cfg.get("Redis_Level_DB_TermFreq", "host"),
+        port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
+        db=cfg.getint("Redis_Level_DB_TermFreq", "db"))
+
 
 app = Flask(__name__, static_url_path='/static/')
 
@@ -552,19 +557,71 @@ def sentiment_analysis_plot_tool_getdata():
         return jsonify(to_return)
 
 
+@app.route("/terms_management/")
+def terms_management():
+    TrackedTermsSet_Name = "TrackedSetTermSet"
+    BlackListTermsSet_Name = "BlackListSetTermSet"
+    
+    track_list = []
+    track_list_values = []
+    for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
+        track_list.append(tracked_term)
+
+    black_list = []
+    black_list_values = []
+    for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
+        black_list.append(blacked_term)
+
+    return render_template("terms_management.html", black_list=black_list, track_list=track_list)
+
+
+@app.route("/terms_management_action/", methods=['GET'])
+def terms_management_action():
+    TrackedTermsSet_Name = "TrackedSetTermSet"
+    BlackListTermsSet_Name = "BlackListSetTermSet"
+
+    section = request.args.get('section')
+    action = request.args.get('action')
+    term =  request.args.get('term')
+    if action is None or term is None:
+        return "None"
+    else:
+        if section == "followTerm":
+            if action == "add":
+                r_serv_term.sadd(TrackedTermsSet_Name, term)
+            else:
+                r_serv_term.srem(TrackedTermsSet_Name, term)
+        elif section == "blacklistTerm":
+            if action == "add":
+                r_serv_term.sadd(BlackListTermsSet_Name, term)
+            else:
+                r_serv_term.srem(BlackListTermsSet_Name, term)
+        else:
+            return "None"
+
+        to_return = {}
+        to_return["section"] = section
+        to_return["action"] = action
+        to_return["term"] = term
+        return jsonify(to_return)
+
+
+
+@app.route("/terms_plot_tool/")
+def terms_plot_tool():
+    return render_template("terms_plot_tool.html")
+
+
+
 @app.route("/test/") #completely shows the paste in a new tab
 def test():
 
-    server = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB_TermFreq", "host"),
-        port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
-        db=cfg.getint("Redis_Level_DB_TermFreq", "db"))
-
+    server = r_serv_term
     array1 = []
     for w in server.smembers('TopTermFreq_set_day'):
-        val = server.hget('1471478400', w)
+        val = server.hget('1471564800', w)
         val = val if val is not None else 0
-        val2 = server.hget('1471392000', w)
+        val2 = server.hget('1471478400', w)
         val2 = val2 if val2 is not None else 0
         array1.append((w, (int(val), int(val2))))
 
@@ -572,7 +629,7 @@ def test():
 #    for w in server.smembers('TopTermFreq_set_week'):
 #        array2.append((w, int(server.hget('1471478400', w))))
 
-    array1.sort(key=lambda tup: tup[1][0]+tup[1][1])
+    array1.sort(key=lambda tup: tup[1][0])
     stri = "<h1> day </h1>"
     for e in array1:
         stri += "<p>"+ e[0] + "\t" + str(e[1]) +"</p>"

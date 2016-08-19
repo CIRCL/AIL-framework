@@ -136,7 +136,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Credential" bash -c './Credential.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
+    #screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
     sleep 0.1
@@ -157,6 +157,13 @@ function launching_scripts {
     screen -S "Script" -X screen -t "Browse_warning_paste" bash -c './Browse_warning_paste.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "SentimentAnalyser" bash -c './SentimentAnalyser.py; read x'
+
+    sleep 0.1
+    screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
 }
 
 #If no params, display the help

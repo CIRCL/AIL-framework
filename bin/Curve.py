@@ -33,7 +33,7 @@ import calendar
 from Helper import Process
 
 # Config Variables
-top_term_freq_max_set_cardinality = 50 # Max cardinality of the terms frequences set
+top_term_freq_max_set_cardinality = 20 # Max cardinality of the terms frequences set
 
 
 def getValueOverRange(word, startDate, num_day):
@@ -76,29 +76,49 @@ if __name__ == "__main__":
     message = p.get_from_set()
     prec_filename = None
     generate_new_graph = False
-    iii = 0
+
+    # Term Frequency
+    top_termFreq_setName_day = ["TopTermFreq_set_day", 1]
+    top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
+    top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
+    top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
+
     while True:
+
         if message is not None:
             generate_new_graph = True
 
             filename, word, score = message.split()
             temp = filename.split('/')
             date = temp[-4] + temp[-3] + temp[-2]
+            timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
 
+            # If set size is greater then the one authorized
+            # suppress smaller elements
+            for curr_set, curr_num_day in top_termFreq_set_array:
+                diffCard = server_term.scard(curr_set) - top_term_freq_max_set_cardinality
+                if diffCard > 0:
+                    top_termFreq = server_term.smembers(curr_set)
+                    sorted_top_termFreq_set = []
+                    for word in top_termFreq:
+                        word_value = getValueOverRange(word, timestamp, curr_num_day)
+                        sorted_top_termFreq_set.append((word, word_value))
+
+                    sorted_top_termFreq_set.sort(key=lambda tup: tup[1])
+                    for i in range(0, diffCard):
+                        print 'set oversized, dropping', sorted_top_termFreq_set[i][0]
+                        server_term.srem(curr_set, sorted_top_termFreq_set[i][0])
+
+
+            #timer = time.clock()
             low_word = word.lower()
+            #print 'wordlower', time.clock() - timer
             r_serv1.hincrby(low_word, date, int(score))
 
-            # Term Frequency
-            top_termFreq_setName_day = ["TopTermFreq_set_day", 1]
-            top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
-            top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
-            top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
-            timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
 
             # Update redis
             curr_word_value = int(server_term.hincrby(timestamp, low_word, int(score)))
             
-#            print '+----------------------------------------------------------------'
             # Manage Top set
             for curr_set, curr_num_day in top_termFreq_set_array:
 
@@ -108,27 +128,23 @@ if __name__ == "__main__":
                     continue
 
                 else:
+                    #timer = time.clock()
+                    curr_word_value = getValueOverRange(low_word, timestamp, curr_num_day)
+                    #print 'curr_range', time.clock() - timer
                     top_termFreq = server_term.smembers(curr_set)
                     sorted_top_termFreq_set = []
+                    #timer = time.clock()
                     for word in top_termFreq:
                         word_value = getValueOverRange(word, timestamp, curr_num_day)
                         sorted_top_termFreq_set.append((word, word_value))
 
                     sorted_top_termFreq_set.sort(key=lambda tup: tup[1])
-#                    if curr_num_day == 1:
-#                        print sorted_top_termFreq_set
-                    curr_word_value = getValueOverRange(low_word, timestamp, curr_num_day)
+                    #print 'whole_range', time.clock() - timer
 
                     if curr_word_value > int(sorted_top_termFreq_set[0][1]):
                         print str(curr_num_day)+':', low_word, curr_word_value, '\t', sorted_top_termFreq_set[0][0], sorted_top_termFreq_set[0][1], '\t', curr_word_value > sorted_top_termFreq_set[0][1]
-                        #print sorted_top_termFreq_set
                         server_term.srem(curr_set, sorted_top_termFreq_set[0][0])
                         server_term.sadd(curr_set, low_word)
-            if iii == 2:
-                iii-=1
-            else:
-                iii+=1
-
 
         else:
             if generate_new_graph:

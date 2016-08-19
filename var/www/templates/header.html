@@ -7,8 +7,15 @@
         <li id='page-sentiment'><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-heart"></i> Sentiment Analysis
             <span class="caret"></span></a>
             <ul class="dropdown-menu">
-              <li><a href="{{ url_for('sentiment_analysis_trending') }}">Trending</a></li>
-              <li><a href="{{ url_for('sentiment_analysis_plot_tool') }}">Plot Tool</a></li>
+              <li><a href="{{ url_for('sentiment_analysis_trending') }}"> Sentiment trending</a></li>
+              <li><a href="{{ url_for('sentiment_analysis_plot_tool') }}">Sentiment plot Tool</a></li>
+            </ul>
+        </li>
+        <li id='page-termsfrequency'><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-eye"></i> Terms frequency
+            <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('terms_management') }}">Terms managements</a></li>
+              <li><a href="{{ url_for('terms_plot_tool') }}">Terms plot Tool</a></li>
             </ul>
         </li>
     </ul>
