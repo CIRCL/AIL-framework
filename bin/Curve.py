@@ -14,6 +14,14 @@ words and their occurency per day.
 ..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
 the same Subscriber name in both of them.
 
+
+
+
+zrank for each day
+week -> top zrank for each day
+
+
+
 Requirements
 ------------
 

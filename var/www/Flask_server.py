@@ -5,6 +5,7 @@ import redis
 import ConfigParser
 import json
 import datetime
+import time
 import calendar
 from flask import Flask, render_template, jsonify, request
 import flask
@@ -577,6 +578,8 @@ def sentiment_analysis_plot_tool_getdata():
 def terms_management():
     TrackedTermsSet_Name = "TrackedSetTermSet"
     BlackListTermsSet_Name = "BlackListSetTermSet"
+    TrackedTermsDate_Name = "TrackedTermDate"
+    BlackListTermsDate_Name = "BlackListTermDate"
     
     today = datetime.datetime.now()
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -586,31 +589,57 @@ def terms_management():
     track_list_values = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
         track_list.append(tracked_term)
-        track_list_values.append(Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31]))
+        value_range = Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31])
+
+        term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
+        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
+        value_range.append(term_date)
+        track_list_values.append(value_range)
 
 
     black_list = []
     for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
-        black_list.append(blacked_term)
+        term_date = r_serv_term.hget(BlackListTermsDate_Name, blacked_term)
+        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
+        print term_date
+        black_list.append([blacked_term, term_date])
 
     return render_template("terms_management.html", black_list=black_list, track_list=track_list, track_list_values=track_list_values)
 
 
 @app.route("/terms_management_query/")
 def terms_management_query():
+    TrackedTermsDate_Name = "TrackedTermDate"
+    BlackListTermsDate_Name = "BlackListTermDate"
     term =  request.args.get('term')
+    section = request.args.get('section')
+
     today = datetime.datetime.now()
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
+    value_range = Term_getValueOverRange(term, today_timestamp, [1, 7, 31])
 
-    print Term_getValueOverRange(term, today_timestamp, [1, 7, 31])
-    return jsonify(Term_getValueOverRange(term, today_timestamp, [1, 7, 31]))
+    if section == "followTerm":
+        term_date = r_serv_term.hget(TrackedTermsDate_Name, term)
+    elif section == "blacklistTerm":
+        term_date = r_serv_term.hget(BlackListTermsDate_Name, term)
+
+    term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
+    value_range.append(str(term_date))
+    return jsonify(value_range)
 
 
 @app.route("/terms_management_action/", methods=['GET'])
 def terms_management_action():
     TrackedTermsSet_Name = "TrackedSetTermSet"
+    TrackedTermsDate_Name = "TrackedTermDate"
+    BlackListTermsDate_Name = "BlackListTermDate"
     BlackListTermsSet_Name = "BlackListSetTermSet"
+
+    today = datetime.datetime.now()
+    today = today.replace(microsecond=0)
+    today_timestamp = calendar.timegm(today.timetuple())
+
 
     section = request.args.get('section')
     action = request.args.get('action')
@@ -621,11 +650,13 @@ def terms_management_action():
         if section == "followTerm":
             if action == "add":
                 r_serv_term.sadd(TrackedTermsSet_Name, term)
+                r_serv_term.hset(TrackedTermsDate_Name, term, today_timestamp)
             else:
                 r_serv_term.srem(TrackedTermsSet_Name, term)
         elif section == "blacklistTerm":
             if action == "add":
                 r_serv_term.sadd(BlackListTermsSet_Name, term)
+                r_serv_term.hset(BlackListTermsDate_Name, term, today_timestamp)
             else:
                 r_serv_term.srem(BlackListTermsSet_Name, term)
         else:
