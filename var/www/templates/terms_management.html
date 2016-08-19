@@ -97,9 +97,9 @@
                                   <tr>
                                       <td>{{ term }}</td>
                                       <td>{{ i }}</td>
-                                      <td>15</td>
-                                      <td>55</td>
-                                      <td>459</td>
+                                      <td>{{ track_list_values[i][0] }}</td>
+                                      <td>{{ track_list_values[i][1] }}</td>
+                                      <td>{{ track_list_values[i][2] }}</td>
                                       <td><p style="margin: 0px;">
                                           <button class="btn-link" data-toggle="tooltip" data-placement="right" title="Show concerned paste(s)"><span class="glyphicon glyphicon-info-sign"></span></button>
                                           <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="right" title="Remove this term" data-content="{{ term }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
@@ -211,9 +211,11 @@ function perform_operation(){
                 if(json.section == "followTerm") {
                     if(json.action == "add") {
                         // query data
-                        var action_button = "<button class=\"btn-link btn-interaction\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Remove this term\" data-content=\"" + json.term + "\" data-section=\"followTerm\" data-action=\"delete\"><span class=\"glyphicon glyphicon-trash\"></span></button>"
-                        table_track.row.add( [ json.term, 'now', 0, 0, 0, action_button ] ).draw( false );
-                        perform_binding();
+                        $.get("{{ url_for('terms_management_query') }}", { term: json.term }, function(data2, status){
+                            var action_button = "<button class=\"btn-link btn-interaction\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Remove this term\" data-content=\"" + json.term + "\" data-section=\"followTerm\" data-action=\"delete\"><span class=\"glyphicon glyphicon-trash\"></span></button>"
+                            table_track.row.add( [ json.term, 'now', data2[0], data2[1], data2[2], action_button ] ).draw( false );
+                            perform_binding();
+                        });
                    } else if (json.action == "delete") {
                        // Find indexes of row which have the term in the first column
                        var index = table_track.row().eq( 0 ).filter( function (rowIdx) {

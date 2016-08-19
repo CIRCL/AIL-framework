@@ -218,6 +218,22 @@ def get_top_relevant_data(server, module_name):
 #            member_set.insert(0, ("passed_days", days))
 #            return member_set
 
+
+def Term_getValueOverRange(word, startDate, num_day):
+    passed_days = 0
+    oneDay = 60*60*24
+    to_return = []
+    curr_to_return = 0
+    for timestamp in range(startDate, startDate - max(num_day)*oneDay, -oneDay):
+        value = r_serv_term.hget(timestamp, word)
+        curr_to_return += int(value) if value is not None else 0
+        for i in num_day:
+            if passed_days == i-1:
+                to_return.append(curr_to_return)
+        passed_days += 1
+    return to_return
+
+
 # ========= CACHE CONTROL ========
 @app.after_request
 def add_header(response):
@@ -562,17 +578,33 @@ def terms_management():
     TrackedTermsSet_Name = "TrackedSetTermSet"
     BlackListTermsSet_Name = "BlackListSetTermSet"
     
+    today = datetime.datetime.now()
+    today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_timestamp = calendar.timegm(today.timetuple())
+
     track_list = []
     track_list_values = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
         track_list.append(tracked_term)
+        track_list_values.append(Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31]))
+
 
     black_list = []
-    black_list_values = []
     for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
         black_list.append(blacked_term)
 
-    return render_template("terms_management.html", black_list=black_list, track_list=track_list)
+    return render_template("terms_management.html", black_list=black_list, track_list=track_list, track_list_values=track_list_values)
+
+
+@app.route("/terms_management_query/")
+def terms_management_query():
+    term =  request.args.get('term')
+    today = datetime.datetime.now()
+    today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_timestamp = calendar.timegm(today.timetuple())
+
+    print Term_getValueOverRange(term, today_timestamp, [1, 7, 31])
+    return jsonify(Term_getValueOverRange(term, today_timestamp, [1, 7, 31]))
 
 
 @app.route("/terms_management_action/", methods=['GET'])
