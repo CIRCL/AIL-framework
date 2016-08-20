@@ -309,10 +309,12 @@ $(document).ready(function () {
                     refresh();
                     update_values();
 
-                    if($('#button-toggle-queues').prop('checked'))
+                    if($('#button-toggle-queues').prop('checked')){
                         create_queue_table();
-                    else
+                    }
+                    else{
                         $("#queueing").html('');
+                    }
 
 
                     for (i = 0; i < (glob_tabvar.row1).length; i++){

@@ -509,7 +509,13 @@ def sentiment_analysis_getplotdata():
     dateStart_timestamp = calendar.timegm(dateStart.timetuple())
 
     to_return = {}
-    for cur_provider in r_serv_charts.zrangebyscore('providers_set_'+ get_date_range(0)[0], '-inf', '+inf', start=0, num=8):
+    range_providers = r_serv_charts.zrangebyscore('providers_set_'+ get_date_range(1)[1], '-inf', '+inf', start=0, num=8)
+    if range_providers == []:
+        print 'today provider empty'
+        range_providers = r_serv_charts.smembers('all_provider_set')
+
+    for cur_provider in range_providers:
+        print cur_provider
         cur_provider_name = cur_provider + '_'
         list_date = {}
         for cur_timestamp in range(int(dateStart_timestamp), int(dateStart_timestamp)-sevenDays-oneHour, -oneHour):
