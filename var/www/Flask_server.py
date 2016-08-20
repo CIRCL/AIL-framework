@@ -679,14 +679,24 @@ def terms_plot_tool():
 
 @app.route("/terms_plot_tool_data/")
 def terms_plot_tool_data():
-    num_day = int(request.args.get('num_day'))
+    oneDay = 60*60*24
+    range_start =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_start')))) if request.args.get('range_start') is not None else 0;
+    range_start = range_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    range_start = calendar.timegm(range_start.timetuple())
+    range_end =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_end')))) if request.args.get('range_end') is not None else 0;
+    range_end = range_end.replace(hour=0, minute=0, second=0, microsecond=0)
+    range_end = calendar.timegm(range_end.timetuple())
     term =  request.args.get('term')
 
     if term is None:
-        print 'cc'
-    
-        
-    return jsonify()
+        return "None"
+    else:
+        value_range = []
+        for timestamp in range(range_start, range_end+oneDay, oneDay):
+            value = r_serv_term.hget(timestamp, term)
+            curr_value_range = int(value) if value is not None else 0
+            value_range.append([timestamp, curr_value_range])
+        return jsonify(value_range)
 
 
 @app.route("/terms_plot_top/")

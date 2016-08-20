@@ -177,17 +177,17 @@ var graph_options = {
 function plotData(){
     var curthis = $(this);
     var term = $('#TermInput').val();
-    console.log(term);
+    var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
+    var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
 
-    $.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month, num_day: 31 }, function(data, status){
+    $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
         var to_plot = [];
+        console.log(data);
+        var curr_data = [];
         for(i=0; i<data.length; i++) {
-            var curr_data = [];
-            for(j=0; j<data[i][1].length; j++) {
-                curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
-            }
-            to_plot.push({ data: curr_data, label: data[i][0]}); 
+                curr_data.push([data[i][0]*1000, data[i][1]]);
         }
+        to_plot.push({ data: curr_data, label: term}); 
         var plot = $.plot($("#graph"), to_plot, graph_options);
     })
 
