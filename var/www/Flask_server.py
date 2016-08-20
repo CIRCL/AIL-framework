@@ -227,6 +227,8 @@ def Term_getValueOverRange(word, startDate, num_day):
     curr_to_return = 0
     for timestamp in range(startDate, startDate - max(num_day)*oneDay, -oneDay):
         value = r_serv_term.hget(timestamp, word)
+        print timestamp, word
+        print value
         curr_to_return += int(value) if value is not None else 0
         for i in num_day:
             if passed_days == i-1:
@@ -675,6 +677,37 @@ def terms_plot_tool():
     return render_template("terms_plot_tool.html")
 
 
+@app.route("/terms_plot_top/")
+def terms_plot_top():
+    return render_template("terms_plot_top.html")
+
+
+@app.route("/terms_plot_top_data/")
+def terms_plot_top_data():
+    today = datetime.datetime.now()
+    today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_timestamp = calendar.timegm(today.timetuple())
+
+    the_set = request.args.get('set')
+    num_day = int(request.args.get('num_day'))
+    if the_set is None:
+        return "None"
+    else:
+        oneDay = 60*60*24
+        to_return = []
+        for term in r_serv_term.smembers(the_set):
+            value_range = []
+            tot_sum = 0
+            for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
+                value = r_serv_term.hget(timestamp, term)
+                curr_value_range = int(value) if value is not None else 0
+                tot_sum += curr_value_range
+                value_range.append([timestamp, curr_value_range])
+
+            to_return.append([term, value_range, tot_sum])
+
+        return jsonify(to_return)
+
 
 @app.route("/test/") #completely shows the paste in a new tab
 def test():
@@ -700,6 +733,7 @@ def test():
 #    for e in array2:
 #        stri += "<p>"+ e[0] + "\t" + str(e[1]) +"</p>"
 
+    print stri
     return stri
 
 
