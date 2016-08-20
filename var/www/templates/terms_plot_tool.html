@@ -76,8 +76,8 @@
 
                             <div class="form-group input-group" style="margin-top: 30px;">
                                 <span class="input-group-addon"><span class="glyphicon glyphicon-stats"></span></span>
-                                <input id="followTermInput" class="form-control" placeholder="Term to plot" type="text" style="max-width: 400px;">
-                                <button class="btn btn-info btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Plot a term</button>
+                                <input id="TermInput" class="form-control" placeholder="Term to plot" type="text" style="max-width: 400px;">
+                                <button id="plot-btn" class="btn btn-info btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Plot a term</button>
                             </div>
 
                         </div>
@@ -139,13 +139,62 @@
             }
         });
 
-$( "#amount" ).val( new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +
-  " - " + new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString() );
-
-$('#plot_btn').click(plotData); 
+        $( "#amount" ).val( new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +
+          " - " + new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString() );
+        
+        $('#plot-btn').click(plotData); 
 
    });
 </script>
+
+<script>
+var graph_options = {
+                        series: {
+                            lines: { 
+                                show: true,
+                                lineWidth: 2
+                            },
+                            bars: {show: false, barWidth: 60*60*1000},
+                            shadowSize: 0
+                        },
+                        grid: { 
+                            hoverable: true, 
+                            clickable: true, 
+                            tickColor: "#f9f9f9",
+                            borderWidth: 0
+                        },
+                        xaxis: {
+                              mode: "time",
+                              timeformat: "%m/%d",
+                              minTickSize: [1, "day"]
+                        },
+                        yaxis: {
+                            autoscaleMargin: 0.1,
+                        },
+                    }
+
+
+function plotData(){
+    var curthis = $(this);
+    var term = $('#TermInput').val();
+    console.log(term);
+
+    $.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month, num_day: 31 }, function(data, status){
+        var to_plot = [];
+        for(i=0; i<data.length; i++) {
+            var curr_data = [];
+            for(j=0; j<data[i][1].length; j++) {
+                curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
+            }
+            to_plot.push({ data: curr_data, label: data[i][0]}); 
+        }
+        var plot = $.plot($("#graph"), to_plot, graph_options);
+    })
+
+
+}
+</script>
+
 
 </body>
 </html>

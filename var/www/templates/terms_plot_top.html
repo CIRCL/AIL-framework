@@ -307,6 +307,10 @@ set_today = "TopTermFreq_set_day";
 set_week = "TopTermFreq_set_week";
 set_month = "TopTermFreq_set_month";
 
+var plot_today;
+var plot_week;
+var plot_month;
+
 var promises = []; // Used to know when everything has been received
 
 promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today, num_day: 1 }, function(data, status){
@@ -323,15 +327,14 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table_today.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("graph-today", data[i][0])+"</td></tr>")
+            table_today.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0])+"</td></tr>")
         else
-            table_today2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("graph-today", data[i][0])+"</td></tr>")
+            table_today2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0])+"</td></tr>")
     }
-    var plot_today = $.plot($("#graph-today"), to_plot, graph_options);
+    plot_today = $.plot($("#graph-today"), to_plot, graph_options);
 }));
 
 promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week, num_day: 7 }, function(data, status){
-    console.log(data);
     data.sort(function(a, b){return b[2]-a[2];});
     // Sort data
     var table = $("#table-week")
@@ -344,15 +347,14 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week,
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("graph-week", data[i][0])+"</td></tr>")
+            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0])+"</td></tr>")
         else
-            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("graph-week", data[i][0])+"</td></tr>")
+            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0])+"</td></tr>")
     }
-    var plot_week = $.plot($("#graph-week"), to_plot, graph_options);
+    plot_week = $.plot($("#graph-week"), to_plot, graph_options);
 }));
 
 promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month, num_day: 31 }, function(data, status){
-    console.log(data);
     data.sort(function(a, b){return b[2]-a[2];});
     // Sort data
     var table = $("#table-month")
@@ -365,11 +367,11 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("graph-month", data[i][0])+"</td></tr>")
+            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0])+"</td></tr>")
         else
-            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("graph-month", data[i][0])+"</td></tr>")
+            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0])+"</td></tr>")
     }
-    var plot_month = $.plot($("#graph-month"), to_plot, graph_options);
+    plot_month = $.plot($("#graph-month"), to_plot, graph_options);
 }));
 
 /* When everything has been received, start adding tooltip */
@@ -384,9 +386,9 @@ $.when.apply($, promises).done( function (arg) {
 
 
 function addbuttons(term) {
-    return "<button class=\"fa fa-eye btn-interaction\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Add to tracked list\" style=\"margin-right: 5px;\""+
+    return "<button class=\"fa fa-eye btn-interaction btn btn-success\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Add to tracked list\" style=\"margin-right: 5px;\""+
         "data-section=\"followTerm\" data-term=\""+term+"\"></button>"+
-        "<button class=\"fa fa-eye-slash btn-interaction\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Add to black-list\""+
+        "<button class=\"fa fa-eye-slash btn-interaction btn btn-danger\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Add to black-list\""+
         "data-section=\"blacklistTerm\" data-term=\""+term+"\"></button>";
 }
 
@@ -401,7 +403,6 @@ function perform_operation(){
 
     var data_to_send = { section: curr_section, action:"add", term: curr_term};
 
-    console.log(data_to_send);
     $.get("{{ url_for('terms_management_action') }}", data_to_send, function(data, status){
         if(status == "success") {
             location.reload();
@@ -414,6 +415,44 @@ function hide_or_show() {
     var graph = $(this).attr('data-graph');
     var checked = $(this).prop('checked')
     console.log(curr_term + ' ' + graph + ' ' + checked);
+    
+    if(graph == "today") {
+        var graphData = plot_today.getData();
+        var index;
+        for(i=0; i<graphData.length; i++){
+            if(graphData[i].label == curr_term){
+                index = i;
+                break;
+            }
+        }
+        graphData[index].lines.show = checked;
+        plot_today.setData(graphData);
+        plot_today.draw();
+    } else if (graph == "week") {
+        var graphData = plot_week.getData();
+        var index;
+        for(i=0; i<graphData.length; i++){
+            if(graphData[i].label == curr_term){
+                index = i;
+                break;
+            }
+        }
+        graphData[index].lines.show = checked;
+        plot_week.setData(graphData);
+        plot_week.draw();
+    } else if (graph == "month") {
+          var graphData = plot_month.getData();
+        var index;
+        for(i=0; i<graphData.length; i++){
+            if(graphData[i].label == curr_term){
+                index = i;
+                break;
+            }
+        }
+        graphData[index].lines.show = checked;
+        plot_month.setData(graphData);
+        plot_month.draw();
+    }
 
     // graph, hide curve
 }

@@ -677,6 +677,18 @@ def terms_plot_tool():
     return render_template("terms_plot_tool.html")
 
 
+@app.route("/terms_plot_tool_data/")
+def terms_plot_tool_data():
+    num_day = int(request.args.get('num_day'))
+    term =  request.args.get('term')
+
+    if term is None:
+        print 'cc'
+    
+        
+    return jsonify()
+
+
 @app.route("/terms_plot_top/")
 def terms_plot_top():
     return render_template("terms_plot_top.html")
