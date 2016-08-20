@@ -144,6 +144,13 @@
         
         $('#plot-btn').click(plotData); 
 
+        $("#TermInput").keyup(function(event){
+            if(event.keyCode == 13){
+                $("#plot-btn").click();
+                $("#TermInput").val("");
+            }
+        });
+
    });
 </script>
 

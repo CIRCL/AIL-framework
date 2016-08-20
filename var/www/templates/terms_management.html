@@ -76,8 +76,8 @@
 
                             <div class="form-group input-group" style="margin-bottom: 30px;">
                                 <span class="input-group-addon"><span class="fa fa-eye"></span></span>
-                                <input id="followTermInput" class="form-control" placeholder="Term to track" type="text" style="max-width: 400px;">
-                                <button class="btn btn-success btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Add term</button>
+                                <input id="followTermInput" class="form-control" placeholder="Term to track" type="text" style="max-width: 400px;" onkeypress="return enterKeyScript(event)">
+                                <button id="followTermBtn" class="btn btn-success btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Add term</button>
                             </div>
 
                             <table class="table table-striped table-bordered table-hover" id="myTable">
@@ -131,7 +131,7 @@
                             <div class="form-group input-group" style="margin-bottom: 30px;">
                                 <span class="input-group-addon"><span class="fa fa-eye-slash "></span></span>
                                 <input id="blacklistTermInput" class="form-control" placeholder="Term to track" type="text" style="max-width: 400px;">
-                                <button class="btn btn-danger btn-interaction" style="margin-left: 10px;" data-section="blacklistTerm" data-action="add"> Black list a term</button>
+                                <button id="blacklistTermBtn" class="btn btn-danger btn-interaction" style="margin-left: 10px;" data-section="blacklistTerm" data-action="add"> Black list a term</button>
                             </div>
 
                             <table class="table table-striped table-bordered table-hover" id="myTable2">
@@ -182,11 +182,28 @@
 	table_track = $('#myTable').DataTable();
 	table_black = $('#myTable2').DataTable();
 
+        $("#followTermInput").keyup(function(event){
+            if(event.keyCode == 13){
+                $("#followTermBtn").click();
+                $("#followTermInput").val("");
+            }
+        });
+        
+        $("#blacklistTermInput").keyup(function(event){
+            if(event.keyCode == 13){
+                $("#blacklistTermBtn").click();
+                $("#blacklistTermInput").val("");
+            }
+        });
+
         perform_binding();
    });
 </script>
 
 <script>
+
+
+
 function perform_binding() {
     $(".btn-interaction").unbind("click.interaction");
     $(".btn-interaction").bind("click.interaction", perform_operation);
