@@ -42,7 +42,6 @@
 
 $.getJSON("/sentiment_analysis_getplotdata/",
     function(data) {
-        console.log(data);
         var all_data = [];
         var plot_data = [];
         var graph_avg = [];
@@ -120,6 +119,8 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             all_graph_hour_maxVal = Math.abs(hour_sum) > all_graph_hour_maxVal ? Math.abs(hour_sum) : all_graph_hour_maxVal;
 
             var curr_avg = curr_sum / (curr_sum_elem); 
+            if(isNaN(curr_avg))
+                curr_avg = 0.0
             //var curr_avg = curr_sum / (oneWeek/oneHour); 
             //var curr_avg = curr_sum / (spark_data.length); 
             graph_avg.push([curr_provider, curr_avg]);
@@ -134,6 +135,7 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             // print week
             var num = graphNum + 1;
             var placeholder = '.sparkLineStatsWeek' + num;
+            sparklineOptions.barWidth = 2;
             $(placeholder).sparkline(plot_data[graphNum], sparklineOptions);
             $(placeholder+'t').text(curr_provider);
             var curr_avg_text = isNaN(curr_avg) ? "No data" : curr_avg.toFixed(5); 
@@ -143,7 +145,6 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> Avg: {{value}} </span>'
             $(placeholder+'b').sparkline([curr_avg], sparklineOptions);
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
-            sparklineOptions.barWidth = 2;
 
             sparklineOptions.tooltipValueLookups = { names: offset_to_time};
             sparklineOptions.chartRangeMax = max_value_day;
@@ -180,7 +181,6 @@ $.getJSON("/sentiment_analysis_getplotdata/",
             all_day_avg_maxVal = Math.abs(day_avg) > all_day_avg_maxVal ? Math.abs(day_avg) : all_day_avg_maxVal;
             $(placeholder+'b').sparkline([day_avg], sparklineOptions);
             sparklineOptions.tooltipFormat = '<span style="color: {{color}}">&#9679;</span> {{offset:names}}, {{value}} </span>'
-            sparklineOptions.barWidth = 2;
             $(placeholder+'s').text(day_avg_text);
 
             avgName = ".pannelToday" + num;
