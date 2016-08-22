@@ -113,7 +113,7 @@ if __name__ == "__main__":
             temp = filename.split('/')
             date = temp[-4] + temp[-3] + temp[-2]
             timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
-            top_termFreq_setName_day[0] += timestamp
+            top_termFreq_setName_day[0] += str(timestamp)
 
 
             low_word = word.lower()

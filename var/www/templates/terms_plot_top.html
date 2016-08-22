@@ -463,11 +463,9 @@ function hide_or_show() {
     var curr_term = $(this).attr('data-term');
     var graph = $(this).attr('data-graph');
     var checked = $(this).prop('checked')
-    console.log(curr_term + ' ' + graph + ' ' + checked);
     
     if(graph == "today") {
         var graphData = plot_today.getData();
-        console.log(graphData); 
         var index;
         for(i=0; i<graphData.length; i++){
             if(graphData[i].label == curr_term){

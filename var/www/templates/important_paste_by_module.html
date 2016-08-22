@@ -28,7 +28,7 @@
 <script>
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
-    $('#myTable').dataTable();
+    $('#myTable').dataTable({ "order": [[ 2, "desc" ]] });
 });
 </script>
 
