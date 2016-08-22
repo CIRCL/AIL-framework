@@ -90,6 +90,7 @@ var source = new EventSource('/_logs');
 
 source.onmessage = function(event) {
     var feed = jQuery.parseJSON( event.data );
+    create_log_table(feed);
 };
 
 function pad_2(number)
