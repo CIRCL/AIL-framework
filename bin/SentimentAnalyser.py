@@ -33,7 +33,6 @@ size_threshold = 250
 line_max_length_threshold = 1000
 
 def Analyse(message, server):
-    #print 'analyzing'
     path = message
     paste = Paste.Paste(path)
 
@@ -50,19 +49,13 @@ def Analyse(message, server):
 
     if p_MimeType in accepted_Mime_type:
 
-        print 'Processing', path
         the_date = datetime.date(int(p_date[0:4]), int(p_date[4:6]), int(p_date[6:8]))
-        #print 'pastedate: ', the_date
         the_time = datetime.datetime.now()
         the_time = datetime.time(getattr(the_time, 'hour'), 0, 0)
-        #print 'now: ', the_time
         combined_datetime = datetime.datetime.combine(the_date, the_time)
-        #print 'combined: ', combined_datetime
         timestamp = calendar.timegm(combined_datetime.timetuple())
-        #print 'timestamp: ', timestamp 
     
         sentences = tokenize.sent_tokenize(p_content.decode('utf-8', 'ignore'))
-        #print len(sentences)
     
         if len(sentences) > 0:
             avg_score = {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compoundPos': 0.0, 'compoundNeg': 0.0}
@@ -82,7 +75,6 @@ def Analyse(message, server):
                      else:
                          avg_score[k] += ss[k]
     
-                     #print('{0}: {1}, '.format(k, ss[k]))
     
             for k in avg_score:
                 if k == 'compoundPos':
@@ -99,16 +91,13 @@ def Analyse(message, server):
             # (UniqID_i -> PasteValue_i)
     
             server.sadd('Provider_set', provider)
-            #print 'Provider_set', provider
     
             provider_timestamp = provider + '_' + str(timestamp)
-            #print provider_timestamp
             server.incr('UniqID')
             UniqID = server.get('UniqID')
             print provider_timestamp, '->', UniqID, 'dropped', num_line_removed, 'lines'
             server.sadd(provider_timestamp, UniqID)
             server.set(UniqID, avg_score)
-            #print UniqID, '->', avg_score
     else:
         print 'Dropped:', p_MimeType
     
@@ -143,15 +132,12 @@ if __name__ == '__main__':
         port=p.config.get("Redis_Level_DB_Sentiment", "port"),
         db=p.config.get("Redis_Level_DB_Sentiment", "db"))
 
-    # Endless loop getting messages from the input queue
     while True:
-        # Get one message from the input queue
         message = p.get_from_set()
         if message is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
             time.sleep(1)
             continue
 
-        # Do something with the message from the queue
         Analyse(message, server)
 
