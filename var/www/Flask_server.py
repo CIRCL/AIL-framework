@@ -626,8 +626,6 @@ def terms_management_query_paste():
 
     set_paste_name = "tracked_" + term
     track_list_path = r_serv_term.smembers(set_paste_name)
-    print set_paste_name
-    print track_list_path
 
     for path in track_list_path:
         paste = Paste.Paste(path)
@@ -635,14 +633,13 @@ def terms_management_query_paste():
         p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
         p_source = paste.p_source
         p_encoding = paste._get_p_encoding()
-        p_language = paste._get_p_language()
         p_size = paste.p_size
         p_mime = paste.p_mime
         p_lineinfo = paste.get_lines_info()
         p_content = paste.get_p_content().decode('utf-8', 'ignore')
         if p_content != 0:
             p_content = p_content[0:400]
-        paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "language": p_language, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
+        paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
 
     return jsonify(paste_info)
 
