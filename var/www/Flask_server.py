@@ -199,7 +199,6 @@ def get_top_relevant_data(server, module_name):
     for date in get_date_range(15):
         redis_progression_name_set = 'top_'+ module_name +'_set_' + date
         member_set = server.zrevrangebyscore(redis_progression_name_set, '+inf', '-inf', withscores=True)
-        #print member_set
         if len(member_set) == 0: #No data for this date
             days += 1
         else:
@@ -214,8 +213,6 @@ def Term_getValueOverRange(word, startDate, num_day):
     curr_to_return = 0
     for timestamp in range(startDate, startDate - max(num_day)*oneDay, -oneDay):
         value = r_serv_term.hget(timestamp, word)
-        #print timestamp, word
-        #print value
         curr_to_return += int(value) if value is not None else 0
         for i in num_day:
             if passed_days == i-1:
@@ -322,9 +319,6 @@ def providersChart():
             curr_value_size_avg = r_serv_charts.hget(keyword_name+'_'+'avg', date)
             if module_name == "size":
                 curr_value = float(curr_value_size_avg if curr_value_size_avg is not None else 0)
-                #curr_value_num = curr_value_num if curr_value_num is not None else 0
-                #curr_value_num = curr_value_num if int(curr_value_num) != 0 else 10000000000
-                #curr_value = float(curr_value_size if curr_value_size is not None else 0.0) / float(curr_value_num)
             else:
                 curr_value = float(curr_value_num if curr_value_num is not None else 0.0)
 
