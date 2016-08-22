@@ -55,7 +55,7 @@ def check_if_tracked_term(term, path):
     if term in TrackedTermsSet_Name:
         #add_paste to tracked_word_set
         set_name = "tracked_" + term
-        server.sadd(set_name, path)
+        server_term.sadd(set_name, path)
         p.populate_set_out("New Term added", 'CurveManageTopSets')
 
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             temp = filename.split('/')
             date = temp[-4] + temp[-3] + temp[-2]
             timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
-            top_termFreq_setName_day[0] += str(timestamp)
+            curr_set = top_termFreq_setName_day[0] + str(timestamp)
 
 
             low_word = word.lower()
@@ -123,8 +123,8 @@ if __name__ == "__main__":
 
             # Update redis
             curr_word_value = int(server_term.hincrby(timestamp, low_word, int(score)))
-            if low_word not in server.smembers(BlackListTermsSet_Name):
-                server.zincrby(top_termFreq_setName_day[0], int(score), low_word)
+            if low_word not in server_term.smembers(BlackListTermsSet_Name):
+                server_term.zincrby(curr_set, low_word, float(score))
             
             #Add more info for tracked terms
             check_if_tracked_term(low_word, filename)

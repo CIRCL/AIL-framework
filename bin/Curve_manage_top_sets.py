@@ -52,15 +52,14 @@ def manage_top_set():
     # Retreive top data (2*max_card) from days sets
     for timestamp in range(startDate, startDate - top_termFreq_setName_month[1]*oneDay, -oneDay):
         curr_set = top_termFreq_setName_day[0] + str(timestamp)
-        print top_termFreq_setName_day[0]
-        array_top_day = server_term.zrangebyscore(curr_set, '-inf', '+inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality*2)
+        array_top_day = server_term.zrevrangebyscore(curr_set, '+inf', '-inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality*2)
 
-        print array_top_day
         for word, value in array_top_day:
-            if word in dico.keys():
-                dico[word] += value
-            else:
-                dico[word] = value
+            if word not in server_term.smembers(BlackListTermsSet_Name):
+                if word in dico.keys():
+                    dico[word] += value
+                else:
+                    dico[word] = value
 
         if timestamp == startDate - num_day_week*oneDay:
             dico_week = copy.deepcopy(dico)
@@ -77,9 +76,6 @@ def manage_top_set():
         array_week.append((w, v))
     array_week.sort(key=lambda tup: -tup[1])
     array_week = array_week[0:20]
-
-    print array_month
-    print array_week
 
     # suppress every terms in top sets
     for curr_set, curr_num_day in top_termFreq_set_array[1:3]:

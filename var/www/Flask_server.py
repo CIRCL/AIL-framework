@@ -760,7 +760,7 @@ def terms_plot_top_data():
         if the_set == "TopTermFreq_set_day":
             the_set += "_" + str(today_timestamp)
 
-        for term, tot_value in r_serv_term.zrangebyscore(the_set, '-inf', '+inf', withscores=True, start=0, num=20):
+        for term, tot_value in r_serv_term.zrevrangebyscore(the_set, '+inf', '-inf', withscores=True, start=0, num=20):
             value_range = []
             for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
                 value = r_serv_term.hget(timestamp, term)
