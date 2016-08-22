@@ -350,7 +350,7 @@ def providersChart():
         redis_provider_name_set = 'top_avg_size_set_' if module_name == "size" else 'providers_set_'
         redis_provider_name_set = redis_provider_name_set + get_date_range(0)[0]
         
-        member_set = r_serv_charts.zrangebyscore(redis_provider_name_set, '-inf', '+inf', withscores=True, start=0, num=8)
+        member_set = r_serv_charts.zrevrangebyscore(redis_provider_name_set, '+inf', '-inf', withscores=True, start=0, num=8)
         # Member set is a list of (value, score) pairs
         if len(member_set) == 0:
             member_set.append(("No relevant data", float(100)))
@@ -509,7 +509,7 @@ def sentiment_analysis_getplotdata():
     dateStart_timestamp = calendar.timegm(dateStart.timetuple())
 
     to_return = {}
-    range_providers = r_serv_charts.zrangebyscore('providers_set_'+ get_date_range(0)[0], '-inf', '+inf', start=0, num=8)
+    range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
     if range_providers == []:
         print 'today provider empty'
         range_providers = r_serv_charts.smembers('all_provider_set')
