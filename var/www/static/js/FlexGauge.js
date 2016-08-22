@@ -3,6 +3,8 @@
  *  Version: 1.0
  *  Author: Jeff Millies
  *  Author URI:
+ *
+ *  Slight modification for better display in Sentiment webpages
  */
 (function ($) {
     var FlexGauge = function (o) {

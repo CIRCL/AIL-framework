@@ -115,7 +115,6 @@ $(document).ready(function(){
    $('#myTable').on( 'draw.dt', function () {
        // On click, get html content from url and update the corresponding modal
        $("[data-toggle='modal']").unbind('click.openmodal').on("click.openmodal", function (event) {
-           console.log('hi');
            event.preventDefault();
            var modal=$(this);
            var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');

@@ -173,6 +173,7 @@ def showpaste(content_range):
     if content_range != 0:
        p_content = p_content[0:content_range]
 
+
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list)
 
 def getPastebyType(server, module_name):
@@ -204,20 +205,6 @@ def get_top_relevant_data(server, module_name):
         else:
             member_set.insert(0, ("passed_days", days))
             return member_set
-
-#        member_set = []
-#        for keyw in server.smembers(redis_progression_name_set):
-#            redis_progression_name = module_name+'-'+keyw
-#            keyw_value = server.hget(date ,redis_progression_name)
-#            keyw_value = keyw_value if keyw_value is not None else 0
-#            member_set.append((keyw, int(keyw_value)))
-#        member_set.sort(key=lambda tup: tup[1], reverse=True)
-#        if member_set[0][1] == 0: #No data for this date
-#            days += 1
-#            continue
-#        else:
-#            member_set.insert(0, ("passed_days", days))
-#            return member_set
 
 
 def Term_getValueOverRange(word, startDate, num_day):
@@ -356,34 +343,6 @@ def providersChart():
             member_set.append(("No relevant data", float(100)))
         return jsonify(member_set)
 
-
-'''
-        # Iterate over element in top_x_set and retreive their value
-        member_set = []
-        for keyw in r_serv_charts.smembers(redis_provider_name_set):
-            redis_provider_name_size = keyw+'_'+'size'
-            redis_provider_name_num = keyw+'_'+'num'
-            keyw_value_size = r_serv_charts.hget(redis_provider_name_size, get_date_range(0)[0])
-            keyw_value_size = keyw_value_size if keyw_value_size is not None else 0.0
-            keyw_value_num = r_serv_charts.hget(redis_provider_name_num, get_date_range(0)[0])
-
-            if keyw_value_num is not None:
-                keyw_value_num = int(keyw_value_num)
-            else:
-                if module_name == "size":
-                    keyw_value_num = 10000000000
-                else:
-                    keyw_value_num = 0
-            if module_name == "size":
-                member_set.append((keyw, float(keyw_value_size)/float(keyw_value_num)))
-            else:
-                member_set.append((keyw, float(keyw_value_num)))
-
-        member_set.sort(key=lambda tup: tup[1], reverse=True)
-        if len(member_set) == 0:
-            member_set.append(("No relevant data", float(100)))
-        return jsonify(member_set)
-'''
 
 
 @app.route("/search", methods=['POST'])
@@ -770,50 +729,6 @@ def terms_plot_top_data():
             to_return.append([term, value_range, tot_value])
     
         return jsonify(to_return)
-
-        '''
-        to_return = []
-        for term in r_serv_term.smembers(the_set):
-            value_range = []
-            tot_sum = 0
-            for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
-                value = r_serv_term.hget(timestamp, term)
-                curr_value_range = int(value) if value is not None else 0
-                tot_sum += curr_value_range
-                value_range.append([timestamp, curr_value_range])
-
-            to_return.append([term, value_range, tot_sum])
-
-        return jsonify(to_return)
-        '''
-
-
-@app.route("/test/") #completely shows the paste in a new tab
-def test():
-
-    server = r_serv_term
-    array1 = []
-    for w in server.smembers('TopTermFreq_set_day'):
-        val = server.hget('1471564800', w)
-        val = val if val is not None else 0
-        val2 = server.hget('1471478400', w)
-        val2 = val2 if val2 is not None else 0
-        array1.append((w, (int(val), int(val2))))
-
-#    array2 = []
-#    for w in server.smembers('TopTermFreq_set_week'):
-#        array2.append((w, int(server.hget('1471478400', w))))
-
-    array1.sort(key=lambda tup: tup[1][0])
-    stri = "<h1> day </h1>"
-    for e in array1:
-        stri += "<p>"+ e[0] + "\t" + str(e[1]) +"</p>"
-#    stri += "<h1> week </h1>"
-#    for e in array2:
-#        stri += "<p>"+ e[0] + "\t" + str(e[1]) +"</p>"
-
-    print stri
-    return stri
 
 
 

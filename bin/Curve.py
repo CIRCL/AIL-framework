@@ -1,9 +1,6 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 """
-The ZMQ_Sub_Curve Module
-============================
-
 This module is consuming the Redis-list created by the ZMQ_Sub_Curve_Q Module.
 
 This modules update a .csv file used to draw curves representing selected
@@ -15,11 +12,9 @@ words and their occurency per day.
 the same Subscriber name in both of them.
 
 
+This Module is also used for term frequency.
 
-
-zrank for each day
-week -> top zrank for each day
-
+/!\ Top set management is done in the module Curve_manage_top_set
 
 
 Requirements
@@ -117,48 +112,21 @@ if __name__ == "__main__":
 
 
             low_word = word.lower()
-            #Old curve
+            #Old curve with words in file
             r_serv1.hincrby(low_word, date, int(score))
-
 
             # Update redis
             curr_word_value = int(server_term.hincrby(timestamp, low_word, int(score)))
+
+            # Add in set only if term is not in the blacklist
             if low_word not in server_term.smembers(BlackListTermsSet_Name):
                 server_term.zincrby(curr_set, low_word, float(score))
             
             #Add more info for tracked terms
             check_if_tracked_term(low_word, filename)
 
-            # Manage Top set is done in module Curve_manage_top_sets
-
-            '''
-            if server_term.scard(curr_set) < top_term_freq_max_set_cardinality:
-                server_term.sadd(curr_set, low_word)
-            elif server_term.sismember(curr_set, low_word):
-                continue
-
-            else:
-
-
-                #timer = time.clock()
-                curr_word_value = getValueOverRange(low_word, timestamp, curr_num_day)
-                #print 'curr_range', time.clock() - timer
-                top_termFreq = server_term.smembers(curr_set)
-                sorted_top_termFreq_set = []
-                #timer = time.clock()
-                for word in top_termFreq:
-                    word_value = getValueOverRange(word, timestamp, curr_num_day)
-                    sorted_top_termFreq_set.append((word, word_value))
-
-                sorted_top_termFreq_set.sort(key=lambda tup: tup[1])
-                #print 'whole_range', time.clock() - timer
-
-                if curr_word_value > int(sorted_top_termFreq_set[0][1]):
-                    print str(curr_num_day)+':', low_word, curr_word_value, '\t', sorted_top_termFreq_set[0][0], sorted_top_termFreq_set[0][1], '\t', curr_word_value > sorted_top_termFreq_set[0][1]
-                    server_term.srem(curr_set, sorted_top_termFreq_set[0][0])
-                    server_term.sadd(curr_set, low_word)
-            '''
         else:
+
             if generate_new_graph:
                 generate_new_graph = False
                 print 'Building graph'

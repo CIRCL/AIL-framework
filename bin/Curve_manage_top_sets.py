@@ -2,10 +2,8 @@
 # -*-coding:UTF-8 -*
 """
 
-
-
-zrank for each day
-week -> top zrank for each day
+This module manage top sets for terms frequency.
+Every 'refresh_rate' update the weekly and monthly set
 
 
 Requirements
@@ -22,13 +20,13 @@ import time
 import copy
 from pubsublogger import publisher
 from packages import lib_words
-import os
 import datetime
 import calendar
 
 from Helper import Process
 
 # Config Variables
+Refresh_rate = 60*5 #sec
 BlackListTermsSet_Name = "BlackListSetTermSet"
 TrackedTermsSet_Name = "TrackedSetTermSet"
 top_term_freq_max_set_cardinality = 20 # Max cardinality of the terms frequences set
@@ -91,7 +89,6 @@ def manage_top_set():
 
 
 
-
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
     # Port of the redis instance used by pubsublogger
@@ -107,7 +104,6 @@ if __name__ == '__main__':
         port=p.config.get("Redis_Level_DB_TermFreq", "port"),
         db=p.config.get("Redis_Level_DB_TermFreq", "db"))
 
-    # FUNCTIONS #
     publisher.info("Script Curve_manage_top_set started")
 
     # Sent to the logging a description of the module
@@ -116,15 +112,12 @@ if __name__ == '__main__':
     manage_top_set()
 
     while True:
-        # Get one message from the input queue
+        # Get one message from the input queue (module only work if linked with a queue)
         message = p.get_from_set()
         if message is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
             print 'sleeping'
-            time.sleep(60) # sleep a long time then manage the set
+            time.sleep(Refresh_rate) # sleep a long time then manage the set
             manage_top_set()
             continue
-
-        # Do something with the message from the queue
-        #manage_top_set()
 
