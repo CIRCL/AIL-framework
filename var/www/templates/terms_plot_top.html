@@ -266,6 +266,7 @@
 <!-- /#page-wrapper -->
 </div>
 
+<div style="position: absolute; border: 1px solid rgb(255, 221, 221); padding: 2px; background-color: #333; color:white; opacity: 0.8; top: 423px; left: 616px; display: none;" id="tooltip"></div>
 
 <!-- import graph function -->
 <script>
@@ -300,6 +301,14 @@ var graph_options = {
                         yaxis: {
                             autoscaleMargin: 0.1,
                         },
+                        tooltip: true,
+                        tooltipOpts: {
+                            content: "%s (%x.1 is %y.4)",
+                            shifts: {
+                                x: -60,
+                                y: 25
+                            }
+                        }
                     }
 
 
@@ -313,8 +322,8 @@ var plot_month;
 
 var promises = []; // Used to know when everything has been received
 
-promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today, num_day: 1 }, function(data, status){
-    //console.log(data);
+promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today, num_day: 5 }, function(data, status){
+    console.log(data);
     data.sort(function(a, b){return b[2]-a[2];});
     // Sort data
     var table_today = $("#table-today")
@@ -326,12 +335,27 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
+        console.log(to_plot);
         if ( i < (data.length/2))
             table_today.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0])+"</td></tr>")
         else
             table_today2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0])+"</td></tr>")
     }
     plot_today = $.plot($("#graph-today"), to_plot, graph_options);
+    $("#graph-today").bind("plothover", function (event, pos, item) {
+        if (item) {
+            var date = new Date(item.datapoint[0]);
+            var x = parseInt(date.getUTCMonth())+1 + "/" + date.getUTCDate();
+            var y = item.datapoint[1];
+
+            $("#tooltip").html(item.series.label + " for "+x + " = " + y)
+                .css({top: item.pageY+5, left: item.pageX+5})
+                .fadeIn(200);
+        } else {
+            $("#tooltip").hide();
+        }
+    });
+
 }));
 
 promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week, num_day: 7 }, function(data, status){
@@ -352,6 +376,19 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week,
             table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0])+"</td></tr>")
     }
     plot_week = $.plot($("#graph-week"), to_plot, graph_options);
+    $("#graph-week").bind("plothover", function (event, pos, item) {
+        if (item) {
+            var date = new Date(item.datapoint[0]);
+            var x = parseInt(date.getUTCMonth())+1 + "/" + date.getUTCDate();
+            var y = item.datapoint[1];
+
+            $("#tooltip").html(item.series.label + " for "+x + " = " + y)
+                .css({top: item.pageY+5, left: item.pageX+5})
+                .fadeIn(200);
+        } else {
+            $("#tooltip").hide();
+        }
+    });
 }));
 
 promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month, num_day: 31 }, function(data, status){
@@ -372,6 +409,19 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month
             table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0])+"</td></tr>")
     }
     plot_month = $.plot($("#graph-month"), to_plot, graph_options);
+    $("#graph-month").bind("plothover", function (event, pos, item) {
+        if (item) {
+            var date = new Date(item.datapoint[0]);
+            var x = parseInt(date.getUTCMonth())+1 + "/" + date.getUTCDate();
+            var y = item.datapoint[1];
+
+            $("#tooltip").html(item.series.label + " for "+x + " = " + y)
+                .css({top: item.pageY+5, left: item.pageX+5})
+                .fadeIn(200);
+        } else {
+            $("#tooltip").hide();
+        }
+    });
 }));
 
 /* When everything has been received, start adding tooltip */
@@ -417,6 +467,7 @@ function hide_or_show() {
     
     if(graph == "today") {
         var graphData = plot_today.getData();
+        console.log(graphData); 
         var index;
         for(i=0; i<graphData.length; i++){
             if(graphData[i].label == curr_term){

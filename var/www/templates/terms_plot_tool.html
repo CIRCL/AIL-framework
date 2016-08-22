@@ -76,7 +76,7 @@
 
                             <div class="form-group input-group" style="margin-top: 30px;">
                                 <span class="input-group-addon"><span class="glyphicon glyphicon-stats"></span></span>
-                                <input id="TermInput" class="form-control" placeholder="Term to plot" type="text" style="max-width: 400px;">
+                                <input id="TermInput" class="form-control" placeholder="Term to plot" type="text" style="max-width: 400px;" data-init-plot="{{ term }}">
                                 <button id="plot-btn" class="btn btn-info btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Plot a term</button>
                             </div>
 
@@ -143,6 +143,9 @@
           " - " + new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString() );
         
         $('#plot-btn').click(plotData); 
+
+        $("#TermInput").val($("#TermInput").attr("data-init-plot"));
+        $("#plot-btn").click();
 
         $("#TermInput").keyup(function(event){
             if(event.keyCode == 13){

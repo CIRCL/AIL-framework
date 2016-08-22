@@ -227,8 +227,8 @@ def Term_getValueOverRange(word, startDate, num_day):
     curr_to_return = 0
     for timestamp in range(startDate, startDate - max(num_day)*oneDay, -oneDay):
         value = r_serv_term.hget(timestamp, word)
-        print timestamp, word
-        print value
+        #print timestamp, word
+        #print value
         curr_to_return += int(value) if value is not None else 0
         for i in num_day:
             if passed_days == i-1:
@@ -595,11 +595,15 @@ def terms_management():
 
     track_list = []
     track_list_values = []
+    track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
         track_list.append(tracked_term)
         value_range = Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31])
 
         term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
+
+        set_paste_name = "tracked_" + tracked_term
+        track_list_num_of_paste.append(r_serv_term.scard(set_paste_name))
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         value_range.append(term_date)
         track_list_values.append(value_range)
@@ -609,10 +613,38 @@ def terms_management():
     for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
         term_date = r_serv_term.hget(BlackListTermsDate_Name, blacked_term)
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-        print term_date
         black_list.append([blacked_term, term_date])
 
-    return render_template("terms_management.html", black_list=black_list, track_list=track_list, track_list_values=track_list_values)
+    return render_template("terms_management.html", black_list=black_list, track_list=track_list, track_list_values=track_list_values,  track_list_num_of_paste=track_list_num_of_paste)
+
+
+@app.route("/terms_management_query_paste/")
+def terms_management_query_paste():
+    term =  request.args.get('term')
+    TrackedTermsSet_Name = "TrackedSetTermSet"
+    paste_info = []
+
+    set_paste_name = "tracked_" + term
+    track_list_path = r_serv_term.smembers(set_paste_name)
+    print set_paste_name
+    print track_list_path
+
+    for path in track_list_path:
+        paste = Paste.Paste(path)
+        p_date = str(paste._get_p_date())
+        p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+        p_source = paste.p_source
+        p_encoding = paste._get_p_encoding()
+        p_language = paste._get_p_language()
+        p_size = paste.p_size
+        p_mime = paste.p_mime
+        p_lineinfo = paste.get_lines_info()
+        p_content = paste.get_p_content().decode('utf-8', 'ignore')
+        if p_content != 0:
+            p_content = p_content[0:400]
+        paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "language": p_language, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
+
+    return jsonify(paste_info)
 
 
 @app.route("/terms_management_query/")
@@ -680,7 +712,11 @@ def terms_management_action():
 
 @app.route("/terms_plot_tool/")
 def terms_plot_tool():
-    return render_template("terms_plot_tool.html")
+    term =  request.args.get('term')
+    if term is not None:
+        return render_template("terms_plot_tool.html", term=term)
+    else:
+        return render_template("terms_plot_tool.html", term="")
 
 
 @app.route("/terms_plot_tool_data/")
@@ -699,6 +735,7 @@ def terms_plot_tool_data():
     else:
         value_range = []
         for timestamp in range(range_start, range_end+oneDay, oneDay):
+            print timestamp, term
             value = r_serv_term.hget(timestamp, term)
             curr_value_range = int(value) if value is not None else 0
             value_range.append([timestamp, curr_value_range])
@@ -712,6 +749,7 @@ def terms_plot_top():
 
 @app.route("/terms_plot_top_data/")
 def terms_plot_top_data():
+    oneDay = 60*60*24
     today = datetime.datetime.now()
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
@@ -721,7 +759,22 @@ def terms_plot_top_data():
     if the_set is None:
         return "None"
     else:
-        oneDay = 60*60*24
+        to_return = []
+        if the_set == "TopTermFreq_set_day":
+            the_set += "_" + str(today_timestamp)
+
+        for term, tot_value in r_serv_term.zrangebyscore(the_set, '-inf', '+inf', withscores=True, start=0, num=20):
+            value_range = []
+            for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
+                value = r_serv_term.hget(timestamp, term)
+                curr_value_range = int(value) if value is not None else 0
+                value_range.append([timestamp, curr_value_range])
+                
+            to_return.append([term, value_range, tot_value])
+    
+        return jsonify(to_return)
+
+        '''
         to_return = []
         for term in r_serv_term.smembers(the_set):
             value_range = []
@@ -735,6 +788,7 @@ def terms_plot_top_data():
             to_return.append([term, value_range, tot_sum])
 
         return jsonify(to_return)
+        '''
 
 
 @app.route("/test/") #completely shows the paste in a new tab

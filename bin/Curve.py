@@ -41,11 +41,25 @@ import calendar
 from Helper import Process
 
 # Config Variables
+BlackListTermsSet_Name = "BlackListSetTermSet"
+TrackedTermsSet_Name = "TrackedSetTermSet"
 top_term_freq_max_set_cardinality = 20 # Max cardinality of the terms frequences set
+oneDay = 60*60*24
+top_termFreq_setName_day = ["TopTermFreq_set_day_", 1]
+top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
+top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
+top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
+
+
+def check_if_tracked_term(term, path):
+    if term in TrackedTermsSet_Name:
+        #add_paste to tracked_word_set
+        set_name = "tracked_" + term
+        server.sadd(set_name, path)
+        p.populate_set_out("New Term added", 'CurveManageTopSets')
 
 
 def getValueOverRange(word, startDate, num_day):
-    oneDay = 60*60*24
     to_return = 0
     for timestamp in range(startDate, startDate - num_day*oneDay, -oneDay):
         value = server_term.hget(timestamp, word)
@@ -86,10 +100,9 @@ if __name__ == "__main__":
     generate_new_graph = False
 
     # Term Frequency
-    top_termFreq_setName_day = ["TopTermFreq_set_day", 1]
+    top_termFreq_setName_day = ["TopTermFreq_set_day_", 1]
     top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
     top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
-    top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
     while True:
 
@@ -100,60 +113,51 @@ if __name__ == "__main__":
             temp = filename.split('/')
             date = temp[-4] + temp[-3] + temp[-2]
             timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
-
-            # If set size is greater then the one authorized
-            # suppress smaller elements
-            for curr_set, curr_num_day in top_termFreq_set_array:
-                diffCard = server_term.scard(curr_set) - top_term_freq_max_set_cardinality
-                if diffCard > 0:
-                    top_termFreq = server_term.smembers(curr_set)
-                    sorted_top_termFreq_set = []
-                    for word in top_termFreq:
-                        word_value = getValueOverRange(word, timestamp, curr_num_day)
-                        sorted_top_termFreq_set.append((word, word_value))
-
-                    sorted_top_termFreq_set.sort(key=lambda tup: tup[1])
-                    for i in range(0, diffCard):
-                        print 'set oversized, dropping', sorted_top_termFreq_set[i][0]
-                        server_term.srem(curr_set, sorted_top_termFreq_set[i][0])
+            top_termFreq_setName_day[0] += timestamp
 
 
-            #timer = time.clock()
             low_word = word.lower()
-            #print 'wordlower', time.clock() - timer
+            #Old curve
             r_serv1.hincrby(low_word, date, int(score))
 
 
             # Update redis
             curr_word_value = int(server_term.hincrby(timestamp, low_word, int(score)))
+            if low_word not in server.smembers(BlackListTermsSet_Name):
+                server.zincrby(top_termFreq_setName_day[0], int(score), low_word)
             
-            # Manage Top set
-            for curr_set, curr_num_day in top_termFreq_set_array:
+            #Add more info for tracked terms
+            check_if_tracked_term(low_word, filename)
 
-                if server_term.scard(curr_set) < top_term_freq_max_set_cardinality:
+            # Manage Top set is done in module Curve_manage_top_sets
+
+            '''
+            if server_term.scard(curr_set) < top_term_freq_max_set_cardinality:
+                server_term.sadd(curr_set, low_word)
+            elif server_term.sismember(curr_set, low_word):
+                continue
+
+            else:
+
+
+                #timer = time.clock()
+                curr_word_value = getValueOverRange(low_word, timestamp, curr_num_day)
+                #print 'curr_range', time.clock() - timer
+                top_termFreq = server_term.smembers(curr_set)
+                sorted_top_termFreq_set = []
+                #timer = time.clock()
+                for word in top_termFreq:
+                    word_value = getValueOverRange(word, timestamp, curr_num_day)
+                    sorted_top_termFreq_set.append((word, word_value))
+
+                sorted_top_termFreq_set.sort(key=lambda tup: tup[1])
+                #print 'whole_range', time.clock() - timer
+
+                if curr_word_value > int(sorted_top_termFreq_set[0][1]):
+                    print str(curr_num_day)+':', low_word, curr_word_value, '\t', sorted_top_termFreq_set[0][0], sorted_top_termFreq_set[0][1], '\t', curr_word_value > sorted_top_termFreq_set[0][1]
+                    server_term.srem(curr_set, sorted_top_termFreq_set[0][0])
                     server_term.sadd(curr_set, low_word)
-                elif server_term.sismember(curr_set, low_word):
-                    continue
-
-                else:
-                    #timer = time.clock()
-                    curr_word_value = getValueOverRange(low_word, timestamp, curr_num_day)
-                    #print 'curr_range', time.clock() - timer
-                    top_termFreq = server_term.smembers(curr_set)
-                    sorted_top_termFreq_set = []
-                    #timer = time.clock()
-                    for word in top_termFreq:
-                        word_value = getValueOverRange(word, timestamp, curr_num_day)
-                        sorted_top_termFreq_set.append((word, word_value))
-
-                    sorted_top_termFreq_set.sort(key=lambda tup: tup[1])
-                    #print 'whole_range', time.clock() - timer
-
-                    if curr_word_value > int(sorted_top_termFreq_set[0][1]):
-                        print str(curr_num_day)+':', low_word, curr_word_value, '\t', sorted_top_termFreq_set[0][0], sorted_top_termFreq_set[0][1], '\t', curr_word_value > sorted_top_termFreq_set[0][1]
-                        server_term.srem(curr_set, sorted_top_termFreq_set[0][0])
-                        server_term.sadd(curr_set, low_word)
-
+            '''
         else:
             if generate_new_graph:
                 generate_new_graph = False

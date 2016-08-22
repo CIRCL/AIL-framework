@@ -33,6 +33,24 @@
 </head>
 <body>
 
+    <!-- Modal -->
+    <div id="mymodal" class="modal fade" role="dialog">
+      <div class="modal-dialog modal-lg">
+    
+        <!-- Modal content-->
+        <div id="mymodalcontent" class="modal-content">
+          <div id="mymodalbody" class="modal-body" max-width="8500px">
+            <p>Loading paste information...</p>
+            <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
+          </div>
+          <div class="modal-footer">
+            <a id="button_show_plot" target="_blank" href=""><button type="button" class="btn btn-info">Plot term</button></a>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
    <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
       {% include 'header.html' %}
@@ -76,7 +94,7 @@
 
                             <div class="form-group input-group" style="margin-bottom: 30px;">
                                 <span class="input-group-addon"><span class="fa fa-eye"></span></span>
-                                <input id="followTermInput" class="form-control" placeholder="Term to track" type="text" style="max-width: 400px;" onkeypress="return enterKeyScript(event)">
+                                <input id="followTermInput" class="form-control" placeholder="Term to track" type="text" style="max-width: 400px;">
                                 <button id="followTermBtn" class="btn btn-success btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Add term</button>
                             </div>
 
@@ -88,6 +106,7 @@
                                         <th>Day occurence</th>
                                         <th>Week occurence</th>
                                         <th>Month occurence</th>
+                                        <th># Concerned pastes</th>
                                         <th>Action</th>
                                      </tr>
                                 </thead>
@@ -100,9 +119,10 @@
                                       <td>{{ track_list_values[i][0] }}</td>
                                       <td>{{ track_list_values[i][1] }}</td>
                                       <td>{{ track_list_values[i][2] }}</td>
+                                      <td>{{ track_list_num_of_paste[i] }}</td>
                                       <td><p style="margin: 0px;">
-                                          <button class="btn-link" data-toggle="tooltip" data-placement="right" title="Show concerned paste(s)"><span class="glyphicon glyphicon-info-sign"></span></button>
-                                          <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="right" title="Remove this term" data-content="{{ term }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
+                                          <span data-toggle="modal" data-target="#mymodal" data-term="{{ term }}" ><button class="btn-link" data-toggle="tooltip" data-placement="right" title="Show concerned paste(s)"><span class="glyphicon glyphicon-info-sign"></span></button></span>
+                                          <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ term }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                       </p></td>
                                   </tr>
                                 {% set i = i + 1 %}
@@ -197,6 +217,66 @@
         });
 
         perform_binding();
+
+        // On click, get html content from url and update the corresponding modal
+        $("[data-toggle='modal']").on("click.openmodal", function (event) {
+            event.preventDefault();
+            var the_modal=$(this);
+            var url = "{{ url_for('terms_management_query_paste')  }}?term=" + $(this).attr('data-term');
+            $.getJSON(url, function (data) {
+                //console.log(data); 
+                if (data.length != 0) {
+                    for (i=0; i<data.length; i++) {
+                        curr_data = data[i];
+                        var html_to_add = "";
+                        html_to_add += "<table class=\"table table-condensed\">";
+                          html_to_add += "<thead>";
+                            html_to_add += "<tr>";
+                              html_to_add += "<th>Source</th>";
+                              html_to_add += "<th>Date</th>";
+                              html_to_add += "<th>Encoding</th>";
+                              html_to_add += "<th>Language</th>";
+                              html_to_add += "<th>Size (Kb)</th>";
+                              html_to_add += "<th>Mime</th>";
+                              html_to_add += "<th>Number of lines</th>";
+                              html_to_add += "<th>Max line length</th>";
+                              html_to_add += "<th>Preview</th>";
+                            html_to_add += "</tr>";
+                          html_to_add += "</thead>";
+                          html_to_add += "<tbody>";
+                            html_to_add += "<tr>";
+                                html_to_add += "<td>"+curr_data.source+"</td>";
+                                html_to_add += "<td>"+curr_data.date+"</td>";
+                                html_to_add += "<td>"+curr_data.encoding+"</td>";
+                                html_to_add += "<td>"+curr_data.language+"</td>";
+                                html_to_add += "<td>"+curr_data.size+"</td>";
+                                html_to_add += "<td>"+curr_data.mime+"</td>";
+                                html_to_add += "<td>"+curr_data.lineinfo[0]+"</td>";
+                                html_to_add += "<td>"+curr_data.lineinfo[1]+"</td>";
+                                html_to_add += "<td><div class=\"row\"><button class=\"btn btn-xs btn-default\" data-toggle=\"popover\" data-placement=\"left\" data-content=\""+curr_data.content+"\">Preview content</button><a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+curr_data.path+"&num=0\">  <button type=\"button\" class=\"btn btn-xs btn-info\">Show Paste</button></a></div></td>";
+
+                            html_to_add += "</tr>";
+                          html_to_add += "</tbody>";
+                        html_to_add += "</table>";
+                        $("#mymodalbody").html(html_to_add);
+                        $("[data-toggle=popover]").popover();
+                        $("#button_show_plot").attr("href", "{{ url_for('terms_plot_tool')}}"+"?term="+the_modal.attr('data-term') );
+                    }
+                } else {
+                    $("#mymodalbody").html("No paste containing this term has been received yet.");
+                    $("#button_show_plot").attr("href", "{{ url_for('terms_plot_tool')}}"+"?term="+the_modal.attr('data-term') );
+                }
+            });
+
+       });
+
+    $("#mymodal").on('hidden.bs.modal', function () {
+        $("#mymodalbody").html("<p>Loading paste information...</p>");
+        var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
+        $("#mymodalbody").append(loading_gif); // Show the loading GIF
+    });
+
+
    });
 </script>
 
@@ -229,8 +309,8 @@ function perform_operation(){
                     if(json.action == "add") {
                         // query data
                         $.get("{{ url_for('terms_management_query') }}", { term: json.term, section: json.section }, function(data2, status){
-                            var action_button = "<button class=\"btn-link btn-interaction\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Remove this term\" data-content=\"" + json.term + "\" data-section=\"followTerm\" data-action=\"delete\"><span class=\"glyphicon glyphicon-trash\"></span></button>"
-                            table_track.row.add( [ json.term, data2[3], data2[0], data2[1], data2[2], action_button ] ).draw( false );
+                            var action_button = "<button class=\"btn-link btn-interaction\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Remove this term\" data-content=\"" + json.term + "\" data-section=\"followTerm\" data-action=\"delete\"><span class=\"glyphicon glyphicon-trash\"></span></button>"
+                            table_track.row.add( [ json.term, data2[3], data2[0], data2[1], data2[2], 0, action_button ] ).draw( false );
                             perform_binding();
                         });
                    } else if (json.action == "delete") {
