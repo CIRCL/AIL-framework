@@ -289,22 +289,25 @@
 <script>
 var graph_options = {
                         series: {
-                            lines: { 
+                            lines: {
                                 show: true,
                                 lineWidth: 2
                             },
                             bars: {show: false, barWidth: 60*60*1000},
                             shadowSize: 0
                         },
-                        grid: { 
-                            hoverable: true, 
-                            clickable: true, 
+                        grid: {
+                            hoverable: true,
+                            clickable: true,
                             tickColor: "#f9f9f9",
                             borderWidth: 0
                         },
                         legend: { show: true,
                                   noColumns: 1,
-                                  position: "nw"
+                                  position: "nw",
+                                  labelFormatter: function(label, series) {
+                                      return "<a href=\"#\" onClick=\"hide_or_show2("+series.idx+", "+series.graphNum+"); return false;\" >" + label + "</a>";
+                                  }
                         },
                         xaxis: {
                               mode: "time",
@@ -353,12 +356,13 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
         if (i>=default_num_curves) {
             unchecked_label.push(data[i][0]);
         }
-        to_plot.push({ data: curr_data, label: data[i][0]}); 
+        to_plot.push({ data: curr_data, label: data[i][0], idx: i});
         if ( i < (data.length/2))
             table_today.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td><td>"+data[i][3].week+", "+data[i][3].month+"</td></tr>");
         else
             table_today2.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td><td>"+data[i][3].week+", "+data[i][3].month+"</td></tr>");
     }
+    graph_options.series.graphNum=1;
     plot_today = $.plot($("#graph-today"), to_plot, graph_options);
     hide_unchecked_curves(plot_today, unchecked_label);
     $("#graph-today").bind("plothover", function (event, pos, item) {
@@ -393,12 +397,13 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week,
         if (i>=default_num_curves) {
             unchecked_label.push(data[i][0]);
         }
-        to_plot.push({ data: curr_data, label: data[i][0]}); 
+        to_plot.push({ data: curr_data, label: data[i][0], idx: i});
         if ( i < (data.length/2))
             table.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].month+"</td></tr>");
         else
             table2.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].month+"</td></tr>");
     }
+    graph_options.series.graphNum=2;
     plot_week = $.plot($("#graph-week"), to_plot, graph_options);
     hide_unchecked_curves(plot_week, unchecked_label);
     $("#graph-week").bind("plothover", function (event, pos, item) {
@@ -432,12 +437,13 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month
         if (i>=default_num_curves) {
             unchecked_label.push(data[i][0]);
         }
-        to_plot.push({ data: curr_data, label: data[i][0]}); 
+        to_plot.push({ data: curr_data, label: data[i][0], idx: i});
         if ( i < (data.length/2))
             table.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].week+"</td></tr>");
         else
             table2.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].week+"</td></tr>");
     }
+    graph_options.series.graphNum=3;
     plot_month = $.plot($("#graph-month"), to_plot, graph_options);
     hide_unchecked_curves(plot_month, unchecked_label);
     $("#graph-month").bind("plothover", function (event, pos, item) {
@@ -509,7 +515,7 @@ function hide_or_show() {
     var curr_term = $(this).attr('data-term');
     var graph = $(this).attr('data-graph');
     var checked = $(this).prop('checked')
-    
+
     if(graph == "today") {
         var graphData = plot_today.getData();
         var index;
@@ -551,6 +557,19 @@ function hide_or_show() {
     // graph, hide curve
 }
 
+function hide_or_show2(index, graphNum) {
+    if (graphNum == 1)
+        var plot = plot_today;
+    else if (graphNum == 2)
+        var plot = plot_week;
+    else if (graphNum == 3)
+        var plot = plot_month;
+
+    var graphData = plot.getData();
+    graphData[index].lines.show = !graphData[index].lines.show;
+    plot.setData(graphData);
+    plot.draw();
+}
 </script>
 
 </body>
