@@ -320,6 +320,7 @@ var graph_options = {
 set_today = "TopTermFreq_set_day";
 set_week = "TopTermFreq_set_week";
 set_month = "TopTermFreq_set_month";
+default_num_curves = 8;
 
 var plot_today;
 var plot_week;
@@ -333,18 +334,23 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
     var table_today = $("#table-today")
     var table_today2 = $("#table-today2")
     var to_plot = [];
+    var unchecked_label = [];
     for(i=0; i<data.length; i++) {
         var curr_data = [];
         for(j=0; j<data[i][1].length; j++) {
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
         }
+        if (i>=default_num_curves) {
+            unchecked_label.push(data[i][0]);
+        }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table_today.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0])+"</td></tr>")
+            table_today.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td></tr>")
         else
-            table_today2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0])+"</td></tr>")
+            table_today2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td></tr>")
     }
     plot_today = $.plot($("#graph-today"), to_plot, graph_options);
+    hide_unchecked_curves(plot_today, unchecked_label);
     $("#graph-today").bind("plothover", function (event, pos, item) {
         if (item) {
             var date = new Date(item.datapoint[0]);
@@ -367,18 +373,23 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week,
     var table = $("#table-week")
     var table2 = $("#table-week2")
     var to_plot = [];
+    var unchecked_label = [];
     for(i=0; i<data.length; i++) {
         var curr_data = [];
         for(j=0; j<data[i][1].length; j++) {
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
         }
+        if (i>=default_num_curves) {
+            unchecked_label.push(data[i][0]);
+        }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0])+"</td></tr>")
+            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td></tr>")
         else
-            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0])+"</td></tr>")
+            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td></tr>")
     }
     plot_week = $.plot($("#graph-week"), to_plot, graph_options);
+    hide_unchecked_curves(plot_week, unchecked_label);
     $("#graph-week").bind("plothover", function (event, pos, item) {
         if (item) {
             var date = new Date(item.datapoint[0]);
@@ -400,18 +411,23 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month
     var table = $("#table-month")
     var table2 = $("#table-month2")
     var to_plot = [];
+    var unchecked_label = [];
     for(i=0; i<data.length; i++) {
         var curr_data = [];
         for(j=0; j<data[i][1].length; j++) {
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
         }
+        if (i>=default_num_curves) {
+            unchecked_label.push(data[i][0]);
+        }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0])+"</td></tr>")
+            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td></tr>")
         else
-            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0])+"</td></tr>")
+            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td></tr>")
     }
     plot_month = $.plot($("#graph-month"), to_plot, graph_options);
+    hide_unchecked_curves(plot_month, unchecked_label);
     $("#graph-month").bind("plothover", function (event, pos, item) {
         if (item) {
             var date = new Date(item.datapoint[0]);
@@ -445,8 +461,9 @@ function addbuttons(term) {
         "data-section=\"blacklistTerm\" data-term=\""+term+"\"></button>";
 }
 
-function addcheckbox(graph, term) {
-    return "<input type=checkbox checked class=\"check-interaction\" data-term=\""+term+"\" data-graph=\""+graph+"\"></input>";
+function addcheckbox(graph, term, checked) {
+    var checked_text = checked ? "checked" : "";
+    return "<input type=checkbox "+checked_text+" class=\"check-interaction\" data-term=\""+term+"\" data-graph=\""+graph+"\"></input>";
 }
 
 function perform_operation(){
@@ -461,6 +478,20 @@ function perform_operation(){
         }
     });
 }
+
+
+function hide_unchecked_curves(plot, unchecked_label) {
+    var graphData = plot.getData();
+    var index;
+    for(i=0; i<graphData.length; i++) {
+        if($.inArray( graphData[i].label, unchecked_label ) != -1){
+            graphData[i].lines.show = false;
+        }
+    }
+    plot.setData(graphData);
+    plot.draw();
+}
+
 
 function hide_or_show() {
     var curr_term = $(this).attr('data-term');
