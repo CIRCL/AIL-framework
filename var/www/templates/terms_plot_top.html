@@ -293,17 +293,22 @@ var graph_options = {
                             tickColor: "#f9f9f9",
                             borderWidth: 0
                         },
+                        legend: { show: true,
+                                  noColumns: 0,
+                                  position: "nw"
+                        },
                         xaxis: {
                               mode: "time",
                               timeformat: "%m/%d",
                               minTickSize: [1, "day"]
                         },
                         yaxis: {
+                            //transform: function (v) { return v < 1 ? v : Math.log(v); }
                             autoscaleMargin: 0.1,
                         },
                         tooltip: true,
                         tooltipOpts: {
-                            content: "%s (%x.1 is %y.4)",
+                            content: " %s (%x.1 is %y.4) ",
                             shifts: {
                                 x: -60,
                                 y: 25
@@ -323,7 +328,6 @@ var plot_month;
 var promises = []; // Used to know when everything has been received
 
 promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today, num_day: 5 }, function(data, status){
-    console.log(data);
     data.sort(function(a, b){return b[2]-a[2];});
     // Sort data
     var table_today = $("#table-today")
@@ -335,7 +339,6 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
-        console.log(to_plot);
         if ( i < (data.length/2))
             table_today.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0])+"</td></tr>")
         else
