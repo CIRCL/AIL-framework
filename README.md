@@ -77,16 +77,6 @@ linux based distributions, you can replace it with [installing_deps_archlinux.sh
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
-Concerning the sentiment module, nltk.sentiment.vader must be installed manually.
-
-In your AIL virtualenv, type
-```
-python
-import nltk
-nltk.download()
-```
-and then install the sentiment.vader module
-
 
 Starting AIL web interface
 --------------------------

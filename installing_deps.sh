@@ -83,5 +83,6 @@ pushd tlsh/py_ext
 python setup.py build
 python setup.py install
 
-# Download the necessary NLTK corpora
+# Download the necessary NLTK corpora and sentiment vader
 HOME=$(pwd) python -m textblob.download_corpora
+python -m nltk.downloader vader_lexicon
