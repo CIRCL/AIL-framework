@@ -91,6 +91,7 @@ class Paste(object):
         self.p_langage = None
         self.p_nb_lines = None
         self.p_max_length_line = None
+        self.array_line_above_threshold = None
         self.p_duplicate = None
 
     def get_p_content(self):
@@ -118,6 +119,21 @@ class Paste(object):
     def get_p_content_as_file(self):
         return cStringIO.StringIO(self.get_p_content())
 
+    def get_p_content_with_removed_lines(self, threshold):
+        num_line_removed = 0
+        line_length_threshold = threshold
+        string_content = ""
+        f = self.get_p_content_as_file()
+        line_id = 0
+        for line_id, line in enumerate(f):
+            length = len(line)
+            if length < line_length_threshold:
+                string_content += line
+            else:
+                num_line_removed+=1
+
+        return (num_line_removed, string_content)
+
     def get_lines_info(self):
         """
         Returning and setting the number of lines and the maximum lenght of the
@@ -136,9 +152,11 @@ class Paste(object):
                 length = len(line)
                 if length >= max_length_line:
                     max_length_line = length
+
             f.close()
             self.p_nb_lines = line_id
             self.p_max_length_line = max_length_line
+
         return (self.p_nb_lines, self.p_max_length_line)
 
     def _get_p_encoding(self):

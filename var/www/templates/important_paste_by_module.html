@@ -28,7 +28,7 @@
 <script>
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
-    $('#myTable').dataTable();
+    $('#myTable').dataTable({ "order": [[ 2, "desc" ]] });
 });
 </script>
 
@@ -92,7 +92,8 @@ $(document).ready(function(){
        }
 
        if (final_index != start_index){ // still have data to display
-           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text()+complete_paste.substring(start_index+1, final_index+1)); // Append the new content
+           // Append the new content using text() and not append (XSS)
+           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text()+complete_paste.substring(start_index+1, final_index+1));
            start_index = final_index;
            if (flag_stop)
                nothing_to_display();
@@ -115,7 +116,6 @@ $(document).ready(function(){
    $('#myTable').on( 'draw.dt', function () {
        // On click, get html content from url and update the corresponding modal
        $("[data-toggle='modal']").unbind('click.openmodal').on("click.openmodal", function (event) {
-           console.log('hi');
            event.preventDefault();
            var modal=$(this);
            var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
