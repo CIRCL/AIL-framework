@@ -714,6 +714,10 @@ def terms_plot_top_data():
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
 
+    set_day = "TopTermFreq_set_day_" + str(today_timestamp)
+    set_week = "TopTermFreq_set_week";
+    set_month = "TopTermFreq_set_month";
+
     the_set = request.args.get('set')
     num_day = int(request.args.get('num_day'))
     if the_set is None:
@@ -724,13 +728,20 @@ def terms_plot_top_data():
             the_set += "_" + str(today_timestamp)
 
         for term, tot_value in r_serv_term.zrevrangebyscore(the_set, '+inf', '-inf', withscores=True, start=0, num=20):
+            position = {}
+            position['day'] = r_serv_term.zrevrank(set_day, term)
+            position['day'] = position['day']+1 if position['day'] is not None else "<20"
+            position['week'] = r_serv_term.zrevrank(set_week, term)
+            position['week'] = position['week']+1 if position['week'] is not None else "<20"
+            position['month'] = r_serv_term.zrevrank(set_month, term)
+            position['month'] = position['month']+1 if position['month'] is not None else "<20"
             value_range = []
             for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
                 value = r_serv_term.hget(timestamp, term)
                 curr_value_range = int(value) if value is not None else 0
                 value_range.append([timestamp, curr_value_range])
                 
-            to_return.append([term, value_range, tot_value])
+            to_return.append([term, value_range, tot_value, position])
     
         return jsonify(to_return)
 

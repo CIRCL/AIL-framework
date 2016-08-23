@@ -26,6 +26,9 @@
           padding-left:0;
           list-style:none
       }
+      .table > tbody > tr > td {
+          padding: 5px;
+      }
   </style>
 </head>
 <body>
@@ -82,7 +85,8 @@
                                                 <th>Term</th>
                                                 <th>Value</th>
                                                 <th>Action</th>
-                                                <th>Displayed</th>
+                                                <th>Show</th>
+                                                <th data-toggle="tooltip" data-placement="left" title="Position of the term in the week and month set">Position</th>
                                             </tr>
                                         </thead>
                                         <tbody id="table-today">
@@ -96,7 +100,8 @@
                                                 <th>Term</th>
                                                 <th>Value</th>
                                                 <th>Action</th>
-                                                <th>Displayed</th>
+                                                <th>Show</th>
+                                                <th data-toggle="tooltip" data-placement="left" title="Position of the term in the week and month set">Position</th>
                                             </tr>
                                         </thead>
                                         <tbody id="table-today2">
@@ -148,7 +153,8 @@
                                                 <th>Term</th>
                                                 <th>Value</th>
                                                 <th>Action</th>
-                                                <th>Displayed</th>
+                                                <th>Show</th>
+                                                <th data-toggle="tooltip" data-placement="left" title="Position of the term in the day and month set">Position</th>
                                             </tr>
                                         </thead>
                                         <tbody id="table-week">
@@ -162,7 +168,8 @@
                                                 <th>Term</th>
                                                 <th>Value</th>
                                                 <th>Action</th>
-                                                <th>Displayed</th>
+                                                <th>Show</th>
+                                                <th data-toggle="tooltip" data-placement="left" title="Position of the term in the day and month set">Position</th>
                                             </tr>
                                         </thead>
                                         <tbody id="table-week2">
@@ -214,7 +221,8 @@
                                                 <th>Term</th>
                                                 <th>Value</th>
                                                 <th>Action</th>
-                                                <th>Displayed</th>
+                                                <th>Show</th>
+                                                <th data-toggle="tooltip" data-placement="left" title="Position of the term in the day and week set">Position</th>
                                             </tr>
                                         </thead>
                                         <tbody id="table-month">
@@ -228,7 +236,8 @@
                                                 <th>Term</th>
                                                 <th>Value</th>
                                                 <th>Action</th>
-                                                <th>Displayed</th>
+                                                <th>Show</th>
+                                                <th data-toggle="tooltip" data-placement="left" title="Position of the term in the day and week set">Position</th>
                                             </tr>
                                         </thead>
                                         <tbody id="table-month2">
@@ -336,6 +345,7 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
     var to_plot = [];
     var unchecked_label = [];
     for(i=0; i<data.length; i++) {
+        var highlight = data[i][3].week == "<20"? " style=\"background-color: lightgreen;\" " : "";
         var curr_data = [];
         for(j=0; j<data[i][1].length; j++) {
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
@@ -345,9 +355,9 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table_today.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td></tr>")
+            table_today.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td><td>"+data[i][3].week+", "+data[i][3].month+"</td></tr>");
         else
-            table_today2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td></tr>")
+            table_today2.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("today", data[i][0], i<default_num_curves)+"</td><td>"+data[i][3].week+", "+data[i][3].month+"</td></tr>");
     }
     plot_today = $.plot($("#graph-today"), to_plot, graph_options);
     hide_unchecked_curves(plot_today, unchecked_label);
@@ -375,6 +385,7 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week,
     var to_plot = [];
     var unchecked_label = [];
     for(i=0; i<data.length; i++) {
+        var highlight = parseInt(data[i][3].day) > 20? " style=\"background-color: orange;\" " : "";
         var curr_data = [];
         for(j=0; j<data[i][1].length; j++) {
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
@@ -384,9 +395,9 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week,
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td></tr>")
+            table.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].month+"</td></tr>");
         else
-            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td></tr>")
+            table2.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("week", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].month+"</td></tr>");
     }
     plot_week = $.plot($("#graph-week"), to_plot, graph_options);
     hide_unchecked_curves(plot_week, unchecked_label);
@@ -413,6 +424,7 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month
     var to_plot = [];
     var unchecked_label = [];
     for(i=0; i<data.length; i++) {
+        var highlight = parseInt(data[i][3].day) > 20? " style=\"background-color: orange;\" " : "";
         var curr_data = [];
         for(j=0; j<data[i][1].length; j++) {
             curr_data.push([data[i][1][j][0]*1000, data[i][1][j][1]]);
@@ -422,9 +434,9 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month
         }
         to_plot.push({ data: curr_data, label: data[i][0]}); 
         if ( i < (data.length/2))
-            table.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td></tr>")
+            table.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].week+"</td></tr>");
         else
-            table2.append("<tr><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td></tr>")
+            table2.append("<tr"+highlight+"><td>"+data[i][0]+"</td><td>"+data[i][2]+"</td><td>"+addbuttons(data[i][0])+"</td><td>"+addcheckbox("month", data[i][0], i<default_num_curves)+"</td><td><strong>"+data[i][3].day+"</strong>, "+data[i][3].week+"</td></tr>");
     }
     plot_month = $.plot($("#graph-month"), to_plot, graph_options);
     hide_unchecked_curves(plot_month, unchecked_label);
