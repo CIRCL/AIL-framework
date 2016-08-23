@@ -47,10 +47,11 @@ top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, to
 
 
 def check_if_tracked_term(term, path):
-    if term in TrackedTermsSet_Name:
+    if term in server_term.smembers(TrackedTermsSet_Name):
         #add_paste to tracked_word_set
         set_name = "tracked_" + term
         server_term.sadd(set_name, path)
+        print term, 'addded', set_name, '->', path
         p.populate_set_out("New Term added", 'CurveManageTopSets')
 
 

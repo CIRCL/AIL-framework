@@ -289,9 +289,9 @@ function perform_operation(){
     var curr_section = $(this).attr('data-section');
     var curr_action = $(this).attr('data-action'); 
     if (curr_action == "add") {
-        var curr_term = $('#'+curr_section+'Input').val();
+        var curr_term = $('#'+curr_section+'Input').val().toLowerCase();;
     } else {
-        var curr_term = $(this).attr('data-content');
+        var curr_term = $(this).attr('data-content').toLowerCase();;
     }
     var data_to_send = { section: curr_section, action:curr_action, term: curr_term};
 

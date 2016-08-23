@@ -649,16 +649,16 @@ def terms_management_action():
     else:
         if section == "followTerm":
             if action == "add":
-                r_serv_term.sadd(TrackedTermsSet_Name, term)
+                r_serv_term.sadd(TrackedTermsSet_Name, term.lower())
                 r_serv_term.hset(TrackedTermsDate_Name, term, today_timestamp)
             else:
-                r_serv_term.srem(TrackedTermsSet_Name, term)
+                r_serv_term.srem(TrackedTermsSet_Name, term.lower())
         elif section == "blacklistTerm":
             if action == "add":
-                r_serv_term.sadd(BlackListTermsSet_Name, term)
+                r_serv_term.sadd(BlackListTermsSet_Name, term.lower())
                 r_serv_term.hset(BlackListTermsDate_Name, term, today_timestamp)
             else:
-                r_serv_term.srem(BlackListTermsSet_Name, term)
+                r_serv_term.srem(BlackListTermsSet_Name, term.lower())
         else:
             return "None"
 
