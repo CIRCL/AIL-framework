@@ -12,6 +12,7 @@
   <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+  <link href="{{ url_for('static', filename='css/switch_checkbox.css') }}" rel="stylesheet" type="text/css" />
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
@@ -34,14 +35,7 @@
 
     <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-          <div class="navbar-header">
-           <ul class="nav navbar-nav">
-              <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-              <li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
-              <li><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
-              <li><a href="{{ url_for('browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
-           </ul>
-        </div>
+          {% include 'header.html' %}
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
               <div class="sidebar-collapse">
@@ -64,6 +58,14 @@
                   </div>
               </div>
                   <!-- <div id="Graph_paste_num" style="height:90px; width:100%;"></div> -->
+              <div class='pull_right'>
+                  <label class="switch">
+                      <input id="button-toggle-queues" class="switch-input" type="checkbox" checked>
+                      <span class="switch-label" data-on="On" data-off="Off"></span>
+                      <span class="switch-handle"></span>
+                  </label>
+                  <strong style="top: 3px; position: relative;">Display queues</strong>
+              <div>
               <div class="table-responsive", id="queueing" style="margin-top:10px;"></div>
              <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
@@ -107,7 +109,7 @@
 		<option value="100">100</option>
 		</select>
                 </label>
-		<input id="checkbox_log_info" type="checkbox" value="info" checked="true"> INFO
+		<input id="checkbox_log_info" type="checkbox" value="info"> INFO
 		<input id="checkbox_log_warning" type="checkbox" value="warning" checked="true"> WARNING
 		<input id="checkbox_log_critical" type="checkbox" value="critical" checked="true"> CRITICAL
 
@@ -142,8 +144,13 @@
     </div>
     <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"></script>
 
+    <script>
+        activePage = "page-index";
+        $("#"+activePage).addClass("active");
+    </script>
+
     <script type="text/javascript">
-    initfunc( "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}", {{ request.script_root|tojson|safe }} );
+        initfunc( "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}", {{ request.script_root|tojson|safe }} );
     </script>
 
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>

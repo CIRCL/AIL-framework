@@ -23,12 +23,11 @@
       .tooltip-inner {
          text-align: left;
          height: 200%;
-         width: 200%;
          max-width: 500px;
          max-height: 500px;
          font-size: 13px;
       }
-      xmp {
+      pre {
          white-space:pre-wrap;
          word-wrap:break-word;
       }
@@ -42,12 +41,7 @@
 
     <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-          <div class="navbar-header">
-          <ul class="nav navbar-nav">
-               <li class="active"><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-               <li><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
-          </ul>
-          </div>
+          {% include 'header.html' %}
           <!-- /.navbar-top-links -->
           <div class="navbar-default sidebar" role="navigation">
               <div class="sidebar-collapse">
@@ -201,7 +195,8 @@
        }
 
        if (final_index != start_index){ // still have data to display
-           $("#mymodalbody").find("#paste-holder").append(complete_paste.substring(start_index+1, final_index+1)); // Append the new content
+           // Append the new content using text() and not append (XSS)
+           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text() + complete_paste.substring(start_index+1, final_index+1)); 
            start_index = final_index;
            if (flag_stop)
                nothing_to_display();

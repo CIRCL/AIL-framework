@@ -1,6 +1,5 @@
 [Directories]
 bloomfilters = Blooms
-#Duplicate_ssdeep
 dicofilters = Dicos
 pastes = PASTES
 
@@ -59,11 +58,26 @@ host = localhost
 port = 6379
 db = 1
 
+[Redis_Paste_Name]
+host = localhost
+port = 6379
+db = 2
+
 ##### LevelDB #####
 [Redis_Level_DB_Curve]
 host = localhost
-port = 3016
-db = 0
+port = 6382
+db = 1
+
+[Redis_Level_DB_Sentiment]
+host = localhost
+port = 6382
+db = 4
+
+[Redis_Level_DB_TermFreq]
+host = localhost
+port = 6382
+db = 2
 
 [Redis_Level_DB]
 host = localhost
@@ -72,8 +86,8 @@ db = 0
 
 [Redis_Level_DB_Trending]
 host = localhost
-port = 2016
-db = 0
+port = 6382
+db = 3
 
 [Redis_Level_DB_Hashs]
 host = localhost

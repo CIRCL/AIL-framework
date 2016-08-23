@@ -37,6 +37,15 @@ wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTabl
 wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.js -O ./static/js/jquery.flot.js
 wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.pie.js -O ./static/js/jquery.flot.pie.js
 wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.time.js -O ./static/js/jquery.flot.time.js
+wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.stack.js -O ./static/js/jquery.flot.stack.js
+
+#Ressources for sparkline and canvasJS
+wget http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js -O ./static/js/jquery.sparkline.min.js
+wget http://canvasjs.com/fdm/chart/ -O temp/canvasjs.zip
+unzip temp/canvasjs.zip -d temp/
+mkdir temp
+mv temp/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
+rm -rf temp
 
 mkdir -p ./static/image
 pushd static/image

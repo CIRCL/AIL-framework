@@ -58,6 +58,10 @@ function launching_redis {
     screen -S "Redis" -X screen -t "6380" bash -c 'redis-server '$conf_dir'6380.conf ; read x'
     sleep 0.1
     screen -S "Redis" -X screen -t "6381" bash -c 'redis-server '$conf_dir'6381.conf ; read x'
+
+    # For Words and curves
+    sleep 0.1
+    screen -S "Redis" -X screen -t "6382" bash -c 'redis-server '$conf_dir'6382.conf ; read x'
 }
 
 function launching_lvldb {
@@ -134,6 +138,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
     sleep 0.1
+    screen -S "Script" -X screen -t "Curve_topsets_manager" bash -c './Curve_manage_top_sets.py; read x'
+    sleep 0.1
     screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Keys" bash -c './Keys.py; read x'
@@ -151,6 +157,9 @@ function launching_scripts {
     screen -S "Script" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Browse_warning_paste" bash -c './Browse_warning_paste.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "SentimentAnalyser" bash -c './SentimentAnalyser.py; read x'
+
 }
 
 #If no params, display the help
