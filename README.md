@@ -11,8 +11,8 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
 
-Trending
---------
+Trending charts
+---------------
 
 ![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
 ![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
@@ -31,6 +31,9 @@ Terms manager and occurence
 ---------------------------
 
 ![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
+
+## Top terms
+
 ![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
 ![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
 
