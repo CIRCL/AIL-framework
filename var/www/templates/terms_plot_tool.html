@@ -130,6 +130,7 @@
 
 
         /* Create the slider and button*/
+        $('#plot-btn-add').hide();
         var today = Date.now();
         var old_day = today - (12*31*24*60*60)*1000;
         $( ".sliderRange" ).slider({
@@ -150,7 +151,9 @@
         $('#plot-btn-add').click(addData); 
 
         $("#TermInput").val($("#TermInput").attr("data-init-plot"));
-        $("#plot-btn").click();
+        if($("#TermInput").attr("data-init-plot") != "") {
+            $("#plot-btn").click();
+        }
 
         $("#TermInput").keyup(function(event){
             if(event.keyCode == 13){
@@ -192,6 +195,7 @@ var graph_options = {
 
 
 function plotData() {
+    $('#plot-btn-add').show("fast");
     var curthis = $(this);
     var term = $('#TermInput').val();
     var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
