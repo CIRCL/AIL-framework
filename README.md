@@ -9,8 +9,15 @@ AIL framework - Framework for Analysis of Information Leaks
 
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
 
-![Dashboard](./doc/screenshots/DashboardAIL.png?raw=true "AIL framework dashboard")
-![Trending](./doc/screenshots/WordtrendingAIL.png?raw=true "AIL framework wordtrending")
+![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
+![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
+![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
+![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
+![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
+![Term-Manager](./doc/screenshots/term-manager.png?raw=true "AIL framework termManager")
+![Term-Top](./doc/screenshots/term-top.png?raw=true "AIL framework termTop")
+![Term-Plot](./doc/screenshots/term-plot.png?raw=true "AIL framework termPlot")
+
 
 AIL framework screencast: https://www.youtube.com/watch?v=9idfHCIMzBY
 
