@@ -11,12 +11,24 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
 
+Trending
+--------
+
 ![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
 ![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
 
+Browsing
+--------
+
 ![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
 
+Sentiment analysis
+------------------
+
 ![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
+
+Terms manager and occurence
+---------------------------
 
 ![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
 ![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
@@ -63,6 +75,7 @@ linux based distributions, you can replace it with [installing_deps_archlinux.sh
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
 Concerning the sentiment module, nltk.sentiment.vader must be installed manually.
+
 In your AIL virtualenv, type
 ```
 python
