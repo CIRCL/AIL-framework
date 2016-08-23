@@ -34,6 +34,8 @@ screen -S "Script" -X screen -t "Credential" bash -c './Credential.py; read x'
 sleep 0.1
 screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
 sleep 0.1
+screen -S "Script" -X screen -t "Curve_topsets_manager" bash -c './Curve_manage_top_sets.py; read x'
+sleep 0.1
 screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
 sleep 0.1
 screen -S "Script" -X screen -t "Keys" bash -c './Keys.py; read x'
