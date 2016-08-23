@@ -463,6 +463,10 @@ def sentiment_analysis_getplotdata():
 
     to_return = {}
     range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
+    # if empty, get yesterday top providers
+    print 'providers_set_'+ get_date_range(1)[1]
+    range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
+    # if still empty, takes from all providers
     if range_providers == []:
         print 'today provider empty'
         range_providers = r_serv_charts.smembers('all_provider_set')
