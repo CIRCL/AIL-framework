@@ -61,6 +61,11 @@ r_serv_term = redis.StrictRedis(
         port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
         db=cfg.getint("Redis_Level_DB_TermFreq", "db"))
 
+r_serv_pasteName = redis.StrictRedis(
+    host=cfg.get("Redis_Paste_Name", "host"),
+    port=cfg.getint("Redis_Paste_Name", "port"),
+    db=cfg.getint("Redis_Paste_Name", "db"))
+
 
 app = Flask(__name__, static_url_path='/static/')
 
@@ -348,19 +353,20 @@ def search():
     c = [] #preview of the paste content
     paste_date = []
     paste_size = []
+
     # Search filename
-    from os import walk
-    for (dirpath, dirnames, filenames) in walk(os.path.join(os.environ['AIL_HOME'], 'PASTES/')):
-        if q[0] in filenames:
-            r.append(dirpath+'/'+q[0])
-            paste = Paste.Paste(dirpath+'/'+q[0])
-            content = paste.get_p_content().decode('utf8', 'ignore')
-            content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-            c.append(content[0:content_range])
-            curr_date = str(paste._get_p_date())
-            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
-            paste_date.append(curr_date)
-            paste_size.append(paste._get_p_size())
+    print r_serv_pasteName.smembers(q[0])
+    for path in r_serv_pasteName.smembers(q[0]):
+        print path
+        r.append(path)
+        paste = Paste.Paste(path)
+        content = paste.get_p_content().decode('utf8', 'ignore')
+        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+        c.append(content[0:content_range])
+        curr_date = str(paste._get_p_date())
+        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+        paste_date.append(curr_date)
+        paste_size.append(paste._get_p_size())
 
     # Search full line
     from whoosh import index

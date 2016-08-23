@@ -58,11 +58,12 @@ def compute_most_posted(server, message):
             print redis_progression_name_set
 
 
-def compute_provider_info(server, path):
+def compute_provider_info(server_trend, server_pasteName, path):
     redis_all_provider = 'all_provider_set'
     
     paste = Paste.Paste(path)
     
+    paste_baseName = paste.p_name.split('.')[0]
     paste_size = paste._get_p_size()
     paste_provider = paste.p_source
     paste_date = str(paste._get_p_date())
@@ -71,12 +72,13 @@ def compute_provider_info(server, path):
     redis_providers_name_set = 'providers_set_' + paste_date
 
     # Add/Update in Redis
-    server.sadd(redis_all_provider, paste_provider)
+    server_pasteName.sadd(paste_baseName, path)
+    server_trend.sadd(redis_all_provider, paste_provider)
 
-    num_paste = int(server.hincrby(paste_provider+'_num', paste_date, 1))
-    sum_size = float(server.hincrbyfloat(paste_provider+'_size', paste_date, paste_size))
+    num_paste = int(server_trend.hincrby(paste_provider+'_num', paste_date, 1))
+    sum_size = float(server_trend.hincrbyfloat(paste_provider+'_size', paste_date, paste_size))
     new_avg = float(sum_size) / float(num_paste)
-    server.hset(paste_provider +'_avg', paste_date, new_avg)
+    server_trend.hset(paste_provider +'_avg', paste_date, new_avg)
 
 
     #
@@ -84,33 +86,33 @@ def compute_provider_info(server, path):
     #
         
     # Size
-    if server.zcard(redis_sum_size_set) < max_set_cardinality or server.zscore(redis_sum_size_set, paste_provider) != "nil":
-        server.zadd(redis_sum_size_set, float(num_paste), paste_provider)
-        server.zadd(redis_avg_size_name_set, float(new_avg), paste_provider)
+    if server_trend.zcard(redis_sum_size_set) < max_set_cardinality or server_trend.zscore(redis_sum_size_set, paste_provider) != "nil":
+        server_trend.zadd(redis_sum_size_set, float(num_paste), paste_provider)
+        server_trend.zadd(redis_avg_size_name_set, float(new_avg), paste_provider)
     else: #set full capacity
-        member_set = server.zrangebyscore(redis_sum_size_set, '-inf', '+inf', withscores=True, start=0, num=1)
+        member_set = server_trend.zrangebyscore(redis_sum_size_set, '-inf', '+inf', withscores=True, start=0, num=1)
         # Member set is a list of (value, score) pairs
         if float(member_set[0][1]) < new_avg:
             #remove min from set and add the new one
             print 'Size - adding ' +paste_provider+ '(' +str(new_avg)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
-            server.zrem(redis_sum_size_set, member_set[0][0])
-            server.zadd(redis_sum_size_set, float(sum_size), paste_provider)
-            server.zrem(redis_avg_size_name_set, member_set[0][0])
-            server.zadd(redis_avg_size_name_set, float(new_avg), paste_provider)
+            server_trend.zrem(redis_sum_size_set, member_set[0][0])
+            server_trend.zadd(redis_sum_size_set, float(sum_size), paste_provider)
+            server_trend.zrem(redis_avg_size_name_set, member_set[0][0])
+            server_trend.zadd(redis_avg_size_name_set, float(new_avg), paste_provider)
 
 
     # Num
     # if set not full or provider already present
-    if server.zcard(redis_providers_name_set) < max_set_cardinality or server.zscore(redis_providers_name_set, paste_provider) != "nil":
-        server.zadd(redis_providers_name_set, float(num_paste), paste_provider)
+    if server_trend.zcard(redis_providers_name_set) < max_set_cardinality or server_trend.zscore(redis_providers_name_set, paste_provider) != "nil":
+        server_trend.zadd(redis_providers_name_set, float(num_paste), paste_provider)
     else: #set at full capacity
-        member_set = server.zrangebyscore(redis_providers_name_set, '-inf', '+inf', withscores=True, start=0, num=1)
+        member_set = server_trend.zrangebyscore(redis_providers_name_set, '-inf', '+inf', withscores=True, start=0, num=1)
         # Member set is a list of (value, score) pairs
         if int(member_set[0][1]) < num_paste:
             #remove min from set and add the new one
             print 'Num - adding ' +paste_provider+ '(' +str(num_paste)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
-            server.zrem(member_set[0][0])
-            server.zadd(redis_providers_name_set, float(num_paste), paste_provider)
+            server_trend.zrem(member_set[0][0])
+            server_trend.zadd(redis_providers_name_set, float(num_paste), paste_provider)
 
 
 if __name__ == '__main__':
@@ -135,6 +137,11 @@ if __name__ == '__main__':
         port=p.config.get("Redis_Level_DB_Trending", "port"),
         db=p.config.get("Redis_Level_DB_Trending", "db"))
 
+    r_serv_pasteName = redis.StrictRedis(
+        host=p.config.get("Redis_Paste_Name", "host"),
+        port=p.config.get("Redis_Paste_Name", "port"),
+        db=p.config.get("Redis_Paste_Name", "db"))
+
     # Endless loop getting messages from the input queue
     while True:
         # Get one message from the input queue
@@ -151,4 +158,4 @@ if __name__ == '__main__':
             if len(message.split(';')) > 1:
                 compute_most_posted(r_serv_trend, message)
             else:
-                compute_provider_info(r_serv_trend, message)
+                compute_provider_info(r_serv_trend, r_serv_pasteName, message)
