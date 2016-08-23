@@ -92,7 +92,8 @@ $(document).ready(function(){
        }
 
        if (final_index != start_index){ // still have data to display
-           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text()+complete_paste.substring(start_index+1, final_index+1)); // Append the new content
+           // Append the new content using text() and not append (XSS)
+           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text()+complete_paste.substring(start_index+1, final_index+1));
            start_index = final_index;
            if (flag_stop)
                nothing_to_display();
