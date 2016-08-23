@@ -1,8 +1,11 @@
 
  function generate_offset_to_time(num){
      var to_ret = {};
-     for(i=0; i<=num; i++)
-         to_ret[i] = new Date().getHours()-(23-i)+'h';
+     for(i=0; i<=num; i++) {
+         var t1 = new Date().getHours()-(23-i);
+         t1 = t1 < 0 ? 24+t1 : t1;
+         to_ret[i] =  t1+'h';
+     }
      return to_ret;
  };
 
@@ -13,7 +16,9 @@
      for(i=day; i>=0; i--){
          for(j=0; j<24; j++){
              var t1 =now.getDate()-i + ":"; 
-             var t2 =now.getHours()-(23-j)+"h";
+             var t2 =now.getHours()-(23-j);
+             t2 = t2 < 0 ? 24+t2 : t2;
+             t2 += "h";
              to_ret[j+24*(day-i)] = t1+t2;
          }
      }
