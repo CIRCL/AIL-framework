@@ -9,8 +9,34 @@ AIL framework - Framework for Analysis of Information Leaks
 
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
 
-![Dashboard](./doc/screenshots/DashboardAIL.png?raw=true "AIL framework dashboard")
-![Trending](./doc/screenshots/WordtrendingAIL.png?raw=true "AIL framework wordtrending")
+![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
+
+Trending charts
+---------------
+
+![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
+![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
+
+Browsing
+--------
+
+![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
+
+Sentiment analysis
+------------------
+
+![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
+
+Terms manager and occurence
+---------------------------
+
+![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
+
+## Top terms
+
+![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
+![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
+
 
 AIL framework screencast: https://www.youtube.com/watch?v=9idfHCIMzBY
 
@@ -26,6 +52,9 @@ Features
 * Module for extracting Tor .onion addresses (to be further processed for analysis)
 * Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
 * A full-text indexer module to index unstructured information
+* Modules and web statistics 
+* Global sentiment analysis for each providers based on nltk vader module
+* Terms tracking and occurence
 * Many more modules for extracting phone numbers, credentials and others
 
 Installation
@@ -47,6 +76,7 @@ The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu 
 linux based distributions, you can replace it with [installing_deps_archlinux.sh](./installing_deps_archlinux.sh).
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
+
 
 Starting AIL web interface
 --------------------------
@@ -94,6 +124,7 @@ Redis and LevelDB overview
 *                          DB 0 - Cache hostname/dns
 * Redis on TCP port 6380 - Redis Pub-Sub only
 * Redis on TCP port 6381 - DB 0 - Queue and Paste content LRU cache
+* Redis on TCP port 6382 - DB 1-4 - Trending, terms and sentiments
 * LevelDB on TCP port <year> - Lines duplicate
 
 LICENSE
