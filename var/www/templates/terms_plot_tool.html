@@ -119,6 +119,9 @@
 </div>
 
 
+<div style="position: absolute; border: 1px solid rgb(255, 221, 221); padding: 2px; background-color: #333; color:white; opacity: 0.8; top: 423px; left: 616px; display: none;" id="tooltip"></div>
+
+
 <!-- import graph function -->
 <script>
     $(document).ready(function(){
@@ -204,6 +207,21 @@ function plotData() {
         to_plot.push({ data: curr_data, label: term}); 
         graph_data.push({ data: curr_data, label: term});
         plot = $.plot($("#graph"), to_plot, graph_options);
+
+        $("#graph").bind("plothover", function (event, pos, item) {
+            if (item) {
+                var date = new Date(item.datapoint[0]);
+                var x = parseInt(date.getUTCMonth())+1 + "/" + date.getUTCDate();
+                var y = item.datapoint[1];
+    
+                $("#tooltip").html(item.series.label + " for "+x + " = " + y)
+                    .css({top: item.pageY-15, left: item.pageX+5})
+                    .fadeIn(200);
+            } else {
+                $("#tooltip").hide();
+            }
+        });
+
         $("#TermInput").val("");
     })
 }
