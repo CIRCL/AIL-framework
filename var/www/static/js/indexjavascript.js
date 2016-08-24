@@ -221,11 +221,17 @@ function create_queue_table() {
 
     for(i = 0; i < (glob_tabvar.row1).length;i++){
         var tr = document.createElement('TR')
-        for(j = 0; j < (glob_tabvar.row1[i]).length; j++){
+        for(j = 0; j < 2; j++){
             var td = document.createElement('TD')
             td.appendChild(document.createTextNode(glob_tabvar.row1[i][j]));
             tr.appendChild(td)
         }
+        if (parseInt(glob_tabvar.row1[i][2]) > 60*1 && parseInt(glob_tabvar.row1[i][1]) > 2)
+            tr.className += " danger";
+        else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)
+            tr.className += " warning";
+        else
+            tr.className += " success";
         tableBody.appendChild(tr);
     }
     Tablediv.appendChild(table);
