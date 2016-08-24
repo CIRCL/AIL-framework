@@ -10,6 +10,7 @@ textblob
 numpy
 matplotlib
 networkx
+prettytable
 
 #Tokeniser
 nltk
