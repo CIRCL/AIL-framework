@@ -4,7 +4,6 @@
 
 import time
 import datetime
-import calendar
 import redis
 import os
 import signal
