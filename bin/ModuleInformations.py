@@ -8,7 +8,14 @@ import calendar
 import redis
 import os
 import ConfigParser
+import json
 from prettytable import PrettyTable
+
+# CONFIG VARIABLES
+threshold_stucked_module = 60*60*1 #1 hour
+log_filename = "../logs/moduleInfo.log"
+
+
 
 if __name__ == "__main__":
 
@@ -41,12 +48,20 @@ if __name__ == "__main__":
                     num += 1
                     startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
                     processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
+
+                    if int((datetime.datetime.now() - startTime_readable).total_seconds()) > threshold_stucked_module:
+                        log = open(log_filename, 'a')
+                        log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
+
                     if int(card) > 0:
                         table1.add_row([num, queue, card, startTime_readable, processed_time_readable, path])
                     else:
                         table2.add_row([num, queue, card, startTime_readable, processed_time_readable, path])
 
         os.system('clear') 
+        print 'Working queues:\n'
         print table1
+        print '\n'
+        print 'Ideling queues:\n'
         print table2
         time.sleep(5)
