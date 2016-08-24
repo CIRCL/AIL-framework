@@ -7,13 +7,33 @@ import datetime
 import calendar
 import redis
 import os
+import signal
+from subprocess import PIPE, Popen
 import ConfigParser
 import json
 from prettytable import PrettyTable
 
 # CONFIG VARIABLES
-threshold_stucked_module = 60*60*1 #1 hour
+threshold_stucked_module = 1*60*1 #1 hour
 log_filename = "../logs/moduleInfo.log"
+command_search_pid = "ps a -o pid,cmd | grep {}"
+command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{}.py; read x\""
+
+
+def kill_module(module):
+    print 'trying to kill module:', module
+    time.sleep(8)
+
+    time.sleep(1)
+    p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
+
+    for line in p.stdout:
+        splittedLine = line.split()
+        if 'python2' in splittedLine:
+            pid = int(splittedLine[0])
+            os.kill(pid, signal.SIGUSR1)
+            time.sleep(15)
+            p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
 
 
 
@@ -49,12 +69,14 @@ if __name__ == "__main__":
                     startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
                     processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
 
-                    if int((datetime.datetime.now() - startTime_readable).total_seconds()) > threshold_stucked_module:
-                        log = open(log_filename, 'a')
-                        log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
-
                     if int(card) > 0:
+                        if int((datetime.datetime.now() - startTime_readable).total_seconds()) > threshold_stucked_module:
+                            log = open(log_filename, 'a')
+                            log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
+                            kill_module(queue)
+
                         table1.add_row([num, queue, card, startTime_readable, processed_time_readable, path])
+
                     else:
                         table2.add_row([num, queue, card, startTime_readable, processed_time_readable, path])
 
