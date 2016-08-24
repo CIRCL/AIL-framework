@@ -14,27 +14,48 @@ import json
 from prettytable import PrettyTable
 
 # CONFIG VARIABLES
-threshold_stucked_module = 1*60*1 #1 hour
+threshold_stucked_module = 60*60*1 #1 hour
+refreshRate = 1
 log_filename = "../logs/moduleInfo.log"
 command_search_pid = "ps a -o pid,cmd | grep {}"
 command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{}.py; read x\""
 
 
-def kill_module(module):
-    print 'trying to kill module:', module
-    time.sleep(8)
-
-    time.sleep(1)
+def getPid(module):
     p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
-
     for line in p.stdout:
         splittedLine = line.split()
         if 'python2' in splittedLine:
-            pid = int(splittedLine[0])
-            os.kill(pid, signal.SIGUSR1)
-            time.sleep(15)
+            return int(splittedLine[0])
+        else:
+            return None
+
+
+def kill_module(module):
+    print ''
+    print '-> trying to kill module:', module
+
+    pid = getPid(module)
+    if pid is not None:
+        os.kill(pid, signal.SIGUSR1)
+        time.sleep(1)
+        if getPid(module) is None:
+            print module, 'has been killed'
+            print 'restarting', module, '...'
             p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
 
+        else:
+            print 'killing failed, retrying...'
+            time.sleep(3)
+            os.kill(pid, signal.SIGUSR1)
+            time.sleep(1)
+            if getPid(module) is None:
+                print module, 'has been killed'
+                print 'restarting', module, '...'
+                p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
+            else:
+                print 'killing failed!'
+    time.sleep(7)
 
 
 if __name__ == "__main__":
@@ -86,4 +107,4 @@ if __name__ == "__main__":
         print '\n'
         print 'Ideling queues:\n'
         print table2
-        time.sleep(5)
+        time.sleep(refreshRate)
