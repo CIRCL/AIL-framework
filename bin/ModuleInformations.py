@@ -29,7 +29,8 @@ if __name__ == "__main__":
 
     while True:
 
-        table = PrettyTable(['#', 'Queue', 'Amount', 'Paste start time', 'Processing time for current paste (H:M:S)', 'Paste hash'], sortby="Processing time for current paste (H:M:S)", reversesort=True)
+        table1 = PrettyTable(['#', 'Queue', 'Amount', 'Paste start time', 'Processing time for current paste (H:M:S)', 'Paste hash'], sortby="Processing time for current paste (H:M:S)", reversesort=True)
+        table2 = PrettyTable(['#', 'Queue', 'Amount', 'Paste start time', 'Time since idle (H:M:S)', 'Last paste hash'], sortby="Time since idle (H:M:S)", reversesort=True)
         num = 0
         for queue, card in server.hgetall("queues").iteritems():
             key = "MODULE_" + queue
@@ -38,10 +39,14 @@ if __name__ == "__main__":
                 timestamp, path = value.split(", ")
                 if timestamp is not None and path is not None:
                     num += 1
-                    startTime_readable = datetime.datetime.utcfromtimestamp(int(timestamp))
+                    startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
                     processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
-                    table.add_row([num, queue, card, startTime_readable, processed_time_readable, path])
+                    if int(card) > 0:
+                        table1.add_row([num, queue, card, startTime_readable, processed_time_readable, path])
+                    else:
+                        table2.add_row([num, queue, card, startTime_readable, processed_time_readable, path])
 
         os.system('clear') 
-        print table
-        time.sleep(1)
+        print table1
+        print table2
+        time.sleep(5)

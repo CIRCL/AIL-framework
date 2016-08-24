@@ -134,7 +134,7 @@ class Process(object):
         self.r_temp.hset('queues', self.subscriber_name,
                          int(self.r_temp.scard(in_set)))
         message = self.r_temp.spop(in_set)
-        timestamp = int(time.mktime(datetime.datetime.utcnow().timetuple()))
+        timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
         dir_name = os.environ['AIL_HOME']+self.config.get('Directories', 'pastes')
 
         if message is None:
@@ -142,7 +142,6 @@ class Process(object):
 
         else:
             try:
-                #path = message[message.index(dir_name)+len(dir_name):message.index(".gz")]
                 path = message.split(".")[-2].split("/")[-1]
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name, value)
