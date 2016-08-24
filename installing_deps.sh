@@ -17,6 +17,9 @@ sudo apt-get install libadns1 libadns1-dev
 #Needed for redis-lvlDB
 sudo apt-get install libev-dev libgmp-dev
 
+#Need for generate-data-flow graph
+sudo apt-get install graphviz
+
 #needed for mathplotlib
 test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
 sudo easy_install -U distribute
