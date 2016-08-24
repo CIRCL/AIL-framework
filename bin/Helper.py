@@ -16,6 +16,7 @@ import ConfigParser
 import os
 import zmq
 import time
+import datetime
 import json
 
 
@@ -132,7 +133,26 @@ class Process(object):
         in_set = self.subscriber_name + 'in'
         self.r_temp.hset('queues', self.subscriber_name,
                          int(self.r_temp.scard(in_set)))
-        return self.r_temp.spop(in_set)
+        message = self.r_temp.spop(in_set)
+        timestamp = int(time.mktime(datetime.datetime.utcnow().timetuple()))
+        dir_name = os.environ['AIL_HOME']+self.config.get('Directories', 'pastes')
+
+        if message is None:
+            return None
+
+        else:
+            try:
+                #path = message[message.index(dir_name)+len(dir_name):message.index(".gz")]
+                path = message.split(".")[-2].split("/")[-1]
+                value = str(timestamp) + ", " + path
+                self.r_temp.set("MODULE_"+self.subscriber_name, value)
+                return message
+
+            except:
+                path = "?"
+                value = str(timestamp) + ", " + path
+                self.r_temp.set("MODULE_"+self.subscriber_name, value)
+                return message
 
     def populate_set_out(self, msg, channel=None):
         # multiproc

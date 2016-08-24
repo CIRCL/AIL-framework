@@ -22,8 +22,7 @@ from pubsublogger import publisher
 from packages import lib_words
 import datetime
 import calendar
-
-from Helper import Process
+import ConfigParser
 
 # Config Variables
 Refresh_rate = 60*5 #sec
@@ -96,8 +95,14 @@ if __name__ == '__main__':
     # Script is the default channel used for the modules.
     publisher.channel = 'Script'
 
-    config_section = 'CurveManageTopSets'
-    p = Process(config_section)
+    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+    if not os.path.exists(configfile):
+        raise Exception('Unable to find the configuration file. \
+                        Did you set environment variables? \
+                        Or activate the virtualenv.')
+    
+    cfg = ConfigParser.ConfigParser()
+    cfg.read(configfile)
 
     server_term = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_TermFreq", "host"),
@@ -113,7 +118,6 @@ if __name__ == '__main__':
 
     while True:
         # Get one message from the input queue (module only work if linked with a queue)
-        message = p.get_from_set()
         if message is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
             print 'sleeping'
