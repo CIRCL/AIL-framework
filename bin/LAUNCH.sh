@@ -114,31 +114,31 @@ function launching_scripts {
 
     screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Duplicate" bash -c './Duplicate_ssdeep_v2.py; read x'
+    screen -S "Script" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Attribute" bash -c './Attribute.py; read x'
+    screen -S "Script" -X screen -t "Attributes" bash -c './Attributes.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Line" bash -c './Line.py; read x'
+    screen -S "Script" -X screen -t "Lines" bash -c './Lines.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "DomainClassifier" bash -c './DomClassifier.py; read x'
+    screen -S "Script" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Categ" bash -c './Categ.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "CreditCard" bash -c './CreditCard.py; read x'
+    screen -S "Script" -X screen -t "CreditCards" bash -c './CreditCards.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Onion" bash -c './Onion.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Mail" bash -c './Mail.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Url" bash -c './Url.py; read x'
+    screen -S "Script" -X screen -t "Web" bash -c './Web.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Credential" bash -c './Credential.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Curve_topsets_manager" bash -c './Curve_manage_top_sets.py; read x'
+    screen -S "Script" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
     sleep 0.1
@@ -158,7 +158,9 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "Browse_warning_paste" bash -c './Browse_warning_paste.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "SentimentAnalyser" bash -c './SentimentAnalyser.py; read x'
+    screen -S "Script" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py -k 0; read x'
 
 }
 

@@ -17,6 +17,9 @@ sudo apt-get install libadns1 libadns1-dev
 #Needed for redis-lvlDB
 sudo apt-get install libev-dev libgmp-dev
 
+#Need for generate-data-flow graph
+sudo apt-get install graphviz
+
 #needed for mathplotlib
 test ! -L /usr/include/ft2build.h && sudo ln -s freetype2/ft2build.h /usr/include/
 sudo easy_install -U distribute
@@ -69,6 +72,7 @@ echo export AIL_LEVELDB=$(pwd)/redis-leveldb/ >> ./AILENV/bin/activate
 
 mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
 mkdir -p $AIL_HOME/LEVEL_DB_DATA/2016
+mkdir -p $AIL_HOME/LEVEL_DB_DATA/3016
 
 pip install -U pip
 pip install -r pip_packages_requirement.txt

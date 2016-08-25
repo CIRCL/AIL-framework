@@ -81,8 +81,22 @@ def event_stream():
 
 def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
-    return [(queue, int(card)) for queue, card in
-            r.hgetall("queues").iteritems()]
+    data = [(queue, int(card)) for queue, card in r.hgetall("queues").iteritems()]
+    newData = []
+    for queue, card in data:
+        key = "MODULE_" + queue
+        value = r.get(key)
+        if value is not None:
+            timestamp, path = value.split(", ")
+            if timestamp is not None:
+                startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
+                processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
+                seconds = int((datetime.datetime.now() - startTime_readable).total_seconds())
+                newData.append( (queue, card, seconds) )
+            else:
+                newData.append( (queue, cards, 0) )
+
+    return newData
 
 
 def list_len(s):
