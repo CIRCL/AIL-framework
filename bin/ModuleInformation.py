@@ -130,7 +130,7 @@ if __name__ == "__main__":
                                 content[longest_col] = temp.strip()
                         t1.table_data[i] = content
 
-        t2 = AsciiTable(printarray2, title="Iddeling queues")
+        t2 = AsciiTable(printarray2, title="Idling queues")
         t2.column_max_width(1)
         if not t2.ok:
                 longest_col = t2.column_widths.index(max(t2.column_widths))

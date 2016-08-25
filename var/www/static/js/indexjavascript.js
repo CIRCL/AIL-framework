@@ -226,7 +226,7 @@ function create_queue_table() {
             td.appendChild(document.createTextNode(glob_tabvar.row1[i][j]));
             tr.appendChild(td)
         }
-        if (parseInt(glob_tabvar.row1[i][2]) > 60*1 && parseInt(glob_tabvar.row1[i][1]) > 2)
+        if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
             tr.className += " danger";
         else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)
             tr.className += " warning";
