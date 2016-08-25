@@ -160,6 +160,7 @@ def showpaste(content_range):
     p_lineinfo = paste.get_lines_info()
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
     p_duplicate_full_list = parseStringToList2(paste._get_p_duplicate())
+    p_duplicate_full_list = json.load(paste._get_p_duplicate())
     p_duplicate_list = []
     p_simil_list = []
     p_hashtype_list = []
@@ -290,19 +291,9 @@ def progressionCharts():
         return jsonify(bar_values)
 
     else:
-        redis_progression_name = 'top_progression_'+trending_name
-        redis_progression_name_set = 'top_progression_'+trending_name+'_set'
-
-        # Iterate over element in top_x_set and retreive their value
-        member_set = []
-        for keyw in r_serv_charts.smembers(redis_progression_name_set):
-            keyw_value = r_serv_charts.hget(redis_progression_name, keyw)
-            keyw_value = keyw_value if keyw_value is not None else 0
-            member_set.append((keyw, int(keyw_value)))
-        member_set.sort(key=lambda tup: tup[1], reverse=True)
-        if len(member_set) == 0:
-            member_set.append(("No relevant data", int(100)))
-        return jsonify(member_set)
+        redis_progression_name = "z_top_progression_" + trending_name
+        keyw_value = r_serv_charts.zrevrangebyscore(redis_progression_name, '+inf', '-inf', withscores=True, start=0, num=10)
+        return jsonify(keyw_value)
 
 @app.route("/_moduleCharts", methods=['GET'])
 def modulesCharts():
