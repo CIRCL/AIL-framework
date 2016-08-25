@@ -83,18 +83,27 @@ def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
     data = [(queue, int(card)) for queue, card in r.hgetall("queues").iteritems()]
     newData = []
+
+    curr_range = 50
     for queue, card in data:
-        key = "MODULE_" + queue
-        value = r.get(key)
-        if value is not None:
-            timestamp, path = value.split(", ")
-            if timestamp is not None:
-                startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
-                processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
-                seconds = int((datetime.datetime.now() - startTime_readable).total_seconds())
-                newData.append( (queue, card, seconds) )
-            else:
-                newData.append( (queue, cards, 0) )
+        key = "MODULE_" + queue + "_"
+        for i in range(1, 50):
+            curr_num = r.get("MODULE_"+ queue + "_" + str(i))
+            if curr_num is None:
+                curr_range = i
+                break
+
+        for moduleNum in range(1, curr_range):
+            value = r.get(key + str(moduleNum))
+            if value is not None:
+                timestamp, path = value.split(", ")
+                if timestamp is not None:
+                    startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
+                    processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
+                    seconds = int((datetime.datetime.now() - startTime_readable).total_seconds())
+                    newData.append( (queue, card, seconds, moduleNum) )
+                else:
+                    newData.append( (queue, cards, 0, moduleNum) )
 
     return newData
 

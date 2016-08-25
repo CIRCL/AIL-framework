@@ -223,7 +223,8 @@ function create_queue_table() {
         var tr = document.createElement('TR')
         for(j = 0; j < 2; j++){
             var td = document.createElement('TD')
-            td.appendChild(document.createTextNode(glob_tabvar.row1[i][j]));
+            var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
+            td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
             tr.appendChild(td)
         }
         if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
