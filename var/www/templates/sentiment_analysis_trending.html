@@ -508,7 +508,7 @@
         $("#"+activePage).addClass("active");
         $('[data-toggle="tooltip"]').tooltip(); 
 
-
+        draw_page();
         // Reload every 30min
         setTimeout(function(){ location.reload(); }, 30*60*1000);
    });

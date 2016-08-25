@@ -472,7 +472,7 @@ def sentiment_analysis_trending():
     return render_template("sentiment_analysis_trending.html")
 
 
-@app.route("/sentiment_analysis_getplotdata/")
+@app.route("/sentiment_analysis_getplotdata/", methods=['GET'])
 def sentiment_analysis_getplotdata():
     # Get the top providers based on number of pastes
     oneHour = 60*60
@@ -481,19 +481,22 @@ def sentiment_analysis_getplotdata():
     dateStart = dateStart.replace(minute=0, second=0, microsecond=0)
     dateStart_timestamp = calendar.timegm(dateStart.timetuple())
 
-    to_return = {}
-    range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
-    # if empty, get yesterday top providers
-    print 'providers_set_'+ get_date_range(1)[1]
-    range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
-    # if still empty, takes from all providers
-    if range_providers == []:
-        print 'today provider empty'
-        range_providers = r_serv_charts.smembers('all_provider_set')
+    getAllProviders = request.args.get('getProviders')
+    provider = request.args.get('provider')
+    if getAllProviders == 'True':
+        range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
+        # if empty, get yesterday top providers
+        range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
+        # if still empty, takes from all providers
+        if range_providers == []:
+            print 'today provider empty'
+            range_providers = r_serv_charts.smembers('all_provider_set')
+        return jsonify(range_providers)
 
-    for cur_provider in range_providers:
-        print cur_provider
-        cur_provider_name = cur_provider + '_'
+    elif provider is not None:
+        to_return = {}
+
+        cur_provider_name = provider + '_'
         list_date = {}
         for cur_timestamp in range(int(dateStart_timestamp), int(dateStart_timestamp)-sevenDays-oneHour, -oneHour):
             cur_set_name = cur_provider_name + str(cur_timestamp)
@@ -503,9 +506,10 @@ def sentiment_analysis_getplotdata():
                 cur_value = r_serv_sentiment.get(cur_id)
                 list_value.append(cur_value)
             list_date[cur_timestamp] = list_value
-        to_return[cur_provider] = list_date
+        to_return[provider] = list_date
 
-    return jsonify(to_return)
+        return jsonify(to_return)
+    return "Bad request"
 
 
 
