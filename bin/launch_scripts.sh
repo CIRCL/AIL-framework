@@ -56,4 +56,4 @@ echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
     sleep 0.1
     screen -S "Script" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py; read x'
+    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py -k 0; read x'
