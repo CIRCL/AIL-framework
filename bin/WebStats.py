@@ -77,12 +77,14 @@ def compute_progression(server, field_name, num_day, url_parsed):
                 member_set = []
                 for keyw in server.smembers(redis_progression_name_set):
                     member_set.append((keyw, int(server.hget(redis_progression_name, keyw))))
-                print member_set
                 member_set.sort(key=lambda tup: tup[1])
                 if member_set[0][1] < keyword_increase:
+                    print 'removing', member_set[0][0] + '('+str(member_set[0][1])+')', 'and adding', keyword, str(keyword_increase)
                     #remove min from set and add the new one
-                    server.srem(redis_progression_name_set, member_set[0])
+                    server.srem(redis_progression_name_set, member_set[0][0])
                     server.sadd(redis_progression_name_set, keyword)
+                    server.hdel(redis_progression_name, member_set[0][0])
+                    server.hset(redis_progression_name, keyword, keyword_increase)
 
 
 if __name__ == '__main__':
