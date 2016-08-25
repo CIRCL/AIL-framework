@@ -1,5 +1,41 @@
 
 /* Functions and config */
+function add_new_graph_today(id) {
+    return "<div id=\"panel-today\" class=\"panel panel-default pannelToday"+id+"\">" +
+                "<div class=\"panel-heading\">" +
+                    "<strong class=\"sparkLineStatsToday"+id+"t\">Graph "+id+"</strong>" +
+                    "<strong class=\"sparkLineStatsToday"+id+"s pull-right\">Avg</strong>" +
+                "</div>" +
+                "<div class=\"panel-body panelInside\">" +
+                    "<table class=\"table\">" +
+                        "<tbody>" +
+                            "<tr>" +
+                                "<td style=\"border-top: 0px solid #ddd;\"><div class=\"sparkLineStatsToday"+id+"\"></div></td> " +
+                                "<td style=\"border-top: 0px solid #ddd;\"><div class=\"sparkLineStatsToday"+id+"b\"></div></td> " +
+                            "</tr>" +
+                         "</tbody>" +
+                    "</table>" +
+                "</div>" +
+            "</div>";
+};
+function add_new_graph_week(id) {
+    return "<div id=\"panel-week\" class=\"panel panel-default pannelWeek"+id+"\">" +
+                "<div class=\"panel-heading\">" +
+                    "<strong class=\"sparkLineStatsWeek"+id+"t\">Graph "+id+"</strong>" +
+                    "<strong class=\"sparkLineStatsWeek"+id+"s pull-right\">Avg</strong>" +
+                "</div>" +
+                "<div class=\"panel-body panelInside\">" +
+                    "<table class=\"table\">" +
+                        "<tbody>" +
+                            "<tr>" +
+                                "<td style=\"border-top: 0px solid #ddd;\"><div class=\"sparkLineStatsWeek"+id+"\"></div></td> " +
+                                "<td style=\"border-top: 0px solid #ddd;\"><div class=\"sparkLineStatsWeek"+id+"b\"></div></td> " +
+                            "</tr>" +
+                         "</tbody>" +
+                    "</table>" +
+                "</div>" +
+            "</div>";
+}
 
  function generate_offset_to_time(num){
      var to_ret = {};
@@ -51,23 +87,45 @@
 
 var all_graph_day_sum = 0.0;
 var all_graph_hour_sum = 0.0;
+var all_graph_hour_sum_minus = 0.0;
 var all_graph_hour_maxVal = 0.0;
 var all_day_avg = 0.0;
 var all_day_avg_maxVal = 0.0;
 var graph_avg = [];
 var all_data = [];
+var provider_already_loaded = [];
+var totNumGraph = 0;
 
-function draw_page() {
-    $.getJSON("/sentiment_analysis_getplotdata/?getProviders=True",
-            function(data) {
-                var promises = [];
-                for(i=0; i<data.length; i++) {
-                    promises.push(query_and_plot(data[i], i));
+function draw_page(all) {
+    $.getJSON("/sentiment_analysis_getplotdata/?getProviders=True&all="+all,
+        function(data) {
+            var promises = [];
+
+            var the_length = provider_already_loaded.length == 0 ? 0 : provider_already_loaded.length;
+            for(i=0; i<data.length; i++) {
+                if(provider_already_loaded.indexOf(data[i]) != -1) {
+                    continue;
+                } else {
+                    totNumGraph++;
+                    if(i % 2 == 0) {
+                        $("#today_divl").append(add_new_graph_today(i+the_length+1));
+                        $("#week_divl").append(add_new_graph_week(i+the_length+1));
+                    }
+                    else {
+                        $("#today_divr").append(add_new_graph_today(i+the_length+1));
+                        $("#week_divr").append(add_new_graph_week(i+the_length+1));
+                    }
+                    provider_already_loaded.push(data[i])
+                    promises.push(query_and_plot(data[i], i+the_length));
+
                 }
-                $.when.apply($, promises).done( function (arg) {
-                    draw_widgets();
-                });
             }
+
+            $.when.apply($, promises).done( function (arg) {
+                draw_widgets();
+                $("#LoadAll").show('fast');
+            });
+        }
     );
 }
 
@@ -140,6 +198,7 @@ function query_and_plot(provider, graphNum) {
             }
             all_graph_day_sum += day_sum;
             all_graph_hour_sum += hour_sum;
+            all_graph_hour_sum_minus += hour_sum > 0 ? 0 : 1;
             all_graph_hour_maxVal = Math.abs(hour_sum) > all_graph_hour_maxVal ? Math.abs(hour_sum) : all_graph_hour_maxVal;
 
             var curr_avg = curr_sum / (curr_sum_elem);
@@ -225,6 +284,7 @@ function query_and_plot(provider, graphNum) {
 
 
 function draw_widgets() {
+
     /* ---------------- Gauge ---------------- */
     var gaugeOptions = {
         animateEasing: true,
@@ -237,3 +297,154 @@ function draw_widgets() {
         arcFillTotal: 20,
         incTot: 1.0,
 
+        arcBgColorLight: 200,
+        arcBgColorSat: 0,
+        arcStrokeFg: 20,
+        arcStrokeBg: 30,
+
+        colorArcFg: '#FF3300',
+        animateSpeed: 1,
+
+    };
+    // Clone object
+    var gaugeOptions2 = jQuery.extend(true, {}, gaugeOptions);
+    var gaugeOptions3 = jQuery.extend(true, {}, gaugeOptions);
+
+
+
+    gaugeOptions.appendTo = '#gauge_today_last_hour';
+    gaugeOptions.dialLabel = 'Last hour';
+    gaugeOptions.elementId = 'gauge1';
+    var piePercent = (all_graph_hour_sum / (totNumGraph - all_graph_hour_sum_minus)) / all_graph_hour_maxVal;
+    gaugeOptions.inc = piePercent;
+    var gauge_today_last_hour = new FlexGauge(gaugeOptions);
+
+    gaugeOptions2.appendTo = '#gauge_today_last_days';
+    gaugeOptions2.dialLabel = 'Today';
+    gaugeOptions2.elementId = 'gauge2';
+    piePercent = (all_day_avg / totNumGraph) / all_day_avg_maxVal;
+    gaugeOptions2.inc = piePercent;
+    var gauge_today_last_days = new FlexGauge(gaugeOptions2);
+
+    gaugeOptions3.appendTo = '#gauge_week';
+    gaugeOptions3.dialLabel = 'Week';
+    gaugeOptions3.elementId = 'gauge3';
+
+    var graph_avg_sum = 0.0;
+    var temp_max_val = 0.0;
+    for (i=0; i<graph_avg.length; i++){
+        graph_avg_sum += graph_avg[i][1];
+        temp_max_val = Math.abs(graph_avg[i][1]) > temp_max_val ? Math.abs(graph_avg[i][1]) : temp_max_val;
+    }
+
+    piePercent = (graph_avg_sum / graph_avg.length) / temp_max_val;
+    gaugeOptions3.inc = piePercent;
+    var gauge_today_last_days = new FlexGauge(gaugeOptions3);
+
+
+    /* --------- Sort providers -------- */
+
+    graph_avg.sort(function(a, b){return b[1]-a[1]});
+
+    for (i=1; i<6; i++){
+        $('.worst'+i).text(graph_avg[7-(i-1)][0]);
+        $('.best'+i).text(graph_avg[i-1][0]);
+    }
+
+    /* ----------- CanvasJS ------------ */
+
+    var comp_sum_day_pos = 0.0;
+    var comp_sum_day_neg = 0.0;
+    var comp_sum_hour_pos = 0.0;
+    var comp_sum_hour_neg = 0.0;
+    for(graphNum=0; graphNum<totNumGraph; graphNum++){
+        curr_graphData = all_data[graphNum];
+        var gauge_data = curr_graphData.slice(curr_graphData.length-24, curr_graphData.length);
+        for (i=1; i< gauge_data.length; i++){
+            comp_sum_day_pos += gauge_data[i].compoundPos;
+            comp_sum_day_neg += gauge_data[i].compoundNeg;
+
+            if(i == 23){
+                comp_sum_hour_pos += gauge_data[i].compoundPos;
+                comp_sum_hour_neg += gauge_data[i].compoundNeg;
+            }
+        }
+
+    }
+
+    var options_canvasJS_1 = {
+
+        animationEnabled: true,
+        axisY: {
+            tickThickness: 0,
+            lineThickness: 0,
+            valueFormatString: " ",
+            gridThickness: 0
+        },
+        axisX: {
+            tickThickness: 0,
+            lineThickness: 0,
+            labelFontSize: 0.1,
+        },
+        data: [
+            {
+                toolTipContent: "<span style='\"'color: {color};'\"'><strong>Positive: </strong></span><span><strong>{y}</strong></span>",
+                type: "bar",
+                color: "green",
+                dataPoints: [
+                    {y: comp_sum_hour_pos/totNumGraph}
+                ]
+            },
+            {
+                toolTipContent: "<span style='\"'color: {color};'\"'><strong>Negative: </strong></span><span><strong>{y}</strong></span>",
+                type: "bar",
+                color: "red",
+                dataPoints: [
+                    {y: comp_sum_hour_neg/totNumGraph}
+                ]
+            }
+        ]
+    };
+
+    var chart_canvas1 = new CanvasJS.Chart("bar_today_last_hour", options_canvasJS_1);
+
+    var options_canvasJS_2 = {
+
+        animationEnabled: true,
+        axisY: {
+            tickThickness: 0,
+            lineThickness: 0,
+            valueFormatString: " ",
+            gridThickness: 0
+        },
+        axisX: {
+            tickThickness: 0,
+            lineThickness: 0,
+            labelFontSize: 0.1,
+        },
+        data: [
+        {
+            toolTipContent: "<span style='\"'color: {color};'\"'><strong>Positive: </strong></span><span><strong>{y}</strong></span>",
+            type: "bar",
+            color: "green",
+            dataPoints: [
+                {y: comp_sum_day_pos/totNumGraph}
+            ]
+        },
+        {
+            toolTipContent: "<span style='\"'color: {color};'\"'><strong>Negative: </strong></span><span><strong>{y}</strong></span>",
+            type: "bar",
+            color: "red",
+            dataPoints: [
+                {y: comp_sum_day_neg/totNumGraph}
+            ]
+        }
+        ]
+    };
+
+    var chart_canvas2 = new CanvasJS.Chart("bar_today_last_days", options_canvasJS_2);
+
+    chart_canvas1.render();
+    chart_canvas2.render();
+
+}

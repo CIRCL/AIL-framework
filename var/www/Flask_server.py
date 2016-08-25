@@ -483,15 +483,20 @@ def sentiment_analysis_getplotdata():
 
     getAllProviders = request.args.get('getProviders')
     provider = request.args.get('provider')
+    allProvider = request.args.get('all')
     if getAllProviders == 'True':
-        range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
-        # if empty, get yesterday top providers
-        range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
-        # if still empty, takes from all providers
-        if range_providers == []:
-            print 'today provider empty'
+        if allProvider == "True":
             range_providers = r_serv_charts.smembers('all_provider_set')
-        return jsonify(range_providers)
+            return jsonify(list(range_providers))
+        else:
+            range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
+            # if empty, get yesterday top providers
+            range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
+            # if still empty, takes from all providers
+            if range_providers == []:
+                print 'today provider empty'
+                range_providers = r_serv_charts.smembers('all_provider_set')
+            return jsonify(range_providers)
 
     elif provider is not None:
         to_return = {}
