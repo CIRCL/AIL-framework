@@ -112,40 +112,6 @@ def list_len(s):
     return len(s)
 app.jinja_env.filters['list_len'] = list_len
 
-def parseStringToList(the_string):
-    strList = ""
-    elemList = []
-    for c in the_string:
-        if c != ']':
-            if c != '[' and c !=' ' and c != '"':
-                strList += c
-        else:
-            the_list = strList.split(',')
-            if len(the_list) == 3:
-               elemList = elemList + the_list
-            elif len(the_list) == 2:
-               elemList.append(the_list)
-            elif len(the_list) > 1:
-               elemList.append(the_list[1:])
-            strList = ""
-    return elemList
-
-def parseStringToList2(the_string):
-    if the_string == []:
-        return []
-    else:
-        res = []
-        tab_str = the_string.split('], [')
-        tab_str[0] = tab_str[0][1:]+']'
-        tab_str[len(tab_str)-1] = '['+tab_str[len(tab_str)-1][:-1]
-        res.append(parseStringToList(tab_str[0]))
-        for i in range(1, len(tab_str)-2):
-            tab_str[i] = '['+tab_str[i]+']'
-            res.append(parseStringToList(tab_str[i]))
-        if len(tab_str) > 1:
-            res.append(parseStringToList(tab_str[len(tab_str)-1]))
-        return res
-
 
 def showpaste(content_range):
     requested_path = request.args.get('paste', '')
@@ -159,8 +125,7 @@ def showpaste(content_range):
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
-    p_duplicate_full_list = parseStringToList2(paste._get_p_duplicate())
-    p_duplicate_full_list = json.load(paste._get_p_duplicate())
+    p_duplicate_full_list = json.loads(paste._get_p_duplicate())
     p_duplicate_list = []
     p_simil_list = []
     p_hashtype_list = []
@@ -184,7 +149,7 @@ def showpaste(content_range):
         hash_types = []
         comp_vals = []
         for i in indices:
-            hash_types.append(p_duplicate_full_list[i][0])
+            hash_types.append(p_duplicate_full_list[i][0].encode('utf8'))
             comp_vals.append(p_duplicate_full_list[i][2])
             dup_list_removed.append(i)
 
