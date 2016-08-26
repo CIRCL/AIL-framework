@@ -8,6 +8,8 @@ sleep 0.1
 
 echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
+    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py -k 0 -c 1; read x'
+    sleep 0.1
     screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
@@ -55,5 +57,3 @@ echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
     screen -S "Script" -X screen -t "Browse_warning_paste" bash -c './Browse_warning_paste.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
-    sleep 0.1
-    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py; read x'
