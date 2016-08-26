@@ -227,6 +227,12 @@ function create_queue_table() {
             td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
             tr.appendChild(td)
         }
+        // Used to decide the color of the row
+        // We have glob_tabvar.row1[][j] with:
+        // - j=0: ModuleName
+        // - j=1: queueLength
+        // - j=2: LastProcessedPasteTime
+        // - j=3: Number of the module belonging in the same category
         if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
             tr.className += " danger";
         else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)

@@ -96,6 +96,9 @@ var all_data = [];
 var provider_already_loaded = [];
 var totNumGraph = 0;
 
+// Query all providers name then launch the query and plot process for each of them.
+// When everything is terminated, plot the widgets (Gauge, canvasJS, table)
+// input: all - set to 'True' if you take all providers
 function draw_page(all) {
     $.getJSON("/sentiment_analysis_getplotdata/?getProviders=True&all="+all,
         function(data) {
@@ -130,7 +133,9 @@ function draw_page(all) {
 }
 
 
-
+// Query data and plot it for a given provider
+// input - provider: The povider name to be plotted
+// input - graphNum: The number of the graph (Use to plot on correct div)
 function query_and_plot(provider, graphNum) {
     var query_plot = $.getJSON("/sentiment_analysis_getplotdata/?provider="+provider,
         function(data) {
@@ -186,8 +191,7 @@ function query_and_plot(provider, graphNum) {
                     max_value = Math.abs(pos-neg) > max_value ? Math.abs(pos-neg) : max_value;
 
                     if(curr_date >= dateStart+oneWeek-23*oneHour){
-                        max_value_day = Math.abs(pos-neg) > max_value_day ? Math.abs(pos-neg) : max_value_day;
-                        day_sum += (pos-neg);
+                        max_value_day = Math.abs(pos-neg) > max_value_day ? Math.abs(pos-neg) : max_value_day; day_sum += (pos-neg);
                         day_sum_elem++;
                     }
                     if(curr_date > dateStart+oneWeek-2*oneHour && curr_date <=dateStart+oneWeek-oneHour){
