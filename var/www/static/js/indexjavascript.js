@@ -258,13 +258,13 @@ function load_queues() {
         if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
             if (curves_labels2.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
                 tmp_tab2.push(0);
-                curves_labels2.push(glob_tabvar.row1[i][0].split("."));
+                curves_labels2.push(glob_tabvar.row1[i][0].split(".")[0]);
             }
         }
         else {
             if (curves_labels.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
                 tmp_tab.push(0);
-                curves_labels.push(glob_tabvar.row1[i][0].split("."));
+                curves_labels.push(glob_tabvar.row1[i][0].split(".")[0]);
             }
         }
     }
@@ -337,14 +337,14 @@ function load_queues() {
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
                         if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
                             if (queues_pushed.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
-                                queues_pushed.push(glob_tabvar.row1[i][0].split("."));
-                                tmp_values2.push(glob_tabvar.row1[i][1]);
+                                queues_pushed.push(glob_tabvar.row1[i][0].split(".")[0]);
+                                tmp_values2.push(parseInt(glob_tabvar.row1[i][1]));
                             }
                         }
                         else {
-                            if (curves_labels.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
-                                queues_pushed.push(glob_tabvar.row1[i][0].split("."));
-                                tmp_values.push(glob_tabvar.row1[i][1]);
+                            if (queues_pushed.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                                queues_pushed.push(glob_tabvar.row1[i][0].split(".")[0]);
+                                tmp_values.push(parseInt(glob_tabvar.row1[i][1]));
                             }
                             
                         }
