@@ -87,82 +87,100 @@ if __name__ == "__main__":
     if args.clear == 1:
         clearRedisModuleInfo()
 
-    while True:
 
-        curr_range = 50
-        printarray1 = []
-        printarray2 = []
-        for queue, card in server.hgetall("queues").iteritems():
-            key = "MODULE_" + queue + "_"
-            for i in range(1, 50):
-                curr_num = server.get("MODULE_"+ queue + "_" + str(i))
-                if curr_num is None:
-                    curr_range = i
-                    break
+    module_file_array = set()
+    with open('../doc/all_modules.txt', 'r') as module_file:
+        for line in module_file:
+            module_file_array.add(line[:-1])
 
-            for moduleNum in range(1, curr_range):
-                value = server.get(key + str(moduleNum))
-                if value is not None:
-                    timestamp, path = value.split(", ")
-                    if timestamp is not None and path is not None:
-                        startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
-                        processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
+        while True:
 
-                        if int(card) > 0:
-                            if int((datetime.datetime.now() - startTime_readable).total_seconds()) > threshold_stucked_module:
-                                log = open(log_filename, 'a')
-                                log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
-                                if args.autokill == 1:
-                                    kill_module(queue)
+            all_queue = set()
+            curr_range = 50
+            printarray1 = []
+            printarray2 = []
+            printarray3 = []
+            for queue, card in server.hgetall("queues").iteritems():
+                all_queue.add(queue)
+                key = "MODULE_" + queue + "_"
+                for i in range(1, 50):
+                    curr_num = server.get("MODULE_"+ queue + "_" + str(i))
+                    if curr_num is None:
+                        curr_range = i
+                        break
 
-                            printarray1.append([str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)])
+                for moduleNum in range(1, curr_range):
+                    value = server.get(key + str(moduleNum))
+                    if value is not None:
+                        timestamp, path = value.split(", ")
+                        if timestamp is not None and path is not None:
+                            startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
+                            processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
 
-                        else:
-                            printarray2.append([str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)])
+                            if int(card) > 0:
+                                if int((datetime.datetime.now() - startTime_readable).total_seconds()) > threshold_stucked_module:
+                                    log = open(log_filename, 'a')
+                                    log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
+                                    if args.autokill == 1:
+                                        kill_module(queue)
 
-        printarray1.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
-        printarray2.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
-        printarray1.insert(0,["Queue", "#", "Amount", "Paste start time", "Processing time for current paste (H:M:S)", "Paste hash"])
-        printarray2.insert(0,["Queue", "#","Amount", "Paste start time", "Time since idle (H:M:S)", "Last paste hash"])
+                                printarray1.append([str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)])
 
-        os.system('clear')
-        t1 = AsciiTable(printarray1, title="Working queues")
-        t1.column_max_width(1)
-        if not t1.ok:
-                longest_col = t1.column_widths.index(max(t1.column_widths))
-                max_length_col = t1.column_max_width(longest_col)
-                if max_length_col > 0:
-                    for i, content in enumerate(t1.table_data):
-                        if len(content[longest_col]) > max_length_col:
-                            temp = ''
-                            for l in content[longest_col].splitlines():
-                                if len(l) > max_length_col:
-                                    temp += '\n'.join(textwrap.wrap(l, max_length_col)) + '\n'
-                                else:
-                                    temp += l + '\n'
-                                content[longest_col] = temp.strip()
-                        t1.table_data[i] = content
+                            else:
+                                printarray2.append([str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)])
 
-        t2 = AsciiTable(printarray2, title="Idling queues")
-        t2.column_max_width(1)
-        if not t2.ok:
-                longest_col = t2.column_widths.index(max(t2.column_widths))
-                max_length_col = t2.column_max_width(longest_col)
-                if max_length_col > 0:
-                    for i, content in enumerate(t2.table_data):
-                        if len(content[longest_col]) > max_length_col:
-                            temp = ''
-                            for l in content[longest_col].splitlines():
-                                if len(l) > max_length_col:
-                                    temp += '\n'.join(textwrap.wrap(l, max_length_col)) + '\n'
-                                else:
-                                    temp += l + '\n'
-                                content[longest_col] = temp.strip()
-                        t2.table_data[i] = content
+            for curr_queue in module_file_array:
+                if curr_queue not in all_queue:
+                    printarray3.append([curr_queue, "Not running"])
 
+            printarray1.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
+            printarray2.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
+            printarray1.insert(0,["Queue", "#", "Amount", "Paste start time", "Processing time for current paste (H:M:S)", "Paste hash"])
+            printarray2.insert(0,["Queue", "#","Amount", "Paste start time", "Time since idle (H:M:S)", "Last paste hash"])
+            printarray3.insert(0,["Queue", "State"])
 
-        print t1.table
-        print '\n'
-        print t2.table
+            os.system('clear')
+            t1 = AsciiTable(printarray1, title="Working queues")
+            t1.column_max_width(1)
+            if not t1.ok:
+                    longest_col = t1.column_widths.index(max(t1.column_widths))
+                    max_length_col = t1.column_max_width(longest_col)
+                    if max_length_col > 0:
+                        for i, content in enumerate(t1.table_data):
+                            if len(content[longest_col]) > max_length_col:
+                                temp = ''
+                                for l in content[longest_col].splitlines():
+                                    if len(l) > max_length_col:
+                                        temp += '\n'.join(textwrap.wrap(l, max_length_col)) + '\n'
+                                    else:
+                                        temp += l + '\n'
+                                    content[longest_col] = temp.strip()
+                            t1.table_data[i] = content
 
-        time.sleep(args.refresh)
+            t2 = AsciiTable(printarray2, title="Idling queues")
+            t2.column_max_width(1)
+            if not t2.ok:
+                    longest_col = t2.column_widths.index(max(t2.column_widths))
+                    max_length_col = t2.column_max_width(longest_col)
+                    if max_length_col > 0:
+                        for i, content in enumerate(t2.table_data):
+                            if len(content[longest_col]) > max_length_col:
+                                temp = ''
+                                for l in content[longest_col].splitlines():
+                                    if len(l) > max_length_col:
+                                        temp += '\n'.join(textwrap.wrap(l, max_length_col)) + '\n'
+                                    else:
+                                        temp += l + '\n'
+                                    content[longest_col] = temp.strip()
+                            t2.table_data[i] = content
+
+            t3 = AsciiTable(printarray3, title="Not running queues")
+            t3.column_max_width(1)
+
+            print t1.table
+            print '\n'
+            print t2.table
+            print '\n'
+            print t3.table
+
+            time.sleep(args.refresh)
