@@ -1,6 +1,18 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 
+'''
+
+This module can be use to see information of running modules.
+These information are logged in "logs/moduleInfo.log"
+
+It can also try to manage them by killing inactive one.
+However, it does not support mutliple occurence of the same module
+(It will kill the first one obtained by get)
+
+
+'''
+
 import time
 import datetime
 import redis
