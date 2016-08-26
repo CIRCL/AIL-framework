@@ -83,18 +83,27 @@ def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
     data = [(queue, int(card)) for queue, card in r.hgetall("queues").iteritems()]
     newData = []
+
+    curr_range = 50
     for queue, card in data:
-        key = "MODULE_" + queue
-        value = r.get(key)
-        if value is not None:
-            timestamp, path = value.split(", ")
-            if timestamp is not None:
-                startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
-                processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
-                seconds = int((datetime.datetime.now() - startTime_readable).total_seconds())
-                newData.append( (queue, card, seconds) )
-            else:
-                newData.append( (queue, cards, 0) )
+        key = "MODULE_" + queue + "_"
+        for i in range(1, 50):
+            curr_num = r.get("MODULE_"+ queue + "_" + str(i))
+            if curr_num is None:
+                curr_range = i
+                break
+
+        for moduleNum in range(1, curr_range):
+            value = r.get(key + str(moduleNum))
+            if value is not None:
+                timestamp, path = value.split(", ")
+                if timestamp is not None:
+                    startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
+                    processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
+                    seconds = int((datetime.datetime.now() - startTime_readable).total_seconds())
+                    newData.append( (queue, card, seconds, moduleNum) )
+                else:
+                    newData.append( (queue, cards, 0, moduleNum) )
 
     return newData
 
@@ -102,40 +111,6 @@ def get_queues(r):
 def list_len(s):
     return len(s)
 app.jinja_env.filters['list_len'] = list_len
-
-def parseStringToList(the_string):
-    strList = ""
-    elemList = []
-    for c in the_string:
-        if c != ']':
-            if c != '[' and c !=' ' and c != '"':
-                strList += c
-        else:
-            the_list = strList.split(',')
-            if len(the_list) == 3:
-               elemList = elemList + the_list
-            elif len(the_list) == 2:
-               elemList.append(the_list)
-            elif len(the_list) > 1:
-               elemList.append(the_list[1:])
-            strList = ""
-    return elemList
-
-def parseStringToList2(the_string):
-    if the_string == []:
-        return []
-    else:
-        res = []
-        tab_str = the_string.split('], [')
-        tab_str[0] = tab_str[0][1:]+']'
-        tab_str[len(tab_str)-1] = '['+tab_str[len(tab_str)-1][:-1]
-        res.append(parseStringToList(tab_str[0]))
-        for i in range(1, len(tab_str)-2):
-            tab_str[i] = '['+tab_str[i]+']'
-            res.append(parseStringToList(tab_str[i]))
-        if len(tab_str) > 1:
-            res.append(parseStringToList(tab_str[len(tab_str)-1]))
-        return res
 
 
 def showpaste(content_range):
@@ -150,7 +125,7 @@ def showpaste(content_range):
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
-    p_duplicate_full_list = parseStringToList2(paste._get_p_duplicate())
+    p_duplicate_full_list = json.loads(paste._get_p_duplicate())
     p_duplicate_list = []
     p_simil_list = []
     p_hashtype_list = []
@@ -174,7 +149,7 @@ def showpaste(content_range):
         hash_types = []
         comp_vals = []
         for i in indices:
-            hash_types.append(p_duplicate_full_list[i][0])
+            hash_types.append(p_duplicate_full_list[i][0].encode('utf8'))
             comp_vals.append(p_duplicate_full_list[i][2])
             dup_list_removed.append(i)
 
@@ -281,19 +256,9 @@ def progressionCharts():
         return jsonify(bar_values)
 
     else:
-        redis_progression_name = 'top_progression_'+trending_name
-        redis_progression_name_set = 'top_progression_'+trending_name+'_set'
-
-        # Iterate over element in top_x_set and retreive their value
-        member_set = []
-        for keyw in r_serv_charts.smembers(redis_progression_name_set):
-            keyw_value = r_serv_charts.hget(redis_progression_name, keyw)
-            keyw_value = keyw_value if keyw_value is not None else 0
-            member_set.append((keyw, int(keyw_value)))
-        member_set.sort(key=lambda tup: tup[1], reverse=True)
-        if len(member_set) == 0:
-            member_set.append(("No relevant data", int(100)))
-        return jsonify(member_set)
+        redis_progression_name = "z_top_progression_" + trending_name
+        keyw_value = r_serv_charts.zrevrangebyscore(redis_progression_name, '+inf', '-inf', withscores=True, start=0, num=10)
+        return jsonify(keyw_value)
 
 @app.route("/_moduleCharts", methods=['GET'])
 def modulesCharts():
@@ -472,7 +437,7 @@ def sentiment_analysis_trending():
     return render_template("sentiment_analysis_trending.html")
 
 
-@app.route("/sentiment_analysis_getplotdata/")
+@app.route("/sentiment_analysis_getplotdata/", methods=['GET'])
 def sentiment_analysis_getplotdata():
     # Get the top providers based on number of pastes
     oneHour = 60*60
@@ -481,19 +446,27 @@ def sentiment_analysis_getplotdata():
     dateStart = dateStart.replace(minute=0, second=0, microsecond=0)
     dateStart_timestamp = calendar.timegm(dateStart.timetuple())
 
-    to_return = {}
-    range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
-    # if empty, get yesterday top providers
-    print 'providers_set_'+ get_date_range(1)[1]
-    range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
-    # if still empty, takes from all providers
-    if range_providers == []:
-        print 'today provider empty'
-        range_providers = r_serv_charts.smembers('all_provider_set')
+    getAllProviders = request.args.get('getProviders')
+    provider = request.args.get('provider')
+    allProvider = request.args.get('all')
+    if getAllProviders == 'True':
+        if allProvider == "True":
+            range_providers = r_serv_charts.smembers('all_provider_set')
+            return jsonify(list(range_providers))
+        else:
+            range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
+            # if empty, get yesterday top providers
+            range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
+            # if still empty, takes from all providers
+            if range_providers == []:
+                print 'today provider empty'
+                range_providers = r_serv_charts.smembers('all_provider_set')
+            return jsonify(range_providers)
 
-    for cur_provider in range_providers:
-        print cur_provider
-        cur_provider_name = cur_provider + '_'
+    elif provider is not None:
+        to_return = {}
+
+        cur_provider_name = provider + '_'
         list_date = {}
         for cur_timestamp in range(int(dateStart_timestamp), int(dateStart_timestamp)-sevenDays-oneHour, -oneHour):
             cur_set_name = cur_provider_name + str(cur_timestamp)
@@ -503,9 +476,10 @@ def sentiment_analysis_getplotdata():
                 cur_value = r_serv_sentiment.get(cur_id)
                 list_value.append(cur_value)
             list_date[cur_timestamp] = list_value
-        to_return[cur_provider] = list_date
+        to_return[provider] = list_date
 
-    return jsonify(to_return)
+        return jsonify(to_return)
+    return "Bad request"
 
 
 

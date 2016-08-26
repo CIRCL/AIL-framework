@@ -108,6 +108,7 @@ class Process(object):
         self.modules = ConfigParser.ConfigParser()
         self.modules.read(modulesfile)
         self.subscriber_name = conf_section
+
         self.pubsub = None
         if self.modules.has_section(conf_section):
             self.pubsub = PubSub()
@@ -117,6 +118,15 @@ class Process(object):
             host=self.config.get('RedisPubSub', 'host'),
             port=self.config.get('RedisPubSub', 'port'),
             db=self.config.get('RedisPubSub', 'db'))
+
+        self.moduleNum = 1
+        for i in range(1, 50):
+            curr_num = self.r_temp.get("MODULE_"+self.subscriber_name + "_" + str(i))
+            if curr_num is None:
+                self.moduleNum = i
+                break
+
+
 
     def populate_set_in(self):
         # monoproc
@@ -142,15 +152,18 @@ class Process(object):
 
         else:
             try:
-                path = message.split(".")[-2].split("/")[-1]
+                if ".gz" in message:
+                    path = message.split(".")[-2].split("/")[-1]
+                else:
+                    path = "?"
                 value = str(timestamp) + ", " + path
-                self.r_temp.set("MODULE_"+self.subscriber_name, value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
                 return message
 
             except:
                 path = "?"
                 value = str(timestamp) + ", " + path
-                self.r_temp.set("MODULE_"+self.subscriber_name, value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
                 return message
 
     def populate_set_out(self, msg, channel=None):

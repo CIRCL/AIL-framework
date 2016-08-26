@@ -32,6 +32,9 @@ with open('../bin/packages/modules.cfg', 'r') as f:
                     continue
 
     output_set_graph = set()
+    with open('all_modules.txt', 'w') as f2:
+        for e in all_modules:
+            f2.write(e+"\n")
 
     for module in modules.keys():
         for stream_in in modules[module]['sub']:
