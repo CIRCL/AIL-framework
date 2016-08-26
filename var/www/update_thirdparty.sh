@@ -49,7 +49,7 @@ mv temp/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
 wget https://jqueryui.com/resources/download/jquery-ui-1.12.0.zip -O temp/jquery-ui.zip
 unzip temp/jquery-ui.zip -d temp/
 mv temp/jquery-ui-1.12.0/jquery-ui.min.js ./static/js/jquery-ui.min.js
-mv temp/jquery-ui-1.12.0/jquery-ui.min.css ./static/js/jquery-ui.min.css
+mv temp/jquery-ui-1.12.0/jquery-ui.min.css ./static/css/jquery-ui.min.css
 rm -rf temp
 
 mkdir -p ./static/image
