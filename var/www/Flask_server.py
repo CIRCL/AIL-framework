@@ -81,19 +81,13 @@ def event_stream():
 
 def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
-    data = [(queue, int(card)) for queue, card in r.hgetall("queues").iteritems()]
     newData = []
-
-    curr_range = 50
-    for queue, card in data:
+    for queue, card in r.hgetall("queues").iteritems():
         key = "MODULE_" + queue + "_"
-        for i in range(1, 50):
-            curr_num = r.get("MODULE_"+ queue + "_" + str(i))
-            if curr_num is None:
-                curr_range = i
-                break
+        keySet = "MODULE_TYPE_" + queue
 
-        for moduleNum in range(1, curr_range):
+        for moduleNum in r.smembers(keySet):
+    
             value = r.get(key + str(moduleNum))
             if value is not None:
                 timestamp, path = value.split(", ")

@@ -119,13 +119,7 @@ class Process(object):
             port=self.config.get('RedisPubSub', 'port'),
             db=self.config.get('RedisPubSub', 'db'))
 
-        self.moduleNum = 1
-        for i in range(1, 50):
-            curr_num = self.r_temp.get("MODULE_"+self.subscriber_name + "_" + str(i))
-            if curr_num is None:
-                self.moduleNum = i
-                break
-
+        self.moduleNum = os.getpid()
 
 
     def populate_set_in(self):
@@ -158,12 +152,14 @@ class Process(object):
                     path = "?"
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 
             except:
                 path = "?"
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 
     def populate_set_out(self, msg, channel=None):
