@@ -66,7 +66,18 @@
                   </label>
                   <strong style="top: 3px; position: relative;">Display queues</strong>
               <div>
-              <div class="table-responsive", id="queueing" style="margin-top:10px;"></div>
+              <div style="padding: 6px"> 
+                  <table id="queue-color-legend">
+                  <thead>
+                  </thead>
+                  <tbody>
+                      <tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #d0e9c6;overflow:hidden"></div></div></td><td> Working queues</td></tr>
+                      <tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #faf2cc;overflow:hidden"></div></div></td><td> Idling queues</td></tr>
+                      <tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #ebcccc;overflow:hidden"></div></div></td><td> Stucked queues</td></tr>
+                  </tbody>
+                  </table>
+              </div>
+              <div class="table-responsive", id="queueing" style="margin-top:10px; font-size: small;"></div>
              <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->

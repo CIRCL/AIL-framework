@@ -207,7 +207,7 @@ function create_queue_table() {
     table.appendChild(tableHead);
     table.appendChild(tableBody);
     var heading = new Array();
-    heading[0] = "Queue Name"
+    heading[0] = "Queue Name.PID"
     heading[1] = "Amount"
     var tr = document.createElement('TR');
     tableHead.appendChild(tr);
@@ -255,13 +255,17 @@ function load_queues() {
     var x = new Date();
 
     for (i = 0; i < glob_tabvar.row1.length; i++){
-        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
-            tmp_tab2.push(0);
-            curves_labels2.push(glob_tabvar.row1[i][0]);
+        if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
+            if (curves_labels2.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                tmp_tab2.push(0);
+                curves_labels2.push(glob_tabvar.row1[i][0].split("."));
+            }
         }
         else {
-            tmp_tab.push(0);
-            curves_labels.push(glob_tabvar.row1[i][0]);
+            if (curves_labels.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                tmp_tab.push(0);
+                curves_labels.push(glob_tabvar.row1[i][0].split("."));
+            }
         }
     }
     tmp_tab.unshift(x);
@@ -320,19 +324,29 @@ function load_queues() {
                     update_values();
 
                     if($('#button-toggle-queues').prop('checked')){
+                        $("#queue-color-legend").show();
                         create_queue_table();
                     }
                     else{
                         $("#queueing").html('');
+                        $("#queue-color-legend").hide();
                     }
 
 
+                    queues_pushed = []
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
-                        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
-                            tmp_values2.push(glob_tabvar.row1[i][1]);
+                        if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
+                            if (queues_pushed.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                                queues_pushed.push(glob_tabvar.row1[i][0].split("."));
+                                tmp_values2.push(glob_tabvar.row1[i][1]);
+                            }
                         }
                         else {
-                            tmp_values.push(glob_tabvar.row1[i][1]);
+                            if (curves_labels.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                                queues_pushed.push(glob_tabvar.row1[i][0].split("."));
+                                tmp_values.push(glob_tabvar.row1[i][1]);
+                            }
+                            
                         }
                     }
                     tmp_values.unshift(x);
