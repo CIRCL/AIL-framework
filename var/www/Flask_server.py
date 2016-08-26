@@ -677,7 +677,6 @@ def terms_plot_tool_data():
     else:
         value_range = []
         for timestamp in range(range_start, range_end+oneDay, oneDay):
-            print timestamp, term
             value = r_serv_term.hget(timestamp, term)
             curr_value_range = int(value) if value is not None else 0
             value_range.append([timestamp, curr_value_range])
