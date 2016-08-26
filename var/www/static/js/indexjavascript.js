@@ -244,12 +244,8 @@ function create_queue_table() {
     Tablediv.appendChild(table);
 }
 
-$(document).ready(function () {
-    if (typeof glob_tabvar == "undefined")
-        location.reload();
-    if (typeof glob_tabvar.row1 == "undefined")
-        location.reload();
 
+function load_queues() {
     var data = [];
     var data2 = [];
     var tmp_tab = [];
@@ -375,7 +371,19 @@ $(document).ready(function () {
       // something went wrong, hide the canvas container
       document.getElementById('myCanvasContainer').style.display = 'none';
     }
+}
 
+function manage_undefined() {
+    if (typeof glob_tabvar == "undefined")
+        setTimeout(function() { if (typeof glob_tabvar == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
+    else if (typeof glob_tabvar.row1 == "undefined")
+        setTimeout(function() { if (typeof glob_tabvar.row1 == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
+    else
+        load_queues();
+}
+
+$(document).ready(function () {
+    manage_undefined();
 });
 
 
