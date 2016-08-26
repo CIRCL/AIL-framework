@@ -66,23 +66,7 @@ def compute_progression(server, field_name, num_day, url_parsed):
         # filter
         if (keyword_total_sum > threshold_total_sum) and (keyword_increase > threshold_increase):
             
-            if server.sismember(redis_progression_name_set, keyword): #if keyword is in the set
-                server.hset(redis_progression_name, keyword, keyword_increase) #update its value
-
-            elif (server.scard(redis_progression_name_set) < max_set_cardinality):
-                server.sadd(redis_progression_name_set, keyword)
-
-            else: #not in the set
-                #Check value for all members
-                member_set = []
-                for keyw in server.smembers(redis_progression_name_set):
-                    member_set.append((keyw, int(server.hget(redis_progression_name, keyw))))
-                print member_set
-                member_set.sort(key=lambda tup: tup[1])
-                if member_set[0][1] < keyword_increase:
-                    #remove min from set and add the new one
-                    server.srem(redis_progression_name_set, member_set[0])
-                    server.sadd(redis_progression_name_set, keyword)
+            server.zadd("z_top_progression_"+field_name, float(keyword_increase), keyword)
 
 
 if __name__ == '__main__':

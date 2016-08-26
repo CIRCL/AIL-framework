@@ -233,15 +233,15 @@
             $.getJSON(url, function (data) {
                 if (data.length != 0) {
                     var html_to_add = "";
-                    html_to_add += "<table class=\"table table-striped\">";
+                    html_to_add += "<table id=\"modal-table\" class=\"table table-striped\">";
                     html_to_add += "<thead>";
                       html_to_add += "<tr>";
                         html_to_add += "<th>Source</th>";
                         html_to_add += "<th>Date</th>";
                         html_to_add += "<th>Encoding</th>";
                         html_to_add += "<th>Size (Kb)</th>";
-                        html_to_add += "<th>Mime</th>";
-                        html_to_add += "<th>(# lines, Max line length)</th>";
+                        html_to_add += "<th># lines</th>";
+                        html_to_add += "<th>Max length</th>";
                         html_to_add += "<th>Preview</th>";
                       html_to_add += "</tr>";
                     html_to_add += "</thead>";
@@ -253,8 +253,8 @@
                                 html_to_add += "<td>"+curr_data.date+"</td>";
                                 html_to_add += "<td>"+curr_data.encoding+"</td>";
                                 html_to_add += "<td>"+curr_data.size+"</td>";
-                                html_to_add += "<td>"+curr_data.mime+"</td>";
-                                html_to_add += "<td>("+curr_data.lineinfo[0]+", "+curr_data.lineinfo[1]+")</td>";
+                                html_to_add += "<td>"+curr_data.lineinfo[0]+"</td>";
+                                html_to_add += "<td>"+curr_data.lineinfo[1]+"</td>";
                                 html_to_add += "<td><div class=\"row\"><button class=\"btn btn-xs btn-default\" data-toggle=\"popover\" data-placement=\"left\" data-content=\""+curr_data.content+"\">Preview content</button><a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+curr_data.path+"&num=0\">  <button type=\"button\" class=\"btn btn-xs btn-info\">Show Paste</button></a></div></td>";
 
                             html_to_add += "</tr>";
@@ -264,6 +264,7 @@
                     $("#mymodalbody").html(html_to_add);
                     $("[data-toggle=popover]").popover();
                     $("#button_show_plot").attr("href", "{{ url_for('terms_plot_tool')}}"+"?term="+the_modal.attr('data-term') );
+	            $('#modal-table').DataTable();
                 } else {
                     $("#mymodalbody").html("No paste containing this term has been received yet.");
                     $("#button_show_plot").attr("href", "{{ url_for('terms_plot_tool')}}"+"?term="+the_modal.attr('data-term') );

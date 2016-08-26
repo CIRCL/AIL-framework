@@ -10,6 +10,7 @@ textblob
 numpy
 matplotlib
 networkx
+terminaltables
 
 #Tokeniser
 nltk
