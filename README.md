@@ -7,7 +7,7 @@ AIL
 
 AIL framework - Framework for Analysis of Information Leaks
 
-AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
+AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
 
@@ -38,7 +38,7 @@ Terms manager and occurence
 ![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
 
 
-AIL framework screencast: https://www.youtube.com/watch?v=9idfHCIMzBY
+[AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
 
 Features
 --------
@@ -54,7 +54,7 @@ Features
 * A full-text indexer module to index unstructured information
 * Modules and web statistics 
 * Global sentiment analysis for each providers based on nltk vader module
-* Terms tracking and occurence
+* Terms tracking and occurrence
 * Many more modules for extracting phone numbers, credentials and others
 
 Installation
