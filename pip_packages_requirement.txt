@@ -40,7 +40,7 @@ pycountry
 PySocks
 
 #ASN lookup requirements
-http://adns-python.googlecode.com/files/adns-python-1.2.1.tar.gz
+https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/adns-python/adns-python-1.2.1.tar.gz
 https://github.com/trolldbois/python-cymru-services/archive/master.zip
 
 https://github.com/saffsd/langid.py/archive/master.zip
