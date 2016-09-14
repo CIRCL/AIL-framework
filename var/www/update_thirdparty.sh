@@ -41,9 +41,9 @@ wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.stack.js -O 
 
 #Ressources for sparkline and canvasJS
 wget http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js -O ./static/js/jquery.sparkline.min.js
+mkdir temp
 wget http://canvasjs.com/fdm/chart/ -O temp/canvasjs.zip
 unzip temp/canvasjs.zip -d temp/
-mkdir temp
 mv temp/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
 rm -rf temp
 
