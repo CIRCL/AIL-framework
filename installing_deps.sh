@@ -47,6 +47,10 @@ popd
 test ! -d tlsh && git clone git://github.com/trendmicro/tlsh.git
 pushd tlsh/
 ./make.sh
+pushd build/release/
+sudo make install
+sudo ldconfig
+popd
 popd
 
 # REDIS LEVEL DB #
