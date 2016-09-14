@@ -97,6 +97,7 @@ popd
 
 # Py tlsh
 pushd tlsh/py_ext
+git checkout a67c69b0cdfd168c62c159d41b8a3612ee2b0df1 # temporary, latest commit breaks the python module
 python setup.py build
 python setup.py install
 
