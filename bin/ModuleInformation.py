@@ -29,6 +29,7 @@ import textwrap
 threshold_stucked_module = 60*60*1 #1 hour
 log_filename = "../logs/moduleInfo.log"
 command_search_pid = "ps a -o pid,cmd | grep {}"
+command_search_name = "ps a -o pid,cmd | grep {}"
 command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{}.py; read x\""
 
 
@@ -44,6 +45,23 @@ def getPid(module):
 def clearRedisModuleInfo():
     for k in server.keys("MODULE_*"):
         server.delete(k)
+
+def cleanRedis():
+    for k in server.keys("MODULE_TYPE_*"):
+        moduleName = k[12:].split('_')[0]
+        for pid in server.smembers(k):
+            flag_pid_valid = False
+            proc = Popen([command_search_name.format(pid)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
+            for line in proc.stdout:
+                splittedLine = line.split()
+                if ('python2' in splittedLine or 'python' in splittedLine) and "./"+moduleName+".py" in splittedLine:
+                    flag_pid_valid = True
+
+            if not flag_pid_valid:
+                print flag_pid_valid, 'cleaning', pid, 'in', k
+                server.srem(k, pid)
+                time.sleep(5)
+
 
 def kill_module(module):
     print ''
@@ -76,8 +94,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Show info concerning running modules and log suspected stucked modules. May be use to automatically kill and restart stucked one.')
     parser.add_argument('-r', '--refresh', type=int, required=False, default=1, help='Refresh rate')
-    parser.add_argument('-k', '--autokill', type=int, required=True, default=1, help='Enable auto kill option (1 for TRUE, anything else for FALSE)')
-    parser.add_argument('-c', '--clear', type=int, required=False, default=1, help='Clear the current module information (Used to clear data from old launched modules)')
+    parser.add_argument('-k', '--autokill', type=int, required=False, default=0, help='Enable auto kill option (1 for TRUE, anything else for FALSE)')
+    parser.add_argument('-c', '--clear', type=int, required=False, default=0, help='Clear the current module information (Used to clear data from old launched modules)')
 
     args = parser.parse_args()
 
@@ -99,6 +117,7 @@ if __name__ == "__main__":
     if args.clear == 1:
         clearRedisModuleInfo()
 
+    lastTime = datetime.datetime.now()
 
     module_file_array = set()
     with open('../doc/all_modules.txt', 'r') as module_file:
@@ -108,20 +127,15 @@ if __name__ == "__main__":
         while True:
 
             all_queue = set()
-            curr_range = 50
             printarray1 = []
             printarray2 = []
             printarray3 = []
             for queue, card in server.hgetall("queues").iteritems():
                 all_queue.add(queue)
                 key = "MODULE_" + queue + "_"
-                for i in range(1, 50):
-                    curr_num = server.get("MODULE_"+ queue + "_" + str(i))
-                    if curr_num is None:
-                        curr_range = i
-                        break
+                keySet = "MODULE_TYPE_" + queue
 
-                for moduleNum in range(1, curr_range):
+                for moduleNum in server.smembers(keySet):
                     value = server.get(key + str(moduleNum))
                     if value is not None:
                         timestamp, path = value.split(", ")
@@ -147,8 +161,8 @@ if __name__ == "__main__":
 
             printarray1.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
             printarray2.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
-            printarray1.insert(0,["Queue", "#", "Amount", "Paste start time", "Processing time for current paste (H:M:S)", "Paste hash"])
-            printarray2.insert(0,["Queue", "#","Amount", "Paste start time", "Time since idle (H:M:S)", "Last paste hash"])
+            printarray1.insert(0,["Queue", "PID", "Amount", "Paste start time", "Processing time for current paste (H:M:S)", "Paste hash"])
+            printarray2.insert(0,["Queue", "PID","Amount", "Paste start time", "Time since idle (H:M:S)", "Last paste hash"])
             printarray3.insert(0,["Queue", "State"])
 
             os.system('clear')
@@ -195,4 +209,7 @@ if __name__ == "__main__":
             print '\n'
             print t3.table
 
+            if (datetime.datetime.now() - lastTime).total_seconds() > args.refresh*5: 
+                lastTime = datetime.datetime.now()
+                cleanRedis()
             time.sleep(args.refresh)

@@ -6,19 +6,19 @@ set -x
 sudo apt-get update
 
 sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
-    screen g++ python-tk unzip libsnappy-dev cmake
+    screen g++ python-tk unzip libsnappy-dev cmake -y
 
 #Needed for bloom filters
-sudo apt-get install libssl-dev libfreetype6-dev python-numpy
+sudo apt-get install libssl-dev libfreetype6-dev python-numpy -y
 
 # DNS deps
-sudo apt-get install libadns1 libadns1-dev
+sudo apt-get install libadns1 libadns1-dev -y
 
 #Needed for redis-lvlDB
-sudo apt-get install libev-dev libgmp-dev
+sudo apt-get install libev-dev libgmp-dev -y
 
 #Need for generate-data-flow graph
-sudo apt-get install graphviz
+sudo apt-get install graphviz -y
 
 #needed for mathplotlib
 sudo easy_install -U distribute

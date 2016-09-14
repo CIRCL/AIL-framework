@@ -24,7 +24,7 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'Browse_warning_paste'
+    config_section = 'BrowseWarningPaste'
 
     p = Process(config_section)
 

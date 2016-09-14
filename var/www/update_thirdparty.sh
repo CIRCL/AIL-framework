@@ -39,12 +39,17 @@ wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.pie.js -O ./
 wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.time.js -O ./static/js/jquery.flot.time.js
 wget https://raw.githubusercontent.com/flot/flot/master/jquery.flot.stack.js -O ./static/js/jquery.flot.stack.js
 
-#Ressources for sparkline and canvasJS
+#Ressources for sparkline and canvasJS and slider
 wget http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js -O ./static/js/jquery.sparkline.min.js
 mkdir temp
 wget http://canvasjs.com/fdm/chart/ -O temp/canvasjs.zip
 unzip temp/canvasjs.zip -d temp/
 mv temp/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
+
+wget https://jqueryui.com/resources/download/jquery-ui-1.12.0.zip -O temp/jquery-ui.zip
+unzip temp/jquery-ui.zip -d temp/
+mv temp/jquery-ui-1.12.0/jquery-ui.min.js ./static/js/jquery-ui.min.js
+mv temp/jquery-ui-1.12.0/jquery-ui.min.css ./static/css/jquery-ui.min.css
 rm -rf temp
 
 mkdir -p ./static/image
