@@ -4,24 +4,28 @@ set -e
 
 wget http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.js
 
-SBADMIN_VERSION='1.0.4'
+SBADMIN_VERSION='3.3.7'
 
 rm -rf temp
 mkdir temp
 
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}.zip
+wget https://github.com/BlackrockDigital/startbootstrap-sb-admin-2/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}-2.zip
 unzip temp/${SBADMIN_VERSION}.zip -d temp/
-mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin-2
+unzip temp/${SBADMIN_VERSION}-2.zip -d temp/
+mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin
+mv temp/startbootstrap-sb-admin-2-${SBADMIN_VERSION} temp/sb-admin-2
 
 rm -rf ./static/js/plugins
-mv temp/sb-admin-2/js/* ./static/js/
+mv temp/sb-admin/js/* ./static/js/
 
 rm -rf ./static/fonts/ ./static/font-awesome/
-mv temp/sb-admin-2/fonts/ ./static/
-mv temp/sb-admin-2/font-awesome/ ./static/
+mv temp/sb-admin/fonts/ ./static/
+mv temp/sb-admin/font-awesome/ ./static/
 
 rm -rf ./static/css/plugins/
-mv temp/sb-admin-2/css/* ./static/css/
+mv temp/sb-admin/css/* ./static/css/
+mv temp/sb-admin-2/dist/css/* ./static/css/
 
 rm -rf temp
 
