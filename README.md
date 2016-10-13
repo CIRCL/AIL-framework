@@ -108,11 +108,12 @@ How to feed the AIL framework
 -----------------------------
 
 For now, there are two different way to feed AIL with data:
+
 1. Be a collaborator of CIRCL and ask to access our feed. Then, it will be sent to the static IP your are using for AIL.
 
 2. You can setup [pystemon](https://github.com/CIRCL/pystemon) and use the custom feeder provided by AIL
 
-#Feeding AIL with pystemon
+###Feeding AIL with pystemon
 AIL is an analysis tool, not a collector!
 However, if you want to collect some paste and feed them to AIL, the procedure is described below.
 
