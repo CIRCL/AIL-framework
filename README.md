@@ -119,7 +119,7 @@ However, if you want to collect some pastes and feed them to AIL, the procedure 
 
 Nevertheless, moderate your queries!
 
-Here are the steps to setup your pystemon and feed data to AIL:
+Here are the steps to setup pystemon and feed data to AIL:
 
 1. Clone the [pystemon's git repository](https://github.com/CIRCL/pystemon)
 
