@@ -109,17 +109,23 @@ How to feed the AIL framework
 
 For now, there are two different way to feed AIL with data:
 1. Be a collaborator of CIRCL and ask to access our feed. Then, it will be sent to the static IP your are using for AIL.
+
 2. You can setup [pystemon](https://github.com/CIRCL/pystemon) and use the custom feeder provided by AIL
 
 #Feeding AIL with pystemon
-AIL is a analysis tool, not a collector!
-However, if you want to collect some paste and feed them to AIL, here is the procedure but moderate your queries quantity!!
+AIL is an analysis tool, not a collector!
+However, if you want to collect some paste and feed them to AIL, the procedure is described below.
+Nevertheless, moderate your queries!
 
 Here are the steps to setup your pystemon and feed data to AIL:
 1. Clone the [pystemon's git repository](https://github.com/CIRCL/pystemon)
+
 2. Install its python dependencies inside your virtual environment
+
 3. Launch pystemon ``` ./pystemon ```
+
 4. Edit the file bin/feeder/pystemon-feeder.py and modify the pystemonpath path accordingly
+
 5. Launch pystemon-feeder ``` ./pystemon-feeder.py ```
 
 
