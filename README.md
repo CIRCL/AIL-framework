@@ -115,16 +115,18 @@ For now, there are two different way to feed AIL with data:
 #Feeding AIL with pystemon
 AIL is an analysis tool, not a collector!
 However, if you want to collect some paste and feed them to AIL, the procedure is described below.
+
 Nevertheless, moderate your queries!
 
 Here are the steps to setup your pystemon and feed data to AIL:
+
 1. Clone the [pystemon's git repository](https://github.com/CIRCL/pystemon)
 
 2. Install its python dependencies inside your virtual environment
 
 3. Launch pystemon ``` ./pystemon ```
 
-4. Edit the file bin/feeder/pystemon-feeder.py and modify the pystemonpath path accordingly
+4. Edit the file ```bin/feeder/pystemon-feeder.py``` and modify the pystemonpath path accordingly
 
 5. Launch pystemon-feeder ``` ./pystemon-feeder.py ```
 
