@@ -24,6 +24,7 @@ sudo apt-get install graphviz -y
 sudo easy_install -U distribute
 # ssdeep
 sudo apt-get install libfuzzy-dev
+sudo apt-get install build-essential libffi-dev automake autoconf libtool -y
 
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
@@ -104,3 +105,6 @@ python setup.py install
 # Download the necessary NLTK corpora and sentiment vader
 HOME=$(pwd) python -m textblob.download_corpora
 python -m nltk.downloader vader_lexicon
+
+#Create the file all_module and update the graph in doc
+$AIL_HOME/doc/generate_modules_data_flow_graph.sh
