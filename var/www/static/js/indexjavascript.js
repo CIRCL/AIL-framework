@@ -207,7 +207,7 @@ function create_queue_table() {
     table.appendChild(tableHead);
     table.appendChild(tableBody);
     var heading = new Array();
-    heading[0] = "Queue Name"
+    heading[0] = "Queue Name.PID"
     heading[1] = "Amount"
     var tr = document.createElement('TR');
     tableHead.appendChild(tr);
@@ -221,22 +221,31 @@ function create_queue_table() {
 
     for(i = 0; i < (glob_tabvar.row1).length;i++){
         var tr = document.createElement('TR')
-        for(j = 0; j < (glob_tabvar.row1[i]).length; j++){
+        for(j = 0; j < 2; j++){
             var td = document.createElement('TD')
-            td.appendChild(document.createTextNode(glob_tabvar.row1[i][j]));
+            var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
+            td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
             tr.appendChild(td)
         }
+        // Used to decide the color of the row
+        // We have glob_tabvar.row1[][j] with:
+        // - j=0: ModuleName
+        // - j=1: queueLength
+        // - j=2: LastProcessedPasteTime
+        // - j=3: Number of the module belonging in the same category
+        if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
+            tr.className += " danger";
+        else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)
+            tr.className += " warning";
+        else
+            tr.className += " success";
         tableBody.appendChild(tr);
     }
     Tablediv.appendChild(table);
 }
 
-$(document).ready(function () {
-    if (typeof glob_tabvar == "undefined")
-        location.reload();
-    if (typeof glob_tabvar.row1 == "undefined")
-        location.reload();
 
+function load_queues() {
     var data = [];
     var data2 = [];
     var tmp_tab = [];
@@ -246,13 +255,17 @@ $(document).ready(function () {
     var x = new Date();
 
     for (i = 0; i < glob_tabvar.row1.length; i++){
-        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
-            tmp_tab2.push(0);
-            curves_labels2.push(glob_tabvar.row1[i][0]);
+        if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
+            if (curves_labels2.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                tmp_tab2.push(0);
+                curves_labels2.push(glob_tabvar.row1[i][0].split(".")[0]);
+            }
         }
         else {
-            tmp_tab.push(0);
-            curves_labels.push(glob_tabvar.row1[i][0]);
+            if (curves_labels.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                tmp_tab.push(0);
+                curves_labels.push(glob_tabvar.row1[i][0].split(".")[0]);
+            }
         }
     }
     tmp_tab.unshift(x);
@@ -311,19 +324,29 @@ $(document).ready(function () {
                     update_values();
 
                     if($('#button-toggle-queues').prop('checked')){
+                        $("#queue-color-legend").show();
                         create_queue_table();
                     }
                     else{
                         $("#queueing").html('');
+                        $("#queue-color-legend").hide();
                     }
 
 
+                    queues_pushed = []
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
-                        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
-                            tmp_values2.push(glob_tabvar.row1[i][1]);
+                        if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
+                            if (queues_pushed.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                                queues_pushed.push(glob_tabvar.row1[i][0].split(".")[0]);
+                                tmp_values2.push(parseInt(glob_tabvar.row1[i][1]));
+                            }
                         }
                         else {
-                            tmp_values.push(glob_tabvar.row1[i][1]);
+                            if (queues_pushed.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                                queues_pushed.push(glob_tabvar.row1[i][0].split(".")[0]);
+                                tmp_values.push(parseInt(glob_tabvar.row1[i][1]));
+                            }
+                            
                         }
                     }
                     tmp_values.unshift(x);
@@ -362,7 +385,19 @@ $(document).ready(function () {
       // something went wrong, hide the canvas container
       document.getElementById('myCanvasContainer').style.display = 'none';
     }
+}
 
+function manage_undefined() {
+    if (typeof glob_tabvar == "undefined")
+        setTimeout(function() { if (typeof glob_tabvar == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
+    else if (typeof glob_tabvar.row1 == "undefined")
+        setTimeout(function() { if (typeof glob_tabvar.row1 == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
+    else
+        load_queues();
+}
+
+$(document).ready(function () {
+    manage_undefined();
 });
 
 

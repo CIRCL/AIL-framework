@@ -16,6 +16,7 @@ import ConfigParser
 import os
 import zmq
 import time
+import datetime
 import json
 
 
@@ -107,6 +108,7 @@ class Process(object):
         self.modules = ConfigParser.ConfigParser()
         self.modules.read(modulesfile)
         self.subscriber_name = conf_section
+
         self.pubsub = None
         if self.modules.has_section(conf_section):
             self.pubsub = PubSub()
@@ -116,6 +118,9 @@ class Process(object):
             host=self.config.get('RedisPubSub', 'host'),
             port=self.config.get('RedisPubSub', 'port'),
             db=self.config.get('RedisPubSub', 'db'))
+
+        self.moduleNum = os.getpid()
+
 
     def populate_set_in(self):
         # monoproc
@@ -132,7 +137,30 @@ class Process(object):
         in_set = self.subscriber_name + 'in'
         self.r_temp.hset('queues', self.subscriber_name,
                          int(self.r_temp.scard(in_set)))
-        return self.r_temp.spop(in_set)
+        message = self.r_temp.spop(in_set)
+        timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
+        dir_name = os.environ['AIL_HOME']+self.config.get('Directories', 'pastes')
+
+        if message is None:
+            return None
+
+        else:
+            try:
+                if ".gz" in message:
+                    path = message.split(".")[-2].split("/")[-1]
+                else:
+                    path = "?"
+                value = str(timestamp) + ", " + path
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+                return message
+
+            except:
+                path = "?"
+                value = str(timestamp) + ", " + path
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+                return message
 
     def populate_set_out(self, msg, channel=None):
         # multiproc
