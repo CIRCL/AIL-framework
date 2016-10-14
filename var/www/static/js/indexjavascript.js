@@ -219,27 +219,41 @@ function create_queue_table() {
         tr.appendChild(th);
     }
 
-    for(i = 0; i < (glob_tabvar.row1).length;i++){
-        var tr = document.createElement('TR')
-        for(j = 0; j < 2; j++){
-            var td = document.createElement('TD')
-            var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
-            td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
-            tr.appendChild(td)
-        }
-        // Used to decide the color of the row
-        // We have glob_tabvar.row1[][j] with:
-        // - j=0: ModuleName
-        // - j=1: queueLength
-        // - j=2: LastProcessedPasteTime
-        // - j=3: Number of the module belonging in the same category
-        if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
-            tr.className += " danger";
-        else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)
-            tr.className += " warning";
-        else
-            tr.className += " success";
+    if ((glob_tabvar.row1).length == 0) {
+        var tr = document.createElement('TR');
+        var td = document.createElement('TD');
+        var td2 = document.createElement('TD');
+        td.appendChild(document.createTextNode("No running queues"));
+        td2.appendChild(document.createTextNode("Or no feed"));
+        td.className += " danger";
+        td2.className += " danger";
+        tr.appendChild(td);
+        tr.appendChild(td2);
         tableBody.appendChild(tr);
+    }
+    else {
+        for(i = 0; i < (glob_tabvar.row1).length;i++){
+            var tr = document.createElement('TR')
+            for(j = 0; j < 2; j++){
+                var td = document.createElement('TD')
+                var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
+                td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
+                tr.appendChild(td)
+            }
+            // Used to decide the color of the row
+            // We have glob_tabvar.row1[][j] with:
+            // - j=0: ModuleName
+            // - j=1: queueLength
+            // - j=2: LastProcessedPasteTime
+            // - j=3: Number of the module belonging in the same category
+            if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
+                tr.className += " danger";
+            else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)
+                tr.className += " warning";
+            else
+                tr.className += " success";
+            tableBody.appendChild(tr);
+        }
     }
     Tablediv.appendChild(table);
 }
