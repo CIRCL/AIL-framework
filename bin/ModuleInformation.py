@@ -120,7 +120,8 @@ if __name__ == "__main__":
     lastTime = datetime.datetime.now()
 
     module_file_array = set()
-    with open('../doc/all_modules.txt', 'r') as module_file:
+    path_allmod = os.path.join(os.environ['AIL_HOME'], 'doc/all_modules.txt')
+    with open(path_allmod, 'r') as module_file:
         for line in module_file:
             module_file_array.add(line[:-1])
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 
+import os
+
 content = ""
 modules = {}
 all_modules = []
@@ -8,7 +10,9 @@ curr_module = ""
 streamingPub = {}
 streamingSub = {}
 
-with open('../bin/packages/modules.cfg', 'r') as f:
+path = os.path.join(os.environ['AIL_BIN'], 'packages/modules.cfg')
+path2 = os.path.join(os.environ['AIL_HOME'], 'doc/all_modules.txt')
+with open(path, 'r') as f:
     for line in f:
         if line[0] != '#':
             if line[0] == '[':
@@ -32,7 +36,7 @@ with open('../bin/packages/modules.cfg', 'r') as f:
                     continue
 
     output_set_graph = set()
-    with open('all_modules.txt', 'w') as f2:
+    with open(path2, 'w') as f2:
         for e in all_modules:
             f2.write(e+"\n")
 
