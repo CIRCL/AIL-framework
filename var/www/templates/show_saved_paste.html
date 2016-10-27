@@ -5,31 +5,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
-  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
-
+   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+   <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+   <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+   <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>     
 </head>
 <body>
-  <div style="margin: 10px;">
-    <div class="row">
-        <div class="col-lg-12">
-            <h1 class="page-header" >Paste: {{ request.args.get('paste') }}</h1>
-            <h2 class="page-header" >({{ request.args.get('num') }})</h2>
-        </div>
-    </div>
-  
-  <div class="row">
     <div class="panel panel-default">
       <div class="panel-heading">
+        <h1 class="page-header" >Paste: {{ request.args.get('paste') }}</h1>
+        <h2 class="page-header" >({{ request.args.get('num') }})</h2>
+  
         <table class="table table-condensed">
           <thead>
             <tr>
@@ -88,7 +81,6 @@
       </div>
     </div>
   
-  </div>
 </body>
 <script>
     $('#tableDup').DataTable();
