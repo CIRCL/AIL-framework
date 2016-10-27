@@ -162,7 +162,7 @@ if __name__ == "__main__":
                 if dupl != []:
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis("p_duplicate", dupl)
-                    publisher.info('{}Detected {}'.format(to_print, len(dupl)))
+                    publisher.info('{}Detected {};{}'.format(to_print, len(dupl), PST.p_path))
                     print '{}Detected {}'.format(to_print, len(dupl))
 
                 y = time.time()

@@ -69,7 +69,7 @@ def analyse(url, path):
         if (result_path > 1) or (result_query > 1):
             print "Detected SQL in URL: "
             print urllib2.unquote(url)
-            to_print = 'SQLInjection;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL")
+            to_print = 'SQLInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL", paste.p_path)
             publisher.warning(to_print)
             #Send to duplicate
             p.populate_set_out(path, 'Duplicate')

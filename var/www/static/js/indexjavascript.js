@@ -170,7 +170,7 @@ function create_log_table(obj_json) {
     msage.appendChild(document.createTextNode(message.join(" ")));
 
     var paste_path = parsedmess[5];
-    var url_to_saved_paste = url_showSavedPath+"?paste="+paste_path+"&num=0";
+    var url_to_saved_paste = url_showSavedPath+"?paste="+paste_path+"&num="+parsedmess[0];
 
     var action_icon_a = document.createElement("A");
     action_icon_a.setAttribute("TARGET", "_blank");
