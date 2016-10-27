@@ -109,10 +109,10 @@ function create_log_table(obj_json) {
     var pdate = document.createElement('TD')
     var nam = document.createElement('TD')
     var msage = document.createElement('TD')
+    var inspect = document.createElement('TD')
 
     var chansplit = obj_json.channel.split('.');
     var parsedmess = obj_json.data.split(';');
-
 
     if (parsedmess[0] == "Global"){
         var paste_processed = parsedmess[4].split(" ")[2];
@@ -139,7 +139,7 @@ function create_log_table(obj_json) {
         source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
     }
     source_link.setAttribute("HREF",source_url);
-    source_link.setAttribute("TARGET", "_blank")
+    source_link.setAttribute("TARGET", "_blank");
     source_link.appendChild(document.createTextNode(parsedmess[1]));
 
     src.appendChild(source_link);
@@ -169,6 +169,18 @@ function create_log_table(obj_json) {
 
     msage.appendChild(document.createTextNode(message.join(" ")));
 
+    var paste_path = parsedmess[5];
+    var url_to_saved_paste = url_showSavedPath+"?paste="+paste_path+"&num=0";
+
+    var action_icon_a = document.createElement("A");
+    action_icon_a.setAttribute("TARGET", "_blank");
+    action_icon_a.setAttribute("HREF", url_to_saved_paste);
+    var action_icon_span = document.createElement('SPAN');
+    action_icon_span.className = "fa fa-search-plus";
+    action_icon_a.appendChild(action_icon_span);
+ 
+    inspect.appendChild(action_icon_a);
+
     tr.appendChild(time)
     tr.appendChild(chan);
     tr.appendChild(level);
@@ -177,6 +189,7 @@ function create_log_table(obj_json) {
     tr.appendChild(pdate);
     tr.appendChild(nam);
     tr.appendChild(msage);
+    tr.appendChild(inspect);
 
     if (tr.className == document.getElementById("checkbox_log_info").value && document.getElementById("checkbox_log_info").checked  == true) {
            tableBody.appendChild(tr);
