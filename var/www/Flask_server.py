@@ -78,6 +78,28 @@ def event_stream():
         if msg['type'] == 'pmessage' and level != "DEBUG":
             yield 'data: %s\n\n' % json.dumps(msg)
 
+def event_stream_getImportantPasteByModule(module_name):
+    index = 0
+    all_pastes_list = getPastebyType(r_serv_db, module_name)
+    for path in all_pastes_list:
+        index += 1
+        paste = Paste.Paste(path)
+        content = paste.get_p_content().decode('utf8', 'ignore')
+        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+        curr_date = str(paste._get_p_date())
+        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+        data = {}
+        data["module"] = module_name
+        data["index"] = index
+        data["path"] = path
+        data["content"] = content[0:content_range]
+        data["linenum"] = paste.get_lines_info()[0]
+        data["date"] = curr_date
+        data["char_to_display"] = max_preview_modal
+        data["finished"] = True if index == len(all_pastes_list) else False
+        print index
+        yield 'data: %s\n\n' % json.dumps(data)
+
 
 def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
@@ -452,8 +474,9 @@ def importantPasteByModule():
     paste_date = []
     paste_linenum = []
     all_path = []
+    allPastes = getPastebyType(r_serv_db, module_name)
 
-    for path in getPastebyType(r_serv_db, module_name):
+    for path in allPastes[0:10]:
         all_path.append(path)
         paste = Paste.Paste(path)
         content = paste.get_p_content().decode('utf8', 'ignore')
@@ -464,7 +487,17 @@ def importantPasteByModule():
         paste_date.append(curr_date)
         paste_linenum.append(paste.get_lines_info()[0])
 
-    return render_template("important_paste_by_module.html", all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal)
+    if len(allPastes) > 10:
+        finished = "" 
+    else:
+        finished = "display: none;"
+
+    return render_template("important_paste_by_module.html", moduleName=module_name, all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal, finished=finished)
+
+@app.route("/_getImportantPasteByModule")
+def getImportantPasteByModule():
+    module_name = request.args.get('moduleName')
+    return flask.Response(event_stream_getImportantPasteByModule(module_name), mimetype="text/event-stream")
 
 @app.route("/moduletrending/")
 def moduletrending():

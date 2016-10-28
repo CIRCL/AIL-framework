@@ -1,4 +1,5 @@
-<table class="table table-striped table-bordered table-hover" id="myTable">
+<img id="loading_gif_browse" src="{{url_for('static', filename='image/loading.gif') }}" heigt="20" width="20" style="margin: 2px; {{ finished }}">
+<table class="table table-striped table-bordered table-hover" id="myTable_{{ moduleName }}">
     <thead>
          <tr>
             <th>#</th>
@@ -25,10 +26,47 @@
 </br>
 </br>
 
+
 <script>
+function deploy_source() {
+    if(typeof(EventSource) !== "undefined" && typeof(source) !== "") {
+        var source = new EventSource("{{ url_for('getImportantPasteByModule') }}"+"?moduleName="+moduleName);
+        source.onmessage = function(event) {
+            var feed = jQuery.parseJSON( event.data );
+            var curr_numElem = parseInt($("#myTable_"+moduleName).attr('data-numElem'));
+            console.log(curr_numElem);
+            if (feed.index > curr_numElem & feed.module == moduleName) { // Avoid doubling the pastes
+                search_table.row.add( [
+                    feed.index,
+                   "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\"> "+ feed.path +"</a>",
+                    feed.date,
+                    feed.linenum,
+                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+feed.content+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+feed.index+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste=\""+feed.path+"\"&num=\""+feed.index+"\" data-path=\""+feed.path+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
+                ] ).draw( false );
+                $("#myTable_"+moduleName).attr('data-numElem', curr_numElem+1);
+                if(feed.finished) {
+                    $("#loading_gif_browse").hide();
+                }
+            }
+        };
+    } else {
+        console.log("Sorry, your browser does not support server-sent events...");
+    }
+}
+</script>
+
+
+<script>
+var moduleName = "{{ moduleName }}";
+var search_table;
+$("#myTable_"+moduleName).attr('data-numElem', "{{ all_path|length }}");
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
-    $('#myTable').dataTable({ "order": [[ 2, "desc" ]] });
+
+    search_table = $('#myTable_'+moduleName).DataTable({ "order": [[ 2, "desc" ]] });
+
+    deploy_source();
+
 });
 </script>
 
