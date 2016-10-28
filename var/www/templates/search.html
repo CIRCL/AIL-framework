@@ -153,10 +153,10 @@
             for(i=0; i<data.path_array.length; i++) {
                 search_table.row.add( [
                     i+offset,
-                    data.path_array[i],
+                   "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>",
                     data.date_array[i],
                     data.size_array[i],
-                    data.preview_array[i]
+                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+data.preview_array[i]+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste=\""+data.path_array[i]+"\"&num=\""+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
                 ] ).draw( false );
             }
             if (data.moreData == true)
