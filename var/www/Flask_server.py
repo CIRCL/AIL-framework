@@ -328,7 +328,6 @@ def search():
     paste_size = []
 
     # Search filename
-    print r_serv_pasteName.smembers(q[0])
     for path in r_serv_pasteName.smembers(q[0]):
         print path
         r.append(path)
@@ -351,7 +350,7 @@ def search():
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
-        results = searcher.search_page(query, 1, pagelen=20)
+        results = searcher.search_page(query, 1, pagelen=10)
         for x in results:
             r.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
@@ -370,7 +369,7 @@ def get_more_search_result():
     query = request.form['query']
     q = []
     q.append(query)
-    offset = request.form['offset']
+    offset = int(request.form['offset'])
 
     path_array = []
     preview_array = []
@@ -386,7 +385,7 @@ def get_more_search_result():
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
-        results = searcher.search_page(query, offset, pagelen=20)   
+        results = searcher.search_page(query, offset, pagelen=10)   
         for x in results:
             path_array.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
@@ -402,7 +401,11 @@ def get_more_search_result():
         to_return["preview_array"] = preview_array
         to_return["date_array"] = date_array
         to_return["size_array"] = size_array
-        to_return["moreData"] = False
+        if len(path_array) < 10: #pagelength
+            to_return["moreData"] = False
+        else:
+            to_return["moreData"] = True
+
     return jsonify(to_return)
 
 
