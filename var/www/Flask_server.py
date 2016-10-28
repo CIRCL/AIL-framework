@@ -351,7 +351,7 @@ def search():
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
-        results = searcher.search(query, limit=None)
+        results = searcher.search_page(query, 1, pagelen=20)
         for x in results:
             r.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
@@ -363,6 +363,47 @@ def search():
             paste_date.append(curr_date)
             paste_size.append(paste._get_p_size())
     return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
+
+
+@app.route("/get_more_search_result", methods=['POST'])
+def get_more_search_result():
+    query = request.form['query']
+    q = []
+    q.append(query)
+    offset = request.form['offset']
+
+    path_array = []
+    preview_array = []
+    date_array = []
+    size_array = []
+
+    from whoosh import index
+    from whoosh.fields import Schema, TEXT, ID
+    schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
+
+    indexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
+    ix = index.open_dir(indexpath)
+    from whoosh.qparser import QueryParser
+    with ix.searcher() as searcher:
+        query = QueryParser("content", ix.schema).parse(" ".join(q))
+        results = searcher.search_page(query, offset, pagelen=20)   
+        for x in results:
+            path_array.append(x.items()[0][1])
+            paste = Paste.Paste(x.items()[0][1])
+            content = paste.get_p_content().decode('utf8', 'ignore')
+            content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+            preview_array.append(content[0:content_range])
+            curr_date = str(paste._get_p_date())
+            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+            date_array.append(curr_date)
+            size_array.append(paste._get_p_size())
+        to_return = {}
+        to_return["path_array"] = path_array
+        to_return["preview_array"] = preview_array
+        to_return["date_array"] = date_array
+        to_return["size_array"] = size_array
+        to_return["moreData"] = False
+    return jsonify(to_return)
 
 
 @app.route("/")

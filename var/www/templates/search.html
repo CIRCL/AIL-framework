@@ -101,7 +101,7 @@
                                       <th>Action</th>
                                    </tr>
                               </thead>
-                              <tbody>
+                              <tbody id="table_body">
                           {% set i = 0 %}
                           {% for path in r %}
                                 <tr>
@@ -131,8 +131,39 @@
     $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
         $("#button_show_path").hide();
-	$('#myTable').dataTable();
+        var search_table = $('#myTable').DataTable();
+
+        var prev_query = "{{ query }}";
+        var offset = 1;
+        load_search_data(search_table, prev_query, offset);
     });
+
+</script>
+
+<script>
+
+// Loop to recover all the data from  get_more_search_results
+// And add it dynamically top the dataTable
+
+    function load_search_data(search_table, prev_query, offset) {
+        $.post( "{{ url_for('get_more_search_result') }}", { query: prev_query, offset: offset }).done(function( data ) {
+            console.log( "Data Loaded: " )
+            console.log( data );
+
+            for(i=0; i<data.path_array.length; i++) {
+                search_table.row.add( [
+                    i+offset,
+                    data.path_array[i],
+                    data.date_array[i],
+                    data.size_array[i],
+                    data.preview_array[i]
+                ] ).draw( false );
+            }
+            if (data.moreData == true)
+                load_search_data(prev_query, offset+i);
+        });
+    }
+
 </script>
 
 <!-- Dynamically update the modal -->
