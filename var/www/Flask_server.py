@@ -92,7 +92,7 @@ def event_stream_getImportantPasteByModule(module_name):
         data["module"] = module_name
         data["index"] = index
         data["path"] = path
-        data["content"] = content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " ")
+        data["content"] = content[0:content_range]
         data["linenum"] = paste.get_lines_info()[0]
         data["date"] = curr_date
         data["char_to_display"] = max_preview_modal
