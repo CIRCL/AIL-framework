@@ -198,6 +198,9 @@
 
 <!-- import graph function -->
 <script>
+    var table_track;
+    var table_black;
+
     $(document).ready(function(){
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
@@ -206,6 +209,14 @@
         $('[data-toggle="tooltip"]').tooltip();
 	table_track = $('#myTable').DataTable();
 	table_black = $('#myTable2').DataTable();
+
+        table_track.on( 'draw.dt', function () {
+            perform_binding();
+        });
+        table_black.on( 'draw.dt', function () {
+            perform_binding();
+        });
+
 
         $("#followTermInput").keyup(function(event){
             if(event.keyCode == 13){
