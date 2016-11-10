@@ -31,9 +31,7 @@
          white-space:pre-wrap;
          word-wrap:break-word;
       }
-      .modal-backdrop.fade {
-         opacity: 0;
-      }
+
   </style>
 
 </head>
@@ -69,7 +67,7 @@
             </div>
             <div class="modal-footer">
               <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
             </div>
           </div>
         </div>
@@ -129,6 +127,9 @@
 
 <!-- enable tooltip and dataTable -->
 <script>
+    var search_table;
+
+
     $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
 
@@ -150,7 +151,6 @@
 
     function load_search_data(init_num_of_elements_in_table, search_table, prev_query, offset) {
         var options = { query: prev_query, offset: offset };
-        console.log(options);
         $.post( "{{ url_for('get_more_search_result') }}", options).done(function( data ) {
 
             for(i=0; i<data.path_array.length; i++) {
@@ -160,7 +160,7 @@
                    "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>",
                     data.date_array[i],
                     data.size_array[i],
-                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste=\""+data.path_array[i]+"\"&num=\""+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
+                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
                 ] ).draw( false );
             }
             $("#numberOfRes").text(parseInt($("#numberOfRes").text()) + data.path_array.length);
@@ -172,10 +172,6 @@
         });
     }
 
-    $('#myTable').on( 'page.dt', function () {
-        setTimeout(function(){ $('[data-toggle="tooltip"]').tooltip(); }, 300);
-    } );
-
 </script>
 
 <!-- Dynamically update the modal -->
@@ -185,37 +181,6 @@
     var complete_paste = null;
     var char_to_display = {{ char_to_display }};
     var start_index = 0;
-
-    // On click, get html content from url and update the corresponding modal
-    $("[data-toggle='modal']").on("click", function (event) {
-        event.preventDefault();
-        var modal=$(this);
-        var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
-        $.get(url, function (data) {
-            $("#mymodalbody").html(data);
-            var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
-            button.tooltip();
-            $("#mymodalbody").children(".panel-default").append(button);
-
-            $("#button_show_path").attr('href', $(modal).attr('data-url'));
-            $("#button_show_path").show('fast');
-            $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
-            if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
-                nothing_to_display();
-            }
-            // On click, donwload all paste's content
-            $("#load-more-button").on("click", function (event) {
-                if (complete_paste == null) { //Donwload only once
-                    $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
-                        complete_paste = data;
-                        update_preview();
-                    });
-                } else {
-                    update_preview();
-                }
-            });
-        });
-    });
 
     // When the modal goes out, refresh it to normal content
     $("#mymodal").on('hidden.bs.modal', function () {
@@ -254,5 +219,45 @@
        new_content.show('fast');
        $("#load-more-button").hide();
    }
+
+
+   $('#myTable').on( 'draw.dt', function () {
+       // Bind tooltip each time we draw a new page
+       $('[data-toggle="tooltip"]').tooltip();
+       // On click, get html content from url and update the corresponding modal
+       $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
+           var modal=$(this);
+           var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
+           $.get(url, function (data) {
+               
+               // clear data by removing html, body, head tags. prevent dark modal background stack bug.
+               var cleared_data = data.split("<body>")[1].split("</body>")[0];
+               $("#mymodalbody").html(cleared_data);
+
+               var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
+               button.tooltip();
+               $("#mymodalbody").children(".panel-default").append(button);
+   
+               $("#button_show_path").attr('href', $(modal).attr('data-url'));
+               $("#button_show_path").show('fast');
+               $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
+               if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
+                   nothing_to_display();
+               }
+               // On click, donwload all paste's content
+               $("#load-more-button").off('click.download').on("click.download", function (event) {
+                   if (complete_paste == null) { //Donwload only once
+                       $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                           complete_paste = data;
+                           update_preview();
+                       });
+                   } else {
+                       update_preview();
+                   }
+               });
+           });
+       });
+   } );
+
 </script>
 </html>

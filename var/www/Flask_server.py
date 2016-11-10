@@ -98,7 +98,6 @@ def event_stream_getImportantPasteByModule(module_name):
         data["char_to_display"] = max_preview_modal
         data["finished"] = True if index == len(all_pastes_list) else False
         time.sleep(0.002) #So that the front end client is not flooded by data
-        print data["path"]
         yield 'data: %s\n\n' % json.dumps(data)
 
 
@@ -352,7 +351,6 @@ def search():
 
     # Search filename
     for path in r_serv_pasteName.smembers(q[0]):
-        print path
         r.append(path)
         paste = Paste.Paste(path)
         content = paste.get_p_content().decode('utf8', 'ignore')
