@@ -36,6 +36,7 @@ function deploy_source() {
             var curr_numElem = parseInt($("#myTable_"+moduleName).attr('data-numElem'));
             console.log(curr_numElem);
             if (feed.index > curr_numElem & feed.module == moduleName) { // Avoid doubling the pastes
+                // Add the row to the table
                 search_table.row.add( [
                     feed.index,
                    "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\"> "+ feed.path +"</a>",
@@ -151,7 +152,9 @@ $(document).ready(function(){
 
    // Use to bind the button with the new displayed data
    // (The bind do not happens if the dataTable is in tabs and the clicked data is in another page)
-   $('#myTable').on( 'draw.dt', function () {
+   search_table.on( 'draw.dt', function () {
+       // Bind tooltip each time we draw a new page
+       $('[data-toggle="tooltip"]').tooltip();
        // On click, get html content from url and update the corresponding modal
        $("[data-toggle='modal']").unbind('click.openmodal').on("click.openmodal", function (event) {
            event.preventDefault();
