@@ -811,7 +811,8 @@ def showsavedpaste():
 
 @app.route("/showpreviewpaste/")
 def showpreviewpaste():
-    return showpaste(max_preview_modal)
+    num = request.args.get('num', '')
+    return "|num|"+num+"|num|"+showpaste(max_preview_modal)
 
 
 @app.route("/getmoredata/")

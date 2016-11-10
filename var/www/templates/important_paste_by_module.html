@@ -59,7 +59,10 @@ function deploy_source() {
 <script>
 var moduleName = "{{ moduleName }}";
 var search_table;
+var last_clicked_paste;
+var can_change_modal_content = true;
 $("#myTable_"+moduleName).attr('data-numElem', "{{ all_path|length }}");
+
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
 
@@ -80,6 +83,7 @@ $(document).ready(function(){
 
     // When the modal goes out, refresh it to normal content
     $("#mymodal").on('hidden.bs.modal', function () {
+        can_change_modal_content = true;
         $("#mymodalbody").html("<p>Loading paste information...</p>");
         var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
         $("#mymodalbody").append(loading_gif); // Show the loading GIF
@@ -128,33 +132,42 @@ $(document).ready(function(){
            event.preventDefault();
            var modal=$(this);
            var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
+           last_clicked_paste =  $(this).attr('data-num');
            $.get(url, function (data) {
 
-               // clear data by removing html, body, head tags. prevent dark modal background stack bug.
-               var cleared_data = data.split("<body>")[1].split("</body>")[0];
-               $("#mymodalbody").html(cleared_data);
+               // verify that the reveived data is really the current clicked paste. Otherwise, ignore it. 
+               var received_num = parseInt(data.split("|num|")[1]);
+               if (received_num == last_clicked_paste && can_change_modal_content) {
+                   can_change_modal_content = false;
 
-               var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
-               button.tooltip();
-               $("#mymodalbody").children(".panel-default").append(button);
-   
-               $("#button_show_path").attr('href', $(modal).attr('data-url'));
-               $("#button_show_path").show('fast');
-               $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
-               if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
-                   nothing_to_display();
-               }
-               // On click, donwload all paste's content
-               $("#load-more-button").on("click", function (event) {
-                   if (complete_paste == null) { //Donwload only once
-                       $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
-                           complete_paste = data;
-                           update_preview();
-                       });
-                   } else {
-                       update_preview();
+                   // clear data by removing html, body, head tags. prevent dark modal background stack bug.
+                   var cleared_data = data.split("<body>")[1].split("</body>")[0];
+                   $("#mymodalbody").html(cleared_data);
+
+                   var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
+                   button.tooltip();
+                   $("#mymodalbody").children(".panel-default").append(button);
+       
+                   $("#button_show_path").attr('href', $(modal).attr('data-url'));
+                   $("#button_show_path").show('fast');
+                   $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
+                   if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
+                       nothing_to_display();
                    }
-               });
+                   // On click, donwload all paste's content
+                   $("#load-more-button").on("click", function (event) {
+                       if (complete_paste == null) { //Donwload only once
+                           $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                               complete_paste = data;
+                               update_preview();
+                           });
+                       } else {
+                           update_preview();
+                       }
+                   });
+               } else if (can_change_modal_content) {
+                   $("#mymodalbody").html("Ignoring previous not finished query of paste #" + received_num);
+               }
            });
        });
    } );
