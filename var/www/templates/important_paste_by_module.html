@@ -34,7 +34,6 @@ function deploy_source() {
         source.onmessage = function(event) {
             var feed = jQuery.parseJSON( event.data );
             var curr_numElem = parseInt($("#myTable_"+moduleName).attr('data-numElem'));
-            console.log(curr_numElem);
             if (feed.index > curr_numElem & feed.module == moduleName) { // Avoid doubling the pastes
                 // Add the row to the table
                 search_table.row.add( [
@@ -42,7 +41,7 @@ function deploy_source() {
                    "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\"> "+ feed.path +"</a>",
                     feed.date,
                     feed.linenum,
-                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+feed.content+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+feed.index+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste=\""+feed.path+"\"&num=\""+feed.index+"\" data-path=\""+feed.path+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
+                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+feed.content+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+feed.index+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\" data-path=\""+feed.path+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
                 ] ).draw( false );
                 $("#myTable_"+moduleName).attr('data-numElem', curr_numElem+1);
                 if(feed.finished) {

@@ -92,12 +92,13 @@ def event_stream_getImportantPasteByModule(module_name):
         data["module"] = module_name
         data["index"] = index
         data["path"] = path
-        data["content"] = content[0:content_range]
+        data["content"] = content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " ")
         data["linenum"] = paste.get_lines_info()[0]
         data["date"] = curr_date
         data["char_to_display"] = max_preview_modal
         data["finished"] = True if index == len(all_pastes_list) else False
         time.sleep(0.002) #So that the front end client is not flooded by data
+        print data["path"]
         yield 'data: %s\n\n' % json.dumps(data)
 
 
@@ -481,7 +482,7 @@ def importantPasteByModule():
         paste = Paste.Paste(path)
         content = paste.get_p_content().decode('utf8', 'ignore')
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-        all_content.append(content[0:content_range])
+        all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
         curr_date = str(paste._get_p_date())
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
         paste_date.append(curr_date)
