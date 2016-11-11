@@ -97,8 +97,7 @@ def event_stream_getImportantPasteByModule(module_name):
         data["date"] = curr_date
         data["char_to_display"] = max_preview_modal
         data["finished"] = True if index == len(all_pastes_list) else False
-        time.sleep(0.002) #So that the front end client is not flooded by data
-        yield 'data: %s\n\n' % json.dumps(data)
+        yield 'retry: 100000\ndata: %s\n\n' % json.dumps(data) #retry to avoid reconnection of the browser
 
 
 def get_queues(r):
