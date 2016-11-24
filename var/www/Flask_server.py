@@ -143,6 +143,7 @@ def showpaste(content_range):
     p_duplicate_full_list = json.loads(paste._get_p_duplicate())
     p_duplicate_list = []
     p_simil_list = []
+    p_date_list = []
     p_hashtype_list = []
 
 
@@ -170,20 +171,29 @@ def showpaste(content_range):
 
         hash_types = str(hash_types).replace("[","").replace("]","") if len(hash_types)==1 else str(hash_types)
         comp_vals = str(comp_vals).replace("[","").replace("]","") if len(comp_vals)==1 else str(comp_vals)
-        new_dup_list.append([hash_types.replace("'", ""), p_duplicate_full_list[dup_list_index][1], comp_vals])
+        if len(p_duplicate_full_list[dup_list_index]) > 3:
+            try:
+                date_paste = str(int(p_duplicate_full_list[dup_list_index][3]))
+                date_paste = date_paste[0:4]+"-"+date_paste[4:6]+"-"+date_paste[6:8]
+            except ValueError:
+                date_paste = str(p_duplicate_full_list[dup_list_index][3])
+        else:
+            date_paste = "No date available"
+        new_dup_list.append([hash_types.replace("'", ""), p_duplicate_full_list[dup_list_index][1], comp_vals, date_paste])
 
     # Create the list to pass to the webpage
     for dup_list in new_dup_list:
-        hash_type, path, simil_percent = dup_list
+        hash_type, path, simil_percent, date_paste = dup_list
         p_duplicate_list.append(path)
         p_simil_list.append(simil_percent)
         p_hashtype_list.append(hash_type)
+        p_date_list.append(date_paste)
 
     if content_range != 0:
        p_content = p_content[0:content_range]
 
 
-    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list)
+    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
 
 def getPastebyType(server, module_name):
     all_path = []

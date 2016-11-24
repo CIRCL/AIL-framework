@@ -115,7 +115,7 @@
                           </table>
                           <div id="div_stil_data">
                               <button id="load_more_json_button1" type="button" class="btn btn-default" onclick="add_entries();" style="display: none">Load 50 entries</button>
-                              <strong> Totalling {{ num_res }} items </strong>
+                              <strong> Totalling {{ num_res }} results related to paste content </strong>
                           </div>
                         </div>
                         <!-- /.panel-body -->
@@ -266,6 +266,7 @@
                    // clear data by removing html, body, head tags. prevent dark modal background stack bug.
                    var cleared_data = data.split("<body>")[1].split("</body>")[0];
                    $("#mymodalbody").html(cleared_data);
+                   setTimeout(function() { $('#tableDup').DataTable(); }, 150);
 
                    var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
                    button.tooltip();
