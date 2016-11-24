@@ -36,11 +36,11 @@ command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{
 def getPid(module):
     p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
     for line in p.stdout:
+        print line
         splittedLine = line.split()
         if 'python2' in splittedLine:
             return int(splittedLine[0])
-        else:
-            return None
+    return None
 
 def clearRedisModuleInfo():
     for k in server.keys("MODULE_*"):
@@ -87,7 +87,9 @@ def kill_module(module):
                 p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
             else:
                 print 'killing failed!'
-    time.sleep(7)
+    else:
+        print 'Module does not exist'
+    time.sleep(5)
 
 
 if __name__ == "__main__":
@@ -120,6 +122,7 @@ if __name__ == "__main__":
     lastTime = datetime.datetime.now()
 
     module_file_array = set()
+    no_info_modules = {}
     path_allmod = os.path.join(os.environ['AIL_HOME'], 'doc/all_modules.txt')
     with open(path_allmod, 'r') as module_file:
         for line in module_file:
@@ -158,7 +161,19 @@ if __name__ == "__main__":
 
             for curr_queue in module_file_array:
                 if curr_queue not in all_queue:
-                    printarray3.append([curr_queue, "Not running"])
+                        printarray3.append([curr_queue, "Not running"])
+                else:
+                    if len(list(server.smembers('MODULE_TYPE_'+curr_queue))) == 0:
+                        if curr_queue not in no_info_modules:
+                            no_info_modules[curr_queue] = int(time.time())
+                            printarray3.append([curr_queue, "No data"])
+                        else:
+                            #If no info since long time, try to kill
+                            if int(time.time()) - no_info_modules[curr_queue] > threshold_stucked_module:
+                                kill_module(curr_queue)
+                                no_info_modules[curr_queue] = int(time.time())
+                            printarray3.append([curr_queue, "Stuck or idle, restarting in " + str(threshold_stucked_module - (int(time.time()) - no_info_modules[curr_queue])) + "s"])
+
 
             printarray1.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
             printarray2.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
