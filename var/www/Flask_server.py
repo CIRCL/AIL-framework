@@ -347,6 +347,7 @@ def search():
     c = [] #preview of the paste content
     paste_date = []
     paste_size = []
+    num_elem_to_get = 50
 
     # Search filename
     for path in r_serv_pasteName.smembers(q[0]):
@@ -370,7 +371,7 @@ def search():
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
-        results = searcher.search_page(query, 1, pagelen=10)
+        results = searcher.search_page(query, 1, pagelen=num_elem_to_get)
         for x in results:
             r.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
@@ -381,7 +382,10 @@ def search():
             curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
             paste_date.append(curr_date)
             paste_size.append(paste._get_p_size())
-    return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
+        results = searcher.search(query)
+        num_res = len(results)
+
+    return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal, num_res=num_res)
 
 
 @app.route("/get_more_search_result", methods=['POST'])
@@ -389,7 +393,8 @@ def get_more_search_result():
     query = request.form['query']
     q = []
     q.append(query)
-    offset = int(request.form['offset'])
+    page_offset = int(request.form['page_offset'])
+    num_elem_to_get = 50
 
     path_array = []
     preview_array = []
@@ -405,7 +410,7 @@ def get_more_search_result():
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
-        results = searcher.search_page(query, offset, pagelen=10)   
+        results = searcher.search_page(query, page_offset, num_elem_to_get)   
         for x in results:
             path_array.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
@@ -421,7 +426,8 @@ def get_more_search_result():
         to_return["preview_array"] = preview_array
         to_return["date_array"] = date_array
         to_return["size_array"] = size_array
-        if len(path_array) < 10: #pagelength
+        print "len(path_array)="+str(len(path_array))
+        if len(path_array) < num_elem_to_get: #pagelength
             to_return["moreData"] = False
         else:
             to_return["moreData"] = True

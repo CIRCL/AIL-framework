@@ -83,7 +83,6 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <i class="glyphicon glyphicon-search"></i> <b id="numberOfRes">{{ r|length }}</b> Results for "<strong>{{ query }}</strong>
-                            <img id="loading_gif_search" src="{{url_for('static', filename='image/loading.gif') }}" height="20" width="20" style="margin: 2px;">
                             <div class="pull-right">
 
                             </div>
@@ -114,7 +113,11 @@
                           {% endfor %}
                               </tbody>
                           </table>
+                          <div id="div_stil_data">
+                              <button id="load_more_json_button1" type="button" class="btn btn-default" onclick="add_entries();" style="display: none">Load 50 entries</button>
+                              <strong> Totalling {{ num_res }} items </strong>
                           </div>
+                        </div>
                         <!-- /.panel-body -->
                     </div>
                 </div>
@@ -123,6 +126,7 @@
         <!-- /#page-wrapper -->
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</br>
 </body>
 
 <!-- enable tooltip and dataTable -->
@@ -130,17 +134,29 @@
     var search_table;
     var last_clicked_paste;
     var can_change_modal_content = true;
+    var page_offset;
+    var offset;
+    var all_loaded;
+    var init_num_of_elements_in_table;
+    var query;
+    var pagelen = 50;
 
     $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
 
         $("#button_show_path").hide();
-        var search_table = $('#myTable').DataTable();
+        search_table = $('#myTable').DataTable();
 
-        var prev_query = "{{ query }}";
-        var offset = 2;
-        var init_num_of_elements_in_table = parseInt("{{ r|length }}"); // Comes from the file search
-        load_search_data(init_num_of_elements_in_table, search_table, prev_query, offset);
+        query = "{{ query }}";
+        offset = 0;
+        page_offset = 2; //page 1 already loaded
+        all_loaded = false;
+        init_num_of_elements_in_table = parseInt("{{ r|length }}"); // Comes from the file search
+
+
+        if (init_num_of_elements_in_table == pagelen) {
+            $("#load_more_json_button1").show();
+        }
     });
 
 </script>
@@ -149,27 +165,36 @@
 
 // Loop to recover all the data from  get_more_search_results
 // And add it dynamically top the dataTable
+    function add_entries() { //Used to disable the button before going to the big loop
+        $("#load_more_json_button1").attr('disabled','disabled');
+        setTimeout(function() { load_search_50_data();}, 50);
+    }
 
-    function load_search_data(init_num_of_elements_in_table, search_table, prev_query, offset) {
-        var options = { query: prev_query, offset: offset };
+    function load_search_50_data() {
+        var options = { query: query, page_offset: page_offset };
         $.post( "{{ url_for('get_more_search_result') }}", options).done(function( data ) {
 
             for(i=0; i<data.path_array.length; i++) {
                 var curr_preview = data.preview_array[i].replace(/\"/g, "\'");
                 search_table.row.add( [
-                    init_num_of_elements_in_table+((offset-2))+i+1,
+                    init_num_of_elements_in_table+((offset))+i+1,
                    "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>",
                     data.date_array[i],
                     data.size_array[i],
                     "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
                 ] ).draw( false );
             }
+            offset = offset + data.path_array.length;
+            page_offset = page_offset+1;
             $("#numberOfRes").text(parseInt($("#numberOfRes").text()) + data.path_array.length);
-            if (data.moreData == true)
-                load_search_data(init_num_of_elements_in_table, search_table, prev_query, offset+10);
-            else {
-                $("#loading_gif_search").hide();
+            if (data.moreData == true) {
+                //continue
+            } else {
+                all_loaded = true;
+                $("#load_more_json_button1").hide();
             }
+            $("#load_more_json_button1").removeAttr('disabled');
+            return data.path_array.length;
         });
     }
 
