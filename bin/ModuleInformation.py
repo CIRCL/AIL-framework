@@ -247,7 +247,7 @@ if __name__ == "__main__":
                             printarray3.append([curr_queue, "No data"])
                         else:
                             #If no info since long time, try to kill
-                            if int(time.time()) - no_info_modules[curr_queue] > threshold_stucked_module:
+                            if args.autokill == 1 and int(time.time()) - no_info_modules[curr_queue] > threshold_stucked_module:
                                 kill_module(curr_queue, None)
                                 no_info_modules[curr_queue] = int(time.time())
                             printarray3.append([curr_queue, "Stuck or idle, restarting in " + str(threshold_stucked_module - (int(time.time()) - no_info_modules[curr_queue])) + "s"])
