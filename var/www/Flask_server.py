@@ -78,6 +78,27 @@ def event_stream():
         if msg['type'] == 'pmessage' and level != "DEBUG":
             yield 'data: %s\n\n' % json.dumps(msg)
 
+def event_stream_getImportantPasteByModule(module_name):
+    index = 0
+    all_pastes_list = getPastebyType(r_serv_db, module_name)
+    for path in all_pastes_list:
+        index += 1
+        paste = Paste.Paste(path)
+        content = paste.get_p_content().decode('utf8', 'ignore')
+        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+        curr_date = str(paste._get_p_date())
+        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+        data = {}
+        data["module"] = module_name
+        data["index"] = index
+        data["path"] = path
+        data["content"] = content[0:content_range]
+        data["linenum"] = paste.get_lines_info()[0]
+        data["date"] = curr_date
+        data["char_to_display"] = max_preview_modal
+        data["finished"] = True if index == len(all_pastes_list) else False
+        yield 'retry: 100000\ndata: %s\n\n' % json.dumps(data) #retry to avoid reconnection of the browser
+
 
 def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
@@ -122,6 +143,7 @@ def showpaste(content_range):
     p_duplicate_full_list = json.loads(paste._get_p_duplicate())
     p_duplicate_list = []
     p_simil_list = []
+    p_date_list = []
     p_hashtype_list = []
 
 
@@ -149,20 +171,29 @@ def showpaste(content_range):
 
         hash_types = str(hash_types).replace("[","").replace("]","") if len(hash_types)==1 else str(hash_types)
         comp_vals = str(comp_vals).replace("[","").replace("]","") if len(comp_vals)==1 else str(comp_vals)
-        new_dup_list.append([hash_types.replace("'", ""), p_duplicate_full_list[dup_list_index][1], comp_vals])
+        if len(p_duplicate_full_list[dup_list_index]) > 3:
+            try:
+                date_paste = str(int(p_duplicate_full_list[dup_list_index][3]))
+                date_paste = date_paste[0:4]+"-"+date_paste[4:6]+"-"+date_paste[6:8]
+            except ValueError:
+                date_paste = str(p_duplicate_full_list[dup_list_index][3])
+        else:
+            date_paste = "No date available"
+        new_dup_list.append([hash_types.replace("'", ""), p_duplicate_full_list[dup_list_index][1], comp_vals, date_paste])
 
     # Create the list to pass to the webpage
     for dup_list in new_dup_list:
-        hash_type, path, simil_percent = dup_list
+        hash_type, path, simil_percent, date_paste = dup_list
         p_duplicate_list.append(path)
         p_simil_list.append(simil_percent)
         p_hashtype_list.append(hash_type)
+        p_date_list.append(date_paste)
 
     if content_range != 0:
        p_content = p_content[0:content_range]
 
 
-    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list)
+    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
 
 def getPastebyType(server, module_name):
     all_path = []
@@ -326,11 +357,10 @@ def search():
     c = [] #preview of the paste content
     paste_date = []
     paste_size = []
+    num_elem_to_get = 50
 
     # Search filename
-    print r_serv_pasteName.smembers(q[0])
     for path in r_serv_pasteName.smembers(q[0]):
-        print path
         r.append(path)
         paste = Paste.Paste(path)
         content = paste.get_p_content().decode('utf8', 'ignore')
@@ -351,7 +381,7 @@ def search():
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
-        results = searcher.search(query, limit=None)
+        results = searcher.search_page(query, 1, pagelen=num_elem_to_get)
         for x in results:
             r.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
@@ -362,7 +392,57 @@ def search():
             curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
             paste_date.append(curr_date)
             paste_size.append(paste._get_p_size())
-    return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal)
+        results = searcher.search(query)
+        num_res = len(results)
+
+    return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal, num_res=num_res)
+
+
+@app.route("/get_more_search_result", methods=['POST'])
+def get_more_search_result():
+    query = request.form['query']
+    q = []
+    q.append(query)
+    page_offset = int(request.form['page_offset'])
+    num_elem_to_get = 50
+
+    path_array = []
+    preview_array = []
+    date_array = []
+    size_array = []
+
+    from whoosh import index
+    from whoosh.fields import Schema, TEXT, ID
+    schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
+
+    indexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
+    ix = index.open_dir(indexpath)
+    from whoosh.qparser import QueryParser
+    with ix.searcher() as searcher:
+        query = QueryParser("content", ix.schema).parse(" ".join(q))
+        results = searcher.search_page(query, page_offset, num_elem_to_get)   
+        for x in results:
+            path_array.append(x.items()[0][1])
+            paste = Paste.Paste(x.items()[0][1])
+            content = paste.get_p_content().decode('utf8', 'ignore')
+            content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+            preview_array.append(content[0:content_range])
+            curr_date = str(paste._get_p_date())
+            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+            date_array.append(curr_date)
+            size_array.append(paste._get_p_size())
+        to_return = {}
+        to_return["path_array"] = path_array
+        to_return["preview_array"] = preview_array
+        to_return["date_array"] = date_array
+        to_return["size_array"] = size_array
+        print "len(path_array)="+str(len(path_array))
+        if len(path_array) < num_elem_to_get: #pagelength
+            to_return["moreData"] = False
+        else:
+            to_return["moreData"] = True
+
+    return jsonify(to_return)
 
 
 @app.route("/")
@@ -408,19 +488,30 @@ def importantPasteByModule():
     paste_date = []
     paste_linenum = []
     all_path = []
+    allPastes = getPastebyType(r_serv_db, module_name)
 
-    for path in getPastebyType(r_serv_db, module_name):
+    for path in allPastes[0:10]:
         all_path.append(path)
         paste = Paste.Paste(path)
         content = paste.get_p_content().decode('utf8', 'ignore')
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-        all_content.append(content[0:content_range])
+        all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
         curr_date = str(paste._get_p_date())
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
         paste_date.append(curr_date)
         paste_linenum.append(paste.get_lines_info()[0])
 
-    return render_template("important_paste_by_module.html", all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal)
+    if len(allPastes) > 10:
+        finished = "" 
+    else:
+        finished = "display: none;"
+
+    return render_template("important_paste_by_module.html", moduleName=module_name, all_path=all_path, content=all_content, paste_date=paste_date, paste_linenum=paste_linenum, char_to_display=max_preview_modal, finished=finished)
+
+@app.route("/_getImportantPasteByModule")
+def getImportantPasteByModule():
+    module_name = request.args.get('moduleName')
+    return flask.Response(event_stream_getImportantPasteByModule(module_name), mimetype="text/event-stream")
 
 @app.route("/moduletrending/")
 def moduletrending():
@@ -735,7 +826,8 @@ def showsavedpaste():
 
 @app.route("/showpreviewpaste/")
 def showpreviewpaste():
-    return showpaste(max_preview_modal)
+    num = request.args.get('num', '')
+    return "|num|"+num+"|num|"+showpaste(max_preview_modal)
 
 
 @app.route("/getmoredata/")

@@ -48,7 +48,7 @@ if __name__ == "__main__":
         if sites_set:
             message += ' Related websites: {}'.format(', '.join(sites_set))
 
-        to_print = 'Credential;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message)
+        to_print = 'Credential;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message, paste.p_path)
 
         print('\n '.join(creds))
 
