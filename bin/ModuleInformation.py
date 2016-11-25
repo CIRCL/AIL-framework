@@ -24,6 +24,7 @@ import ConfigParser
 import json
 from terminaltables import AsciiTable
 import textwrap
+from colorama import Fore, Back, Style, init
 
 # CONFIG VARIABLES
 threshold_stucked_module = 60*10*1 #1 hour
@@ -33,6 +34,7 @@ command_search_pid = "ps a -o pid,cmd | grep {}"
 command_search_name = "ps a -o pid,cmd | grep {}"
 command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{}.py; read x\""
 
+init() #Necesary for colorama
 printarrayGlob = [None]*14
 printarrayGlob.insert(0, ["Time", "Module", "PID", "Action"])
 lastTimeKillCommand = {}
@@ -138,6 +140,23 @@ def kill_module(module, pid):
     #time.sleep(5)
     cleanRedis()
 
+def get_color(time, idle):
+    if time is not None:
+        temp = time.split(':')
+        time = int(temp[0])*3600 + int(temp[1])*60 + int(temp[2])
+
+        if time >= threshold_stucked_module:
+            if not idle:
+                return Back.RED + Style.BRIGHT
+            else:
+                return Back.MAGENTA + Style.BRIGHT
+        elif time > threshold_stucked_module/2:
+            return Back.YELLOW + Style.BRIGHT
+        else:
+            return Back.GREEN + Style.BRIGHT
+    else:
+        return Style.RESET_ALL
+
 
 if __name__ == "__main__":
 
@@ -209,10 +228,10 @@ if __name__ == "__main__":
                                     if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                         kill_module(queue, int(moduleNum))
 
-                                printarray1.append([str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)])
+                                printarray1.append([get_color(processed_time_readable, False) + str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path) + get_color(None, False)])
 
                             else:
-                                printarray2.append([str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)])
+                                printarray2.append([get_color(processed_time_readable, True) + str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path) + get_color(None, True)])
 
             for curr_queue in module_file_array:
                 if curr_queue not in all_queue:
