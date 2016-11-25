@@ -208,6 +208,7 @@ if __name__ == "__main__":
                 all_queue.add(queue)
                 key = "MODULE_" + queue + "_"
                 keySet = "MODULE_TYPE_" + queue
+                array_module_type = []
 
                 for moduleNum in server.smembers(keySet):
                     value = server.get(key + str(moduleNum))
@@ -228,10 +229,13 @@ if __name__ == "__main__":
                                     if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                         kill_module(queue, int(moduleNum))
 
-                                printarray1.append([get_color(processed_time_readable, False) + str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path) + get_color(None, False)])
+                                array_module_type.append([get_color(processed_time_readable, False) + str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path) + get_color(None, False)])
 
                             else:
                                 printarray2.append([get_color(processed_time_readable, True) + str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path) + get_color(None, True)])
+                        array_module_type.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
+                for e in array_module_type:
+                    printarray1.append(e)
 
             for curr_queue in module_file_array:
                 if curr_queue not in all_queue:
@@ -249,8 +253,10 @@ if __name__ == "__main__":
                             printarray3.append([curr_queue, "Stuck or idle, restarting in " + str(threshold_stucked_module - (int(time.time()) - no_info_modules[curr_queue])) + "s"])
 
 
-            printarray1.sort(lambda x,y: cmp(x[0], y[0]), reverse=False)
-            printarray2.sort(lambda x,y: cmp(x[0], y[0]), reverse=False)
+            #printarray1.sort(lambda x,y: cmp(x[0], y[0]), reverse=False)
+            printarray1.sort(key=lambda x: x[0][9:], reverse=False)
+            #printarray2.sort(lambda x,y: cmp(x[0], y[0]), reverse=False)
+            printarray2.sort(key=lambda x: x[0][9:], reverse=False)
             printarray1.insert(0,["Queue", "PID", "Amount", "Paste start time", "Processing time for current paste (H:M:S)", "Paste hash"])
             printarray2.insert(0,["Queue", "PID","Amount", "Paste start time", "Time since idle (H:M:S)", "Last paste hash"])
             printarray3.insert(0,["Queue", "State"])
