@@ -448,7 +448,8 @@ def get_more_search_result():
 @app.route("/")
 def index():
     default_minute = cfg.get("Flask", "minute_processed_paste")
-    return render_template("index.html", default_minute = default_minute)
+    threshold_stucked_module = cfg.getint("Module_ModuleInformation", "threshold_stucked_module")
+    return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module)
 
 
 @app.route("/monitoring/")
