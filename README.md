@@ -101,6 +101,37 @@ Eventually you can browse the status of the AIL framework website at the followi
 
         ``http://localhost:7000/``
 
+How to
+======
+
+How to feed the AIL framework
+-----------------------------
+
+For the moment, there are two different ways to feed AIL with data:
+
+1. Be a collaborator of CIRCL and ask to access our feed. It will be sent to the static IP your are using for AIL.
+
+2. You can setup [pystemon](https://github.com/CIRCL/pystemon) and use the custom feeder provided by AIL (see below).
+
+###Feeding AIL with pystemon
+AIL is an analysis tool, not a collector!
+However, if you want to collect some pastes and feed them to AIL, the procedure is described below.
+
+Nevertheless, moderate your queries!
+
+Here are the steps to setup pystemon and feed data to AIL:
+
+1. Clone the [pystemon's git repository](https://github.com/CIRCL/pystemon)
+
+2. Install its python dependencies inside your virtual environment
+
+3. Launch pystemon ``` ./pystemon ```
+
+4. Edit the file ```bin/feeder/pystemon-feeder.py``` and modify the pystemonpath path accordingly
+
+5. Launch pystemon-feeder ``` ./pystemon-feeder.py ```
+
+
 How to create a new module
 --------------------------
 
@@ -116,6 +147,10 @@ How to contribute a module
 Feel free to fork the code, play with it, make some patches or add additional analysis modules.
 
 To contribute your module, feel free to pull your contribution.
+
+Overview and License
+====================
+
 
 Redis and LevelDB overview
 --------------------------
