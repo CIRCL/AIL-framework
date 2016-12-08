@@ -44,13 +44,14 @@ def manage_top_set():
     startDate = datetime.datetime.now()
     startDate = startDate.replace(hour=0, minute=0, second=0, microsecond=0)
     startDate = calendar.timegm(startDate.timetuple())
+    blacklist_size = int(server_term.scard(BlackListTermsSet_Name))
 
     dico = {}
 
-    # Retreive top data (2*max_card) from days sets
+    # Retreive top data (max_card + blacklist_size) from days sets
     for timestamp in range(startDate, startDate - top_termFreq_setName_month[1]*oneDay, -oneDay):
         curr_set = top_termFreq_setName_day[0] + str(timestamp)
-        array_top_day = server_term.zrevrangebyscore(curr_set, '+inf', '-inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality*2)
+        array_top_day = server_term.zrevrangebyscore(curr_set, '+inf', '-inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality+blacklist_size)
 
         for word, value in array_top_day:
             if word not in server_term.smembers(BlackListTermsSet_Name):
