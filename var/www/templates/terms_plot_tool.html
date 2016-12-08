@@ -72,7 +72,7 @@
                         </div>
                         <div class="panel-body">
                             <div aria-disabled="false" class="slider sliderRange sliderBlue ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" style="margin-bottom: 5px;"></div>
-                            <strong>Date:</strong> <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;"> <button id="plot-month" onclick="replot(100);" class="btn btn-info" style="float: right;">Plot current terms for a month</button>
+                            <strong>Date:</strong> <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;"> <button id="plot-month" onclick="replot();" class="btn btn-info" style="float: right;">Replot</button>
 
                             <div class="form-group input-group" style="margin-top: 30px;">
                                 <span class="input-group-addon"><span class="glyphicon glyphicon-stats"></span></span>
@@ -252,26 +252,28 @@ function addData() {
 }
 
 
-function replot(duration) {
-    console.log(plotted_terms);
+function replot() {
     graph_data = [];
+    promises = [];
     for(i=0; i<plotted_terms.length; i++) {
         var term = plotted_terms[i];
         var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
         var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
 
-        $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
+        promises.push($.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
             var curr_data = [];
             for(i=1; i<data.length; i++) {
                     curr_data.push([data[i][0]*1000, data[i][1]]);
             }
             graph_data.push({ data: curr_data, label: data[0]});
             $("#TermInput").val("");
-        })
+        }))
     }
-    setTimeout(function() {
-            plot = $.plot($("#graph"), graph_data, graph_options);
-    }, 500);
+    
+    $.when.apply($, promises).done( function () {
+        plot = $.plot($("#graph"), graph_data, graph_options);
+    });
+    
 }
 
 </script>
