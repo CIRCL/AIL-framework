@@ -38,35 +38,55 @@ def get_date_range(num_day):
         date_list.append(date.substract_day(i))
     return date_list
 
+# Compute the progression for one keyword
+def compute_progression_word(keyword):
+    date_range = get_date_range(num_day)
+    # check if this keyword is eligible for progression
+    keyword_total_sum = 0
+    value_list = []
+    for date in date_range: # get value up to date_range
+        curr_value = server.hget(keyword, date)
+        value_list.append(int(curr_value if curr_value is not None else 0))
+        keyword_total_sum += int(curr_value) if curr_value is not None else 0
+    oldest_value = value_list[-1] if value_list[-1] != 0 else 1 #Avoid zero division
+
+    # The progression is based on the ratio: value[i] / value[i-1]
+    keyword_increase = 0
+    value_list_reversed = value_list[:]
+    value_list_reversed.reverse()
+    for i in range(1, len(value_list_reversed)):
+        divisor = value_list_reversed[i-1] if value_list_reversed[i-1] != 0 else 1
+        keyword_increase += value_list_reversed[i] / divisor
+
+    return (keyword_increase, keyword_total_sum)
+
+
+'''
+    recompute the set top_progression zset
+        - Compute the current field progression
+        - re-compute the current progression for each first 2*max_set_cardinality fields in the top_progression_zset
+'''
 def compute_progression(server, field_name, num_day, url_parsed):
-    redis_progression_name = 'top_progression_'+field_name
-    redis_progression_name_set = 'top_progression_'+field_name+'_set'
+    redis_progression_name_set = "z_top_progression_"+field_name
 
     keyword = url_parsed[field_name]
     if keyword is not None:
-        date_range = get_date_range(num_day) 
 
-        # check if this keyword is eligible for progression
-        keyword_total_sum = 0 
-        value_list = []
-        for date in date_range: # get value up to date_range
-            curr_value = server.hget(keyword, date)
-            value_list.append(int(curr_value if curr_value is not None else 0))
-            keyword_total_sum += int(curr_value) if curr_value is not None else 0
-        oldest_value = value_list[-1] if value_list[-1] != 0 else 1 #Avoid zero division
+        #compute the progression of the current word
+        keyword_increase, keyword_total_sum = compute_progression_word(keyword)
 
-        # The progression is based on the ratio: value[i] / value[i-1]
-        keyword_increase = 0
-        value_list_reversed = value_list[:]
-        value_list_reversed.reverse()
-        for i in range(1, len(value_list_reversed)):
-            divisor = value_list_reversed[i-1] if value_list_reversed[i-1] != 0 else 1
-            keyword_increase += value_list_reversed[i] / divisor
+        #re-compute the progression of 2*max_set_cardinality
+        current_top = server.zrevrangebyscore(redis_progression_name_set, '+inf', '-inf', withscores=True, start=0, num=2*max_set_cardinality)
+        for word, value in array_top_day:
+            word_inc, word_tot_sum = compute_progression_word(word)
+            server.zrem(redis_progression_name_set, word)
+            if (word_tot_sum > threshold_total_sum) and (word_inc > threshold_increase):
+                server.zadd(redis_progression_name_set, float(word_inc), word)
 
-        # filter
+        # filter before adding
         if (keyword_total_sum > threshold_total_sum) and (keyword_increase > threshold_increase):
-            
-            server.zadd("z_top_progression_"+field_name, float(keyword_increase), keyword)
+            server.zadd(redis_progression_name_set, float(keyword_increase), keyword)
+
 
 
 if __name__ == '__main__':

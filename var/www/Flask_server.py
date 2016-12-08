@@ -772,6 +772,7 @@ def terms_plot_tool_data():
             value = r_serv_term.hget(timestamp, term)
             curr_value_range = int(value) if value is not None else 0
             value_range.append([timestamp, curr_value_range])
+        value_range.insert(0,term)
         return jsonify(value_range)
 
 
