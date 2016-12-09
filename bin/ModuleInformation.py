@@ -247,15 +247,16 @@ if __name__ == "__main__":
                             printarray3.append([curr_queue, "No data"])
                         else:
                             #If no info since long time, try to kill
-                            if args.autokill == 1 and int(time.time()) - no_info_modules[curr_queue] > threshold_stucked_module:
-                                kill_module(curr_queue, None)
-                                no_info_modules[curr_queue] = int(time.time())
-                            printarray3.append([curr_queue, "Stuck or idle, restarting in " + str(threshold_stucked_module - (int(time.time()) - no_info_modules[curr_queue])) + "s"])
+                            if args.autokill == 1:
+                                if int(time.time()) - no_info_modules[curr_queue] > threshold_stucked_module:
+                                    kill_module(curr_queue, None)
+                                    no_info_modules[curr_queue] = int(time.time())
+                                printarray3.append([curr_queue, "Stuck or idle, restarting in " + str(abs(threshold_stucked_module - (int(time.time()) - no_info_modules[curr_queue]))) + "s"])
+                            else:
+                                printarray3.append([curr_queue, "Stuck or idle, restarting disabled"])
 
 
-            #printarray1.sort(lambda x,y: cmp(x[0], y[0]), reverse=False)
             printarray1.sort(key=lambda x: x[0][9:], reverse=False)
-            #printarray2.sort(lambda x,y: cmp(x[0], y[0]), reverse=False)
             printarray2.sort(key=lambda x: x[0][9:], reverse=False)
             printarray1.insert(0,["Queue", "PID", "Amount", "Paste start time", "Processing time for current paste (H:M:S)", "Paste hash"])
             printarray2.insert(0,["Queue", "PID","Amount", "Paste start time", "Time since idle (H:M:S)", "Last paste hash"])
@@ -307,6 +308,12 @@ if __name__ == "__main__":
             t4 = AsciiTable(printarray4, title="Last actions")
             t4.column_max_width(1)
 
+            legend_array = [["Color", "Meaning"], [Back.RED+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time >=" +str(threshold_stucked_module)+Style.RESET_ALL], [Back.MAGENTA+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time >=" +str(threshold_stucked_module)+" while idle"+Style.RESET_ALL], [Back.YELLOW+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time >=" +str(threshold_stucked_module/2)+Style.RESET_ALL], [Back.GREEN+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time <" +str(threshold_stucked_module)]]
+            legend = AsciiTable(legend_array, title="Legend")
+            legend.column_max_width(1)
+
+            print legend.table
+            print '\n'
             print t1.table
             print '\n'
             print t2.table
