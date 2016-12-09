@@ -4,6 +4,8 @@
 '''
     Flask functions and routes for the dashboard page
 '''
+import json
+
 import flask
 from flask import Flask, render_template, jsonify, request
 
