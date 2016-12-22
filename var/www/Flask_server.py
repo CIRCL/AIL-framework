@@ -12,6 +12,7 @@ import flask
 import os
 import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+sys.path.append('./Flasks/')
 import Paste
 from Date import Date
 
