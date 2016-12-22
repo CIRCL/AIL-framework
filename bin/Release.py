@@ -34,7 +34,7 @@ if __name__ == "__main__":
         if len(releases) == 0:
             continue
 
-        to_print = 'Release;{};{};{};{} releases'.format(paste.p_source, paste.p_date, paste.p_name, len(releases))
+        to_print = 'Release;{};{};{};{} releases;{}'.format(paste.p_source, paste.p_date, paste.p_name, len(releases), paste.p_path)
         if len(releases) > 30:
             publisher.warning(to_print)
         else:

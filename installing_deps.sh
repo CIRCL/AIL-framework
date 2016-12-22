@@ -104,6 +104,7 @@ python setup.py install
 # Download the necessary NLTK corpora and sentiment vader
 HOME=$(pwd) python -m textblob.download_corpora
 python -m nltk.downloader vader_lexicon
+python -m nltk.downloader punkt
 
 #Create the file all_module and update the graph in doc
 $AIL_HOME/doc/generate_modules_data_flow_graph.sh
