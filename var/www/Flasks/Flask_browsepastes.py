@@ -79,9 +79,9 @@ def importantPasteByModule():
         paste_linenum.append(paste.get_lines_info()[0])
 
     if len(allPastes) > 10:
-        finished = "" 
+        finished = False
     else:
-        finished = "display: none;"
+        finished = True
 
     return render_template("important_paste_by_module.html",
             moduleName=module_name, 

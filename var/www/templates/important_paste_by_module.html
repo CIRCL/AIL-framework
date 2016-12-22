@@ -29,7 +29,7 @@
 <div id="div_stil_data">
     <button id="load_more_json_button1" type="button" class="btn btn-default" onclick="add_entries(100)" style="display: none">Load 100 entries</button>
     <button id="load_more_json_button2" type="button" class="btn btn-warning" onclick="add_entries(300)" style="display: none">Load 300 entries</button>
-    <img id="loading_gif_browse" src="{{url_for('static', filename='image/loading.gif') }}" heigt="20" width="20" style="margin: 2px; {{ finished }}"></div>
+    <img id="loading_gif_browse" src="{{url_for('static', filename='image/loading.gif') }}" heigt="20" width="20" style="margin: 2px;"></div>
 </br>
 
 
@@ -38,13 +38,15 @@
 var json_array = [];
 var all_data_received = false;
 var curr_numElem;
-var elem_added = 0;
-var tot_num_entry = 0;
+var elem_added = 10; //10 elements are added by default in the page loading
+var tot_num_entry = 10; //10 elements are added by default in the page loading
 
 function deploy_source() {
     var button_load_more_displayed = false;
 
     if(typeof(EventSource) !== "undefined" && typeof(source) !== "") {
+        $("#load_more_json_button1").show();
+        $("#load_more_json_button2").show();
         var source = new EventSource("{{ url_for('getImportantPasteByModule') }}"+"?moduleName="+moduleName);
         source.onmessage = function(event) {
             var feed = jQuery.parseJSON( event.data );
@@ -52,8 +54,6 @@ function deploy_source() {
             if (feed.index > curr_numElem & feed.module == moduleName) { // Avoid doubling the pastes
                 json_array.push(feed);
                 tot_num_entry++;
-                $("#load_more_json_button1").show();
-                $("#load_more_json_button2").show();
                 $("#nbr_entry").text(tot_num_entry + " entries available, " + (tot_num_entry - elem_added) + " not displayed");
 
                 $("#myTable_"+moduleName).attr('data-numElem', curr_numElem+1);
@@ -125,7 +125,14 @@ $(document).ready(function(){
 
     search_table = $('#myTable_'+moduleName).DataTable({ "order": [[ 2, "desc" ]] });
 
-    deploy_source();
+    if( "{{ finished }}" == "True"){
+       $("#load_more_json_button1").hide();
+       $("#load_more_json_button2").hide();
+       $("#nbr_entry").hide();
+       $("#loading_gif_browse").hide();
+    } else {
+        deploy_source();
+    }
 
 });
 </script>
