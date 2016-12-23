@@ -1,6 +1,6 @@
 var time_since_last_pastes_num = {};
 var data_for_processed_paste = { "global": [] };
-var list_feeder = ["global"];
+var list_feeder = [];
 var htmltext_graph_container = "<div class=\"col-lg-6\"> <div id=\"$1\" style=\"height: 90px; padding: 0px; position: relative;\"></div></div>";
 window.paste_num_tabvar_all = {};
 
@@ -134,8 +134,11 @@ function create_log_table(obj_json) {
         var msg_type = parsedmess[4].split(" ")[2]; 
 
         if (feeder == "All_feeders"){
-           var total_proc = $.plot("#global", [ getData("global") ], options_processed_pastes);
-           update_processed_pastes(total_proc, "global");
+            if(list_feeder.indexOf("global") == -1) {
+                list_feeder.push("global");
+                var total_proc = $.plot("#global", [ getData("global") ], options_processed_pastes);
+                update_processed_pastes(total_proc, "global");
+            }
            window.paste_num_tabvar_all["global"] = paste_processed;
            time_since_last_pastes_num["global"] = new Date().getTime();
         } else {
