@@ -33,7 +33,7 @@ function update_values() {
 // BEGIN PROCESSED PASTES
     var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
     var totalPoints = 60*parseInt(default_minute); //60s*minute
-    var curr_max = 0;
+    var curr_max = {"global": 0};
     
     function getData(dataset) {
         var curr_data;
@@ -44,14 +44,14 @@ function update_values() {
 
         if (curr_data.length > 0){
              var data_old = curr_data[0];
-             curr_data = curr_data.slice(1);
-             curr_max = curr_max == data_old ? Math.max.apply(null, curr_data) : curr_max;
+             curr_data = curr_data.slice(10);
+             curr_max[dataset] = curr_max[dataset] == data_old ? Math.max.apply(null, curr_data) : curr_max[dataset];
         }
         
         while (curr_data.length < totalPoints) {
             //var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
             var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
-            curr_max = y > curr_max ? y : curr_max;
+            curr_max[dataset] = y > curr_max[dataset] ? y : curr_max[dataset];
             curr_data.push(y);
         }
         // Zip the generated y values with the x values
@@ -63,7 +63,7 @@ function update_values() {
         return res;
     }
 
-    var updateInterval = 1000;
+    var updateInterval = 10000;
     var options_processed_pastes = {
         series: { shadowSize: 1 },
         lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
@@ -74,16 +74,14 @@ function update_values() {
             borderWidth: 0 
         },
     };
-    var total_proc = $.plot("#global", [ getData("global") ], options_processed_pastes);
 
     function update_processed_pastes(graph, dataset) {
         graph.setData([getData(dataset)]);
-        graph.getOptions().yaxes[0].max = curr_max;
+        graph.getOptions().yaxes[0].max = curr_max[dataset];
         graph.setupGrid();
         graph.draw();
         setTimeout(function(){ update_processed_pastes(graph, dataset); }, updateInterval);
     }
-    update_processed_pastes(total_proc, "global");
 
 
 // END PROCESSED PASTES    
@@ -136,6 +134,8 @@ function create_log_table(obj_json) {
         var msg_type = parsedmess[4].split(" ")[2]; 
 
         if (feeder == "All_feeders"){
+           var total_proc = $.plot("#global", [ getData("global") ], options_processed_pastes);
+           update_processed_pastes(total_proc, "global");
            window.paste_num_tabvar_all["global"] = paste_processed;
            time_since_last_pastes_num["global"] = new Date().getTime();
         } else {
