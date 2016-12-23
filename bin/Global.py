@@ -72,6 +72,8 @@ if __name__ == '__main__':
             os.makedirs(dirname)
 
         with open(filename, 'wb') as f:
+            print gzip64encoded
+            print base64.standard_b64decode(gzip64encoded)
             f.write(base64.standard_b64decode(gzip64encoded))
         p.populate_set_out(filename)
         processed_paste+=1

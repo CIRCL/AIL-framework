@@ -114,6 +114,8 @@ function launching_scripts {
 
     screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py -k 0 -c 1; read x'
     sleep 0.1
+    screen -S "Script" -X screen -t "Mixer" bash -c './Mixer.py; read x'
+    sleep 0.1
     screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
