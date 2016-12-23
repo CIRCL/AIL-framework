@@ -52,10 +52,10 @@
               <!-- /.sidebar-collapse -->
               <div class="panel panel-default">
                   <div class="panel-heading">
-                      <i class="fa fa-dashboard  fa-fw"></i> Pastes since {{ default_minute }} min
+                      <i class="fa fa-dashboard  fa-fw"></i> Total pastes since {{ default_minute }} min
                   </div>
                   <div class="panel-body">
-                       <div id="realtimechart" style="height: 90px; padding: 0px; position: relative;"></div>
+                       <div id="global" style="height: 90px; padding: 0px; position: relative;"></div>
                   </div>
               </div>
                   <!-- <div id="Graph_paste_num" style="height:90px; width:100%;"></div> -->
@@ -91,23 +91,38 @@
         </div>
 
             <div class="row">
-                      <div class="col-lg-12">
-                      <div class="panel panel-default">
-                      <div class="panel-heading">
-                        <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
-                      </div>
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-lg-6" id="Graph" style="height:400px; width:48%;"></div>
-                                <div class="col-lg-6" id="Graph2" style="height:400px; width:48%;"></div>
-                            </div>
-                            <!-- /.row -->
+                 <div class="col-lg-8">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">
+                           <i class="fa fa-bar-chart-o fa-fw"></i> <i class="fa fa-dashboard  fa-fw"></i> <i class="fa fa-copy"></i>Feeder(s) Monitor: Processed pastes and filtered duplicated
                         </div>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
-                </div>
-                <!-- /.col-lg-8 -->
+                        <div id="panelbody" class="panel-body" style="height:489px;">
+
+                        
+                        </div>
+                     <!-- /.panel-body -->
+                     </div>
+                      <!-- /.panel -->
+                 </div>
+                 <!-- /.col-lg-6 -->
+                 <div class="col-lg-4">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">
+                           <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
+                        </div>
+                        <div class="panel-body">
+                           <div class="row">
+                               <div class="col-lg-6" id="Graph" style="height:195px; width:88%;"></div>
+                               <div style="height:10px;"></div>
+                               <div class="col-lg-6" id="Graph2" style="height:195px; width:88%;"></div>
+                           </div>
+                        <!-- /.row -->
+                        </div>
+                     <!-- /.panel-body -->
+                     </div>
+                      <!-- /.panel -->
+                 </div>
+                 <!-- /.col-lg-6 -->
         <div class="col-lg-12">
         <div class="panel panel-default">
         <div class="panel-heading">

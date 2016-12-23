@@ -1,10 +1,16 @@
-var time_since_last_pastes_num;
+var time_since_last_pastes_num = {};
+var data_for_processed_paste = { "global": [] };
+var list_feeder = ["global"];
+var htmltext_graph_container = "<div class=\"col-lg-6\"> <div id=\"$1\" style=\"height: 90px; padding: 0px; position: relative;\"></div></div>";
+window.paste_num_tabvar_all = {};
 
 //If we do not received info from global, set pastes_num to 0
 function checkIfReceivedData(){
-    if ((new Date().getTime() - time_since_last_pastes_num) > 45*1000)
-        window.paste_num_tabvar = 0;
-    setTimeout(checkIfReceivedData, 45*1000);
+    for (i in list_feeder) {
+        if ((new Date().getTime() - time_since_last_pastes_num[list_feeder[i]]) > 45*1000)
+            window.paste_num_tabvar_all[list_feeder[i]] = 0;
+        setTimeout(checkIfReceivedData, 45*1000);
+    }
 }
 
 setTimeout(checkIfReceivedData, 45*1000);
@@ -24,34 +30,41 @@ function update_values() {
 
 
 // Plot and update the number of processed pastes
-$(function() {
-    var data = [];
+// BEGIN PROCESSED PASTES
     var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
     var totalPoints = 60*parseInt(default_minute); //60s*minute
     var curr_max = 0;
     
-    function getData() {
-        if (data.length > 0){
-             var data_old = data[0];
-             data = data.slice(1);
-             curr_max = curr_max == data_old ? Math.max.apply(null, data) : curr_max;
+    function getData(dataset) {
+        var curr_data;
+        if (data_for_processed_paste[dataset] ===  undefined) { // create feeder dataset if not exists yet
+            data_for_processed_paste[dataset] = [];
+        } 
+        curr_data = data_for_processed_paste[dataset];
+
+        if (curr_data.length > 0){
+             var data_old = curr_data[0];
+             curr_data = curr_data.slice(1);
+             curr_max = curr_max == data_old ? Math.max.apply(null, curr_data) : curr_max;
         }
         
-        while (data.length < totalPoints) {
-            var y = (typeof window.paste_num_tabvar !== "undefined") ? parseInt(window.paste_num_tabvar) : 0;
+        while (curr_data.length < totalPoints) {
+            //var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
+            var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
             curr_max = y > curr_max ? y : curr_max;
-            data.push(y);
+            curr_data.push(y);
         }
         // Zip the generated y values with the x values
         var res = [];
-        for (var i = 0; i < data.length; ++i) {
-            res.push([i, data[i]])
-        }
+        for (var i = 0; i < curr_data.length; ++i) {
+            res.push([i, curr_data[i]])
+        } 
+        data_for_processed_paste[dataset] = curr_data;
         return res;
     }
 
     var updateInterval = 1000;
-    var options = {
+    var options_processed_pastes = {
         series: { shadowSize: 1 },
         lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
         yaxis: { min: 0, max: 40 },
@@ -61,17 +74,19 @@ $(function() {
             borderWidth: 0 
         },
     };
-    var plot = $.plot("#realtimechart", [ getData() ], options);
-    
-    function update() {
-        plot.setData([getData()]);
-        plot.getOptions().yaxes[0].max = curr_max;
-        plot.setupGrid();
-        plot.draw();
-        setTimeout(update, updateInterval);
+    var total_proc = $.plot("#global", [ getData("global") ], options_processed_pastes);
+
+    function update_processed_pastes(graph, dataset) {
+        graph.setData([getData(dataset)]);
+        graph.getOptions().yaxes[0].max = curr_max;
+        graph.setupGrid();
+        graph.draw();
+        setTimeout(function(){ update_processed_pastes(graph, dataset); }, updateInterval);
     }
-    update();
-});
+    update_processed_pastes(total_proc, "global");
+
+
+// END PROCESSED PASTES    
 
 function initfunc( csvay, scroot) {
   window.csv = csvay;
@@ -114,10 +129,34 @@ function create_log_table(obj_json) {
     var chansplit = obj_json.channel.split('.');
     var parsedmess = obj_json.data.split(';');
 
-    if (parsedmess[0] == "Global"){
-        var paste_processed = parsedmess[4].split(" ")[2];
-        window.paste_num_tabvar = paste_processed;
-        time_since_last_pastes_num = new Date().getTime();
+  
+    if (parsedmess[0] == "Mixer"){
+        var feeder = parsedmess[4].split(" ")[1];
+        var paste_processed = parsedmess[4].split(" ")[3];
+        var msg_type = parsedmess[4].split(" ")[2]; 
+
+        if (feeder == "All_feeders"){
+           window.paste_num_tabvar_all["global"] = paste_processed;
+           time_since_last_pastes_num["global"] = new Date().getTime();
+        } else {
+
+            if (list_feeder.indexOf(feeder) == -1) {
+                list_feeder.push(feeder);
+                //ADD HTML CONTAINER + PLOT THE GRAPH, ADD IT TO A LIST CONTAING THE PLOTED GRAPH
+                $("#panelbody").append("<strong>"+feeder+"</strong>");
+                $("#panelbody").append("<div class=\"row\"> <div class=\"col-lg-12\">" + htmltext_graph_container.replace("$1", feeder+"Proc") + htmltext_graph_container.replace("$1", feeder+"Dup")+"</div></div>");
+                var new_feederProc = $.plot("#"+feeder+"Proc", [ getData(feeder+"Proc") ], options_processed_pastes);
+                options_processed_pastes.colors = ["#edc240"];
+                var new_feederDup = $.plot("#"+feeder+"Dup", [ getData(feeder+"Dup") ], options_processed_pastes);
+                options_processed_pastes.colors = ["#a971ff"];
+                update_processed_pastes(new_feederProc, feeder+"Proc");
+                update_processed_pastes(new_feederDup, feeder+"Dup");
+            }
+
+            var feederName = msg_type == "Duplicated" ? feeder+"Dup" : feeder+"Proc";
+            window.paste_num_tabvar_all[feederName] = paste_processed;
+            time_since_last_pastes_num[feederName] = new Date().getTime();
+        }
         return;
     }
 
