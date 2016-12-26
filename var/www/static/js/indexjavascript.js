@@ -1,19 +1,25 @@
 var time_since_last_pastes_num = {};
-var data_for_processed_paste = { "global": [] };
+var data_for_processed_paste = {  };
 var list_feeder = [];
-var htmltext_graph_container = "<div class=\"col-lg-6\"> <div id=\"$1\" style=\"height: 90px; padding: 0px; position: relative;\"></div></div>";
 window.paste_num_tabvar_all = {};
 
-//If we do not received info from global, set pastes_num to 0
+//If we do not received info from mixer, set pastes_num to 0
 function checkIfReceivedData(){
     for (i in list_feeder) {
-        if ((new Date().getTime() - time_since_last_pastes_num[list_feeder[i]]) > 45*1000)
-            window.paste_num_tabvar_all[list_feeder[i]] = 0;
-        setTimeout(checkIfReceivedData, 45*1000);
+        if(list_feeder[i] == "global"){
+            if ((new Date().getTime() - time_since_last_pastes_num[list_feeder[i]]) > 35*1000){
+                window.paste_num_tabvar_all[list_feeder[i]] = 0;
+            }
+        } else {
+            if ((new Date().getTime() - time_since_last_pastes_num["Proc"+list_feeder[i]]) > 35*1000){
+                window.paste_num_tabvar_all["Proc"+list_feeder[i]] = 0;
+                window.paste_num_tabvar_all["Dup"+list_feeder[i]] = 0;
+            }
+        }
     }
+    setTimeout(checkIfReceivedData, 35*1000);
 }
 
-setTimeout(checkIfReceivedData, 45*1000);
 
 function initfunc( csvay, scroot) {
   window.csv = csvay;
@@ -32,24 +38,17 @@ function update_values() {
 // Plot and update the number of processed pastes
 // BEGIN PROCESSED PASTES
     var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
-    var totalPoints = 60*parseInt(default_minute); //60s*minute
+    var totalPoints = 2*parseInt(default_minute); //60s*minute
     var curr_max = {"global": 0};
-    
-    function getData(dataset) {
-        var curr_data;
-        if (data_for_processed_paste[dataset] ===  undefined) { // create feeder dataset if not exists yet
-            data_for_processed_paste[dataset] = [];
-        } 
-        curr_data = data_for_processed_paste[dataset];
 
+    function fetch_data(dataset, curr_data, feeder_name) {
         if (curr_data.length > 0){
              var data_old = curr_data[0];
-             curr_data = curr_data.slice(10);
+             curr_data = curr_data.slice(1);
              curr_max[dataset] = curr_max[dataset] == data_old ? Math.max.apply(null, curr_data) : curr_max[dataset];
         }
         
         while (curr_data.length < totalPoints) {
-            //var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
             var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
             curr_max[dataset] = y > curr_max[dataset] ? y : curr_max[dataset];
             curr_data.push(y);
@@ -60,27 +59,61 @@ function update_values() {
             res.push([i, curr_data[i]])
         } 
         data_for_processed_paste[dataset] = curr_data;
-        return res;
+        return { label: feeder_name, data: res };
+    }
+
+    function getData(dataset_group, graph_type) {
+        var curr_data;
+ 
+        var all_res = [];
+        if (dataset_group == "global") {
+            if (data_for_processed_paste["global"] ===  undefined) { // create feeder dataset if not exists yet
+                data_for_processed_paste["global"] = [];
+            }
+            curr_data = data_for_processed_paste["global"];
+            all_res.push(fetch_data("global", curr_data, "global"));
+        } else {   
+
+            for(d_i in list_feeder) {
+                if(list_feeder[d_i] == "global") {
+                    continue;
+                }
+
+                dataset = graph_type+list_feeder[d_i];
+                if (data_for_processed_paste[dataset] ===  undefined) { // create feeder dataset if not exists yet
+                    data_for_processed_paste[dataset] = [];
+                }
+                curr_data = data_for_processed_paste[dataset];
+                all_res.push(fetch_data(dataset, curr_data, list_feeder[d_i]));
+            }
+
+        }
+        return all_res;
     }
 
     var updateInterval = 10000;
     var options_processed_pastes = {
-        series: { shadowSize: 1 },
-        lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
+        series: {   shadowSize: 0 ,
+                    lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }}
+                },
         yaxis: { min: 0, max: 40 },
-        colors: ["#a971ff"],
+        xaxis: { ticks: [[0, 0], [2, 1], [4, 2], [6, 3], [8, 4], [10, 5], [12, 6], [14, 7], [16, 8], [18, 9], [20, 10]] },
         grid: {
             tickColor: "#dddddd",
             borderWidth: 0 
         },
+        legend: {
+            show: true,
+            position: "nw",
+        }
     };
 
-    function update_processed_pastes(graph, dataset) {
-        graph.setData([getData(dataset)]);
+    function update_processed_pastes(graph, dataset, graph_type) {
+        graph.setData(getData(dataset, graph_type));
         graph.getOptions().yaxes[0].max = curr_max[dataset];
         graph.setupGrid();
         graph.draw();
-        setTimeout(function(){ update_processed_pastes(graph, dataset); }, updateInterval);
+        setTimeout(function(){ update_processed_pastes(graph, dataset, graph_type); }, updateInterval);
     }
 
 
@@ -136,8 +169,20 @@ function create_log_table(obj_json) {
         if (feeder == "All_feeders"){
             if(list_feeder.indexOf("global") == -1) {
                 list_feeder.push("global");
-                var total_proc = $.plot("#global", [ getData("global") ], options_processed_pastes);
+
+                options_processed_pastes.legend.show = false;
+                var total_proc = $.plot("#global", [ getData("global", null) ], options_processed_pastes);
+                options_processed_pastes.legend.show = true;
+                options_processed_pastes.series.lines = { show: true };
+                data_for_processed_paste["global"] = Array(totalPoints+1).join(0).split('');
+
+                var feederProc = $.plot("#Proc_feeder", [ getData(feeder, "Proc") ], options_processed_pastes);
+                var feederDup = $.plot("#Dup_feeder", [ getData(feeder, "Dup") ], options_processed_pastes);
+
+                update_processed_pastes(feederProc, "feeder", "Proc");
+                update_processed_pastes(feederDup, "feeder", "Dup");
                 update_processed_pastes(total_proc, "global");
+                setTimeout(checkIfReceivedData, 45*1000);
             }
            window.paste_num_tabvar_all["global"] = paste_processed;
            time_since_last_pastes_num["global"] = new Date().getTime();
@@ -145,18 +190,11 @@ function create_log_table(obj_json) {
 
             if (list_feeder.indexOf(feeder) == -1) {
                 list_feeder.push(feeder);
-                //ADD HTML CONTAINER + PLOT THE GRAPH, ADD IT TO A LIST CONTAING THE PLOTED GRAPH
-                $("#panelbody").append("<strong>"+feeder+"</strong>");
-                $("#panelbody").append("<div class=\"row\"> <div class=\"col-lg-12\">" + htmltext_graph_container.replace("$1", feeder+"Proc") + htmltext_graph_container.replace("$1", feeder+"Dup")+"</div></div>");
-                var new_feederProc = $.plot("#"+feeder+"Proc", [ getData(feeder+"Proc") ], options_processed_pastes);
-                options_processed_pastes.colors = ["#edc240"];
-                var new_feederDup = $.plot("#"+feeder+"Dup", [ getData(feeder+"Dup") ], options_processed_pastes);
-                options_processed_pastes.colors = ["#a971ff"];
-                update_processed_pastes(new_feederProc, feeder+"Proc");
-                update_processed_pastes(new_feederDup, feeder+"Dup");
+                data_for_processed_paste["Proc"+feeder] = Array(totalPoints+1).join(0).split('');
+                data_for_processed_paste["Dup"+feeder] = Array(totalPoints+1).join(0).split('');
             }
 
-            var feederName = msg_type == "Duplicated" ? feeder+"Dup" : feeder+"Proc";
+            var feederName = msg_type == "Duplicated" ? "Dup"+feeder : "Proc"+feeder;
             window.paste_num_tabvar_all[feederName] = paste_processed;
             time_since_last_pastes_num[feederName] = new Date().getTime();
         }

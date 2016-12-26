@@ -17,6 +17,7 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
   <script>
       window.default_minute = {{ default_minute }};
       window.glob_tabvar = []; // Avoid undefined
@@ -98,7 +99,9 @@
                         </div>
                         <div id="panelbody" class="panel-body" style="height:420px;">
 
-                        
+                       <div id="Proc_feeder" style="height: 200px; padding: 0px; position: relative;"></div>
+                       <div id="Dup_feeder" style="height: 200px; padding: 0px; position: relative;"></div>
+
                         </div>
                      <!-- /.panel-body -->
                      </div>
