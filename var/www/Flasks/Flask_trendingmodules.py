@@ -63,6 +63,7 @@ def modulesCharts():
 
     else:
         member_set = get_top_relevant_data(r_serv_charts, module_name)
+        member_set = member_set if member_set is not None else []
         if len(member_set) == 0:
             member_set.append(("No relevant data", int(100)))
         return jsonify(member_set)
