@@ -112,6 +112,7 @@ if __name__ == '__main__':
                         duplicated_paste_per_feeder[feeder_name] += 1
                     else: # New content
                         p.populate_set_out(relay_message)
+                        # OR populate another set based on the feeder_name
                     server.sadd(gzip64encoded, feeder_name)
                     server.expire(gzip64encoded, ttl_key)
 
@@ -128,6 +129,7 @@ if __name__ == '__main__':
                         server.expire(paste_name, ttl_key)
                         server.expire('HASH_'+paste_name, ttl_key)
                         p.populate_set_out(relay_message)
+                        # OR populate another set based on the feeder_name
                     else:
                         if gzip64encoded != content:
                             # Same paste name but different content
@@ -136,6 +138,7 @@ if __name__ == '__main__':
                             server.sadd(paste_name, feeder_name)
                             server.expire(paste_name, ttl_key)
                             p.populate_set_out(relay_message)
+                            # OR populate another set based on the feeder_name
                         else:
                             # Already processed
                             # Keep track of processed pastes
