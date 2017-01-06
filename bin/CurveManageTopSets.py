@@ -17,6 +17,7 @@ Requirements
 
 import redis
 import time
+import datetime
 import copy
 from pubsublogger import publisher
 from packages import lib_words
@@ -44,13 +45,14 @@ def manage_top_set():
     startDate = datetime.datetime.now()
     startDate = startDate.replace(hour=0, minute=0, second=0, microsecond=0)
     startDate = calendar.timegm(startDate.timetuple())
+    blacklist_size = int(server_term.scard(BlackListTermsSet_Name))
 
     dico = {}
 
-    # Retreive top data (2*max_card) from days sets
+    # Retreive top data (max_card + blacklist_size) from days sets
     for timestamp in range(startDate, startDate - top_termFreq_setName_month[1]*oneDay, -oneDay):
         curr_set = top_termFreq_setName_day[0] + str(timestamp)
-        array_top_day = server_term.zrevrangebyscore(curr_set, '+inf', '-inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality*2)
+        array_top_day = server_term.zrevrangebyscore(curr_set, '+inf', '-inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality+blacklist_size)
 
         for word, value in array_top_day:
             if word not in server_term.smembers(BlackListTermsSet_Name):
@@ -87,6 +89,11 @@ def manage_top_set():
     for elem in array_month:
         server_term.zadd(top_termFreq_setName_month[0], float(elem[1]), elem[0])
 
+    timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
+    value = str(timestamp) + ", " + "-"
+    r_temp.set("MODULE_"+ "CurveManageTopSets" + "_" + str(os.getpid()), value)
+    print "refreshed module"
+
 
 
 if __name__ == '__main__':
@@ -104,6 +111,18 @@ if __name__ == '__main__':
     
     cfg = ConfigParser.ConfigParser()
     cfg.read(configfile)
+
+
+    # For Module Manager
+    r_temp = redis.StrictRedis(
+        host=cfg.get('RedisPubSub', 'host'),
+        port=cfg.getint('RedisPubSub', 'port'),
+        db=cfg.getint('RedisPubSub', 'db'))
+
+    timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
+    value = str(timestamp) + ", " + "-"
+    r_temp.set("MODULE_"+ "CurveManageTopSets" + "_" + str(os.getpid()), value)
+    r_temp.sadd("MODULE_TYPE_"+ "CurveManageTopSets" , str(os.getpid()))
 
     server_term = redis.StrictRedis(
         host=cfg.get("Redis_Level_DB_TermFreq", "host"),

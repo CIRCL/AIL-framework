@@ -36,6 +36,9 @@ threshold_duplicate_tlsh = 100
 #Minimum size of the paste considered
 min_paste_size = 0.3
 
+[Module_ModuleInformation]
+#Threshold to deduce if a module is stuck or not, in seconds.
+threshold_stucked_module=600
 
 ##### Redis #####
 [Redis_Cache]

@@ -131,8 +131,10 @@ if __name__ == "__main__":
                                 # index of paste
                                 index_current = r_serv_dico.get(dico_hash)
                                 paste_path = r_serv_dico.get(index_current)
+                                paste_date = r_serv_dico.get(index_current+'_date')
+                                paste_date = paste_date if paste_date != None else "No date available"
                                 if paste_path != None:
-                                    hash_dico[dico_hash] = (hash_type, paste_path, percent)
+                                    hash_dico[dico_hash] = (hash_type, paste_path, percent, paste_date)
 
                                 print '['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent)
                         except Exception,e:
@@ -142,6 +144,7 @@ if __name__ == "__main__":
             # Add paste in DB after checking to prevent its analysis twice
             # hash_type_i -> index_i  AND  index_i -> PST.PATH
             r_serv1.set(index, PST.p_path)
+            r_serv1.set(index+'_date', PST._get_p_date())
             r_serv1.sadd("INDEX", index)
             # Adding hashes in Redis
             for hash_type, paste_hash in paste_hashes.iteritems():
@@ -152,7 +155,7 @@ if __name__ == "__main__":
 
             # if there is data in this dictionnary
             if len(hash_dico) != 0:
-                # paste_tuple = (paste_path, percent)
+                # paste_tuple = (hash_type, date, paste_path, percent)
                 for dico_hash, paste_tuple in hash_dico.items():
                     dupl.append(paste_tuple)
 
@@ -162,7 +165,7 @@ if __name__ == "__main__":
                 if dupl != []:
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis("p_duplicate", dupl)
-                    publisher.info('{}Detected {}'.format(to_print, len(dupl)))
+                    publisher.info('{}Detected {};{}'.format(to_print, len(dupl), PST.p_path))
                     print '{}Detected {}'.format(to_print, len(dupl))
 
                 y = time.time()

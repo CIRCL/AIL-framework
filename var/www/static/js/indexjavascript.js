@@ -109,10 +109,10 @@ function create_log_table(obj_json) {
     var pdate = document.createElement('TD')
     var nam = document.createElement('TD')
     var msage = document.createElement('TD')
+    var inspect = document.createElement('TD')
 
     var chansplit = obj_json.channel.split('.');
     var parsedmess = obj_json.data.split(';');
-
 
     if (parsedmess[0] == "Global"){
         var paste_processed = parsedmess[4].split(" ")[2];
@@ -139,7 +139,7 @@ function create_log_table(obj_json) {
         source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
     }
     source_link.setAttribute("HREF",source_url);
-    source_link.setAttribute("TARGET", "_blank")
+    source_link.setAttribute("TARGET", "_blank");
     source_link.appendChild(document.createTextNode(parsedmess[1]));
 
     src.appendChild(source_link);
@@ -169,6 +169,18 @@ function create_log_table(obj_json) {
 
     msage.appendChild(document.createTextNode(message.join(" ")));
 
+    var paste_path = parsedmess[5];
+    var url_to_saved_paste = url_showSavedPath+"?paste="+paste_path+"&num="+parsedmess[0];
+
+    var action_icon_a = document.createElement("A");
+    action_icon_a.setAttribute("TARGET", "_blank");
+    action_icon_a.setAttribute("HREF", url_to_saved_paste);
+    var action_icon_span = document.createElement('SPAN');
+    action_icon_span.className = "fa fa-search-plus";
+    action_icon_a.appendChild(action_icon_span);
+ 
+    inspect.appendChild(action_icon_a);
+
     tr.appendChild(time)
     tr.appendChild(chan);
     tr.appendChild(level);
@@ -177,6 +189,7 @@ function create_log_table(obj_json) {
     tr.appendChild(pdate);
     tr.appendChild(nam);
     tr.appendChild(msage);
+    tr.appendChild(inspect);
 
     if (tr.className == document.getElementById("checkbox_log_info").value && document.getElementById("checkbox_log_info").checked  == true) {
            tableBody.appendChild(tr);
@@ -219,27 +232,41 @@ function create_queue_table() {
         tr.appendChild(th);
     }
 
-    for(i = 0; i < (glob_tabvar.row1).length;i++){
-        var tr = document.createElement('TR')
-        for(j = 0; j < 2; j++){
-            var td = document.createElement('TD')
-            var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
-            td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
-            tr.appendChild(td)
-        }
-        // Used to decide the color of the row
-        // We have glob_tabvar.row1[][j] with:
-        // - j=0: ModuleName
-        // - j=1: queueLength
-        // - j=2: LastProcessedPasteTime
-        // - j=3: Number of the module belonging in the same category
-        if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
-            tr.className += " danger";
-        else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)
-            tr.className += " warning";
-        else
-            tr.className += " success";
+    if ((glob_tabvar.row1).length == 0) {
+        var tr = document.createElement('TR');
+        var td = document.createElement('TD');
+        var td2 = document.createElement('TD');
+        td.appendChild(document.createTextNode("No running queues"));
+        td2.appendChild(document.createTextNode("Or no feed"));
+        td.className += " danger";
+        td2.className += " danger";
+        tr.appendChild(td);
+        tr.appendChild(td2);
         tableBody.appendChild(tr);
+    }
+    else {
+        for(i = 0; i < (glob_tabvar.row1).length;i++){
+            var tr = document.createElement('TR')
+            for(j = 0; j < 2; j++){
+                var td = document.createElement('TD')
+                var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
+                td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
+                tr.appendChild(td)
+            }
+            // Used to decide the color of the row
+            // We have glob_tabvar.row1[][j] with:
+            // - j=0: ModuleName
+            // - j=1: queueLength
+            // - j=2: LastProcessedPasteTime
+            // - j=3: Number of the module belonging in the same category
+            if (parseInt(glob_tabvar.row1[i][2]) > window.threshold_stucked_module && parseInt(glob_tabvar.row1[i][1]) > 2)
+                tr.className += " danger";
+            else if (parseInt(glob_tabvar.row1[i][1]) == 0)
+                tr.className += " warning";
+            else
+                tr.className += " success";
+            tableBody.appendChild(tr);
+        }
     }
     Tablediv.appendChild(table);
 }

@@ -133,8 +133,8 @@ if __name__ == "__main__":
                                                     PST.p_name)
                 if len(domains_list) > 0:
 
-                    publisher.warning('{}Detected {} .onion(s)'.format(
-                        to_print, len(domains_list)))
+                    publisher.warning('{}Detected {} .onion(s);{}'.format(
+                        to_print, len(domains_list),PST.p_path))
                     now = datetime.datetime.now()
                     path = os.path.join('onions', str(now.year).zfill(4),
                                         str(now.month).zfill(2),
@@ -144,9 +144,9 @@ if __name__ == "__main__":
                                                         PST.p_date,
                                                         PST.p_name)
                     for url in fetch(p, r_cache, urls, domains_list, path):
-                        publisher.warning('{}Checked {}'.format(to_print, url))
+                        publisher.warning('{}Checked {};{}'.format(to_print, url, PST.p_path))
                 else:
-                    publisher.info('{}Onion related'.format(to_print))
+                    publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
 
             prec_filename = filename
         else:

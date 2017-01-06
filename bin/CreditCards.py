@@ -63,14 +63,14 @@ if __name__ == "__main__":
                 to_print = 'CreditCard;{};{};{};'.format(
                     paste.p_source, paste.p_date, paste.p_name)
                 if (len(creditcard_set) > 0):
-                    publisher.warning('{}Checked {} valid number(s)'.format(
-                        to_print, len(creditcard_set)))
+                    publisher.warning('{}Checked {} valid number(s);{}'.format(
+                        to_print, len(creditcard_set), paste.p_path))
                     #Send to duplicate
                     p.populate_set_out(filename, 'Duplicate')
                     #send to Browse_warning_paste
                     p.populate_set_out('creditcard;{}'.format(filename), 'BrowseWarningPaste')
                 else:
-                    publisher.info('{}CreditCard related'.format(to_print))
+                    publisher.info('{}CreditCard related;{}'.format(to_print, paste.p_path))
         else:
             publisher.debug("Script creditcard is idling 1m")
             time.sleep(10)

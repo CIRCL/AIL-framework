@@ -131,8 +131,8 @@ if __name__ == "__main__":
                                              list(A_values[1])))
 
                     pprint.pprint(A_values)
-                    publisher.info('Url;{};{};{};Checked {} URL'.format(
-                        PST.p_source, PST.p_date, PST.p_name, A_values[0]))
+                    publisher.info('Url;{};{};{};Checked {} URL;{}'.format(
+                        PST.p_source, PST.p_date, PST.p_name, A_values[0], PST.p_path))
             prec_filename = filename
 
         else:
