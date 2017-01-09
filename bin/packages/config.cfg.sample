@@ -72,11 +72,10 @@ host = localhost
 port = 6379
 db = 2
 
-[Redis_Mixer]
+[Redis_Mixer_Cache]
 host = localhost
 port = 6381
 db = 1
-channel = 102
 
 ##### LevelDB #####
 [Redis_Level_DB_Curve]

@@ -19,7 +19,10 @@ Depending on the configuration, this module will process the feed as follow:
             - Elseif, the saved content associated with the paste is not the same, process it
             - Else, do not process it but keep track for statistics on duplicate
 
-Note that the hash of the content is defined as the gzip64encoded
+Note that the hash of the content is defined as the gzip64encoded.
+
+Every data coming from a named feed can be sent to a pre-processing module before going to the global module.
+The mapping can be done via the variable feed_queue_mapping
 
 Requirements
 ------------
@@ -40,8 +43,7 @@ from Helper import Process
 
 # CONFIG #
 refresh_time = 30
-
-
+feed_queue_mapping = { "feeder2": "preProcess1" } # Map a feeder name to a pre-processing module
 
 if __name__ == '__main__':
     publisher.port = 6380
@@ -62,9 +64,9 @@ if __name__ == '__main__':
 
     # REDIS #
     server = redis.StrictRedis(
-        host=cfg.get("Redis_Mixer", "host"),
-        port=cfg.getint("Redis_Mixer", "port"),
-        db=cfg.getint("Redis_Mixer", "db"))
+        host=cfg.get("Redis_Mixer_Cache", "host"),
+        port=cfg.getint("Redis_Mixer_Cache", "port"),
+        db=cfg.getint("Redis_Mixer_Cache", "db"))
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")
@@ -86,13 +88,13 @@ if __name__ == '__main__':
         if message is not None:
             splitted = message.split()
             if len(splitted) == 2:
-                paste, gzip64encoded = splitted
+                complete_paste, gzip64encoded = splitted
                 try:
-                    feeder_name, paste_name = paste.split('>')
+                    feeder_name, paste_name = complete_paste.split('>')
                     feeder_name.replace(" ","")
                 except ValueError as e:
                     feeder_name = "unnamed_feeder"
-                    paste_name = paste
+                    paste_name = complete_paste
 
                 # Processed paste
                 processed_paste += 1
@@ -111,8 +113,13 @@ if __name__ == '__main__':
                         #STATS
                         duplicated_paste_per_feeder[feeder_name] += 1
                     else: # New content
-                        p.populate_set_out(relay_message)
-                        # OR populate another set based on the feeder_name
+
+                        # populate Global OR populate another set based on the feeder_name
+                        if feeder_name in feed_queue_mapping:
+                            p.populate_set_out(relay_message, feed_queue_mapping[feeder_name])
+                        else:
+                            p.populate_set_out(relay_message, 'Mixer')
+
                     server.sadd(gzip64encoded, feeder_name)
                     server.expire(gzip64encoded, ttl_key)
 
@@ -128,8 +135,13 @@ if __name__ == '__main__':
                         server.sadd(paste_name, feeder_name)
                         server.expire(paste_name, ttl_key)
                         server.expire('HASH_'+paste_name, ttl_key)
-                        p.populate_set_out(relay_message)
-                        # OR populate another set based on the feeder_name
+
+                        # populate Global OR populate another set based on the feeder_name
+                        if feeder_name in feed_queue_mapping:
+                            p.populate_set_out(relay_message, feed_queue_mapping[feeder_name])
+                        else:
+                            p.populate_set_out(relay_message, 'Mixer')
+
                     else:
                         if gzip64encoded != content:
                             # Same paste name but different content
@@ -137,8 +149,13 @@ if __name__ == '__main__':
                             duplicated_paste_per_feeder[feeder_name] += 1
                             server.sadd(paste_name, feeder_name)
                             server.expire(paste_name, ttl_key)
-                            p.populate_set_out(relay_message)
-                            # OR populate another set based on the feeder_name
+
+                            # populate Global OR populate another set based on the feeder_name
+                            if feeder_name in feed_queue_mapping:
+                                p.populate_set_out(relay_message, feed_queue_mapping[feeder_name])
+                            else:
+                                p.populate_set_out(relay_message, 'Mixer')
+
                         else:
                             # Already processed
                             # Keep track of processed pastes

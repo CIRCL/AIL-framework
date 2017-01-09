@@ -98,6 +98,7 @@ class PubSub(object):
                         msg = sub.recv(zmq.NOBLOCK)
                         yield msg.split(' ', 1)[1]
                     except zmq.error.Again as e:
+                        time.sleep(0.2)
                         pass
         else:
             raise Exception('No subscribe function defined')
