@@ -19,7 +19,7 @@ Depending on the configuration, this module will process the feed as follow:
             - Elseif, the saved content associated with the paste is not the same, process it
             - Else, do not process it but keep track for statistics on duplicate
 
-Note that the hash of the content is defined as the gzip64encoded.
+Note that the hash of the content is defined as the sha1(gzip64encoded).
 
 Every data coming from a named feed can be sent to a pre-processing module before going to the global module.
 The mapping can be done via the variable feed_queue_mapping
@@ -32,6 +32,7 @@ Requirements
 
 """
 import base64
+import hashlib
 import os
 import time
 from pubsublogger import publisher
@@ -106,10 +107,11 @@ if __name__ == '__main__':
                     duplicated_paste_per_feeder[feeder_name] = 0
 
                 relay_message = "{0} {1}".format(paste_name, gzip64encoded)
+                digest = hashlib.sha1(gzip64encoded).hexdigest()
 
                 # Avoid any duplicate coming from any sources
                 if operation_mode == 1:
-                    if server.exists(gzip64encoded): # Content already exists
+                    if server.exists(digest): # Content already exists
                         #STATS
                         duplicated_paste_per_feeder[feeder_name] += 1
                     else: # New content
@@ -120,8 +122,8 @@ if __name__ == '__main__':
                         else:
                             p.populate_set_out(relay_message, 'Mixer')
 
-                    server.sadd(gzip64encoded, feeder_name)
-                    server.expire(gzip64encoded, ttl_key)
+                    server.sadd(digest, feeder_name)
+                    server.expire(digest, ttl_key)
 
 
                 # Keep duplicate coming from different sources
@@ -131,7 +133,7 @@ if __name__ == '__main__':
                     if content is None:
                         # New content
                         # Store in redis for filtering
-                        server.set('HASH_'+paste_name, content)
+                        server.set('HASH_'+paste_name, digest)
                         server.sadd(paste_name, feeder_name)
                         server.expire(paste_name, ttl_key)
                         server.expire('HASH_'+paste_name, ttl_key)
@@ -143,7 +145,7 @@ if __name__ == '__main__':
                             p.populate_set_out(relay_message, 'Mixer')
 
                     else:
-                        if gzip64encoded != content:
+                        if digest != content:
                             # Same paste name but different content
                             #STATS
                             duplicated_paste_per_feeder[feeder_name] += 1
