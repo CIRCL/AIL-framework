@@ -17,6 +17,7 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
   <script>
       window.default_minute = {{ default_minute }};
       window.glob_tabvar = []; // Avoid undefined
@@ -52,10 +53,10 @@
               <!-- /.sidebar-collapse -->
               <div class="panel panel-default">
                   <div class="panel-heading">
-                      <i class="fa fa-dashboard  fa-fw"></i> Pastes since {{ default_minute }} min
+                      <i class="fa fa-dashboard  fa-fw"></i> Total pastes since {{ default_minute }} min
                   </div>
                   <div class="panel-body">
-                       <div id="realtimechart" style="height: 90px; padding: 0px; position: relative;"></div>
+                       <div id="global" style="height: 90px; padding: 0px; position: relative;"></div>
                   </div>
               </div>
                   <!-- <div id="Graph_paste_num" style="height:90px; width:100%;"></div> -->
@@ -91,23 +92,43 @@
         </div>
 
             <div class="row">
-                      <div class="col-lg-12">
-                      <div class="panel panel-default">
-                      <div class="panel-heading">
-                        <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
-                      </div>
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-lg-6" id="Graph" style="height:400px; width:48%;"></div>
-                                <div class="col-lg-6" id="Graph2" style="height:400px; width:48%;"></div>
-                            </div>
-                            <!-- /.row -->
+                 <div class="col-lg-6">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">
+                           <i class="fa fa-bar-chart-o fa-fw"></i> Feeder(s) Monitor:
                         </div>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
-                </div>
-                <!-- /.col-lg-8 -->
+                        <div id="panelbody" class="panel-body" style="height:420px;">
+
+                       <strong>Processed pastes</strong>
+                       <div id="Proc_feeder" style="height: 230px; padding: 0px; position: relative;"></div>
+                       <hr style="border-top: 2px solid #eee; margin-top: 7px; margin-bottom: 7px;">
+                       <strong>Filtered duplicated</strong>
+                       <div id="Dup_feeder" style="height: 100px; padding: 0px; position: relative;"></div>
+
+                        </div>
+                     <!-- /.panel-body -->
+                     </div>
+                      <!-- /.panel -->
+                 </div>
+                 <!-- /.col-lg-6 -->
+                 <div class="col-lg-6">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">
+                           <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
+                        </div>
+                        <div class="panel-body">
+                           <div class="row">
+                               <div class="col-lg-6" id="Graph" style="height:195px; width:88%;"></div>
+                               <div style="height:10px;"></div>
+                               <div class="col-lg-6" id="Graph2" style="height:195px; width:88%;"></div>
+                           </div>
+                        <!-- /.row -->
+                        </div>
+                     <!-- /.panel-body -->
+                     </div>
+                      <!-- /.panel -->
+                 </div>
+                 <!-- /.col-lg-6 -->
         <div class="col-lg-12">
         <div class="panel panel-default">
         <div class="panel-heading">

@@ -59,7 +59,7 @@ if __name__ == '__main__':
             if int(time.time() - time_1) > 30:
                 to_print = 'Global; ; ; ;glob Processed {0} paste(s)'.format(processed_paste)
                 print to_print
-                publisher.info(to_print)
+                #publisher.info(to_print)
                 time_1 = time.time()
                 processed_paste = 0
             time.sleep(1)
