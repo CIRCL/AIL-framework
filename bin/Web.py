@@ -113,7 +113,7 @@ if __name__ == "__main__":
                     # IP allocation)
                     if cc is not None and cc != "EU":
                         print hostl, asn, cc, \
-                            pycountry.countries.get(alpha2=cc).name
+                            pycountry.countries.get(alpha_2=cc).name
                         if cc == cc_critical:
                             to_print = 'Url;{};{};{};Detected {} {}'.format(
                                     PST.p_source, PST.p_date, PST.p_name,
