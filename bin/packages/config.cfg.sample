@@ -14,6 +14,8 @@ tldsfile = faup/src/data/mozilla.tlds
 
 domainstrending_csv = var/www/static/csv/domainstrendingdata
 
+pystemonpath = /home/pystemon/pystemon/
+
 ##### Flask #####
 [Flask]
 #Maximum number of character to display in the toolip
