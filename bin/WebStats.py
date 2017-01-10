@@ -39,7 +39,7 @@ def get_date_range(num_day):
     return date_list
 
 # Compute the progression for one keyword
-def compute_progression_word(keyword):
+def compute_progression_word(server, num_day, keyword):
     date_range = get_date_range(num_day)
     # check if this keyword is eligible for progression
     keyword_total_sum = 0
@@ -73,12 +73,12 @@ def compute_progression(server, field_name, num_day, url_parsed):
     if keyword is not None:
 
         #compute the progression of the current word
-        keyword_increase, keyword_total_sum = compute_progression_word(keyword)
+        keyword_increase, keyword_total_sum = compute_progression_word(server, num_day, keyword)
 
         #re-compute the progression of 2*max_set_cardinality
         current_top = server.zrevrangebyscore(redis_progression_name_set, '+inf', '-inf', withscores=True, start=0, num=2*max_set_cardinality)
-        for word, value in array_top_day:
-            word_inc, word_tot_sum = compute_progression_word(word)
+        for word, value in current_top:
+            word_inc, word_tot_sum = compute_progression_word(server, num_day, word)
             server.zrem(redis_progression_name_set, word)
             if (word_tot_sum > threshold_total_sum) and (word_inc > threshold_increase):
                 server.zadd(redis_progression_name_set, float(word_inc), word)
