@@ -16,6 +16,8 @@ domainstrending_csv = var/www/static/csv/domainstrendingdata
 
 pystemonpath = /home/pystemon/pystemon/
 
+sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
+
 ##### Flask #####
 [Flask]
 #Maximum number of character to display in the toolip
