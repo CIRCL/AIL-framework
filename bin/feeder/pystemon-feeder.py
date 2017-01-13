@@ -36,7 +36,11 @@ if not os.path.exists(configfile):
 cfg = ConfigParser.ConfigParser()
 cfg.read(configfile)
 
-zmq_url = cfg.get("ZMQ_Global", "address")
+if cfg.has_option("ZMQ_Global", "bind"):
+    zmq_url = cfg.get("ZMQ_Global", "bind")
+else:
+    zmq_url = "tcp://127.0.0.1:5556"
+
 pystemonpath = cfg.get("Directories", "pystemonpath")
 
 context = zmq.Context()
