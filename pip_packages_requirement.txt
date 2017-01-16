@@ -12,6 +12,7 @@ matplotlib
 networkx
 terminaltables
 colorama
+asciimatics
 
 #Tokeniser
 nltk
