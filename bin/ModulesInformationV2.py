@@ -27,13 +27,53 @@ lastTimeKillCommand = {}
 TABLES = {"running": [("fetching information...",0)], "idle": [("fetching information...",0)], "notRunning": [("fetching information...",0)], "logs": [("No events recorded yet", 0)]}
 
 class CListBox(ListBox):
+
     def __init__(self, queue_name, *args, **kwargs):
         self.queue_name = queue_name
         super(CListBox, self).__init__(*args, **kwargs)
 
     def update(self, frame_no):
         self._options = TABLES[self.queue_name]
-        ListBox.update(self, frame_no)
+
+        self._draw_label()
+
+        # Calculate new visible limits if needed.
+        width = self._w - self._offset
+        height = self._h
+        dx = dy = 0
+
+        # Clear out the existing box content
+        (colour, attr, bg) = self._frame.palette["field"]
+        for i in range(height):
+            self._frame.canvas.print_at(
+                " " * width,
+                self._x + self._offset + dx,
+                self._y + i + dy,
+                colour, attr, bg)
+
+        # Don't bother with anything else if there are no options to render.
+        if len(self._options) <= 0:
+            return
+
+        # Render visible portion of the text.
+        self._start_line = max(0, max(self._line - height + 1,
+                                      min(self._start_line, self._line)))
+        for i, (text, _) in enumerate(self._options):
+            if i == 0:
+                colour, attr, bg = self._frame.palette["title"]
+                self._frame.canvas.print_at(
+                    "{:{width}}".format(text, width=width),
+                    self._x + self._offset + dx,
+                    self._y + i + dy - self._start_line,
+                    colour, attr, bg)
+            elif self._start_line <= i < self._start_line + height:
+                colour, attr, bg = self._pick_colours("field", i == self._line)
+                self._frame.canvas.print_at(
+                    "{:{width}}".format(text, width=width),
+                    self._x + self._offset + dx,
+                    self._y + i + dy - self._start_line,
+                    colour, attr, bg)
+
 
 class CLabel(Label):
     def __init__(self, label):
@@ -51,6 +91,7 @@ class CLabel(Label):
 
     def update(self, frame_no):
         (colour, attr, bg) = self._frame.palette["title"]
+        colour = Screen.COLOUR_YELLOW
         self._frame.canvas.print_at(
             self._text, self._x, self._y, colour, attr, bg)
 
@@ -67,7 +108,8 @@ class ListView(Frame):
                                        screen.height,
                                        screen.width,
                                        on_load=self._reload_list,
-                                       hover_focus=True)
+                                       hover_focus=True,
+                                       reduce_cpu=True)
 
         self._list_view_run_queue = CListBox(
             "running",
@@ -142,7 +184,7 @@ def demo(screen):
                 TABLES[key] = val
             screen.refresh()
             time_cooldown = time.time()
-        time.sleep(0.02)
+        #time.sleep(0.02)
 
 
 def getPid(module):
@@ -334,7 +376,7 @@ def fetchQueueData():
         printstring1.append( (text, the_pid) )
 
     padding_row = [5, 23, 8, 
-                   12, 45]
+                   12, 50]
     printstring2 = []
     for row in printarray2:
         the_array = row[0]
