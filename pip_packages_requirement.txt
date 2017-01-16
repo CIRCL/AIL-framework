@@ -25,6 +25,7 @@ ssdeep
 #Others
 python-magic
 pybloomfiltermmap
+psutil
 
 ipython
 flask

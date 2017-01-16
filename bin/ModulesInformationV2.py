@@ -13,6 +13,7 @@ import time, datetime
 import argparse, ConfigParser
 import json
 import redis
+import psutil
 
  # CONFIG VARIABLES
 kill_retry_threshold = 60 #1m
@@ -26,6 +27,8 @@ printarrayGlob.insert(0, ["Time", "Module", "PID", "Action"])
 lastTimeKillCommand = {}
 TABLES = {"running": [("fetching information...",0)], "idle": [("fetching information...",0)], "notRunning": [("fetching information...",0)], "logs": [("No events recorded yet", 0)]}
 QUEUE_STATUS = {}
+CPU_TABLE = {} 
+CPU_OBJECT_TABLE = {}
 
 class CListBox(ListBox):
 
@@ -83,7 +86,7 @@ class CListBox(ListBox):
                         queueStatus = Screen.COLOUR_GREEN
 
                     self._frame.canvas.print_at(" ",
-                        self._x + 5 + dx,
+                        self._x + 9 + dx,
                         self._y + i + dy - self._start_line,
                         colour, attr, queueStatus)
 
@@ -109,13 +112,6 @@ class CLabel(Label):
             self._text, self._x, self._y, colour, attr, bg)
 
 class ListView(Frame):
-    # Override standard palette for pop-ups
-#        "selected_field":
-#            (Screen.COLOUR_YELLOW, Screen.A_BOLD, Screen.COLOUR_BLUE),
-#        "focus_field":
-#            (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLUE),
-#        "selected_focus_field":
-#            (Screen.COLOUR_WHITE, Screen.A_BOLD, Screen.COLOUR_CYAN),
     def __init__(self, screen):
         super(ListView, self).__init__(screen,
                                        screen.height,
@@ -140,6 +136,7 @@ class ListView(Frame):
             "logs",
             screen.height // 4,
             [], name="LIST", on_change=self._on_pick)
+        self._list_view_Log.disabled = True
 
         #Running Queues
         layout = Layout([100])
@@ -192,12 +189,13 @@ def demo(screen):
     while True:
         LV._update(None)
         screen.draw_next_frame()
-        if time.time() - time_cooldown > 1:
+        if time.time() - time_cooldown > args.refresh:
             for key, val in fetchQueueData().iteritems():
                 TABLES[key] = val
+            TABLES["logs"] = format_logs(printarrayGlob)
             screen.refresh()
             time_cooldown = time.time()
-        #time.sleep(0.02)
+        time.sleep(0.02)
 
 
 def getPid(module):
@@ -252,8 +250,10 @@ def kill_module(module, pid):
     lastTimeKillCommand[pid] = int(time.time())
     if pid is not None:
         try:
-            os.kill(pid, signal.SIGUSR1)
-        except OSError:
+            #os.kill(pid, signal.SIGUSR1)
+            p = psutil.Process(pid)
+            p.terminate()
+        except Exception:
             print pid, 'already killed'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
             printarrayGlob.insert(1, [inst_time, module, pid, "Already killed"])
@@ -277,7 +277,9 @@ def kill_module(module, pid):
             printarrayGlob.pop()
 
             time.sleep(1)
-            os.kill(pid, signal.SIGUSR1)
+            #os.kill(pid, signal.SIGUSR1)
+            p = psutil.Process(pid)
+            p.terminate()
             time.sleep(1)
             if getPid(module) is None:
                 print module, 'has been killed'
@@ -341,44 +343,57 @@ def fetchQueueData():
                             if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                 kill_module(queue, int(moduleNum))
     
-                        array_module_type.append( ([" K  [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)], moduleNum) )
+                        try:
+                            cpu_percent = CPU_OBJECT_TABLE[int(moduleNum)].cpu_percent()
+                            CPU_TABLE[moduleNum].insert(1, cpu_percent)
+                            cpu_avg = sum(CPU_TABLE[moduleNum])/len(CPU_TABLE[moduleNum])
+                        except KeyError:
+                            CPU_OBJECT_TABLE[int(moduleNum)] = psutil.Process(int(moduleNum))
+                            cpu_percent = CPU_OBJECT_TABLE[int(moduleNum)].cpu_percent()
+                            CPU_TABLE[moduleNum] = []
+                            cpu_avg = cpu_percent
+                        if len(CPU_TABLE[moduleNum]) > args.refresh*10:
+                            CPU_TABLE[moduleNum].pop()
+                        mem_percent = CPU_OBJECT_TABLE[int(moduleNum)].memory_percent()
+
+                        array_module_type.append( ([" <K>    [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path), "{0:.2f}".format(cpu_percent)+"%", "{0:.2f}".format(mem_percent)+"%", "{0:.2f}".format(cpu_avg)+"%"], moduleNum) )
     
                     else:
-                        printarray2.append( (["   ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
+                        printarray2.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
                 array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True)
         for e in array_module_type:
             printarray1.append(e)
     
     for curr_queue in module_file_array:
         if curr_queue not in all_queue:
-                printarray3.append( (["   ", curr_queue, "Not running"], len(printarray3)+1) )
+                printarray3.append( ([" <S>  ", curr_queue, "Not running"], len(printarray3)+1) )
         else:
             if len(list(server.smembers('MODULE_TYPE_'+curr_queue))) == 0:
                 if curr_queue not in no_info_modules:
                     no_info_modules[curr_queue] = int(time.time())
-                    printarray3.append( (["   ", curr_queue, "No data"], len(printarray3)+1) )
+                    printarray3.append( ([" <S>  ", curr_queue, "No data"], len(printarray3)+1) )
                 else:
                     #If no info since long time, try to kill
                     if args.autokill == 1:
                         if int(time.time()) - no_info_modules[curr_queue] > args.treshold:
                             kill_module(curr_queue, None)
                             no_info_modules[curr_queue] = int(time.time())
-                        printarray3.append( (["   ", curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"], len(printarray3)+1) )
+                        printarray3.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"], len(printarray3)+1) )
                     else:
-                        printarray3.append( (["   ", curr_queue, "Stuck or idle, restarting disabled"], len(printarray3)+1) )
+                        printarray3.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting disabled"], len(printarray3)+1) )
     
     ## FIXME To add:
     ## Button KILL Process using  Curses
     
     printarray1.sort(key=lambda x: x[0], reverse=False)
     printarray2.sort(key=lambda x: x[0], reverse=False)
-    printarray1.insert(0,(["   ", "Queue name", "PID", "#", "S Time", "R Time", "Processed element", "CPU", "Mem", "Avg CPU"], 0) )
-    printarray2.insert(0,(["   ", "Queue", "PID", "Idle Time", "Last paste hash"], 0) )
-    printarray3.insert(0,(["   ", "Queue", "State"], 0) )
+    printarray1.insert(0,([" Action", "Queue name", "PID", "#", "S Time", "R Time", "Processed element", "CPU %", "Mem %", "Avg CPU%"], 0) )
+    printarray2.insert(0,([" Action", "Queue", "PID", "Idle Time", "Last paste hash"], 0) )
+    printarray3.insert(0,([" Action", "Queue", "State"], 0) )
 
-    padding_row = [8, 23, 8, 
+    padding_row = [12, 23, 8, 
                         8, 23, 10,
-                        50, 6, 6, 8]
+                        55, 11, 11, 12]
     printstring1 = []
     for row in printarray1:
         the_array = row[0]
@@ -394,7 +409,7 @@ def fetchQueueData():
             text += (padding_row[ite] - len(elem))*" " + padd_off
         printstring1.append( (text, the_pid) )
 
-    padding_row = [5, 23, 8, 
+    padding_row = [9, 23, 8, 
                    12, 50]
     printstring2 = []
     for row in printarray2:
@@ -411,7 +426,7 @@ def fetchQueueData():
             text += (padding_row[ite] - len(elem))*" " + padd_off
         printstring2.append( (text, the_pid) )
 
-    padding_row = [5, 23, 35] 
+    padding_row = [9, 23, 35] 
     printstring3 = []
     for row in printarray3:
         the_array = row[0]
@@ -429,12 +444,31 @@ def fetchQueueData():
 
     return {"running": printstring1, "idle": printstring2, "notRunning": printstring3}
 
+def format_logs(logs):
+    printstring4 = []
+    padding_row = [12, 23, 8, 50]
+    text=""
+
+    for row in logs:
+        if row is None:
+            continue
+        for ite, elem in enumerate(row):
+            if len(elem) > padding_row[ite]:
+                text += "*" + elem[-padding_row[ite]+6:]
+                padd_off = " "*5
+            else:
+                text += elem
+                padd_off = " "*0
+            text += (padding_row[ite] - len(elem))*" " + padd_off
+        printstring4.append( (text, len(printstring4)+1) )
+    return printstring4
+
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Show info concerning running modules and log suspected stucked modules. May be use to automatically kill and restart stucked one.')
-    parser.add_argument('-r', '--refresh', type=int, required=False, default=1, help='Refresh rate')
+    parser.add_argument('-r', '--refresh', type=int, required=False, default=2, help='Refresh rate')
     parser.add_argument('-t', '--treshold', type=int, required=False, default=60*10*1, help='Refresh rate')
     parser.add_argument('-k', '--autokill', type=int, required=False, default=0, help='Enable auto kill option (1 for TRUE, anything else for FALSE)')
     parser.add_argument('-c', '--clear', type=int, required=False, default=0, help='Clear the current module information (Used to clear data from old launched modules)')
