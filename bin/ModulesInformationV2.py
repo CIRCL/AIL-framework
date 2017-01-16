@@ -25,6 +25,7 @@ printarrayGlob = [None]*14
 printarrayGlob.insert(0, ["Time", "Module", "PID", "Action"])
 lastTimeKillCommand = {}
 TABLES = {"running": [("fetching information...",0)], "idle": [("fetching information...",0)], "notRunning": [("fetching information...",0)], "logs": [("No events recorded yet", 0)]}
+QUEUE_STATUS = {}
 
 class CListBox(ListBox):
 
@@ -58,7 +59,7 @@ class CListBox(ListBox):
         # Render visible portion of the text.
         self._start_line = max(0, max(self._line - height + 1,
                                       min(self._start_line, self._line)))
-        for i, (text, _) in enumerate(self._options):
+        for i, (text, pid) in enumerate(self._options):
             if i == 0:
                 colour, attr, bg = self._frame.palette["title"]
                 self._frame.canvas.print_at(
@@ -73,6 +74,18 @@ class CListBox(ListBox):
                     self._x + self._offset + dx,
                     self._y + i + dy - self._start_line,
                     colour, attr, bg)
+                if self.queue_name == "running":
+                    if QUEUE_STATUS[pid] == 2:
+                        queueStatus = Screen.COLOUR_RED
+                    elif QUEUE_STATUS[pid] == 1:
+                        queueStatus = Screen.COLOUR_YELLOW
+                    else:
+                        queueStatus = Screen.COLOUR_GREEN
+
+                    self._frame.canvas.print_at(" ",
+                        self._x + 5 + dx,
+                        self._y + i + dy - self._start_line,
+                        colour, attr, queueStatus)
 
 
 class CLabel(Label):
@@ -310,6 +323,12 @@ def fetchQueueData():
                 if timestamp is not None and path is not None:
                     startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
                     processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
+                    if ((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
+                        QUEUE_STATUS[moduleNum] = 2
+                    elif ((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold/2:
+                        QUEUE_STATUS[moduleNum] = 1
+                    else:
+                        QUEUE_STATUS[moduleNum] = 0
     
                     if int(card) > 0:
                         if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
@@ -322,7 +341,7 @@ def fetchQueueData():
                             if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                 kill_module(queue, int(moduleNum))
     
-                        array_module_type.append( (["   ", str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)], moduleNum) )
+                        array_module_type.append( ([" K  [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path)], moduleNum) )
     
                     else:
                         printarray2.append( (["   ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
@@ -357,9 +376,9 @@ def fetchQueueData():
     printarray2.insert(0,(["   ", "Queue", "PID", "Idle Time", "Last paste hash"], 0) )
     printarray3.insert(0,(["   ", "Queue", "State"], 0) )
 
-    padding_row = [5, 23, 8, 
+    padding_row = [8, 23, 8, 
                         8, 23, 10,
-                        45, 6, 6, 8]
+                        50, 6, 6, 8]
     printstring1 = []
     for row in printarray1:
         the_array = row[0]
