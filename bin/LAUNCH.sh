@@ -117,7 +117,7 @@ function launching_scripts {
 
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
-    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py -k 0 -c 1; read x'
+    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModulesInformationV2.py -k 0 -c 1; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Mixer" bash -c './Mixer.py; read x'
     sleep 0.1

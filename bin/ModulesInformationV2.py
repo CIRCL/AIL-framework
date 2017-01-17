@@ -29,6 +29,8 @@ lastTimeKillCommand = {}
 
 current_selected_value = 0
 current_selected_queue = ""
+current_selected_action = ""
+current_selected_action = 0
 
 PID_NAME_DICO = {}
 
@@ -108,7 +110,8 @@ class CListBox(ListBox):
                 global current_selected_value, current_selected_queue
                 current_selected_value = self.value
                 current_selected_queue = self.queue_name
-                raise NextScene("confirm")
+                self._frame.save()
+                raise NextScene("action_choice")
             else:
                 # Ignore any other key press.
                 return event
@@ -125,7 +128,7 @@ class CListBox(ListBox):
                     # If clicked on button <k>, kill the queue
                     if self._x+2 <= new_event.x < self._x+4:
                         if self.queue_name in ["running", "idle"]:
-                            kill_module(PID_NAME_DICO[self.value], self.value)
+                            kill_module(PID_NAME_DICO[int(self.value)], self.value)
                         else:
                             restart_module(self.value)
 
@@ -232,7 +235,8 @@ class Confirm(Frame):
         # Create the form for displaying the list of contacts.
         layout = Layout([100], fill_frame=True)
         self.add_layout(layout)
-        self.label = CLabel("Confirm {} module {} {}?")
+        self.label = CLabel("{} module {} {}?")
+        layout.add_widget(Label(" "))
         layout.add_widget(self.label)
         layout2 = Layout([1,1])
         self.add_layout(layout2)
@@ -242,41 +246,119 @@ class Confirm(Frame):
         self.fix()
 
     def _ok(self):
-        global current_selected_value, current_selected_queue
-        if current_selected_queue in ["running", "idle"]:
-            kill_module(PID_NAME_DICO[current_selected_value], current_selected_value)
+        global current_selected_value, current_selected_queue, current_selected_action, current_selected_amount
+        if current_selected_action == "KILL":
+            kill_module(PID_NAME_DICO[int(current_selected_value)], current_selected_value)
         else:
-            restart_module(current_selected_value)
+            count = int(current_selected_amount)
+            if current_selected_queue in ["running", "idle"]:
+                restart_module(PID_NAME_DICO[int(current_selected_value)], count)
+            else:
+                restart_module(current_selected_value, count)
+
         current_selected_value = 0
-        current_selected_value = 0
-        self.label._text = "Confirm {} module {} {}?"
+        current_selected_amount = 0
+        current_selected_action = ""
+        self.label._text = "{} module {} {}?"
+        self.save()
         raise NextScene("dashboard")
 
     def _cancel(self):
         global current_selected_value
         current_selected_value = 0
-        self.label._text = "Confirm {} module {} {}?"
+        current_selected_amount = 0
+        current_selected_action = ""
+        self.label._text = "{} module {} {}?"
+        self.save()
         raise NextScene("dashboard")
 
     def _setValue(self):
-        global current_selected_value, current_selected_queue
+        global current_selected_value, current_selected_queue, current_selected_action, current_selected_amount
         if current_selected_queue in ["running", "idle"]:
-            action = "KILL"
-            modulename = PID_NAME_DICO[current_selected_value]
+            action = current_selected_action if current_selected_action == "KILL" else current_selected_action +" "+ str(current_selected_amount) + "x"
+            modulename = PID_NAME_DICO[int(current_selected_value)]
             pid = current_selected_value
         else:
-            action = "START"
+            action = current_selected_action + " " + str(current_selected_amount) + "x"
             modulename = current_selected_value
             pid = ""
         self.label._text = self.label._text.format(action, modulename, pid)
 
+class Action_choice(Frame):
+    def __init__(self, screen):
+        super(Action_choice, self).__init__(screen,
+                                          screen.height * 1 // 8,
+                                          screen.width * 1 // 2,
+                                          hover_focus=True,
+                                          on_load=self._setValue,
+                                          title="Confirm action",
+                                          reduce_cpu=True)
 
+        # Create the form for displaying the list of contacts.
+        layout = Layout([100], fill_frame=True)
+        self.add_layout(layout)
+        self.label = CLabel("Choose action on module {} {}")
+        layout.add_widget(self.label)
+        layout2 = Layout([1,1,1])
+        self.add_layout(layout2)
+        layout2.add_widget(Button("Cancel", self._cancel), 0)
+        self._killBtn = Button("KILL", self._kill)
+        layout2.add_widget(self._killBtn, 1)
+        layout2.add_widget(Button("START", self._start), 2)
+        layout3 = Layout([1,1,1])
+        self.add_layout(layout3)
+        self.textEdit = Text("Amount", "amount")
+        layout3.add_widget(self.textEdit, 2)
+
+        self.fix()
+
+    def _kill(self):
+        global current_selected_action
+        current_selected_action = "KILL"
+        self.label._text = "Choose action on module {} {}"
+        self.save()
+        raise NextScene("confirm")
+
+    def _start(self):
+        global current_selected_action, current_selected_amount
+        current_selected_action = "START"
+        try:
+            count = int(self.textEdit.value)
+            count = count if count < 20 else 1
+        except Exception:
+            count = 1
+        current_selected_amount = count
+        self.label._text = "Choose action on module {} {}"
+        self.save()
+        raise NextScene("confirm")
+
+
+    def _cancel(self):
+        global current_selected_value
+        current_selected_value = 0
+        self.label._text = "Choose action on module {} {}"
+        self.save()
+        raise NextScene("dashboard")
+
+    def _setValue(self):
+        self._killBtn.disabled = False
+        global current_selected_value, current_selected_queue
+        if current_selected_queue in ["running", "idle"]:
+            modulename = PID_NAME_DICO[int(current_selected_value)]
+            pid = current_selected_value
+        else:
+            self._killBtn.disabled = True
+            modulename = current_selected_value
+            pid = ""
+        self.label._text = self.label._text.format(modulename, pid)
 
 def demo(screen):
     dashboard = ListView(screen)
     confirm = Confirm(screen)
+    action_choice = Action_choice(screen)
     scenes = [
         Scene([dashboard], -1, name="dashboard"),
+        Scene([action_choice], -1, name="action_choice"),
         Scene([confirm], -1, name="confirm"),
     ]
 
@@ -333,10 +415,12 @@ def cleanRedis():
                 printarrayGlob.pop()
                 #time.sleep(5)
 
-def restart_module(module):
-    p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
+def restart_module(module, count=1):
+    for i in range(count):
+        p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
+        time.sleep(0.2)
     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, "?", "Restarted"], 0))
+    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, "?", "Restarted " + str(count) + "x"], 0))
     printarrayGlob.pop()
 
 
@@ -374,7 +458,7 @@ def kill_module(module, pid):
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
             printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
             printarrayGlob.pop()
-            restart_module(module)
+            #restart_module(module)
 
         else:
             #print 'killing failed, retrying...'
@@ -391,7 +475,7 @@ def kill_module(module, pid):
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
                 printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
                 printarrayGlob.pop()
-                restart_module(module)
+                #restart_module(module)
             else:
                 #print 'killing failed!'
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
@@ -468,7 +552,7 @@ def fetchQueueData():
     
                     else:
                         printarray2.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
-                        PID_NAME_DICO[moduleNum] = str(queue)
+                PID_NAME_DICO[int(moduleNum)] = str(queue)
                 array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True)
         for e in array_module_type:
             printarray1.append(e)
