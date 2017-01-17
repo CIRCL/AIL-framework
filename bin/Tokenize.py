@@ -28,6 +28,15 @@ from packages import Paste
 from pubsublogger import publisher
 
 from Helper import Process
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -44,10 +53,17 @@ if __name__ == "__main__":
         print message
         if message is not None:
             paste = Paste.Paste(message)
-            for word, score in paste._get_top_words().items():
-                if len(word) >= 4:
-                    msg = '{} {} {}'.format(paste.p_path, word, score)
-                    p.populate_set_out(msg)
+            signal.alarm(5)
+            try:
+                for word, score in paste._get_top_words().items():
+                    if len(word) >= 4:
+                        msg = '{} {} {}'.format(paste.p_path, word, score)
+                        p.populate_set_out(msg)
+            except TimeoutException:
+                 print ("{0} processing timeout".format(paste.p_path))
+                 continue
+            else:
+                signal.alarm(0)
         else:
             publisher.debug("Tokeniser is idling 10s")
             time.sleep(10)

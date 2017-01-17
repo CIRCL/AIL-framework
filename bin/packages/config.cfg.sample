@@ -14,6 +14,10 @@ tldsfile = faup/src/data/mozilla.tlds
 
 domainstrending_csv = var/www/static/csv/domainstrendingdata
 
+pystemonpath = /home/pystemon/pystemon/
+
+sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
+
 ##### Flask #####
 [Flask]
 #Maximum number of character to display in the toolip
@@ -128,6 +132,7 @@ path = indexdir
 #address = tcp://crf.circl.lu:5556
 address = tcp://127.0.0.1:5556
 channel = 102
+bind = tcp://127.0.0.1:5556
 
 [ZMQ_Url]
 address = tcp://127.0.0.1:5004

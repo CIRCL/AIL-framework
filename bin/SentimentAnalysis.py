@@ -32,6 +32,20 @@ accepted_Mime_type = ['text/plain']
 size_threshold = 250
 line_max_length_threshold = 1000
 
+import os
+import ConfigParser
+
+configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+if not os.path.exists(configfile):
+    raise Exception('Unable to find the configuration file. \
+        Did you set environment variables? \
+        Or activate the virtualenv.')
+
+cfg = ConfigParser.ConfigParser()
+cfg.read(configfile)
+
+sentiment_lexicon_file = cfg.get("Directories", "sentiment_lexicon_file")
+
 def Analyse(message, server):
     path = message
     paste = Paste.Paste(path)
@@ -61,7 +75,7 @@ def Analyse(message, server):
             avg_score = {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compoundPos': 0.0, 'compoundNeg': 0.0}
             neg_line = 0
             pos_line = 0
-            sid = SentimentIntensityAnalyzer()
+            sid = SentimentIntensityAnalyzer(sentiment_lexicon_file)
             for sentence in sentences:
                  ss = sid.polarity_scores(sentence)
                  for k in sorted(ss):
