@@ -24,13 +24,28 @@ import sys
 import time
 import redis
 import base64
+import os
+import ConfigParser
 
-port = "5556"
-pystemonpath = "/home/pystemon/pystemon/"
+configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+if not os.path.exists(configfile):
+    raise Exception('Unable to find the configuration file. \
+        Did you set environment variables? \
+        Or activate the virtualenv.')
+
+cfg = ConfigParser.ConfigParser()
+cfg.read(configfile)
+
+if cfg.has_option("ZMQ_Global", "bind"):
+    zmq_url = cfg.get("ZMQ_Global", "bind")
+else:
+    zmq_url = "tcp://127.0.0.1:5556"
+
+pystemonpath = cfg.get("Directories", "pystemonpath")
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-socket.bind("tcp://*:%s" % port)
+socket.bind(zmq_url)
 
 # check https://github.com/cvandeplas/pystemon/blob/master/pystemon.yaml#L16
 r = redis.StrictRedis(host='localhost', db=10)
