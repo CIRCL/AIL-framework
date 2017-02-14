@@ -111,6 +111,8 @@ class CListBox(ListBox):
                 self.value = self._options[self._line][1]
             elif len(self._options) > 0 and event.key_code == ord(' '):
                 global current_selected_value, current_selected_queue
+                if self.queue_name == "logs":
+                    return event
                 current_selected_value = self.value
                 current_selected_queue = self.queue_name
                 self._frame.save()
@@ -229,7 +231,7 @@ class Confirm(Frame):
     def __init__(self, screen):
         super(Confirm, self).__init__(screen,
                                           screen.height * 1 // 8,
-                                          screen.width * 1 // 4,
+                                          screen.width * 1 // 3,
                                           hover_focus=True,
                                           on_load=self._setValue,
                                           title="Confirm action",
@@ -305,7 +307,8 @@ class Action_choice(Frame):
         layout2 = Layout([1,1,1,1])
         self.add_layout(layout2)
         layout2.add_widget(Button("Cancel", self._cancel), 0)
-        layout2.add_widget(Button("Show current paste", self._showpaste), 1)
+        self._ShowPasteBtn = Button("Show current paste", self._showpaste)
+        layout2.add_widget(self._ShowPasteBtn, 1)
         self._killBtn = Button("KILL", self._kill)
         layout2.add_widget(self._killBtn, 2)
         layout2.add_widget(Button("START", self._start), 3)
@@ -351,12 +354,14 @@ class Action_choice(Frame):
 
     def _setValue(self):
         self._killBtn.disabled = False
+        self._ShowPasteBtn.disabled = False
         global current_selected_value, current_selected_queue
         if current_selected_queue in ["running", "idle"]:
             modulename = PID_NAME_DICO[int(current_selected_value)]
             pid = current_selected_value
         else:
             self._killBtn.disabled = True
+            self._ShowPasteBtn.disabled = True
             modulename = current_selected_value
             pid = ""
         self.label._text = self.label._text.format(modulename, pid)
@@ -430,7 +435,8 @@ class Show_paste(Frame):
 
         except OSError as e:
             self.label_list[0]._text = "Error during parsing the filepath. Please, check manually"
-            for i in range(1,self.num_label):
+            self.label_list[1]._text = COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
+            for i in range(2,self.num_label):
                 self.label_list[i]._text = ""
 
         except Exception as e:
@@ -744,6 +750,10 @@ if __name__ == "__main__":
     TABLES_TITLES["notRunning"] = format_string([([" Action", "Queue", "State"],0)], TABLES_PADDING["notRunning"])[0][0]
     TABLES_TITLES["logs"] = format_string([(["Time", "Module", "PID", "Info"],0)], TABLES_PADDING["logs"])[0][0]
 
+    try:
+        input("Press < ENTER > to launch the manager...")
+    except SyntaxError:
+        pass
 
     while True:
        Screen.wrapper(demo)
