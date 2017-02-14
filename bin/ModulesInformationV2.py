@@ -16,6 +16,7 @@ import json
 import redis
 import psutil
 from subprocess import PIPE, Popen
+from packages import Paste
 
  # CONFIG VARIABLES
 kill_retry_threshold = 60 #1m
@@ -41,6 +42,8 @@ TABLES_PADDING = {"running": [12, 23, 8, 8, 23, 10, 55, 11, 11, 12], "idle": [9,
 QUEUE_STATUS = {}
 CPU_TABLE = {} 
 CPU_OBJECT_TABLE = {}
+
+COMPLETE_PASTE_PATH_PER_PID = {}
 
 class CListBox(ListBox):
 
@@ -299,16 +302,17 @@ class Action_choice(Frame):
         self.add_layout(layout)
         self.label = CLabel("Choose action on module {} {}")
         layout.add_widget(self.label)
-        layout2 = Layout([1,1,1])
+        layout2 = Layout([1,1,1,1])
         self.add_layout(layout2)
         layout2.add_widget(Button("Cancel", self._cancel), 0)
+        layout2.add_widget(Button("Show current paste", self._showpaste), 1)
         self._killBtn = Button("KILL", self._kill)
-        layout2.add_widget(self._killBtn, 1)
-        layout2.add_widget(Button("START", self._start), 2)
-        layout3 = Layout([1,1,1])
+        layout2.add_widget(self._killBtn, 2)
+        layout2.add_widget(Button("START", self._start), 3)
+        layout3 = Layout([1,1,1,1])
         self.add_layout(layout3)
         self.textEdit = Text("Amount", "amount")
-        layout3.add_widget(self.textEdit, 2)
+        layout3.add_widget(self.textEdit, 3)
 
         self.fix()
 
@@ -340,6 +344,11 @@ class Action_choice(Frame):
         self.save()
         raise NextScene("dashboard")
 
+    def _showpaste(self):
+        self.label._text = "Choose action on module {} {}"
+        self.save()
+        raise NextScene("show_paste")
+
     def _setValue(self):
         self._killBtn.disabled = False
         global current_selected_value, current_selected_queue
@@ -352,14 +361,95 @@ class Action_choice(Frame):
             pid = ""
         self.label._text = self.label._text.format(modulename, pid)
 
+class Show_paste(Frame):
+    def __init__(self, screen):
+        super(Show_paste, self).__init__(screen,
+                                          screen.height,
+                                          screen.width,
+                                          hover_focus=True,
+                                          on_load=self._setValue,
+                                          title="Show current paste",
+                                          reduce_cpu=True)
+
+        # Create the form for displaying the list of contacts.
+        layout = Layout([100], fill_frame=True)
+        self.layout = layout
+        self.add_layout(layout)
+
+        self.label_list = []
+        self.num_label = 41
+        for i in range(self.num_label):
+            self.label_list += [Label("THE PASTE CONTENT " + str(i))]
+            layout.add_widget(self.label_list[i])
+
+        layout2 = Layout([100])
+        self.add_layout(layout2)
+        layout2.add_widget(Button("Ok", self._ok), 0)
+        self.fix()
+
+    def _ok(self):
+        global current_selected_value, current_selected_queue, current_selected_action, current_selected_amount
+        current_selected_value = 0
+        current_selected_amount = 0
+        current_selected_action = ""
+        self.save()
+        raise NextScene("dashboard")
+
+    def _setValue(self):
+        try:
+            #Verify that the  module have a paste
+            if COMPLETE_PASTE_PATH_PER_PID[current_selected_value] is None:
+                self.label_list[0]._text = "No paste for this module"
+                for i in range(1,self.num_label):
+                    self.label_list[i]._text = ""
+                return
+
+            paste = Paste.Paste(COMPLETE_PASTE_PATH_PER_PID[current_selected_value])
+            old_content = paste.get_p_content()[0:4000]
+
+            #Replace unprintable char by ?
+            content = ""
+            for i, c in enumerate(old_content):
+                if ord(c) > 127:
+                    content += '?'
+                else:
+                    content += c
+
+            #Print in the correct label
+            to_print = ""
+            i = 0
+            for line in content.split("\n"):
+                if i==self.num_label:
+                    break
+                self.label_list[i]._text = str(i) + ". " + line.replace("\r","")
+                i += 1
+
+            while i<self.num_label:
+                self.label_list[i]._text = ""
+                i += 1
+
+        except OSError as e:
+            self.label_list[0]._text = "Error during parsing the filepath. Please, check manually"
+            for i in range(1,self.num_label):
+                self.label_list[i]._text = ""
+
+        except Exception as e:
+            self.label_list[0]._text = "Error while displaying the paste: " + COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
+            self.label_list[1]._text = str(e)
+            for i in range(2,self.num_label):
+                self.label_list[i]._text = ""
+
+
 def demo(screen):
     dashboard = ListView(screen)
     confirm = Confirm(screen)
     action_choice = Action_choice(screen)
+    show_paste = Show_paste(screen)
     scenes = [
         Scene([dashboard], -1, name="dashboard"),
         Scene([action_choice], -1, name="action_choice"),
         Scene([confirm], -1, name="confirm"),
+        Scene([show_paste], -1, name="show_paste"),
     ]
 
    # screen.play(scenes)
@@ -506,6 +596,8 @@ def fetchQueueData():
     
         for moduleNum in server.smembers(keySet):
             value = server.get(key + str(moduleNum))
+            complete_paste_path = server.get(key + str(moduleNum) + "_PATH")
+            COMPLETE_PASTE_PATH_PER_PID[moduleNum] = complete_paste_path
             if value is not None:
                 timestamp, path = value.split(", ")
                 if timestamp is not None and path is not None:

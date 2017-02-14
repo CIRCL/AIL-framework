@@ -161,7 +161,9 @@ class Process(object):
                 else:
                     path = "?"
                 value = str(timestamp) + ", " + path
+                complete_path = os.environ['AIL_HOME'] + "/PASTES/" + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
                 self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 
@@ -169,6 +171,7 @@ class Process(object):
                 path = "?"
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
                 self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 
