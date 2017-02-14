@@ -96,6 +96,6 @@ if __name__ == "__main__":
                 p.populate_set_out(msg, categ)
 
                 publisher.info(
-                    'Categ;{};{};{};Detected {} as {}'.format(
+                    'Categ;{};{};{};Detected {} as {};{}'.format(
                         paste.p_source, paste.p_date, paste.p_name,
-                        len(found), categ))
+                        len(found), categ), paste.p_path)
