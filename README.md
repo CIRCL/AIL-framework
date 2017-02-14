@@ -127,7 +127,7 @@ Here are the steps to setup pystemon and feed data to AIL:
 
 3. Launch pystemon ``` ./pystemon ```
 
-4. Edit the file ```bin/feeder/pystemon-feeder.py``` and modify the pystemonpath path accordingly
+4. Edit your configuration file ```bin/packages/config.cfg``` and modify the pystemonpath path accordingly
 
 5. Launch pystemon-feeder ``` ./pystemon-feeder.py ```
 
