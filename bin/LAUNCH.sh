@@ -71,7 +71,9 @@ function launching_lvldb {
     db1_y='2013'
     db2_y='2014'
     db3_y='2016'
-    db4_y='3016'
+    db4_y='2017'
+
+    dbC_y='3016'
     nb_db=13
 
     screen -dmS "LevelDB"
@@ -83,10 +85,13 @@ function launching_lvldb {
     screen -S "LevelDB" -X screen -t "2014" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2014/ -P '$db2_y' -M '$nb_db'; read x'
     sleep 0.1
     screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db3_y' -M '$nb_db'; read x'
+    sleep 0.1
+    screen -S "LevelDB" -X screen -t "2017" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2017/ -P '$db4_y' -M '$nb_db'; read x'
+
 
     # For Curve
     sleep 0.1
-    screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$db4_y' -M '$nb_db'; read x'
+    screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$dbC_y' -M '$nb_db'; read x'
 }
 
 function launching_logs {
@@ -113,6 +118,8 @@ function launching_scripts {
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
     screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py -k 0 -c 1; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "Mixer" bash -c './Mixer.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
     sleep 0.1
@@ -158,7 +165,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Browse_warning_paste" bash -c './Browse_warning_paste.py; read x'
+    screen -S "Script" -X screen -t "BrowseWarningPaste" bash -c './BrowseWarningPaste.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
 

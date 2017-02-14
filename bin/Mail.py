@@ -55,9 +55,9 @@ if __name__ == "__main__":
                                              list(MX_values[1])))
 
                     pprint.pprint(MX_values)
-                    to_print = 'Mails;{};{};{};Checked {} e-mail(s)'.\
+                    to_print = 'Mails;{};{};{};Checked {} e-mail(s);{}'.\
                         format(PST.p_source, PST.p_date, PST.p_name,
-                               MX_values[0])
+                               MX_values[0], PST.p_path)
                     if MX_values[0] > is_critical:
                         publisher.warning(to_print)
                         #Send to duplicate

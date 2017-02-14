@@ -17,9 +17,11 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
   <script>
       window.default_minute = {{ default_minute }};
       window.glob_tabvar = []; // Avoid undefined
+      window.threshold_stucked_module = {{ threshold_stucked_module }}
       function update_values() {
           $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
           $.getJSON($SCRIPT_ROOT+"/_stuff",
@@ -51,10 +53,10 @@
               <!-- /.sidebar-collapse -->
               <div class="panel panel-default">
                   <div class="panel-heading">
-                      <i class="fa fa-dashboard  fa-fw"></i> Pastes since {{ default_minute }} min
+                      <i class="fa fa-dashboard  fa-fw"></i> Total pastes since {{ default_minute }} min
                   </div>
                   <div class="panel-body">
-                       <div id="realtimechart" style="height: 90px; padding: 0px; position: relative;"></div>
+                       <div id="global" style="height: 90px; padding: 0px; position: relative;"></div>
                   </div>
               </div>
                   <!-- <div id="Graph_paste_num" style="height:90px; width:100%;"></div> -->
@@ -66,7 +68,18 @@
                   </label>
                   <strong style="top: 3px; position: relative;">Display queues</strong>
               <div>
-              <div class="table-responsive", id="queueing" style="margin-top:10px;"></div>
+              <div>
+                  <table id="queue-color-legend" class="table">
+                  <thead>
+                  </thead>
+                  <tbody>
+                      <tr><td class="legendColorBox" style="vertical-align: ; "><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #d0e9c6;overflow:hidden"></div></div></td><td> Working queues</td></tr>
+                      <tr><td class="legendColorBox" style="vertical-align: ;"><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #faf2cc;overflow:hidden"></div></div></td><td> Idling queues</td></tr>
+                      <tr><td class="legendColorBox" style="vertical-align: ;"><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #ebcccc;overflow:hidden"></div></div></td><td> Stuck queues</td></tr>
+                  </tbody>
+                  </table>
+              </div>
+              <div class="table-responsive", id="queueing" style="margin-top:10px; font-size: small;"></div>
              <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
@@ -79,23 +92,43 @@
         </div>
 
             <div class="row">
-                      <div class="col-lg-12">
-                      <div class="panel panel-default">
-                      <div class="panel-heading">
-                        <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
-                      </div>
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-lg-6" id="Graph" style="height:400px; width:48%;"></div>
-                                <div class="col-lg-6" id="Graph2" style="height:400px; width:48%;"></div>
-                            </div>
-                            <!-- /.row -->
+                 <div class="col-lg-6">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">
+                           <i class="fa fa-bar-chart-o fa-fw"></i> Feeder(s) Monitor:
                         </div>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
-                </div>
-                <!-- /.col-lg-8 -->
+                        <div id="panelbody" class="panel-body" style="height:420px;">
+
+                       <strong>Processed pastes</strong>
+                       <div id="Proc_feeder" style="height: 230px; padding: 0px; position: relative;"></div>
+                       <hr style="border-top: 2px solid #eee; margin-top: 7px; margin-bottom: 7px;">
+                       <strong>Filtered duplicated</strong>
+                       <div id="Dup_feeder" style="height: 100px; padding: 0px; position: relative;"></div>
+
+                        </div>
+                     <!-- /.panel-body -->
+                     </div>
+                      <!-- /.panel -->
+                 </div>
+                 <!-- /.col-lg-6 -->
+                 <div class="col-lg-6">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">
+                           <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
+                        </div>
+                        <div class="panel-body">
+                           <div class="row">
+                               <div class="col-lg-6" id="Graph" style="height:195px; width:88%;"></div>
+                               <div style="height:10px;"></div>
+                               <div class="col-lg-6" id="Graph2" style="height:195px; width:88%;"></div>
+                           </div>
+                        <!-- /.row -->
+                        </div>
+                     <!-- /.panel-body -->
+                     </div>
+                      <!-- /.panel -->
+                 </div>
+                 <!-- /.col-lg-6 -->
         <div class="col-lg-12">
         <div class="panel panel-default">
         <div class="panel-heading">
@@ -129,6 +162,7 @@
 						<th>Date</th>
 						<th>Paste name</th>
 						<th>Message</th>
+						<th>Actions</th>
 						</tr>
 					</thead>
 					<tbody id="tab_body">
@@ -142,6 +176,7 @@
         <!-- /#page-wrapper -->
 
     </div>
+    <script> var url_showSavedPath = "{{ url_for('showsavedpaste') }}"; </script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"></script>
 
     <script>

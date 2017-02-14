@@ -72,7 +72,7 @@
                         </div>
                         <div class="panel-body">
                             <div aria-disabled="false" class="slider sliderRange sliderBlue ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" style="margin-bottom: 5px;"></div>
-                            <strong>Date:</strong> <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                            <strong>Date:</strong> <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;"> <button id="plot-month" onclick="replot();" class="btn btn-info" style="float: right;">Replot</button>
 
                             <div class="form-group input-group" style="margin-top: 30px;">
                                 <span class="input-group-addon"><span class="glyphicon glyphicon-stats"></span></span>
@@ -168,6 +168,7 @@
 <script>
 var plot;
 var graph_data = [];
+var plotted_terms = [];
 var graph_options = {
                         series: {
                             lines: { 
@@ -198,6 +199,7 @@ function plotData() {
     $('#plot-btn-add').show("fast");
     var curthis = $(this);
     var term = $('#TermInput').val();
+    plotted_terms = [term]
     var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
     var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
 
@@ -205,8 +207,8 @@ function plotData() {
         graph_data = [];
         var to_plot = [];
         var curr_data = [];
-        for(i=0; i<data.length; i++) {
-                curr_data.push([data[i][0]*1000, data[i][1]]);
+        for(i=1; i<data.length; i++) {
+            curr_data.push([data[i][0]*1000, data[i][1]]);
         }
         to_plot.push({ data: curr_data, label: term}); 
         graph_data.push({ data: curr_data, label: term});
@@ -234,20 +236,44 @@ function plotData() {
 function addData() {
     var curthis = $(this);
     var term = $('#TermInput').val();
+    plotted_terms.push(term)
     var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
     var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
 
     $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
-        var to_plot = [];
         var curr_data = [];
-        for(i=0; i<data.length; i++) {
+        for(i=1; i<data.length; i++) {
                 curr_data.push([data[i][0]*1000, data[i][1]]);
         }
-        to_plot.push({ data: curr_data, label: term}); 
         graph_data.push({ data: curr_data, label: term});
         plot = $.plot($("#graph"), graph_data, graph_options);
         $("#TermInput").val("");
     })
+}
+
+
+function replot() {
+    graph_data = [];
+    promises = [];
+    for(i=0; i<plotted_terms.length; i++) {
+        var term = plotted_terms[i];
+        var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
+        var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
+
+        promises.push($.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
+            var curr_data = [];
+            for(i=1; i<data.length; i++) {
+                    curr_data.push([data[i][0]*1000, data[i][1]]);
+            }
+            graph_data.push({ data: curr_data, label: data[0]});
+            $("#TermInput").val("");
+        }))
+    }
+    
+    $.when.apply($, promises).done( function () {
+        plot = $.plot($("#graph"), graph_data, graph_options);
+    });
+    
 }
 
 </script>

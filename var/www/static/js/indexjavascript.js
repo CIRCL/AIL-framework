@@ -1,13 +1,25 @@
-var time_since_last_pastes_num;
+var time_since_last_pastes_num = {};
+var data_for_processed_paste = {  };
+var list_feeder = [];
+window.paste_num_tabvar_all = {};
 
-//If we do not received info from global, set pastes_num to 0
+//If we do not received info from mixer, set pastes_num to 0
 function checkIfReceivedData(){
-    if ((new Date().getTime() - time_since_last_pastes_num) > 45*1000)
-        window.paste_num_tabvar = 0;
-    setTimeout(checkIfReceivedData, 45*1000);
+    for (i in list_feeder) {
+        if(list_feeder[i] == "global"){
+            if ((new Date().getTime() - time_since_last_pastes_num[list_feeder[i]]) > 35*1000){
+                window.paste_num_tabvar_all[list_feeder[i]] = 0;
+            }
+        } else {
+            if ((new Date().getTime() - time_since_last_pastes_num["Proc"+list_feeder[i]]) > 35*1000){
+                window.paste_num_tabvar_all["Proc"+list_feeder[i]] = 0;
+                window.paste_num_tabvar_all["Dup"+list_feeder[i]] = 0;
+            }
+        }
+    }
+    setTimeout(checkIfReceivedData, 35*1000);
 }
 
-setTimeout(checkIfReceivedData, 45*1000);
 
 function initfunc( csvay, scroot) {
   window.csv = csvay;
@@ -24,54 +36,88 @@ function update_values() {
 
 
 // Plot and update the number of processed pastes
-$(function() {
-    var data = [];
+// BEGIN PROCESSED PASTES
     var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
-    var totalPoints = 60*parseInt(default_minute); //60s*minute
-    var curr_max = 0;
-    
-    function getData() {
-        if (data.length > 0){
-             var data_old = data[0];
-             data = data.slice(1);
-             curr_max = curr_max == data_old ? Math.max.apply(null, data) : curr_max;
+    var totalPoints = 2*parseInt(default_minute); //60s*minute
+    var curr_max = {"global": 0};
+
+    function fetch_data(dataset, curr_data, feeder_name) {
+        if (curr_data.length > 0){
+             var data_old = curr_data[0];
+             curr_data = curr_data.slice(1);
+             curr_max[dataset] = curr_max[dataset] == data_old ? Math.max.apply(null, curr_data) : curr_max[dataset];
         }
         
-        while (data.length < totalPoints) {
-            var y = (typeof window.paste_num_tabvar !== "undefined") ? parseInt(window.paste_num_tabvar) : 0;
-            curr_max = y > curr_max ? y : curr_max;
-            data.push(y);
+        while (curr_data.length < totalPoints) {
+            var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
+            curr_max[dataset] = y > curr_max[dataset] ? y : curr_max[dataset];
+            curr_data.push(y);
         }
         // Zip the generated y values with the x values
         var res = [];
-        for (var i = 0; i < data.length; ++i) {
-            res.push([i, data[i]])
-        }
-        return res;
+        for (var i = 0; i < curr_data.length; ++i) {
+            res.push([i, curr_data[i]])
+        } 
+        data_for_processed_paste[dataset] = curr_data;
+        return { label: feeder_name, data: res };
     }
 
-    var updateInterval = 1000;
-    var options = {
-        series: { shadowSize: 1 },
-        lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }},
+    function getData(dataset_group, graph_type) {
+        var curr_data;
+ 
+        var all_res = [];
+        if (dataset_group == "global") {
+            if (data_for_processed_paste["global"] ===  undefined) { // create feeder dataset if not exists yet
+                data_for_processed_paste["global"] = [];
+            }
+            curr_data = data_for_processed_paste["global"];
+            all_res.push(fetch_data("global", curr_data, "global"));
+        } else {   
+
+            for(d_i in list_feeder) {
+                if(list_feeder[d_i] == "global") {
+                    continue;
+                }
+
+                dataset = graph_type+list_feeder[d_i];
+                if (data_for_processed_paste[dataset] ===  undefined) { // create feeder dataset if not exists yet
+                    data_for_processed_paste[dataset] = [];
+                }
+                curr_data = data_for_processed_paste[dataset];
+                all_res.push(fetch_data(dataset, curr_data, list_feeder[d_i]));
+            }
+
+        }
+        return all_res;
+    }
+
+    var updateInterval = 10000;
+    var options_processed_pastes = {
+        series: {   shadowSize: 0 ,
+                    lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }}
+                },
         yaxis: { min: 0, max: 40 },
-        colors: ["#a971ff"],
+        xaxis: { ticks: [[0, 0], [2, 1], [4, 2], [6, 3], [8, 4], [10, 5], [12, 6], [14, 7], [16, 8], [18, 9], [20, 10]] },
         grid: {
             tickColor: "#dddddd",
             borderWidth: 0 
         },
+        legend: {
+            show: true,
+            position: "nw",
+        }
     };
-    var plot = $.plot("#realtimechart", [ getData() ], options);
-    
-    function update() {
-        plot.setData([getData()]);
-        plot.getOptions().yaxes[0].max = curr_max;
-        plot.setupGrid();
-        plot.draw();
-        setTimeout(update, updateInterval);
+
+    function update_processed_pastes(graph, dataset, graph_type) {
+        graph.setData(getData(dataset, graph_type));
+        graph.getOptions().yaxes[0].max = curr_max[dataset];
+        graph.setupGrid();
+        graph.draw();
+        setTimeout(function(){ update_processed_pastes(graph, dataset, graph_type); }, updateInterval);
     }
-    update();
-});
+
+
+// END PROCESSED PASTES    
 
 function initfunc( csvay, scroot) {
   window.csv = csvay;
@@ -109,15 +155,49 @@ function create_log_table(obj_json) {
     var pdate = document.createElement('TD')
     var nam = document.createElement('TD')
     var msage = document.createElement('TD')
+    var inspect = document.createElement('TD')
 
     var chansplit = obj_json.channel.split('.');
     var parsedmess = obj_json.data.split(';');
 
+  
+    if (parsedmess[0] == "Mixer"){
+        var feeder = parsedmess[4].split(" ")[1];
+        var paste_processed = parsedmess[4].split(" ")[3];
+        var msg_type = parsedmess[4].split(" ")[2]; 
 
-    if (parsedmess[0] == "Global"){
-        var paste_processed = parsedmess[4].split(" ")[2];
-        window.paste_num_tabvar = paste_processed;
-        time_since_last_pastes_num = new Date().getTime();
+        if (feeder == "All_feeders"){
+            if(list_feeder.indexOf("global") == -1) {
+                list_feeder.push("global");
+
+                options_processed_pastes.legend.show = false;
+                var total_proc = $.plot("#global", [ getData("global", null) ], options_processed_pastes);
+                options_processed_pastes.legend.show = true;
+                options_processed_pastes.series.lines = { show: true };
+                data_for_processed_paste["global"] = Array(totalPoints+1).join(0).split('');
+
+                var feederProc = $.plot("#Proc_feeder", [ getData(feeder, "Proc") ], options_processed_pastes);
+                var feederDup = $.plot("#Dup_feeder", [ getData(feeder, "Dup") ], options_processed_pastes);
+
+                update_processed_pastes(feederProc, "feeder", "Proc");
+                update_processed_pastes(feederDup, "feeder", "Dup");
+                update_processed_pastes(total_proc, "global");
+                setTimeout(checkIfReceivedData, 45*1000);
+            }
+           window.paste_num_tabvar_all["global"] = paste_processed;
+           time_since_last_pastes_num["global"] = new Date().getTime();
+        } else {
+
+            if (list_feeder.indexOf(feeder) == -1) {
+                list_feeder.push(feeder);
+                data_for_processed_paste["Proc"+feeder] = Array(totalPoints+1).join(0).split('');
+                data_for_processed_paste["Dup"+feeder] = Array(totalPoints+1).join(0).split('');
+            }
+
+            var feederName = msg_type == "Duplicated" ? "Dup"+feeder : "Proc"+feeder;
+            window.paste_num_tabvar_all[feederName] = paste_processed;
+            time_since_last_pastes_num[feederName] = new Date().getTime();
+        }
         return;
     }
 
@@ -139,7 +219,7 @@ function create_log_table(obj_json) {
         source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
     }
     source_link.setAttribute("HREF",source_url);
-    source_link.setAttribute("TARGET", "_blank")
+    source_link.setAttribute("TARGET", "_blank");
     source_link.appendChild(document.createTextNode(parsedmess[1]));
 
     src.appendChild(source_link);
@@ -169,6 +249,18 @@ function create_log_table(obj_json) {
 
     msage.appendChild(document.createTextNode(message.join(" ")));
 
+    var paste_path = parsedmess[5];
+    var url_to_saved_paste = url_showSavedPath+"?paste="+paste_path+"&num="+parsedmess[0];
+
+    var action_icon_a = document.createElement("A");
+    action_icon_a.setAttribute("TARGET", "_blank");
+    action_icon_a.setAttribute("HREF", url_to_saved_paste);
+    var action_icon_span = document.createElement('SPAN');
+    action_icon_span.className = "fa fa-search-plus";
+    action_icon_a.appendChild(action_icon_span);
+ 
+    inspect.appendChild(action_icon_a);
+
     tr.appendChild(time)
     tr.appendChild(chan);
     tr.appendChild(level);
@@ -177,6 +269,7 @@ function create_log_table(obj_json) {
     tr.appendChild(pdate);
     tr.appendChild(nam);
     tr.appendChild(msage);
+    tr.appendChild(inspect);
 
     if (tr.className == document.getElementById("checkbox_log_info").value && document.getElementById("checkbox_log_info").checked  == true) {
            tableBody.appendChild(tr);
@@ -207,7 +300,7 @@ function create_queue_table() {
     table.appendChild(tableHead);
     table.appendChild(tableBody);
     var heading = new Array();
-    heading[0] = "Queue Name"
+    heading[0] = "Queue Name.PID"
     heading[1] = "Amount"
     var tr = document.createElement('TR');
     tableHead.appendChild(tr);
@@ -219,37 +312,47 @@ function create_queue_table() {
         tr.appendChild(th);
     }
 
-    for(i = 0; i < (glob_tabvar.row1).length;i++){
-        var tr = document.createElement('TR')
-        for(j = 0; j < 2; j++){
-            var td = document.createElement('TD')
-            var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
-            td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
-            tr.appendChild(td)
-        }
-        // Used to decide the color of the row
-        // We have glob_tabvar.row1[][j] with:
-        // - j=0: ModuleName
-        // - j=1: queueLength
-        // - j=2: LastProcessedPasteTime
-        // - j=3: Number of the module belonging in the same category
-        if (parseInt(glob_tabvar.row1[i][2]) > 60*2 && parseInt(glob_tabvar.row1[i][1]) > 2)
-            tr.className += " danger";
-        else if (parseInt(glob_tabvar.row1[i][2]) > 60*1)
-            tr.className += " warning";
-        else
-            tr.className += " success";
+    if ((glob_tabvar.row1).length == 0) {
+        var tr = document.createElement('TR');
+        var td = document.createElement('TD');
+        var td2 = document.createElement('TD');
+        td.appendChild(document.createTextNode("No running queues"));
+        td2.appendChild(document.createTextNode("Or no feed"));
+        td.className += " danger";
+        td2.className += " danger";
+        tr.appendChild(td);
+        tr.appendChild(td2);
         tableBody.appendChild(tr);
+    }
+    else {
+        for(i = 0; i < (glob_tabvar.row1).length;i++){
+            var tr = document.createElement('TR')
+            for(j = 0; j < 2; j++){
+                var td = document.createElement('TD')
+                var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
+                td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
+                tr.appendChild(td)
+            }
+            // Used to decide the color of the row
+            // We have glob_tabvar.row1[][j] with:
+            // - j=0: ModuleName
+            // - j=1: queueLength
+            // - j=2: LastProcessedPasteTime
+            // - j=3: Number of the module belonging in the same category
+            if (parseInt(glob_tabvar.row1[i][2]) > window.threshold_stucked_module && parseInt(glob_tabvar.row1[i][1]) > 2)
+                tr.className += " danger";
+            else if (parseInt(glob_tabvar.row1[i][1]) == 0)
+                tr.className += " warning";
+            else
+                tr.className += " success";
+            tableBody.appendChild(tr);
+        }
     }
     Tablediv.appendChild(table);
 }
 
-$(document).ready(function () {
-    if (typeof glob_tabvar == "undefined")
-        location.reload();
-    if (typeof glob_tabvar.row1 == "undefined")
-        location.reload();
 
+function load_queues() {
     var data = [];
     var data2 = [];
     var tmp_tab = [];
@@ -259,13 +362,17 @@ $(document).ready(function () {
     var x = new Date();
 
     for (i = 0; i < glob_tabvar.row1.length; i++){
-        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
-            tmp_tab2.push(0);
-            curves_labels2.push(glob_tabvar.row1[i][0]);
+        if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
+            if (curves_labels2.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                tmp_tab2.push(0);
+                curves_labels2.push(glob_tabvar.row1[i][0].split(".")[0]);
+            }
         }
         else {
-            tmp_tab.push(0);
-            curves_labels.push(glob_tabvar.row1[i][0]);
+            if (curves_labels.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                tmp_tab.push(0);
+                curves_labels.push(glob_tabvar.row1[i][0].split(".")[0]);
+            }
         }
     }
     tmp_tab.unshift(x);
@@ -324,19 +431,29 @@ $(document).ready(function () {
                     update_values();
 
                     if($('#button-toggle-queues').prop('checked')){
+                        $("#queue-color-legend").show();
                         create_queue_table();
                     }
                     else{
                         $("#queueing").html('');
+                        $("#queue-color-legend").hide();
                     }
 
 
+                    queues_pushed = []
                     for (i = 0; i < (glob_tabvar.row1).length; i++){
-                        if (glob_tabvar.row1[i][0] == 'Categ' || glob_tabvar.row1[i][0] == 'Curve'){
-                            tmp_values2.push(glob_tabvar.row1[i][1]);
+                        if (glob_tabvar.row1[i][0].split(".")[0] == 'Categ' || glob_tabvar.row1[i][0].split(".")[0] == 'Curve'){
+                            if (queues_pushed.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                                queues_pushed.push(glob_tabvar.row1[i][0].split(".")[0]);
+                                tmp_values2.push(parseInt(glob_tabvar.row1[i][1]));
+                            }
                         }
                         else {
-                            tmp_values.push(glob_tabvar.row1[i][1]);
+                            if (queues_pushed.indexOf(glob_tabvar.row1[i][0].split(".")[0]) == -1) {
+                                queues_pushed.push(glob_tabvar.row1[i][0].split(".")[0]);
+                                tmp_values.push(parseInt(glob_tabvar.row1[i][1]));
+                            }
+                            
                         }
                     }
                     tmp_values.unshift(x);
@@ -375,7 +492,19 @@ $(document).ready(function () {
       // something went wrong, hide the canvas container
       document.getElementById('myCanvasContainer').style.display = 'none';
     }
+}
 
+function manage_undefined() {
+    if (typeof glob_tabvar == "undefined")
+        setTimeout(function() { if (typeof glob_tabvar == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
+    else if (typeof glob_tabvar.row1 == "undefined")
+        setTimeout(function() { if (typeof glob_tabvar.row1 == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
+    else
+        load_queues();
+}
+
+$(document).ready(function () {
+    manage_undefined();
 });
 
 

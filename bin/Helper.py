@@ -32,7 +32,7 @@ class PubSub(object):
         self.config.read(configfile)
         self.redis_sub = False
         self.zmq_sub = False
-        self.subscriber = None
+        self.subscribers = None
         self.publishers = {'Redis': [], 'ZMQ': []}
 
     def setup_subscribe(self, conn_name):
@@ -46,14 +46,19 @@ class PubSub(object):
                 host=self.config.get('RedisPubSub', 'host'),
                 port=self.config.get('RedisPubSub', 'port'),
                 db=self.config.get('RedisPubSub', 'db'))
-            self.subscriber = r.pubsub(ignore_subscribe_messages=True)
-            self.subscriber.psubscribe(channel)
+            self.subscribers = r.pubsub(ignore_subscribe_messages=True)
+            self.subscribers.psubscribe(channel)
         elif conn_name.startswith('ZMQ'):
             self.zmq_sub = True
             context = zmq.Context()
-            self.subscriber = context.socket(zmq.SUB)
-            self.subscriber.connect(self.config.get(conn_name, 'address'))
-            self.subscriber.setsockopt(zmq.SUBSCRIBE, channel)
+
+            self.subscribers = []
+            addresses = self.config.get(conn_name, 'address')
+            for address in addresses.split(','):
+                new_sub = context.socket(zmq.SUB)
+                new_sub.connect(address)
+                new_sub.setsockopt(zmq.SUBSCRIBE, channel)
+                self.subscribers.append(new_sub)
 
     def setup_publish(self, conn_name):
         if self.config.has_section(conn_name):
@@ -83,13 +88,18 @@ class PubSub(object):
 
     def subscribe(self):
         if self.redis_sub:
-            for msg in self.subscriber.listen():
+            for msg in self.subscribers.listen():
                 if msg.get('data', None) is not None:
                     yield msg['data']
         elif self.zmq_sub:
             while True:
-                msg = self.subscriber.recv()
-                yield msg.split(' ', 1)[1]
+                for sub in self.subscribers:
+                    try:
+                        msg = sub.recv(zmq.NOBLOCK)
+                        yield msg.split(' ', 1)[1]
+                    except zmq.error.Again as e:
+                        time.sleep(0.2)
+                        pass
         else:
             raise Exception('No subscribe function defined')
 
@@ -119,13 +129,7 @@ class Process(object):
             port=self.config.get('RedisPubSub', 'port'),
             db=self.config.get('RedisPubSub', 'db'))
 
-        self.moduleNum = 1
-        for i in range(1, 50):
-            curr_num = self.r_temp.get("MODULE_"+self.subscriber_name + "_" + str(i))
-            if curr_num is None:
-                self.moduleNum = i
-                break
-
+        self.moduleNum = os.getpid()
 
 
     def populate_set_in(self):
@@ -158,12 +162,14 @@ class Process(object):
                     path = "?"
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 
             except:
                 path = "?"
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 
     def populate_set_out(self, msg, channel=None):

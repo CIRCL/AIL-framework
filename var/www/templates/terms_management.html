@@ -12,7 +12,6 @@
   <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
-  <link href="{{ url_for('static', filename='css/jquery-ui.min.css') }}" rel="stylesheet" type="text/css" />
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
@@ -112,7 +111,7 @@
                                         <th>Day occurence</th>
                                         <th>Week occurence</th>
                                         <th>Month occurence</th>
-                                        <th># Concerned pastes</th>
+                                        <th># tracked paste</th>
                                         <th>Action</th>
                                      </tr>
                                 </thead>
@@ -199,6 +198,9 @@
 
 <!-- import graph function -->
 <script>
+    var table_track;
+    var table_black;
+
     $(document).ready(function(){
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
@@ -207,6 +209,14 @@
         $('[data-toggle="tooltip"]').tooltip();
 	table_track = $('#myTable').DataTable();
 	table_black = $('#myTable2').DataTable();
+
+        table_track.on( 'draw.dt', function () {
+            perform_binding();
+        });
+        table_black.on( 'draw.dt', function () {
+            perform_binding();
+        });
+
 
         $("#followTermInput").keyup(function(event){
             if(event.keyCode == 13){
@@ -255,7 +265,7 @@
                                 html_to_add += "<td>"+curr_data.size+"</td>";
                                 html_to_add += "<td>"+curr_data.lineinfo[0]+"</td>";
                                 html_to_add += "<td>"+curr_data.lineinfo[1]+"</td>";
-                                html_to_add += "<td><div class=\"row\"><button class=\"btn btn-xs btn-default\" data-toggle=\"popover\" data-placement=\"left\" data-content=\""+curr_data.content+"\">Preview content</button><a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+curr_data.path+"&num=0\">  <button type=\"button\" class=\"btn btn-xs btn-info\">Show Paste</button></a></div></td>";
+                                html_to_add += "<td><div class=\"row\"><button class=\"btn btn-xs btn-default\" data-toggle=\"popover\" data-placement=\"left\" data-content=\""+curr_data.content.replace(/\"/g, "\'")+"\">Preview content</button><a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+curr_data.path+"&num=0\">  <button type=\"button\" class=\"btn btn-xs btn-info\">Show Paste</button></a></div></td>";
 
                             html_to_add += "</tr>";
                     }

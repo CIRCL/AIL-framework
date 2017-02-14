@@ -113,7 +113,7 @@ if __name__ == "__main__":
                     # IP allocation)
                     if cc is not None and cc != "EU":
                         print hostl, asn, cc, \
-                            pycountry.countries.get(alpha2=cc).name
+                            pycountry.countries.get(alpha_2=cc).name
                         if cc == cc_critical:
                             to_print = 'Url;{};{};{};Detected {} {}'.format(
                                     PST.p_source, PST.p_date, PST.p_name,
@@ -131,8 +131,8 @@ if __name__ == "__main__":
                                              list(A_values[1])))
 
                     pprint.pprint(A_values)
-                    publisher.info('Url;{};{};{};Checked {} URL'.format(
-                        PST.p_source, PST.p_date, PST.p_name, A_values[0]))
+                    publisher.info('Url;{};{};{};Checked {} URL;{}'.format(
+                        PST.p_source, PST.p_date, PST.p_name, A_values[0], PST.p_path))
             prec_filename = filename
 
         else:

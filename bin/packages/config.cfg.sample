@@ -14,6 +14,10 @@ tldsfile = faup/src/data/mozilla.tlds
 
 domainstrending_csv = var/www/static/csv/domainstrendingdata
 
+pystemonpath = /home/pystemon/pystemon/
+
+sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
+
 ##### Flask #####
 [Flask]
 #Maximum number of character to display in the toolip
@@ -36,6 +40,15 @@ threshold_duplicate_tlsh = 100
 #Minimum size of the paste considered
 min_paste_size = 0.3
 
+[Module_ModuleInformation]
+#Threshold to deduce if a module is stuck or not, in seconds.
+threshold_stucked_module=600
+
+[Module_Mixer]
+#Define the configuration of the mixer, possible value: 1 or 2
+operation_mode = 1
+#Define the time that a paste will be considerate duplicate. in seconds (1day = 86400)
+ttl_duplicate = 86400
 
 ##### Redis #####
 [Redis_Cache]
@@ -62,6 +75,11 @@ db = 1
 host = localhost
 port = 6379
 db = 2
+
+[Redis_Mixer_Cache]
+host = localhost
+port = 6381
+db = 1
 
 ##### LevelDB #####
 [Redis_Level_DB_Curve]
@@ -108,10 +126,13 @@ path = indexdir
 
 ###############################################################################
 
+# For multiple feed, add them with "," without space
+# e.g.: tcp://127.0.0.1:5556,tcp://127.0.0.1:5557
 [ZMQ_Global]
 #address = tcp://crf.circl.lu:5556
 address = tcp://127.0.0.1:5556
 channel = 102
+bind = tcp://127.0.0.1:5556
 
 [ZMQ_Url]
 address = tcp://127.0.0.1:5004
