@@ -2,8 +2,7 @@
 # -*-coding:UTF-8 -*
 
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
-    Button, TextBox, Widget, Label
-from asciimatics.effects import Cycle, Print, Stars
+    Button, Label
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
@@ -25,26 +24,38 @@ command_search_pid = "ps a -o pid,cmd | grep {}"
 command_search_name = "ps a -o pid,cmd | grep {}"
 command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{}.py; read x\""
 
-printarrayGlob = [None]*14
+printarrayLog = [None]*14
 lastTimeKillCommand = {}
 
+# Used to pass information through scenes
 current_selected_value = 0
 current_selected_queue = ""
 current_selected_action = ""
 current_selected_action = 0
 
+# Map PID to Queue name (For restart and killing)
 PID_NAME_DICO = {}
 
+# Tables containing info for the dashboad
 TABLES = {"running": [], "idle": [], "notRunning": [], "logs": [("No events recorded yet", 0)]}
 TABLES_TITLES = {"running": "", "idle": "", "notRunning": "", "logs": ""}
 TABLES_PADDING = {"running": [12, 23, 8, 8, 23, 10, 55, 11, 11, 12], "idle": [9, 23, 8, 12, 50], "notRunning": [9, 23, 35], "logs": [15, 23, 8, 50]}
 
+# Indicator for the health of a queue (green(0), red(2), yellow(1))
 QUEUE_STATUS = {}
+
+# Maintain the state of the CPU objects
 CPU_TABLE = {} 
 CPU_OBJECT_TABLE = {}
 
+# Path of the current paste for a pid
 COMPLETE_PASTE_PATH_PER_PID = {}
 
+'''
+ASCIIMATICS WIDGETS EXTENSION
+'''
+
+# Custom listbox
 class CListBox(ListBox):
 
     def __init__(self, queue_name, *args, **kwargs):
@@ -85,6 +96,8 @@ class CListBox(ListBox):
                     self._x + self._offset + dx,
                     self._y + i + dy - self._start_line,
                     colour, attr, bg)
+
+                # Pick color depending on queue health
                 if self.queue_name == "running":
                     if QUEUE_STATUS[pid] == 2:
                         queueStatus = Screen.COLOUR_RED
@@ -105,11 +118,13 @@ class CListBox(ListBox):
                 # Move up one line in text - use value to trigger on_select.
                 self._line = max(0, self._line - 1)
                 self.value = self._options[self._line][1]
+
             elif len(self._options) > 0 and event.key_code == Screen.KEY_DOWN:
                 # Move down one line in text - use value to trigger on_select.
                 self._line = min(len(self._options) - 1, self._line + 1)
                 self.value = self._options[self._line][1]
-            elif len(self._options) > 0 and event.key_code == ord(' '):
+
+            elif len(self._options) > 0 and event.key_code in [ord(' '), ord('\n')] :
                 global current_selected_value, current_selected_queue
                 if self.queue_name == "logs":
                     return event
@@ -117,9 +132,15 @@ class CListBox(ListBox):
                 current_selected_queue = self.queue_name
                 self._frame.save()
                 raise NextScene("action_choice")
+
+            # Quit if press q
+            elif event.key_code == ord('q'):
+                Dashboard._quit()
+            
             else:
                 # Ignore any other key press.
                 return event
+
         elif isinstance(event, MouseEvent):
             # Mouse event - rebase coordinates to Frame context.
             new_event = self._frame.rebase_event(event)
@@ -145,6 +166,7 @@ class CListBox(ListBox):
             return event
 
 
+# Custom label centered in the middle
 class CLabel(Label):
     def __init__(self, label, listTitle=False):
         super(Label, self).__init__(None, tab_stop=False)
@@ -166,9 +188,17 @@ class CLabel(Label):
         self._frame.canvas.print_at(
             self._text, self._x, self._y, colour, attr, bg)
 
-class ListView(Frame):
+'''
+END EXTENSION
+'''
+
+'''
+SCENE DEFINITION
+''' 
+
+class Dashboard(Frame):
     def __init__(self, screen):
-        super(ListView, self).__init__(screen,
+        super(Dashboard, self).__init__(screen,
                                        screen.height,
                                        screen.width,
                                        hover_focus=True,
@@ -255,7 +285,7 @@ class Confirm(Frame):
         if current_selected_action == "KILL":
             kill_module(PID_NAME_DICO[int(current_selected_value)], current_selected_value)
         else:
-            count = int(current_selected_amount)
+            count = int(current_selected_amount) #Number of queue to start
             if current_selected_queue in ["running", "idle"]:
                 restart_module(PID_NAME_DICO[int(current_selected_value)], count)
             else:
@@ -376,13 +406,12 @@ class Show_paste(Frame):
                                           title="Show current paste",
                                           reduce_cpu=True)
 
-        # Create the form for displaying the list of contacts.
         layout = Layout([100], fill_frame=True)
         self.layout = layout
         self.add_layout(layout)
 
         self.label_list = []
-        self.num_label = 41
+        self.num_label = 42 # Number of line available for displaying the paste
         for i in range(self.num_label):
             self.label_list += [Label("THE PASTE CONTENT " + str(i))]
             layout.add_widget(self.label_list[i])
@@ -410,26 +439,35 @@ class Show_paste(Frame):
                 return
 
             paste = Paste.Paste(COMPLETE_PASTE_PATH_PER_PID[current_selected_value])
-            old_content = paste.get_p_content()[0:4000]
+            old_content = paste.get_p_content()[0:4000] # Limit number of char to be displayed
 
             #Replace unprintable char by ?
             content = ""
             for i, c in enumerate(old_content):
-                if ord(c) > 127:
+                if ord(c) > 127: # Used to avoid printing unprintable char
                     content += '?'
+                elif c == "\t":  # Replace tab by 4 spaces
+                    content += "    "
                 else:
                     content += c
 
-            #Print in the correct label
+            #Print in the correct label, END or more
             to_print = ""
             i = 0
             for line in content.split("\n"):
-                if i==self.num_label:
+                if i > self.num_label - 2:
                     break
                 self.label_list[i]._text = str(i) + ". " + line.replace("\r","")
                 i += 1
 
-            while i<self.num_label:
+            if i > self.num_label - 2:
+                self.label_list[i]._text = "- ALL PASTE NOT DISPLAYED -"
+                i += 1
+            else:
+                self.label_list[i]._text = "- END of PASTE -"
+                i += 1
+
+            while i<self.num_label: #Clear out remaining lines
                 self.label_list[i]._text = ""
                 i += 1
 
@@ -445,36 +483,14 @@ class Show_paste(Frame):
             for i in range(2,self.num_label):
                 self.label_list[i]._text = ""
 
+'''
+END SCENES DEFINITION
+'''
 
-def demo(screen):
-    dashboard = ListView(screen)
-    confirm = Confirm(screen)
-    action_choice = Action_choice(screen)
-    show_paste = Show_paste(screen)
-    scenes = [
-        Scene([dashboard], -1, name="dashboard"),
-        Scene([action_choice], -1, name="action_choice"),
-        Scene([confirm], -1, name="confirm"),
-        Scene([show_paste], -1, name="show_paste"),
-    ]
 
-   # screen.play(scenes)
-    screen.set_scenes(scenes)
-    time_cooldown = time.time()
-    global TABLES
-    while True:
-        if time.time() - time_cooldown > args.refresh:
-            cleanRedis()
-            for key, val in fetchQueueData().iteritems():
-                TABLES[key] = val
-            TABLES["logs"] = format_string(printarrayGlob, TABLES_PADDING["logs"])
-            if current_selected_value == 0:
-                dashboard._update(None)
-                screen.refresh()
-            time_cooldown = time.time()
-        screen.draw_next_frame()
-        time.sleep(0.02)
-
+'''
+MANAGE MODULES AND GET INFOS
+'''
 
 def getPid(module):
     p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
@@ -489,8 +505,7 @@ def clearRedisModuleInfo():
     for k in server.keys("MODULE_*"):
         server.delete(k)
     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], "*", "-", "Cleared redis module info"], 0))
-    printarrayGlob.pop()
+    log(([str(inst_time).split(' ')[1], "*", "-", "Cleared redis module info"], 0))
 
 def cleanRedis():
     for k in server.keys("MODULE_TYPE_*"):
@@ -498,38 +513,39 @@ def cleanRedis():
         for pid in server.smembers(k):
             flag_pid_valid = False
             proc = Popen([command_search_name.format(pid)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
-            for line in proc.stdout:
-                splittedLine = line.split()
-                if ('python2' in splittedLine or 'python' in splittedLine) and "./"+moduleName+".py" in splittedLine:
-                    flag_pid_valid = True
+            try:
+                for line in proc.stdout:
+                    splittedLine = line.split()
+                    if ('python2' in splittedLine or 'python' in splittedLine) and "./"+moduleName+".py" in splittedLine:
+                        flag_pid_valid = True
 
-            if not flag_pid_valid:
-                #print flag_pid_valid, 'cleaning', pid, 'in', k
-                server.srem(k, pid)
+                if not flag_pid_valid:
+                    #print flag_pid_valid, 'cleaning', pid, 'in', k
+                    server.srem(k, pid)
+                    inst_time = datetime.datetime.fromtimestamp(int(time.time()))
+                    log(([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
+
+            #Error due to resize, interrupted sys call
+            except IOError as e:
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
-                printarrayGlob.pop()
-                #time.sleep(5)
+                log(([str(inst_time).split(' ')[1], " - ", " - ", "Cleaning fail due to resize."], 0))
+
 
 def restart_module(module, count=1):
     for i in range(count):
         p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
         time.sleep(0.2)
     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, "?", "Restarted " + str(count) + "x"], 0))
-    printarrayGlob.pop()
-
+    log(([str(inst_time).split(' ')[1], module, "?", "Restarted " + str(count) + "x"], 0))
 
 
 def kill_module(module, pid):
-    #print ''
     #print '-> trying to kill module:', module
 
     if pid is None:
         #print 'pid was None'
         inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-        printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "PID was None"], 0))
-        printarrayGlob.pop()
+        log(([str(inst_time).split(' ')[1], module, pid, "PID was None"], 0))
         pid = getPid(module)
     else: #Verify that the pid is at least in redis
         if server.exists("MODULE_"+module+"_"+str(pid)) == 0:
@@ -538,62 +554,51 @@ def kill_module(module, pid):
     lastTimeKillCommand[pid] = int(time.time())
     if pid is not None:
         try:
-            #os.kill(pid, signal.SIGUSR1)
             p = psutil.Process(int(pid))
             p.terminate()
         except Exception as e:
             #print pid, 'already killed'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-            printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Already killed"], 0))
-            printarrayGlob.pop()
+            log(([str(inst_time).split(' ')[1], module, pid, "Already killed"], 0))
             return
         time.sleep(0.2)
         if not p.is_running():
             #print module, 'has been killed'
             #print 'restarting', module, '...'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-            printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
-            printarrayGlob.pop()
+            log(([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
             #restart_module(module)
 
         else:
             #print 'killing failed, retrying...'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-            printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing #1 failed."], 0))
-            printarrayGlob.pop()
+            log(([str(inst_time).split(' ')[1], module, pid, "Killing #1 failed."], 0))
 
-            #os.kill(pid, signal.SIGUSR1)
-            #time.sleep(1)
             p.terminate()
             if not p.is_running():
                 #print module, 'has been killed'
                 #print 'restarting', module, '...'
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
-                printarrayGlob.pop()
+                log(([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
                 #restart_module(module)
             else:
                 #print 'killing failed!'
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing failed!"], 0))
-                printarrayGlob.pop()
+                log(([str(inst_time).split(' ')[1], module, pid, "Killing failed!"], 0))
     else:
         #print 'Module does not exist'
         inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-        printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing failed, module not found"], 0))
-        printarrayGlob.pop()
-    #time.sleep(5)
+        log(([str(inst_time).split(' ')[1], module, pid, "Killing failed, module not found"], 0))
     cleanRedis()
 
 
-
-
+# Fetch the data for all queue
 def fetchQueueData():
 
     all_queue = set()
-    printarray1 = []
-    printarray2 = []
-    printarray3 = []
+    printarray_running = []
+    printarray_idle = []
+    printarray_notrunning = []
     for queue, card in server.hgetall("queues").iteritems():
         all_queue.add(queue)
         key = "MODULE_" + queue + "_"
@@ -604,9 +609,11 @@ def fetchQueueData():
             value = server.get(key + str(moduleNum))
             complete_paste_path = server.get(key + str(moduleNum) + "_PATH")
             COMPLETE_PASTE_PATH_PER_PID[moduleNum] = complete_paste_path
+
             if value is not None:
                 timestamp, path = value.split(", ")
                 if timestamp is not None and path is not None:
+                    # Queue health
                     startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
                     processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
                     if ((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
@@ -616,9 +623,11 @@ def fetchQueueData():
                     else:
                         QUEUE_STATUS[moduleNum] = 0
     
+                    # Queue contain elements
                     if int(card) > 0:
+                        # Queue need to be killed
                         if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
-                            #log = open(log_filename, 'a')
+                            log(([time.time(), queue, "-", "ST:"+timestamp+" PT:"+time.time()-timestamp], 0), True)
                             #log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
                             try:
                                 last_kill_try = time.time() - lastTimeKillCommand[moduleNum]
@@ -627,6 +636,7 @@ def fetchQueueData():
                             if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                 kill_module(queue, int(moduleNum))
     
+                        # Create CPU objects
                         try:
                             cpu_percent = CPU_OBJECT_TABLE[int(moduleNum)].cpu_percent()
                             CPU_TABLE[moduleNum].insert(1, cpu_percent)
@@ -646,43 +656,47 @@ def fetchQueueData():
                                 cpu_avg = cpu_percent
                                 mem_percent = 0
 
-                        array_module_type.append( ([" <K>    [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path), "{0:.2f}".format(cpu_percent)+"%", "{0:.2f}".format(mem_percent)+"%", "{0:.2f}".format(cpu_avg)+"%"], moduleNum) )
+                        array_module_type.append( ([" <K>    [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable),
+                                                    str(processed_time_readable), str(path), "{0:.2f}".format(cpu_percent)+"%", 
+                                                    "{0:.2f}".format(mem_percent)+"%", "{0:.2f}".format(cpu_avg)+"%"], moduleNum) )
     
                     else:
-                        printarray2.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
+                        printarray_idle.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
+
                 PID_NAME_DICO[int(moduleNum)] = str(queue)
-                array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True)
+                array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True) #Sort by num of pastes
         for e in array_module_type:
-            printarray1.append(e)
+            printarray_running.append(e)
     
     for curr_queue in module_file_array:
-        if curr_queue not in all_queue:
-                printarray3.append( ([" <S>  ", curr_queue, "Not running by default"], curr_queue) )
-        else:
+        if curr_queue not in all_queue: #Module not running by default
+                printarray_notrunning.append( ([" <S>  ", curr_queue, "Not running by default"], curr_queue) )
+        else: #Module did not process anything yet
             if len(list(server.smembers('MODULE_TYPE_'+curr_queue))) == 0:
                 if curr_queue not in no_info_modules:
                     no_info_modules[curr_queue] = int(time.time())
-                    printarray3.append( ([" <S>  ", curr_queue, "No data"], curr_queue) )
+                    printarray_notrunning.append( ([" <S>  ", curr_queue, "No data"], curr_queue) )
                 else:
                     #If no info since long time, try to kill
                     if args.autokill == 1:
                         if int(time.time()) - no_info_modules[curr_queue] > args.treshold:
                             kill_module(curr_queue, None)
                             no_info_modules[curr_queue] = int(time.time())
-                        printarray3.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"], curr_queue) )
+                        printarray_notrunning.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"], curr_queue) )
                     else:
-                        printarray3.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting disabled"], curr_queue) )
+                        printarray_notrunning.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting disabled"], curr_queue) )
     
     
-    printarray1.sort(key=lambda x: x[0], reverse=False)
-    printarray2.sort(key=lambda x: x[0], reverse=False)
+    printarray_running.sort(key=lambda x: x[0], reverse=False)
+    printarray_idle.sort(key=lambda x: x[0], reverse=False)
 
-    printstring1 = format_string(printarray1, TABLES_PADDING["running"])
-    printstring2 = format_string(printarray2, TABLES_PADDING["idle"])
-    printstring3 = format_string(printarray3, TABLES_PADDING["notRunning"])
+    printstring_running = format_string(printarray_running, TABLES_PADDING["running"])
+    printstring_idle = format_string(printarray_idle, TABLES_PADDING["idle"])
+    printstring_notrunning = format_string(printarray_notrunning, TABLES_PADDING["notRunning"])
 
-    return {"running": printstring1, "idle": printstring2, "notRunning": printstring3}
+    return {"running": printstring_running, "idle": printstring_idle, "notRunning": printstring_notrunning}
 
+# Format the input string with its related padding to have collumn like text in CListBox
 def format_string(tab, padding_row):
     printstring = []
     for row in tab:
@@ -703,6 +717,52 @@ def format_string(tab, padding_row):
         printstring.append( (text, the_pid) )
     return printstring
 
+def log(data, write_on_disk=False):
+    printarrayLog.insert(0, data)
+    printarrayLog.pop()
+    if write_on_disk:
+        with open(log_filename, 'a') as log:
+            log.write(json.dumps(data[0]) + "\n")
+
+'''
+END MANAGE
+'''
+
+def demo(screen):
+    dashboard = Dashboard(screen)
+    confirm = Confirm(screen)
+    action_choice = Action_choice(screen)
+    show_paste = Show_paste(screen)
+    scenes = [
+        Scene([dashboard], -1, name="dashboard"),
+        Scene([action_choice], -1, name="action_choice"),
+        Scene([confirm], -1, name="confirm"),
+        Scene([show_paste], -1, name="show_paste"),
+    ]
+
+
+    screen.set_scenes(scenes)
+    time_cooldown = time.time() # Cooldown before refresh
+    global TABLES
+    while True:
+        #Stop on resize
+        if screen.has_resized():
+            screen._scenes[screen._scene_index].exit()
+            raise ResizeScreenError("Screen resized", screen._scenes[screen._scene_index])
+
+        if time.time() - time_cooldown > args.refresh:
+            cleanRedis()
+            for key, val in fetchQueueData().iteritems(): #fetch data and put it into the tables
+                TABLES[key] = val
+            TABLES["logs"] = format_string(printarrayLog, TABLES_PADDING["logs"])
+
+            #refresh dashboad only if the scene is active (no value selected)
+            if current_selected_value == 0:
+                dashboard._update(None)
+                screen.refresh()
+            time_cooldown = time.time()
+        screen.draw_next_frame()
+        time.sleep(0.02) #time between screen refresh (For UI navigation, not data actualisation)
 
 
 if __name__ == "__main__":
@@ -755,7 +815,12 @@ if __name__ == "__main__":
     except SyntaxError:
         pass
 
+    last_scene = None
     while True:
-       Screen.wrapper(demo)
-       sys.exit(0)
-
+        try:
+            Screen.wrapper(demo)
+            sys.exit(0)
+        except ResizeScreenError as e:
+            pass
+        except StopApplication:
+            sys.exit(0)
