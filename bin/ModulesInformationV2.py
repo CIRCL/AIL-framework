@@ -24,7 +24,7 @@ command_search_pid = "ps a -o pid,cmd | grep {}"
 command_search_name = "ps a -o pid,cmd | grep {}"
 command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{}.py; read x\""
 
-printarrayGlob = [None]*14
+printarrayLog = [None]*14
 lastTimeKillCommand = {}
 
 # Used to pass information through scenes
@@ -505,8 +505,7 @@ def clearRedisModuleInfo():
     for k in server.keys("MODULE_*"):
         server.delete(k)
     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], "*", "-", "Cleared redis module info"], 0))
-    printarrayGlob.pop()
+    log(([str(inst_time).split(' ')[1], "*", "-", "Cleared redis module info"], 0))
 
 def cleanRedis():
     for k in server.keys("MODULE_TYPE_*"):
@@ -524,15 +523,12 @@ def cleanRedis():
                     #print flag_pid_valid, 'cleaning', pid, 'in', k
                     server.srem(k, pid)
                     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
-                    printarrayGlob.pop()
+                    log(([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
 
             #Error due to resize, interrupted sys call
             except IOError as e:
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], " - ", " - ", "Cleaning fail due to resize."], 0))
-                printarrayGlob.pop()
-                pass
+                log(([str(inst_time).split(' ')[1], " - ", " - ", "Cleaning fail due to resize."], 0))
 
 
 def restart_module(module, count=1):
@@ -540,9 +536,7 @@ def restart_module(module, count=1):
         p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
         time.sleep(0.2)
     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, "?", "Restarted " + str(count) + "x"], 0))
-    printarrayGlob.pop()
-
+    log(([str(inst_time).split(' ')[1], module, "?", "Restarted " + str(count) + "x"], 0))
 
 
 def kill_module(module, pid):
@@ -551,8 +545,7 @@ def kill_module(module, pid):
     if pid is None:
         #print 'pid was None'
         inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-        printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "PID was None"], 0))
-        printarrayGlob.pop()
+        log(([str(inst_time).split(' ')[1], module, pid, "PID was None"], 0))
         pid = getPid(module)
     else: #Verify that the pid is at least in redis
         if server.exists("MODULE_"+module+"_"+str(pid)) == 0:
@@ -566,42 +559,36 @@ def kill_module(module, pid):
         except Exception as e:
             #print pid, 'already killed'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-            printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Already killed"], 0))
-            printarrayGlob.pop()
+            log(([str(inst_time).split(' ')[1], module, pid, "Already killed"], 0))
             return
         time.sleep(0.2)
         if not p.is_running():
             #print module, 'has been killed'
             #print 'restarting', module, '...'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-            printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
-            printarrayGlob.pop()
+            log(([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
             #restart_module(module)
 
         else:
             #print 'killing failed, retrying...'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-            printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing #1 failed."], 0))
-            printarrayGlob.pop()
+            log(([str(inst_time).split(' ')[1], module, pid, "Killing #1 failed."], 0))
 
             p.terminate()
             if not p.is_running():
                 #print module, 'has been killed'
                 #print 'restarting', module, '...'
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
-                printarrayGlob.pop()
+                log(([str(inst_time).split(' ')[1], module, pid, "Killed"], 0))
                 #restart_module(module)
             else:
                 #print 'killing failed!'
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing failed!"], 0))
-                printarrayGlob.pop()
+                log(([str(inst_time).split(' ')[1], module, pid, "Killing failed!"], 0))
     else:
         #print 'Module does not exist'
         inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-        printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing failed, module not found"], 0))
-        printarrayGlob.pop()
+        log(([str(inst_time).split(' ')[1], module, pid, "Killing failed, module not found"], 0))
     cleanRedis()
 
 
@@ -640,7 +627,7 @@ def fetchQueueData():
                     if int(card) > 0:
                         # Queue need to be killed
                         if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
-                            #log = open(log_filename, 'a')
+                            log(([time.time(), queue, "-", "ST:"+timestamp+" PT:"+time.time()-timestamp], 0), True)
                             #log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
                             try:
                                 last_kill_try = time.time() - lastTimeKillCommand[moduleNum]
@@ -730,6 +717,13 @@ def format_string(tab, padding_row):
         printstring.append( (text, the_pid) )
     return printstring
 
+def log(data, write_on_disk=False):
+    printarrayLog.insert(0, data)
+    printarrayLog.pop()
+    if write_on_disk:
+        with open(log_filename, 'a') as log:
+            log.write(json.dumps(data[0]) + "\n")
+
 '''
 END MANAGE
 '''
@@ -760,7 +754,7 @@ def demo(screen):
             cleanRedis()
             for key, val in fetchQueueData().iteritems(): #fetch data and put it into the tables
                 TABLES[key] = val
-            TABLES["logs"] = format_string(printarrayGlob, TABLES_PADDING["logs"])
+            TABLES["logs"] = format_string(printarrayLog, TABLES_PADDING["logs"])
 
             #refresh dashboad only if the scene is active (no value selected)
             if current_selected_value == 0:
