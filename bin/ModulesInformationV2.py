@@ -526,7 +526,6 @@ def cleanRedis():
                     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
                     printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
                     printarrayGlob.pop()
-                    #time.sleep(5)
 
             #Error due to resize, interrupted sys call
             except IOError as e:
@@ -547,7 +546,6 @@ def restart_module(module, count=1):
 
 
 def kill_module(module, pid):
-    #print ''
     #print '-> trying to kill module:', module
 
     if pid is None:
@@ -563,7 +561,6 @@ def kill_module(module, pid):
     lastTimeKillCommand[pid] = int(time.time())
     if pid is not None:
         try:
-            #os.kill(pid, signal.SIGUSR1)
             p = psutil.Process(int(pid))
             p.terminate()
         except Exception as e:
@@ -587,8 +584,6 @@ def kill_module(module, pid):
             printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing #1 failed."], 0))
             printarrayGlob.pop()
 
-            #os.kill(pid, signal.SIGUSR1)
-            #time.sleep(1)
             p.terminate()
             if not p.is_running():
                 #print module, 'has been killed'
@@ -607,8 +602,8 @@ def kill_module(module, pid):
         inst_time = datetime.datetime.fromtimestamp(int(time.time()))
         printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], module, pid, "Killing failed, module not found"], 0))
         printarrayGlob.pop()
-    #time.sleep(5)
     cleanRedis()
+
 
 def fetchQueueData():
 
@@ -705,6 +700,7 @@ def fetchQueueData():
 
     return {"running": printstring1, "idle": printstring2, "notRunning": printstring3}
 
+# Format the input string with its related padding to have collumn like text in CListBox
 def format_string(tab, padding_row):
     printstring = []
     for row in tab:
@@ -741,9 +737,9 @@ def demo(screen):
         Scene([show_paste], -1, name="show_paste"),
     ]
 
-   # screen.play(scenes)
+
     screen.set_scenes(scenes)
-    time_cooldown = time.time()
+    time_cooldown = time.time() # Cooldown before refresh
     global TABLES
     while True:
         #Stop on resize
@@ -753,15 +749,17 @@ def demo(screen):
 
         if time.time() - time_cooldown > args.refresh:
             cleanRedis()
-            for key, val in fetchQueueData().iteritems():
+            for key, val in fetchQueueData().iteritems(): #fetch data and put it into the tables
                 TABLES[key] = val
             TABLES["logs"] = format_string(printarrayGlob, TABLES_PADDING["logs"])
+
+            #refresh dashboad only if the scene is active (no value selected)
             if current_selected_value == 0:
                 dashboard._update(None)
                 screen.refresh()
             time_cooldown = time.time()
         screen.draw_next_frame()
-        time.sleep(0.02)
+        time.sleep(0.02) #time between screen refresh (For UI navigation, not data actualisation)
 
 
 
