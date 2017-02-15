@@ -27,27 +27,35 @@ command_restart_module = "screen -S \"Script\" -X screen -t \"{}\" bash -c \"./{
 printarrayGlob = [None]*14
 lastTimeKillCommand = {}
 
+# Used to pass information through scenes
 current_selected_value = 0
 current_selected_queue = ""
 current_selected_action = ""
 current_selected_action = 0
 
+# Map PID to Queue name (For restart and killing)
 PID_NAME_DICO = {}
 
+# Tables containing info for the dashboad
 TABLES = {"running": [], "idle": [], "notRunning": [], "logs": [("No events recorded yet", 0)]}
 TABLES_TITLES = {"running": "", "idle": "", "notRunning": "", "logs": ""}
 TABLES_PADDING = {"running": [12, 23, 8, 8, 23, 10, 55, 11, 11, 12], "idle": [9, 23, 8, 12, 50], "notRunning": [9, 23, 35], "logs": [15, 23, 8, 50]}
 
+# Indicator for the health of a queue (green(0), red(2), yellow(1))
 QUEUE_STATUS = {}
+
+# Maintain the state of the CPU objects
 CPU_TABLE = {} 
 CPU_OBJECT_TABLE = {}
 
+# Path of the current paste for a pid
 COMPLETE_PASTE_PATH_PER_PID = {}
 
 '''
 ASCIIMATICS WIDGETS EXTENSION
 '''
 
+# Custom listbox
 class CListBox(ListBox):
 
     def __init__(self, queue_name, *args, **kwargs):
@@ -88,6 +96,8 @@ class CListBox(ListBox):
                     self._x + self._offset + dx,
                     self._y + i + dy - self._start_line,
                     colour, attr, bg)
+
+                # Pick color depending on queue health
                 if self.queue_name == "running":
                     if QUEUE_STATUS[pid] == 2:
                         queueStatus = Screen.COLOUR_RED
@@ -108,10 +118,12 @@ class CListBox(ListBox):
                 # Move up one line in text - use value to trigger on_select.
                 self._line = max(0, self._line - 1)
                 self.value = self._options[self._line][1]
+
             elif len(self._options) > 0 and event.key_code == Screen.KEY_DOWN:
                 # Move down one line in text - use value to trigger on_select.
                 self._line = min(len(self._options) - 1, self._line + 1)
                 self.value = self._options[self._line][1]
+
             elif len(self._options) > 0 and event.key_code == ord(' '):
                 global current_selected_value, current_selected_queue
                 if self.queue_name == "logs":
@@ -128,6 +140,7 @@ class CListBox(ListBox):
             else:
                 # Ignore any other key press.
                 return event
+
         elif isinstance(event, MouseEvent):
             # Mouse event - rebase coordinates to Frame context.
             new_event = self._frame.rebase_event(event)
@@ -153,6 +166,7 @@ class CListBox(ListBox):
             return event
 
 
+# Custom label centered in the middle
 class CLabel(Label):
     def __init__(self, label, listTitle=False):
         super(Label, self).__init__(None, tab_stop=False)
@@ -271,7 +285,7 @@ class Confirm(Frame):
         if current_selected_action == "KILL":
             kill_module(PID_NAME_DICO[int(current_selected_value)], current_selected_value)
         else:
-            count = int(current_selected_amount)
+            count = int(current_selected_amount) #Number of queue to start
             if current_selected_queue in ["running", "idle"]:
                 restart_module(PID_NAME_DICO[int(current_selected_value)], count)
             else:
@@ -392,13 +406,12 @@ class Show_paste(Frame):
                                           title="Show current paste",
                                           reduce_cpu=True)
 
-        # Create the form for displaying the list of contacts.
         layout = Layout([100], fill_frame=True)
         self.layout = layout
         self.add_layout(layout)
 
         self.label_list = []
-        self.num_label = 42
+        self.num_label = 42 # Number of line available for displaying the paste
         for i in range(self.num_label):
             self.label_list += [Label("THE PASTE CONTENT " + str(i))]
             layout.add_widget(self.label_list[i])
@@ -426,19 +439,19 @@ class Show_paste(Frame):
                 return
 
             paste = Paste.Paste(COMPLETE_PASTE_PATH_PER_PID[current_selected_value])
-            old_content = paste.get_p_content()[0:4000]
+            old_content = paste.get_p_content()[0:4000] # Limit number of char to be displayed
 
             #Replace unprintable char by ?
             content = ""
             for i, c in enumerate(old_content):
-                if ord(c) > 127:
+                if ord(c) > 127: # Used to avoid printing unprintable char
                     content += '?'
-                elif c == "\t":
+                elif c == "\t":  # Replace tab by 4 spaces
                     content += "    "
                 else:
                     content += c
 
-            #Print in the correct label
+            #Print in the correct label, END or more
             to_print = ""
             i = 0
             for line in content.split("\n"):
@@ -448,13 +461,13 @@ class Show_paste(Frame):
                 i += 1
 
             if i > self.num_label - 2:
-                self.label_list[i]._text = "..."
+                self.label_list[i]._text = "- ALL PASTE NOT DISPLAYED -"
                 i += 1
             else:
-                self.label_list[i]._text = "- END -"
+                self.label_list[i]._text = "- END of PASTE -"
                 i += 1
 
-            while i<self.num_label:
+            while i<self.num_label: #Clear out remaining lines
                 self.label_list[i]._text = ""
                 i += 1
 
