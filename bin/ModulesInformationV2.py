@@ -382,7 +382,7 @@ class Show_paste(Frame):
         self.add_layout(layout)
 
         self.label_list = []
-        self.num_label = 41
+        self.num_label = 42
         for i in range(self.num_label):
             self.label_list += [Label("THE PASTE CONTENT " + str(i))]
             layout.add_widget(self.label_list[i])
@@ -417,6 +417,8 @@ class Show_paste(Frame):
             for i, c in enumerate(old_content):
                 if ord(c) > 127:
                     content += '?'
+                elif c == "\t":
+                    content += "    "
                 else:
                     content += c
 
@@ -424,9 +426,16 @@ class Show_paste(Frame):
             to_print = ""
             i = 0
             for line in content.split("\n"):
-                if i==self.num_label:
+                if i > self.num_label - 2:
                     break
                 self.label_list[i]._text = str(i) + ". " + line.replace("\r","")
+                i += 1
+
+            if i > self.num_label - 2:
+                self.label_list[i]._text = "..."
+                i += 1
+            else:
+                self.label_list[i]._text = "- END -"
                 i += 1
 
             while i<self.num_label:
@@ -463,6 +472,11 @@ def demo(screen):
     time_cooldown = time.time()
     global TABLES
     while True:
+        #Stop on resize
+        if screen.has_resized():
+            screen._scenes[screen._scene_index].exit()
+            raise ResizeScreenError("Screen resized", screen._scenes[screen._scene_index])
+
         if time.time() - time_cooldown > args.refresh:
             cleanRedis()
             for key, val in fetchQueueData().iteritems():
@@ -498,18 +512,27 @@ def cleanRedis():
         for pid in server.smembers(k):
             flag_pid_valid = False
             proc = Popen([command_search_name.format(pid)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
-            for line in proc.stdout:
-                splittedLine = line.split()
-                if ('python2' in splittedLine or 'python' in splittedLine) and "./"+moduleName+".py" in splittedLine:
-                    flag_pid_valid = True
+            try:
+                for line in proc.stdout:
+                    splittedLine = line.split()
+                    if ('python2' in splittedLine or 'python' in splittedLine) and "./"+moduleName+".py" in splittedLine:
+                        flag_pid_valid = True
 
-            if not flag_pid_valid:
-                #print flag_pid_valid, 'cleaning', pid, 'in', k
-                server.srem(k, pid)
+                if not flag_pid_valid:
+                    #print flag_pid_valid, 'cleaning', pid, 'in', k
+                    server.srem(k, pid)
+                    inst_time = datetime.datetime.fromtimestamp(int(time.time()))
+                    printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
+                    printarrayGlob.pop()
+                    #time.sleep(5)
+
+            #Error due to resize, interrupted sys call
+            except IOError as e:
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
+                printarrayGlob.insert(0, ([str(inst_time).split(' ')[1], " - ", " - ", "Cleaning fail due to resize."], 0))
                 printarrayGlob.pop()
-                #time.sleep(5)
+                pass
+
 
 def restart_module(module, count=1):
     for i in range(count):
@@ -755,7 +778,10 @@ if __name__ == "__main__":
     except SyntaxError:
         pass
 
+    last_scene = None
     while True:
-       Screen.wrapper(demo)
-       sys.exit(0)
-
+        try:
+            Screen.wrapper(demo)
+            sys.exit(0)
+        except ResizeScreenError as e:
+            pass
