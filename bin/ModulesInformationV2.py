@@ -605,12 +605,13 @@ def kill_module(module, pid):
     cleanRedis()
 
 
+# Fetch the data for all queue
 def fetchQueueData():
 
     all_queue = set()
-    printarray1 = []
-    printarray2 = []
-    printarray3 = []
+    printarray_running = []
+    printarray_idle = []
+    printarray_notrunning = []
     for queue, card in server.hgetall("queues").iteritems():
         all_queue.add(queue)
         key = "MODULE_" + queue + "_"
@@ -621,9 +622,11 @@ def fetchQueueData():
             value = server.get(key + str(moduleNum))
             complete_paste_path = server.get(key + str(moduleNum) + "_PATH")
             COMPLETE_PASTE_PATH_PER_PID[moduleNum] = complete_paste_path
+
             if value is not None:
                 timestamp, path = value.split(", ")
                 if timestamp is not None and path is not None:
+                    # Queue health
                     startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
                     processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
                     if ((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
@@ -633,7 +636,9 @@ def fetchQueueData():
                     else:
                         QUEUE_STATUS[moduleNum] = 0
     
+                    # Queue contain elements
                     if int(card) > 0:
+                        # Queue need to be killed
                         if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
                             #log = open(log_filename, 'a')
                             #log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
@@ -644,6 +649,7 @@ def fetchQueueData():
                             if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                 kill_module(queue, int(moduleNum))
     
+                        # Create CPU objects
                         try:
                             cpu_percent = CPU_OBJECT_TABLE[int(moduleNum)].cpu_percent()
                             CPU_TABLE[moduleNum].insert(1, cpu_percent)
@@ -663,42 +669,45 @@ def fetchQueueData():
                                 cpu_avg = cpu_percent
                                 mem_percent = 0
 
-                        array_module_type.append( ([" <K>    [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path), "{0:.2f}".format(cpu_percent)+"%", "{0:.2f}".format(mem_percent)+"%", "{0:.2f}".format(cpu_avg)+"%"], moduleNum) )
+                        array_module_type.append( ([" <K>    [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable),
+                                                    str(processed_time_readable), str(path), "{0:.2f}".format(cpu_percent)+"%", 
+                                                    "{0:.2f}".format(mem_percent)+"%", "{0:.2f}".format(cpu_avg)+"%"], moduleNum) )
     
                     else:
-                        printarray2.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
+                        printarray_idle.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
+
                 PID_NAME_DICO[int(moduleNum)] = str(queue)
-                array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True)
+                array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True) #Sort by num of pastes
         for e in array_module_type:
-            printarray1.append(e)
+            printarray_running.append(e)
     
     for curr_queue in module_file_array:
-        if curr_queue not in all_queue:
-                printarray3.append( ([" <S>  ", curr_queue, "Not running by default"], curr_queue) )
-        else:
+        if curr_queue not in all_queue: #Module not running by default
+                printarray_notrunning.append( ([" <S>  ", curr_queue, "Not running by default"], curr_queue) )
+        else: #Module did not process anything yet
             if len(list(server.smembers('MODULE_TYPE_'+curr_queue))) == 0:
                 if curr_queue not in no_info_modules:
                     no_info_modules[curr_queue] = int(time.time())
-                    printarray3.append( ([" <S>  ", curr_queue, "No data"], curr_queue) )
+                    printarray_notrunning.append( ([" <S>  ", curr_queue, "No data"], curr_queue) )
                 else:
                     #If no info since long time, try to kill
                     if args.autokill == 1:
                         if int(time.time()) - no_info_modules[curr_queue] > args.treshold:
                             kill_module(curr_queue, None)
                             no_info_modules[curr_queue] = int(time.time())
-                        printarray3.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"], curr_queue) )
+                        printarray_notrunning.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"], curr_queue) )
                     else:
-                        printarray3.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting disabled"], curr_queue) )
+                        printarray_notrunning.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting disabled"], curr_queue) )
     
     
-    printarray1.sort(key=lambda x: x[0], reverse=False)
-    printarray2.sort(key=lambda x: x[0], reverse=False)
+    printarray_running.sort(key=lambda x: x[0], reverse=False)
+    printarray_idle.sort(key=lambda x: x[0], reverse=False)
 
-    printstring1 = format_string(printarray1, TABLES_PADDING["running"])
-    printstring2 = format_string(printarray2, TABLES_PADDING["idle"])
-    printstring3 = format_string(printarray3, TABLES_PADDING["notRunning"])
+    printstring_running = format_string(printarray_running, TABLES_PADDING["running"])
+    printstring_idle = format_string(printarray_idle, TABLES_PADDING["idle"])
+    printstring_notrunning = format_string(printarray_notrunning, TABLES_PADDING["notRunning"])
 
-    return {"running": printstring1, "idle": printstring2, "notRunning": printstring3}
+    return {"running": printstring_running, "idle": printstring_idle, "notRunning": printstring_notrunning}
 
 # Format the input string with its related padding to have collumn like text in CListBox
 def format_string(tab, padding_row):
@@ -760,7 +769,6 @@ def demo(screen):
             time_cooldown = time.time()
         screen.draw_next_frame()
         time.sleep(0.02) #time between screen refresh (For UI navigation, not data actualisation)
-
 
 
 if __name__ == "__main__":
