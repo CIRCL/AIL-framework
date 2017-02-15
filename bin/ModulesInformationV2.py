@@ -44,6 +44,10 @@ CPU_OBJECT_TABLE = {}
 
 COMPLETE_PASTE_PATH_PER_PID = {}
 
+'''
+ASCIIMATICS WIDGETS EXTENSION
+'''
+
 class CListBox(ListBox):
 
     def __init__(self, queue_name, *args, **kwargs):
@@ -119,7 +123,7 @@ class CListBox(ListBox):
 
             # Quit if press q
             elif event.key_code == ord('q'):
-                ListView._quit()
+                Dashboard._quit()
             
             else:
                 # Ignore any other key press.
@@ -170,9 +174,17 @@ class CLabel(Label):
         self._frame.canvas.print_at(
             self._text, self._x, self._y, colour, attr, bg)
 
-class ListView(Frame):
+'''
+END EXTENSION
+'''
+
+'''
+SCENE DEFINITION
+''' 
+
+class Dashboard(Frame):
     def __init__(self, screen):
-        super(ListView, self).__init__(screen,
+        super(Dashboard, self).__init__(screen,
                                        screen.height,
                                        screen.width,
                                        hover_focus=True,
@@ -458,41 +470,14 @@ class Show_paste(Frame):
             for i in range(2,self.num_label):
                 self.label_list[i]._text = ""
 
+'''
+END SCENES DEFINITION
+'''
 
-def demo(screen):
-    dashboard = ListView(screen)
-    confirm = Confirm(screen)
-    action_choice = Action_choice(screen)
-    show_paste = Show_paste(screen)
-    scenes = [
-        Scene([dashboard], -1, name="dashboard"),
-        Scene([action_choice], -1, name="action_choice"),
-        Scene([confirm], -1, name="confirm"),
-        Scene([show_paste], -1, name="show_paste"),
-    ]
 
-   # screen.play(scenes)
-    screen.set_scenes(scenes)
-    time_cooldown = time.time()
-    global TABLES
-    while True:
-        #Stop on resize
-        if screen.has_resized():
-            screen._scenes[screen._scene_index].exit()
-            raise ResizeScreenError("Screen resized", screen._scenes[screen._scene_index])
-
-        if time.time() - time_cooldown > args.refresh:
-            cleanRedis()
-            for key, val in fetchQueueData().iteritems():
-                TABLES[key] = val
-            TABLES["logs"] = format_string(printarrayGlob, TABLES_PADDING["logs"])
-            if current_selected_value == 0:
-                dashboard._update(None)
-                screen.refresh()
-            time_cooldown = time.time()
-        screen.draw_next_frame()
-        time.sleep(0.02)
-
+'''
+MANAGE MODULES AND GET INFOS
+'''
 
 def getPid(module):
     p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
@@ -612,9 +597,6 @@ def kill_module(module, pid):
     #time.sleep(5)
     cleanRedis()
 
-
-
-
 def fetchQueueData():
 
     all_queue = set()
@@ -729,6 +711,44 @@ def format_string(tab, padding_row):
             text += (padding_row[ite] - len(elem))*" " + padd_off
         printstring.append( (text, the_pid) )
     return printstring
+
+'''
+END MANAGE
+'''
+
+def demo(screen):
+    dashboard = Dashboard(screen)
+    confirm = Confirm(screen)
+    action_choice = Action_choice(screen)
+    show_paste = Show_paste(screen)
+    scenes = [
+        Scene([dashboard], -1, name="dashboard"),
+        Scene([action_choice], -1, name="action_choice"),
+        Scene([confirm], -1, name="confirm"),
+        Scene([show_paste], -1, name="show_paste"),
+    ]
+
+   # screen.play(scenes)
+    screen.set_scenes(scenes)
+    time_cooldown = time.time()
+    global TABLES
+    while True:
+        #Stop on resize
+        if screen.has_resized():
+            screen._scenes[screen._scene_index].exit()
+            raise ResizeScreenError("Screen resized", screen._scenes[screen._scene_index])
+
+        if time.time() - time_cooldown > args.refresh:
+            cleanRedis()
+            for key, val in fetchQueueData().iteritems():
+                TABLES[key] = val
+            TABLES["logs"] = format_string(printarrayGlob, TABLES_PADDING["logs"])
+            if current_selected_value == 0:
+                dashboard._update(None)
+                screen.refresh()
+            time_cooldown = time.time()
+        screen.draw_next_frame()
+        time.sleep(0.02)
 
 
 
