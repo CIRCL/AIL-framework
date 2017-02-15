@@ -196,7 +196,9 @@ def terms_plot_tool_data():
 
 @app.route("/terms_plot_top/")
 def terms_plot_top():
-    return render_template("terms_plot_top.html")
+    per_paste = request.args.get('per_paste')
+    per_paste = per_paste if per_paste is not None else 1
+    return render_template("terms_plot_top.html", per_paste=per_paste)
 
 
 @app.route("/terms_plot_top_data/")
@@ -212,11 +214,15 @@ def terms_plot_top_data():
 
     the_set = request.args.get('set')
     num_day = int(request.args.get('num_day'))
+    per_paste = int(request.args.get('per_paste'))
+    if per_paste == 1:
+        the_set = "per_paste_" + the_set
+
     if the_set is None:
         return "None"
     else:
         to_return = []
-        if the_set == "TopTermFreq_set_day":
+        if "TopTermFreq_set_day" in the_set:
             the_set += "_" + str(today_timestamp)
 
         for term, tot_value in r_serv_term.zrevrangebyscore(the_set, '+inf', '-inf', withscores=True, start=0, num=20):

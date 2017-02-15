@@ -48,11 +48,13 @@ def manage_top_set():
     blacklist_size = int(server_term.scard(BlackListTermsSet_Name))
 
     dico = {}
+    dico_per_paste = {}
 
     # Retreive top data (max_card + blacklist_size) from days sets
     for timestamp in range(startDate, startDate - top_termFreq_setName_month[1]*oneDay, -oneDay):
         curr_set = top_termFreq_setName_day[0] + str(timestamp)
         array_top_day = server_term.zrevrangebyscore(curr_set, '+inf', '-inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality+blacklist_size)
+        array_top_day_per_paste = server_term.zrevrangebyscore("per_paste_" + curr_set, '+inf', '-inf', withscores=True, start=0, num=top_term_freq_max_set_cardinality+blacklist_size)
 
         for word, value in array_top_day:
             if word not in server_term.smembers(BlackListTermsSet_Name):
@@ -61,8 +63,16 @@ def manage_top_set():
                 else:
                     dico[word] = value
 
+        for word, value in "per_paste_" + array_top_day:
+            if word not in server_term.smembers(BlackListTermsSet_Name):
+                if word in dico_per_paste.keys():
+                    dico_per_paste[word] += value
+                else:
+                    dico_per_paste[word] = value
+
         if timestamp == startDate - num_day_week*oneDay:
             dico_week = copy.deepcopy(dico)
+            dico_week_per_paste = copy.deepcopy(dico_per_paste)
 
     # convert dico into sorted array
     array_month = []
@@ -77,17 +87,37 @@ def manage_top_set():
     array_week.sort(key=lambda tup: -tup[1])
     array_week = array_week[0:20]
 
+    # convert dico_per_paste into sorted array
+    array_month_per_paste = []
+    for w, v in dico_per_paste.iteritems():
+        array_month_per_paste.append((w, v))
+    array_month_per_paste.sort(key=lambda tup: -tup[1])
+    array_month_per_paste = array_month_per_paste[0:20]
+
+    array_week_per_paste = []
+    for w, v in dico_week_per_paste.iteritems():
+        array_week_per_paste.append((w, v))
+    array_week_per_paste.sort(key=lambda tup: -tup[1])
+    array_week_per_paste = array_week_per_paste[0:20]
+
+
     # suppress every terms in top sets
     for curr_set, curr_num_day in top_termFreq_set_array[1:3]:
         for w in server_term.zrange(curr_set, 0, -1):
             server_term.zrem(curr_set, w)
+        for w in server_term.zrange("per_paste_" + curr_set, 0, -1):
+            server_term.zrem("per_paste_" + curr_set, w)
 
     # Add top term from sorted array in their respective sorted sets
     for elem in array_week:
         server_term.zadd(top_termFreq_setName_week[0], float(elem[1]), elem[0])
+    for elem in array_week_per_paste:
+        server_term.zadd("per_paste_" + top_termFreq_setName_week[0], float(elem[1]), elem[0])
   
     for elem in array_month:
         server_term.zadd(top_termFreq_setName_month[0], float(elem[1]), elem[0])
+    for elem in array_month_per_paste:
+        server_term.zadd("per_paste_" + top_termFreq_setName_month[0], float(elem[1]), elem[0])
 
     timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
     value = str(timestamp) + ", " + "-"

@@ -117,12 +117,18 @@ if __name__ == "__main__":
             r_serv1.hincrby(low_word, date, int(score))
 
             # Update redis
+            #consider the num of occurence of this term
             curr_word_value = int(server_term.hincrby(timestamp, low_word, int(score)))
+            #1 term per paste
+            curr_word_value_perPaste = int(server_term.hincrby(timestamp, low_word, int(1)))
 
             # Add in set only if term is not in the blacklist
             if low_word not in server_term.smembers(BlackListTermsSet_Name):
+                #consider the num of occurence of this term
                 server_term.zincrby(curr_set, low_word, float(score))
-            
+                #1 term per paste
+                server_term.zincrby("per_paste_" + curr_set, low_word, float(score))
+             
             #Add more info for tracked terms
             check_if_tracked_term(low_word, filename)
 
