@@ -124,7 +124,7 @@ class CListBox(ListBox):
                 self._line = min(len(self._options) - 1, self._line + 1)
                 self.value = self._options[self._line][1]
 
-            elif len(self._options) > 0 and event.key_code == ord(' '):
+            elif len(self._options) > 0 and event.key_code in [ord(' '), ord('\n')] :
                 global current_selected_value, current_selected_queue
                 if self.queue_name == "logs":
                     return event
