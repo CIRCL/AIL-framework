@@ -78,7 +78,7 @@ def analyse(url, path):
         else:
             print "Potential SQL injection:"
             print urllib2.unquote(url)
-            to_print = 'SQLInjection;{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Potential SQL injection")
+            to_print = 'SQLInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Potential SQL injection", paste.p_path)
             publisher.info(to_print)
 
 
