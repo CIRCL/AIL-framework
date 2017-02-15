@@ -627,7 +627,7 @@ def fetchQueueData():
                     if int(card) > 0:
                         # Queue need to be killed
                         if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
-                            log(([str(time.time()), queue, "-", "ST:"+str(timestamp)+" PT:"+str(time.time()-timestamp)], 0), True)
+                            log(([str(time.time()), queue, "-", "ST:"+str(timestamp)+" PT:"+str(time.time()-float(timestamp))], 0), True)
                             #log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
                             try:
                                 last_kill_try = time.time() - lastTimeKillCommand[moduleNum]
