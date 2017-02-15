@@ -213,7 +213,7 @@ function create_log_table(obj_json) {
 
     source_link = document.createElement("A");
     if (parsedmess[1] == "slexy.org"){
-        soruce_url = "http://"+parsedmess[1]+"/view/"+parsedmess[3].split(".")[0];
+        source_url = "http://"+parsedmess[1]+"/view/"+parsedmess[3].split(".")[0];
     }
     else{
         source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
