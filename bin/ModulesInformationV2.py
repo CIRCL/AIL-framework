@@ -2,8 +2,7 @@
 # -*-coding:UTF-8 -*
 
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
-    Button, TextBox, Widget, Label
-from asciimatics.effects import Cycle, Print, Stars
+    Button, Label
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
@@ -117,6 +116,11 @@ class CListBox(ListBox):
                 current_selected_queue = self.queue_name
                 self._frame.save()
                 raise NextScene("action_choice")
+
+            # Quit if press q
+            elif event.key_code == ord('q'):
+                ListView._quit()
+            
             else:
                 # Ignore any other key press.
                 return event
@@ -785,3 +789,5 @@ if __name__ == "__main__":
             sys.exit(0)
         except ResizeScreenError as e:
             pass
+        except StopApplication:
+            sys.exit(0)
