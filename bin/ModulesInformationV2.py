@@ -240,7 +240,7 @@ class Dashboard(Frame):
         layout2.add_widget(CLabel(TABLES_TITLES["idle"], listTitle=True), 0)
         layout2.add_widget(self._list_view_idle_queue, 0)
         #Non Running Queues
-        text_nq = CLabel("No Running Queues")
+        text_nq = CLabel("Queues not running")
         layout2.add_widget(text_nq, 1)
         layout2.add_widget(CLabel(TABLES_TITLES["notRunning"], listTitle=True), 1)
         layout2.add_widget(self._list_view_noRunning, 1)
@@ -627,7 +627,7 @@ def fetchQueueData():
                     if int(card) > 0:
                         # Queue need to be killed
                         if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
-                            log(([time.time(), queue, "-", "ST:"+timestamp+" PT:"+time.time()-timestamp], 0), True)
+                            log(([str(time.time()), queue, "-", "ST:"+str(timestamp)+" PT:"+str(time.time()-timestamp)], 0), True)
                             #log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
                             try:
                                 last_kill_try = time.time() - lastTimeKillCommand[moduleNum]
@@ -689,6 +689,7 @@ def fetchQueueData():
     
     printarray_running.sort(key=lambda x: x[0], reverse=False)
     printarray_idle.sort(key=lambda x: x[0], reverse=False)
+    printarray_notrunning.sort(key=lambda x: x[0][1], reverse=False)
 
     printstring_running = format_string(printarray_running, TABLES_PADDING["running"])
     printstring_idle = format_string(printarray_idle, TABLES_PADDING["idle"])
