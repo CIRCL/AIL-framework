@@ -12,6 +12,7 @@
   <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+  <link href="{{ url_for('static', filename='css/switch_checkbox.css') }}" rel="stylesheet" type="text/css" />
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
@@ -67,9 +68,14 @@
         <div class="col-lg-12">
             <div class="row">
                 <div class="col-lg-12">
-                    <form>
-                        <input type="checkbox" id="per_paste" value="per_paste" onclick="reload_per_paste()"> 1 term per paste
-                    </form>
+                    <div class='pull_right'>
+                        <label class="switch">
+                            <input id="per_paste" class="switch-input" value="per_paste" type="checkbox" onclick="reload_per_paste()">
+                            <span class="switch-label" data-on="On" data-off="Off"></span>
+                            <span class="switch-handle"></span>
+                        </label>
+                        <strong style="top: 3px; position: relative;">1 term per paste</strong>
+                    <div>
                     <div id="panel-today" class="panel panel-info">
                         <div class="panel-heading">
                             <strong>Today</strong>

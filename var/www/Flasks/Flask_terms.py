@@ -208,16 +208,21 @@ def terms_plot_top_data():
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
 
-    set_day = "TopTermFreq_set_day_" + str(today_timestamp)
-    set_week = "TopTermFreq_set_week";
-    set_month = "TopTermFreq_set_month";
-
-    the_set = request.args.get('set')
-    num_day = int(request.args.get('num_day'))
     per_paste = int(request.args.get('per_paste'))
     if per_paste == 1:
-        the_set = "per_paste_" + the_set
+        per_paste = "per_paste_"
+    else:
+        per_paste = ""
 
+    set_day = per_paste + "TopTermFreq_set_day_" + str(today_timestamp)
+    set_week = per_paste + "TopTermFreq_set_week";
+    set_month = per_paste + "TopTermFreq_set_month";
+
+    the_set = per_paste + request.args.get('set')
+    num_day = int(request.args.get('num_day'))
+
+    print(set_day)
+    print(per_paste)
     if the_set is None:
         return "None"
     else:
@@ -235,7 +240,7 @@ def terms_plot_top_data():
             position['month'] = position['month']+1 if position['month'] is not None else "<20"
             value_range = []
             for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
-                value = r_serv_term.hget(timestamp, term)
+                value = r_serv_term.hget(per_paste+str(timestamp), term)
                 curr_value_range = int(value) if value is not None else 0
                 value_range.append([timestamp, curr_value_range])
                 

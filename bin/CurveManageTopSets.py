@@ -63,7 +63,7 @@ def manage_top_set():
                 else:
                     dico[word] = value
 
-        for word, value in "per_paste_" + array_top_day:
+        for word, value in array_top_day_per_paste:
             if word not in server_term.smembers(BlackListTermsSet_Name):
                 if word in dico_per_paste.keys():
                     dico_per_paste[word] += value

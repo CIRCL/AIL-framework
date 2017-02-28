@@ -116,21 +116,19 @@
                                      </tr>
                                 </thead>
                                 <tbody>
-                                {% set i = 0 %}
                                 {% for term in track_list %}
                                   <tr>
                                       <td>{{ term }}</td>
-                                      <td>{{ track_list_values[i][3] }}</td>
-                                      <td>{{ track_list_values[i][0] }}</td>
-                                      <td>{{ track_list_values[i][1] }}</td>
-                                      <td>{{ track_list_values[i][2] }}</td>
-                                      <td>{{ track_list_num_of_paste[i] }}</td>
+                                      <td>{{ track_list_values[loop.index0][3] }}</td>
+                                      <td>{{ track_list_values[loop.index0][0] }}</td>
+                                      <td>{{ track_list_values[loop.index0][1] }}</td>
+                                      <td>{{ track_list_values[loop.index0][2] }}</td>
+                                      <td>{{ track_list_num_of_paste[loop.index0] }}</td>
                                       <td><p style="margin: 0px;">
                                           <span data-toggle="modal" data-target="#mymodal" data-term="{{ term }}" ><button class="btn-link" data-toggle="tooltip" data-placement="right" title="Show concerned paste(s)"><span class="glyphicon glyphicon-info-sign"></span></button></span>
                                           <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ term }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                       </p></td>
                                   </tr>
-                                {% set i = i + 1 %}
                                 {% endfor %}
                                 </tbody>
                             </table>
@@ -162,22 +160,20 @@
                             <table class="table table-striped table-bordered table-hover" id="myTable2">
                                 <thead>
                                      <tr>
-                                        <th style="max-width: 800px;">Termx</th>
+                                        <th style="max-width: 800px;">Term</th>
                                         <th>Added date</th>
                                         <th>Action</th>
                                      </tr>
                                 </thead>
                                 <tbody>
-                                {% set i = 0 %}
-                                {% for term in black_list %}
+                                {% for term, date in black_list %}
                                   <tr>
-                                      <td>{{ black_list[i][0] }}</td>
-                                      <td>{{ black_list[i][1] }}</td>
+                                      <td>{{ term }}</td>
+                                      <td>{{ date }}</td>
                                       <td><p style="margin: 0px;">
-                                          <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="right" title="Remove this term" data-content="{{ black_list[i][0] }}" data-section="blacklistTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
+                                          <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="right" title="Remove this term" data-content="{{ term }}" data-section="blacklistTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                       </p></td>
                                   </tr>
-                                {% set i = i + 1 %}
                                 {% endfor %}
                                 </tbody>
                             </table>
