@@ -799,10 +799,18 @@ if __name__ == "__main__":
     module_file_array = set()
     no_info_modules = {}
     path_allmod = os.path.join(os.environ['AIL_HOME'], 'doc/all_modules.txt')
-    with open(path_allmod, 'r') as module_file:
-        for line in module_file:
-            module_file_array.add(line[:-1])
 
+    try:
+        with open(path_allmod, 'r') as module_file:
+            for line in module_file:
+                module_file_array.add(line[:-1])
+    except IOError as e:
+        if e.errno == 2: #module_file not found, creating a new one
+            print(path_allmod + " not found.\nCreating a new one.")
+            os.system("./../doc/generate_modules_data_flow_graph.sh")
+            with open(path_allmod, 'r') as module_file:
+                for line in module_file:
+                    module_file_array.add(line[:-1])
     cleanRedis()
 
     
