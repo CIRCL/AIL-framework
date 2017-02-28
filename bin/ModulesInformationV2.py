@@ -627,8 +627,7 @@ def fetchQueueData():
                     if int(card) > 0:
                         # Queue need to be killed
                         if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
-                            log(([str(time.time()), queue, "-", "ST:"+str(timestamp)+" PT:"+str(time.time()-float(timestamp))], 0), True)
-                            #log.write(json.dumps([queue, card, str(startTime_readable), str(processed_time_readable), path]) + "\n")
+                            log(([str(time.time()), queue, "-", "ST:"+str(timestamp)+" PT:"+str(time.time()-float(timestamp))], 0), True, show_in_board=False)
                             try:
                                 last_kill_try = time.time() - lastTimeKillCommand[moduleNum]
                             except KeyError:
@@ -718,9 +717,10 @@ def format_string(tab, padding_row):
         printstring.append( (text, the_pid) )
     return printstring
 
-def log(data, write_on_disk=False):
-    printarrayLog.insert(0, data)
-    printarrayLog.pop()
+def log(data, write_on_disk=False, show_in_board=True):
+    if show_in_board:
+        printarrayLog.insert(0, data)
+        printarrayLog.pop()
     if write_on_disk:
         with open(log_filename, 'a') as log:
             log.write(json.dumps(data[0]) + "\n")
@@ -799,10 +799,18 @@ if __name__ == "__main__":
     module_file_array = set()
     no_info_modules = {}
     path_allmod = os.path.join(os.environ['AIL_HOME'], 'doc/all_modules.txt')
-    with open(path_allmod, 'r') as module_file:
-        for line in module_file:
-            module_file_array.add(line[:-1])
 
+    try:
+        with open(path_allmod, 'r') as module_file:
+            for line in module_file:
+                module_file_array.add(line[:-1])
+    except IOError as e:
+        if e.errno == 2: #module_file not found, creating a new one
+            print(path_allmod + " not found.\nCreating a new one.")
+            os.system("./../doc/generate_modules_data_flow_graph.sh")
+            with open(path_allmod, 'r') as module_file:
+                for line in module_file:
+                    module_file_array.add(line[:-1])
     cleanRedis()
 
     
