@@ -62,6 +62,7 @@ if __name__ == "__main__":
                         publisher.warning(to_print)
                         #Send to duplicate
                         p.populate_set_out(filename, 'Duplicate')
+                        p.populate_set_out('mail;{}'.format(filename), 'BrowseWarningPaste')
                         
                     else:
                         publisher.info(to_print)
@@ -69,7 +70,6 @@ if __name__ == "__main__":
                 for mail in MX_values[1]:
                     print 'mail;{};{};{}'.format(1, mail, PST.p_date)
                     p.populate_set_out('mail;{};{};{}'.format(1, mail, PST.p_date), 'ModuleStats')
-                    p.populate_set_out('mail;{}'.format(filename), 'BrowseWarningPaste')
 
             prec_filename = filename
 
