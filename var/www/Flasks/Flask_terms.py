@@ -20,13 +20,13 @@ cfg = Flask_config.cfg
 r_serv_term = Flask_config.r_serv_term
 # ============ FUNCTIONS ============
 
-def Term_getValueOverRange(word, startDate, num_day):
+def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
     passed_days = 0
     oneDay = 60*60*24
     to_return = []
     curr_to_return = 0
     for timestamp in range(startDate, startDate - max(num_day)*oneDay, -oneDay):
-        value = r_serv_term.hget(timestamp, word)
+        value = r_serv_term.hget(per_paste+str(timestamp), word)
         curr_to_return += int(value) if value is not None else 0
         for i in num_day:
             if passed_days == i-1:
@@ -39,6 +39,14 @@ def Term_getValueOverRange(word, startDate, num_day):
 
 @app.route("/terms_management/")
 def terms_management():
+    per_paste = request.args.get('per_paste')
+    if per_paste == "1" or per_paste is None:
+        per_paste_text = "per_paste_"
+        per_paste = 1
+    else:
+        per_paste_text = ""
+        per_paste = 0
+
     TrackedTermsSet_Name = "TrackedSetTermSet"
     BlackListTermsSet_Name = "BlackListSetTermSet"
     TrackedTermsDate_Name = "TrackedTermDate"
@@ -53,7 +61,7 @@ def terms_management():
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
         track_list.append(tracked_term)
-        value_range = Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31])
+        value_range = Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
 
         term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
 
@@ -70,7 +78,7 @@ def terms_management():
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         black_list.append([blacked_term, term_date])
 
-    return render_template("terms_management.html", black_list=black_list, track_list=track_list, track_list_values=track_list_values,  track_list_num_of_paste=track_list_num_of_paste)
+    return render_template("terms_management.html", black_list=black_list, track_list=track_list, track_list_values=track_list_values,  track_list_num_of_paste=track_list_num_of_paste, per_paste=per_paste)
 
 
 @app.route("/terms_management_query_paste/")
@@ -182,12 +190,19 @@ def terms_plot_tool_data():
     range_end = calendar.timegm(range_end.timetuple())
     term =  request.args.get('term')
 
+    per_paste = request.args.get('per_paste')
+    if per_paste == "1" or per_paste is None:
+        per_paste = "per_paste_"
+    else:
+        per_paste = ""
+
+
     if term is None:
         return "None"
     else:
         value_range = []
         for timestamp in range(range_start, range_end+oneDay, oneDay):
-            value = r_serv_term.hget(timestamp, term)
+            value = r_serv_term.hget(per_paste+str(timestamp), term)
             curr_value_range = int(value) if value is not None else 0
             value_range.append([timestamp, curr_value_range])
         value_range.insert(0,term)
@@ -208,8 +223,8 @@ def terms_plot_top_data():
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
 
-    per_paste = int(request.args.get('per_paste'))
-    if per_paste == 1:
+    per_paste = request.args.get('per_paste')
+    if per_paste == "1" or per_paste is None:
         per_paste = "per_paste_"
     else:
         per_paste = ""
@@ -221,8 +236,6 @@ def terms_plot_top_data():
     the_set = per_paste + request.args.get('set')
     num_day = int(request.args.get('num_day'))
 
-    print(set_day)
-    print(per_paste)
     if the_set is None:
         return "None"
     else:
