@@ -644,6 +644,12 @@ def fetchQueueData():
                             if len(CPU_TABLE[moduleNum]) > args.refresh*10:
                                 CPU_TABLE[moduleNum].pop()
                             mem_percent = CPU_OBJECT_TABLE[int(moduleNum)].memory_percent()
+                        except psutil.NoSuchProcess:
+                            del CPU_OBJECT_TABLE[int(moduleNum)]
+                            del CPU_TABLE[moduleNum]
+                            cpu_percent = 0
+                            cpu_avg = cpu_percent
+                            mem_percent = 0
                         except KeyError:
                             try:
                                 CPU_OBJECT_TABLE[int(moduleNum)] = psutil.Process(int(moduleNum))
