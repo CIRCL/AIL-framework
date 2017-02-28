@@ -98,4 +98,4 @@ if __name__ == "__main__":
                 publisher.info(
                     'Categ;{};{};{};Detected {} as {};{}'.format(
                         paste.p_source, paste.p_date, paste.p_name,
-                        len(found), categ), paste.p_path)
+                        len(found), categ, paste.p_path))
