@@ -13,6 +13,7 @@
   <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
   <link href="{{ url_for('static', filename='css/jquery-ui.min.css') }}" rel="stylesheet" type="text/css" />
+  <link href="{{ url_for('static', filename='css/switch_checkbox.css') }}" rel="stylesheet" type="text/css" />
   <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
@@ -79,6 +80,15 @@
                                 <input id="TermInput" class="form-control" placeholder="Term to plot" type="text" style="max-width: 400px;" data-init-plot="{{ term }}">
                                 <button id="plot-btn" class="btn btn-info" style="margin-left: 10px;"><span class="fa fa-caret-down"> Plot a term</button>
                                 <button id="plot-btn-add" class="btn btn-success" style="margin-left: 6px;"><span class="fa fa-plus"></span> Add the term to the chart</button>
+                            </div>
+
+                            <div class='pull_right' style="float: right;">
+                                <label class="switch">
+                                    <input id="per_paste" class="switch-input" value="per_paste" type="checkbox" checked>
+                                    <span class="switch-label" data-on="On" data-off="Off"></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                                <strong style="top: 3px; position: relative;">1 term per paste</strong>
                             </div>
 
                         </div>
@@ -202,8 +212,9 @@ function plotData() {
     plotted_terms = [term]
     var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
     var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
+    var checked = $("#per_paste").prop( "checked" ) ? 1 : 0;
 
-    $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
+    $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
         graph_data = [];
         var to_plot = [];
         var curr_data = [];
@@ -239,8 +250,9 @@ function addData() {
     plotted_terms.push(term)
     var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
     var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
+    var checked = $("#per_paste").prop( "checked" ) ? 1 : 0;
 
-    $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
+    $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
         var curr_data = [];
         for(i=1; i<data.length; i++) {
                 curr_data.push([data[i][0]*1000, data[i][1]]);
@@ -259,8 +271,9 @@ function replot() {
         var term = plotted_terms[i];
         var range_start = new Date($( ".sliderRange" ).slider( "values", 0 )).getTime() / 1000;
         var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
+        var checked = $("#per_paste").prop( "checked" ) ? 1 : 0;
 
-        promises.push($.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term }, function(data, status){
+        promises.push($.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
             var curr_data = [];
             for(i=1; i<data.length; i++) {
                     curr_data.push([data[i][0]*1000, data[i][1]]);
@@ -279,5 +292,3 @@ function replot() {
 </script>
 
 
-</body>
-</html>
