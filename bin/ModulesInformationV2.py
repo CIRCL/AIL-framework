@@ -117,6 +117,7 @@ class CListBox(ListBox):
             if len(self._options) > 0 and event.key_code == Screen.KEY_UP:
                 # Move up one line in text - use value to trigger on_select.
                 self._line = max(0, self._line - 1)
+                self._line = min(self._line, len(self._options)-1) #If we move a line cursor from a line that has dissapear
                 self.value = self._options[self._line][1]
 
             elif len(self._options) > 0 and event.key_code == Screen.KEY_DOWN:
