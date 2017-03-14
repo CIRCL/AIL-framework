@@ -158,10 +158,17 @@ class Process(object):
             try:
                 if ".gz" in message:
                     path = message.split(".")[-2].split("/")[-1]
+                    #find start of path with AIL_HOME
+                    index_s = message.find(os.environ['AIL_HOME'])
+                    #Stop when .gz
+                    index_e = message.find(".gz")+3 
+                    complete_path = message[index_s:index_e]
+
                 else:
                     path = "?"
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
                 self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 
@@ -169,6 +176,7 @@ class Process(object):
                 path = "?"
                 value = str(timestamp) + ", " + path
                 self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", "?")
                 self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
                 return message
 

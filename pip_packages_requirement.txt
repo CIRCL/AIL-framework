@@ -12,6 +12,7 @@ matplotlib
 networkx
 terminaltables
 colorama
+asciimatics
 
 #Tokeniser
 nltk
@@ -24,6 +25,7 @@ ssdeep
 #Others
 python-magic
 pybloomfiltermmap
+psutil
 
 ipython
 flask
