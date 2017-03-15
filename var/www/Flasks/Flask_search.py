@@ -11,6 +11,9 @@ import flask
 from flask import Flask, render_template, jsonify, request
 
 import Paste
+from whoosh import index
+from whoosh.fields import Schema, TEXT, ID
+from whoosh.qparser import QueryParser
 
 # ============ VARIABLES ============
 import Flask_config
@@ -40,7 +43,12 @@ def get_index_list(selected_index=""):
     index_list = []
     for dirs in os.listdir(baseindexpath):
         if os.path.isdir(os.path.join(baseindexpath, dirs)):
-            index_list.append([ dirs, dirs + " - " + str(get_dir_size(dirs) / (1000*1000)) + " Mb", dirs==selected_index.split('/')[-1]])
+            value = dirs
+            name = dirs + " - " + \
+                    str(get_dir_size(dirs) / (1000*1000)) + " Mb " + \
+                    "(" + str(get_item_count(dirs)) + " Items" + ")"
+            flag = dirs==selected_index.split('/')[-1]
+            index_list.append([ value, name, flag])
     return index_list
 
 def get_dir_size(directory):
@@ -48,6 +56,10 @@ def get_dir_size(directory):
     for directory, subdirs, files in os.walk(os.path.join(baseindexpath,directory)):
         cur_sum += sum(os.path.getsize(os.path.join(directory, name)) for name in files)
     return cur_sum
+
+def get_item_count(dirs):
+    ix = index.open_dir(os.path.join(baseindexpath, dirs))
+    return ix.doc_count_all()
 
 
 # ============ ROUTES ============
@@ -61,14 +73,14 @@ def search():
     c = [] #preview of the paste content
     paste_date = []
     paste_size = []
-    index_num = request.form['index_num']
+    index_name = request.form['index_name']
     num_elem_to_get = 50
 
     # select correct index
-    if index_num is None or index_num == "0":
+    if index_name is None or index_name == "0":
         selected_index = get_current_index()
     else:
-        selected_index = os.path.join(baseindexpath, index_num)
+        selected_index = os.path.join(baseindexpath, index_name)
 
     # Search filename
     for path in r_serv_pasteName.smembers(q[0]):
@@ -83,12 +95,9 @@ def search():
         paste_size.append(paste._get_p_size())
 
     # Search full line
-    from whoosh import index
-    from whoosh.fields import Schema, TEXT, ID
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
     ix = index.open_dir(selected_index)
-    from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
         results = searcher.search_page(query, 1, pagelen=num_elem_to_get)
@@ -121,26 +130,23 @@ def get_more_search_result():
     q = []
     q.append(query)
     page_offset = int(request.form['page_offset'])
-    index_num = request.form['index_num']
+    index_name = request.form['index_name']
     num_elem_to_get = 50
 
     # select correct index
-    if index_num is None or index_num == "0":
+    if index_name is None or index_name == "0":
         selected_index = get_current_index()
     else:
-        selected_index = os.path.join(baseindexpath, index_num)
+        selected_index = os.path.join(baseindexpath, index_name)
 
     path_array = []
     preview_array = []
     date_array = []
     size_array = []
 
-    from whoosh import index
-    from whoosh.fields import Schema, TEXT, ID
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
     ix = index.open_dir(selected_index)
-    from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
         results = searcher.search_page(query, page_offset, num_elem_to_get)   

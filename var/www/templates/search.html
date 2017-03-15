@@ -92,7 +92,7 @@
                               <div class="row">
                               <div class="col-md-12">
                                   <strong style="">Index: </strong> 
-                                  <select class="form-control" id="index_num" style="display: inline-block; margin-bottom: 5px; width: 15%">
+                                  <select class="form-control" id="index_name" style="display: inline-block; margin-bottom: 5px; width: 25%">
                                       {% for indexElem in index_list %}
                                       <option {% if indexElem[2] %} selected="selected" {% endif %}  value="{{ indexElem[0] }}" >{{ indexElem[1] }}</option>
                                       {% endfor %}
@@ -166,14 +166,14 @@
             $("#load_more_json_button1").show();
         }
 
-        $('#index_num').on('change', function() {
+        $('#index_name').on('change', function() {
             var form = document.createElement('form');
             form.setAttribute("method", 'post');
             form.setAttribute("action", "{{ url_for('search') }}");
 
             var input1 = document.createElement('input');
             input1.setAttribute("type", "hidden");
-            input1.setAttribute("name", "index_num");
+            input1.setAttribute("name", "index_name");
             input1.setAttribute("value", this.value);
             form.appendChild(input1);
             
@@ -201,7 +201,7 @@
     }
 
     function load_search_50_data() {
-        var options = { query: query, page_offset: page_offset, index_num: $("#index_num").val() };
+        var options = { query: query, page_offset: page_offset, index_name: $("#index_name").val() };
         $.post( "{{ url_for('get_more_search_result') }}", options).done(function( data ) {
 
             for(i=0; i<data.path_array.length; i++) {
