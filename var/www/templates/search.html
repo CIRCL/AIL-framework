@@ -89,6 +89,16 @@
                         </div>
                         <!-- /.panel-heading -->
                           <div class="panel-body">
+                              <div class="row">
+                              <div class="col-md-12">
+                                  <strong style="">Index: </strong> 
+                                  <select class="form-control" id="index_num" style="display: inline-block; margin-bottom: 5px; width: 15%">
+                                      {% for indexElem in index_list %}
+                                      <option {% if indexElem[2] %} selected="selected" {% endif %}  value="{{ indexElem[0] }}" >{{ indexElem[1] }}</option>
+                                      {% endfor %}
+                                  </select>
+                              </div>
+                              </div>
                           <table class="table table-striped table-bordered table-hover" id="myTable">
                               <thead>
                                    <tr>
@@ -100,16 +110,14 @@
                                    </tr>
                               </thead>
                               <tbody id="table_body">
-                          {% set i = 0 %}
                           {% for path in r %}
                                 <tr>
-                                    <td>{{ i + 1 }}</td>
-                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}"> {{ path }}</a></td>
-                                    <td>{{ paste_date[i] }}</td>
-                                    <td>{{ paste_size[i] }}</td>
-                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[i] }}"></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                    <td>{{ loop.index0 + 1 }}</td>
+                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}"> {{ path }}</a></td>
+                                    <td>{{ paste_date[loop.index0] }}</td>
+                                    <td>{{ paste_size[loop.index0] }}</td>
+                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[loop.index0] }}"></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
                                 </tr>
-                              {% set i = i + 1 %}
                           {% endfor %}
                               </tbody>
                           </table>
@@ -157,6 +165,28 @@
         if (init_num_of_elements_in_table == pagelen) {
             $("#load_more_json_button1").show();
         }
+
+        $('#index_num').on('change', function() {
+            var form = document.createElement('form');
+            form.setAttribute("method", 'post');
+            form.setAttribute("action", "{{ url_for('search') }}");
+
+            var input1 = document.createElement('input');
+            input1.setAttribute("type", "hidden");
+            input1.setAttribute("name", "index_num");
+            input1.setAttribute("value", this.value);
+            form.appendChild(input1);
+            
+            var input2 = document.createElement('input');
+            input2.setAttribute("type", "hidden");
+            input2.setAttribute("name", "query");
+            input2.setAttribute("value", "{{ query }}");
+            form.appendChild(input2);
+
+            document.body.appendChild(form);
+            form.submit();
+        })
+
     });
 
 </script>
@@ -171,7 +201,7 @@
     }
 
     function load_search_50_data() {
-        var options = { query: query, page_offset: page_offset };
+        var options = { query: query, page_offset: page_offset, index_num: $("#index_num").val() };
         $.post( "{{ url_for('get_more_search_result') }}", options).done(function( data ) {
 
             for(i=0; i<data.path_array.length; i++) {

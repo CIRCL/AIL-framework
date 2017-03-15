@@ -20,7 +20,34 @@ cfg = Flask_config.cfg
 r_serv_pasteName = Flask_config.r_serv_pasteName
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
+
+
+baseindexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
+indexRegister_path = os.path.join(os.environ['AIL_HOME'], 
+                         cfg.get("Indexer", "register"))
+
 # ============ FUNCTIONS ============
+def get_current_index():
+    with open(indexRegister_path, "r") as f:
+        allIndex = f.read()
+        allIndex = allIndex.split(',')
+        allIndex.sort()
+        indexnum = int(allIndex[-1])
+        indexpath = os.path.join(baseindexpath, "index_"+str(indexnum))
+    return indexpath
+
+def get_index_list(selected_index=""):
+    index_list = []
+    for dirs in os.listdir(baseindexpath):
+        if os.path.isdir(os.path.join(baseindexpath, dirs)):
+            index_list.append([ dirs, dirs + " - " + str(get_dir_size(dirs) / (1000*1000)) + " Mb", dirs==selected_index.split('/')[-1]])
+    return index_list
+
+def get_dir_size(directory):
+    cur_sum = 0
+    for directory, subdirs, files in os.walk(os.path.join(baseindexpath,directory)):
+        cur_sum += sum(os.path.getsize(os.path.join(directory, name)) for name in files)
+    return cur_sum
 
 
 # ============ ROUTES ============
@@ -34,7 +61,14 @@ def search():
     c = [] #preview of the paste content
     paste_date = []
     paste_size = []
+    index_num = request.form['index_num']
     num_elem_to_get = 50
+
+    # select correct index
+    if index_num is None or index_num == "0":
+        selected_index = get_current_index()
+    else:
+        selected_index = os.path.join(baseindexpath, index_num)
 
     # Search filename
     for path in r_serv_pasteName.smembers(q[0]):
@@ -53,8 +87,7 @@ def search():
     from whoosh.fields import Schema, TEXT, ID
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
-    indexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
-    ix = index.open_dir(indexpath)
+    ix = index.open_dir(selected_index)
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
@@ -72,7 +105,14 @@ def search():
         results = searcher.search(query)
         num_res = len(results)
 
-    return render_template("search.html", r=r, c=c, query=request.form['query'], paste_date=paste_date, paste_size=paste_size, char_to_display=max_preview_modal, num_res=num_res)
+    index_min = 1
+    index_max = len(get_index_list())
+    return render_template("search.html", r=r, c=c, 
+            query=request.form['query'], paste_date=paste_date, 
+            paste_size=paste_size, char_to_display=max_preview_modal, 
+            num_res=num_res, index_min=index_min, index_max=index_max,
+            index_list=get_index_list(selected_index)
+           )
 
 
 @app.route("/get_more_search_result", methods=['POST'])
@@ -81,7 +121,14 @@ def get_more_search_result():
     q = []
     q.append(query)
     page_offset = int(request.form['page_offset'])
+    index_num = request.form['index_num']
     num_elem_to_get = 50
+
+    # select correct index
+    if index_num is None or index_num == "0":
+        selected_index = get_current_index()
+    else:
+        selected_index = os.path.join(baseindexpath, index_num)
 
     path_array = []
     preview_array = []
@@ -92,8 +139,7 @@ def get_more_search_result():
     from whoosh.fields import Schema, TEXT, ID
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
-    indexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
-    ix = index.open_dir(indexpath)
+    ix = index.open_dir(selected_index)
     from whoosh.qparser import QueryParser
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
@@ -113,7 +159,6 @@ def get_more_search_result():
         to_return["preview_array"] = preview_array
         to_return["date_array"] = date_array
         to_return["size_array"] = size_array
-        print "len(path_array)="+str(len(path_array))
         if len(path_array) < num_elem_to_get: #pagelength
             to_return["moreData"] = False
         else:
