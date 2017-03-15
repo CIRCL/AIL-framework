@@ -25,14 +25,22 @@ INDEX_SIZE_THRESHOLD = 500 #Mb
 TIME_WAIT = 1.0 #sec
 
 # return in bytes
-def check_index_size(indexnum):
+def check_index_size(indexname):
     global baseindexpath
-    the_index_name = "index_"+str(indexnum) if indexnum != 0 else "old_index"
-    the_index_name = os.path.join(baseindexpath, the_index_name)
+    the_index_name = indexname if indexname != "0" else "old_index"
+    the_index_name = join(baseindexpath, the_index_name)
     cur_sum = 0
     for root, dirs, files in os.walk(the_index_name):
         cur_sum += sum(getsize(join(root, name)) for name in files)
     return cur_sum
+
+def move_index_into_old_index_folder(baseindexpath):
+    command_move = "mv {} {}"
+    command_dir = "mkdir {}"
+    os.system(command_dir.format(join(baseindexpath, "old_index")))
+    for files in os.listdir(baseindexpath):
+        if not files == "old_index":
+            os.system(command_move.format(join(baseindexpath, files), join(join(baseindexpath, "old_index"), files)))
 
 
 if __name__ == "__main__":
@@ -44,9 +52,9 @@ if __name__ == "__main__":
     p = Process(config_section)
 
     # Indexer configuration - index dir and schema setup
-    baseindexpath = os.path.join(os.environ['AIL_HOME'],
+    baseindexpath = join(os.environ['AIL_HOME'],
                              p.config.get("Indexer", "path"))
-    indexRegister_path = os.path.join(os.environ['AIL_HOME'], 
+    indexRegister_path = join(os.environ['AIL_HOME'], 
                              p.config.get("Indexer", "register"))
     indexertype = p.config.get("Indexer", "type")
     if indexertype == "whoosh":
@@ -57,23 +65,33 @@ if __name__ == "__main__":
             os.mkdir(baseindexpath)
 
         # create the index register if not present
-        if not os.path.isfile(indexRegister_path):
+        time_now = int(time.time())
+        if not os.path.isfile(indexRegister_path): #index are not organised
+            #move all files to old_index folder
+            move_index_into_old_index_folder(baseindexpath)
+            #create all_index.txt
             with open(indexRegister_path, 'w') as f:
-                f.write("1")
+                f.write(str(time_now))
+            #create dir
+            os.system("mkdir "+join(baseindexpath, str(time_now)))
 
         with open(indexRegister_path, "r") as f:
             allIndex = f.read()
-            allIndex = allIndex.split(',')
+            allIndex = allIndex.split(',') # format [time1,time2]
             allIndex.sort()
-            indexnum = int(allIndex[-1])
 
-            indexpath = os.path.join(baseindexpath, "index_"+str(indexnum))
+            try:
+                indexname = allIndex[-1].strip('\n\r')
+            except IndexError as e:
+                indexname = time_now
+
+            indexpath = join(baseindexpath, str(indexname))
             if not exists_in(indexpath):
                 ix = create_in(indexpath, schema)
             else:
                 ix = open_dir(indexpath)
  
-        last_refresh = time.time()
+        last_refresh = time_now
 
     # LOGGING #
     publisher.info("ZMQ Indexer is Running")
@@ -90,17 +108,19 @@ if __name__ == "__main__":
                 continue
             docpath = message.split(" ", -1)[-1]
             paste = PST.get_p_content()
-            print "Indexing :", docpath
+            print "Indexing - "+indexname+" :", docpath
 
 
             if time.time() - last_refresh > TIME_WAIT: #avoid calculating the index's size at each message
                 last_refresh = time.time()
-                if check_index_size(indexnum) > INDEX_SIZE_THRESHOLD*(1000*1000):
-                    indexpath = os.path.join(baseindexpath, "index_"+str(indexnum+1))
-                    ix = create_in(indexpath, schema, indexname=str(indexnum+1))
+                if check_index_size(indexname) > INDEX_SIZE_THRESHOLD*(1000*1000):
+                    timestamp = int(time.time())
+                    indexpath = join(baseindexpath, str(timestamp))
+                    ix = create_in(indexpath, schema)
+                    indexname = str(timestamp)
                     ## Correctly handle the file
                     with open(indexRegister_path, "a") as f:
-                        f.write(","+str(indexnum))
+                        f.write(","+str(timestamp))
 
 
             if indexertype == "whoosh":

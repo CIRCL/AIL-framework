@@ -7,6 +7,7 @@
 import redis
 import json
 import os
+import datetime
 import flask
 from flask import Flask, render_template, jsonify, request
 
@@ -33,10 +34,13 @@ indexRegister_path = os.path.join(os.environ['AIL_HOME'],
 def get_current_index():
     with open(indexRegister_path, "r") as f:
         allIndex = f.read()
-        allIndex = allIndex.split(',')
+        allIndex = allIndex.split(',') # format [time1,time2]
         allIndex.sort()
-        indexnum = int(allIndex[-1])
-        indexpath = os.path.join(baseindexpath, "index_"+str(indexnum))
+        try:
+            indexname = allIndex[-1].strip('\n\r')
+        except IndexError as e:
+            indexname = "no-index"
+        indexpath = os.path.join(baseindexpath, indexname)
     return indexpath
 
 def get_index_list(selected_index=""):
@@ -44,22 +48,31 @@ def get_index_list(selected_index=""):
     for dirs in os.listdir(baseindexpath):
         if os.path.isdir(os.path.join(baseindexpath, dirs)):
             value = dirs
-            name = dirs + " - " + \
+            name = to_iso_date(dirs) + " - " + \
                     str(get_dir_size(dirs) / (1000*1000)) + " Mb " + \
                     "(" + str(get_item_count(dirs)) + " Items" + ")"
             flag = dirs==selected_index.split('/')[-1]
             index_list.append([ value, name, flag])
+
     return index_list
 
 def get_dir_size(directory):
     cur_sum = 0
     for directory, subdirs, files in os.walk(os.path.join(baseindexpath,directory)):
-        cur_sum += sum(os.path.getsize(os.path.join(directory, name)) for name in files)
+        try:
+            cur_sum += sum(os.path.getsize(os.path.join(directory, name)) for name in files)
+        except OSError as e: #File disappeared
+            pass
     return cur_sum
 
 def get_item_count(dirs):
     ix = index.open_dir(os.path.join(baseindexpath, dirs))
     return ix.doc_count_all()
+
+def to_iso_date(timestamp):
+    if timestamp == "old_index":
+        return "old_index"
+    return str(datetime.datetime.fromtimestamp(int(timestamp))).split()[0]
 
 
 # ============ ROUTES ============
