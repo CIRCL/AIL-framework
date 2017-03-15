@@ -66,8 +66,11 @@ if __name__ == "__main__":
         # create the index register if not present
         time_now = int(time.time())
         if not os.path.isfile(indexRegister_path): #index are not organised
+            print("Indexes are not organized")
+            print("moving all files in folder 'old_index' ")
             #move all files to old_index folder
             move_index_into_old_index_folder(baseindexpath)
+            print("Creating new index")
             #create all_index.txt
             with open(indexRegister_path, 'w') as f:
                 f.write(str(time_now))
@@ -76,7 +79,7 @@ if __name__ == "__main__":
 
         with open(indexRegister_path, "r") as f:
             allIndex = f.read()
-            allIndex = allIndex.split(',') # format [time1,time2]
+            allIndex = allIndex.split() # format [time1\ntime2]
             allIndex.sort()
 
             try:
@@ -119,7 +122,7 @@ if __name__ == "__main__":
                     indexname = str(timestamp)
                     #update all_index
                     with open(indexRegister_path, "a") as f:
-                        f.write(","+str(timestamp))
+                        f.write(str(timestamp))
                     #create new dir
                     os.mkdir(indexpath)
                     ix = create_in(indexpath, schema)

@@ -34,7 +34,7 @@ indexRegister_path = os.path.join(os.environ['AIL_HOME'],
 def get_current_index():
     with open(indexRegister_path, "r") as f:
         allIndex = f.read()
-        allIndex = allIndex.split(',') # format [time1,time2]
+        allIndex = allIndex.split() # format [time1\ntime2]
         allIndex.sort()
         try:
             indexname = allIndex[-1].strip('\n\r')
