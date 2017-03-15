@@ -21,7 +21,6 @@ from os.path import join, getsize
 from Helper import Process
 
 # Config variable
-INDEX_SIZE_THRESHOLD = 500 #Mb
 TIME_WAIT = 1.0 #sec
 
 # return in bytes
@@ -57,6 +56,7 @@ if __name__ == "__main__":
     indexRegister_path = join(os.environ['AIL_HOME'], 
                              p.config.get("Indexer", "register"))
     indexertype = p.config.get("Indexer", "type")
+    INDEX_SIZE_THRESHOLD = p.config.get("Indexer", "index_max_size")
     if indexertype == "whoosh":
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True,
                                                          unique=True),
