@@ -44,6 +44,7 @@ def get_current_index():
     return indexpath
 
 def get_index_list(selected_index=""):
+    temp = []
     index_list = []
     for dirs in os.listdir(baseindexpath):
         if os.path.isdir(os.path.join(baseindexpath, dirs)):
@@ -52,8 +53,14 @@ def get_index_list(selected_index=""):
                     str(get_dir_size(dirs) / (1000*1000)) + " Mb " + \
                     "(" + str(get_item_count(dirs)) + " Items" + ")"
             flag = dirs==selected_index.split('/')[-1]
-            index_list.append([ value, name, flag])
+            if dirs == "old_index":
+                temp = [value, name, flag]
+            else:
+                index_list.append([value, name, flag])
 
+    index_list.sort(reverse=True, key=lambda x: x[0])
+    if len(temp) != 0:
+        index_list.append(temp)
     return index_list
 
 def get_dir_size(directory):

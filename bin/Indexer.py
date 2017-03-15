@@ -35,8 +35,7 @@ def check_index_size(indexname):
 
 def move_index_into_old_index_folder(baseindexpath):
     command_move = "mv {} {}"
-    command_dir = "mkdir {}"
-    os.system(command_dir.format(join(baseindexpath, "old_index")))
+    os.mkdir(join(baseindexpath, "old_index"))
     for files in os.listdir(baseindexpath):
         if not files == "old_index":
             os.system(command_move.format(join(baseindexpath, files), join(join(baseindexpath, "old_index"), files)))
@@ -56,7 +55,7 @@ if __name__ == "__main__":
     indexRegister_path = join(os.environ['AIL_HOME'], 
                              p.config.get("Indexer", "register"))
     indexertype = p.config.get("Indexer", "type")
-    INDEX_SIZE_THRESHOLD = p.config.get("Indexer", "index_max_size")
+    INDEX_SIZE_THRESHOLD = int(p.config.get("Indexer", "index_max_size"))
     if indexertype == "whoosh":
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True,
                                                          unique=True),
@@ -73,7 +72,7 @@ if __name__ == "__main__":
             with open(indexRegister_path, 'w') as f:
                 f.write(str(time_now))
             #create dir
-            os.system("mkdir "+join(baseindexpath, str(time_now)))
+            os.mkdir(join(baseindexpath, str(time_now)))
 
         with open(indexRegister_path, "r") as f:
             allIndex = f.read()
@@ -113,14 +112,17 @@ if __name__ == "__main__":
 
             if time.time() - last_refresh > TIME_WAIT: #avoid calculating the index's size at each message
                 last_refresh = time.time()
-                if check_index_size(indexname) > INDEX_SIZE_THRESHOLD*(1000*1000):
+                if check_index_size(indexname) >= INDEX_SIZE_THRESHOLD*(1000*1000):
                     timestamp = int(time.time())
+                    print("Creating new index", timestamp)
                     indexpath = join(baseindexpath, str(timestamp))
-                    ix = create_in(indexpath, schema)
                     indexname = str(timestamp)
-                    ## Correctly handle the file
+                    #update all_index
                     with open(indexRegister_path, "a") as f:
                         f.write(","+str(timestamp))
+                    #create new dir
+                    os.mkdir(indexpath)
+                    ix = create_in(indexpath, schema)
 
 
             if indexertype == "whoosh":
