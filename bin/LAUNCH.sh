@@ -183,7 +183,7 @@ islogged=`screen -ls | awk '/\.Logging\t/ {print strtonum($1)}'`
 isqueued=`screen -ls | awk '/\.Queue\t/ {print strtonum($1)}'`
 isscripted=`screen -ls | awk '/\.Script\t/ {print strtonum($1)}'`
 
-options=("Redis" "LevelDB" "Logs" "Queues" "Scripts" "Killall" "Shutdown")
+options=("Redis" "LevelDB" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config")
 
 menu() {
     echo "What do you want to Launch?:"
@@ -251,6 +251,9 @@ for i in ${!options[@]}; do
                 ;;
             Shutdown)
                 bash -c "./Shutdown.py"
+                ;;
+            Update-config)
+                bash -c "./Update-conf.py"
                 ;;
         esac
     fi

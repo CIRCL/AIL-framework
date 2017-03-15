@@ -123,6 +123,7 @@ cc_tld = r'\.de$'
 [Indexer]
 type = whoosh
 path = indexdir
+register = indexdir/all_index.txt
 #size in Mb
 index_max_size = 2000
 
