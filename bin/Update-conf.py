@@ -64,12 +64,12 @@ def main():
     if resp != 'y':
         return
     else:
-        #Do not keep item order in section. New items appened
+        #Do not keep item ordering in section. New items appened
         for section in missingItem:
             for item, value in dicoMissingItem[section]:
                 cfg.set(section, item, value)
 
-        #Keep sections order while updating the config file
+        #Keep sections ordering while updating the config file
         new_dico = add_items_to_correct_position(cfgSample._sections, cfg._sections, missingSection, dicoMissingSection)
         cfg._sections = new_dico
 
