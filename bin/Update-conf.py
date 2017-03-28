@@ -2,8 +2,9 @@
 # -*-coding:UTF-8 -*
 
 import ConfigParser
-from ConfigParser import RawConfigParser
+from ConfigParser import ConfigParser as cfgP
 import os
+from collections import OrderedDict
 
 
 def main():
@@ -20,8 +21,8 @@ def main():
     cfgSample = ConfigParser.ConfigParser()
     cfgSample.read(configfileSample)
 
-    sections = RawConfigParser.sections(cfg)
-    sectionsSample = RawConfigParser.sections(cfgSample)
+    sections = cfgP.sections(cfg)
+    sectionsSample = cfgP.sections(cfgSample)
     
     missingSection = []
     dicoMissingSection = {}
@@ -31,10 +32,10 @@ def main():
     for sec in sectionsSample:
         if sec not in sections:
             missingSection += [sec]
-            dicoMissingSection[sec] = RawConfigParser.items(cfgSample, sec)
+            dicoMissingSection[sec] = cfgP.items(cfgSample, sec)
         else:
-            setSample = set(RawConfigParser.options(cfgSample, sec))
-            setNormal = set(RawConfigParser.options(cfg, sec))
+            setSample = set(cfgP.options(cfgSample, sec))
+            setNormal = set(cfgP.options(cfg, sec))
             if setSample != setNormal:
                 missing_items = list(setSample.difference(setNormal))
                 missingItem += [sec]
@@ -57,21 +58,41 @@ def main():
         for item in dicoMissingItem[section]:
             print("  - "+item[0])
     print("+--------------------------------------------------------------------+")
+
     resp = raw_input("Do you want to auto fix it? [y/n] ")
 
     if resp != 'y':
         return
     else:
-        for section in missingSection:
-            cfg.add_section(section)
-            for item, value in dicoMissingSection[section]:
-                cfg.set(section, item, value)
+        #Do not keep item order in section. New items appened
         for section in missingItem:
             for item, value in dicoMissingItem[section]:
                 cfg.set(section, item, value)
 
+        #Keep sections order while updating the config file
+        new_dico = add_items_to_correct_position(cfgSample._sections, cfg._sections, missingSection, dicoMissingSection)
+        cfg._sections = new_dico
+
         with open(configfile, 'w') as f:
             cfg.write(f)
+
+
+''' Return a new dico with the section ordered as the old configuration with the updated one added '''
+def add_items_to_correct_position(sample_dico, old_dico, missingSection, dicoMissingSection):
+    new_dico = OrderedDict()
+    
+    positions = {}
+    for pos_i, sec in enumerate(sample_dico):
+        if sec in missingSection:
+            positions[pos_i] = sec
+
+    for pos_i, sec in enumerate(old_dico):
+        if pos_i in positions:
+            missSection = positions[pos_i]
+            new_dico[missSection] = sample_dico[missSection]
+
+        new_dico[sec] = old_dico[sec]
+    return new_dico
 
 
 if __name__ == "__main__":
