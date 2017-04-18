@@ -23,7 +23,10 @@ lvdbdir="${AIL_HOME}/LEVEL_DB_DATA/"
 db1_y='2013'
 db2_y='2014'
 db3_y='2016'
-db4_y='3016'
+db4_y='2017'
+
+dbC_y='3016'
+ 
 nb_db=13
 
 screen -dmS "LevelDB"
@@ -31,9 +34,10 @@ screen -dmS "LevelDB"
 screen -S "LevelDB" -X screen -t "2013" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2013/ -P '$db1_y' -M '$nb_db'; read x'
 screen -S "LevelDB" -X screen -t "2014" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2014/ -P '$db2_y' -M '$nb_db'; read x'
 screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db3_y' -M '$nb_db'; read x'
+screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2017/ -P '$db4_y' -M '$nb_db'; read x'
 
 # For Curve
-screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$db4_y' -M '$nb_db'; read x'
+screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$dbC_y' -M '$nb_db'; read x'
 
 
 screen -dmS "Logging"
@@ -45,6 +49,7 @@ screen -S "Queue" -X screen -t "Queues" bash -c './launch_queues.py; read x'
 
 screen -dmS "Script"
 screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModuleInformation.py -k 0 -c 1; read x'
+screen -S "Script" -X screen -t "Mixer" bash -c './Mixer.py; read x'
 screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
 screen -S "Script" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
 screen -S "Script" -X screen -t "Attributes" bash -c './Attributes.py; read x'
