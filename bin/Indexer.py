@@ -24,10 +24,8 @@ from Helper import Process
 TIME_WAIT = 1.0 #sec
 
 # return in bytes
-def check_index_size(indexname):
-    global baseindexpath
-    the_index_name = indexname if indexname != "0" else "old_index"
-    the_index_name = join(baseindexpath, the_index_name)
+def check_index_size(baseindexpath, indexname):
+    the_index_name = join(baseindexpath, indexname)
     cur_sum = 0
     for root, dirs, files in os.walk(the_index_name):
         cur_sum += sum(getsize(join(root, name)) for name in files)
@@ -115,7 +113,7 @@ if __name__ == "__main__":
 
             if time.time() - last_refresh > TIME_WAIT: #avoid calculating the index's size at each message
                 last_refresh = time.time()
-                if check_index_size(indexname) >= INDEX_SIZE_THRESHOLD*(1000*1000):
+                if check_index_size(baseindexpath, indexname) >= INDEX_SIZE_THRESHOLD*(1000*1000):
                     timestamp = int(time.time())
                     print("Creating new index", timestamp)
                     indexpath = join(baseindexpath, str(timestamp))
