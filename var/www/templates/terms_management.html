@@ -289,7 +289,7 @@
             //console.log(data); 
             event.preventDefault();
             var the_modal=$(this);
-            var url = "{{ url_for('terms_management_query_paste')  }}?term=" + $(this).attr('data-term');
+            var url = "{{ url_for('terms_management_query_paste')  }}?term=" + encodeURIComponent($(this).attr('data-term'));
             $.getJSON(url, function (data) {
                 if (data.length != 0) {
                     var html_to_add = "";

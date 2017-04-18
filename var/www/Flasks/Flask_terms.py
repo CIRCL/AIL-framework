@@ -89,7 +89,7 @@ def terms_management():
     trackSet_list_num_of_paste = []
     for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
         trackSet_list.append(tracked_set)
-        value_range = Term_getValueOverRange(tracked_regex, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
+        value_range = Term_getValueOverRange(tracked_set, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
 
         term_date = r_serv_term.hget(TrackedSetDate_Name, tracked_set)
 

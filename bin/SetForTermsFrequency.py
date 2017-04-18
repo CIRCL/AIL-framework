@@ -33,10 +33,10 @@ def add_quote_inside_tab(tab):
     quoted_tab = "["
     for elem in tab[1:-1].split(','):
         elem = elem.lstrip().strip()
-        quoted_tab += "\"{}\", ".format(elem)
+        quoted_tab += "\'{}\', ".format(elem)
     quoted_tab = quoted_tab[:-2] #remove trailing ,
     quoted_tab += "]"
-    return quoted_tab
+    return str(quoted_tab)
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -57,15 +57,16 @@ if __name__ == "__main__":
     #get the dico and matching percent
     dico_percent = {}
     dico_set_tab = {}
+    dico_setname_to_redis = {}
     for set_str in server_term.smembers(TrackedSetSet_Name):
         tab_set = set_str[1:-1]
         tab_set = add_quote_inside_tab(tab_set)
         perc_finder = re.compile("\[[0-9]{1,3}\]").search(tab_set)
         if perc_finder is not None:
             match_percent = perc_finder.group(0)[1:-1]
-            dico_percent[str(set_str)] = match_percent
-            tab_set = '["IoT", "mirai", "botnet", [50]]'
-            dico_set_tab[str(set_str)] = ast.literal_eval(tab_set)[:-1]
+            dico_percent[tab_set] = float(match_percent)
+            dico_set_tab[tab_set] = ast.literal_eval(tab_set)
+            dico_setname_to_redis[tab_set] = set_str
         else:
             continue
 
@@ -84,31 +85,34 @@ if __name__ == "__main__":
 
             #iterate over the words of the file
             match_dico = {}
-            for word in content:
+            for word in content.split():
                 for cur_set, array_set in dico_set_tab.items():
-                    for w_set in array_set:
+                    for w_set in array_set[:-1]: #avoid the percent matching
                         if word == w_set:
                             try:
-                                match_dico[curr_set] += 1
+                                match_dico[str(array_set)] += 1
                             except KeyError:
-                                match_dico[curr_set] = 1
+                                match_dico[str(array_set)] = 1
 
             #compute matching %
             for the_set, matchingNum in match_dico.items():
-                eff_percent = matchingNum / len(dico_set_tab[str(the_set)])
-                if eff_percent >= dico_percent[str(set_str)]:
+                eff_percent = float(matchingNum) / float((len(ast.literal_eval(the_set))-1)) * 100 #-1 bc if the percent matching
+                if eff_percent >= dico_percent[the_set]:
                     print(the_set, "matched in", filename)
-                    set_name = 'set_' + the_set
-                    server_term.sadd(set_name, filename)
+                    set_name = 'set_' + dico_setname_to_redis[the_set]
+                    new_to_the_set = server_term.sadd(set_name, filename)
+                    new_to_the_set = True if new_to_the_set == 1 else False
+                    
 
                     #consider the num of occurence of this set
-                    set_value = int(server_term.hincrby(timestamp, the_set, int(1)))
+                    set_value = int(server_term.hincrby(timestamp, dico_setname_to_redis[the_set], int(1)))
 
                     # FIXME - avoid using per paste as a set is checked over the entire paste
                     #1 term per paste
-                    regex_value_perPaste = int(server_term.hincrby("per_paste_" + str(timestamp), the_set, int(1)))
-                    server_term.zincrby("per_paste_" + curr_set, the_set, float(1))
-                server_term.zincrby(curr_set, the_set, float(1))
+                    if new_to_the_set:
+                        set_value_perPaste = int(server_term.hincrby("per_paste_" + str(timestamp), dico_setname_to_redis[the_set], int(1)))
+                        server_term.zincrby("per_paste_" + curr_set, dico_setname_to_redis[the_set], float(1))
+                server_term.zincrby(curr_set, dico_setname_to_redis[the_set], float(1))
 
 
         else:
