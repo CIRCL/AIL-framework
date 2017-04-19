@@ -35,24 +35,7 @@
 </head>
 <body>
 
-    <div id="wrapper">
-      <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-      {% include 'header.html' %}
-      <!-- /.navbar-top-links -->
-          <div class="navbar-default sidebar" role="navigation">
-              <div class="sidebar-collapse">
-                  <ul class="nav" id="side-menu">
-                      <li class="sidebar-search">
-                          {% include 'searchbox.html' %}
-                      </li>
-                 </ul>
-                  <!-- /#side-menu -->
-              </div>
-              <!-- /.sidebar-collapse -->
-           <a  href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
-          </div>
-          <!-- /.navbar-static-side -->
-      </nav>
+   {% include 'navbar.html' %}
 
 <!-- Modal -->
 <div id="mymodal" class="modal fade" role="dialog">
