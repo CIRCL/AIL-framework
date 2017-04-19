@@ -1,22 +1,22 @@
 <div class="navbar-header">
     <ul class="nav navbar-nav">
-        <li id='page-index'><a href="{{ url_for('index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-        <li id='page-trendingchart'><a href="{{ url_for('trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
-        <li id='page-modulestats'><a href="{{ url_for('moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
-        <li id='page-browse'><a href="{{ url_for('browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
+        <li id='page-index'><a href="{{ url_for('dashboard.index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
+        <li id='page-trendingchart'><a href="{{ url_for('trendings.trending') }}"><i class="glyphicon glyphicon-stats"></i> Trending charts</a></li>
+        <li id='page-modulestats'><a href="{{ url_for('trendingmodules.moduletrending') }}"><i class="glyphicon glyphicon-stats"></i> Modules statistics</a></li>
+        <li id='page-browse'><a href="{{ url_for('browsepastes.browseImportantPaste') }}"><i class="fa fa-search-plus "></i> Browse important pastes</a></li>
         <li id='page-sentiment'><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-heart"></i> Sentiment Analysis
             <span class="caret"></span></a>
             <ul class="dropdown-menu">
-              <li><a href="{{ url_for('sentiment_analysis_trending') }}"><i class="fa fa-bar-chart-o"> </i> Sentiment trending</a></li>
-              <li><a href="{{ url_for('sentiment_analysis_plot_tool') }}"><i class="fa fa-wrench"> </i> Sentiment plot Tool</a></li>
+              <li><a href="{{ url_for('sentiments.sentiment_analysis_trending') }}"><i class="fa fa-bar-chart-o"> </i> Sentiment trending</a></li>
+              <li><a href="{{ url_for('sentiments.sentiment_analysis_plot_tool') }}"><i class="fa fa-wrench"> </i> Sentiment plot Tool</a></li>
             </ul>
         </li>
         <li id='page-termsfrequency'><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-eye"></i> Terms frequency
             <span class="caret"></span></a>
             <ul class="dropdown-menu">
-              <li><a href="{{ url_for('terms_management') }}"><i class="fa fa-gear "> </i> Terms managements</a></li>
-              <li><a href="{{ url_for('terms_plot_top') }}"><i class="glyphicon glyphicon-fire"> </i> Terms plot top</a></li>
-              <li><a href="{{ url_for('terms_plot_tool') }}"><i class="fa fa-wrench"> </i> Terms plot tool</a></li>
+              <li><a href="{{ url_for('terms.terms_management') }}"><i class="fa fa-gear "> </i> Terms managements</a></li>
+              <li><a href="{{ url_for('terms.terms_plot_top') }}"><i class="glyphicon glyphicon-fire"> </i> Terms plot top</a></li>
+              <li><a href="{{ url_for('terms.terms_plot_tool') }}"><i class="fa fa-wrench"> </i> Terms plot tool</a></li>
             </ul>
         </li>
     </ul>

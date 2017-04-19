@@ -8,7 +8,7 @@ import redis
 import datetime
 import calendar
 import flask
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Blueprint
 import re
 import Paste
 
@@ -18,6 +18,8 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_term = Flask_config.r_serv_term
+
+terms = Blueprint('terms', __name__, template_folder='templates')
 
 DEFAULT_MATCH_PERCENT = 50
 
@@ -53,7 +55,7 @@ def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
 
 # ============ ROUTES ============
 
-@app.route("/terms_management/")
+@terms.route("/terms_management/")
 def terms_management():
     per_paste = request.args.get('per_paste')
     if per_paste == "1" or per_paste is None:
@@ -131,7 +133,7 @@ def terms_management():
             per_paste=per_paste)
 
 
-@app.route("/terms_management_query_paste/")
+@terms.route("/terms_management_query_paste/")
 def terms_management_query_paste():
     term =  request.args.get('term')
     paste_info = []
@@ -164,7 +166,7 @@ def terms_management_query_paste():
     return jsonify(paste_info)
 
 
-@app.route("/terms_management_query/")
+@terms.route("/terms_management_query/")
 def terms_management_query():
     TrackedTermsDate_Name = "TrackedTermDate"
     BlackListTermsDate_Name = "BlackListTermDate"
@@ -186,7 +188,7 @@ def terms_management_query():
     return jsonify(value_range)
 
 
-@app.route("/terms_management_action/", methods=['GET'])
+@terms.route("/terms_management_action/", methods=['GET'])
 def terms_management_action():
     today = datetime.datetime.now()
     today = today.replace(microsecond=0)
@@ -254,7 +256,7 @@ def terms_management_action():
 
 
 
-@app.route("/terms_plot_tool/")
+@terms.route("/terms_plot_tool/")
 def terms_plot_tool():
     term =  request.args.get('term')
     if term is not None:
@@ -263,7 +265,7 @@ def terms_plot_tool():
         return render_template("terms_plot_tool.html", term="")
 
 
-@app.route("/terms_plot_tool_data/")
+@terms.route("/terms_plot_tool_data/")
 def terms_plot_tool_data():
     oneDay = 60*60*24
     range_start =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_start')))) if request.args.get('range_start') is not None else 0;
@@ -293,14 +295,14 @@ def terms_plot_tool_data():
         return jsonify(value_range)
 
 
-@app.route("/terms_plot_top/")
+@terms.route("/terms_plot_top/")
 def terms_plot_top():
     per_paste = request.args.get('per_paste')
     per_paste = per_paste if per_paste is not None else 1
     return render_template("terms_plot_top.html", per_paste=per_paste)
 
 
-@app.route("/terms_plot_top_data/")
+@terms.route("/terms_plot_top_data/")
 def terms_plot_top_data():
     oneDay = 60*60*24
     today = datetime.datetime.now()
@@ -346,3 +348,5 @@ def terms_plot_top_data():
         return jsonify(to_return)
 
 
+# ========= REGISTRATION =========
+app.register_blueprint(terms)

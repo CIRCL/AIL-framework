@@ -8,7 +8,7 @@ import redis
 import datetime
 from Date import Date
 import flask
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Blueprint
 
 # ============ VARIABLES ============
 import Flask_config
@@ -16,6 +16,9 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_charts = Flask_config.r_serv_charts
+
+trendingmodules = Blueprint('trendingmodules', __name__, template_folder='templates')
+
 # ============ FUNCTIONS ============
 
 # Iterate over elements in the module provided and return the today data or the last data
@@ -43,7 +46,7 @@ def get_date_range(num_day):
 
 # ============ ROUTES ============
 
-@app.route("/_moduleCharts", methods=['GET'])
+@trendingmodules.route("/_moduleCharts", methods=['GET'])
 def modulesCharts():
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
@@ -69,7 +72,7 @@ def modulesCharts():
         return jsonify(member_set)
 
 
-@app.route("/_providersChart", methods=['GET'])
+@trendingmodules.route("/_providersChart", methods=['GET'])
 def providersChart():
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
@@ -106,8 +109,10 @@ def providersChart():
         return jsonify(member_set)
 
 
-@app.route("/moduletrending/")
+@trendingmodules.route("/moduletrending/")
 def moduletrending():
     return render_template("Moduletrending.html")
 
 
+# ========= REGISTRATION =========
+app.register_blueprint(trendingmodules)

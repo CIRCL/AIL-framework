@@ -8,7 +8,7 @@ import json
 
 import datetime
 import flask
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Blueprint
 
 # ============ VARIABLES ============
 import Flask_config
@@ -17,6 +17,9 @@ app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
+
+dashboard = Blueprint('dashboard', __name__, template_folder='templates')
+
 # ============ FUNCTIONS ============
 
 def event_stream():
@@ -51,18 +54,21 @@ def get_queues(r):
 
 # ============ ROUTES ============
 
-@app.route("/_logs")
+@dashboard.route("/_logs")
 def logs():
     return flask.Response(event_stream(), mimetype="text/event-stream")
 
 
-@app.route("/_stuff", methods=['GET'])
+@dashboard.route("/_stuff", methods=['GET'])
 def stuff():
     return jsonify(row1=get_queues(r_serv))
 
 
-@app.route("/")
+@dashboard.route("/")
 def index():
     default_minute = cfg.get("Flask", "minute_processed_paste")
     threshold_stucked_module = cfg.getint("Module_ModuleInformation", "threshold_stucked_module")
     return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module)
+
+# ========= REGISTRATION =========
+app.register_blueprint(dashboard)

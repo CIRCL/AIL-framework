@@ -49,7 +49,7 @@
                   <!-- /#side-menu -->
               </div>
               <!-- /.sidebar-collapse -->
-           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+           <a  href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
       </nav>
@@ -130,7 +130,7 @@
         $("#"+activePage).addClass("active");
 
         var dataPath = 'credential';
-        $.get("{{ url_for('importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
+        $.get("{{ url_for('browsepastes.importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
             $('#'+dataPath+'-tab').html(data);
         });
     });
@@ -144,7 +144,7 @@ var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_fo
 
 $('.nav-tabs a').on('shown.bs.tab', function(event){
     var dataPath = $(event.target).attr('data-attribute-name');
-    $.get("{{ url_for('importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
+    $.get("{{ url_for('browsepastes.importantPasteByModule') }}"+"?moduleName="+dataPath, function(data, status){
         var currentTab = $('[name].active').children();
         $('#'+previous_tab.attr('data-attribute-name')+'-tab').html(loading_gif);
         currentTab.removeClass( "active" );

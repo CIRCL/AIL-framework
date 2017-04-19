@@ -46,7 +46,7 @@
                   <!-- /#side-menu -->
               </div>
               <!-- /.sidebar-collapse -->
-           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+           <a  href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
       </nav>
@@ -214,7 +214,7 @@ function plotData() {
     var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
     var checked = $("#per_paste").prop( "checked" ) ? 1 : 0;
 
-    $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
+    $.getJSON("{{ url_for('terms.terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
         graph_data = [];
         var to_plot = [];
         var curr_data = [];
@@ -252,7 +252,7 @@ function addData() {
     var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
     var checked = $("#per_paste").prop( "checked" ) ? 1 : 0;
 
-    $.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
+    $.getJSON("{{ url_for('terms.terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
         var curr_data = [];
         for(i=1; i<data.length; i++) {
                 curr_data.push([data[i][0]*1000, data[i][1]]);
@@ -273,7 +273,7 @@ function replot() {
         var range_end = new Date($( ".sliderRange" ).slider( "values", 1 )).getTime() / 1000;
         var checked = $("#per_paste").prop( "checked" ) ? 1 : 0;
 
-        promises.push($.getJSON("{{ url_for('terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
+        promises.push($.getJSON("{{ url_for('terms.terms_plot_tool_data') }}", { range_start: range_start, range_end: range_end, term: term, per_paste: checked }, function(data, status){
             var curr_data = [];
             for(i=1; i<data.length; i++) {
                     curr_data.push([data[i][0]*1000, data[i][1]]);

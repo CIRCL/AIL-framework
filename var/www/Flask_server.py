@@ -9,10 +9,12 @@ import time
 import calendar
 from flask import Flask, render_template, jsonify, request
 import flask
+import importlib
 import os
+from os.path import join
 import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-sys.path.append('./Flasks/')
+sys.path.append('./modules/')
 import Paste
 from Date import Date
 
@@ -25,15 +27,19 @@ cfg = Flask_config.cfg
 Flask_config.app = Flask(__name__, static_url_path='/static/')
 app = Flask_config.app
 
-# import routes and functions from modules
-import Flask_dashboard
-import Flask_trendingcharts
-import Flask_trendingmodules
-import Flask_browsepastes
-import Flask_sentiment
-import Flask_terms
-import Flask_search
-import Flask_showpaste
+# dynamically import routes and functions from modules
+for root, dirs, files in os.walk('modules/'):
+    for directory in dirs:
+        #if directory == 'templates':
+        #    continue
+        sys.path.append(join(root, directory))
+        for name in files:
+            if name.startswith('Flask_') and name.endswith('.py'):
+                if name == 'Flask_config.py':
+                    continue
+                name = name.strip('.py')
+                print('importing {}'.format(name))
+                importlib.import_module(name)
 
 def list_len(s):
     return len(s)

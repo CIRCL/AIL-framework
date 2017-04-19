@@ -43,7 +43,7 @@
               <div class="sidebar-collapse">
                   <ul class="nav" id="side-menu">
                       <li class="sidebar-search">
-                          <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+                          <a href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
                           {% include 'searchbox.html' %}
                           <!-- /input-group -->
                       </li>
@@ -80,7 +80,7 @@
                   </table>
               </div>
               <div class="table-responsive", id="queueing" style="margin-top:10px; font-size: small;"></div>
-             <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+             <a  href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
       </nav>
@@ -176,7 +176,7 @@
         <!-- /#page-wrapper -->
 
     </div>
-    <script> var url_showSavedPath = "{{ url_for('showsavedpaste') }}"; </script>
+    <script> var url_showSavedPath = "{{ url_for('showsavedpastes.showsavedpaste') }}"; </script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"></script>
 
     <script>

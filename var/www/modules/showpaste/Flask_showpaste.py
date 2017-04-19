@@ -7,7 +7,7 @@
 import redis
 import json
 import flask
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Blueprint
 
 import Paste
 
@@ -20,6 +20,9 @@ r_serv_pasteName = Flask_config.r_serv_pasteName
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 tlsh_to_percent = Flask_config.tlsh_to_percent
+
+showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
+
 # ============ FUNCTIONS ============
 
 def showpaste(content_range):
@@ -89,22 +92,20 @@ def showpaste(content_range):
 
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
 
-
-
 # ============ ROUTES ============
 
-@app.route("/showsavedpaste/") #completely shows the paste in a new tab
+@showsavedpastes.route("/showsavedpaste/") #completely shows the paste in a new tab
 def showsavedpaste():
     return showpaste(0)
 
 
-@app.route("/showpreviewpaste/")
+@showsavedpastes.route("/showpreviewpaste/")
 def showpreviewpaste():
     num = request.args.get('num', '')
     return "|num|"+num+"|num|"+showpaste(max_preview_modal)
 
 
-@app.route("/getmoredata/")
+@showsavedpastes.route("/getmoredata/")
 def getmoredata():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
@@ -112,3 +113,5 @@ def getmoredata():
     to_return = p_content[max_preview_modal-1:]
     return to_return
 
+# ========= REGISTRATION =========
+app.register_blueprint(showsavedpastes)

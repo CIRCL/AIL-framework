@@ -49,7 +49,7 @@
                   <!-- /#side-menu -->
               </div>
               <!-- /.sidebar-collapse -->
-           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+           <a  href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
       </nav>
@@ -113,10 +113,10 @@
                           {% for path in r %}
                                 <tr>
                                     <td>{{ loop.index0 + 1 }}</td>
-                                    <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}"> {{ path }}</a></td>
+                                    <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}"> {{ path }}</a></td>
                                     <td>{{ paste_date[loop.index0] }}</td>
                                     <td>{{ paste_size[loop.index0] }}</td>
-                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[loop.index0] }}"></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[loop.index0] }}"></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
                                 </tr>
                           {% endfor %}
                               </tbody>
@@ -169,7 +169,7 @@
         $('#index_name').on('change', function() {
             var form = document.createElement('form');
             form.setAttribute("method", 'post');
-            form.setAttribute("action", "{{ url_for('search') }}");
+            form.setAttribute("action", "{{ url_for('searches.search') }}");
 
             var input1 = document.createElement('input');
             input1.setAttribute("type", "hidden");
@@ -202,16 +202,16 @@
 
     function load_search_50_data() {
         var options = { query: query, page_offset: page_offset, index_name: $("#index_name").val() };
-        $.post( "{{ url_for('get_more_search_result') }}", options).done(function( data ) {
+        $.post( "{{ url_for('searches.get_more_search_result') }}", options).done(function( data ) {
 
             for(i=0; i<data.path_array.length; i++) {
                 var curr_preview = data.preview_array[i].replace(/\"/g, "\'");
                 search_table.row.add( [
                     init_num_of_elements_in_table+((offset))+i+1,
-                   "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>",
+                   "<a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>",
                     data.date_array[i],
                     data.size_array[i],
-                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
+                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
                 ] ).draw( false );
             }
             offset = offset + data.path_array.length;
@@ -284,7 +284,7 @@
        // On click, get html content from url and update the corresponding modal
        $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
            var modal=$(this);
-           var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
+           var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
            last_clicked_paste =  $(this).attr('data-num');
            $.get(url, function (data) {
 
@@ -311,7 +311,7 @@
                    // On click, donwload all paste's content
                    $("#load-more-button").off('click.download').on("click.download", function (event) {
                        if (complete_paste == null) { //Donwload only once
-                           $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                           $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
                                complete_paste = data;
                                update_preview();
                            });

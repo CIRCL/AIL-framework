@@ -9,7 +9,7 @@ import json
 import os
 import datetime
 import flask
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Blueprint
 
 import Paste
 from whoosh import index
@@ -29,6 +29,8 @@ max_preview_modal = Flask_config.max_preview_modal
 baseindexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
 indexRegister_path = os.path.join(os.environ['AIL_HOME'], 
                          cfg.get("Indexer", "register"))
+
+searches = Blueprint('searches', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
 def get_current_index():
@@ -84,7 +86,7 @@ def to_iso_date(timestamp):
 
 # ============ ROUTES ============
 
-@app.route("/search", methods=['POST'])
+@searches.route("/search", methods=['POST'])
 def search():
     query = request.form['query']
     q = []
@@ -144,7 +146,7 @@ def search():
            )
 
 
-@app.route("/get_more_search_result", methods=['POST'])
+@searches.route("/get_more_search_result", methods=['POST'])
 def get_more_search_result():
     query = request.form['query']
     q = []
@@ -193,3 +195,5 @@ def get_more_search_result():
     return jsonify(to_return)
 
 
+# ========= REGISTRATION =========
+app.register_blueprint(searches)

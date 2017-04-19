@@ -13,10 +13,10 @@
       {% for path in all_path %}
       <tr>
           <td> {{ i + 1 }}</td>
-          <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{path}}&num={{i+1}}">{{ path }}</a></td>
+          <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}&num={{i+1}}">{{ path }}</a></td>
           <td>{{ paste_date[i] }}</td>
           <td>{{ paste_linenum[i] }}</td>
-          <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[i] }} "></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+          <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[i] }} "></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
       </tr>
       {% set i = i + 1 %}
       {%  endfor %}
@@ -47,7 +47,7 @@ function deploy_source() {
     if(typeof(EventSource) !== "undefined" && typeof(source) !== "") {
         $("#load_more_json_button1").show();
         $("#load_more_json_button2").show();
-        var source = new EventSource("{{ url_for('getImportantPasteByModule') }}"+"?moduleName="+moduleName);
+        var source = new EventSource("{{ url_for('browsepastes.getImportantPasteByModule') }}"+"?moduleName="+moduleName);
         source.onmessage = function(event) {
             var feed = jQuery.parseJSON( event.data );
             curr_numElem = parseInt($("#myTable_"+moduleName).attr('data-numElem'));
@@ -93,10 +93,10 @@ function add_entries_X(to_add) {
             elem_added++;
              search_table.row.add( [
                  feed.index,
-                "<a target=\"_blank\" href=\"{{ url_for('showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\"> "+ feed.path +"</a>",
+                "<a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\"> "+ feed.path +"</a>",
                  feed.date,
                  feed.linenum,
-                 "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+feed.content.replace(/\"/g, "\'").replace(/\r/g, "\'").replace(/\n/g, "\'")+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+feed.index+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\" data-path=\""+feed.path+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
+                 "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+feed.content.replace(/\"/g, "\'").replace(/\r/g, "\'").replace(/\n/g, "\'")+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+feed.index+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\" data-path=\""+feed.path+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
              ] ).draw( false );
              $("#myTable_"+moduleName).attr('data-numElem', curr_numElem+1);
         }
@@ -195,7 +195,7 @@ $(document).ready(function(){
        $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
            event.preventDefault();
            var modal=$(this);
-           var url = " {{ url_for('showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
+           var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
            last_clicked_paste =  $(this).attr('data-num');
            $.get(url, function (data) {
 
@@ -221,7 +221,7 @@ $(document).ready(function(){
                    // On click, donwload all paste's content
                    $("#load-more-button").on("click", function (event) {
                        if (complete_paste == null) { //Donwload only once
-                           $.get("{{ url_for('getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                           $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
                                complete_paste = data;
                                update_preview();
                            });

@@ -71,7 +71,7 @@
                   <td>{{ hashtype_list[i] }}</td>
                   <td>Similarity: {{ simil_list[i] }}%</td>
                   <td>{{ date_list[i] }}</td>
-                  <td><a target="_blank" href="{{ url_for('showsavedpaste') }}?paste={{ dup_path }}" id='dup_path'>{{ dup_path }}</a></td>
+                  <td><a target="_blank" href="{{ url_for('showsavedpaste.showsavedpaste') }}?paste={{ dup_path }}" id='dup_path'>{{ dup_path }}</a></td>
               </tr>
               {% set i = i + 1 %}
           {% endfor %}

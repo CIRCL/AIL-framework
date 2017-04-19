@@ -9,7 +9,7 @@ import datetime
 import calendar
 from Date import Date
 import flask
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Blueprint
 
 import Paste
 
@@ -20,6 +20,9 @@ app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_charts = Flask_config.r_serv_charts
 r_serv_sentiment = Flask_config.r_serv_sentiment
+
+sentiments = Blueprint('sentiments', __name__, template_folder='templates')
+
 # ============ FUNCTIONS ============
 
 def get_date_range(num_day):
@@ -34,12 +37,12 @@ def get_date_range(num_day):
 
 # ============ ROUTES ============
 
-@app.route("/sentiment_analysis_trending/")
+@sentiments.route("/sentiment_analysis_trending/")
 def sentiment_analysis_trending():
     return render_template("sentiment_analysis_trending.html")
 
 
-@app.route("/sentiment_analysis_getplotdata/", methods=['GET'])
+@sentiments.route("/sentiment_analysis_getplotdata/", methods=['GET'])
 def sentiment_analysis_getplotdata():
     # Get the top providers based on number of pastes
     oneHour = 60*60
@@ -85,13 +88,13 @@ def sentiment_analysis_getplotdata():
 
 
 
-@app.route("/sentiment_analysis_plot_tool/")
+@sentiments.route("/sentiment_analysis_plot_tool/")
 def sentiment_analysis_plot_tool():
     return render_template("sentiment_analysis_plot_tool.html")
 
 
 
-@app.route("/sentiment_analysis_plot_tool_getdata/", methods=['GET'])
+@sentiments.route("/sentiment_analysis_plot_tool_getdata/", methods=['GET'])
 def sentiment_analysis_plot_tool_getdata():
     getProviders = request.args.get('getProviders')
 
@@ -134,4 +137,5 @@ def sentiment_analysis_plot_tool_getdata():
 
         return jsonify(to_return)
 
-
+# ========= REGISTRATION =========
+app.register_blueprint(sentiments)

@@ -47,7 +47,7 @@
                   <!-- /#side-menu -->
               </div>
               <!-- /.sidebar-collapse -->
-           <a  href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
+           <a  href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
           </div>
           <!-- /.navbar-static-side -->
       </nav>
@@ -297,7 +297,7 @@
 
     function reload_per_paste() {
         var checked = $("#per_paste").prop( "checked" ) ? 1 : 0;
-        window.location.href = {{ url_for('terms_plot_top') }}+"?per_paste="+checked;
+        window.location.href = {{ url_for('terms.terms_plot_top') }}+"?per_paste="+checked;
     }
 </script>
 
@@ -357,7 +357,7 @@ var plot_month;
 
 var promises = []; // Used to know when everything has been received
 
-promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today, num_day: 5, per_paste: per_paste }, function(data, status){
+promises.push($.getJSON("{{ url_for('terms.terms_plot_top_data') }}", { set: set_today, num_day: 5, per_paste: per_paste }, function(data, status){
     data.sort(function(a, b){return b[2]-a[2];});
     // Sort data
     var table_today = $("#table-today")
@@ -398,7 +398,7 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_today
 
 }));
 
-promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week, num_day: 7, per_paste: per_paste }, function(data, status){
+promises.push($.getJSON("{{ url_for('terms.terms_plot_top_data') }}", { set: set_week, num_day: 7, per_paste: per_paste }, function(data, status){
     data.sort(function(a, b){return b[2]-a[2];});
     // Sort data
     var table = $("#table-week")
@@ -438,7 +438,7 @@ promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_week,
     });
 }));
 
-promises.push($.getJSON("{{ url_for('terms_plot_top_data') }}", { set: set_month, num_day: 31, per_paste: per_paste }, function(data, status){
+promises.push($.getJSON("{{ url_for('terms.terms_plot_top_data') }}", { set: set_month, num_day: 31, per_paste: per_paste }, function(data, status){
     data.sort(function(a, b){return b[2]-a[2];});
     // Sort data
     var table = $("#table-month")
@@ -507,7 +507,7 @@ function perform_operation(){
 
     var data_to_send = { section: curr_section, action:"add", term: curr_term};
 
-    $.get("{{ url_for('terms_management_action') }}", data_to_send, function(data, status){
+    $.get("{{ url_for('terms.terms_management_action') }}", data_to_send, function(data, status){
         if(status == "success") {
             location.reload();
         }

@@ -8,7 +8,7 @@ import redis
 import datetime
 from Date import Date
 import flask
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Blueprint
 
 # ============ VARIABLES ============
 import Flask_config
@@ -16,6 +16,9 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_charts = Flask_config.r_serv_charts
+
+trendings = Blueprint('trendings', __name__, template_folder='templates')
+
 # ============ FUNCTIONS ============
 
 def get_date_range(num_day):
@@ -30,7 +33,7 @@ def get_date_range(num_day):
 
 # ============ ROUTES ============
 
-@app.route("/_progressionCharts", methods=['GET'])
+@trendings.route("/_progressionCharts", methods=['GET'])
 def progressionCharts():
     attribute_name = request.args.get('attributeName')
     trending_name = request.args.get('trendingName')
@@ -53,21 +56,23 @@ def progressionCharts():
         keyw_value = r_serv_charts.zrevrangebyscore(redis_progression_name, '+inf', '-inf', withscores=True, start=0, num=10)
         return jsonify(keyw_value)
 
-@app.route("/wordstrending/")
+@trendings.route("/wordstrending/")
 def wordstrending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Wordstrending.html", default_display = default_display)
 
 
-@app.route("/protocolstrending/")
+@trendings.route("/protocolstrending/")
 def protocolstrending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Protocolstrending.html", default_display = default_display)
 
 
-@app.route("/trending/")
+@trendings.route("/trending/")
 def trending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Trending.html", default_display = default_display)
 
 
+# ========= REGISTRATION =========
+app.register_blueprint(trendings)
