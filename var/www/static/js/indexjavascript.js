@@ -173,7 +173,7 @@ function create_log_table(obj_json) {
                 options_processed_pastes.legend.show = false;
                 var total_proc = $.plot("#global", [ getData("global", null) ], options_processed_pastes);
                 options_processed_pastes.legend.show = true;
-                options_processed_pastes.series.lines = { show: true };
+                options_processed_pastes.series.lines = { show: true, fill: true };
                 data_for_processed_paste["global"] = Array(totalPoints+1).join(0).split('');
 
                 var feederProc = $.plot("#Proc_feeder", [ getData(feeder, "Proc") ], options_processed_pastes);
