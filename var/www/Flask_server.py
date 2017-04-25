@@ -27,11 +27,33 @@ cfg = Flask_config.cfg
 Flask_config.app = Flask(__name__, static_url_path='/static/')
 app = Flask_config.app
 
+# ========= HEADER GENERATION ========
+
+# Get headers items that should be ignored (not displayed)
+toIgnoreModule = set()
+try:
+    with open('templates/ignored_modules.txt', 'r') as f:
+        lines = f.read().splitlines()
+        for line in lines:
+            toIgnoreModule.add(line)
+
+except IOError:
+    f = open('templates/ignored_modules.txt', 'w')
+    f.close()
+
+
+print(toIgnoreModule)
 # Dynamically import routes and functions from modules
 # Also, prepare header.html
 to_add_to_header_dico = {}
 for root, dirs, files in os.walk('modules/'):
     sys.path.append(join(root))
+
+    # Ignore the module
+    curr_dir = root.split('/')[1]
+    if curr_dir in toIgnoreModule:
+        continue
+
     for name in files:
         module_name = root.split('/')[-2]
         if name.startswith('Flask_') and name.endswith('.py'):

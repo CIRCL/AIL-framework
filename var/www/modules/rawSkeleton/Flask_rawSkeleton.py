@@ -13,7 +13,7 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 
-skeleton = Blueprint('skeleton', __name__, template_folder='templates')
+rawSkeleton = Blueprint('rawSkeleton', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
 def one():
@@ -21,10 +21,10 @@ def one():
 
 # ============= ROUTES ==============
 
-@skeleton.route("/skeleton/", methods=['GET'])
+@rawSkeleton.route("/rawSkeleton/", methods=['GET'])
 def skeleton_page():
-    return render_template("skeleton.html")
+    return render_template("rawSkeleton.html")
 
 
 # ========= REGISTRATION =========
-app.register_blueprint(skeleton)
+app.register_blueprint(rawSkeleton)
