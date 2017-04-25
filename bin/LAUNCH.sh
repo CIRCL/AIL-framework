@@ -112,9 +112,17 @@ function launching_queues {
 }
 
 function launching_scripts {
+    echo -e "\t* Checking configuration"
+    bash -c "./Update-conf.py"
+    exitStatus=$?
+    if [ $exitStatus -ge 1 ]; then
+        echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
+        exit
+    fi
+    echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
+
     screen -dmS "Script"
     sleep 0.1
-
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
     screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModulesInformationV2.py -k 0 -c 1; read x'
@@ -253,7 +261,15 @@ for i in ${!options[@]}; do
                 bash -c "./Shutdown.py"
                 ;;
             Update-config)
+                echo -e "\t* Checking configuration"
                 bash -c "./Update-conf.py"
+                exitStatus=$?
+                if [ $exitStatus -ge 1 ]; then
+                    echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
+                    exit
+                else
+                    echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
+                fi
                 ;;
         esac
     fi
