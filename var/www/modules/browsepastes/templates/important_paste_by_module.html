@@ -9,16 +9,14 @@
          </tr>
     </thead>
     <tbody>
-      {% set i = 0 %}
       {% for path in all_path %}
       <tr>
-          <td> {{ i + 1 }}</td>
-          <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}&num={{i+1}}">{{ path }}</a></td>
-          <td>{{ paste_date[i] }}</td>
-          <td>{{ paste_linenum[i] }}</td>
-          <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[i] }} "></span> <button type="button" class="btn-link" data-num="{{ i + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ i+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+          <td> {{ loop.index0 }}</td>
+          <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}&num={{loop.index0+1}}">{{ path }}</a></td>
+          <td>{{ paste_date[loop.index0] }}</td>
+          <td>{{ paste_linenum[loop.index0] }}</td>
+          <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
       </tr>
-      {% set i = i + 1 %}
       {%  endfor %}
     </tbody>
 </table>
