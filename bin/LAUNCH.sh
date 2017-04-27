@@ -112,9 +112,17 @@ function launching_queues {
 }
 
 function launching_scripts {
+    echo -e "\t* Checking configuration"
+    bash -c "./Update-conf.py"
+    exitStatus=$?
+    if [ $exitStatus -ge 1 ]; then
+        echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
+        exit
+    fi
+    echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
+
     screen -dmS "Script"
     sleep 0.1
-
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
     screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModulesInformationV2.py -k 0 -c 1; read x'
@@ -183,7 +191,7 @@ islogged=`screen -ls | awk '/\.Logging\t/ {print strtonum($1)}'`
 isqueued=`screen -ls | awk '/\.Queue\t/ {print strtonum($1)}'`
 isscripted=`screen -ls | awk '/\.Script\t/ {print strtonum($1)}'`
 
-options=("Redis" "LevelDB" "Logs" "Queues" "Scripts" "Killall" "Shutdown")
+options=("Redis" "LevelDB" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config")
 
 menu() {
     echo "What do you want to Launch?:"
@@ -251,6 +259,17 @@ for i in ${!options[@]}; do
                 ;;
             Shutdown)
                 bash -c "./Shutdown.py"
+                ;;
+            Update-config)
+                echo -e "\t* Checking configuration"
+                bash -c "./Update-conf.py"
+                exitStatus=$?
+                if [ $exitStatus -ge 1 ]; then
+                    echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
+                    exit
+                else
+                    echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
+                fi
                 ;;
         esac
     fi
