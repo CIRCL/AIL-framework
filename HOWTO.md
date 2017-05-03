@@ -12,7 +12,9 @@ For the moment, there are three different ways to feed AIL with data:
 
 3. You can feed your own data using the [./bin/import_dir.py](./bin/import_dir.py) script.
 
-###Feeding AIL with pystemon
+Feeding AIL with pystemon
+-------------------------
+
 AIL is an analysis tool, not a collector!
 However, if you want to collect some pastes and feed them to AIL, the procedure is described below.
 
