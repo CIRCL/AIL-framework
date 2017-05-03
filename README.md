@@ -11,35 +11,6 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
 
-Trending charts
----------------
-
-![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
-![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
-
-Browsing
---------
-
-![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
-
-Sentiment analysis
-------------------
-
-![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
-
-Terms manager and occurence
----------------------------
-
-![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
-
-## Top terms
-
-![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
-![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
-
-
-[AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
-
 Features
 --------
 
@@ -103,6 +74,39 @@ Flask_server.py
 Eventually you can browse the status of the AIL framework website at the following URL:
 
         ``http://localhost:7000/``
+
+
+Screenshots
+===========
+
+Trending charts
+---------------
+
+![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
+![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
+
+Browsing
+--------
+
+![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
+
+Sentiment analysis
+------------------
+
+![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
+
+Terms manager and occurence
+---------------------------
+
+![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
+
+## Top terms
+
+![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
+![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
+
+
+[AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
 
 
 License
