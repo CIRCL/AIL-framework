@@ -1,5 +1,5 @@
-How to
-======
+Feeding, adding new features and contributing
+=============================================
 
 How to feed the AIL framework
 -----------------------------
@@ -12,13 +12,10 @@ For the moment, there are three different ways to feed AIL with data:
 
 3. You can feed your own data using the [./bin/import_dir.py](./bin/import_dir.py) script.
 
-Feeding AIL with pystemon
--------------------------
+### Feeding AIL with pystemon
 
 AIL is an analysis tool, not a collector!
-However, if you want to collect some pastes and feed them to AIL, the procedure is described below.
-
-Nevertheless, moderate your queries!
+However, if you want to collect some pastes and feed them to AIL, the procedure is described below. Nevertheless, moderate your queries!
 
 Feed data to AIL:
 
@@ -61,3 +58,39 @@ Feel free to fork the code, play with it, make some patches or add additional an
 
 To contribute your module, feel free to pull your contribution.
 
+
+Additional information
+======================
+
+Manage modules: ModulesInformationV2.py
+---------------------------------------
+
+You can do a lots of things easily with the [./bin/ModulesInformationV2](./bin/ModulesInformationV2) script:
+
+- Monitor the health of other modules
+- Monitor the ressources comsumption of other modules
+- Start one or more modules
+- Kill running modules
+- Restart automatically stuck modules
+- Show the paste currently processed by a module
+
+![moduleinformation](./doc/screenshots/tutorials/ModulesInformations/interface.png?raw=true "AIL framework ModulesInformationV2.py")
+
+### Navigation
+
+You can navigate into the interface by using arrow keys. In order to perform an action on a selected module, you can either press <ENTER> or <SPACE> to show the dialog box.
+
+To change list, you can press the <TAB> key.
+
+Also, you can quickly stop or start modules by clicking on the <K> or <S> symbol respectively. These are located in the _Action_ column.
+
+Finally, you can quit this program by pressing either <q> or <C-c>
+
+
+Terms frequency usage
+---------------------
+
+In AIL, you can track terms, set of terms and even regexes without creating a dedicated module. To do so, go to the tab `Terms Frequency` in the web interface.
+- You can track a term by simply putting it in the box.
+- You can track a set of terms by simply putting terms in an array surrounded by the '\' character. You can also set a custom threshold regarding the number of terms that must match to trigger the detection. For example, if you want to track the terms _term1_ and _term2_ at the same time, you can use the following rule: `\[term1, term2, [100]]\`
+- You can track regexes as easily as tracking a term. You just have to put your regex in the box surrounded by the '/' character. For example, if you want to track the regex matching all email address having the domain _domain.net_, you can use the following aggressive rule: `/*.domain.net/`.
