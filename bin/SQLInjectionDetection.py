@@ -1,7 +1,14 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
+
 """
-    Sql Injection module
+The SQLInjectionDetection Module
+================================
+
+This module is consuming the Redis-list created by the Web module.
+
+It test different possibility to makes some sqlInjection.
+
 """
 
 import time

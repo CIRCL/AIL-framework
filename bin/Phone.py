@@ -1,7 +1,14 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
+
 """
-    module for finding phone numbers
+The Phone Module
+================
+
+This module is consuming the Redis-list created by the Categ module.
+
+It apply phone number regexes on paste content and warn if above a threshold.
+
 """
 
 import time

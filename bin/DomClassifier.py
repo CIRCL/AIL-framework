@@ -5,8 +5,8 @@
 The DomClassifier Module
 ============================
 
-The DomClassifier modules is fetching the list of files to be
-processed and index each file with a full-text indexer (Whoosh until now).
+The DomClassifier modules extract and classify Internet domains/hostnames/IP addresses from 
+the out output of the Global module.
 
 """
 import time

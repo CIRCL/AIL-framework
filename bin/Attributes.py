@@ -5,25 +5,7 @@
 The ZMQ_Sub_Attribute Module
 ============================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Line_Q Module
-
-It perform a sorting on the line's length and publish/forward them to
-differents channels:
-
-*Channel 1 if max length(line) < max
-*Channel 2 if max length(line) > max
-
-The collected informations about the processed pastes
-(number of lines and maximum length line) are stored in Redis.
-
-..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
-the same Subscriber name in both of them.
-
-Requirements
-------------
-
-*Need running Redis instances. (LevelDB & Redis)
-*Need the ZMQ_PubSub_Line_Q Module running to be able to work properly.
+This module is saving Attribute of the paste into redis
 
 """
 import time

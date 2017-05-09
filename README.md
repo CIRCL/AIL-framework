@@ -100,7 +100,7 @@ Terms manager and occurence
 
 ![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
 
-## Top terms
+### Top terms
 
 ![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
 ![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
@@ -108,6 +108,10 @@ Terms manager and occurence
 
 [AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
 
+Command line module manager
+---------------------------
+
+![Module-Manager](./doc/screenshots/module-manager.png?raw=true "AIL framework ModuleInformationV2.py")
 
 License
 =======

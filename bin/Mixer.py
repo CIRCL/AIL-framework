@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*-coding:UTF-8 -*
 """
-The ZMQ_Feed_Q Module
-=====================
+The Mixer Module
+================
 
 This module is consuming the Redis-list created by the ZMQ_Feed_Q Module.
 
@@ -22,13 +22,7 @@ Depending on the configuration, this module will process the feed as follow:
 Note that the hash of the content is defined as the sha1(gzip64encoded).
 
 Every data coming from a named feed can be sent to a pre-processing module before going to the global module.
-The mapping can be done via the variable feed_queue_mapping
-
-Requirements
-------------
-
-*Need running Redis instances.
-*Need the ZMQ_Feed_Q Module running to be able to work properly.
+The mapping can be done via the variable FEED_QUEUE_MAPPING
 
 """
 import base64
@@ -44,7 +38,7 @@ from Helper import Process
 
 # CONFIG #
 refresh_time = 30
-feed_queue_mapping = { "feeder2": "preProcess1" } # Map a feeder name to a pre-processing module
+FEED_QUEUE_MAPPING = { "feeder2": "preProcess1" } # Map a feeder name to a pre-processing module
 
 if __name__ == '__main__':
     publisher.port = 6380
@@ -117,8 +111,8 @@ if __name__ == '__main__':
                     else: # New content
 
                         # populate Global OR populate another set based on the feeder_name
-                        if feeder_name in feed_queue_mapping:
-                            p.populate_set_out(relay_message, feed_queue_mapping[feeder_name])
+                        if feeder_name in FEED_QUEUE_MAPPING:
+                            p.populate_set_out(relay_message, FEED_QUEUE_MAPPING[feeder_name])
                         else:
                             p.populate_set_out(relay_message, 'Mixer')
 
@@ -139,8 +133,8 @@ if __name__ == '__main__':
                         server.expire('HASH_'+paste_name, ttl_key)
 
                         # populate Global OR populate another set based on the feeder_name
-                        if feeder_name in feed_queue_mapping:
-                            p.populate_set_out(relay_message, feed_queue_mapping[feeder_name])
+                        if feeder_name in FEED_QUEUE_MAPPING:
+                            p.populate_set_out(relay_message, FEED_QUEUE_MAPPING[feeder_name])
                         else:
                             p.populate_set_out(relay_message, 'Mixer')
 
@@ -153,8 +147,8 @@ if __name__ == '__main__':
                             server.expire(paste_name, ttl_key)
 
                             # populate Global OR populate another set based on the feeder_name
-                            if feeder_name in feed_queue_mapping:
-                                p.populate_set_out(relay_message, feed_queue_mapping[feeder_name])
+                            if feeder_name in FEED_QUEUE_MAPPING:
+                                p.populate_set_out(relay_message, FEED_QUEUE_MAPPING[feeder_name])
                             else:
                                 p.populate_set_out(relay_message, 'Mixer')
 

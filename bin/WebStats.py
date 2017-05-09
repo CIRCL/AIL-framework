@@ -1,7 +1,13 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
+
 """
-    Template for new modules
+The WebStats Module
+======================
+
+This module makes stats on URL recolted from the web module.
+It consider the TLD, Domain and protocol.
+
 """
 
 import time

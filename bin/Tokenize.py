@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*-coding:UTF-8 -*
 """
-The ZMQ_PubSub_Lines Module
-============================
+The Tokenize Module
+===================
 
 This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q
 Module.

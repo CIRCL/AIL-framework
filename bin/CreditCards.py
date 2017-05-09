@@ -1,12 +1,23 @@
 #!/usr/bin/env python
 # -*-coding:UTF-8 -*
+
+"""
+The CreditCards Module
+======================
+
+This module is consuming the Redis-list created by the Categ module.
+
+It apply credit card regexes on paste content and warn if above a threshold.
+
+"""
+
+
 import pprint
 import time
 from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
 import re
-
 
 from Helper import Process
 
