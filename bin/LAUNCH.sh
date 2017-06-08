@@ -157,6 +157,10 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
     sleep 0.1
+    screen -S "Script" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
+    sleep 0.1
+    screen -S "Script" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
+    sleep 0.1
     screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "Keys" bash -c './Keys.py; read x'

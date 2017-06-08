@@ -132,6 +132,10 @@ if __name__ == "__main__":
             #Add more info for tracked terms
             check_if_tracked_term(low_word, filename)
 
+            #send to RegexForTermsFrequency
+            to_send = "{} {} {}".format(filename, timestamp, word)
+            p.populate_set_out(to_send, 'RegexForTermsFrequency')
+
         else:
 
             if generate_new_graph:

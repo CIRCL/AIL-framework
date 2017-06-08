@@ -9,7 +9,7 @@ import datetime
 import calendar
 import flask
 from flask import Flask, render_template, jsonify, request
-
+import re
 import Paste
 
 # ============ VARIABLES ============
@@ -18,6 +18,22 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_term = Flask_config.r_serv_term
+
+DEFAULT_MATCH_PERCENT = 50
+
+#tracked
+TrackedTermsSet_Name = "TrackedSetTermSet"
+TrackedTermsDate_Name = "TrackedTermDate"
+#black
+BlackListTermsDate_Name = "BlackListTermDate"
+BlackListTermsSet_Name = "BlackListSetTermSet"
+#regex
+TrackedRegexSet_Name = "TrackedRegexSet"
+TrackedRegexDate_Name = "TrackedRegexDate"
+#set
+TrackedSetSet_Name = "TrackedSetSet"
+TrackedSetDate_Name = "TrackedSetDate"
+
 # ============ FUNCTIONS ============
 
 def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
@@ -47,15 +63,43 @@ def terms_management():
         per_paste_text = ""
         per_paste = 0
 
-    TrackedTermsSet_Name = "TrackedSetTermSet"
-    BlackListTermsSet_Name = "BlackListSetTermSet"
-    TrackedTermsDate_Name = "TrackedTermDate"
-    BlackListTermsDate_Name = "BlackListTermDate"
-    
     today = datetime.datetime.now()
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
 
+    #Regex
+    trackReg_list = []
+    trackReg_list_values = []
+    trackReg_list_num_of_paste = []
+    for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
+        trackReg_list.append(tracked_regex)
+        value_range = Term_getValueOverRange(tracked_regex, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
+
+        term_date = r_serv_term.hget(TrackedRegexDate_Name, tracked_regex)
+
+        set_paste_name = "regex_" + tracked_regex
+        trackReg_list_num_of_paste.append(r_serv_term.scard(set_paste_name))
+        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
+        value_range.append(term_date)
+        trackReg_list_values.append(value_range)
+
+    #Set
+    trackSet_list = []
+    trackSet_list_values = []
+    trackSet_list_num_of_paste = []
+    for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
+        trackSet_list.append(tracked_set)
+        value_range = Term_getValueOverRange(tracked_set, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
+
+        term_date = r_serv_term.hget(TrackedSetDate_Name, tracked_set)
+
+        set_paste_name = "set_" + tracked_set
+        trackSet_list_num_of_paste.append(r_serv_term.scard(set_paste_name))
+        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
+        value_range.append(term_date)
+        trackSet_list_values.append(value_range)
+
+    #Tracked terms
     track_list = []
     track_list_values = []
     track_list_num_of_paste = []
@@ -72,23 +116,36 @@ def terms_management():
         track_list_values.append(value_range)
 
 
+    #blacklist terms
     black_list = []
     for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
         term_date = r_serv_term.hget(BlackListTermsDate_Name, blacked_term)
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         black_list.append([blacked_term, term_date])
 
-    return render_template("terms_management.html", black_list=black_list, track_list=track_list, track_list_values=track_list_values,  track_list_num_of_paste=track_list_num_of_paste, per_paste=per_paste)
+    return render_template("terms_management.html", 
+            black_list=black_list, track_list=track_list, trackReg_list=trackReg_list, trackSet_list=trackSet_list,
+            track_list_values=track_list_values, track_list_num_of_paste=track_list_num_of_paste, 
+            trackReg_list_values=trackReg_list_values, trackReg_list_num_of_paste=trackReg_list_num_of_paste,
+            trackSet_list_values=trackSet_list_values, trackSet_list_num_of_paste=trackSet_list_num_of_paste,
+            per_paste=per_paste)
 
 
 @app.route("/terms_management_query_paste/")
 def terms_management_query_paste():
     term =  request.args.get('term')
-    TrackedTermsSet_Name = "TrackedSetTermSet"
     paste_info = []
 
-    set_paste_name = "tracked_" + term
-    track_list_path = r_serv_term.smembers(set_paste_name)
+    # check if regex or not
+    if term.startswith('/') and term.endswith('/'):
+        set_paste_name = "regex_" + term
+        track_list_path = r_serv_term.smembers(set_paste_name)
+    elif term.startswith('\\') and term.endswith('\\'):
+        set_paste_name = "set_" + term
+        track_list_path = r_serv_term.smembers(set_paste_name)
+    else:
+        set_paste_name = "tracked_" + term
+        track_list_path = r_serv_term.smembers(set_paste_name)
 
     for path in track_list_path:
         paste = Paste.Paste(path)
@@ -131,11 +188,6 @@ def terms_management_query():
 
 @app.route("/terms_management_action/", methods=['GET'])
 def terms_management_action():
-    TrackedTermsSet_Name = "TrackedSetTermSet"
-    TrackedTermsDate_Name = "TrackedTermDate"
-    BlackListTermsDate_Name = "BlackListTermDate"
-    BlackListTermsSet_Name = "BlackListSetTermSet"
-
     today = datetime.datetime.now()
     today = today.replace(microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
@@ -149,10 +201,42 @@ def terms_management_action():
     else:
         if section == "followTerm":
             if action == "add":
-                r_serv_term.sadd(TrackedTermsSet_Name, term.lower())
-                r_serv_term.hset(TrackedTermsDate_Name, term, today_timestamp)
+                # check if regex/set or simple term
+                #regex
+                if term.startswith('/') and term.endswith('/'):
+                    r_serv_term.sadd(TrackedRegexSet_Name, term)
+                    r_serv_term.hset(TrackedRegexDate_Name, term, today_timestamp)
+
+                #set
+                elif term.startswith('\\') and term.endswith('\\'):
+                    tab_term = term[1:-1]
+                    perc_finder = re.compile("\[[0-9]{1,3}\]").search(tab_term)
+                    if perc_finder is not None:
+                        match_percent = perc_finder.group(0)[1:-1]
+                        set_to_add = term
+                    else:
+                        match_percent = DEFAULT_MATCH_PERCENT
+                        set_to_add = "\\" + tab_term[:-1] + ", [{}]]\\".format(match_percent)
+                    r_serv_term.sadd(TrackedSetSet_Name, set_to_add)
+                    r_serv_term.hset(TrackedSetDate_Name, set_to_add, today_timestamp)
+
+                #simple term
+                else:
+                    r_serv_term.sadd(TrackedTermsSet_Name, term.lower())
+                    r_serv_term.hset(TrackedTermsDate_Name, term.lower(), today_timestamp)
+            #del action
             else:
-                r_serv_term.srem(TrackedTermsSet_Name, term.lower())
+                if term.startswith('/') and term.endswith('/'):
+                    r_serv_term.srem(TrackedRegexSet_Name, term)
+                    r_serv_term.hdel(TrackedRegexDate_Name, term)
+                elif term.startswith('\\') and term.endswith('\\'):
+                    r_serv_term.srem(TrackedSetSet_Name, term)
+                    print(term)
+                    r_serv_term.hdel(TrackedSetDate_Name, term)
+                else:
+                    r_serv_term.srem(TrackedTermsSet_Name, term.lower())
+                    r_serv_term.hdel(TrackedTermsDate_Name, term.lower())
+
         elif section == "blacklistTerm":
             if action == "add":
                 r_serv_term.sadd(BlackListTermsSet_Name, term.lower())

@@ -105,9 +105,16 @@
                         </div>
                         <div class="panel-body">
 
+                            <div style="margin-bottom: 10px;"> 
+                                <table>
+                                    <tr><td><b>Regex</b>: surround the term by '<b>/</b>'. </td> <td><b style="margin-left: 20px;">/([a-z])\w+([a-z])\n/</b></td></tr>
+                                    <tr><td><b>Set of terms</b>: surround the list by '<b>\</b>'. </td> <td><b style="margin-left: 20px;">\[term1, term2, ...]\</b></td></tr>
+                                    <tr><td> - To set a custom matching <b>threshold</b> (defaut=50), append it at the end as a inner list '<b>[thresh]</b>'. </td> <td><b style="margin-left: 20px;">\[term1, term2, ..., [75]]\</b></td></tr>
+                                </table>
+                            </div>
                             <div class="form-group input-group" style="margin-bottom: 30px;">
                                 <span class="input-group-addon"><span class="fa fa-eye"></span></span>
-                                <input id="followTermInput" class="form-control" placeholder="Term to track" type="text" style="max-width: 400px;">
+                                <input id="followTermInput" class="form-control" placeholder="Term to track." type="text" style="max-width: 400px;">
                                 <button id="followTermBtn" class="btn btn-success btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Add term</button>
                             </div>
 
@@ -124,6 +131,37 @@
                                      </tr>
                                 </thead>
                                 <tbody>
+                                <!-- SET -->
+                                {% for set in trackSet_list %}
+                                  <tr style="background-color: #cdffca;">
+                                      <td>{{ set }}</td>
+                                      <td>{{ trackSet_list_values[loop.index0][3] }}</td>
+                                      <td>{{ trackSet_list_values[loop.index0][0] }}</td>
+                                      <td>{{ trackSet_list_values[loop.index0][1] }}</td>
+                                      <td>{{ trackSet_list_values[loop.index0][2] }}</td>
+                                      <td>{{ trackSet_list_num_of_paste[loop.index0] }}</td>
+                                      <td><p style="margin: 0px;">
+                                          <span data-toggle="modal" data-target="#mymodal" data-term="{{ set }}" ><button class="btn-link" data-toggle="tooltip" data-placement="right" title="Show concerned paste(s)"><span class="glyphicon glyphicon-info-sign"></span></button></span>
+                                          <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ set }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
+                                      </p></td>
+                                  </tr>
+                                {% endfor %}
+                                <!-- REGEX -->
+                                {% for regex in trackReg_list %}
+                                  <tr style="background-color: #fffdca;">
+                                      <td>{{ regex }}</td>
+                                      <td>{{ trackReg_list_values[loop.index0][3] }}</td>
+                                      <td>{{ trackReg_list_values[loop.index0][0] }}</td>
+                                      <td>{{ trackReg_list_values[loop.index0][1] }}</td>
+                                      <td>{{ trackReg_list_values[loop.index0][2] }}</td>
+                                      <td>{{ trackReg_list_num_of_paste[loop.index0] }}</td>
+                                      <td><p style="margin: 0px;">
+                                          <span data-toggle="modal" data-target="#mymodal" data-term="{{ regex }}" ><button class="btn-link" data-toggle="tooltip" data-placement="right" title="Show concerned paste(s)"><span class="glyphicon glyphicon-info-sign"></span></button></span>
+                                          <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ regex }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
+                                      </p></td>
+                                  </tr>
+                                {% endfor %}
+                                <!-- Normal term -->
                                 {% for term in track_list %}
                                   <tr>
                                       <td>{{ term }}</td>
@@ -251,7 +289,7 @@
             //console.log(data); 
             event.preventDefault();
             var the_modal=$(this);
-            var url = "{{ url_for('terms_management_query_paste')  }}?term=" + $(this).attr('data-term');
+            var url = "{{ url_for('terms_management_query_paste')  }}?term=" + encodeURIComponent($(this).attr('data-term'));
             $.getJSON(url, function (data) {
                 if (data.length != 0) {
                     var html_to_add = "";
@@ -318,9 +356,9 @@ function perform_operation(){
     var curr_section = $(this).attr('data-section');
     var curr_action = $(this).attr('data-action'); 
     if (curr_action == "add") {
-        var curr_term = $('#'+curr_section+'Input').val().toLowerCase();;
+        var curr_term = $('#'+curr_section+'Input').val();
     } else {
-        var curr_term = $(this).attr('data-content').toLowerCase();;
+        var curr_term = $(this).attr('data-content');
     }
     var data_to_send = { section: curr_section, action:curr_action, term: curr_term};
 
@@ -341,6 +379,7 @@ function perform_operation(){
                    } else if (json.action == "delete") {
                        // Find indexes of row which have the term in the first column
                        var index = table_track.rows().eq( 0 ).filter( function (rowIdx) {
+                           console.log(table_track.cell( rowIdx, 0 ).data())
                            return table_track.cell( rowIdx, 0 ).data() === json.term;
                        } );
                        table_track.rows(index).remove().draw( false );
