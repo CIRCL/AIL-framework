@@ -26,6 +26,7 @@ ssdeep
 python-magic
 pybloomfiltermmap
 psutil
+phonenumbers
 
 ipython
 flask

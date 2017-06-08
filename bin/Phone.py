@@ -6,6 +6,7 @@
 
 import time
 import re
+import phonenumbers
 from packages import Paste
 from pubsublogger import publisher
 from Helper import Process
@@ -27,6 +28,20 @@ def search_phone(message):
         p.populate_set_out('phone;{}'.format(message), 'BrowseWarningPaste')
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
+        stats = {}
+        for phone_number in results:
+            try:
+                x = phonenumbers.parse(phone_number, None)
+                country_code = x.country_code
+                if stats.get(country_code) is None:
+                    stats[country_code] = 1
+                else:
+                    stats[country_code] = stats[country_code] + 1
+            except:
+                pass
+        for country_code in stats:
+            if stats[country_code] > 4:
+                publisher.warning('{} contains Phone numbers with country code {}'.format(paste.p_name, country_code))
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
