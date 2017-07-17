@@ -11,50 +11,24 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
 
-Trending charts
----------------
-
-![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
-![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
-
-Browsing
---------
-
-![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
-
-Sentiment analysis
-------------------
-
-![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
-
-Terms manager and occurence
----------------------------
-
-![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
-
-## Top terms
-
-![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
-![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
-
-
-[AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
-
 Features
 --------
 
 * Modular architecture to handle streams of unstructured or structured information
 * Default support for external ZMQ feeds, such as provided by CIRCL or other providers
+* Multiple feed support
 * Each module can process and reprocess the information already processed by AIL
 * Detecting and extracting URLs including their geographical location (e.g. IP address location)
-* Extracting and validating potential leak of credit cards numbers
+* Extracting and validating potential leak of credit cards numbers, credentials, ...
 * Extracting and validating email addresses leaked including DNS MX validation
 * Module for extracting Tor .onion addresses (to be further processed for analysis)
+* Keep tracks of duplicates
 * Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
 * A full-text indexer module to index unstructured information
-* Modules and web statistics 
+* Statistics on modules and web
+* Realtime modules manager in terminal
 * Global sentiment analysis for each providers based on nltk vader module
-* Terms tracking and occurrence
+* Terms, Set of terms and Regex tracking and occurrence
 * Many more modules for extracting phone numbers, credentials and others
 
 Installation
@@ -101,69 +75,51 @@ Eventually you can browse the status of the AIL framework website at the followi
 
         ``http://localhost:7000/``
 
-How to
-======
+HOWTO
+-----
 
-How to feed the AIL framework
------------------------------
-
-For the moment, there are two different ways to feed AIL with data:
-
-1. Be a collaborator of CIRCL and ask to access our feed. It will be sent to the static IP your are using for AIL.
-
-2. You can setup [pystemon](https://github.com/CIRCL/pystemon) and use the custom feeder provided by AIL (see below).
-
-###Feeding AIL with pystemon
-AIL is an analysis tool, not a collector!
-However, if you want to collect some pastes and feed them to AIL, the procedure is described below.
-
-Nevertheless, moderate your queries!
-
-Here are the steps to setup pystemon and feed data to AIL:
-
-1. Clone the [pystemon's git repository](https://github.com/CIRCL/pystemon)
-
-2. Install its python dependencies inside your virtual environment
-
-3. Launch pystemon ``` ./pystemon ```
-
-4. Edit your configuration file ```bin/packages/config.cfg``` and modify the pystemonpath path accordingly
-
-5. Launch pystemon-feeder ``` ./pystemon-feeder.py ```
+HOWTO are available in [HOWTO.md](HOWTO.md)
 
 
-How to create a new module
---------------------------
+Screenshots
+===========
 
-If you want to add a new processing or analysis module in AIL, follow these simple steps:
+Trending charts
+---------------
 
-1. Add your module name in [./bin/packages/modules.cfg](./bin/packages/modules.cfg) and subscribe to the Redis_Global at minimum.
+![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
+![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
 
-2. Use [./bin/template.py](./bin/template.py) as a sample module and create a new file in bin/ with the module name used in the modules.cfg configuration.
+Browsing
+--------
 
-How to contribute a module
---------------------------
+![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
 
-Feel free to fork the code, play with it, make some patches or add additional analysis modules.
+Sentiment analysis
+------------------
 
-To contribute your module, feel free to pull your contribution.
+![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
 
-Overview and License
-====================
+Terms manager and occurence
+---------------------------
+
+![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
+
+### Top terms
+
+![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
+![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
 
 
-Redis and LevelDB overview
---------------------------
+[AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
 
-* Redis on TCP port 6379 - DB 1 - Paste meta-data
-*                          DB 0 - Cache hostname/dns
-* Redis on TCP port 6380 - Redis Pub-Sub only
-* Redis on TCP port 6381 - DB 0 - Queue and Paste content LRU cache
-* Redis on TCP port 6382 - DB 1-4 - Trending, terms and sentiments
-* LevelDB on TCP port <year> - Lines duplicate
+Command line module manager
+---------------------------
 
-LICENSE
--------
+![Module-Manager](./doc/screenshots/module-manager.png?raw=true "AIL framework ModuleInformationV2.py")
+
+License
+=======
 
 ```
     Copyright (C) 2014 Jules Debra

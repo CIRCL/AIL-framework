@@ -4,8 +4,8 @@
     Sentiment analyser module.
     It takes its inputs from 'global'.
 
-    The content analysed comes from the pastes with length of the line 
-    above a defined threshold removed (get_p_content_with_removed_lines).
+    The content is analysed if the length of the line is
+    above a defined threshold (get_p_content_with_removed_lines).
     This is done because NLTK sentences tokemnizer (sent_tokenize) seems to crash
     for long lines (function _slices_from_text line#1276).
 

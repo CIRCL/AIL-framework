@@ -1,5 +1,16 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
+
+"""
+The Credential Module
+=====================
+
+This module is consuming the Redis-list created by the Categ module.
+
+It apply credential regexes on paste content and warn if above a threshold.
+
+"""
+
 import time
 import sys
 from packages import Paste

@@ -1,6 +1,15 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 
+'''
+The preProcess Module
+=====================
+
+This module is just an example of how we can pre-process a feed coming from the Mixer
+module before seding it to the Global module.
+
+'''
+
 import time
 from pubsublogger import publisher
 

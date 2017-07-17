@@ -6,6 +6,11 @@ from pubsublogger import publisher
 from Helper import Process
 import re
 
+'''
+This module takes its input from the global module.
+It applies some regex and publish matched content
+'''
+
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"

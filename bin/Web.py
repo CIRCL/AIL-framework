@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 # -*-coding:UTF-8 -*
+
+"""
+The Web Module
+============================
+
+This module tries to parse URLs and warns if some defined contry code are present.
+
+"""
+
 import redis
 import pprint
 import time

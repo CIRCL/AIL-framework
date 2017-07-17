@@ -5,14 +5,6 @@
 This module manage top sets for terms frequency.
 Every 'refresh_rate' update the weekly and monthly set
 
-
-Requirements
-------------
-
-*Need running Redis instances. (Redis)
-*Categories files of words in /files/ need to be created
-*Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
-
 """
 
 import redis

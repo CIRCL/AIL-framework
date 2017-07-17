@@ -2,6 +2,8 @@
 # -*-coding:UTF-8 -*
 """
 This Module is used for term frequency.
+It processes every paste coming from the global module and test the sets
+supplied in  the term webpage.
 
 """
 import redis

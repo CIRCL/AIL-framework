@@ -1,7 +1,13 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
 """
-    Template for new modules
+The CVE Module
+======================
+
+This module is consuming the Redis-list created by the Categ module.
+
+It apply CVE regexes on paste content and warn if a reference to a CVE is spotted.
+
 """
 
 import time

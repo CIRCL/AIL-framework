@@ -1,7 +1,14 @@
 #!/usr/bin/env python2
 # -*-coding:UTF-8 -*
+
 """
-    Template for new modules
+The Keys Module
+======================
+
+This module is consuming the Redis-list created by the Global module.
+
+It is looking for PGP encrypted messages
+
 """
 
 import time
