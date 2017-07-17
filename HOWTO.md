@@ -74,8 +74,6 @@ You can do a lots of things easily with the [./bin/ModulesInformationV2](./bin/M
 - Restart automatically stuck modules
 - Show the paste currently processed by a module
 
-![moduleinformation](./doc/screenshots/tutorials/ModulesInformations/interface.png?raw=true "AIL framework ModulesInformationV2.py")
-
 ### Navigation
 
 You can navigate into the interface by using arrow keys. In order to perform an action on a selected module, you can either press <ENTER> or <SPACE> to show the dialog box.
