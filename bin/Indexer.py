@@ -15,13 +15,14 @@ from pubsublogger import publisher
 
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
+import shutil
 import os
 from os.path import join, getsize
 
 from Helper import Process
 
 # Config variable
-TIME_WAIT = 1.0 #sec
+TIME_WAIT = 60*15 #sec
 
 # return in bytes
 def check_index_size(baseindexpath, indexname):
@@ -32,11 +33,9 @@ def check_index_size(baseindexpath, indexname):
     return cur_sum
 
 def move_index_into_old_index_folder(baseindexpath):
-    command_move = "mv {} {}"
-    os.mkdir(join(baseindexpath, "old_index"))
-    for files in os.listdir(baseindexpath):
-        if not files == "old_index":
-            os.system(command_move.format(join(baseindexpath, files), join(join(baseindexpath, "old_index"), files)))
+    for cur_file in os.listdir(baseindexpath):
+        if not cur_file == "old_index":
+            shutil.move(join(baseindexpath, cur_file), join(join(baseindexpath, "old_index"), cur_file))
 
 
 if __name__ == "__main__":
