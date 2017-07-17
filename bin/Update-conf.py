@@ -5,11 +5,15 @@ import ConfigParser
 from ConfigParser import ConfigParser as cfgP
 import os
 from collections import OrderedDict
+import sys
+import shutil
 
 
+#return true if the configuration is up-to-date
 def main():
 
     configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+    configfileBackup = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg') + '.backup'
     if not os.path.exists(configfile):
         raise Exception('Unable to find the configuration file. \
                         Did you set environment variables? \
@@ -45,8 +49,8 @@ def main():
                 dicoMissingItem[sec] = list_items
 
     if len(missingSection) == 0 and len(missingItem) == 0:
-        print("Configuration up-to-date")
-        return
+        #print("Configuration up-to-date")
+        return True
     print("/!\\ Configuration not complete. Missing following configuration: /!\\")
     print("+--------------------------------------------------------------------+")
     for section in missingSection:
@@ -62,8 +66,12 @@ def main():
     resp = raw_input("Do you want to auto fix it? [y/n] ")
 
     if resp != 'y':
-        return
+        return False
     else:
+        resp2 = raw_input("Do you want to keep a backup of the old configuration file? [y/n] ")
+        if resp2 == 'y':
+            shutil.move(configfile, configfileBackup)
+
         #Do not keep item ordering in section. New items appened
         for section in missingItem:
             for item, value in dicoMissingItem[section]:
@@ -75,6 +83,7 @@ def main():
 
         with open(configfile, 'w') as f:
             cfg.write(f)
+        return True
 
 
 ''' Return a new dico with the section ordered as the old configuration with the updated one added '''
@@ -96,5 +105,8 @@ def add_items_to_correct_position(sample_dico, old_dico, missingSection, dicoMis
 
 
 if __name__ == "__main__":
-    main()
+    if main():
+        sys.exit()
+    else:
+        sys.exit(1)
 

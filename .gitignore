@@ -26,3 +26,4 @@ bin/packages/config.cfg
 
 # installed files
 nltk_data/
+doc/all_modules.txt
