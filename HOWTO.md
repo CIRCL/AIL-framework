@@ -45,11 +45,15 @@ How to create a new webpage
 
 If you want to add a new webpage for a module in AIL, follow these simple steps:
 
-1. Launch [./var/www/create_new_web_module.py](./var/www/create_new_web_module.py) and enter the name to use for your webpage (Usually, your python module).
+1. Launch [./var/www/create_new_web_module.py](./var/www/create_new_web_module.py) and enter the name to use for your webpage (Usually, your newly created python module).
 
 2. A template and flask skeleton has been created for your new webpage in [./var/www/modules/](./var/www/modules/)
 
-3. Edit the created html files under the template folder as well as the Flask_* python script.
+3. Edit the created html files under the template folder as well as the Flask_* python script so that they fit your needs.
+
+4. You can change the order of your module in the top navigation header in the file [./var/www/templates/header_base.html](./var/www/templates/header_base.html) 
+
+5. You can ignore module, and so, not display them in the top navigation header by adding the module name in the file [./var/www/templates/ignored_modules.txt](./var/www/templates/ignored_modules.txt) 
 
 How to contribute a module
 --------------------------
