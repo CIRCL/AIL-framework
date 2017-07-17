@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+				<div class="row">
+				  <div class="col-lg-12">
+				  <h1 class="page-header" data-page="page-termsfrequency" >MODULENAME</h1>
+				  </div>
+				  <!-- /.col-lg-12 -->
+				</div>
+				<!-- /.row -->
+
+            </div>
+            <!-- /#page-wrapper -->
+
+            <script>
+                $(document).ready(function(){
+                    activePage = "page-MODULENAME"
+                    $("#"+activePage).addClass("active");
+                });
+            </script>
+            <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        </body>
+
+</html>

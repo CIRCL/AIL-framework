@@ -9,10 +9,12 @@ import time
 import calendar
 from flask import Flask, render_template, jsonify, request
 import flask
+import importlib
 import os
+from os.path import join
 import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-sys.path.append('./Flasks/')
+sys.path.append('./modules/')
 import Paste
 from Date import Date
 
@@ -25,16 +27,70 @@ cfg = Flask_config.cfg
 Flask_config.app = Flask(__name__, static_url_path='/static/')
 app = Flask_config.app
 
-# import routes and functions from modules
-import Flask_dashboard
-import Flask_trendingcharts
-import Flask_trendingmodules
-import Flask_browsepastes
-import Flask_sentiment
-import Flask_terms
-import Flask_search
-import Flask_showpaste
+# ========= HEADER GENERATION ========
 
+# Get headers items that should be ignored (not displayed)
+toIgnoreModule = set()
+try:
+    with open('templates/ignored_modules.txt', 'r') as f:
+        lines = f.read().splitlines()
+        for line in lines:
+            toIgnoreModule.add(line)
+
+except IOError:
+    f = open('templates/ignored_modules.txt', 'w')
+    f.close()
+
+
+# Dynamically import routes and functions from modules
+# Also, prepare header.html
+to_add_to_header_dico = {}
+for root, dirs, files in os.walk('modules/'):
+    sys.path.append(join(root))
+
+    # Ignore the module
+    curr_dir = root.split('/')[1]
+    if curr_dir in toIgnoreModule:
+        continue
+
+    for name in files:
+        module_name = root.split('/')[-2]
+        if name.startswith('Flask_') and name.endswith('.py'):
+            if name == 'Flask_config.py':
+                continue
+            name = name.strip('.py')
+            #print('importing {}'.format(name))
+            importlib.import_module(name)
+        elif name == 'header_{}.html'.format(module_name):
+            with open(join(root, name), 'r') as f:
+                to_add_to_header_dico[module_name] = f.read()
+
+#create header.html
+complete_header = ""
+with open('templates/header_base.html', 'r') as f:
+    complete_header = f.read()
+modified_header = complete_header
+
+#Add the header in the supplied order
+for module_name, txt in to_add_to_header_dico.items():
+    to_replace = '<!--{}-->'.format(module_name)
+    if to_replace in complete_header:
+        modified_header = modified_header.replace(to_replace, txt)
+        del to_add_to_header_dico[module_name]
+
+#Add the header for no-supplied order
+to_add_to_header = []
+for module_name, txt in to_add_to_header_dico.items():
+    to_add_to_header.append(txt)
+
+modified_header = modified_header.replace('<!--insert here-->', '\n'.join(to_add_to_header))
+
+#Write the header.html file
+with open('templates/header.html', 'w') as f:
+    f.write(modified_header)
+
+
+# ========= JINJA2 FUNCTIONS ========
 def list_len(s):
     return len(s)
 app.jinja_env.filters['list_len'] = list_len
@@ -50,6 +106,12 @@ def add_header(response):
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
     response.headers['Cache-Control'] = 'public, max-age=0'
     return response
+
+# ========== ROUTES ============
+@app.route('/searchbox/')
+def searchbox():
+    return render_template("searchbox.html")
+
 
 # ============ MAIN ============
 
