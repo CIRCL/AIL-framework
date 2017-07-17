@@ -75,6 +75,11 @@ Eventually you can browse the status of the AIL framework website at the followi
 
         ``http://localhost:7000/``
 
+HOWTO
+-----
+
+HOWTO are available in [HOWTO.md](HOWTO.md)
+
 
 Screenshots
 ===========
