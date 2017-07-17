@@ -18,10 +18,11 @@ if __name__ == "__main__":
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
     socket.bind("tcp://*:{}".format(args.port))
+    time.sleep(1) #Important, avoid loosing the 1 message
 
     for dirname, dirnames, filenames in os.walk(args.directory):
         for filename in filenames:
             messagedata = open(os.path.join(dirname, filename)).read()
             print(os.path.join(dirname, filename))
             socket.send('{} {} {}'.format(args.channel, filename, base64.b64encode(messagedata)))
-            time.sleep(.1)
+            time.sleep(.2)
