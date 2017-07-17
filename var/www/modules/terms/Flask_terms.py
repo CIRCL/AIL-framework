@@ -348,5 +348,24 @@ def terms_plot_top_data():
         return jsonify(to_return)
 
 
+@terms.route("/credentials_tracker/")
+def credentials_tracker():
+    return render_template("credentials_tracker.html")
+
+@terms.route("/credentials_management_query_paste/")
+def credentials_management_query_paste():
+    cred =  request.args.get('cred')
+    return 1
+
+@terms.route("/credentials_management_action/", methods=['GET'])
+def cred_management_action():
+    cred =  request.args.get('cred')
+    action = request.args.get('action')
+    return 1
+
+@terms.route("/credentials_management_query/")
+def cred_management_query():
+    return 1
+
 # ========= REGISTRATION =========
 app.register_blueprint(terms)
