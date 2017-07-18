@@ -11,6 +11,7 @@ import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
 import re
 import Paste
+from pprint import pprint
 
 # ============ VARIABLES ============
 import Flask_config
@@ -18,6 +19,7 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_term = Flask_config.r_serv_term
+r_serv_cred = Flask_config.r_serv_cred
 
 terms = Blueprint('terms', __name__, template_folder='templates')
 
@@ -357,11 +359,80 @@ def credentials_management_query_paste():
     cred =  request.args.get('cred')
     return 1
 
+def mixUserName(supplied):
+    #e.g.: John Smith
+    terms = supplied.split()[:2]
+    usernames = []
+    if len(terms) == 1:
+        terms.append(' ')
+
+    #john, smith, John, Smith, JOHN, SMITH
+    usernames += [terms[0].lower()]
+    usernames += [terms[1].lower()]
+    usernames += [terms[0][0].upper() + terms[0][1:].lower()]
+    usernames += [terms[1][0].upper() + terms[1][1:].lower()]
+    usernames += [terms[0].upper()]
+    usernames += [terms[1].upper()]
+
+    #johnsmith, smithjohn, JOHNsmith, johnSMITH, SMITHjohn, smithJOHN
+    usernames += [(terms[0].lower() + terms[1].lower()).strip()]
+    usernames += [(terms[1].lower() + terms[0].lower()).strip()]
+    usernames += [(terms[0].upper() + terms[1].lower()).strip()]
+    usernames += [(terms[0].lower() + terms[1].upper()).strip()]
+    usernames += [(terms[1].upper() + terms[0].lower()).strip()]
+    usernames += [(terms[1].lower() + terms[0].upper()).strip()]
+    #Jsmith, JSmith, jsmith, jSmith, johnS, Js, JohnSmith, Johnsmith, johnSmith
+    usernames += [(terms[0][0].upper() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0].lower() + terms[1][0].upper()).strip()]
+    usernames += [(terms[0].upper() + terms[1][0].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+
+    return usernames
+    
+
+
 @terms.route("/credentials_management_action/", methods=['GET'])
 def cred_management_action():
-    cred =  request.args.get('cred')
+    REGEX_CRED = '[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+'
+    REDIS_KEY_NUM_USERNAME = 'uniqNumForUsername'
+    REDIS_KEY_NUM_PATH = 'uniqNumForUsername'
+    REDIS_KEY_ALL_CRED_SET = 'AllCredentials'
+    REDIS_KEY_ALL_CRED_SET_REV = 'AllCredentialsRev'
+    REDIS_KEY_ALL_PATH_SET = 'AllPath'
+    REDIS_KEY_ALL_PATH_SET_REV = 'AllPath'
+    REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
+
+    supplied =  request.args.get('term')
     action = request.args.get('action')
-    return 1
+    section = request.args.get('section')
+
+    #splitedCred = re.findall(REGEX_CRED, cred)
+    uniq_num_set = set()
+    if action == "seek":
+        possibilities = mixUserName(supplied)
+        for poss in possibilities:
+            for num in r_serv_cred.smembers(poss):
+                uniq_num_set.add(num)
+
+    data = {'usr': [], 'path': []}
+    for Unum in uniq_num_set:
+        data['usr'].append(r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum))
+        data['path'].append(r_serv_cred.hget(REDIS_KEY_MAP_CRED_TO_PATH, Unum))
+
+    pprint(data)
+    to_return = {}
+    to_return["section"] = section
+    to_return["action"] = action
+    to_return["term"] = supplied
+    to_return["data"] = data
+
+    return jsonify(to_return)
+
 
 @terms.route("/credentials_management_query/")
 def cred_management_query():

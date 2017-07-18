@@ -97,6 +97,11 @@ host = localhost
 port = 6382
 db = 2
 
+[Redis_Level_DB_TermCred]
+host = localhost
+port = 6382
+db = 5
+
 [Redis_Level_DB]
 host = localhost
 port = 2016

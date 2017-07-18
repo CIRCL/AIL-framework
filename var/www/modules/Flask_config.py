@@ -53,6 +53,11 @@ r_serv_term = redis.StrictRedis(
         port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
         db=cfg.getint("Redis_Level_DB_TermFreq", "db"))
 
+r_serv_cred = redis.StrictRedis(
+        host=cfg.get("Redis_Level_DB_TermCred", "host"),
+        port=cfg.getint("Redis_Level_DB_TermCred", "port"),
+        db=cfg.getint("Redis_Level_DB_TermCred", "db"))
+
 r_serv_pasteName = redis.StrictRedis(
     host=cfg.get("Redis_Paste_Name", "host"),
     port=cfg.getint("Redis_Paste_Name", "port"),
