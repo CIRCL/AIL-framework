@@ -40,6 +40,7 @@ REDIS_KEY_ALL_CRED_SET_REV = 'AllCredentialsRev'
 REDIS_KEY_ALL_PATH_SET = 'AllPath'
 REDIS_KEY_ALL_PATH_SET_REV = 'AllPathRev'
 REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
+MINIMUMSIZETHRESHOLD = 3
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         host=p.config.get("Redis_Level_DB_TermCred", "host"),
         port=p.config.get("Redis_Level_DB_TermCred", "port"),
         db=p.config.get("Redis_Level_DB_TermCred", "db"))
-
+Credential
     critical = 8
 
     regex_web = "((?:https?:\/\/)[-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
@@ -134,7 +135,7 @@ if __name__ == "__main__":
             cred = cred.split('@')[0]
 
             #unique number attached to unique path
-            uniq_num_path = server_cred.incr(REDIS_KEY_ALL_PATH_SET)
+            uniq_num_path = server_cred.incr(REDIS_KEY_NUM_PATH)
             print(REDIS_KEY_ALL_PATH_SET, {filepath: uniq_num_path})
             server_cred.hmset(REDIS_KEY_ALL_PATH_SET, {filepath: uniq_num_path})
             server_cred.hmset(REDIS_KEY_ALL_PATH_SET_REV, {uniq_num_path: filepath})
@@ -151,6 +152,7 @@ if __name__ == "__main__":
             splitedCred = re.findall(REGEX_CRED, cred)
             print(splitedCred)
             for partCred in splitedCred:
-                server_cred.sadd(partCred, uniq_num_cred)
+                if len(partCred) > MINIMUMSIZETHRESHOLD:
+                    server_cred.sadd(partCred, uniq_num_cred)
 
 

@@ -21,6 +21,7 @@ nltk
 crcmod
 mmh3
 ssdeep
+python-Levenshtein
 
 #Others
 python-magic

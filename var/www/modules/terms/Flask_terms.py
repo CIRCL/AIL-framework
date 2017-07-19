@@ -12,6 +12,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint
 import re
 import Paste
 from pprint import pprint
+import Levenshtein
 
 # ============ VARIABLES ============
 import Flask_config
@@ -54,6 +55,41 @@ def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
         passed_days += 1
     return to_return
 
+def mixUserName(supplied):
+    #e.g.: John Smith
+    terms = supplied.split()[:2]
+    usernames = []
+    if len(terms) == 1:
+        terms.append(' ')
+
+    #john, smith, John, Smith, JOHN, SMITH
+    usernames += [terms[0].lower()]
+    usernames += [terms[1].lower()]
+    usernames += [terms[0][0].upper() + terms[0][1:].lower()]
+    usernames += [terms[1][0].upper() + terms[1][1:].lower()]
+    usernames += [terms[0].upper()]
+    usernames += [terms[1].upper()]
+
+    #johnsmith, smithjohn, JOHNsmith, johnSMITH, SMITHjohn, smithJOHN
+    usernames += [(terms[0].lower() + terms[1].lower()).strip()]
+    usernames += [(terms[1].lower() + terms[0].lower()).strip()]
+    usernames += [(terms[0].upper() + terms[1].lower()).strip()]
+    usernames += [(terms[0].lower() + terms[1].upper()).strip()]
+    usernames += [(terms[1].upper() + terms[0].lower()).strip()]
+    usernames += [(terms[1].lower() + terms[0].upper()).strip()]
+    #Jsmith, JSmith, jsmith, jSmith, johnS, Js, JohnSmith, Johnsmith, johnSmith
+    usernames += [(terms[0][0].upper() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0].lower() + terms[1][0].upper()).strip()]
+    usernames += [(terms[0].upper() + terms[1][0].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+
+    return usernames
+ 
 
 # ============ ROUTES ============
 
@@ -359,41 +395,7 @@ def credentials_management_query_paste():
     cred =  request.args.get('cred')
     return 1
 
-def mixUserName(supplied):
-    #e.g.: John Smith
-    terms = supplied.split()[:2]
-    usernames = []
-    if len(terms) == 1:
-        terms.append(' ')
-
-    #john, smith, John, Smith, JOHN, SMITH
-    usernames += [terms[0].lower()]
-    usernames += [terms[1].lower()]
-    usernames += [terms[0][0].upper() + terms[0][1:].lower()]
-    usernames += [terms[1][0].upper() + terms[1][1:].lower()]
-    usernames += [terms[0].upper()]
-    usernames += [terms[1].upper()]
-
-    #johnsmith, smithjohn, JOHNsmith, johnSMITH, SMITHjohn, smithJOHN
-    usernames += [(terms[0].lower() + terms[1].lower()).strip()]
-    usernames += [(terms[1].lower() + terms[0].lower()).strip()]
-    usernames += [(terms[0].upper() + terms[1].lower()).strip()]
-    usernames += [(terms[0].lower() + terms[1].upper()).strip()]
-    usernames += [(terms[1].upper() + terms[0].lower()).strip()]
-    usernames += [(terms[1].lower() + terms[0].upper()).strip()]
-    #Jsmith, JSmith, jsmith, jSmith, johnS, Js, JohnSmith, Johnsmith, johnSmith
-    usernames += [(terms[0][0].upper() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
-    usernames += [(terms[0][0].upper() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
-    usernames += [(terms[0][0].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
-    usernames += [(terms[0][0].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
-    usernames += [(terms[0].lower() + terms[1][0].upper()).strip()]
-    usernames += [(terms[0].upper() + terms[1][0].lower()).strip()]
-    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
-    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
-    usernames += [(terms[0][0].lower() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
-
-    return usernames
-    
+   
 
 
 @terms.route("/credentials_management_action/", methods=['GET'])
@@ -407,7 +409,7 @@ def cred_management_action():
     REDIS_KEY_ALL_PATH_SET_REV = 'AllPath'
     REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
 
-    supplied =  request.args.get('term')
+    supplied =  request.args.get('term').encode('utf-8')
     action = request.args.get('action')
     section = request.args.get('section')
 
@@ -419,12 +421,22 @@ def cred_management_action():
             for num in r_serv_cred.smembers(poss):
                 uniq_num_set.add(num)
 
-    data = {'usr': [], 'path': []}
+    data = {'usr': [], 'path': [], 'numPaste': [], 'simil': []}
     for Unum in uniq_num_set:
-        data['usr'].append(r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum))
-        data['path'].append(r_serv_cred.hget(REDIS_KEY_MAP_CRED_TO_PATH, Unum))
+        username = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum)
+        
+        # Calculate Levenshtein distance, ignore negative ratio
+        levenDist = float(Levenshtein.distance(supplied, username))
+        levenRatio = levenDist / float(len(supplied))
+        levenRatioStr = "{:.1%}".format(1.0 - levenRatio)
+        if levenRatio >= 1.0:
+            continue
 
-    pprint(data)
+        data['usr'].append(username)
+        data['path'].append(r_serv_cred.hget(REDIS_KEY_MAP_CRED_TO_PATH, Unum))
+        data['numPaste'].append(len(uniq_num_set))
+        data['simil'].append(levenRatioStr)
+
     to_return = {}
     to_return["section"] = section
     to_return["action"] = action
