@@ -71,6 +71,7 @@ def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
         passed_days += 1
     return to_return
 
+#Mix suplied username, if extensive is set, slice username(s) with different windows
 def mixUserName(supplied, extensive=False):
     #e.g.: John Smith
     terms = supplied.split()[:2]
@@ -107,6 +108,7 @@ def mixUserName(supplied, extensive=False):
     if not extensive:
         return usernames
 
+    #Slice the supplied username(s)
     mixedSupplied = supplied.replace(' ','')
     minWindow = 3 if len(mixedSupplied)/2 < 4 else len(mixedSupplied)/2
     for winSize in range(3,len(mixedSupplied)):
@@ -334,7 +336,6 @@ def terms_plot_tool():
 
 @terms.route("/terms_plot_tool_data/")
 def terms_plot_tool_data():
-
     oneDay = 60*60*24
     range_start =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_start')))) if request.args.get('range_start') is not None else 0;
     range_start = range_start.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -349,7 +350,6 @@ def terms_plot_tool_data():
         per_paste = "per_paste_"
     else:
         per_paste = ""
-
 
     if term is None:
         return "None"
@@ -366,7 +366,6 @@ def terms_plot_tool_data():
 
 @terms.route("/terms_plot_top/")
 def terms_plot_top():
-
     per_paste = request.args.get('per_paste')
     per_paste = per_paste if per_paste is not None else 1
     return render_template("terms_plot_top.html", per_paste=per_paste)
@@ -378,7 +377,6 @@ def terms_plot_top_data():
     today = datetime.datetime.now()
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
-
 
     per_paste = request.args.get('per_paste')
     if per_paste == "1" or per_paste is None:
@@ -469,8 +467,16 @@ def cred_management_action():
                 uniq_num_set.add(num)
         #Extensive /!\
         if extensive:
+            iter_num = 0
+            tot_iter = len(AllUsernameInRedis)*len(possibilities)
             for tempUsername in AllUsernameInRedis:
                 for poss in possibilities:
+                    #FIXME print progress
+                    if(iter_num % int(tot_iter/20) == 0):
+                        #print("searching: {}% done".format(int(iter_num/tot_iter*100)), sep=' ', end='\r', flush=True)
+                        print("searching: {}% done".format(float(iter_num)/float(tot_iter)*100))
+                    iter_num += 1
+
                     if poss in tempUsername:
                         num = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername)
                         if num is not None:
@@ -488,14 +494,8 @@ def cred_management_action():
         supp_mixed = supplied.replace(' ','')
         supp_splitted.append(supp_mixed)
         for indiv_supplied in supp_splitted:
-            #levenDist = float(Levenshtein.distance(indiv_supplied, username))
-            #levenRatio = levenDist / float(len(indiv_supplied)) if levenRatio > levenDist / float(len(indiv_supplied)) else levenRatio
-            #levenRatio = levenRatio if levenRatio < 1.0 else 1.0
             levenRatio = float(Levenshtein.ratio(indiv_supplied, username))
             levenRatioStr = "{:.1%}".format(levenRatio)
-            #levenRatioStr = "{:.1%}".format(1.0 - levenRatio)
-            #if levenRatio >= 1.0:
-            #    continue
 
         data['usr'].append(username)
         allPathNum = list(r_serv_cred.smembers(REDIS_KEY_MAP_CRED_TO_PATH+'_'+Unum))
