@@ -3,6 +3,8 @@
 
 '''
     Flask functions and routes for the trending modules page
+    
+    note: The matching of credential against supplied credential is done using Levenshtein distance
 '''
 import redis
 import datetime
@@ -11,6 +13,8 @@ import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
 import re
 import Paste
+from pprint import pprint
+import Levenshtein
 
 # ============ VARIABLES ============
 import Flask_config
@@ -18,9 +22,11 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_term = Flask_config.r_serv_term
+r_serv_cred = Flask_config.r_serv_cred
 
 terms = Blueprint('terms', __name__, template_folder='templates')
 
+'''TERM'''
 DEFAULT_MATCH_PERCENT = 50
 
 #tracked
@@ -35,6 +41,19 @@ TrackedRegexDate_Name = "TrackedRegexDate"
 #set
 TrackedSetSet_Name = "TrackedSetSet"
 TrackedSetDate_Name = "TrackedSetDate"
+
+
+'''CRED'''
+REGEX_CRED = '[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+'
+REDIS_KEY_NUM_USERNAME = 'uniqNumForUsername'
+REDIS_KEY_NUM_PATH = 'uniqNumForUsername'
+REDIS_KEY_ALL_CRED_SET = 'AllCredentials'
+REDIS_KEY_ALL_CRED_SET_REV = 'AllCredentialsRev'
+REDIS_KEY_ALL_PATH_SET = 'AllPath'
+REDIS_KEY_ALL_PATH_SET_REV = 'AllPathRev'
+REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
+
+
 
 # ============ FUNCTIONS ============
 
@@ -52,6 +71,56 @@ def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
         passed_days += 1
     return to_return
 
+#Mix suplied username, if extensive is set, slice username(s) with different windows
+def mixUserName(supplied, extensive=False):
+    #e.g.: John Smith
+    terms = supplied.split()[:2]
+    usernames = []
+    if len(terms) == 1:
+        terms.append(' ')
+
+    #john, smith, John, Smith, JOHN, SMITH
+    usernames += [terms[0].lower()]
+    usernames += [terms[1].lower()]
+    usernames += [terms[0][0].upper() + terms[0][1:].lower()]
+    usernames += [terms[1][0].upper() + terms[1][1:].lower()]
+    usernames += [terms[0].upper()]
+    usernames += [terms[1].upper()]
+
+    #johnsmith, smithjohn, JOHNsmith, johnSMITH, SMITHjohn, smithJOHN
+    usernames += [(terms[0].lower() + terms[1].lower()).strip()]
+    usernames += [(terms[1].lower() + terms[0].lower()).strip()]
+    usernames += [(terms[0].upper() + terms[1].lower()).strip()]
+    usernames += [(terms[0].lower() + terms[1].upper()).strip()]
+    usernames += [(terms[1].upper() + terms[0].lower()).strip()]
+    usernames += [(terms[1].lower() + terms[0].upper()).strip()]
+    #Jsmith, JSmith, jsmith, jSmith, johnS, Js, JohnSmith, Johnsmith, johnSmith
+    usernames += [(terms[0][0].upper() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0].lower() + terms[1][0].upper()).strip()]
+    usernames += [(terms[0].upper() + terms[1][0].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
+    usernames += [(terms[0][0].lower() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
+
+    if not extensive:
+        return usernames
+
+    #Slice the supplied username(s)
+    mixedSupplied = supplied.replace(' ','')
+    minWindow = 3 if len(mixedSupplied)/2 < 4 else len(mixedSupplied)/2
+    for winSize in range(3,len(mixedSupplied)):
+        for startIndex in range(0, len(mixedSupplied)-winSize):
+            usernames += [mixedSupplied[startIndex:startIndex+winSize]]
+
+    filtered_usernames = []
+    for usr in usernames:
+        if len(usr) > 2:
+            filtered_usernames.append(usr)
+    return filtered_usernames
+ 
 
 # ============ ROUTES ============
 
@@ -282,9 +351,9 @@ def terms_plot_tool_data():
     else:
         per_paste = ""
 
-
     if term is None:
         return "None"
+
     else:
         value_range = []
         for timestamp in range(range_start, range_end+oneDay, oneDay):
@@ -346,6 +415,101 @@ def terms_plot_top_data():
             to_return.append([term, value_range, tot_value, position])
     
         return jsonify(to_return)
+
+
+@terms.route("/credentials_tracker/")
+def credentials_tracker():
+    return render_template("credentials_tracker.html")
+
+@terms.route("/credentials_management_query_paste/", methods=['GET', 'POST'])
+def credentials_management_query_paste():
+    cred =  request.args.get('cred')
+    allPath = request.json['allPath']
+
+    paste_info = []
+    for pathNum in allPath:
+        path = r_serv_cred.hget(REDIS_KEY_ALL_PATH_SET_REV, pathNum)
+        paste = Paste.Paste(path)
+        p_date = str(paste._get_p_date())
+        p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+        p_source = paste.p_source
+        p_encoding = paste._get_p_encoding()
+        p_size = paste.p_size
+        p_mime = paste.p_mime
+        p_lineinfo = paste.get_lines_info()
+        p_content = paste.get_p_content().decode('utf-8', 'ignore')
+        if p_content != 0:
+            p_content = p_content[0:400]
+        paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
+
+    return jsonify(paste_info)
+
+@terms.route("/credentials_management_action/", methods=['GET'])
+def cred_management_action():
+
+    supplied =  request.args.get('term').encode('utf-8')
+    action = request.args.get('action')
+    section = request.args.get('section')
+    extensive = request.args.get('extensive')
+    extensive = True if extensive == "true" else False
+
+    if extensive:
+        #collectDico
+        AllUsernameInRedis = r_serv_cred.hgetall(REDIS_KEY_ALL_CRED_SET).keys()
+    uniq_num_set = set()
+    if action == "seek":
+        possibilities = mixUserName(supplied, extensive)
+        for poss in possibilities:
+            num = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, poss)
+            if num is not None:
+                uniq_num_set.add(num)
+            for num in r_serv_cred.smembers(poss):
+                uniq_num_set.add(num)
+        #Extensive /!\
+        if extensive:
+            iter_num = 0
+            tot_iter = len(AllUsernameInRedis)*len(possibilities)
+            for tempUsername in AllUsernameInRedis:
+                for poss in possibilities:
+                    #FIXME print progress
+                    if(iter_num % int(tot_iter/20) == 0):
+                        #print("searching: {}% done".format(int(iter_num/tot_iter*100)), sep=' ', end='\r', flush=True)
+                        print("searching: {}% done".format(float(iter_num)/float(tot_iter)*100))
+                    iter_num += 1
+
+                    if poss in tempUsername:
+                        num = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername)
+                        if num is not None:
+                            uniq_num_set.add(num)
+                        for num in r_serv_cred.smembers(tempUsername):
+                            uniq_num_set.add(num)
+
+    data = {'usr': [], 'path': [], 'numPaste': [], 'simil': []}
+    for Unum in uniq_num_set:
+        levenRatio = 2.0
+        username = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum)
+        
+        # Calculate Levenshtein distance, ignore negative ratio
+        supp_splitted = supplied.split()
+        supp_mixed = supplied.replace(' ','')
+        supp_splitted.append(supp_mixed)
+        for indiv_supplied in supp_splitted:
+            levenRatio = float(Levenshtein.ratio(indiv_supplied, username))
+            levenRatioStr = "{:.1%}".format(levenRatio)
+
+        data['usr'].append(username)
+        allPathNum = list(r_serv_cred.smembers(REDIS_KEY_MAP_CRED_TO_PATH+'_'+Unum))
+        data['path'].append(allPathNum)
+        data['numPaste'].append(len(allPathNum))
+        data['simil'].append(levenRatioStr)
+
+    to_return = {}
+    to_return["section"] = section
+    to_return["action"] = action
+    to_return["term"] = supplied
+    to_return["data"] = data
+
+    return jsonify(to_return)
 
 
 # ========= REGISTRATION =========
