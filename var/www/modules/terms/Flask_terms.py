@@ -24,6 +24,7 @@ r_serv_cred = Flask_config.r_serv_cred
 
 terms = Blueprint('terms', __name__, template_folder='templates')
 
+'''TERM'''
 DEFAULT_MATCH_PERCENT = 50
 
 #tracked
@@ -38,6 +39,19 @@ TrackedRegexDate_Name = "TrackedRegexDate"
 #set
 TrackedSetSet_Name = "TrackedSetSet"
 TrackedSetDate_Name = "TrackedSetDate"
+
+
+'''CRED'''
+REGEX_CRED = '[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+'
+REDIS_KEY_NUM_USERNAME = 'uniqNumForUsername'
+REDIS_KEY_NUM_PATH = 'uniqNumForUsername'
+REDIS_KEY_ALL_CRED_SET = 'AllCredentials'
+REDIS_KEY_ALL_CRED_SET_REV = 'AllCredentialsRev'
+REDIS_KEY_ALL_PATH_SET = 'AllPath'
+REDIS_KEY_ALL_PATH_SET_REV = 'AllPathRev'
+REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
+
+
 
 # ============ FUNCTIONS ============
 
@@ -55,7 +69,7 @@ def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
         passed_days += 1
     return to_return
 
-def mixUserName(supplied):
+def mixUserName(supplied, extensive=False):
     #e.g.: John Smith
     terms = supplied.split()[:2]
     usernames = []
@@ -88,7 +102,20 @@ def mixUserName(supplied):
     usernames += [(terms[0][0].upper() + terms[0][1:].lower() + terms[1][0].lower() + terms[1][1:].lower()).strip()]
     usernames += [(terms[0][0].lower() + terms[0][1:].lower() + terms[1][0].upper() + terms[1][1:].lower()).strip()]
 
-    return usernames
+    if not extensive:
+        return usernames
+
+    mixedSupplied = supplied.replace(' ','')
+    minWindow = 3 if len(mixedSupplied)/2 < 4 else len(mixedSupplied)/2
+    for winSize in range(3,len(mixedSupplied)):
+        for startIndex in range(0, len(mixedSupplied)-winSize):
+            usernames += [mixedSupplied[startIndex:startIndex+winSize]]
+
+    filtered_usernames = []
+    for usr in usernames:
+        if len(usr) > 2:
+            filtered_usernames.append(usr)
+    return filtered_usernames
  
 
 # ============ ROUTES ============
@@ -305,6 +332,7 @@ def terms_plot_tool():
 
 @terms.route("/terms_plot_tool_data/")
 def terms_plot_tool_data():
+
     oneDay = 60*60*24
     range_start =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_start')))) if request.args.get('range_start') is not None else 0;
     range_start = range_start.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -323,6 +351,7 @@ def terms_plot_tool_data():
 
     if term is None:
         return "None"
+
     else:
         value_range = []
         for timestamp in range(range_start, range_end+oneDay, oneDay):
@@ -335,6 +364,7 @@ def terms_plot_tool_data():
 
 @terms.route("/terms_plot_top/")
 def terms_plot_top():
+
     per_paste = request.args.get('per_paste')
     per_paste = per_paste if per_paste is not None else 1
     return render_template("terms_plot_top.html", per_paste=per_paste)
@@ -346,6 +376,7 @@ def terms_plot_top_data():
     today = datetime.datetime.now()
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
+
 
     per_paste = request.args.get('per_paste')
     if per_paste == "1" or per_paste is None:
@@ -390,51 +421,84 @@ def terms_plot_top_data():
 def credentials_tracker():
     return render_template("credentials_tracker.html")
 
-@terms.route("/credentials_management_query_paste/")
+@terms.route("/credentials_management_query_paste/", methods=['GET', 'POST'])
 def credentials_management_query_paste():
     cred =  request.args.get('cred')
-    return 1
+    allPath = request.json['allPath']
 
-   
+    paste_info = []
+    for pathNum in allPath:
+        path = r_serv_cred.hget(REDIS_KEY_ALL_PATH_SET_REV, pathNum)
+        paste = Paste.Paste(path)
+        p_date = str(paste._get_p_date())
+        p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+        p_source = paste.p_source
+        p_encoding = paste._get_p_encoding()
+        p_size = paste.p_size
+        p_mime = paste.p_mime
+        p_lineinfo = paste.get_lines_info()
+        p_content = paste.get_p_content().decode('utf-8', 'ignore')
+        if p_content != 0:
+            p_content = p_content[0:400]
+        paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
 
+    return jsonify(paste_info)
 
 @terms.route("/credentials_management_action/", methods=['GET'])
 def cred_management_action():
-    REGEX_CRED = '[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+'
-    REDIS_KEY_NUM_USERNAME = 'uniqNumForUsername'
-    REDIS_KEY_NUM_PATH = 'uniqNumForUsername'
-    REDIS_KEY_ALL_CRED_SET = 'AllCredentials'
-    REDIS_KEY_ALL_CRED_SET_REV = 'AllCredentialsRev'
-    REDIS_KEY_ALL_PATH_SET = 'AllPath'
-    REDIS_KEY_ALL_PATH_SET_REV = 'AllPath'
-    REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
 
     supplied =  request.args.get('term').encode('utf-8')
     action = request.args.get('action')
     section = request.args.get('section')
+    extensive = request.args.get('extensive')
+    extensive = True if extensive == "true" else False
 
-    #splitedCred = re.findall(REGEX_CRED, cred)
+    if extensive:
+        #collectDico
+        AllUsernameInRedis = r_serv_cred.hgetall(REDIS_KEY_ALL_CRED_SET).keys()
     uniq_num_set = set()
     if action == "seek":
-        possibilities = mixUserName(supplied)
+        possibilities = mixUserName(supplied, extensive)
         for poss in possibilities:
+            num = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, poss)
+            if num is not None:
+                uniq_num_set.add(num)
             for num in r_serv_cred.smembers(poss):
                 uniq_num_set.add(num)
+        #Extensive /!\
+        if extensive:
+            for tempUsername in AllUsernameInRedis:
+                for poss in possibilities:
+                    if poss in tempUsername:
+                        num = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername)
+                        if num is not None:
+                            uniq_num_set.add(num)
+                        for num in r_serv_cred.smembers(tempUsername):
+                            uniq_num_set.add(num)
 
     data = {'usr': [], 'path': [], 'numPaste': [], 'simil': []}
     for Unum in uniq_num_set:
+        levenRatio = 2.0
         username = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum)
         
         # Calculate Levenshtein distance, ignore negative ratio
-        levenDist = float(Levenshtein.distance(supplied, username))
-        levenRatio = levenDist / float(len(supplied))
-        levenRatioStr = "{:.1%}".format(1.0 - levenRatio)
-        if levenRatio >= 1.0:
-            continue
+        supp_splitted = supplied.split()
+        supp_mixed = supplied.replace(' ','')
+        supp_splitted.append(supp_mixed)
+        for indiv_supplied in supp_splitted:
+            #levenDist = float(Levenshtein.distance(indiv_supplied, username))
+            #levenRatio = levenDist / float(len(indiv_supplied)) if levenRatio > levenDist / float(len(indiv_supplied)) else levenRatio
+            #levenRatio = levenRatio if levenRatio < 1.0 else 1.0
+            levenRatio = float(Levenshtein.ratio(indiv_supplied, username))
+            levenRatioStr = "{:.1%}".format(levenRatio)
+            #levenRatioStr = "{:.1%}".format(1.0 - levenRatio)
+            #if levenRatio >= 1.0:
+            #    continue
 
         data['usr'].append(username)
-        data['path'].append(r_serv_cred.hget(REDIS_KEY_MAP_CRED_TO_PATH, Unum))
-        data['numPaste'].append(len(uniq_num_set))
+        allPathNum = list(r_serv_cred.smembers(REDIS_KEY_MAP_CRED_TO_PATH+'_'+Unum))
+        data['path'].append(allPathNum)
+        data['numPaste'].append(len(allPathNum))
         data['simil'].append(levenRatioStr)
 
     to_return = {}
