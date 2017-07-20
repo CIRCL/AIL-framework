@@ -3,6 +3,8 @@
 
 '''
     Flask functions and routes for the trending modules page
+    
+    note: The matching of credential against supplied credential is done using Levenshtein distance
 '''
 import redis
 import datetime
@@ -509,10 +511,6 @@ def cred_management_action():
 
     return jsonify(to_return)
 
-
-@terms.route("/credentials_management_query/")
-def cred_management_query():
-    return 1
 
 # ========= REGISTRATION =========
 app.register_blueprint(terms)

@@ -14,6 +14,7 @@ It also split the username and store it into redis for searching purposes.
 Redis organization:
     uniqNumForUsername: unique number attached to unique username
     uniqNumForPath: unique number attached to unique path
+        -> uniqNum are used to avoid string duplication
     AllCredentials: hashed set where keys are username and value are their uniq number
     AllCredentialsRev: the opposite of AllCredentials, uniqNum -> username
     AllPath: hashed set where keys are path and value are their uniq number
@@ -130,9 +131,9 @@ if __name__ == "__main__":
             print('found {} credentials'.format(len(creds)))
 
 
-        #for searching credential in cred seeker
+        #for searching credential in termFreq
         for cred in creds:
-            cred = cred.split('@')[0]
+            cred = cred.split('@')[0] #Split to ignore mail address
 
             #unique number attached to unique path
             uniq_num_path = server_cred.incr(REDIS_KEY_NUM_PATH)
@@ -146,12 +147,13 @@ if __name__ == "__main__":
                 server_cred.hmset(REDIS_KEY_ALL_CRED_SET, {cred: uniq_num_cred})
                 server_cred.hmset(REDIS_KEY_ALL_CRED_SET_REV, {uniq_num_cred: cred})
         
-            #server_cred.hmset(REDIS_KEY_MAP_CRED_TO_PATH, {uniq_num_cred: uniq_num_path})
+            #Add the mapping between the credential and the path
             server_cred.sadd(REDIS_KEY_MAP_CRED_TO_PATH+'_'+str(uniq_num_cred), uniq_num_path)
 
+            #Split credentials on capital letters, numbers, dots and so on
+            #Add the split to redis, each split point towards its initial credential unique number
             splitedCred = re.findall(REGEX_CRED, cred)
             for partCred in splitedCred:
                 if len(partCred) > MINIMUMSIZETHRESHOLD:
                     server_cred.sadd(partCred, uniq_num_cred)
-
 
