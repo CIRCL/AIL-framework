@@ -66,4 +66,4 @@ with open(path, 'r') as f:
         output_text_graph += elem
 
     output_text_graph += "}"
-    print output_text_graph
+    print(output_text_graph)
