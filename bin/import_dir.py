@@ -24,5 +24,5 @@ if __name__ == "__main__":
         for filename in filenames:
             messagedata = open(os.path.join(dirname, filename)).read()
             print(os.path.join(dirname, filename))
-            socket.send('{} {} {}'.format(args.channel, filename, base64.b64encode(messagedata)))
+            socket.send('{} {} {}'.format(args.channel, os.path.join(dirname, filename), base64.b64encode(messagedata)))
             time.sleep(.2)
