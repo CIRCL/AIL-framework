@@ -19,6 +19,9 @@ Depending on the configuration, this module will process the feed as follow:
             - Elseif, the saved content associated with the paste is not the same, process it
             - Else, do not process it but keep track for statistics on duplicate
 
+    operation_mode 3: "Don't look if duplicate"
+        - SImply do not bother to check if it is a duplicate
+
 Note that the hash of the content is defined as the sha1(gzip64encoded).
 
 Every data coming from a named feed can be sent to a pre-processing module before going to the global module.
@@ -76,6 +79,7 @@ if __name__ == '__main__':
     duplicated_paste_per_feeder = {}
     time_1 = time.time()
 
+    print('Operation mode ' + str(operation_mode))
 
     while True:
 
@@ -121,7 +125,7 @@ if __name__ == '__main__':
 
 
                 # Keep duplicate coming from different sources
-                else:
+                elif operation_mode == 2:
                     # Filter to avoid duplicate 
                     content = server.get('HASH_'+paste_name)
                     if content is None:
@@ -158,6 +162,13 @@ if __name__ == '__main__':
                             #STATS
                             duplicated_paste_per_feeder[feeder_name] += 1
                             continue
+                else:
+                    # populate Global OR populate another set based on the feeder_name
+                    if feeder_name in FEED_QUEUE_MAPPING:
+                        p.populate_set_out(relay_message, FEED_QUEUE_MAPPING[feeder_name])
+                    else:
+                        p.populate_set_out(relay_message, 'Mixer')
+
 
             else:
                 # TODO Store the name of the empty paste inside a Redis-list.
