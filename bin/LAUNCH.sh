@@ -93,6 +93,8 @@ function launching_lvldb {
     sleep 0.1
     screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$dbC1_y' -M '$nb_db'; read x'
     sleep 0.1
+    screen -S "LevelDB" -X screen -t "3017" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3017/ -P '$dbC1_y' -M '$nb_db'; read x'
+    sleep 0.1
     screen -S "LevelDB" -X screen -t "$dbCn_y" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir$dbCn_y'/ -P '$dbCn_y' -M '$nb_db'; read x'
 }
 
@@ -257,6 +259,7 @@ for i in ${!options[@]}; do
             Killall)
                 if [[ $isredis || $islvldb || $islogged || $isqueued || $isscripted ]]; then
                     kill $isredis $islvldb $islogged $isqueued $isscripted
+                    sleep 0.2
                     echo -e $ROSE`screen -ls`$DEFAULT
                     echo -e $GREEN"\t* $isredis $islvldb $islogged $isqueued $isscripted killed."$DEFAULT
                 else
