@@ -66,32 +66,34 @@ function launching_redis {
 
 function launching_lvldb {
     #Want to launch more level_db?
+    #FIXME update the date in config.cfg
     lvdbhost='127.0.0.1'
     lvdbdir="${AIL_HOME}/LEVEL_DB_DATA/"
-    db1_y='2013'
-    db2_y='2014'
-    db3_y='2016'
-    db4_y='2017'
+    db1_y='2016'
+    db2_y='2017'
+    dbn_y=`date +%Y`
 
-    dbC_y='3016'
+    dbC1_y='3016'
+    dbCn_y=30`date +%y`
     nb_db=13
 
     screen -dmS "LevelDB"
     sleep 0.1
     echo -e $GREEN"\t* Launching Levels DB servers"$DEFAULT
     #Add lines here with appropriates options.
-    screen -S "LevelDB" -X screen -t "2013" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2013/ -P '$db1_y' -M '$nb_db'; read x'
     sleep 0.1
-    screen -S "LevelDB" -X screen -t "2014" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2014/ -P '$db2_y' -M '$nb_db'; read x'
+    screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db1_y' -M '$nb_db'; read x'
     sleep 0.1
-    screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db3_y' -M '$nb_db'; read x'
+    screen -S "LevelDB" -X screen -t "2017" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2017/ -P '$db2_y' -M '$nb_db'; read x'
     sleep 0.1
-    screen -S "LevelDB" -X screen -t "2017" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2017/ -P '$db4_y' -M '$nb_db'; read x'
+    screen -S "LevelDB" -X screen -t "$dbn_y" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir$dbn_y'/ -P '$dbn_y' -M '$nb_db'; read x'
 
 
     # For Curve
     sleep 0.1
-    screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$dbC_y' -M '$nb_db'; read x'
+    screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$dbC1_y' -M '$nb_db'; read x'
+    sleep 0.1
+    screen -S "LevelDB" -X screen -t "$dbCn_y" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir$dbCn_y'/ -P '$dbCn_y' -M '$nb_db'; read x'
 }
 
 function launching_logs {
