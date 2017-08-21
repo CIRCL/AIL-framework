@@ -91,7 +91,7 @@ function update_values() {
         return all_res;
     }
 
-    var updateInterval = 10000;
+    var updateInterval = 30*1000; //30s = 30*1000ms
     var options_processed_pastes = {
         series: {   shadowSize: 0 ,
                     lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }}
