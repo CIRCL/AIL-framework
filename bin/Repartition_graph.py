@@ -4,6 +4,7 @@
 import redis
 import argparse
 import ConfigParser
+from datetime import datetime
 from pubsublogger import publisher
 
 import matplotlib.pyplot as plt
@@ -28,9 +29,11 @@ def main():
     args = parser.parse_args()
 
     # REDIS #
+    # port generated automatically depending on the date
+    curYear = datetime.now().year
     r_serv = redis.StrictRedis(
         host=cfg.get("Redis_Level_DB_Hashs", "host"),
-        port=cfg.getint("Redis_Level_DB_Hashs", "port"),
+        port=curYear,
         db=cfg.getint("Redis_Level_DB_Hashs", "db"))
 
     # LOGGING #

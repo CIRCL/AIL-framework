@@ -66,7 +66,6 @@ function launching_redis {
 
 function launching_lvldb {
     #Want to launch more level_db?
-    #FIXME update the date in config.cfg
     lvdbhost='127.0.0.1'
     lvdbdir="${AIL_HOME}/LEVEL_DB_DATA/"
     db1_y='2016'

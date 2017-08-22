@@ -28,9 +28,11 @@ if __name__ == "__main__":
 
     p = Process(config_section)
 
+    # port generated automatically depending on the date
+    curYear = datetime.now().year
     server = redis.StrictRedis(
                 host=p.config.get("Redis_Level_DB", "host"),
-                port=p.config.get("Redis_Level_DB", "port"),
+                port=curYear,
                 db=p.config.get("Redis_Level_DB", "db"))
 
     # FUNCTIONS #

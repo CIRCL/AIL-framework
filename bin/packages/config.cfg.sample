@@ -104,7 +104,6 @@ db = 5
 
 [Redis_Level_DB]
 host = localhost
-port = 2016
 db = 0
 
 [Redis_Level_DB_Trending]
@@ -114,7 +113,6 @@ db = 3
 
 [Redis_Level_DB_Hashs]
 host = localhost
-port = 2016
 db = 1
 
 [Url]
