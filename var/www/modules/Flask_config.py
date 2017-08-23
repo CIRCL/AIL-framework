@@ -38,11 +38,6 @@ r_serv_charts = redis.StrictRedis(
     port=cfg.getint("Redis_Level_DB_Trending", "port"),
     db=cfg.getint("Redis_Level_DB_Trending", "db"))
 
-r_serv_db = redis.StrictRedis(
-    host=cfg.get("Redis_Level_DB", "host"),
-    port=cfg.getint("Redis_Level_DB", "port"),
-    db=cfg.getint("Redis_Level_DB", "db"))
-
 r_serv_sentiment = redis.StrictRedis(
         host=cfg.get("Redis_Level_DB_Sentiment", "host"),
         port=cfg.getint("Redis_Level_DB_Sentiment", "port"),
