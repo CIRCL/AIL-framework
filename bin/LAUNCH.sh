@@ -189,11 +189,11 @@ function launching_scripts {
 helptext;
 
 ############### TESTS ###################
-isredis=`screen -ls | awk '/\.Redis\t/ {print strtonum($1)}'`
-islvldb=`screen -ls | awk '/\.LevelDB\t/ {print strtonum($1)}'`
-islogged=`screen -ls | awk '/\.Logging\t/ {print strtonum($1)}'`
-isqueued=`screen -ls | awk '/\.Queue\t/ {print strtonum($1)}'`
-isscripted=`screen -ls | awk '/\.Script\t/ {print strtonum($1)}'`
+isredis=`screen -ls | egrep '[0-9]+.Redis' | cut -d. -f1`
+islvldb=`screen -ls | egrep '[0-9]+.LevelDB' | cut -d. -f1`
+islogged=`screen -ls | egrep '[0-9]+.Logging' | cut -d. -f1`
+isqueued=`screen -ls | egrep '[0-9]+.Queue' | cut -d. -f1`
+isscripted=`screen -ls | egrep '[0-9]+.Script' | cut -d. -f1`
 
 options=("Redis" "LevelDB" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config")
 

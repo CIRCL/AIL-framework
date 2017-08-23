@@ -20,6 +20,7 @@ var/www/static/
 !var/www/static/js/moduleTrending.js
 !var/www/static/js/plot-graph.js
 !var/www/static/js/trendingchart.js
+var/www/templates/header.html # auto-generated
 
 # Local config
 bin/packages/config.cfg
@@ -27,3 +28,4 @@ bin/packages/config.cfg
 # installed files
 nltk_data/
 doc/all_modules.txt
+doc/module-data-flow.png # auto-generated

@@ -120,6 +120,10 @@ $("#myTable_"+moduleName).attr('data-numElem', "{{ all_path|length }}");
 
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
+    $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
+        //get_html_and_update_modal(event);
+        get_html_and_update_modal(event, $(this));
+    });
 
     search_table = $('#myTable_'+moduleName).DataTable({ "order": [[ 2, "desc" ]] });
 
@@ -182,6 +186,50 @@ $(document).ready(function(){
        $("#load-more-button").hide();
    }
 
+   function get_html_and_update_modal(event, truemodal) {
+       event.preventDefault();
+
+       var modal=truemodal;
+       var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + modal.attr('data-path') + "&num=" + modal.attr('data-num');
+       last_clicked_paste =  modal.attr('data-num');
+       $.get(url, function (data) {
+       
+           // verify that the reveived data is really the current clicked paste. Otherwise, ignore it. 
+           var received_num = parseInt(data.split("|num|")[1]);
+           if (received_num == last_clicked_paste && can_change_modal_content) {
+               can_change_modal_content = false;
+       
+               // clear data by removing html, body, head tags. prevent dark modal background stack bug.
+               var cleared_data = data.split("<body>")[1].split("</body>")[0];
+               $("#mymodalbody").html(cleared_data);
+       
+               var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
+               button.tooltip();
+               $("#mymodalbody").children(".panel-default").append(button);
+       
+               $("#button_show_path").attr('href', $(modal).attr('data-url'));
+               $("#button_show_path").show('fast');
+               $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
+               if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
+                   nothing_to_display();
+               }
+               // On click, donwload all paste's content
+               $("#load-more-button").on("click", function (event) {
+                   if (complete_paste == null) { //Donwload only once
+                       $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                           complete_paste = data;
+                           update_preview();
+                       });
+                   } else {
+                       update_preview();
+                   }
+               });
+           } else if (can_change_modal_content) {
+               $("#mymodalbody").html("Ignoring previous not finished query of paste #" + received_num);
+           }
+       });
+   }
+
 
    // Use to bind the button with the new displayed data
    // (The bind do not happens if the dataTable is in tabs and the clicked data is in another page)
@@ -191,46 +239,7 @@ $(document).ready(function(){
        $('[data-toggle="tooltip"]').tooltip();
        // On click, get html content from url and update the corresponding modal
        $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
-           event.preventDefault();
-           var modal=$(this);
-           var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
-           last_clicked_paste =  $(this).attr('data-num');
-           $.get(url, function (data) {
-
-               // verify that the reveived data is really the current clicked paste. Otherwise, ignore it. 
-               var received_num = parseInt(data.split("|num|")[1]);
-               if (received_num == last_clicked_paste && can_change_modal_content) {
-                   can_change_modal_content = false;
-
-                   // clear data by removing html, body, head tags. prevent dark modal background stack bug.
-                   var cleared_data = data.split("<body>")[1].split("</body>")[0];
-                   $("#mymodalbody").html(cleared_data);
-
-                   var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
-                   button.tooltip();
-                   $("#mymodalbody").children(".panel-default").append(button);
-       
-                   $("#button_show_path").attr('href', $(modal).attr('data-url'));
-                   $("#button_show_path").show('fast');
-                   $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
-                   if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
-                       nothing_to_display();
-                   }
-                   // On click, donwload all paste's content
-                   $("#load-more-button").on("click", function (event) {
-                       if (complete_paste == null) { //Donwload only once
-                           $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
-                               complete_paste = data;
-                               update_preview();
-                           });
-                       } else {
-                           update_preview();
-                       }
-                   });
-               } else if (can_change_modal_content) {
-                   $("#mymodalbody").html("Ignoring previous not finished query of paste #" + received_num);
-               }
-           });
+           get_html_and_update_modal(event, $(this));
        });
    } );
 
