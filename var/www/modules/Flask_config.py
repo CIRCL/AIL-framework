@@ -7,7 +7,6 @@
 import ConfigParser
 import redis
 import os
-from datetime import datetime
 
 # FLASK #
 app = None
