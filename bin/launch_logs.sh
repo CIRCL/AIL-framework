@@ -3,6 +3,10 @@
 set -e
 set -x
 
+[ -z "$AIL_HOME" ] && echo "Needs the env var AIL_HOME. Run the script from the virtual environment." && exit 1;
+[ -z "$AIL_REDIS" ] && echo "Needs the env var AIL_REDIS. Run the script from the virtual environment." && exit 1;
+[ -z "$AIL_LEVELDB" ] && echo "Needs the env var AIL_LEVELDB. Run the script from the virtual environment." && exit 1;
+
 screen -dmS "Logging"
 sleep 0.1
 echo -e $GREEN"\t* Launching logging process"$DEFAULT
