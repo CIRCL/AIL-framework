@@ -25,12 +25,13 @@ def main():
     parser.add_argument('-f', type=str, metavar="filename", default="figure",
                         help='The absolute path name of the "figure.png"',
                         action='store')
+    parser.add_argument('-y', '--year', type=int, required=False, default=None, help='The date related to the DB')
 
     args = parser.parse_args()
 
     # REDIS #
     # port generated automatically depending on the date
-    curYear = datetime.now().year
+    curYear = datetime.now().year if args.year is None else args.year
     r_serv = redis.StrictRedis(
         host=cfg.get("Redis_Level_DB_Hashs", "host"),
         port=curYear,

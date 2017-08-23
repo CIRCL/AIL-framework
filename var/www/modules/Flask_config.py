@@ -7,9 +7,11 @@
 import ConfigParser
 import redis
 import os
+from datetime import datetime
 
 # FLASK #
 app = None
+curYear = None #can be set to fit the needs, Correspond to the level-DB year to be used
 
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -38,9 +40,11 @@ r_serv_charts = redis.StrictRedis(
     port=cfg.getint("Redis_Level_DB_Trending", "port"),
     db=cfg.getint("Redis_Level_DB_Trending", "db"))
 
+# port generated automatically depending on the date
+curYear = datetime.now().year if curYear is None else curYear
 r_serv_db = redis.StrictRedis(
     host=cfg.get("Redis_Level_DB", "host"),
-    port=cfg.getint("Redis_Level_DB", "port"),
+    port=curYear,
     db=cfg.getint("Redis_Level_DB", "db"))
 
 r_serv_sentiment = redis.StrictRedis(
