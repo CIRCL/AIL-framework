@@ -119,7 +119,7 @@ if __name__ == "__main__":
                     indexname = str(timestamp)
                     #update all_index
                     with open(indexRegister_path, "a") as f:
-                        f.write('/n'+str(timestamp)+)
+                        f.write('/n'+str(timestamp))
                     #create new dir
                     os.mkdir(indexpath)
                     ix = create_in(indexpath, schema)
