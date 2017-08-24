@@ -65,33 +65,26 @@ function launching_redis {
 }
 
 function launching_lvldb {
-    #Want to launch more level_db?
     lvdbhost='127.0.0.1'
     lvdbdir="${AIL_HOME}/LEVEL_DB_DATA/"
-    db1_y='2013'
-    db2_y='2014'
-    db3_y='2016'
-    db4_y='2017'
-
-    dbC_y='3016'
     nb_db=13
+
+    db_y=`date +%Y`
+    #Verify that a dir with the correct year exists, create it otherwise
+    if [ ! -d "$lvdbdir$db_y" ]; then
+        mkdir -p "$db_y"
+    fi
 
     screen -dmS "LevelDB"
     sleep 0.1
     echo -e $GREEN"\t* Launching Levels DB servers"$DEFAULT
-    #Add lines here with appropriates options.
-    screen -S "LevelDB" -X screen -t "2013" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2013/ -P '$db1_y' -M '$nb_db'; read x'
-    sleep 0.1
-    screen -S "LevelDB" -X screen -t "2014" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2014/ -P '$db2_y' -M '$nb_db'; read x'
-    sleep 0.1
-    screen -S "LevelDB" -X screen -t "2016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2016/ -P '$db3_y' -M '$nb_db'; read x'
-    sleep 0.1
-    screen -S "LevelDB" -X screen -t "2017" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'2017/ -P '$db4_y' -M '$nb_db'; read x'
 
-
-    # For Curve
-    sleep 0.1
-    screen -S "LevelDB" -X screen -t "3016" bash -c 'redis-leveldb -H '$lvdbhost' -D '$lvdbdir'3016/ -P '$dbC_y' -M '$nb_db'; read x'
+    #Launch a DB for each dir
+    for pathDir in $lvdbdir*/ ; do
+        yDir=$(basename "$pathDir")
+        sleep 0.1
+        screen -S "LevelDB" -X screen -t "$yDir" bash -c 'redis-leveldb -H '$lvdbhost' -D '$pathDir'/ -P '$yDir' -M '$nb_db'; read x'
+    done
 }
 
 function launching_logs {
@@ -255,6 +248,7 @@ for i in ${!options[@]}; do
             Killall)
                 if [[ $isredis || $islvldb || $islogged || $isqueued || $isscripted ]]; then
                     kill $isredis $islvldb $islogged $isqueued $isscripted
+                    sleep 0.2
                     echo -e $ROSE`screen -ls`$DEFAULT
                     echo -e $GREEN"\t* $isredis $islvldb $islogged $isqueued $isscripted killed."$DEFAULT
                 else

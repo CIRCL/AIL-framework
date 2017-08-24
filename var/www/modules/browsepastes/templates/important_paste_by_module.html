@@ -45,7 +45,7 @@ function deploy_source() {
     if(typeof(EventSource) !== "undefined" && typeof(source) !== "") {
         $("#load_more_json_button1").show();
         $("#load_more_json_button2").show();
-        var source = new EventSource("{{ url_for('browsepastes.getImportantPasteByModule') }}"+"?moduleName="+moduleName);
+        var source = new EventSource("{{ url_for('browsepastes.getImportantPasteByModule') }}"+"?moduleName="+moduleName+"&year="+currentSelectYear);
         source.onmessage = function(event) {
             var feed = jQuery.parseJSON( event.data );
             curr_numElem = parseInt($("#myTable_"+moduleName).attr('data-numElem'));
@@ -113,6 +113,7 @@ function add_entries_X(to_add) {
 
 <script>
 var moduleName = "{{ moduleName }}";
+var currentSelectYear = "{{ year }}";
 var search_table;
 var last_clicked_paste;
 var can_change_modal_content = true;
