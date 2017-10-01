@@ -7,15 +7,17 @@ RUN mkdir /opt/AIL && apt-get update -y \
 # Adding sudo command
 RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
 RUN echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-#RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-#USER docker
+# Installing AIL dependencies
 ADD . /opt/AIL
 WORKDIR /opt/AIL
 RUN ./installing_deps.sh 
+WORKDIR /opt/AIL
+
+# Installing Web dependencies,
+# remove all the parts below if you dont need the Web UI
 WORKDIR /opt/AIL/var/www
 RUN ./update_thirdparty.sh
-
 WORKDIR /opt/AIL
 
 CMD bash docker_start.sh

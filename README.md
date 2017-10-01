@@ -60,18 +60,18 @@ apt-get install -y curl
 curl https://get.docker.com | /bin/bash
 ```
 
-2. Type these commands to build the Docker image
+2. Type these commands to build the Docker image:
 ```
 git clone https://github.com/CIRCL/ail-framework
 cd AIL-framework
 docker build -t ail-framework
 ```
-3. To start AIL on port 7000, type the following command below.
+3. To start AIL on port 7000, type the following command below:
 ```
 docker run -p 7000:7000 ail-framework
 ```
 
-To debug the running container, type the following command and note the container name or identifier
+4. To debug the running container, type the following command and note the container name or identifier:
 ```
 docker ps
 ```
@@ -81,6 +81,7 @@ After getting the name or identifier type the following commands:
 docker exec -it CONTAINER_NAME_OR_IDENTIFIER bash
 cd /opt/ail
 ```
+
 
 Starting AIL web interface
 --------------------------
