@@ -37,84 +37,82 @@ function update_values() {
 
 // Plot and update the number of processed pastes
 // BEGIN PROCESSED PASTES
-    var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
-    var totalPoints = 2*parseInt(default_minute); //60s*minute
-    var curr_max = {"global": 0};
+var default_minute = (typeof window.default_minute !== "undefined") ? parseInt(window.default_minute) : 10;
+var totalPoints = 2*parseInt(default_minute); //60s*minute
+var curr_max = {"global": 0};
 
-    function fetch_data(dataset, curr_data, feeder_name) {
-        if (curr_data.length > 0){
-            var data_old = curr_data[0];
-            curr_data = curr_data.slice(1);
-            curr_max[dataset] = curr_max[dataset] == data_old ? Math.max.apply(null, curr_data) : curr_max[dataset];
-        }
-        
-        while (curr_data.length < totalPoints) {
-            var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
-            curr_max[dataset] = y > curr_max[dataset] ? y : curr_max[dataset];
-            curr_data.push(y);
-        }
-        // Zip the generated y values with the x values
-        var res = [];
-        for (var i = 0; i < curr_data.length; ++i) {
-            res.push([i, curr_data[i]])
-        } 
-        data_for_processed_paste[dataset] = curr_data;
-        return { label: feeder_name, data: res };
+function fetch_data(dataset, curr_data, feeder_name) {
+    if (curr_data.length > 0){
+        var data_old = curr_data[0];
+        curr_data = curr_data.slice(1);
+        curr_max[dataset] = curr_max[dataset] == data_old ? Math.max.apply(null, curr_data) : curr_max[dataset];
     }
 
-    function getData(dataset_group, graph_type) {
-        var curr_data;
- 
-        var all_res = [];
-        if (dataset_group == "global") {
-            if (data_for_processed_paste["global"] ===  undefined) { // create feeder dataset if not exists yet
-                data_for_processed_paste["global"] = [];
-            }
-            curr_data = data_for_processed_paste["global"];
-            all_res.push(fetch_data("global", curr_data, "global"));
-        } else {   
+    while (curr_data.length < totalPoints) {
+        var y = (typeof window.paste_num_tabvar_all[dataset] !== "undefined") ? parseInt(window.paste_num_tabvar_all[dataset]) : 0;
+        curr_max[dataset] = y > curr_max[dataset] ? y : curr_max[dataset];
+        curr_data.push(y);
+    }
+    // Zip the generated y values with the x values
+    var res = [];
+    for (var i = 0; i < curr_data.length; ++i) {
+        res.push([i, curr_data[i]])
+    }
+    data_for_processed_paste[dataset] = curr_data;
+    return { label: feeder_name, data: res };
+}
 
-            for(d_i in list_feeder) {
-                if(list_feeder[d_i] == "global") {
-                    continue;
-                }
+function getData(dataset_group, graph_type) {
+    var curr_data;
 
-                dataset = graph_type+list_feeder[d_i];
-                if (data_for_processed_paste[dataset] ===  undefined) { // create feeder dataset if not exists yet
-                    data_for_processed_paste[dataset] = [];
-                }
-                curr_data = data_for_processed_paste[dataset];
-                all_res.push(fetch_data(dataset, curr_data, list_feeder[d_i]));
+    var all_res = [];
+    if (dataset_group == "global") {
+        if (data_for_processed_paste["global"] ===  undefined) { // create feeder dataset if not exists yet
+            data_for_processed_paste["global"] = [];
+        }
+        curr_data = data_for_processed_paste["global"];
+        all_res.push(fetch_data("global", curr_data, "global"));
+    } else {
+        for(d_i in list_feeder) {
+            if(list_feeder[d_i] == "global") {
+                continue;
             }
 
+            dataset = graph_type+list_feeder[d_i];
+            if (data_for_processed_paste[dataset] ===  undefined) { // create feeder dataset if not exists yet
+                data_for_processed_paste[dataset] = [];
+            }
+            curr_data = data_for_processed_paste[dataset];
+            all_res.push(fetch_data(dataset, curr_data, list_feeder[d_i]));
         }
-        return all_res;
     }
+    return all_res;
+}
 
-    var updateInterval = 30*1000; //30s = 30*1000ms
-    var options_processed_pastes = {
-        series: {   shadowSize: 0 ,
-                    lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }}
-                },
-        yaxis: { min: 0, max: 40 },
-        xaxis: { ticks: [[0, 0], [2, 1], [4, 2], [6, 3], [8, 4], [10, 5], [12, 6], [14, 7], [16, 8], [18, 9], [20, 10]] },
-        grid: {
-            tickColor: "#dddddd",
-            borderWidth: 0 
-        },
-        legend: {
-            show: true,
-            position: "nw",
-        }
-    };
-
-    function update_processed_pastes(graph, dataset, graph_type) {
-        graph.setData(getData(dataset, graph_type));
-        graph.getOptions().yaxes[0].max = curr_max[dataset];
-        graph.setupGrid();
-        graph.draw();
-        setTimeout(function(){ update_processed_pastes(graph, dataset, graph_type); }, updateInterval);
+var updateInterval = 30*1000; //30s = 30*1000ms
+var options_processed_pastes = {
+    series: {   shadowSize: 0 ,
+                lines: { fill: true, fillColor: { colors: [ { opacity: 1 }, { opacity: 0.1 } ] }}
+            },
+    yaxis: { min: 0, max: 40 },
+    xaxis: { ticks: [[0, 0], [2, 1], [4, 2], [6, 3], [8, 4], [10, 5], [12, 6], [14, 7], [16, 8], [18, 9], [20, 10]] },
+    grid: {
+        tickColor: "#dddddd",
+        borderWidth: 0
+    },
+    legend: {
+        show: true,
+        position: "nw",
     }
+};
+
+function update_processed_pastes(graph, dataset, graph_type) {
+    graph.setData(getData(dataset, graph_type));
+    graph.getOptions().yaxes[0].max = curr_max[dataset];
+    graph.setupGrid();
+    graph.draw();
+    setTimeout(function(){ update_processed_pastes(graph, dataset, graph_type); }, updateInterval);
+}
 
 
 // END PROCESSED PASTES    
