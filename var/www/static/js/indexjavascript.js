@@ -1,5 +1,5 @@
 var time_since_last_pastes_num = {};
-var data_for_processed_paste = {  };
+var data_for_processed_paste = {};
 var list_feeder = [];
 window.paste_num_tabvar_all = {};
 
@@ -22,17 +22,17 @@ function checkIfReceivedData(){
 
 
 function initfunc( csvay, scroot) {
-  window.csv = csvay;
-  window.scroot = scroot;
+    window.csv = csvay;
+    window.scroot = scroot;
 };
 
 function update_values() {
-  $SCRIPT_ROOT = window.scroot ;
+    $SCRIPT_ROOT = window.scroot ;
     $.getJSON($SCRIPT_ROOT+"/_stuff",
         function(data) {
             window.glob_tabvar = data;
-        });
-    };
+    });
+}
 
 
 // Plot and update the number of processed pastes
@@ -43,9 +43,9 @@ function update_values() {
 
     function fetch_data(dataset, curr_data, feeder_name) {
         if (curr_data.length > 0){
-             var data_old = curr_data[0];
-             curr_data = curr_data.slice(1);
-             curr_max[dataset] = curr_max[dataset] == data_old ? Math.max.apply(null, curr_data) : curr_max[dataset];
+            var data_old = curr_data[0];
+            curr_data = curr_data.slice(1);
+            curr_max[dataset] = curr_max[dataset] == data_old ? Math.max.apply(null, curr_data) : curr_max[dataset];
         }
         
         while (curr_data.length < totalPoints) {
@@ -124,14 +124,6 @@ function initfunc( csvay, scroot) {
   window.scroot = scroot;
 };
 
-function update_values() {
-  $SCRIPT_ROOT = window.scroot ;
-    $.getJSON($SCRIPT_ROOT+"/_stuff",
-        function(data) {
-            window.glob_tabvar = data;
-        });
-    };
-
 var source = new EventSource('/_logs');
 
 source.onmessage = function(event) {
@@ -139,9 +131,8 @@ source.onmessage = function(event) {
     create_log_table(feed);
 };
 
-function pad_2(number)
-{
-     return (number < 10 ? '0' : '') + number;
+function pad_2(number) {
+    return (number < 10 ? '0' : '') + number;
 }
 
 function create_log_table(obj_json) {
@@ -187,7 +178,6 @@ function create_log_table(obj_json) {
            window.paste_num_tabvar_all["global"] = paste_processed;
            time_since_last_pastes_num["global"] = new Date().getTime();
         } else {
-
             if (list_feeder.indexOf(feeder) == -1) {
                 list_feeder.push(feeder);
                 data_for_processed_paste["Proc"+feeder] = Array(totalPoints+1).join(0).split('');
@@ -282,7 +272,7 @@ function create_log_table(obj_json) {
     };
 
     var sel = document.getElementById("log_select")
-    if (tableBody.rows.length > sel.options[sel.options.selectedIndex].value){
+    if (tableBody.rows.length > sel.options[sel.options.selectedIndex].value) {
         while (tableBody.rows.length != sel.options[sel.options.selectedIndex].value){
             tableBody.deleteRow(0);
         }

@@ -35,7 +35,7 @@ Installation
 ------------
 
 Type these command lines for a fully automated installation and start AIL framework
-```
+```bash
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
 ./installing_deps.sh
@@ -54,14 +54,14 @@ There is also a [Travis file](.travis.yml) used for automating the installation 
 Docker Quick Start (Ubuntu 16.04 LTS)
 ------------
 1. Install Docker
-```
+```bash
 sudo su
 apt-get install -y curl
 curl https://get.docker.com | /bin/bash
 ```
 
 2. Type these commands to build the Docker image:
-```
+```bash
 git clone https://github.com/CIRCL/ail-framework
 cd AIL-framework
 docker build -t ail-framework .
@@ -72,12 +72,12 @@ docker run -p 7000:7000 ail-framework
 ```
 
 4. To debug the running container, type the following command and note the container name or identifier:
-```
+```bash
 docker ps
 ```
 
 After getting the name or identifier type the following commands:
-```
+```bash
 docker exec -it CONTAINER_NAME_OR_IDENTIFIER bash
 cd /opt/ail
 ```
@@ -88,7 +88,7 @@ Starting AIL web interface
 
 To start the web interface, you first need to fetch the required Javascript/CSS files:
 
-```
+```bash
 cd $AILENV
 cd var/www/
 bash update_thirdparty.sh
@@ -96,7 +96,7 @@ bash update_thirdparty.sh
 
 and then you can start the web interface python script:
 
-```
+```bash
 cd $AILENV
 cd var/www/
 Flask_server.py
@@ -104,7 +104,9 @@ Flask_server.py
 
 Eventually you can browse the status of the AIL framework website at the following URL:
 
-        ``http://localhost:7000/``
+```
+http://localhost:7000/
+```
 
 HOWTO
 -----
