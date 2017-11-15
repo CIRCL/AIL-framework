@@ -53,6 +53,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--port', type=int, default=5556, help='Zero MQ port')
     parser.add_argument('-c', '--channel', type=str, default='102', help='Zero MQ channel')
     parser.add_argument('-n', '--name', type=str, default='import_dir', help='Name of the feeder')
+    parser.add_argument('-s', '--seconds', type=float, default=0.2, help='Second between pastes')
     parser.add_argument('--hierarchy', type=int, default=1, help='Number of parent directory forming the name')
 
     args = parser.parse_args()
@@ -90,4 +91,4 @@ if __name__ == "__main__":
             print(args.name+'>'+wanted_path)
             path_to_send = args.name + '>' + wanted_path
             socket.send('{} {} {}'.format(args.channel, path_to_send, base64.b64encode(messagedata)))
-            time.sleep(.2)
+            time.sleep(args.seconds)
