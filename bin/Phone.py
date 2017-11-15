@@ -33,7 +33,7 @@ def search_phone(message):
         print results
         publisher.warning('{} contains PID (phone numbers)'.format(paste.p_name))
         #send to Browse_warning_paste
-        p.populate_set_out('phone;{}'.format(message), 'BrowseWarningPaste')
+        p.populate_set_out('phone;{}'.format(message), 'alertHandler')
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
         stats = {}

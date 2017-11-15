@@ -170,7 +170,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "BrowseWarningPaste" bash -c './BrowseWarningPaste.py; read x'
+    screen -S "Script" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
     sleep 0.1
     screen -S "Script" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
 

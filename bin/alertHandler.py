@@ -24,7 +24,7 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'BrowseWarningPaste'
+    config_section = 'alertHandler'
 
     p = Process(config_section)
 
@@ -48,12 +48,10 @@ if __name__ == "__main__":
                 time.sleep(10)
                 continue
 
-            # Add in redis
+            # Add in redis for browseWarningPaste
             # Format in set: WARNING_moduleName -> p_path
             key = "WARNING_" + module_name
-            print key + ' -> ' + p_path
             server.sadd(key, p_path)
 
-            publisher.info('Saved in warning paste {}'.format(p_path))
-            #print 'Saved in warning paste {}'.format(p_path)
+            publisher.info('Saved warning paste {}'.format(p_path))
 

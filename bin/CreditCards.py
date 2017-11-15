@@ -79,7 +79,7 @@ if __name__ == "__main__":
                     #Send to duplicate
                     p.populate_set_out(filename, 'Duplicate')
                     #send to Browse_warning_paste
-                    p.populate_set_out('creditcard;{}'.format(filename), 'BrowseWarningPaste')
+                    p.populate_set_out('creditcard;{}'.format(filename), 'alertHandler')
                 else:
                     publisher.info('{}CreditCard related;{}'.format(to_print, paste.p_path))
         else:

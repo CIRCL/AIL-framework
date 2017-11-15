@@ -32,7 +32,7 @@ def search_cve(message):
         publisher.warning('{} contains CVEs'.format(paste.p_name))
 
         #send to Browse_warning_paste
-        p.populate_set_out('cve;{}'.format(filepath), 'BrowseWarningPaste')
+        p.populate_set_out('cve;{}'.format(filepath), 'alertHandler')
         #Send to duplicate
         p.populate_set_out(filepath, 'Duplicate')
 
