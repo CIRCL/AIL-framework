@@ -22,7 +22,9 @@ from Helper import Process
 
 from pymisp import PyMISP
 import ailleakObject
-from ../mispKEYS import misp_url, misp_key, misp_verifycert
+import sys
+sys.path.append('../')
+from mispKEYS import misp_url, misp_key, misp_verifycert
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -69,9 +71,9 @@ if __name__ == "__main__":
 
             # Publish object to MISP
             try:
-                    templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == mispTYPE
-                except IndexError:
-                    valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
-                    print ("Template for type %s not found! Valid types are: %s" % (mispTYPE, valid_types))
-            continue
+                templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == mispTYPE][0]
+            except IndexError:
+                valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
+                print ("Template for type %s not found! Valid types are: %s" % (mispTYPE, valid_types))
+                continue
             #r = pymisp.add_object(eventID, templateID, misp_object)
