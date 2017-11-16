@@ -50,18 +50,18 @@ function helptext {
 function launching_redis {
     conf_dir="${AIL_HOME}/configs/"
 
-    screen -dmS "Redis"
+    screen -dmS "Redis_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching Redis servers"$DEFAULT
-    screen -S "Redis" -X screen -t "6379" bash -c 'redis-server '$conf_dir'6379.conf ; read x'
+    screen -S "Redis_AIL" -X screen -t "6379" bash -c 'redis-server '$conf_dir'6379.conf ; read x'
     sleep 0.1
-    screen -S "Redis" -X screen -t "6380" bash -c 'redis-server '$conf_dir'6380.conf ; read x'
+    screen -S "Redis_AIL" -X screen -t "6380" bash -c 'redis-server '$conf_dir'6380.conf ; read x'
     sleep 0.1
-    screen -S "Redis" -X screen -t "6381" bash -c 'redis-server '$conf_dir'6381.conf ; read x'
+    screen -S "Redis_AIL" -X screen -t "6381" bash -c 'redis-server '$conf_dir'6381.conf ; read x'
 
     # For Words and curves
     sleep 0.1
-    screen -S "Redis" -X screen -t "6382" bash -c 'redis-server '$conf_dir'6382.conf ; read x'
+    screen -S "Redis_AIL" -X screen -t "6382" bash -c 'redis-server '$conf_dir'6382.conf ; read x'
 }
 
 function launching_lvldb {
@@ -75,7 +75,7 @@ function launching_lvldb {
         mkdir -p "$db_y"
     fi
 
-    screen -dmS "LevelDB"
+    screen -dmS "LevelDB_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching Levels DB servers"$DEFAULT
 
@@ -83,25 +83,25 @@ function launching_lvldb {
     for pathDir in $lvdbdir*/ ; do
         yDir=$(basename "$pathDir")
         sleep 0.1
-        screen -S "LevelDB" -X screen -t "$yDir" bash -c 'redis-leveldb -H '$lvdbhost' -D '$pathDir'/ -P '$yDir' -M '$nb_db'; read x'
+        screen -S "LevelDB_AIL" -X screen -t "$yDir" bash -c 'redis-leveldb -H '$lvdbhost' -D '$pathDir'/ -P '$yDir' -M '$nb_db'; read x'
     done
 }
 
 function launching_logs {
-    screen -dmS "Logging"
+    screen -dmS "Logging_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching logging process"$DEFAULT
-    screen -S "Logging" -X screen -t "LogQueue" bash -c 'log_subscriber -p 6380 -c Queuing -l ../logs/; read x'
+    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c 'log_subscriber -p 6380 -c Queuing -l ../logs/; read x'
     sleep 0.1
-    screen -S "Logging" -X screen -t "LogScript" bash -c 'log_subscriber -p 6380 -c Script -l ../logs/; read x'
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c 'log_subscriber -p 6380 -c Script -l ../logs/; read x'
 }
 
 function launching_queues {
-    screen -dmS "Queue"
+    screen -dmS "Queue_AIL"
     sleep 0.1
 
     echo -e $GREEN"\t* Launching all the queues"$DEFAULT
-    screen -S "Queue" -X screen -t "Queues" bash -c './launch_queues.py; read x'
+    screen -S "Queue_AIL" -X screen -t "Queues" bash -c './launch_queues.py; read x'
 }
 
 function launching_scripts {
@@ -114,66 +114,106 @@ function launching_scripts {
     fi
     echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
 
-    screen -dmS "Script"
+    screen -dmS "Script_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
-    screen -S "Script" -X screen -t "ModuleInformation" bash -c './ModulesInformationV2.py -k 0 -c 1; read x'
+    screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c './ModulesInformationV2.py -k 0 -c 1; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Mixer" bash -c './Mixer.py; read x'
+    screen -S "Script_AIL" -X screen -t "Mixer" bash -c './Mixer.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Global" bash -c './Global.py; read x'
+    screen -S "Script_AIL" -X screen -t "Global" bash -c './Global.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
+    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Attributes" bash -c './Attributes.py; read x'
+    screen -S "Script_AIL" -X screen -t "Attributes" bash -c './Attributes.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Lines" bash -c './Lines.py; read x'
+    screen -S "Script_AIL" -X screen -t "Lines" bash -c './Lines.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
+    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Categ" bash -c './Categ.py; read x'
+    screen -S "Script_AIL" -X screen -t "Categ" bash -c './Categ.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
+    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "CreditCards" bash -c './CreditCards.py; read x'
+    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c './CreditCards.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Onion" bash -c './Onion.py; read x'
+    screen -S "Script_AIL" -X screen -t "Onion" bash -c './Onion.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Mail" bash -c './Mail.py; read x'
+    screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Web" bash -c './Web.py; read x'
+    screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Credential" bash -c './Credential.py; read x'
+    screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Curve" bash -c './Curve.py; read x'
+    screen -S "Script_AIL" -X screen -t "Curve" bash -c './Curve.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
+    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
+    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
+    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Indexer" bash -c './Indexer.py; read x'
+    screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Keys" bash -c './Keys.py; read x'
+    screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Phone" bash -c './Phone.py; read x'
+    screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Release" bash -c './Release.py; read x'
+    screen -S "Script_AIL" -X screen -t "Release" bash -c './Release.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "Cve" bash -c './Cve.py; read x'
+    screen -S "Script_AIL" -X screen -t "Cve" bash -c './Cve.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "WebStats" bash -c './WebStats.py; read x'
+    screen -S "Script_AIL" -X screen -t "WebStats" bash -c './WebStats.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
+    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
+    screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
+    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
     sleep 0.1
-    screen -S "Script" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
+    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
 
+}
+
+function shutting_down_redis {
+    redis_dir=${AIL_HOME}/redis/src/
+    bash -c $redis_dir'redis-cli -p 6379 SHUTDOWN'
+    sleep 0.1
+    bash -c $redis_dir'redis-cli -p 6380 SHUTDOWN'
+    sleep 0.1
+    bash -c $redis_dir'redis-cli -p 6381 SHUTDOWN'
+    sleep 0.1
+    bash -c $redis_dir'redis-cli -p 6382 SHUTDOWN'
+}
+
+function checking_redis {
+    flag_redis=0
+    redis_dir=${AIL_HOME}/redis/src/
+    bash -c $redis_dir'redis-cli -p 6379 PING | grep "PONG" &> /dev/null'
+    if [ ! $? == 0 ]; then
+       echo -e $RED"\t6379 not ready"$DEFAULT
+       flag_redis=1
+    fi
+    sleep 0.1
+    bash -c $redis_dir'redis-cli -p 6380 PING | grep "PONG" &> /dev/null'
+    if [ ! $? == 0 ]; then
+       echo -e $RED"\t6380 not ready"$DEFAULT
+       flag_redis=1
+    fi
+    sleep 0.1
+    bash -c $redis_dir'redis-cli -p 6381 PING | grep "PONG" &> /dev/null'
+    if [ ! $? == 0 ]; then
+       echo -e $RED"\t6381 not ready"$DEFAULT
+       flag_redis=1
+    fi
+    sleep 0.1
+    bash -c $redis_dir'redis-cli -p 6382 PING | grep "PONG" &> /dev/null'
+    if [ ! $? == 0 ]; then
+       echo -e $RED"\t6382 not ready"$DEFAULT
+       flag_redis=1
+    fi
+    return $flag_redis;
 }
 
 #If no params, display the help
@@ -182,11 +222,11 @@ function launching_scripts {
 helptext;
 
 ############### TESTS ###################
-isredis=`screen -ls | egrep '[0-9]+.Redis' | cut -d. -f1`
-islvldb=`screen -ls | egrep '[0-9]+.LevelDB' | cut -d. -f1`
-islogged=`screen -ls | egrep '[0-9]+.Logging' | cut -d. -f1`
-isqueued=`screen -ls | egrep '[0-9]+.Queue' | cut -d. -f1`
-isscripted=`screen -ls | egrep '[0-9]+.Script' | cut -d. -f1`
+isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
+islvldb=`screen -ls | egrep '[0-9]+.LevelDB_AIL' | cut -d. -f1`
+islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
+isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
+isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 
 options=("Redis" "LevelDB" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config")
 
@@ -240,13 +280,26 @@ for i in ${!options[@]}; do
                 ;;
             Scripts)
                 if [[ ! $isscripted ]]; then
-                    launching_scripts;
+                    if checking_redis; then
+                        launching_scripts;
+                    else
+                        echo -e $YELLOW"\tScript not started, waiting 3 secondes"$DEFAULT
+                        sleep 3
+                        if checking_redis; then
+                            launching_scripts;
+                        else
+                            echo -e $RED"\tScript not started"$DEFAULT
+                        fi;
+                    fi;
                 else
                     echo -e $RED"\t* A screen is already launched"$DEFAULT
                 fi
                 ;;
             Killall)
                 if [[ $isredis || $islvldb || $islogged || $isqueued || $isscripted ]]; then
+                    echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
+                    shutting_down_redis;
+                    echo -e $GREEN"Killing all"$DEFAULT
                     kill $isredis $islvldb $islogged $isqueued $isscripted
                     sleep 0.2
                     echo -e $ROSE`screen -ls`$DEFAULT
