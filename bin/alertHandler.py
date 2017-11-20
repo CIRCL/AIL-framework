@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -34,8 +34,8 @@ if __name__ == "__main__":
 
     p = Process(config_section)
     pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
-    eventID = "9356"
-    mispTYPE = 'ail-leak'
+    print('Connected to MISP:', misp_url)
+    wrapper = ailleakObject.ObjectWrapper(pymisp)
 
     # port generated automatically depending on the date
     curYear = datetime.now().year
@@ -50,6 +50,7 @@ if __name__ == "__main__":
     while True:
             message = p.get_from_set()
             if message is not None:
+                message = message.decode('utf8') #decode because of pyhton3
                 module_name, p_path = message.split(';')
                 #PST = Paste.Paste(p_path)
             else:
@@ -64,16 +65,10 @@ if __name__ == "__main__":
 
             publisher.info('Saved warning paste {}'.format(p_path))
 
-            # Create MISP AIL-leak object
-            misp_object = AilleakObject(moduleName, path)
-            print('validate mispobj', misp_object._validate())
-            print(misp_object)
-
-            # Publish object to MISP
-            try:
-                templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == mispTYPE][0]
-            except IndexError:
-                valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
-                print ("Template for type %s not found! Valid types are: %s" % (mispTYPE, valid_types))
-                continue
-            #r = pymisp.add_object(eventID, templateID, misp_object)
+            # Create MISP AIL-leak object and push it
+            allowed_modules = ['credential']
+            if module_name in allowed_modules:
+                wrapper.add_new_object(module_name, p_path)
+                wrapper.pushToMISP()
+            else:
+                print('not pushing to MISP:', module_name, p_path)
