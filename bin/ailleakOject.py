@@ -33,21 +33,9 @@ if __name__ == "__main__":
     from pymisp import PyMISP
 
     pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
-    eventID = "9356"
-    mispTYPE = 'ail-leak'
 
     moduleName = "Credentials"
     path = "/home/sami/git/AIL-framework/PASTES/archive/pastebin.com_pro/2017/08/23/bPFaJymf.gz"
 
-    misp_object = AilleakObject(moduleName, path)
-    print('validate mispobj', misp_object._validate())
-    print(misp_object)
-
-    # Publish object to MISP
-    try:
-        templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == mispTYPE][0]
-    except IndexError:
-        valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
-        print ("Template for type %s not found! Valid types are: %s" % (mispTYPE, valid_types))
-    print(templateID)
-    #r = pymisp.add_object(eventID, templateID, misp_object)
+    wrapper = objectWrapper(moduleName, path, pymisp)
+    wrapper.pushToMISP()

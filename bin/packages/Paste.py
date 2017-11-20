@@ -24,8 +24,17 @@ import operator
 import string
 import re
 import json
-import ConfigParser
-import cStringIO
+try: # dirty to support python3
+    import ConfigParser
+except:
+    import configparser
+    ConfigParser = configparser
+try: # dirty to support python3
+    import cStringIO
+except:
+    from io import StringIO as cStringIO
+import sys
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 from Date import Date
 from Hash import Hash
 
@@ -84,6 +93,7 @@ class Paste(object):
         var = self.p_path.split('/')
         self.p_date = Date(var[-4], var[-3], var[-2])
         self.p_source = var[-5]
+        self.supposed_url = 'https://{}/{}'.format(self.p_source.replace('_pro', ''), var[-1].split('.gz')[0])
 
         self.p_encoding = None
         self.p_hash_kind = {}

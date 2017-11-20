@@ -32,10 +32,10 @@ class Date(object):
         self.day = day
 	
     def substract_day(self, numDay):
-	import datetime
-	computed_date = datetime.date(int(self.year), int(self.month), int(self.day)) - datetime.timedelta(numDay)
-	comp_year = str(computed_date.year)
+        import datetime
+        computed_date = datetime.date(int(self.year), int(self.month), int(self.day)) - datetime.timedelta(numDay)
+        comp_year = str(computed_date.year)
         comp_month = str(computed_date.month).zfill(2)
         comp_day = str(computed_date.day).zfill(2)
-	return comp_year + comp_month + comp_day
+        return comp_year + comp_month + comp_day
 
