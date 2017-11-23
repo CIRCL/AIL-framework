@@ -2,58 +2,69 @@
 # -*-coding:UTF-8 -*
 
 from pymisp.tools.abstractgenerator import AbstractMISPObjectGenerator
+import configparser
 from packages import Paste
 import datetime
 import json
+from io import BytesIO
 
 class AilleakObject(AbstractMISPObjectGenerator):
-    def __init__(self, moduleName, p_source, p_date, p_content, p_duplicate):
+    def __init__(self, moduleName, p_source, p_date, p_content, p_duplicate, p_duplicate_number):
         super(AbstractMISPObjectGenerator, self).__init__('ail-leak')
-        self.moduleName = moduleName
-        self.p_source = p_source
-        self.p_date = p_date
-        self.p_content = p_content
-        self.p_duplicate = p_duplicate
+        self._moduleName = moduleName
+        self._p_source = p_source.split('/')[-5:]
+        self._p_source = '/'.join(self._p_source)[:-3] # -3 removes .gz
+        self._p_date = p_date
+        self._p_content = p_content.encode('utf8')
+        self._p_duplicate = p_duplicate
+        self._p_duplicate_number = p_duplicate_number
         self.generate_attributes()
 
     def generate_attributes(self):
-        self.add_attribute('type', value=self.moduleName)
-        self.add_attribute('origin', value=self.p_source)
-        self.add_attribute('last-seen', value=self.p_date)
-        self.add_attribute('duplicate-list', value=self.p_duplicate)
-        self.add_attribute('raw-data', value=self.p_content)
+        self.add_attribute('type', value=self._moduleName)
+        self.add_attribute('origin', value=self._p_source, type='text')
+        self.add_attribute('last-seen', value=self._p_date)
+        if self._p_duplicate_number > 0:
+            self.add_attribute('duplicate', value=self._p_duplicate, type='text')
+            self.add_attribute('duplicate_number', value=self._p_duplicate_number, type='counter')
+        self._pseudofile = BytesIO(self._p_content)
+        self.add_attribute('raw-data', value=self._p_source, data=self._pseudofile, type="attachment")
 
 class ObjectWrapper:
     def __init__(self, pymisp):
         self.pymisp = pymisp
         self.currentID_date = None
         self.eventID_to_push = self.get_daily_event_id()
+        cfg = configparser.ConfigParser()
+        cfg.read('./packages/config.cfg')
+        self.maxDuplicateToPushToMISP = cfg.getint("ailleakObject", "maxDuplicateToPushToMISP") 
 
     def add_new_object(self, moduleName, path):
         self.moduleName = moduleName
         self.path = path
         self.paste = Paste.Paste(path)
         self.p_date = self.date_to_str(self.paste.p_date)
-        self.p_source = self.paste.supposed_url
+        self.p_source = self.paste.p_path
         self.p_content = self.paste.get_p_content().decode('utf8')
         
         temp = self.paste._get_p_duplicate()
         try:
             temp = temp.decode('utf8')
         except AttributeError:
-            print('decode error')
+            pass
         #beautifier
         temp = json.loads(temp)
-        to_ret = []
-        for dup in temp:
+        self.p_duplicate_number = len(temp) if len(temp) >= 0 else 0
+        to_ret = ""
+        for dup in temp[:self.maxDuplicateToPushToMISP]:
             algo = dup[0]
             path = dup[1].split('/')[-5:]
+            path = '/'.join(path)[:-3] # -3 removes .gz
             perc = dup[2]
-            to_ret.append([path, algo, perc])
-        self.p_duplicate = str(to_ret)
-        
+            to_ret += "{}: {} [{}%]\n".format(path, algo, perc)
+        self.p_duplicate = to_ret
 
-        self.mispObject = AilleakObject(self.moduleName, self.p_source, self.p_date, self.p_content, self.p_duplicate)
+        self.mispObject = AilleakObject(self.moduleName, self.p_source, self.p_date, self.p_content, self.p_duplicate, self.p_duplicate_number)
 
         '''
         # duplicated
@@ -137,9 +148,10 @@ if __name__ == "__main__":
 
     pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
 
-    moduleName = "Credentials"
+    moduleName = "credentials"
     path = "/home/sami/git/AIL-framework/PASTES/archive/pastebin.com_pro/2017/08/23/bPFaJymf.gz"
 
-    wrapper = ObjectWrapper(moduleName, path, pymisp)
+    wrapper = ObjectWrapper(pymisp)
+    wrapper.add_new_object(moduleName, path)
     wrapper.pushToMISP()
 '''

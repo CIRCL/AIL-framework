@@ -66,7 +66,7 @@ if __name__ == "__main__":
             publisher.info('Saved warning paste {}'.format(p_path))
 
             # Create MISP AIL-leak object and push it
-            allowed_modules = ['credential']
+            allowed_modules = ['credential', 'phone', 'creditcards']
             if module_name in allowed_modules:
                 wrapper.add_new_object(module_name, p_path)
                 wrapper.pushToMISP()
