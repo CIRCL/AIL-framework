@@ -34,7 +34,7 @@ Features
 Installation
 ------------
 
-Type these command lines for a fully automated installation and start AIL framework
+Type these command lines for a fully automated installation and start AIL framework:
 ```bash
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
@@ -46,6 +46,7 @@ cd ~/AIL-framework/
 cd bin/
 ./LAUNCH.sh
 ```
+
 The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distributions. For Arch
 linux based distributions, you can replace it with [installing_deps_archlinux.sh](./installing_deps_archlinux.sh).
 
@@ -53,6 +54,7 @@ There is also a [Travis file](.travis.yml) used for automating the installation 
 
 Docker Quick Start (Ubuntu 16.04 LTS)
 ------------
+
 1. Install Docker
 ```bash
 sudo su
