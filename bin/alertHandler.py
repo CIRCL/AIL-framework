@@ -24,7 +24,12 @@ from pymisp import PyMISP
 import ailleakObject
 import sys
 sys.path.append('../')
-from mispKEYS import misp_url, misp_key, misp_verifycert
+try:
+    from mispKEYS import misp_url, misp_key, misp_verifycert
+    flag_misp = True
+except:
+    print('Misp keys not present')
+    flag_misp = False
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -33,9 +38,16 @@ if __name__ == "__main__":
     config_section = 'alertHandler'
 
     p = Process(config_section)
-    pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
-    print('Connected to MISP:', misp_url)
-    wrapper = ailleakObject.ObjectWrapper(pymisp)
+    if flag_misp:
+        try:
+            pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
+            print('Connected to MISP:', misp_url)
+        except:
+            flag_misp = False
+            print('Not connected to MISP')
+
+    if flag_misp:
+        wrapper = ailleakObject.ObjectWrapper(pymisp)
 
     # port generated automatically depending on the date
     curYear = datetime.now().year
@@ -66,9 +78,10 @@ if __name__ == "__main__":
             publisher.info('Saved warning paste {}'.format(p_path))
 
             # Create MISP AIL-leak object and push it
-            allowed_modules = ['credential', 'phone', 'creditcards']
-            if module_name in allowed_modules:
-                wrapper.add_new_object(module_name, p_path)
-                wrapper.pushToMISP()
-            else:
-                print('not pushing to MISP:', module_name, p_path)
+            if flag_misp:
+                allowed_modules = ['credential', 'phone', 'creditcards']
+                if module_name in allowed_modules:
+                    wrapper.add_new_object(module_name, p_path)
+                    wrapper.pushToMISP()
+                else:
+                    print('not pushing to MISP:', module_name, p_path)
