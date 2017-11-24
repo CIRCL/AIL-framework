@@ -7,7 +7,7 @@ AIL
 
 AIL framework - Framework for Analysis of Information Leaks
 
-AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine sensitive information.
+AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information.
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
 
@@ -26,10 +26,11 @@ Features
 * Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
 * A full-text indexer module to index unstructured information
 * Statistics on modules and web
-* Realtime modules manager in terminal
+* Real-time modules manager in terminal
 * Global sentiment analysis for each providers based on nltk vader module
 * Terms, Set of terms and Regex tracking and occurrence
 * Many more modules for extracting phone numbers, credentials and others
+* Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
 
 Installation
 ------------
@@ -88,7 +89,7 @@ cd /opt/ail
 Starting AIL web interface
 --------------------------
 
-To start the web interface, you first need to fetch the required Javascript/CSS files:
+To start the web interface, you first need to fetch the required JavaScript/CSS files:
 
 ```bash
 cd $AILENV
@@ -158,10 +159,10 @@ License
 
 ```
     Copyright (C) 2014 Jules Debra
-    Copyright (C) 2014-2016 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
-    Copyright (c) 2014-2016 Raphaël Vinot
-    Copyright (c) 2014-2016 Alexandre Dulaunoy
-    Copyright (c) 2016 Sami Mokaddem
+    Copyright (C) 2014-2017 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014-2017 Raphaël Vinot
+    Copyright (c) 2014-2017 Alexandre Dulaunoy
+    Copyright (c) 2016-2017 Sami Mokaddem
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
