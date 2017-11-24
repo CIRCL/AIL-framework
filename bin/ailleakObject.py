@@ -66,14 +66,6 @@ class ObjectWrapper:
 
         self.mispObject = AilleakObject(self.moduleName, self.p_source, self.p_date, self.p_content, self.p_duplicate, self.p_duplicate_number)
 
-        '''
-        # duplicated
-        duplicate_list = json.loads(paste._get_p_duplicate())
-        is_duplicate = True if len(duplicate_list) > 0 else False
-        self.add_attribute('duplicate', value=is_duplicate)
-        '''
-
-
     def date_to_str(self, date):
         return "{0}-{1}-{2}".format(date.year, date.month, date.day)
 
@@ -137,21 +129,3 @@ class ObjectWrapper:
             print(r)
         else:
             print('Pushed:', self.moduleName, '->', self.p_source)
-
-'''
-if __name__ == "__main__":
-
-    import sys
-    sys.path.append('../')
-    from mispKEYS import misp_url, misp_key, misp_verifycert
-    from pymisp import PyMISP
-
-    pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
-
-    moduleName = "credentials"
-    path = "/home/sami/git/AIL-framework/PASTES/archive/pastebin.com_pro/2017/08/23/bPFaJymf.gz"
-
-    wrapper = ObjectWrapper(pymisp)
-    wrapper.add_new_object(moduleName, path)
-    wrapper.pushToMISP()
-'''
