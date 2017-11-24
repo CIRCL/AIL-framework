@@ -130,6 +130,9 @@ register = indexdir/all_index.txt
 #size in Mb
 index_max_size = 2000
 
+[ailleakObject]
+maxDuplicateToPushToMISP=10
+
 ###############################################################################
 
 # For multiple feed, add them with "," without space

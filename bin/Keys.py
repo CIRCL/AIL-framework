@@ -26,7 +26,7 @@ def search_gpg(message):
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
         #send to Browse_warning_paste
-        p.populate_set_out('keys;{}'.format(message), 'BrowseWarningPaste')
+        p.populate_set_out('keys;{}'.format(message), 'alertHandler')
 
 
 if __name__ == '__main__':

@@ -99,8 +99,8 @@ if __name__ == "__main__":
             publisher.warning(to_print)
             #Send to duplicate
             p.populate_set_out(filepath, 'Duplicate')
-            #Send to BrowseWarningPaste
-            p.populate_set_out('credential;{}'.format(filepath), 'BrowseWarningPaste')
+            #Send to alertHandler
+            p.populate_set_out('credential;{}'.format(filepath), 'alertHandler')
             
             #Put in form, count occurences, then send to moduleStats
             creds_sites = {}

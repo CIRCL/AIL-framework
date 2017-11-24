@@ -11,6 +11,10 @@ sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python-numpy -y
 
+#pyMISP
+sudo apt-get -y install python3-pip
+sudo pip3 install pymisp
+
 # DNS deps
 sudo apt-get install libadns1 libadns1-dev -y
 

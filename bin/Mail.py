@@ -72,7 +72,7 @@ if __name__ == "__main__":
                         publisher.warning(to_print)
                         #Send to duplicate
                         p.populate_set_out(filename, 'Duplicate')
-                        p.populate_set_out('mail;{}'.format(filename), 'BrowseWarningPaste')
+                        p.populate_set_out('mail;{}'.format(filename), 'alertHandler')
                         
                     else:
                         publisher.info(to_print)

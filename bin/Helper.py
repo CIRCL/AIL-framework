@@ -12,7 +12,11 @@ the same Subscriber name in both of them.
 
 """
 import redis
-import ConfigParser
+try: # dirty to support python3
+    import ConfigParser
+except:
+    import configparser
+    ConfigParser = configparser
 import os
 import zmq
 import time
