@@ -239,12 +239,14 @@ menu() {
 }
 
 prompt="Check an option (again to uncheck, ENTER when done): "
-while menu && read -rp "$prompt" num && [[ "$num" ]]; do
-    [[ "$num" != *[![:digit:]]* ]] && (( num > 0 && num <= ${#options[@]} )) || {
-        msg="Invalid option: $num"; continue
-    }
-    ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
-    [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
+while menu && read -rp "$prompt" numinput && [[ "$numinput" ]]; do
+    for num in $numinput; do
+        [[ "$num" != *[![:digit:]]* ]] && (( num > 0 && num <= ${#options[@]} )) || {
+            msg="Invalid option: $num"; break
+        }
+        ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+        [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
+    done
 done
 
 for i in ${!options[@]}; do
