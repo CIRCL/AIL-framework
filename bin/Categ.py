@@ -52,6 +52,7 @@ if __name__ == "__main__":
     config_section = 'Categ'
 
     p = Process(config_section)
+    matchingThreshold = p.config.getint("Categ", "matchingThreshold")
 
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(description='Start Categ module on files.')
@@ -90,7 +91,7 @@ if __name__ == "__main__":
 
         for categ, pattern in tmp_dict.items():
             found = set(re.findall(pattern, content))
-            if len(found) > 0:
+            if len(found) >= matchingThreshold:
                 msg = '{} {}'.format(paste.p_path, len(found))
                 print msg, categ
                 p.populate_set_out(msg, categ)

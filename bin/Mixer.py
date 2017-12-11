@@ -20,7 +20,7 @@ Depending on the configuration, this module will process the feed as follow:
             - Else, do not process it but keep track for statistics on duplicate
 
     operation_mode 3: "Don't look if duplicate"
-        - SImply do not bother to check if it is a duplicate
+        - Simply do not bother to check if it is a duplicate
 
 Note that the hash of the content is defined as the sha1(gzip64encoded).
 
