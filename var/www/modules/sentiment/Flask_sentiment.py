@@ -109,11 +109,11 @@ def sentiment_analysis_plot_tool_getdata():
         query = query.split(',')
         Qdate = request.args.get('Qdate')
 
-        date1 = (Qdate.split('-')[0]).split('.')
-        date1 = datetime.date(int(date1[2]), int(date1[1]), int(date1[0]))
+        date1 = (Qdate.split('-')[0]).split('/')
+        date1 = datetime.date(int(date1[2]), int(date1[0]), int(date1[1]))
 
-        date2 = (Qdate.split('-')[1]).split('.')
-        date2 = datetime.date(int(date2[2]), int(date2[1]), int(date2[0]))
+        date2 = (Qdate.split('-')[1]).split('/')
+        date2 = datetime.date(int(date2[2]), int(date2[0]), int(date2[1]))
 
         timestamp1 = calendar.timegm(date1.timetuple())
         timestamp2 = calendar.timegm(date2.timetuple())
