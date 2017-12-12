@@ -34,7 +34,7 @@ minute_processed_paste = 10
 #Minimum number of match between the paste and the category file
 matchingThreshold=1
 
-[Credentials]
+[Credential]
 #Minimum length that a credential must have to be considered as such
 minimumLengthThreshold=3
 #Will be pushed as alert if the number of credentials is greater to that number
@@ -151,7 +151,7 @@ maxDuplicateToPushToMISP=10
 # e.g.: tcp://127.0.0.1:5556,tcp://127.0.0.1:5557
 [ZMQ_Global]
 #address = tcp://crf.circl.lu:5556
-address = tcp://127.0.0.1:5556
+address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
 channel = 102
 bind = tcp://127.0.0.1:5556
 
