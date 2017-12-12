@@ -21,15 +21,17 @@ sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon
 ##### Flask #####
 [Flask]
 #Maximum number of character to display in the toolip
-max_preview_char = 250 
+max_preview_char = 250
 #Maximum number of character to display in the modal
-max_preview_modal = 800 
+max_preview_modal = 800
 #Default number of header to display in trending graphs
 default_display = 10
 #Number of minutes displayed for the number of processed pastes.
 minute_processed_paste = 10
+#Maximum line length authorized to make a diff between duplicates 
+DiffMaxLineLength = 10000
 
-#### Modules #### 
+#### Modules ####
 [Modules_Duplicates]
 #Number of month to look back
 maximum_month_range = 3
