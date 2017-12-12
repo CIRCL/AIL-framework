@@ -41,7 +41,6 @@ REDIS_KEY_ALL_CRED_SET_REV = 'AllCredentialsRev'
 REDIS_KEY_ALL_PATH_SET = 'AllPath'
 REDIS_KEY_ALL_PATH_SET_REV = 'AllPathRev'
 REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
-MINIMUMSIZETHRESHOLD = 3
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -49,6 +48,8 @@ if __name__ == "__main__":
     config_section = "Credential"
     p = Process(config_section)
     publisher.info("Find credentials")
+    
+    minimumLengthThreshold = p.config.getint("Credential", "minimumLengthThreshold")
 
     faup = Faup()
     server_cred = redis.StrictRedis(
@@ -56,7 +57,8 @@ if __name__ == "__main__":
         port=p.config.get("Redis_Level_DB_TermCred", "port"),
         db=p.config.get("Redis_Level_DB_TermCred", "db"))
 
-    critical = 8
+    criticalNumberToAlert = p.config.getint("Credential", "criticalNumberToAlert")
+    minTopPassList = p.config.getint("Credential", "minTopPassList")
 
     regex_web = "((?:https?:\/\/)[-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
     regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
@@ -71,7 +73,7 @@ if __name__ == "__main__":
 
         filepath, count = message.split()
 
-        if count < 5:
+        if count < minTopPassList:
             # Less than 5 matches from the top password list, false positive.
             print("false positive:", count)
             continue
@@ -94,7 +96,7 @@ if __name__ == "__main__":
         print('\n '.join(creds))
 
         #num of creds above tresh, publish an alert
-        if len(creds) > critical:
+        if len(creds) > criticalNumberToAlert:
             print("========> Found more than 10 credentials in this file : {}".format(filepath))
             publisher.warning(to_print)
             #Send to duplicate
@@ -154,6 +156,6 @@ if __name__ == "__main__":
             #Add the split to redis, each split point towards its initial credential unique number
             splitedCred = re.findall(REGEX_CRED, cred)
             for partCred in splitedCred:
-                if len(partCred) > MINIMUMSIZETHRESHOLD:
+                if len(partCred) > minimumLengthThreshold:
                     server_cred.sadd(partCred, uniq_num_cred)
 
