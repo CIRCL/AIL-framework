@@ -19,7 +19,7 @@ Depending on the configuration, this module will process the feed as follow:
             - Elseif, the saved content associated with the paste is not the same, process it
             - Else, do not process it but keep track for statistics on duplicate
 
-    operation_mode 3: "Don't look if duplicate"
+    operation_mode 3: "Don't look if duplicated content"
         - SImply do not bother to check if it is a duplicate
 
 Note that the hash of the content is defined as the sha1(gzip64encoded).
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
                 # Keep duplicate coming from different sources
                 elif operation_mode == 2:
-                    # Filter to avoid duplicate 
+                    # Filter to avoid duplicate
                     content = server.get('HASH_'+paste_name)
                     if content is None:
                         # New content
