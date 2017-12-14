@@ -48,7 +48,7 @@ wget http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js -O ./s
 mkdir temp
 wget http://canvasjs.com/fdm/chart/ -O temp/canvasjs.zip
 unzip temp/canvasjs.zip -d temp/
-mv temp/canvasjs-1.9.10-stable/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
+mv temp/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
 
 wget https://jqueryui.com/resources/download/jquery-ui-1.12.0.zip -O temp/jquery-ui.zip
 unzip temp/jquery-ui.zip -d temp/
