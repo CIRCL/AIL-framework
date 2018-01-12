@@ -159,10 +159,10 @@ License
 
 ```
     Copyright (C) 2014 Jules Debra
-    Copyright (C) 2014-2017 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
-    Copyright (c) 2014-2017 Raphaël Vinot
-    Copyright (c) 2014-2017 Alexandre Dulaunoy
-    Copyright (c) 2016-2017 Sami Mokaddem
+    Copyright (C) 2014-2018 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014-2018 Raphaël Vinot
+    Copyright (c) 2014-2018 Alexandre Dulaunoy
+    Copyright (c) 2016-2018 Sami Mokaddem
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
