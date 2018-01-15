@@ -61,5 +61,8 @@ while True:
         continue
     socket.send("%d %s" % (topic, paste))
     topic = 102
-    messagedata = open(pystemonpath+paste).read()
-    socket.send("%d %s %s" % (topic, paste, base64.b64encode(messagedata)))
+    try:
+        messagedata = open(pystemonpath+paste).read()
+        socket.send("%d %s %s" % (topic, paste, base64.b64encode(messagedata)))
+    except IOError as e:
+        continue
