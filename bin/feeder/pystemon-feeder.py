@@ -42,6 +42,8 @@ else:
     zmq_url = "tcp://127.0.0.1:5556"
 
 pystemonpath = cfg.get("Directories", "pystemonpath")
+base_sleeptime = 0.01
+sleep_inc = 0
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
@@ -54,12 +56,19 @@ r = redis.StrictRedis(host='localhost', db=10)
 # 102 raw pastes feed
 
 while True:
-    time.sleep(1)
+    time.sleep(base_sleeptime + sleep_inc)
     topic = 101
     paste = r.lpop("pastes")
     if paste is None:
         continue
     socket.send("%d %s" % (topic, paste))
     topic = 102
-    messagedata = open(pystemonpath+paste).read()
-    socket.send("%d %s %s" % (topic, paste, base64.b64encode(messagedata)))
+    try:
+        messagedata = open(pystemonpath+paste).read()
+        socket.send("%d %s %s" % (topic, paste, base64.b64encode(messagedata)))
+        sleep_inc = sleep_inc-0.01 if sleep_inc-0.01 > 0 else 0
+    except IOError as e:
+        # file not found, could be a buffering issue -> increase sleeping time
+        print('IOError: Increasing sleep time')
+        sleep_inc += 0.5
+        continue
