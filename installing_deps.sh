@@ -89,8 +89,9 @@ if [ -z "$VIRTUAL_ENV" ]; then
 fi
 
 year1=20`date +%y`
+year2=20`date --date='-1 year' +%y`
 mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
-mkdir -p $AIL_HOME/LEVEL_DB_DATA/$year1
+mkdir -p $AIL_HOME/LEVEL_DB_DATA/{$year1,$year2}
 
 pip install -U pip
 pip install -U -r pip_packages_requirement.txt
