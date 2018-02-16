@@ -175,6 +175,7 @@ class CLabel(Label):
         # tab calculations, so leave internal `_label` value as None.
         self._text = label
         self.listTitle = listTitle
+        self._required_height = 1
 
     def set_layout(self, x, y, offset, w, h):
         # Do the usual layout work. then recalculate exact x/w values for the
