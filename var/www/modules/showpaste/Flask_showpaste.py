@@ -7,7 +7,8 @@
 import redis
 import json
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint
+from flask import Flask, render_template, jsonify, request, Blueprint, make_response
+import difflib
 
 import Paste
 
@@ -20,6 +21,7 @@ r_serv_pasteName = Flask_config.r_serv_pasteName
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 tlsh_to_percent = Flask_config.tlsh_to_percent
+DiffMaxLineLength = Flask_config.DiffMaxLineLength
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
@@ -112,6 +114,22 @@ def getmoredata():
     p_content = paste.get_p_content().decode('utf-8', 'ignore')
     to_return = p_content[max_preview_modal-1:]
     return to_return
+
+@showsavedpastes.route("/showDiff/")
+def showDiff():
+    s1 = request.args.get('s1', '')
+    s2 = request.args.get('s2', '')
+    p1 = Paste.Paste(s1)
+    p2 = Paste.Paste(s2)
+    maxLengthLine1 = p1.get_lines_info()[1]
+    maxLengthLine2 = p2.get_lines_info()[1]
+    if maxLengthLine1 > DiffMaxLineLength or maxLengthLine2 > DiffMaxLineLength:
+        return "Can't make the difference as the lines are too long."
+    htmlD = difflib.HtmlDiff()
+    lines1 = p1.get_p_content().decode('utf8', 'ignore').splitlines()
+    lines2 = p2.get_p_content().decode('utf8', 'ignore').splitlines()
+    the_html = htmlD.make_file(lines1, lines2)
+    return the_html
 
 # ========= REGISTRATION =========
 app.register_blueprint(showsavedpastes)

@@ -15,14 +15,14 @@
    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
-   <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>     
+   <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
 </head>
 <body>
     <div class="panel panel-default">
       <div class="panel-heading">
         <h1 class="page-header" >Paste: {{ request.args.get('paste') }}</h1>
         <h2 class="page-header" >({{ request.args.get('num') }})</h2>
-  
+
         <table class="table table-condensed">
           <thead>
             <tr>
@@ -62,7 +62,8 @@
               <th>Hash type</th>
               <th>Paste info</th>
               <th>Date</th>
-              <th>Path</th> 
+              <th>Path</th>
+              <th>Action</th>
           </tr>
           </thead>
           <tbody>
@@ -72,6 +73,7 @@
                   <td>Similarity: {{ simil_list[i] }}%</td>
                   <td>{{ date_list[i] }}</td>
                   <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ dup_path }}" id='dup_path'>{{ dup_path }}</a></td>
+                  <td><a target="_blank" href="{{ url_for('showsavedpastes.showDiff') }}?s1={{ request.args.get('paste') }}&s2={{ dup_path }}" class="fa fa-columns" title="Show differences"></a></td>
               </tr>
               {% set i = i + 1 %}
           {% endfor %}
@@ -82,7 +84,7 @@
         <p data-initsize="{{ initsize }}"> <pre id="paste-holder">{{ content }}</pre></p>
       </div>
     </div>
-  
+
 </body>
 <script>
     $('#tableDup').DataTable();
