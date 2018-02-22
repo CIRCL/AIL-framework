@@ -13,7 +13,6 @@ sudo apt-get install libssl-dev libfreetype6-dev python-numpy -y
 
 #pyMISP
 sudo apt-get -y install python3-pip
-sudo pip3 install pymisp
 
 # DNS deps
 sudo apt-get install libadns1 libadns1-dev -y
@@ -95,6 +94,7 @@ mkdir -p $AIL_HOME/LEVEL_DB_DATA/{$year1,$year2}
 
 pip install -U pip
 pip install -U -r pip_packages_requirement.txt
+pip3 install -U -r pip3_packages_requirement.txt
 
 # Pyfaup
 pushd faup/src/lib/bindings/python/
@@ -105,6 +105,8 @@ popd
 pushd tlsh/py_ext
 python setup.py build
 python setup.py install
+python3 setup.py build
+python3 setup.py install
 
 # Download the necessary NLTK corpora and sentiment vader
 HOME=$(pwd) python -m textblob.download_corpora
