@@ -1,0 +1,12 @@
+pymisp
+
+redis
+filemagic
+crcmod
+mmh3
+ssdeep
+nltk
+textblob
+
+pubsublogger
+zmq
