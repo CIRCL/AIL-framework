@@ -105,8 +105,8 @@ popd
 pushd tlsh/py_ext
 python setup.py build
 python setup.py install
-python3 setup.py build
-python3 setup.py install
+sudo python3 setup.py build
+sudo python3 setup.py install
 
 # Download the necessary NLTK corpora and sentiment vader
 HOME=$(pwd) python -m textblob.download_corpora

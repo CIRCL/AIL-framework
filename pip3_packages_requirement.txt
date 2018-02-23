@@ -5,9 +5,8 @@ filemagic
 crcmod
 mmh3
 ssdeep
-tlsh
 nltk
-textblop
+textblob
 
 pubsublogger
 zmq
