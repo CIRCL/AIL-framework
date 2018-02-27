@@ -42,6 +42,14 @@ TrackedRegexDate_Name = "TrackedRegexDate"
 TrackedSetSet_Name = "TrackedSetSet"
 TrackedSetDate_Name = "TrackedSetDate"
 
+# notifications enalbed/disabled
+# same value as in `bin/NotificationHelper.py`
+TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
+
+# associated notification email addresses for a specific term`
+# same value as in `bin/NotificationHelper.py`
+# Keys will be e.g. TrackedNotificationEmails_<TERMNAME>
+TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
 
 '''CRED'''
 REGEX_CRED = '[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+'
@@ -138,11 +146,23 @@ def terms_management():
     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = calendar.timegm(today.timetuple())
 
+    # Map tracking if notifications are enabled for a specific term
+    notificationEnabledDict = {}
+    
+    # Maps a specific term to the associated email addresses
+    notificationEMailTermMapping = {}
+
     #Regex
     trackReg_list = []
     trackReg_list_values = []
     trackReg_list_num_of_paste = []
     for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
+                
+        notificationEMailTermMapping[tracked_regex] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex))
+                
+        if tracked_regex not in notificationEnabledDict:
+            notificationEnabledDict[tracked_regex] = False
+                
         trackReg_list.append(tracked_regex)
         value_range = Term_getValueOverRange(tracked_regex, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
 
@@ -154,11 +174,21 @@ def terms_management():
         value_range.append(term_date)
         trackReg_list_values.append(value_range)
 
+        if tracked_regex in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+            notificationEnabledDict[tracked_regex] = True
+
     #Set
     trackSet_list = []
     trackSet_list_values = []
     trackSet_list_num_of_paste = []
     for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
+        
+        notificationEMailTermMapping[tracked_set] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set))
+
+        
+        if tracked_set not in notificationEnabledDict:
+            notificationEnabledDict[tracked_set] = False
+        
         trackSet_list.append(tracked_set)
         value_range = Term_getValueOverRange(tracked_set, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
 
@@ -170,11 +200,20 @@ def terms_management():
         value_range.append(term_date)
         trackSet_list_values.append(value_range)
 
+        if tracked_set in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+            notificationEnabledDict[tracked_set] = True
+
     #Tracked terms
     track_list = []
     track_list_values = []
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
+        
+        notificationEMailTermMapping[tracked_term] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
+        
+        if tracked_term not in notificationEnabledDict:
+            notificationEnabledDict[tracked_term] = False
+        
         track_list.append(tracked_term)
         value_range = Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
 
@@ -186,6 +225,8 @@ def terms_management():
         value_range.append(term_date)
         track_list_values.append(value_range)
 
+        if tracked_term in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+            notificationEnabledDict[tracked_term] = True
 
     #blacklist terms
     black_list = []
@@ -199,7 +240,7 @@ def terms_management():
             track_list_values=track_list_values, track_list_num_of_paste=track_list_num_of_paste, 
             trackReg_list_values=trackReg_list_values, trackReg_list_num_of_paste=trackReg_list_num_of_paste,
             trackSet_list_values=trackSet_list_values, trackSet_list_num_of_paste=trackSet_list_num_of_paste,
-            per_paste=per_paste)
+            per_paste=per_paste, notificationEnabledDict=notificationEnabledDict, notificationEMailTermMapping=notificationEMailTermMapping)
 
 
 @terms.route("/terms_management_query_paste/")
@@ -267,11 +308,36 @@ def terms_management_action():
     section = request.args.get('section')
     action = request.args.get('action')
     term =  request.args.get('term')
+    notificationEmailsParam = request.args.get('emailAddresses')
+    
     if action is None or term is None:
         return "None"
     else:
         if section == "followTerm":
             if action == "add":
+                                
+                # Strip all whitespace
+                notificationEmailsParam = "".join(notificationEmailsParam.split())
+                
+                # Make a list of all passed email addresses
+                notificationEmails = notificationEmailsParam.split(",")
+                
+                validNotificationEmails = []
+                # check for valid email addresses
+                for email in notificationEmails:
+                    # Really basic validation:
+                    # has exactly one @ sign, and at least one . in the part after the @
+                    if re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                        validNotificationEmails.append(email)
+                    
+                # add all valid emails to the set
+                for email in validNotificationEmails:
+                    r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term, email)
+                    print "added " + email + " for " + TrackedTermsNotificationEmailsPrefix_Name + term
+                    
+                # enable notifications by default
+                r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term.lower())
+                    
                 # check if regex/set or simple term
                 #regex
                 if term.startswith('/') and term.endswith('/'):
@@ -295,6 +361,16 @@ def terms_management_action():
                 else:
                     r_serv_term.sadd(TrackedTermsSet_Name, term.lower())
                     r_serv_term.hset(TrackedTermsDate_Name, term.lower(), today_timestamp)
+              
+            elif action == "toggleEMailNotification":
+                # get the current state
+                if term in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+                    # remove it
+                    r_serv_term.srem(TrackedTermsNotificationEnabled_Name, term.lower())
+                else:
+                    # add it
+                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term.lower())
+                    
             #del action
             else:
                 if term.startswith('/') and term.endswith('/'):
@@ -307,6 +383,9 @@ def terms_management_action():
                 else:
                     r_serv_term.srem(TrackedTermsSet_Name, term.lower())
                     r_serv_term.hdel(TrackedTermsDate_Name, term.lower())
+
+                # delete the associated notification emails too
+                r_serv_term.delete(TrackedTermsNotificationEmailsPrefix_Name + term)
 
         elif section == "blacklistTerm":
             if action == "add":

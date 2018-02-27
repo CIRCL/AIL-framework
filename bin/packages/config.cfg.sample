@@ -18,32 +18,25 @@ pystemonpath = /home/pystemon/pystemon/
 
 sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
 
+##### Notifications ######
+[Notifications]
+sender = sender@example.com
+sender_host = smtp.example.com
+sender_port = 1337
+sender_pw = securepassword
+
 ##### Flask #####
 [Flask]
 #Maximum number of character to display in the toolip
-max_preview_char = 250
+max_preview_char = 250 
 #Maximum number of character to display in the modal
-max_preview_modal = 800
+max_preview_modal = 800 
 #Default number of header to display in trending graphs
 default_display = 10
 #Number of minutes displayed for the number of processed pastes.
 minute_processed_paste = 10
-#Maximum line length authorized to make a diff between duplicates 
-DiffMaxLineLength = 10000
 
-#### Modules ####
-[Categ]
-#Minimum number of match between the paste and the category file
-matchingThreshold=1
-
-[Credential]
-#Minimum length that a credential must have to be considered as such
-minimumLengthThreshold=3
-#Will be pushed as alert if the number of credentials is greater to that number
-criticalNumberToAlert=8
-#Will be considered as false positive if less that X matches from the top password list
-minTopPassList=5
-
+#### Modules #### 
 [Modules_Duplicates]
 #Number of month to look back
 maximum_month_range = 3
@@ -59,8 +52,8 @@ min_paste_size = 0.3
 threshold_stucked_module=600
 
 [Module_Mixer]
-#Define the configuration of the mixer, possible value: 1, 2 or 3
-operation_mode = 3
+#Define the configuration of the mixer, possible value: 1 or 2
+operation_mode = 1
 #Define the time that a paste will be considerate duplicate. in seconds (1day = 86400)
 ttl_duplicate = 86400
 
@@ -153,7 +146,7 @@ maxDuplicateToPushToMISP=10
 # e.g.: tcp://127.0.0.1:5556,tcp://127.0.0.1:5557
 [ZMQ_Global]
 #address = tcp://crf.circl.lu:5556
-address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
+address = tcp://127.0.0.1:5556
 channel = 102
 bind = tcp://127.0.0.1:5556
 
