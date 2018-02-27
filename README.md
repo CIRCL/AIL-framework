@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/CIRCL/AIL-framework.svg?branch=master)](https://travis-ci.org/CIRCL/AIL-framework)
-
 AIL
 ===
 
 ![Logo](./doc/logo/logo-small.png?raw=true "AIL logo")
+
+*This is a development fork. The original repository can be found [here](https://github.com/CIRCL/AIL-framework)*
 
 AIL framework - Framework for Analysis of Information Leaks
 
