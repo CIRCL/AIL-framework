@@ -1,4 +1,3 @@
-
 [![Build Status](https://travis-ci.org/CIRCL/AIL-framework.svg?branch=master)](https://travis-ci.org/CIRCL/AIL-framework)
 
 AIL
@@ -178,3 +177,4 @@ License
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
+
