@@ -330,18 +330,17 @@ def terms_management_action():
                     if re.match(r"[^@]+@[^@]+\.[^@]+", email):
                         validNotificationEmails.append(email)
 
-                # add all valid emails to the set
-                for email in validNotificationEmails:
-                    r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term.lower(), email)
-
-                # enable notifications by default
-                r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term.lower())
 
                 # check if regex/set or simple term
                 #regex
                 if term.startswith('/') and term.endswith('/'):
                     r_serv_term.sadd(TrackedRegexSet_Name, term)
                     r_serv_term.hset(TrackedRegexDate_Name, term, today_timestamp)
+                    # add all valid emails to the set
+                    for email in validNotificationEmails:
+                        r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term, email)
+                    # enable notifications by default
+                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term)
 
                 #set
                 elif term.startswith('\\') and term.endswith('\\'):
@@ -355,11 +354,21 @@ def terms_management_action():
                         set_to_add = "\\" + tab_term[:-1] + ", [{}]]\\".format(match_percent)
                     r_serv_term.sadd(TrackedSetSet_Name, set_to_add)
                     r_serv_term.hset(TrackedSetDate_Name, set_to_add, today_timestamp)
+                    # add all valid emails to the set
+                    for email in validNotificationEmails:
+                        r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + set_to_add, email)
+                    # enable notifications by default
+                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, set_to_add)
 
                 #simple term
                 else:
                     r_serv_term.sadd(TrackedTermsSet_Name, term.lower())
                     r_serv_term.hset(TrackedTermsDate_Name, term.lower(), today_timestamp)
+                    # add all valid emails to the set
+                    for email in validNotificationEmails:
+                        r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term.lower(), email)
+                    # enable notifications by default
+                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term.lower())
 
             elif action == "toggleEMailNotification":
                 # get the current state

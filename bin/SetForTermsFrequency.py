@@ -75,7 +75,6 @@ if __name__ == "__main__":
         else:
             continue
 
-
     message = p.get_from_set()
 
     while True:
@@ -103,19 +102,17 @@ if __name__ == "__main__":
             for the_set, matchingNum in match_dico.items():
                 eff_percent = float(matchingNum) / float((len(ast.literal_eval(the_set))-1)) * 100 #-1 bc if the percent matching
                 if eff_percent >= dico_percent[the_set]:
-                    
                     # Send a notification only when the member is in the set
-                    if the_set in server_term.smembers(TrackedTermsNotificationEnabled_Name):
-                        
+                    if dico_setname_to_redis[str(the_set)] in server_term.smembers(TrackedTermsNotificationEnabled_Name):
                         # Send to every associated email adress
-                        for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + the_set):
-                            sendEmailNotification(email, the_set)
-                    
+                        for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + dico_setname_to_redis[str(the_set)]):
+                            sendEmailNotification(email, dico_setname_to_redis[str(the_set)])
+
                     print(the_set, "matched in", filename)
                     set_name = 'set_' + dico_setname_to_redis[the_set]
                     new_to_the_set = server_term.sadd(set_name, filename)
                     new_to_the_set = True if new_to_the_set == 1 else False
-                    
+
                     #consider the num of occurence of this set
                     set_value = int(server_term.hincrby(timestamp, dico_setname_to_redis[the_set], int(1)))
 

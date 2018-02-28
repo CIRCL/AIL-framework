@@ -37,7 +37,7 @@ top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, to
 
 
 def refresh_dicos():
-    dico_regex = {} 
+    dico_regex = {}
     dico_regexname_to_redis = {}
     for regex_str in server_term.smembers(TrackedRegexSet_Name):
         dico_regex[regex_str[1:-1]] = re.compile(regex_str[1:-1])
@@ -90,18 +90,15 @@ if __name__ == "__main__":
                 if matched is not None: #there is a match
                     print('regex matched {}'.format(regex_str))
                     matched = matched.group(0)
-                    
+                    regex_str_complete = "/" + regex_str + "/"
                     # Add in Regex track set only if term is not in the blacklist
-                    if matched not in server_term.smembers(BlackListTermsSet_Name):
-                        
+                    if regex_str_complete not in server_term.smembers(BlackListTermsSet_Name):
                         # Send a notification only when the member is in the set
-                        if matched in server_term.smembers(TrackedTermsNotificationEnabled_Name):
-                            
+                        if regex_str_complete in server_term.smembers(TrackedTermsNotificationEnabled_Name):
                             # Send to every associated email adress
-                            for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + matched):
-                                sendEmailNotification(email, matched)
+                            for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + regex_str_complete):
+                                sendEmailNotification(email, regex_str)
 
-                        
                         set_name = 'regex_' + dico_regexname_to_redis[regex_str]
                         new_to_the_set = server_term.sadd(set_name, filename)
                         new_to_the_set = True if new_to_the_set == 1 else False

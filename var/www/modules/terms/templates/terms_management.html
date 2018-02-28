@@ -129,7 +129,7 @@
                                           <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ set }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                           &nbsp; &nbsp;<input id="checkBoxEMailAlerts" type="checkbox" title="Toggle E-Mail notifications" class="btn-link btn-interaction" data-content="{{ set }}" data-section="followTerm" data-action="toggleEMailNotification" {% if notificationEnabledDict[set] %} checked {% endif %}>
                                       </p></td>
-                                      <td style="white-space:pre">{{ notificationEMailTermMapping[term] }}</td>
+                                      <td style="white-space:pre">{{ notificationEMailTermMapping[set] }}</td>
                                   </tr>
                                 {% endfor %}
                                 <!-- REGEX -->
@@ -146,7 +146,7 @@
                                           <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ regex }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                           &nbsp; &nbsp;<input id="checkBoxEMailAlerts" type="checkbox" title="Toggle E-Mail notifications" class="btn-link btn-interaction" data-content="{{ regex }}" data-section="followTerm" data-action="toggleEMailNotification" {% if notificationEnabledDict[regex] %} checked {% endif %}>
                                       </p></td>
-                                      <td style="white-space:pre">{{ notificationEMailTermMapping[term] }}</td>
+                                      <td style="white-space:pre">{{ notificationEMailTermMapping[regex] }}</td>
                                   </tr>
                                 {% endfor %}
                                 <!-- Normal term -->
@@ -408,3 +408,6 @@ function perform_operation(){
     }
 }
 </script>
+
+
+
