@@ -42,7 +42,7 @@ TrackedRegexDate_Name = "TrackedRegexDate"
 TrackedSetSet_Name = "TrackedSetSet"
 TrackedSetDate_Name = "TrackedSetDate"
 
-# notifications enalbed/disabled
+# notifications enabled/disabled
 # same value as in `bin/NotificationHelper.py`
 TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
 
