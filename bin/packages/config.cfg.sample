@@ -18,6 +18,13 @@ pystemonpath = /home/pystemon/pystemon/
 
 sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
 
+##### Notifications ######
+[Notifications]
+sender = sender@example.com
+sender_host = smtp.example.com
+sender_port = 1337
+sender_pw = securepassword
+
 ##### Flask #####
 [Flask]
 #Maximum number of character to display in the toolip
@@ -28,7 +35,7 @@ max_preview_modal = 800
 default_display = 10
 #Number of minutes displayed for the number of processed pastes.
 minute_processed_paste = 10
-#Maximum line length authorized to make a diff between duplicates 
+#Maximum line length authorized to make a diff between duplicates
 DiffMaxLineLength = 10000
 
 #### Modules ####
