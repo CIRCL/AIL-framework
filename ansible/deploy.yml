@@ -1,0 +1,5 @@
+---
+- hosts: ail
+  remote_user: "{{remote_user}}"
+  roles:
+    - ail-host

@@ -1,0 +1,317 @@
+---
+
+- name: Add AIL group
+  group:
+    name: ail
+    state: present
+
+- name: Add AIL
+  user:
+    name: ail
+    shell: /bin/false
+    createhome: yes
+    group: ail
+
+- name: Update apt repository
+  apt:
+    update_cache: yes
+
+- name: Install requirements via apt
+  action: apt pkg={{item}} state=installed
+  with_items:
+    - autoconf
+    - automake
+    - build-essential
+    - cmake
+    - g++
+    - git
+    - graphviz
+    - libadns1
+    - libadns1-dev
+    - libev-dev
+    - libffi-dev
+    - libfreetype6-dev
+    - libfuzzy-dev
+    - libgmp-dev
+    - libsnappy-dev
+    - libssl-dev
+    - libtool
+    - python-dev
+    - python-magic
+    - python-numpy
+    - python-pip
+    - python-redis
+    - python-tk
+    - python-twython
+    - python-virtualenv
+    - python3-magic
+    - python3-pip
+    - rsync
+    - sudo
+    - unzip
+    - wget
+
+- name: Clone redis from GitHub
+  git:
+    repo: 'https://github.com/antirez/redis.git'
+    dest: /tmp/redis
+
+- name: Compile and install redis and clean afterwards
+  shell: |
+    cd /tmp/redis && \
+    make install && \
+    rm -rf /tmp/redis
+
+- name: Clone the AIL repository
+  git:
+    repo: 'https://github.com/CIRCL/AIL-framework.git'
+    dest: /opt/AIL-framework
+    update: yes
+
+- name: Clone the redis-leveldb repository
+  git: repo='https://github.com/KDr2/redis-leveldb.git'
+       dest=/opt/redis-leveldb
+       recursive=yes
+       force=yes
+
+- name: Build redis-leveldb
+  shell: make
+  args:
+    chdir: /opt/redis-leveldb
+
+- name: Upload the config file of AIL
+  copy:
+    src: config.cfg
+    dest: /opt/AIL-framework/bin/packages/config.cfg
+    owner: ail
+    group: ail
+    force: yes
+
+
+- name: Synchronize the saved third party libraries with remote
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dst }}"
+    owner: ail
+    group: ail
+  with_items:
+    - { src: "staticBackup/css/plugins", dst: "/opt/AIL-framework/var/www/static/css/plugins" }
+    - { src: "staticBackup/css/bootstrap.css", dst: "/opt/AIL-framework/var/www/static/css/bootstrap.css" }
+    - { src: "staticBackup/css/bootstrap.min.css", dst: "/opt/AIL-framework/var/www/static/css/bootstrap.min.css" }
+    - { src: "staticBackup/css/bootstrap-rtl.css", dst: "/opt/AIL-framework/var/www/static/css/bootstrap-rtl.css" }
+    - { src: "staticBackup/css/bootstrap-rtl.min.css", dst: "/opt/AIL-framework/var/www/static/css/bootstrap-rtl.min.css" }
+    - { src: "staticBackup/css/dataTables.bootstrap.css", dst: "/opt/AIL-framework/var/www/static/css/dataTables.bootstrap.css" }
+    - { src: "staticBackup/css/jquery-ui.min.css", dst: "/opt/AIL-framework/var/www/static/css/jquery-ui.min.css" }
+    - { src: "staticBackup/css/sb-admin.css", dst: "/opt/AIL-framework/var/www/static/css/sb-admin.css" }
+    - { src: "staticBackup/css/sb-admin-2.css", dst: "/opt/AIL-framework/var/www/static/css/sb-admin-2.css" }
+    - { src: "staticBackup/css/sb-admin-rtl.css", dst: "/opt/AIL-framework/var/www/static/css/sb-admin-rtl.css" }
+    - { src: "staticBackup/css/timeline.css", dst: "/opt/AIL-framework/var/www/static/css/timeline.css" }
+    - { src: "staticBackup/font-awesome", dst: "/opt/AIL-framework/var/www/static/font-awesome" }
+    - { src: "staticBackup/fonts", dst: "/opt/AIL-framework/var/www/static/fonts" }
+    - { src: "staticBackup/image/AIL.png", dst: "/opt/AIL-framework/var/www/static/image/AIL.png" }
+    - { src: "staticBackup/js/plugins", dst: "/opt/AIL-framework/var/www/static/js/plugins" }
+    - { src: "staticBackup/js/bootstrap.js", dst: "/opt/AIL-framework/var/www/static/js/bootstrap.js" }
+    - { src: "staticBackup/js/bootstrap.min.js", dst: "/opt/AIL-framework/var/www/static/js/bootstrap.min.js" }
+    - { src: "staticBackup/js/dataTables.bootstrap.js", dst: "/opt/AIL-framework/var/www/static/js/dataTables.bootstrap.js" }
+    - { src: "staticBackup/js/dygraph-combined.js", dst: "/opt/AIL-framework/var/www/static/js/dygraph-combined.js" }
+    - { src: "staticBackup/js/jquery.canvasjs.min.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.canvasjs.min.js" }
+    - { src: "staticBackup/js/jquery.dataTables.min.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.dataTables.min.js" }
+    - { src: "staticBackup/js/jquery.flot.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.flot.js" }
+    - { src: "staticBackup/js/jquery.flot.pie.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.flot.pie.js" }
+    - { src: "staticBackup/js/jquery.flot.stack.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.flot.stack.js" }
+    - { src: "staticBackup/js/jquery.flot.time.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.flot.time.js" }
+    - { src: "staticBackup/js/jquery.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.js" }
+    - { src: "staticBackup/js/jquery.sparkline.min.js", dst: "/opt/AIL-framework/var/www/static/js/jquery.sparkline.min.js" }
+    - { src: "staticBackup/js/jquery-ui.min.js", dst: "/opt/AIL-framework/var/www/static/js/jquery-ui.min.js" }
+
+- name: Create virtual environment if not already present
+  shell: |
+        if [ -z "$VIRTUAL_ENV" ] && ! [ -d /opt/AIL-framework/AILENV ]; then
+            cd /opt/AIL-framework &&
+            virtualenv AILENV &&
+            echo export AIL_HOME=$PWD >> ./AILENV/bin/activate &&
+            echo export AIL_BIN=$PWD/bin/ >> ./AILENV/bin/activate &&
+            echo export AIL_FLASK=$PWD/var/www/ >> ./AILENV/bin/activate &&
+            echo export AIL_REDIS=/usr/bin/ >> ./AILENV/bin/activate &&
+            echo export AIL_LEVELDB=/opt/redis-leveldb/ >> ./AILENV/bin/activate &&
+            . ./AILENV/bin/activate;
+        fi
+  args:
+    executable: /bin/bash
+
+- name: Update pip
+  pip:
+    name: pip
+    extra_args: --upgrade
+    virtualenv: /opt/AIL-framework/AILENV
+
+- name: Install pip requirements
+  pip:
+    requirements: /opt/AIL-framework/pip_packages_requirement.txt
+    extra_args: --upgrade
+    virtualenv: /opt/AIL-framework/AILENV
+
+- name: Install pip3 requirements
+  pip:
+    requirements: /opt/AIL-framework/pip3_packages_requirement.txt
+    executable: pip3
+    extra_args: --upgrade
+
+- name: Install additional requirements via pip
+  pip:
+    name: distribute twython
+    virtualenv: /opt/AIL-framework/AILENV
+    extra_args: --upgrade
+
+- name: Install additional python3 requirements via pip3
+  shell: |
+        cd /opt/AIL-framework &&
+        . ./AILENV/bin/activate &&
+        pip3 install langid
+
+- name: Clone the tlsh repo
+  git:
+    repo: 'https://github.com/trendmicro/tlsh'
+    dest: /opt/tlsh
+
+- name: Build tlsh
+  shell: |
+       chmod +x *.sh && ./make.sh
+  args:
+    chdir: /opt/tlsh
+
+- name: Install tlsh for the virtual environment
+  shell: |
+        cd /opt/tlsh/py_ext &&
+        source /opt/AIL-framework/AILENV/bin/activate &&
+        python2.7 setup.py build &&
+        python2.7 setup.py install
+        python3 setup.py build &&
+        python3 setup.py install
+  args:
+    executable: /bin/bash
+
+- name: Clone the faup repository
+  git:
+        repo: 'https://github.com/stricaud/faup.git'
+        dest: /tmp/faup
+
+- name: Create build directory for faup
+  file: path=/tmp/faup/build state=directory
+
+- name: Build and install faup in the virtualenv (only if this step hasn't been run yet)
+  shell: |
+        if [ ! -f /etc/ld.so.conf.d/faup.conf ]; then
+        source /opt/AIL-framework/AILENV/bin/activate &&
+        cmake .. &&
+        make &&
+        make install &&
+        ldconfig &&
+        cd /tmp/faup/src/lib/bindings/python/ &&
+        /usr/bin/env python setup.py install &&
+        echo '/usr/local/lib' | tee -a /etc/ld.so.conf.d/faup.conf; fi
+  args:
+        chdir: /tmp/faup/build
+        executable: /bin/bash
+
+- name: Create data directories
+  shell: |
+        mkdir -p /opt/AIL-framework/PASTES
+        mkdir -p /opt/AIL-framework/Blooms
+        mkdir -p /opt/AIL-framework/dumps
+        mkdir -p /opt/AIL-framework/LEVEL_DB_DATA/$(date +%Y)
+
+- name: Download the NLTK corpora and sentiment vader
+  shell: |
+        HOME=$(pwd) su -s /bin/bash -c "source /opt/AIL-framework/AILENV/bin/activate && python -m textblob.download_corpora" ail &&
+        su -s /bin/bash -c "source /opt/AIL-framework/AILENV/bin/activate && python -m nltk.downloader vader_lexicon" ail &&
+        su -s /bin/bash -c "source /opt/AIL-framework/AILENV/bin/activate && python -m nltk.downloader punkt" ail
+  args:
+        executable: /bin/bash
+
+- name: Make generate_modules_data_flow_graph.sh executable
+  file: dest=/opt/AIL-framework/doc/generate_modules_data_flow_graph.sh mode=a+x
+
+- name: Create the file all_module and update the graph in doc
+  shell: |
+        /opt/AIL-framework/doc/generate_modules_data_flow_graph.sh
+
+- name: Copy the systemd service files to the server
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dst }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - { src: "ail-flask.service", dst: "/etc/systemd/system" }
+    - { src: "ail-leveldb.service", dst: "/etc/systemd/system" }
+    - { src: "ail-logging.service", dst: "/etc/systemd/system" }
+    - { src: "ail-queues.service", dst: "/etc/systemd/system" }
+    - { src: "ail-redis.service", dst: "/etc/systemd/system" }
+    - { src: "ail-scripts.service", dst: "/etc/systemd/system" }
+
+- name: Create start script directory
+  file: path=/opt/AIL-scripts state=directory
+
+- name: Copy the start scripts to the server
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dst }}"
+    owner: root
+    group: root
+  with_items:
+    - { src: "startRedis.sh", dst: "/opt/AIL-scripts" }
+    - { src: "startFlask.sh", dst: "/opt/AIL-scripts" }
+    - { src: "startLogging.sh", dst: "/opt/AIL-scripts" }
+    - { src: "startRedisLevelDB.sh", dst: "/opt/AIL-scripts" }
+    - { src: "startScripts.sh", dst: "/opt/AIL-scripts" }
+    - { src: "startQueues.sh", dst: "/opt/AIL-scripts" }
+
+
+- name: Create log directory for AIL
+  file:
+    path: /var/log/AIL
+    owner: ail
+    group: ail
+    state: directory
+
+- name: Allow the ail user to access AIL files
+  file:
+    path: /opt/AIL-framework
+    owner: ail
+    group: ail
+    recurse: yes
+
+- name: Allow the ail user to access start scripts
+  file:
+    path: /opt/AIL-scripts
+    owner: ail
+    group: ail
+    mode: "a+x"
+    recurse: yes
+
+- name: Make all python scripts executable
+  file:
+    path: /opt/AIL-framework/bin/
+    owner: ail
+    group: ail
+    mode: "a+x"
+    recurse: yes
+
+- name: enable systemd services using shell commands because the service module doesn't work sometimes :(
+  shell: |
+    systemctl enable ail-redis ail-leveldb ail-logging ail-queues ail-scripts ail-flask
+  args:
+    chdir: /etc/systemd/system
+    executable: /bin/bash
+
+- name: Reload the systemd daemon manually because the systemd ansible module hasn't been merged into many distributions yet
+  shell: systemctl daemon-reload
+
+- name: start systemd services using shell commands because the service module doesn't work sometimes :(
+  shell: |
+    systemctl start ail-redis ail-leveldb ail-logging ail-queues ail-scripts ail-flask
+  args:
+    chdir: /etc/systemd/system
+    executable: /bin/bash

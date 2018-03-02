@@ -1,0 +1,13 @@
+[Unit]
+Description=AIL-Framework: LevelDB services
+Requires=ail-redis.service ail-leveldb.service
+After=ail-redis.servic ail-leveldb.service
+
+[Service]
+User=ail
+Group=ail
+ExecStartPre=/bin/sleep 10
+ExecStart=/bin/bash -c "/opt/AIL-scripts/startLogging.sh"
+
+[Install]
+WantedBy=reboot.target

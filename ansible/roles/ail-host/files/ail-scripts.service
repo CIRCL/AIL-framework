@@ -1,0 +1,15 @@
+[Unit]
+Description=AIL-Framework: Scripts service
+Requires=ail-redis.service ail-logging.service
+After=ail-redis.service ail-logging.service
+
+[Service]
+Restart=always
+RestartSec=5
+User=ail
+Group=ail
+ExecStartPre=/bin/sleep 10
+ExecStart=/bin/bash -c "/opt/AIL-scripts/startScripts.sh"
+
+[Install]
+WantedBy=reboot.target

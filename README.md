@@ -85,6 +85,10 @@ docker exec -it CONTAINER_NAME_OR_IDENTIFIER bash
 cd /opt/ail
 ```
 
+Install using Ansible
+---------------------
+
+Please check the [Ansible readme](ansible/README.md).
 
 Starting AIL web interface
 --------------------------
