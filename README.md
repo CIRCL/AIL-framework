@@ -102,7 +102,7 @@ and then you can start the web interface python script:
 ```bash
 cd $AILENV
 cd var/www/
-Flask_server.py
+./Flask_server.py
 ```
 
 Eventually you can browse the status of the AIL framework website at the following URL:
