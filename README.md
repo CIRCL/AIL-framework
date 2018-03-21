@@ -92,7 +92,7 @@ Starting AIL web interface
 To start the web interface, you first need to fetch the required JavaScript/CSS files:
 
 ```bash
-cd $AILENV
+cd $AILENV .
 cd var/www/
 bash update_thirdparty.sh
 ```
@@ -100,9 +100,9 @@ bash update_thirdparty.sh
 and then you can start the web interface python script:
 
 ```bash
-cd $AILENV
+cd $AILENV .
 cd var/www/
-Flask_server.py
+./Flask_server.py
 ```
 
 Eventually you can browse the status of the AIL framework website at the following URL:
