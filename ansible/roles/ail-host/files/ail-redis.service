@@ -1,0 +1,13 @@
+[Unit]
+Description=AIL-Framework: Redis services
+
+[Service]
+Restart=always
+RestartSec=5
+User=ail
+Group=ail
+LimitNOFILE=65536
+ExecStart=/bin/bash -c "/opt/AIL-scripts/startRedis.sh"
+
+[Install]
+WantedBy=reboot.target

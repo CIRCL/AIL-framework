@@ -1,0 +1,12 @@
+[Unit]
+Description=AIL-Framework: LevelDB services
+Requires=ail-redis.service
+After=ail-redis.service
+
+[Service]
+User=ail
+Group=ail
+ExecStartPre=/bin/sleep 10
+ExecStart=/bin/bash -c "/opt/AIL-scripts/startRedisLevelDB.sh"
+[Install]
+WantedBy=reboot.target
