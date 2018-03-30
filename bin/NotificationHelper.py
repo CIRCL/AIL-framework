@@ -73,3 +73,29 @@ def sendEmailNotification(recipient, term):
             
         except Exception as e:
             print str(e)
+            # raise e
+    elif (
+            sender is not None and
+            sender_host is not None and
+            sender_port is not None
+        ):
+        try:
+
+            server = smtplib.SMTP(sender_host, sender_port)
+
+            mime_msg = MIMEMultipart()
+            mime_msg['From'] = sender
+            mime_msg['To'] = recipient
+            mime_msg['Subject'] = "AIL Term Alert"
+            
+            body = "New occurrence for term: " + term
+            mime_msg.attach(MIMEText(body, 'plain'))
+            
+            server.sendmail(sender, recipient, mime_msg.as_string())
+            server.quit()
+
+        except Exception as e:
+            print str(e)
+            # raise e
+
+
