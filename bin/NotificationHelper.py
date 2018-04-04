@@ -47,55 +47,37 @@ def sendEmailNotification(recipient, term):
         
     if isinstance(sender_pw, tuple):
         sender_pw = sender_pw[0]    
-            
-    if (
-        sender is not None and
-        sender_host is not None and
-        sender_port is not None and
-        sender_pw is not None
-       ):
-        try:                    
-                                  
-            server_ssl = smtplib.SMTP_SSL(sender_host, sender_port)
-            server_ssl.ehlo()
-            server_ssl.login(sender, sender_pw)
-            
-            mime_msg = MIMEMultipart()
-            mime_msg['From'] = sender
-            mime_msg['To'] = recipient
-            mime_msg['Subject'] = "AIL Term Alert"
-            
-            body = "New occurrence for term: " + term
-            mime_msg.attach(MIMEText(body, 'plain'))
-            
-            server_ssl.sendmail(sender, recipient, mime_msg.as_string())
-            server_ssl.quit()
-            
-        except Exception as e:
-            print str(e)
-            # raise e
-    elif (
-            sender is not None and
-            sender_host is not None and
-            sender_port is not None
+
+    # raise an exception if any of these is None
+    if (sender is None or
+        sender_host is None or
+        sender_port is None
         ):
-        try:
+        raise Exception('SMTP configuration (host, port, sender) is missing or incomplete!')
 
-            server = smtplib.SMTP(sender_host, sender_port)
-
-            mime_msg = MIMEMultipart()
-            mime_msg['From'] = sender
-            mime_msg['To'] = recipient
-            mime_msg['Subject'] = "AIL Term Alert"
+    try:
+        if sender_pw is not None:
+            smtp_server = smtplib.SMTP_SSL(sender_host, sender_port)
+            smtp_server.ehlo()
+            smtp_server.login(sender, sender_pw)
+        else:
+            smtp_server = smtplib.SMTP(sender_host, sender_port)
             
-            body = "New occurrence for term: " + term
-            mime_msg.attach(MIMEText(body, 'plain'))
+        
+        mime_msg = MIMEMultipart()
+        mime_msg['From'] = sender
+        mime_msg['To'] = recipient
+        mime_msg['Subject'] = "AIL Term Alert"
+        
+        body = "New occurrence for term: " + term
+        mime_msg.attach(MIMEText(body, 'plain'))
+        
+        smtp_server.sendmail(sender, recipient, mime_msg.as_string())
+        smtp_server.quit()
             
-            server.sendmail(sender, recipient, mime_msg.as_string())
-            server.quit()
+    except Exception as e:
+        print str(e)
+        # raise e
 
-        except Exception as e:
-            print str(e)
-            # raise e
 
 
