@@ -23,7 +23,9 @@ sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon
 sender = sender@example.com
 sender_host = smtp.example.com
 sender_port = 1337
-sender_pw = securepassword
+
+# optional for using with authenticated SMTP over SSL
+# sender_pw = securepassword
 
 ##### Flask #####
 [Flask]
