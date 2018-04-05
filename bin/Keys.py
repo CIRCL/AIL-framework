@@ -7,7 +7,8 @@ The Keys Module
 
 This module is consuming the Redis-list created by the Global module.
 
-It is looking for PGP encrypted messages
+It is looking for PGP, private and encrypted private,
+RSA private key, certificate messages
 
 """
 
@@ -18,11 +19,32 @@ from Helper import Process
 from packages import Paste
 
 
-def search_gpg(message):
+def search_key(message):
     paste = Paste.Paste(message)
     content = paste.get_p_content()
+    find = False
     if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
+        find = True
+
+    if '-----BEGIN CERTIFICATE-----' in content:
+        publisher.warning('{} has a certificate message'.format(paste.p_name))
+        find = True
+
+    if '-----BEGIN RSA PRIVATE KEY-----' in content:
+        publisher.warning('{} has a RSA key message'.format(paste.p_name))
+        find = True
+
+    if '-----BEGIN PRIVATE KEY-----' in content:
+        publisher.warning('{} has a private message'.format(paste.p_name))
+        find = True
+
+    if '-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
+        publisher.warning('{} has an encrypted private message'.format(paste.p_name))
+        find = True
+
+    if find :
+
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
         #send to Browse_warning_paste
@@ -55,6 +77,6 @@ if __name__ == '__main__':
             continue
 
         # Do something with the message from the queue
-        search_gpg(message)
+        search_key(message)
 
         # (Optional) Send that thing to the next queue
