@@ -10,3 +10,4 @@ textblob
 
 pubsublogger
 zmq
+langid
