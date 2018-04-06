@@ -28,6 +28,10 @@ def main():
                         1: data graph''',
                         choices=[0, 1], action='store')
 
+    parser.add_argument('spline', type=str, default="ortho",
+                        help='''The graph splines type, spline:default , ortho: orthogonal''',
+                        choices=["ortho", "spline"], action='store')
+
     args = parser.parse_args()
 
     with open(path, 'r') as f:
@@ -63,6 +67,8 @@ def main():
             for e in all_modules:
                 f2.write(e+"\n")
 
+        output_text_graph = ""
+
         # flow between modules
         if args.type == 0:
 
@@ -81,7 +87,15 @@ def main():
                     else:
                         output_set_graph.add("\"" + module + "\"" + "->" + streamingSub[stream_out] + ";\n")
 
-        output_text_graph = ""
+            # graph head
+            output_text_graph += "digraph unix {\n"
+            output_text_graph +=  "graph [pad=\"0.5\"];\n"
+            output_text_graph += "size=\"25,25\";\n"
+            output_text_graph += "splines="
+            output_text_graph += args.spline
+            output_text_graph += ";\n"
+            output_text_graph += "node [color=lightblue2, style=filled];\n"
+
 
         # flow between data
         if args.type == 1:
@@ -95,13 +109,16 @@ def main():
 
                         output_set_graph.add("\"" + stream_in + "\"" + "->" + stream_out + ";\n")
 
+            # graph head
+            output_text_graph += "digraph unix {\n"
+            output_text_graph += "graph [pad=\"0.5\"];\n"
+            output_text_graph += "size=\"25,25\";\n"
+            output_text_graph += "splines="
+            output_text_graph += args.spline
+            output_text_graph += ";\n"
+            output_text_graph += "node [color=tan, style=filled];\n"
 
 
-        # graph head
-        output_text_graph += "digraph unix {\n"\
-                                  "graph [pad=\"0.5\"];\n"\
-                                  "size=\"25,25\";\n"\
-                                  "node [color=lightblue2, style=filled];\n"
 
         # create final txt graph
         for elem in output_set_graph:
