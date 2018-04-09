@@ -8,6 +8,9 @@ sudo apt-get update
 sudo apt-get install python-pip python-virtualenv python-dev libfreetype6-dev \
     screen g++ python-tk unzip libsnappy-dev cmake -y
 
+#optional tor install
+sudo apt-get install tor
+
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python-numpy -y
 
