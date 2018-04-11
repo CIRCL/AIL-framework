@@ -19,13 +19,13 @@ install:
     - pip install coveralls codecov nose
 
 script:
-    - . ./AILENV/bin/activate
     - pushd bin
     - ./launch_redis.sh
     - ./launch_lvldb.sh
     - ./launch_logs.sh
     - ./launch_queues.sh
     - nosetests --with-coverage --cover-package=bin -d
+    - ls
 
 
 after_success:
