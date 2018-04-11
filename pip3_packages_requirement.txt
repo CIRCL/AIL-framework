@@ -1,13 +1,63 @@
 pymisp
 
 redis
-filemagic
+#filemagic conflict with magic
 crcmod
 mmh3
 ssdeep
-nltk
-textblob
 
 pubsublogger
 zmq
 langid
+
+#Essential
+redis
+pyzmq
+dnspython
+logbook
+pubsublogger
+textblob
+
+#Tokeniser
+nltk
+
+#Graph
+numpy
+matplotlib
+networkx
+terminaltables
+colorama
+asciimatics
+
+# Hashlib
+crcmod
+mmh3
+ssdeep
+python-Levenshtein
+
+#Others
+python-magic
+pybloomfiltermmap
+psutil
+phonenumbers
+
+ipython
+flask
+texttable
+
+#DomainClassifier
+DomainClassifier
+#Indexer requirements
+whoosh
+
+ipaddress
+pycountry
+
+# To fetch Onion urls
+PySocks
+
+#ASN lookup requirements
+#https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/adns-python/adns-python-1.2.1.tar.gz
+https://github.com/trolldbois/python-cymru-services/archive/master.zip
+
+https://github.com/saffsd/langid.py/archive/master.zip

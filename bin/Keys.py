@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -15,32 +15,47 @@ RSA private key, certificate messages
 import time
 from pubsublogger import publisher
 
-from Helper import Process
-from packages import Paste
+from bin.packages import Paste
+from bin.Helper import Process
 
 
-def search_key(message):
-    paste = Paste.Paste(message)
+def search_key(paste):
     content = paste.get_p_content()
     find = False
-    if '-----BEGIN PGP MESSAGE-----' in content:
+    if b'-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
         find = True
 
-    if '-----BEGIN CERTIFICATE-----' in content:
+    if b'-----BEGIN CERTIFICATE-----' in content:
         publisher.warning('{} has a certificate message'.format(paste.p_name))
         find = True
 
-    if '-----BEGIN RSA PRIVATE KEY-----' in content:
-        publisher.warning('{} has a RSA key message'.format(paste.p_name))
+    if b'-----BEGIN RSA PRIVATE KEY-----' in content:
+        publisher.warning('{} has a RSA private key message'.format(paste.p_name))
         find = True
 
-    if '-----BEGIN PRIVATE KEY-----' in content:
-        publisher.warning('{} has a private message'.format(paste.p_name))
+    if b'-----BEGIN PRIVATE KEY-----' in content:
+        publisher.warning('{} has a private key message'.format(paste.p_name))
         find = True
 
-    if '-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
-        publisher.warning('{} has an encrypted private message'.format(paste.p_name))
+    if b'-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
+        publisher.warning('{} has an encrypted private key message'.format(paste.p_name))
+        find = True
+
+    if b'-----BEGIN OPENSSH PRIVATE KEY-----' in content:
+        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
+        find = True
+
+    if b'-----BEGIN DSA PRIVATE KEY-----' in content:
+        publisher.warning('{} has a dsa private key message'.format(paste.p_name))
+        find = True
+
+    if b'-----BEGIN EC PRIVATE KEY-----' in content:
+        publisher.warning('{} has an ec private key message'.format(paste.p_name))
+        find = True
+
+    if b'-----BEGIN PGP PRIVATE KEY BLOCK-----' in content:
+        publisher.warning('{} has a pgp private key block message'.format(paste.p_name))
         find = True
 
     if find :
@@ -77,6 +92,7 @@ if __name__ == '__main__':
             continue
 
         # Do something with the message from the queue
-        search_key(message)
+        paste = Paste.Paste(message)
+        search_key(paste)
 
         # (Optional) Send that thing to the next queue

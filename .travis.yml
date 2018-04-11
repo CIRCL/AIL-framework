@@ -1,7 +1,7 @@
 language: python
 
 python:
-    - "2.7"
+    - "3.5"
 
 sudo: required
 
@@ -16,6 +16,7 @@ env:
 
 install:
     - ./installing_deps.sh
+    - pip install coveralls codecov
 
 script:
     - pushd bin
@@ -28,8 +29,13 @@ script:
     - ./Shutdown.py
     - popd
     - find logs/* -exec cat {} \;
+    - nosetests --with-coverage --cover-package=things -d
 
 notifications:
     email:
         on_success: change
         on_failure: change
+
+after_success:
+    - codecov
+    - coveralls
