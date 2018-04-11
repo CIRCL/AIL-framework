@@ -25,7 +25,7 @@ script:
     - ./launch_lvldb.sh
     - ./launch_logs.sh
     - ./launch_queues.sh
-    - nosetests --with-coverage --cover-package=things -d
+    - nosetests --with-coverage --cover-package=bin -d
 
 
 after_success:
