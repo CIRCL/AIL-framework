@@ -83,7 +83,7 @@ function launching_lvldb {
     for pathDir in $lvdbdir*/ ; do
         yDir=$(basename "$pathDir")
         sleep 0.1
-        screen -S "LevelDB_AIL" -X screen -t "$yDir" bash -c 'redis-leveldb -H '$lvdbhost' -D '$pathDir'/ -P '$yDir' -M '$nb_db'; read x'
+        screen -S "LevelDB_AIL" -X screen -t "$yDir" bash -c 'redis-leveldb -h; redis-leveldb -H '$lvdbhost' -D '$pathDir' -P '$yDir' -M '$nb_db'; read x'
     done
 }
 
@@ -101,12 +101,12 @@ function launching_queues {
     sleep 0.1
 
     echo -e $GREEN"\t* Launching all the queues"$DEFAULT
-    screen -S "Queue_AIL" -X screen -t "Queues" bash -c './launch_queues.py; read x'
+    screen -S "Queue_AIL" -X screen -t "Queues" bash -c 'python3 launch_queues.py; read x'
 }
 
 function launching_scripts {
     echo -e "\t* Checking configuration"
-    bash -c "./Update-conf.py"
+    bash -c "python3 Update-conf.py"
     exitStatus=$?
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
@@ -118,61 +118,61 @@ function launching_scripts {
     sleep 0.1
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
-    screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c './ModulesInformationV2.py -k 0 -c 1; read x'
+    screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c 'python3 ModulesInformationV2.py -k 0 -c 1; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Mixer" bash -c './Mixer.py; read x'
+    screen -S "Script_AIL" -X screen -t "Mixer" bash -c 'python3 Mixer.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Global" bash -c './Global.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Attributes" bash -c './Attributes.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Lines" bash -c './Lines.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Categ" bash -c './Categ.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c './CreditCards.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Onion" bash -c './Onion.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Curve" bash -c './Curve.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Release" bash -c './Release.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Cve" bash -c './Cve.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "WebStats" bash -c './WebStats.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
+    #screen -S "Script_AIL" -X screen -t "Global" bash -c './Global.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Attributes" bash -c './Attributes.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Lines" bash -c './Lines.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Categ" bash -c './Categ.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "CreditCards" bash -c './CreditCards.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Onion" bash -c './Onion.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Curve" bash -c './Curve.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Release" bash -c './Release.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Cve" bash -c './Cve.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "WebStats" bash -c './WebStats.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
+    #sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
 
 }
 
@@ -285,8 +285,8 @@ for i in ${!options[@]}; do
                     if checking_redis; then
                         launching_scripts;
                     else
-                        echo -e $YELLOW"\tScript not started, waiting 3 secondes"$DEFAULT
-                        sleep 3
+                        echo -e $YELLOW"\tScript not started, waiting 10 secondes"$DEFAULT
+                        sleep 10
                         if checking_redis; then
                             launching_scripts;
                         else

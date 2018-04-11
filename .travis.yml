@@ -16,25 +16,17 @@ env:
 
 install:
     - ./installing_deps.sh
-    - pip install coveralls codecov
+    - pip install coveralls codecov nose
 
 script:
+    - . ./AILENV/bin/activate
     - pushd bin
     - ./launch_redis.sh
     - ./launch_lvldb.sh
     - ./launch_logs.sh
     - ./launch_queues.sh
-    - ./launch_scripts.sh
-    - sleep 120
-    - ./Shutdown.py
-    - popd
-    - find logs/* -exec cat {} \;
     - nosetests --with-coverage --cover-package=things -d
 
-notifications:
-    email:
-        on_success: change
-        on_failure: change
 
 after_success:
     - codecov
