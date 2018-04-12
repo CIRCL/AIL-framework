@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 The ZMQ_Feed_Q Module
@@ -44,6 +44,7 @@ if __name__ == '__main__':
     while True:
 
         message = p.get_from_set()
+        #print(message)
         # Recovering the streamed message informations.
         if message is not None:
             splitted = message.split()
@@ -51,14 +52,14 @@ if __name__ == '__main__':
                 paste, gzip64encoded = splitted
             else:
                 # TODO Store the name of the empty paste inside a Redis-list.
-                print "Empty Paste: not processed"
+                print("Empty Paste: not processed")
                 publisher.debug("Empty Paste: {0} not processed".format(message))
                 continue
         else:
-            print "Empty Queues: Waiting..."
+            print("Empty Queues: Waiting...")
             if int(time.time() - time_1) > 30:
                 to_print = 'Global; ; ; ;glob Processed {0} paste(s)'.format(processed_paste)
-                print to_print
+                print(to_print)
                 #publisher.info(to_print)
                 time_1 = time.time()
                 processed_paste = 0
@@ -66,12 +67,14 @@ if __name__ == '__main__':
             continue
         # Creating the full filepath
         filename = os.path.join(os.environ['AIL_HOME'],
-                                p.config.get("Directories", "pastes"), paste)
+                                p.config.get("Directories", "pastes"), paste.decode('utf8'))
+        #print(filename)
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
         with open(filename, 'wb') as f:
             f.write(base64.standard_b64decode(gzip64encoded))
-        p.populate_set_out(filename)
+
+        p.populate_set_out(filename.encode('utf8'))
         processed_paste+=1

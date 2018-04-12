@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 Queue helper module
@@ -12,11 +12,7 @@ the same Subscriber name in both of them.
 
 """
 import redis
-try: # dirty to support python3
-    import ConfigParser
-except:
-    import configparser
-    ConfigParser = configparser
+import configparser
 import os
 import zmq
 import time
@@ -32,7 +28,7 @@ class PubSub(object):
             raise Exception('Unable to find the configuration file. \
                             Did you set environment variables? \
                             Or activate the virtualenv.')
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read(configfile)
         self.redis_sub = False
         self.zmq_sub = False
@@ -61,7 +57,7 @@ class PubSub(object):
             for address in addresses.split(','):
                 new_sub = context.socket(zmq.SUB)
                 new_sub.connect(address)
-                new_sub.setsockopt(zmq.SUBSCRIBE, channel)
+                new_sub.setsockopt_string(zmq.SUBSCRIBE, channel)
                 self.subscribers.append(new_sub)
 
     def setup_publish(self, conn_name):
@@ -81,7 +77,7 @@ class PubSub(object):
             self.publishers['ZMQ'].append((p, channel))
 
     def publish(self, message):
-        m = json.loads(message)
+        m = json.loads(message.decode('utf8'))
         channel_message = m.get('channel')
         for p, channel in self.publishers['Redis']:
             if channel_message is None or channel_message == channel:
@@ -100,7 +96,7 @@ class PubSub(object):
                 for sub in self.subscribers:
                     try:
                         msg = sub.recv(zmq.NOBLOCK)
-                        yield msg.split(' ', 1)[1]
+                        yield msg.split(b" ", 1)[1]
                     except zmq.error.Again as e:
                         time.sleep(0.2)
                         pass
@@ -117,9 +113,9 @@ class Process(object):
                             Did you set environment variables? \
                             Or activate the virtualenv.')
         modulesfile = os.path.join(os.environ['AIL_BIN'], 'packages/modules.cfg')
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read(configfile)
-        self.modules = ConfigParser.ConfigParser()
+        self.modules = configparser.ConfigParser()
         self.modules.read(modulesfile)
         self.subscriber_name = conf_section
 
@@ -134,7 +130,6 @@ class Process(object):
             db=self.config.get('RedisPubSub', 'db'))
 
         self.moduleNum = os.getpid()
-
 
     def populate_set_in(self):
         # monoproc
@@ -159,36 +154,46 @@ class Process(object):
             return None
 
         else:
-            try:
-                if ".gz" in message:
-                    path = message.split(".")[-2].split("/")[-1]
-                    #find start of path with AIL_HOME
-                    index_s = message.find(os.environ['AIL_HOME'])
-                    #Stop when .gz
-                    index_e = message.find(".gz")+3 
+            #try:
+            if b'.gz' in message:
+                path = message.split(b".")[-2].split(b"/")[-1]
+                #find start of path with AIL_HOME
+                index_s = (message.decode('utf8')).find(os.environ['AIL_HOME'])
+                #Stop when .gz
+                index_e = message.find(b".gz")+3
+                if(index_s == -1):
+                    complete_path = message[0:index_e]
+                else:
                     complete_path = message[index_s:index_e]
 
-                else:
-                    path = "?"
-                value = str(timestamp) + ", " + path
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
-                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
-                return message
-
-            except:
+            else:
                 path = "?"
-                value = str(timestamp) + ", " + path
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", "?")
-                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
-                return message
+
+            value = str(timestamp) + ", " + path.decode('utf8')
+            self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+            self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
+            self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+            return message
+
+            #except:
+                #print('except')
+                #path = "?"
+                #value = str(timestamp) + ", " + path
+                #self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                #self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", "?")
+                #self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+                #return message
 
     def populate_set_out(self, msg, channel=None):
         # multiproc
+        msg = msg.decode('utf8')
         msg = {'message': msg}
         if channel is not None:
             msg.update({'channel': channel})
+
+        # TODO use bytes here ?
+        #j = (json.dumps(msg)).encode('utf8')
+        j = json.dumps(msg)
         self.r_temp.sadd(self.subscriber_name + 'out', json.dumps(msg))
 
     def publish(self):

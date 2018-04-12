@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 The Mixer Module
@@ -35,7 +35,7 @@ import os
 import time
 from pubsublogger import publisher
 import redis
-import ConfigParser
+import configparser
 
 from Helper import Process
 
@@ -58,7 +58,7 @@ if __name__ == '__main__':
                         Did you set environment variables? \
                         Or activate the virtualenv.')
 
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
     # REDIS #
@@ -89,9 +89,13 @@ if __name__ == '__main__':
             splitted = message.split()
             if len(splitted) == 2:
                 complete_paste, gzip64encoded = splitted
+
                 try:
-                    feeder_name, paste_name = complete_paste.split('>')
-                    feeder_name.replace(" ","")
+                    feeder_name = ( complete_paste.replace(b"archive/",b"") ).split(b"/")[0]
+
+                    # TODO take real name ?
+                    paste_name = complete_paste
+
                 except ValueError as e:
                     feeder_name = "unnamed_feeder"
                     paste_name = complete_paste
@@ -105,7 +109,8 @@ if __name__ == '__main__':
                     processed_paste_per_feeder[feeder_name] = 1
                     duplicated_paste_per_feeder[feeder_name] = 0
 
-                relay_message = "{0} {1}".format(paste_name, gzip64encoded)
+                relay_message = b" ".join( [paste_name, gzip64encoded] )
+                
                 digest = hashlib.sha1(gzip64encoded).hexdigest()
 
                 # Avoid any duplicate coming from any sources
@@ -173,26 +178,26 @@ if __name__ == '__main__':
 
             else:
                 # TODO Store the name of the empty paste inside a Redis-list.
-                print "Empty Paste: not processed"
+                print("Empty Paste: not processed")
                 publisher.debug("Empty Paste: {0} not processed".format(message))
         else:
-            print "Empty Queues: Waiting..."
+            print("Empty Queues: Waiting...")
             if int(time.time() - time_1) > refresh_time:
-                print processed_paste_per_feeder
+                print(processed_paste_per_feeder)
                 to_print = 'Mixer; ; ; ;mixer_all All_feeders Processed {0} paste(s) in {1}sec'.format(processed_paste, refresh_time)
-                print to_print
+                print(to_print)
                 publisher.info(to_print)
                 processed_paste = 0
 
-                for feeder, count in processed_paste_per_feeder.iteritems():
+                for feeder, count in processed_paste_per_feeder.items():
                     to_print = 'Mixer; ; ; ;mixer_{0} {0} Processed {1} paste(s) in {2}sec'.format(feeder, count, refresh_time)
-                    print to_print
+                    print(to_print)
                     publisher.info(to_print)
                     processed_paste_per_feeder[feeder] = 0
 
-                for feeder, count in duplicated_paste_per_feeder.iteritems():
+                for feeder, count in duplicated_paste_per_feeder.items():
                     to_print = 'Mixer; ; ; ;mixer_{0} {0} Duplicated {1} paste(s) in {2}sec'.format(feeder, count, refresh_time)
-                    print to_print
+                    print(to_print)
                     publisher.info(to_print)
                     duplicated_paste_per_feeder[feeder] = 0
 

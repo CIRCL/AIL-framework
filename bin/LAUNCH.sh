@@ -122,57 +122,57 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mixer" bash -c 'python3 Mixer.py; read x'
     sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Global" bash -c './Global.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Attributes" bash -c './Attributes.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Lines" bash -c './Lines.py; read x'
-    #sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Global" bash -c 'python3 Global.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c 'python3 Duplicates.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Attributes" bash -c 'python3 Attributes.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Lines" bash -c 'python3 Lines.py; read x'
+    sleep 0.1
     #screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
     #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Categ" bash -c './Categ.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "CreditCards" bash -c './CreditCards.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Onion" bash -c './Onion.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
-    #sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Categ" bash -c 'python3 Categ.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c 'python3 Tokenize.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c 'python3 CreditCards.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Onion" bash -c './Onion.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
+    sleep 0.1
     #screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
     #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Curve" bash -c './Curve.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Release" bash -c './Release.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Cve" bash -c './Cve.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "WebStats" bash -c './WebStats.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
-    #sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Curve" bash -c './Curve.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Release" bash -c './Release.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Cve" bash -c './Cve.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "WebStats" bash -c './WebStats.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
+    sleep 0.1
     #screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
     #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
-    #sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
+    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
 
 }
 
