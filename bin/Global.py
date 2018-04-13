@@ -76,5 +76,6 @@ if __name__ == '__main__':
         with open(filename, 'wb') as f:
             f.write(base64.standard_b64decode(gzip64encoded))
 
+        print(filename)
         p.populate_set_out(filename.encode('utf8'))
         processed_paste+=1
