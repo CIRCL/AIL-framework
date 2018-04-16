@@ -91,7 +91,7 @@ if __name__ == '__main__':
                 complete_paste, gzip64encoded = splitted
 
                 try:
-                    feeder_name = ( complete_paste.replace(b"archive/",b"") ).split(b"/")[0]
+                    feeder_name = ( complete_paste.replace("archive/","") ).split("/")[0]
 
                     # TODO take real name ?
                     paste_name = complete_paste
@@ -109,9 +109,10 @@ if __name__ == '__main__':
                     processed_paste_per_feeder[feeder_name] = 1
                     duplicated_paste_per_feeder[feeder_name] = 0
 
-                relay_message = b" ".join( [paste_name, gzip64encoded] )
-                
-                digest = hashlib.sha1(gzip64encoded).hexdigest()
+                relay_message = "{0} {1}".format(paste_name, gzip64encoded)
+                #relay_message = b" ".join( [paste_name, gzip64encoded] )
+
+                digest = hashlib.sha1(gzip64encoded.encode('utf8')).hexdigest()
 
                 # Avoid any duplicate coming from any sources
                 if operation_mode == 1:

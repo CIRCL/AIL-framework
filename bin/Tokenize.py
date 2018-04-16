@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 The Tokenize Module
@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     while True:
         message = p.get_from_set()
-        print message
+        print(message)
         if message is not None:
             paste = Paste.Paste(message)
             signal.alarm(5)
@@ -67,4 +67,4 @@ if __name__ == "__main__":
         else:
             publisher.debug("Tokeniser is idling 10s")
             time.sleep(10)
-            print "sleepin"
+            print("Sleeping")

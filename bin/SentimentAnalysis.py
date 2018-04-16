@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
     Sentiment analyser module.
@@ -33,7 +33,7 @@ size_threshold = 250
 line_max_length_threshold = 1000
 
 import os
-import ConfigParser
+import configparser
 
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
 if not os.path.exists(configfile):
@@ -41,7 +41,7 @@ if not os.path.exists(configfile):
         Did you set environment variables? \
         Or activate the virtualenv.')
 
-cfg = ConfigParser.ConfigParser()
+cfg = configparser.ConfigParser()
 cfg.read(configfile)
 
 sentiment_lexicon_file = cfg.get("Directories", "sentiment_lexicon_file")
@@ -69,7 +69,7 @@ def Analyse(message, server):
         combined_datetime = datetime.datetime.combine(the_date, the_time)
         timestamp = calendar.timegm(combined_datetime.timetuple())
 
-        sentences = tokenize.sent_tokenize(p_content.decode('utf-8', 'ignore'))
+        sentences = tokenize.sent_tokenize(p_content)
 
         if len(sentences) > 0:
             avg_score = {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compoundPos': 0.0, 'compoundNeg': 0.0}
@@ -99,7 +99,7 @@ def Analyse(message, server):
                     avg_score[k] = avg_score[k] / len(sentences)
 
 
-            # In redis-levelDB: {} = set, () = K-V 
+            # In redis-levelDB: {} = set, () = K-V
             # {Provider_set -> provider_i}
             # {Provider_TimestampInHour_i -> UniqID_i}_j
             # (UniqID_i -> PasteValue_i)
@@ -109,11 +109,11 @@ def Analyse(message, server):
             provider_timestamp = provider + '_' + str(timestamp)
             server.incr('UniqID')
             UniqID = server.get('UniqID')
-            print provider_timestamp, '->', UniqID, 'dropped', num_line_removed, 'lines'
+            print(provider_timestamp, '->', UniqID.decode('utf8'), 'dropped', num_line_removed, 'lines')
             server.sadd(provider_timestamp, UniqID)
             server.set(UniqID, avg_score)
     else:
-        print 'Dropped:', p_MimeType
+        print('Dropped:', p_MimeType)
 
 
 def isJSON(content):
@@ -121,7 +121,7 @@ def isJSON(content):
         json.loads(content)
         return True
 
-    except Exception,e:
+    except Exception:
         return False
 
 import signal
@@ -170,4 +170,3 @@ if __name__ == '__main__':
             continue
         else:
             signal.alarm(0)
-

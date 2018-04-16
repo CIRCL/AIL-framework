@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 The ZMQ_Sub_Onion Module
@@ -37,7 +37,7 @@ from Helper import Process
 def fetch(p, r_cache, urls, domains, path):
     failed = []
     downloaded = []
-    print len(urls), 'Urls to fetch.'
+    print(len(urls), 'Urls to fetch.')
     for url, domain in zip(urls, domains):
         if r_cache.exists(url) or url in failed:
             continue
@@ -73,9 +73,9 @@ def fetch(p, r_cache, urls, domains, path):
             r_cache.setbit(url, 0, 0)
             r_cache.expire(url, 3600)
             failed.append(url)
-            print 'Failed at downloading', url
-            print process.stdout.read()
-    print 'Failed:', len(failed), 'Downloaded:', len(downloaded)
+            print('Failed at downloading', url)
+            print(process.stdout.read())
+    print('Failed:', len(failed), 'Downloaded:', len(downloaded))
 
 
 if __name__ == "__main__":
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     while True:
         if message is not None:
-            print message
+            print(message)
             filename, score = message.split()
 
             # "For each new paste"
@@ -152,6 +152,6 @@ if __name__ == "__main__":
             prec_filename = filename
         else:
             publisher.debug("Script url is Idling 10s")
-            print 'Sleeping'
+            print('Sleeping')
             time.sleep(10)
         message = p.get_from_set()

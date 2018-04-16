@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -13,7 +13,7 @@ It test different possibility to makes some sqlInjection.
 
 import time
 import string
-import urllib2
+import urllib.request
 import re
 from pubsublogger import publisher
 from Helper import Process
@@ -74,8 +74,8 @@ def analyse(url, path):
     if (result_path > 0) or (result_query > 0):
         paste = Paste.Paste(path)
         if (result_path > 1) or (result_query > 1):
-            print "Detected SQL in URL: "
-            print urllib2.unquote(url)
+            print("Detected SQL in URL: ")
+            print(urllib.request.unquote(url))
             to_print = 'SQLInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL", paste.p_path)
             publisher.warning(to_print)
             #Send to duplicate
@@ -83,8 +83,8 @@ def analyse(url, path):
             #send to Browse_warning_paste
             p.populate_set_out('sqlinjection;{}'.format(path), 'alertHandler')
         else:
-            print "Potential SQL injection:"
-            print urllib2.unquote(url)
+            print("Potential SQL injection:")
+            print(urllib.request.unquote(url))
             to_print = 'SQLInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Potential SQL injection", paste.p_path)
             publisher.info(to_print)
 
@@ -92,7 +92,7 @@ def analyse(url, path):
 # Try to detect if the url passed might be an sql injection by appliying the regex
 # defined above on it.
 def is_sql_injection(url_parsed):
-    line = urllib2.unquote(url_parsed)
+    line = urllib.request.unquote(url_parsed)
     line = string.upper(line)
     result = []
     result_suspect = []
@@ -114,10 +114,10 @@ def is_sql_injection(url_parsed):
             result_suspect.append(line[temp_res:temp_res+len(word)])
 
     if len(result)>0:
-        print result
+        print(result)
         return 2
     elif len(result_suspect)>0:
-        print result_suspect
+        print(result_suspect)
         return 1
     else:
         return 0

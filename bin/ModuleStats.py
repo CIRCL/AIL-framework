@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
     This module makes statistics for some modules and providers
@@ -39,11 +39,11 @@ def compute_most_posted(server, message):
     # Compute Most Posted
     date = get_date_range(0)[0]
     # check if this keyword is eligible for progression
-    keyword_total_sum = 0 
+    keyword_total_sum = 0
 
     curr_value = server.hget(date, module+'-'+keyword)
     keyword_total_sum += int(curr_value) if curr_value is not None else 0
-        
+
     if server.zcard(redis_progression_name_set) < max_set_cardinality:
         server.zadd(redis_progression_name_set, float(keyword_total_sum), keyword)
 
@@ -52,17 +52,17 @@ def compute_most_posted(server, message):
         # Member set is a list of (value, score) pairs
         if int(member_set[0][1]) < keyword_total_sum:
             #remove min from set and add the new one
-            print module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+            print(module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')')
             server.zrem(redis_progression_name_set, member_set[0][0])
             server.zadd(redis_progression_name_set, float(keyword_total_sum), keyword)
-            print redis_progression_name_set
+            print(redis_progression_name_set)
 
 
 def compute_provider_info(server_trend, server_pasteName, path):
     redis_all_provider = 'all_provider_set'
-    
+
     paste = Paste.Paste(path)
-    
+
     paste_baseName = paste.p_name.split('.')[0]
     paste_size = paste._get_p_size()
     paste_provider = paste.p_source
@@ -84,7 +84,7 @@ def compute_provider_info(server_trend, server_pasteName, path):
     #
     # Compute Most Posted
     #
-        
+
     # Size
     if server_trend.zcard(redis_sum_size_set) < max_set_cardinality or server_trend.zscore(redis_sum_size_set, paste_provider) != "nil":
         server_trend.zadd(redis_sum_size_set, float(num_paste), paste_provider)
@@ -94,7 +94,7 @@ def compute_provider_info(server_trend, server_pasteName, path):
         # Member set is a list of (value, score) pairs
         if float(member_set[0][1]) < new_avg:
             #remove min from set and add the new one
-            print 'Size - adding ' +paste_provider+ '(' +str(new_avg)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+            print('Size - adding ' +paste_provider+ '(' +str(new_avg)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')')
             server_trend.zrem(redis_sum_size_set, member_set[0][0])
             server_trend.zadd(redis_sum_size_set, float(sum_size), paste_provider)
             server_trend.zrem(redis_avg_size_name_set, member_set[0][0])
@@ -110,7 +110,7 @@ def compute_provider_info(server_trend, server_pasteName, path):
         # Member set is a list of (value, score) pairs
         if int(member_set[0][1]) < num_paste:
             #remove min from set and add the new one
-            print 'Num - adding ' +paste_provider+ '(' +str(num_paste)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')'
+            print('Num - adding ' +paste_provider+ '(' +str(num_paste)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')')
             server_trend.zrem(member_set[0][0])
             server_trend.zadd(redis_providers_name_set, float(num_paste), paste_provider)
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
 
         if message is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
-            print 'sleeping'
+            print('sleeping')
             time.sleep(20)
             continue
 

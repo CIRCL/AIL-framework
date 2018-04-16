@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 The ZMQ_PubSub_Categ Module
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         bname = os.path.basename(filename)
         tmp_dict[bname] = []
         with open(os.path.join(args.d, filename), 'r') as f:
-            patterns = [r'%s' % re.escape(s.strip()) for s in f]
+            patterns = [r'%s' % ( re.escape(s.strip()) ) for s in f]
             tmp_dict[bname] = re.compile('|'.join(patterns), re.IGNORECASE)
 
     prec_filename = None
@@ -82,18 +82,25 @@ if __name__ == "__main__":
         filename = p.get_from_set()
         if filename is None:
             publisher.debug("Script Categ is Idling 10s")
-            print 'Sleeping'
+            print('Sleeping')
             time.sleep(10)
             continue
 
         paste = Paste.Paste(filename)
         content = paste.get_p_content()
 
+        print('-----------------------------------------------------')
+        print(filename)
+        print(content)
+        print('-----------------------------------------------------')
+
         for categ, pattern in tmp_dict.items():
             found = set(re.findall(pattern, content))
             if len(found) >= matchingThreshold:
                 msg = '{} {}'.format(paste.p_path, len(found))
-                print msg, categ
+                #msg = " ".join( [paste.p_path, bytes(len(found))] )
+
+                print(msg, categ)
                 p.populate_set_out(msg, categ)
 
                 publisher.info(

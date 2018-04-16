@@ -67,7 +67,7 @@ if __name__ == '__main__':
             continue
         # Creating the full filepath
         filename = os.path.join(os.environ['AIL_HOME'],
-                                p.config.get("Directories", "pastes"), paste.decode('utf8'))
+                                p.config.get("Directories", "pastes"), paste)
         #print(filename)
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
@@ -77,5 +77,5 @@ if __name__ == '__main__':
             f.write(base64.standard_b64decode(gzip64encoded))
 
         print(filename)
-        p.populate_set_out(filename.encode('utf8'))
+        p.populate_set_out(filename)
         processed_paste+=1

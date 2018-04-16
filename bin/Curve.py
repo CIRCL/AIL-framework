@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 This module is consuming the Redis-list created by the ZMQ_Sub_Curve_Q Module.
@@ -53,12 +53,12 @@ def check_if_tracked_term(term, path):
         #add_paste to tracked_word_set
         set_name = "tracked_" + term
         server_term.sadd(set_name, path)
-        print term, 'addded', set_name, '->', path
+        print(term, 'addded', set_name, '->', path)
         p.populate_set_out("New Term added", 'CurveManageTopSets')
 
         # Send a notification only when the member is in the set
         if term in server_term.smembers(TrackedTermsNotificationEnabled_Name):
-            
+
             # Send to every associated email adress
             for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + term):
                 sendEmailNotification(email, term)
@@ -137,7 +137,7 @@ if __name__ == "__main__":
                 server_term.zincrby(curr_set, low_word, float(score))
                 #1 term per paste
                 server_term.zincrby("per_paste_" + curr_set, low_word, float(1))
-             
+
             #Add more info for tracked terms
             check_if_tracked_term(low_word, filename)
 
@@ -149,15 +149,16 @@ if __name__ == "__main__":
 
             if generate_new_graph:
                 generate_new_graph = False
-                print 'Building graph'
+                print('Building graph')
                 today = datetime.date.today()
                 year = today.year
                 month = today.month
+
                 lib_words.create_curve_with_word_file(r_serv1, csv_path,
                                                       wordfile_path, year,
                                                       month)
 
             publisher.debug("Script Curve is Idling")
-            print "sleeping"
+            print("sleeping")
             time.sleep(10)
         message = p.get_from_set()

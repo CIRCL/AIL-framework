@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -18,6 +18,7 @@ from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
 import re
+import sys
 
 from Helper import Process
 
@@ -58,13 +59,14 @@ if __name__ == "__main__":
             content = paste.get_p_content()
             all_cards = re.findall(regex, content)
             if len(all_cards) > 0:
-                print 'All matching', all_cards
+                print('All matching', all_cards)
                 creditcard_set = set([])
 
                 for card in all_cards:
                     clean_card = re.sub('[^0-9]', '', card)
+                    clean_card = clean_card
                     if lib_refine.is_luhn_valid(clean_card):
-                        print clean_card, 'is valid'
+                        print(clean_card, 'is valid')
                         creditcard_set.add(clean_card)
 
                 paste.__setattr__(channel, creditcard_set)
@@ -76,13 +78,15 @@ if __name__ == "__main__":
                 if (len(creditcard_set) > 0):
                     publisher.warning('{}Checked {} valid number(s);{}'.format(
                         to_print, len(creditcard_set), paste.p_path))
+                    print('{}Checked {} valid number(s);{}'.format(
+                        to_print, len(creditcard_set), paste.p_path))
                     #Send to duplicate
                     p.populate_set_out(filename, 'Duplicate')
                     #send to Browse_warning_paste
-                    p.populate_set_out('creditcard;{}'.format(filename), 'alertHandler')
+                    msg = 'creditcard;{}'.format(filename)
+                    p.populate_set_out(msg, 'alertHandler')
                 else:
                     publisher.info('{}CreditCard related;{}'.format(to_print, paste.p_path))
         else:
             publisher.debug("Script creditcard is idling 1m")
             time.sleep(10)
-

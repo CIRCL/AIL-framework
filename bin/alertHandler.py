@@ -62,8 +62,9 @@ if __name__ == "__main__":
     while True:
             message = p.get_from_set()
             if message is not None:
-                message = message.decode('utf8') #decode because of pyhton3
+                #decode because of pyhton3
                 module_name, p_path = message.split(';')
+                print("new alert : {}".format(module_name))
                 #PST = Paste.Paste(p_path)
             else:
                 publisher.debug("Script Attribute is idling 10s")

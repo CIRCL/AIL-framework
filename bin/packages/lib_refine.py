@@ -76,7 +76,7 @@ def checking_MX_record(r_serv, adress_set):
                     r_serv.setex(MXdomain[1:], 1, timedelta(days=1))
 
                 except Exception as e:
-                    print e
+                    print(e)
 
     publisher.debug("emails before: {0} after: {1} (valid)".format(num, score))
     return (num, WalidMX)
@@ -125,7 +125,7 @@ def checking_A_record(r_serv, domains_set):
             publisher.debug('The Label is too long')
 
         except Exception as e:
-            print e
+            print(e)
 
     publisher.debug("URLs before: {0} after: {1} (valid)".format(num, score))
     return (num, WalidA)

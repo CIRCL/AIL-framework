@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*- coding: utf-8 -*-
 #
 # This file is part of AIL framework - Analysis Information Leak framework
@@ -25,7 +25,7 @@ import time
 import redis
 import base64
 import os
-import ConfigParser
+import configparser
 
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
 if not os.path.exists(configfile):
@@ -33,7 +33,7 @@ if not os.path.exists(configfile):
         Did you set environment variables? \
         Or activate the virtualenv.')
 
-cfg = ConfigParser.ConfigParser()
+cfg = configparser.ConfigParser()
 cfg.read(configfile)
 
 if cfg.has_option("ZMQ_Global", "bind"):
@@ -59,6 +59,7 @@ while True:
     time.sleep(base_sleeptime + sleep_inc)
     topic = 101
     paste = r.lpop("pastes")
+    print(paste)
     if paste is None:
         continue
     socket.send("%d %s" % (topic, paste))

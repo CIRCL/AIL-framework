@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 This Module is used for term frequency.
@@ -126,6 +126,6 @@ if __name__ == "__main__":
 
         else:
             publisher.debug("Script RegexForTermsFrequency is Idling")
-            print "sleeping"
+            print("sleeping")
             time.sleep(5)
         message = p.get_from_set()

@@ -1,18 +1,18 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 import argparse
 import redis
 from pubsublogger import publisher
 from packages.lib_words import create_dirfile
-import ConfigParser
+import configparser
 
 
 def main():
     """Main Function"""
 
     # CONFIG #
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read('./packages/config.cfg')
 
     parser = argparse.ArgumentParser(

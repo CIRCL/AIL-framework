@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 '''
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         message = p.get_from_set()
         if message is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
-            print "queue empty"
+            print("queue empty")
             time.sleep(1)
             continue
 

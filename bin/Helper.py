@@ -58,7 +58,7 @@ class PubSub(object):
                 new_sub = context.socket(zmq.SUB)
                 new_sub.connect(address)
                 # bytes64 encode bytes to ascii only bytes
-                new_sub.setsockopt(zmq.SUBSCRIBE, channel.encode('ascii'))
+                new_sub.setsockopt_string(zmq.SUBSCRIBE, channel)
                 self.subscribers.append(new_sub)
 
     def setup_publish(self, conn_name):
@@ -78,15 +78,15 @@ class PubSub(object):
             self.publishers['ZMQ'].append((p, channel))
 
     def publish(self, message):
-        m = json.loads(message.decode('ascii'))
+        m = json.loads(message)
         channel_message = m.get('channel')
         for p, channel in self.publishers['Redis']:
             if channel_message is None or channel_message == channel:
-                p.publish(channel, ( m['message']).encode('ascii') )
+                p.publish(channel, ( m['message']) )
         for p, channel in self.publishers['ZMQ']:
             if channel_message is None or channel_message == channel:
-                mess = ( m['message'] ).encode('ascii')
-                p.send(b' '.join( [channel,  mess] ) )
+                p.send('{} {}'.format(channel, m['message']))
+                #p.send(b' '.join( [channel,  mess] ) )
 
 
     def subscribe(self):
@@ -99,7 +99,8 @@ class PubSub(object):
                 for sub in self.subscribers:
                     try:
                         msg = sub.recv(zmq.NOBLOCK)
-                        yield msg.split(b" ", 1)[1]
+                        msg = msg.decode('utf8')
+                        yield msg.split(" ", 1)[1]
                     except zmq.error.Again as e:
                         time.sleep(0.2)
                         pass
@@ -150,6 +151,12 @@ class Process(object):
         self.r_temp.hset('queues', self.subscriber_name,
                          int(self.r_temp.scard(in_set)))
         message = self.r_temp.spop(in_set)
+
+        try:
+            message = message.decode('utf8')
+        except AttributeError:
+            pass
+
         timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
         dir_name = os.environ['AIL_HOME']+self.config.get('Directories', 'pastes')
 
@@ -158,12 +165,12 @@ class Process(object):
 
         else:
             #try:
-            if b'.gz' in message:
-                path = message.split(b".")[-2].split(b"/")[-1]
+            if '.gz' in message:
+                path = message.split(".")[-2].split("/")[-1]
                 #find start of path with AIL_HOME
-                index_s = (message.decode('ascii')).find(os.environ['AIL_HOME'])
+                index_s = message.find(os.environ['AIL_HOME'])
                 #Stop when .gz
-                index_e = message.find(b".gz")+3
+                index_e = message.find(".gz")+3
                 if(index_s == -1):
                     complete_path = message[0:index_e]
                 else:
@@ -173,7 +180,7 @@ class Process(object):
                 path = "-"
                 complete_path = "?"
 
-            value = str(timestamp) + ", " + path.decode('ascii')
+            value = str(timestamp) + ", " + path
             self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
             self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
             self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
@@ -190,13 +197,12 @@ class Process(object):
 
     def populate_set_out(self, msg, channel=None):
         # multiproc
-        msg = msg.decode('ascii')
         msg = {'message': msg}
         if channel is not None:
             msg.update({'channel': channel})
 
         # bytes64 encode bytes to ascii only bytes
-        j = (json.dumps(msg)).encode('ascii')
+        j = json.dumps(msg)
         self.r_temp.sadd(self.subscriber_name + 'out', j)
 
     def publish(self):
@@ -209,6 +215,12 @@ class Process(object):
             self.pubsub.setup_publish(name)
         while True:
             message = self.r_temp.spop(self.subscriber_name + 'out')
+
+            try:
+                message = message.decode('utf8')
+            except AttributeError:
+                pass
+
             if message is None:
                 time.sleep(1)
                 continue

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 The ZMQ_Feed_Q Module
@@ -21,7 +21,7 @@ Requirements
 
 """
 import redis
-import ConfigParser
+import configparser
 import os
 
 configfile = os.path.join(os.environ['AIL_BIN'], './packages/config.cfg')
@@ -31,7 +31,7 @@ def main():
     """Main Function"""
 
     # CONFIG #
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
     # REDIS

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -100,7 +100,7 @@ if __name__ == "__main__":
                     publisher.debug('{} Published'.format(url))
 
                     if f1 == "onion":
-                        print domain
+                        print(domain)
 
                     hostl = unicode(avoidNone(subdomain)+avoidNone(domain))
                     try:
@@ -121,16 +121,16 @@ if __name__ == "__main__":
                     # EU is not an official ISO 3166 code (but used by RIPE
                     # IP allocation)
                     if cc is not None and cc != "EU":
-                        print hostl, asn, cc, \
-                            pycountry.countries.get(alpha_2=cc).name
+                        print(hostl, asn, cc, \
+                            pycountry.countries.get(alpha_2=cc).name)
                         if cc == cc_critical:
                             to_print = 'Url;{};{};{};Detected {} {}'.format(
                                     PST.p_source, PST.p_date, PST.p_name,
                                     hostl, cc)
                             #publisher.warning(to_print)
-                            print to_print
+                            print(to_print)
                     else:
-                        print hostl, asn, cc
+                        print(hostl, asn, cc)
 
                 A_values = lib_refine.checking_A_record(r_serv2,
                                                         domains_list)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
         else:
             publisher.debug("Script url is Idling 10s")
-            print 'Sleeping'
+            print('Sleeping')
             time.sleep(10)
 
         message = p.get_from_set()

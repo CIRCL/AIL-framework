@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*- coding: utf-8 -*-
 #
 # This file is part of AIL framework - Analysis Information Leak framework
@@ -10,7 +10,7 @@
 #
 # Copyright (c) 2014 Alexandre Dulaunoy - a@foo.be
 
-import ConfigParser
+import configparser
 import argparse
 import gzip
 import os
@@ -23,7 +23,7 @@ def readdoc(path=None):
     return f.read()
 
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-cfg = ConfigParser.ConfigParser()
+cfg = configparser.ConfigParser()
 cfg.read(configfile)
 
 # Indexer configuration - index dir and schema setup
@@ -51,7 +51,7 @@ ix = index.open_dir(indexpath)
 from whoosh.qparser import QueryParser
 
 if args.n:
-    print ix.doc_count_all()
+    print(ix.doc_count_all())
     exit(0)
 
 if args.l:

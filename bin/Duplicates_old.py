@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -33,8 +33,8 @@ if __name__ == "__main__":
     # DB OBJECT & HASHS ( DISK )
     # FIXME increase flexibility
     dico_redis = {}
-    for year in xrange(2013, 2017):
-        for month in xrange(0, 16):
+    for year in range(2013, 2017):
+        for month in range(0, 16):
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
                 host=p.config.get("Redis_Level_DB", "host"), port=year,
                 db=month)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                     if percentage >= 50:
                         dupl.append((paste, percentage))
                     else:
-                        print 'percentage: ' + str(percentage)
+                        print('percentage: ' + str(percentage))
 
                 # Creating the object attribute and save it.
                 to_print = 'Duplicate;{};{};{};'.format(
@@ -156,11 +156,11 @@ if __name__ == "__main__":
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis("p_duplicate", dupl)
                     publisher.info('{}Detected {}'.format(to_print, len(dupl)))
-                    print '{}Detected {}'.format(to_print, len(dupl))
+                    print('{}Detected {}'.format(to_print, len(dupl)))
 
                 y = time.time()
 
                 publisher.debug('{}Processed in {} sec'.format(to_print, y-x))
         except IOError:
-            print "CRC Checksum Failed on :", PST.p_path
+            print("CRC Checksum Failed on :", PST.p_path)
             publisher.error('{}CRC Checksum Failed'.format(to_print))

@@ -82,16 +82,16 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
 
     """
     threshold = 50
-    first_day = date(year, month, 01)
+    first_day = date(year, month, 1)
     last_day = date(year, month, calendar.monthrange(year, month)[1])
     words = []
 
-    with open(feederfilename, 'rb') as f:
+    with open(feederfilename, 'r') as f:
         # words of the files
         words = sorted([word.strip() for word in f if word.strip()[0:2]!='//' and word.strip()!='' ])
 
     headers = ['Date'] + words
-    with open(csvfilename+'.csv', 'wb') as f:
+    with open(csvfilename+'.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
 
@@ -103,11 +103,14 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
             # from the 1srt day to the last of the list
             for word in words:
                 value = r_serv.hget(word, curdate)
+
                 if value is None:
                     row.append(0)
                 else:
                     # if the word have a value for the day
                     # FIXME Due to performance issues (too many tlds, leads to more than 7s to perform this procedure), I added a threshold
+                    value = r_serv.hget(word, curdate)
+                    value = int(value.decode('utf8'))
                     if value >= threshold:
                         row.append(value)
             writer.writerow(row)
@@ -127,14 +130,14 @@ def create_curve_from_redis_set(server, csvfilename, set_to_plot, year, month):
 
     """
 
-    first_day = date(year, month, 01)
+    first_day = date(year, month, 1)
     last_day = date(year, month, calendar.monthrange(year, month)[1])
-    
+
     redis_set_name = set_to_plot + "_set_" + str(year) + str(month).zfill(2)
     words = list(server.smembers(redis_set_name))
-    
+
     headers = ['Date'] + words
-    with open(csvfilename+'.csv', 'wb') as f:
+    with open(csvfilename+'.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
 

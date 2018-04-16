@@ -15,46 +15,49 @@ RSA private key, certificate messages
 import time
 from pubsublogger import publisher
 
-from bin.packages import Paste
-from bin.Helper import Process
+#from bin.packages import Paste
+#from bin.Helper import Process
+
+from packages import Paste
+from Helper import Process
 
 
 def search_key(paste):
     content = paste.get_p_content()
     find = False
-    if b'-----BEGIN PGP MESSAGE-----' in content:
+    if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN CERTIFICATE-----' in content:
+    if '-----BEGIN CERTIFICATE-----' in content:
         publisher.warning('{} has a certificate message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN RSA PRIVATE KEY-----' in content:
+    if '-----BEGIN RSA PRIVATE KEY-----' in content:
         publisher.warning('{} has a RSA private key message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN PRIVATE KEY-----' in content:
+    if '-----BEGIN PRIVATE KEY-----' in content:
         publisher.warning('{} has a private key message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
+    if '-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
         publisher.warning('{} has an encrypted private key message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN OPENSSH PRIVATE KEY-----' in content:
+    if '-----BEGIN OPENSSH PRIVATE KEY-----' in content:
         publisher.warning('{} has an openssh private key message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN DSA PRIVATE KEY-----' in content:
+    if '-----BEGIN DSA PRIVATE KEY-----' in content:
         publisher.warning('{} has a dsa private key message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN EC PRIVATE KEY-----' in content:
+    if '-----BEGIN EC PRIVATE KEY-----' in content:
         publisher.warning('{} has an ec private key message'.format(paste.p_name))
         find = True
 
-    if b'-----BEGIN PGP PRIVATE KEY BLOCK-----' in content:
+    if '-----BEGIN PGP PRIVATE KEY BLOCK-----' in content:
         publisher.warning('{} has a pgp private key block message'.format(paste.p_name))
         find = True
 
@@ -63,7 +66,9 @@ def search_key(paste):
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
         #send to Browse_warning_paste
-        p.populate_set_out('keys;{}'.format(message), 'alertHandler')
+        msg = ('keys;{}'.format(message))
+        print(message)
+        p.populate_set_out( msg, 'alertHandler')
 
 
 if __name__ == '__main__':

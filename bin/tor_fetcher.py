@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 import socks
@@ -63,5 +63,5 @@ if __name__ == "__main__":
     t, path = tempfile.mkstemp()
     with open(path,  'w') as f:
         f.write(to_write)
-    print path
+    print(path)
     exit(0)

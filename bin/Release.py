@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 import time
 from packages import Paste
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         filepath = p.get_from_set()
         if filepath is None:
             publisher.debug("Script Release is Idling 10s")
-            print 'Sleeping'
+            print('Sleeping')
             time.sleep(10)
             continue
 
@@ -40,6 +40,7 @@ if __name__ == "__main__":
             continue
 
         to_print = 'Release;{};{};{};{} releases;{}'.format(paste.p_source, paste.p_date, paste.p_name, len(releases), paste.p_path)
+        print(to_print)
         if len(releases) > 30:
             publisher.warning(to_print)
         else:

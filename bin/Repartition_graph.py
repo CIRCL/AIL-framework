@@ -1,9 +1,9 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3.5
 # -*-coding:UTF-8 -*
 
 import redis
 import argparse
-import ConfigParser
+import configparser
 from datetime import datetime
 from pubsublogger import publisher
 
@@ -14,7 +14,7 @@ def main():
     """Main Function"""
 
     # CONFIG #
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read('./packages/config.cfg')
 
     # SCRIPT PARSER #

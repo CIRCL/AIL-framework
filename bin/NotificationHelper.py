@@ -1,10 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
-import ConfigParser
+import configparser
 import os
 import smtplib
-from email.MIMEMultipart import MIMEMultipart
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 """
@@ -22,31 +22,31 @@ TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
 TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
 
 def sendEmailNotification(recipient, term):
-    
+
     if not os.path.exists(configfile):
         raise Exception('Unable to find the configuration file. \
                     Did you set environment variables? \
                     Or activate the virtualenv?')
 
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
     sender = cfg.get("Notifications", "sender"),
     sender_host = cfg.get("Notifications", "sender_host"),
     sender_port = cfg.getint("Notifications", "sender_port"),
     sender_pw = cfg.get("Notifications", "sender_pw"),
-    
+
     if isinstance(sender, tuple):
         sender = sender[0]
 
     if isinstance(sender_host, tuple):
         sender_host = sender_host[0]
-        
+
     if isinstance(sender_port, tuple):
         sender_port = sender_port[0]
-        
+
     if isinstance(sender_pw, tuple):
-        sender_pw = sender_pw[0]    
+        sender_pw = sender_pw[0]
 
     # raise an exception if any of these is None
     if (sender is None or
@@ -62,22 +62,19 @@ def sendEmailNotification(recipient, term):
             smtp_server.login(sender, sender_pw)
         else:
             smtp_server = smtplib.SMTP(sender_host, sender_port)
-            
-        
+
+
         mime_msg = MIMEMultipart()
         mime_msg['From'] = sender
         mime_msg['To'] = recipient
         mime_msg['Subject'] = "AIL Term Alert"
-        
+
         body = "New occurrence for term: " + term
         mime_msg.attach(MIMEText(body, 'plain'))
-        
+
         smtp_server.sendmail(sender, recipient, mime_msg.as_string())
         smtp_server.quit()
-            
+
     except Exception as e:
-        print str(e)
+        print(str(e))
         # raise e
-
-
-

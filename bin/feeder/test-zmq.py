@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*- coding: utf-8 -*-
 #
 # This file is part of AIL framework - Analysis Information Leak framework
@@ -19,14 +19,15 @@ socket.connect ("tcp://crf.circl.lu:%s" % port)
 # 101 Name of the pastes only
 # 102 Full pastes in raw base64(gz)
 
-topicfilter = "102"
+topicfilter = b"102"
 socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
-
+print('b0')
 while True:
     message = socket.recv()
+    print('b1')
     print (message)
-    if topicfilter == "102":
+    if topicfilter == b"102":
         topic, paste, messagedata = message.split()
-        print paste, messagedata
+        print(paste, messagedata)
     else:
         print (message)

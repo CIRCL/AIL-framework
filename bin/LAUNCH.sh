@@ -130,8 +130,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Lines" bash -c 'python3 Lines.py; read x'
     sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
-    #sleep 0.1
+    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Categ" bash -c 'python3 Categ.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tokenize" bash -c 'python3 Tokenize.py; read x'
@@ -142,8 +142,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
     sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
-    #sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Curve" bash -c './Curve.py; read x'
@@ -168,8 +168,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
     sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
-    #sleep 0.1
+    screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'

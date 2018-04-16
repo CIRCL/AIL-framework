@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -73,19 +73,19 @@ if __name__ == "__main__":
                         #Send to duplicate
                         p.populate_set_out(filename, 'Duplicate')
                         p.populate_set_out('mail;{}'.format(filename), 'alertHandler')
-                        
+
                     else:
                         publisher.info(to_print)
-                #Send to ModuleStats 
+                #Send to ModuleStats
                 for mail in MX_values[1]:
-                    print 'mail;{};{};{}'.format(1, mail, PST.p_date)
+                    print('mail;{};{};{}'.format(1, mail, PST.p_date))
                     p.populate_set_out('mail;{};{};{}'.format(1, mail, PST.p_date), 'ModuleStats')
 
             prec_filename = filename
 
         else:
             publisher.debug("Script Mails is Idling 10s")
-            print 'Sleeping'
+            print('Sleeping')
             time.sleep(10)
 
         message = p.get_from_set()

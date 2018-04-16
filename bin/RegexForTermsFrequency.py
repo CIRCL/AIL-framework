@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 """
 This Module is used for term frequency.
@@ -76,6 +76,9 @@ if __name__ == "__main__":
                 dico_regex, dico_regexname_to_redis = refresh_dicos()
                 print('dico got refreshed')
 
+            print(dico_regex)
+            print(dico_regexname_to_redis)
+
             filename = message
             temp = filename.split('/')
             timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
@@ -115,6 +118,6 @@ if __name__ == "__main__":
 
         else:
             publisher.debug("Script RegexForTermsFrequency is Idling")
-            print "sleeping"
+            print("sleeping")
             time.sleep(5)
         message = p.get_from_set()

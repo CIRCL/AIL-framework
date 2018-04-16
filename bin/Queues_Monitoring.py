@@ -1,9 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 import redis
 import argparse
-import ConfigParser
+import configparser
 import time
 import os
 from pubsublogger import publisher
@@ -14,7 +14,7 @@ def main():
     """Main Function"""
 
     # CONFIG #
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read('./packages/config.cfg')
 
     # SCRIPT PARSER #
@@ -49,7 +49,7 @@ def main():
         row.sort()
         table.add_rows(row, header=False)
         os.system('clear')
-        print table.draw()
+        print(table.draw())
 
 
 if __name__ == "__main__":

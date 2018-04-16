@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 """
@@ -33,7 +33,7 @@ def analyse(server, field_name, date, url_parsed):
         if field_name == "domain": #save domain in a set for the monthly plot
             domain_set_name = "domain_set_" + date[0:6]
             server.sadd(domain_set_name, field)
-            print "added in " + domain_set_name +": "+ field
+            print("added in " + domain_set_name +": "+ field)
 
 def get_date_range(num_day):
     curr_date = datetime.date.today()
@@ -122,7 +122,7 @@ if __name__ == '__main__':
                                   p.config.get("Directories", "protocolstrending_csv"))
     protocolsfile_path = os.path.join(os.environ['AIL_HOME'],
                                  p.config.get("Directories", "protocolsfile"))
-    
+
     csv_path_tld = os.path.join(os.environ['AIL_HOME'],
                                 p.config.get("Directories", "tldstrending_csv"))
     tldsfile_path = os.path.join(os.environ['AIL_HOME'],
@@ -145,24 +145,25 @@ if __name__ == '__main__':
                 year = today.year
                 month = today.month
 
-                print 'Building protocol graph'
+                print('Building protocol graph')
                 lib_words.create_curve_with_word_file(r_serv_trend, csv_path_proto,
                                                       protocolsfile_path, year,
                                                       month)
 
-                print 'Building tld graph'
+                print('Building tld graph')
                 lib_words.create_curve_with_word_file(r_serv_trend, csv_path_tld,
                                                       tldsfile_path, year,
                                                       month)
 
-                print 'Building domain graph'
+                print('Building domain graph')
                 lib_words.create_curve_from_redis_set(r_serv_trend, csv_path_domain,
                                                       "domain", year,
                                                       month)
-                print 'end building'
+                print('end building')
+
 
             publisher.debug("{} queue is empty, waiting".format(config_section))
-            print 'sleeping'
+            print('sleeping')
             time.sleep(5*60)
             continue
 
@@ -172,10 +173,14 @@ if __name__ == '__main__':
             url, date, path = message.split()
             faup.decode(url)
             url_parsed = faup.get()
-            
-            analyse(r_serv_trend, 'scheme', date, url_parsed)	#Scheme analysis
-            analyse(r_serv_trend, 'tld', date, url_parsed)	#Tld analysis
-	    analyse(r_serv_trend, 'domain', date, url_parsed)	#Domain analysis
+
+            # Scheme analysis
+            analyse(r_serv_trend, 'scheme', date, url_parsed)
+            # Tld analysis
+            analyse(r_serv_trend, 'tld', date, url_parsed)
+            # Domain analysis
+	        analyse(r_serv_trend, 'domain', date, url_parsed)
+
             compute_progression(r_serv_trend, 'scheme', num_day_to_look, url_parsed)
             compute_progression(r_serv_trend, 'tld', num_day_to_look, url_parsed)
             compute_progression(r_serv_trend, 'domain', num_day_to_look, url_parsed)
