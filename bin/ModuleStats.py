@@ -52,7 +52,7 @@ def compute_most_posted(server, message):
         # Member set is a list of (value, score) pairs
         if int(member_set[0][1]) < keyword_total_sum:
             #remove min from set and add the new one
-            print(module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')')
+            print(module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0].decode('utf8')+'('+str(member_set[0][1])+')')
             server.zrem(redis_progression_name_set, member_set[0][0])
             server.zadd(redis_progression_name_set, float(keyword_total_sum), keyword)
             print(redis_progression_name_set)
