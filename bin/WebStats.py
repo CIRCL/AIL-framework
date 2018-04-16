@@ -29,6 +29,7 @@ num_day_to_look = 5       # the detection of the progression start num_day_to_lo
 def analyse(server, field_name, date, url_parsed):
     field = url_parsed[field_name]
     if field is not None:
+        field = field.decode('utf8')
         server.hincrby(field, date, 1)
         if field_name == "domain": #save domain in a set for the monthly plot
             domain_set_name = "domain_set_" + date[0:6]
@@ -179,7 +180,7 @@ if __name__ == '__main__':
             # Tld analysis
             analyse(r_serv_trend, 'tld', date, url_parsed)
             # Domain analysis
-	        analyse(r_serv_trend, 'domain', date, url_parsed)
+            analyse(r_serv_trend, 'domain', date, url_parsed)
 
             compute_progression(r_serv_trend, 'scheme', num_day_to_look, url_parsed)
             compute_progression(r_serv_trend, 'tld', num_day_to_look, url_parsed)

@@ -66,10 +66,10 @@ def analyse(url, path):
     result_query = 0
 
     if resource_path is not None:
-        result_path = is_sql_injection(resource_path)
+        result_path = is_sql_injection(resource_path.decode('utf8'))
 
     if query_string is not None:
-        result_query = is_sql_injection(query_string)
+        result_query = is_sql_injection(query_string.decode('utf8'))
 
     if (result_path > 0) or (result_query > 0):
         paste = Paste.Paste(path)
@@ -93,7 +93,7 @@ def analyse(url, path):
 # defined above on it.
 def is_sql_injection(url_parsed):
     line = urllib.request.unquote(url_parsed)
-    line = string.upper(line)
+    line = str.upper(line)
     result = []
     result_suspect = []
 
@@ -104,12 +104,12 @@ def is_sql_injection(url_parsed):
 
     for word_list in word_injection:
         for word in word_list:
-            temp_res = string.find(line, string.upper(word))
+            temp_res = str.find(line, str.upper(word))
             if temp_res!=-1:
                 result.append(line[temp_res:temp_res+len(word)])
 
     for word in word_injection_suspect:
-        temp_res = string.find(line, string.upper(word))
+        temp_res = str.find(line, str.upper(word))
         if temp_res!=-1:
             result_suspect.append(line[temp_res:temp_res+len(word)])
 

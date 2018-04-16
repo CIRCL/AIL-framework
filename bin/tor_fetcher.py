@@ -3,7 +3,7 @@
 
 import socks
 import socket
-import urllib2
+import urllib.request
 import StringIO
 import gzip
 import base64
@@ -21,10 +21,10 @@ def create_connection(address, timeout=None, source_address=None):
 
 def get_page(url, torclient_host='127.0.0.1', torclient_port=9050):
 
-    request = urllib2.Request(url)
+    request = urllib.request.Request(url)
     # UA of the Tor browser bundle
     request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0')
-    return urllib2.urlopen(request, timeout=5).read(max_size * 100000)
+    return urllib.request.urlopen(request, timeout=5).read(max_size * 100000)
 
 
 def makegzip64(s):

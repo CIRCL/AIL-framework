@@ -41,7 +41,7 @@ def fetch(p, r_cache, urls, domains, path):
     for url, domain in zip(urls, domains):
         if r_cache.exists(url) or url in failed:
             continue
-        to_fetch = base64.standard_b64encode(url)
+        to_fetch = base64.standard_b64encode(url.encode('utf8'))
         process = subprocess.Popen(["python", './tor_fetcher.py', to_fetch],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
