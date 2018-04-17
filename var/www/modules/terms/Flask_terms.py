@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 '''
@@ -72,7 +72,7 @@ def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
     curr_to_return = 0
     for timestamp in range(startDate, startDate - max(num_day)*oneDay, -oneDay):
         value = r_serv_term.hget(per_paste+str(timestamp), word)
-        curr_to_return += int(value) if value is not None else 0
+        curr_to_return += int(value.decode('utf8')) if value is not None else 0
         for i in num_day:
             if passed_days == i-1:
                 to_return.append(curr_to_return)
@@ -251,13 +251,13 @@ def terms_management_query_paste():
     # check if regex or not
     if term.startswith('/') and term.endswith('/'):
         set_paste_name = "regex_" + term
-        track_list_path = r_serv_term.smembers(set_paste_name)
+        track_list_path = (r_serv_term.smembers(set_paste_name)).decode('utf8')
     elif term.startswith('\\') and term.endswith('\\'):
         set_paste_name = "set_" + term
-        track_list_path = r_serv_term.smembers(set_paste_name)
+        track_list_path = (r_serv_term.smembers(set_paste_name)).decode('utf8')
     else:
         set_paste_name = "tracked_" + term
-        track_list_path = r_serv_term.smembers(set_paste_name)
+        track_list_path = (r_serv_term.smembers(set_paste_name)).decode('utf8')
 
     for path in track_list_path:
         paste = Paste.Paste(path)
@@ -268,7 +268,7 @@ def terms_management_query_paste():
         p_size = paste.p_size
         p_mime = paste.p_mime
         p_lineinfo = paste.get_lines_info()
-        p_content = paste.get_p_content().decode('utf-8', 'ignore')
+        p_content = paste.get_p_content()
         if p_content != 0:
             p_content = p_content[0:400]
         paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
@@ -310,7 +310,7 @@ def terms_management_action():
     term =  request.args.get('term')
     notificationEmailsParam = request.args.get('emailAddresses')
 
-    if action is None or term is None:
+    if action is None or term is None or notificationEmailsParam is None:
         return "None"
     else:
         if section == "followTerm":
@@ -386,7 +386,7 @@ def terms_management_action():
                     r_serv_term.hdel(TrackedRegexDate_Name, term)
                 elif term.startswith('\\') and term.endswith('\\'):
                     r_serv_term.srem(TrackedSetSet_Name, term)
-                    print(term)
+                    #print(term)
                     r_serv_term.hdel(TrackedSetDate_Name, term)
                 else:
                     r_serv_term.srem(TrackedTermsSet_Name, term.lower())
@@ -499,7 +499,7 @@ def terms_plot_top_data():
                 curr_value_range = int(value) if value is not None else 0
                 value_range.append([timestamp, curr_value_range])
 
-            to_return.append([term, value_range, tot_value, position])
+            to_return.append([term.decode('utf8'), value_range, tot_value, position])
 
         return jsonify(to_return)
 
@@ -534,7 +534,7 @@ def credentials_management_query_paste():
 @terms.route("/credentials_management_action/", methods=['GET'])
 def cred_management_action():
 
-    supplied =  request.args.get('term').encode('utf-8')
+    supplied =  request.args.get('term')
     action = request.args.get('action')
     section = request.args.get('section')
     extensive = request.args.get('extensive')
@@ -557,6 +557,7 @@ def cred_management_action():
             iter_num = 0
             tot_iter = len(AllUsernameInRedis)*len(possibilities)
             for tempUsername in AllUsernameInRedis:
+                tempUsername = tempUsername.decode('utf8')
                 for poss in possibilities:
                     #FIXME print progress
                     if(iter_num % int(tot_iter/20) == 0):
@@ -565,7 +566,7 @@ def cred_management_action():
                     iter_num += 1
 
                     if poss in tempUsername:
-                        num = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername)
+                        num = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername)).decode('utf8')
                         if num is not None:
                             uniq_num_set.add(num)
                         for num in r_serv_cred.smembers(tempUsername):
@@ -574,7 +575,7 @@ def cred_management_action():
     data = {'usr': [], 'path': [], 'numPaste': [], 'simil': []}
     for Unum in uniq_num_set:
         levenRatio = 2.0
-        username = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum)
+        username = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum)).decode('utf8')
 
         # Calculate Levenshtein distance, ignore negative ratio
         supp_splitted = supplied.split()
@@ -585,9 +586,21 @@ def cred_management_action():
             levenRatioStr = "{:.1%}".format(levenRatio)
 
         data['usr'].append(username)
+
+        try:
+            Unum = Unum.decode('utf8')
+        except:
+            pass
+
         allPathNum = list(r_serv_cred.smembers(REDIS_KEY_MAP_CRED_TO_PATH+'_'+Unum))
-        data['path'].append(allPathNum)
-        data['numPaste'].append(len(allPathNum))
+
+        # decode bytes
+        allPathNum_str = []
+        for p in allPathNum:
+            allPathNum_str.append(p.decode('utf8'))
+
+        data['path'].append(allPathNum_str)
+        data['numPaste'].append(len(allPathNum_str))
         data['simil'].append(levenRatioStr)
 
     to_return = {}

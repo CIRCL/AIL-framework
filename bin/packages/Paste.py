@@ -85,8 +85,6 @@ class Paste(object):
         # in a month folder which is itself in a year folder.
         # /year/month/day/paste.gz
 
-        # TODO use bytes ?
-
         var = self.p_path.split('/')
         self.p_date = Date(var[-4], var[-3], var[-2])
         self.p_source = var[-5]
@@ -280,7 +278,11 @@ class Paste(object):
 
     def _get_p_duplicate(self):
         self.p_duplicate = self.store.hget(self.p_path, "p_duplicate")
-        return self.p_duplicate if self.p_duplicate is not None else '[]'
+        if self.p_duplicate is not None:
+            self.p_duplicate = self.p_duplicate.decode('utf8')
+            return self.p_duplicate
+        else:
+            return '[]'
 
     def save_all_attributes_redis(self, key=None):
         """

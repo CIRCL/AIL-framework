@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 '''
@@ -28,6 +28,7 @@ def get_date_range(num_day):
 
     for i in range(0, num_day+1):
         date_list.append(date.substract_day(i))
+
     return date_list
 
 
@@ -47,6 +48,8 @@ def progressionCharts():
         # Retreive all data from the last num_day
         for date in date_range:
             curr_value = r_serv_charts.hget(attribute_name, date)
+            if curr_value is not None:
+                curr_value = curr_value.decode('utf8')
             bar_values.append([date[0:4]+'/'+date[4:6]+'/'+date[6:8], int(curr_value if curr_value is not None else 0)])
         bar_values.insert(0, attribute_name)
         return jsonify(bar_values)
@@ -54,7 +57,14 @@ def progressionCharts():
     else:
         redis_progression_name = "z_top_progression_" + trending_name
         keyw_value = r_serv_charts.zrevrangebyscore(redis_progression_name, '+inf', '-inf', withscores=True, start=0, num=10)
-        return jsonify(keyw_value)
+
+        # decode bytes
+        keyw_value_str = []
+        for domain, value in keyw_value:
+            m = domain.decode('utf8'), value
+            keyw_value_str.append(m)
+
+        return jsonify(keyw_value_str)
 
 @trendings.route("/wordstrending/")
 def wordstrending():

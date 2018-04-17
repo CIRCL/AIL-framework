@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 '''
@@ -55,9 +55,10 @@ def event_stream_getImportantPasteByModule(module_name, year):
     index = 0
     all_pastes_list = getPastebyType(r_serv_db[year], module_name)
     for path in all_pastes_list:
+        path = path.decode('utf8')
         index += 1
         paste = Paste.Paste(path)
-        content = paste.get_p_content().decode('utf8', 'ignore')
+        content = paste.get_p_content()
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
         curr_date = str(paste._get_p_date())
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
@@ -92,9 +93,12 @@ def importantPasteByModule():
     allPastes = getPastebyType(r_serv_db[currentSelectYear], module_name)
 
     for path in allPastes[0:10]:
+        path = path.decode('utf8')
         all_path.append(path)
+        #print(path)
+        #print(type(path))
         paste = Paste.Paste(path)
-        content = paste.get_p_content().decode('utf8', 'ignore')
+        content = paste.get_p_content()
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
         all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
         curr_date = str(paste._get_p_date())
@@ -108,13 +112,13 @@ def importantPasteByModule():
         finished = True
 
     return render_template("important_paste_by_module.html",
-            moduleName=module_name, 
+            moduleName=module_name,
             year=currentSelectYear,
-            all_path=all_path, 
-            content=all_content, 
-            paste_date=paste_date, 
-            paste_linenum=paste_linenum, 
-            char_to_display=max_preview_modal, 
+            all_path=all_path,
+            content=all_content,
+            paste_date=paste_date,
+            paste_linenum=paste_linenum,
+            char_to_display=max_preview_modal,
             finished=finished)
 
 @browsepastes.route("/_getImportantPasteByModule", methods=['GET'])

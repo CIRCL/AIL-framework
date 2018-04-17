@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 '''
@@ -38,7 +38,7 @@ def showpaste(content_range):
     p_size = paste.p_size
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
-    p_content = paste.get_p_content().decode('utf-8', 'ignore')
+    p_content = paste.get_p_content()
     p_duplicate_full_list = json.loads(paste._get_p_duplicate())
     p_duplicate_list = []
     p_simil_list = []
@@ -52,7 +52,7 @@ def showpaste(content_range):
         else:
             dup_list[2] = int(dup_list[2])
 
-    p_duplicate_full_list.sort(lambda x,y: cmp(x[2], y[2]), reverse=True)
+    #p_duplicate_full_list.sort(lambda x,y: cmp(x[2], y[2]), reverse=True)
 
     # Combine multiple duplicate paste name and format for display
     new_dup_list = []
@@ -111,7 +111,7 @@ def showpreviewpaste():
 def getmoredata():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
-    p_content = paste.get_p_content().decode('utf-8', 'ignore')
+    p_content = paste.get_p_content()
     to_return = p_content[max_preview_modal-1:]
     return to_return
 
@@ -126,8 +126,8 @@ def showDiff():
     if maxLengthLine1 > DiffMaxLineLength or maxLengthLine2 > DiffMaxLineLength:
         return "Can't make the difference as the lines are too long."
     htmlD = difflib.HtmlDiff()
-    lines1 = p1.get_p_content().decode('utf8', 'ignore').splitlines()
-    lines2 = p2.get_p_content().decode('utf8', 'ignore').splitlines()
+    lines1 = p1.get_p_content().splitlines()
+    lines2 = p2.get_p_content().splitlines()
     the_html = htmlD.make_file(lines1, lines2)
     return the_html
 

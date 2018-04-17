@@ -1,8 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 import redis
-import ConfigParser
+import configparser
 import json
 import datetime
 import time
@@ -72,7 +72,7 @@ with open('templates/header_base.html', 'r') as f:
 modified_header = complete_header
 
 #Add the header in the supplied order
-for module_name, txt in to_add_to_header_dico.items():
+for module_name, txt in list(to_add_to_header_dico.items()):
     to_replace = '<!--{}-->'.format(module_name)
     if to_replace in complete_header:
         modified_header = modified_header.replace(to_replace, txt)

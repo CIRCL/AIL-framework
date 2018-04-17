@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 '''
@@ -57,16 +57,30 @@ def sentiment_analysis_getplotdata():
     if getAllProviders == 'True':
         if allProvider == "True":
             range_providers = r_serv_charts.smembers('all_provider_set')
-            return jsonify(list(range_providers))
+
+            range_providers_str = []
+            for domain in range_providers:
+                m = domain.decode('utf8')
+                range_providers_str.append(m)
+            return jsonify(list(range_providers_str))
         else:
             range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(0)[0], '+inf', '-inf', start=0, num=8)
             # if empty, get yesterday top providers
             range_providers = r_serv_charts.zrevrangebyscore('providers_set_'+ get_date_range(1)[1], '+inf', '-inf', start=0, num=8) if range_providers == [] else range_providers
+
+
             # if still empty, takes from all providers
             if range_providers == []:
-                print 'today provider empty'
+                print('today provider empty')
                 range_providers = r_serv_charts.smembers('all_provider_set')
-            return jsonify(list(range_providers))
+
+            # decode bytes
+            range_providers_str = []
+            for domain in range_providers:
+                m = domain.decode('utf8')
+                range_providers_str.append(m)
+
+            return jsonify(list(range_providers_str))
 
     elif provider is not None:
         to_return = {}
@@ -78,7 +92,7 @@ def sentiment_analysis_getplotdata():
 
             list_value = []
             for cur_id in r_serv_sentiment.smembers(cur_set_name):
-                cur_value = r_serv_sentiment.get(cur_id)
+                cur_value = (r_serv_sentiment.get(cur_id)).decode('utf8')
                 list_value.append(cur_value)
             list_date[cur_timestamp] = list_value
         to_return[provider] = list_date
@@ -101,7 +115,7 @@ def sentiment_analysis_plot_tool_getdata():
     if getProviders == 'True':
         providers = []
         for cur_provider in r_serv_charts.smembers('all_provider_set'):
-            providers.append(cur_provider)
+            providers.append(cur_provider.decode('utf8'))
         return jsonify(providers)
 
     else:
@@ -130,7 +144,7 @@ def sentiment_analysis_plot_tool_getdata():
 
                 list_value = []
                 for cur_id in r_serv_sentiment.smembers(cur_set_name):
-                    cur_value = r_serv_sentiment.get(cur_id)
+                    cur_value = (r_serv_sentiment.get(cur_id)).decode('utf8')
                     list_value.append(cur_value)
                 list_date[cur_timestamp] = list_value
             to_return[cur_provider] = list_date

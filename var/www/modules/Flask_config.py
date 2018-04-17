@@ -1,10 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.5
 # -*-coding:UTF-8 -*
 
 '''
     Flask global variables shared accross modules
 '''
-import ConfigParser
+import configparser
 import redis
 import os
 
@@ -18,7 +18,7 @@ if not os.path.exists(configfile):
                     Did you set environment variables? \
                     Or activate the virtualenv.')
 
-cfg = ConfigParser.ConfigParser()
+cfg = configparser.ConfigParser()
 cfg.read(configfile)
 
 
