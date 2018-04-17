@@ -73,6 +73,7 @@ if __name__ == "__main__":
                 PST = Paste.Paste(path)
             else:
                 publisher.debug("Script Attribute is idling 10s")
+                print('sleeping')
                 time.sleep(10)
                 continue
 

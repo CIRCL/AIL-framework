@@ -474,12 +474,15 @@ class Show_paste(Frame):
                 i += 1
 
         except OSError as e:
+            print('exceptoserror')
             self.label_list[0]._text = "Error during parsing the filepath. Please, check manually"
             self.label_list[1]._text = COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
             for i in range(2,self.num_label):
                 self.label_list[i]._text = ""
 
         except Exception as e:
+            print('except')
+            print(e)
             self.label_list[0]._text = "Error while displaying the paste: " + COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
             self.label_list[1]._text = str(e)
             for i in range(2,self.num_label):
@@ -499,7 +502,7 @@ def getPid(module):
     for line in p.stdout:
         print(line)
         splittedLine = line.split()
-        if 'python2' in splittedLine:
+        if 'python3' in splittedLine:
             return int(splittedLine[0])
     return None
 
@@ -513,13 +516,22 @@ def cleanRedis():
     for k in server.keys("MODULE_TYPE_*"):
         moduleName = (k[12:].decode('utf8')).split('_')[0]
         for pid in server.smembers(k):
+            pid = pid.decode('utf8')
             flag_pid_valid = False
             proc = Popen([command_search_name.format(pid)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
             try:
                 for line in proc.stdout:
+                    line = line.decode('utf8')
+                    #print('-------------------------')
                     splittedLine = line.split()
-                    if ('python3' in splittedLine or 'python' in splittedLine) and "./"+moduleName + ".py" in splittedLine:
-                        flag_pid_valid = True
+                    if ('python3.5' in splittedLine or 'python3' in splittedLine):
+                        #print(splittedLine)
+                        moduleCommand = "./"+moduleName + ".py"
+                        moduleCommand2 = moduleName + ".py"
+                        if(moduleCommand in splittedLine or moduleCommand2 in splittedLine):
+                            flag_pid_valid = True
+
+                    #print(flag_pid_valid)
 
                 if not flag_pid_valid:
                     #print flag_pid_valid, 'cleaning', pid, 'in', k
@@ -529,6 +541,7 @@ def cleanRedis():
 
             #Error due to resize, interrupted sys call
             except IOError as e:
+                print('exceptp')
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
                 log(([str(inst_time).split(' ')[1], " - ", " - ", "Cleaning fail due to resize."], 0))
 
@@ -559,6 +572,8 @@ def kill_module(module, pid):
             p = psutil.Process(int(pid))
             p.terminate()
         except Exception as e:
+            print('except')
+            print(e)
             #print pid, 'already killed'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
             log(([str(inst_time).split(' ')[1], module, pid, "Already killed"], 0))
@@ -610,8 +625,9 @@ def fetchQueueData():
         array_module_type = []
 
         for moduleNum in server.smembers(keySet):
-            value = server.get(key + str(moduleNum))
-            complete_paste_path = server.get(key + str(moduleNum) + "_PATH")
+            moduleNum = moduleNum.decode('utf8')
+            value = ( server.get(key + str(moduleNum)) ).decode('utf8')
+            complete_paste_path = ( server.get(key + str(moduleNum) + "_PATH") ).decode('utf8')
             COMPLETE_PASTE_PATH_PER_PID[moduleNum] = complete_paste_path
 
             if value is not None:
@@ -635,6 +651,7 @@ def fetchQueueData():
                             try:
                                 last_kill_try = time.time() - lastTimeKillCommand[moduleNum]
                             except KeyError:
+                                print('KeyError')
                                 last_kill_try = kill_retry_threshold+1
                             if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                 kill_module(queue, int(moduleNum))
@@ -646,14 +663,17 @@ def fetchQueueData():
                             cpu_avg = sum(CPU_TABLE[moduleNum])/len(CPU_TABLE[moduleNum])
                             if len(CPU_TABLE[moduleNum]) > args.refresh*10:
                                 CPU_TABLE[moduleNum].pop()
+
                             mem_percent = CPU_OBJECT_TABLE[int(moduleNum)].memory_percent()
                         except psutil.NoSuchProcess:
+                            print('no such process')
                             del CPU_OBJECT_TABLE[int(moduleNum)]
                             del CPU_TABLE[moduleNum]
                             cpu_percent = 0
                             cpu_avg = cpu_percent
                             mem_percent = 0
                         except KeyError:
+                            #print('key error2')
                             try:
                                 CPU_OBJECT_TABLE[int(moduleNum)] = psutil.Process(int(moduleNum))
                                 cpu_percent = CPU_OBJECT_TABLE[int(moduleNum)].cpu_percent()
@@ -661,6 +681,7 @@ def fetchQueueData():
                                 cpu_avg = cpu_percent
                                 mem_percent = CPU_OBJECT_TABLE[int(moduleNum)].memory_percent()
                             except psutil.NoSuchProcess:
+                                print('no such process2')
                                 cpu_percent = 0
                                 cpu_avg = cpu_percent
                                 mem_percent = 0
@@ -673,7 +694,7 @@ def fetchQueueData():
                         printarray_idle.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
 
                 PID_NAME_DICO[int(moduleNum)] = str(queue)
-                array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True) #Sort by num of pastes
+                #array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True) #Sort by num of pastes
         for e in array_module_type:
             printarray_running.append(e)
 
@@ -820,6 +841,7 @@ if __name__ == "__main__":
             for line in module_file:
                 module_file_array.add(line[:-1])
     except IOError as e:
+        print('IOError')
         if e.errno == 2: #module_file not found, creating a new one
             print(path_allmod + " not found.\nCreating a new one.")
             os.system("./../doc/generate_modules_data_flow_graph.sh")
@@ -837,6 +859,7 @@ if __name__ == "__main__":
     try:
         input("Press < ENTER > to launch the manager...")
     except SyntaxError:
+        print('excepterror')
         pass
 
     last_scene = None
