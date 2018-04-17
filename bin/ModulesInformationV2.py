@@ -474,15 +474,12 @@ class Show_paste(Frame):
                 i += 1
 
         except OSError as e:
-            print('exceptoserror')
             self.label_list[0]._text = "Error during parsing the filepath. Please, check manually"
             self.label_list[1]._text = COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
             for i in range(2,self.num_label):
                 self.label_list[i]._text = ""
 
         except Exception as e:
-            print('except')
-            print(e)
             self.label_list[0]._text = "Error while displaying the paste: " + COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
             self.label_list[1]._text = str(e)
             for i in range(2,self.num_label):
@@ -500,7 +497,6 @@ MANAGE MODULES AND GET INFOS
 def getPid(module):
     p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
     for line in p.stdout:
-        print(line)
         splittedLine = line.split()
         if 'python3' in splittedLine:
             return int(splittedLine[0])
@@ -522,16 +518,13 @@ def cleanRedis():
             try:
                 for line in proc.stdout:
                     line = line.decode('utf8')
-                    #print('-------------------------')
                     splittedLine = line.split()
-                    if ('python3.5' in splittedLine or 'python3' in splittedLine):
-                        #print(splittedLine)
+                    if ('python3.5' in splittedLine or 'python3' in splittedLine or 'python' in splittedLine):
                         moduleCommand = "./"+moduleName + ".py"
                         moduleCommand2 = moduleName + ".py"
                         if(moduleCommand in splittedLine or moduleCommand2 in splittedLine):
                             flag_pid_valid = True
 
-                    #print(flag_pid_valid)
 
                 if not flag_pid_valid:
                     #print flag_pid_valid, 'cleaning', pid, 'in', k
@@ -541,7 +534,6 @@ def cleanRedis():
 
             #Error due to resize, interrupted sys call
             except IOError as e:
-                print('exceptp')
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
                 log(([str(inst_time).split(' ')[1], " - ", " - ", "Cleaning fail due to resize."], 0))
 
@@ -572,8 +564,6 @@ def kill_module(module, pid):
             p = psutil.Process(int(pid))
             p.terminate()
         except Exception as e:
-            print('except')
-            print(e)
             #print pid, 'already killed'
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
             log(([str(inst_time).split(' ')[1], module, pid, "Already killed"], 0))
@@ -651,7 +641,6 @@ def fetchQueueData():
                             try:
                                 last_kill_try = time.time() - lastTimeKillCommand[moduleNum]
                             except KeyError:
-                                print('KeyError')
                                 last_kill_try = kill_retry_threshold+1
                             if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                 kill_module(queue, int(moduleNum))
@@ -666,7 +655,6 @@ def fetchQueueData():
 
                             mem_percent = CPU_OBJECT_TABLE[int(moduleNum)].memory_percent()
                         except psutil.NoSuchProcess:
-                            print('no such process')
                             del CPU_OBJECT_TABLE[int(moduleNum)]
                             del CPU_TABLE[moduleNum]
                             cpu_percent = 0
@@ -681,7 +669,6 @@ def fetchQueueData():
                                 cpu_avg = cpu_percent
                                 mem_percent = CPU_OBJECT_TABLE[int(moduleNum)].memory_percent()
                             except psutil.NoSuchProcess:
-                                print('no such process2')
                                 cpu_percent = 0
                                 cpu_avg = cpu_percent
                                 mem_percent = 0
@@ -841,7 +828,6 @@ if __name__ == "__main__":
             for line in module_file:
                 module_file_array.add(line[:-1])
     except IOError as e:
-        print('IOError')
         if e.errno == 2: #module_file not found, creating a new one
             print(path_allmod + " not found.\nCreating a new one.")
             os.system("./../doc/generate_modules_data_flow_graph.sh")
@@ -859,7 +845,6 @@ if __name__ == "__main__":
     try:
         input("Press < ENTER > to launch the manager...")
     except SyntaxError:
-        print('excepterror')
         pass
 
     last_scene = None
