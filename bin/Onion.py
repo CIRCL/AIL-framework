@@ -42,6 +42,7 @@ def fetch(p, r_cache, urls, domains, path):
         if r_cache.exists(url) or url in failed:
             continue
         to_fetch = base64.standard_b64encode(url.encode('utf8'))
+        print(to_fetch)
         process = subprocess.Popen(["python", './tor_fetcher.py', to_fetch],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
@@ -52,6 +53,7 @@ def fetch(p, r_cache, urls, domains, path):
             r_cache.expire(url, 360000)
             downloaded.append(url)
             tempfile = process.stdout.read().strip()
+            tempfile = tempfile.decode('utf8')
             with open(tempfile, 'r') as f:
                 filename = path + domain + '.gz'
                 fetched = f.read()
@@ -152,6 +154,6 @@ if __name__ == "__main__":
             prec_filename = filename
         else:
             publisher.debug("Script url is Idling 10s")
-            print('Sleeping')
+            #print('Sleeping')
             time.sleep(10)
         message = p.get_from_set()

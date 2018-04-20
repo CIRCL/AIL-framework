@@ -144,8 +144,8 @@ if __name__ == "__main__":
 
                                 print('['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent))
                         except Exception:
-                            print(str(e))
-                            #print 'hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash
+                            #print(str(e))
+                            print('hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash)
 
             # Add paste in DB after checking to prevent its analysis twice
             # hash_type_i -> index_i  AND  index_i -> PST.PATH

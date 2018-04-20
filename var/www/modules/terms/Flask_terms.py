@@ -157,8 +157,9 @@ def terms_management():
     trackReg_list_values = []
     trackReg_list_num_of_paste = []
     for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
+        tracked_regex = tracked_regex.decode('utf8')
 
-        notificationEMailTermMapping[tracked_regex] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex))
+        notificationEMailTermMapping[tracked_regex] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)).decode('utf8') )
 
         if tracked_regex not in notificationEnabledDict:
             notificationEnabledDict[tracked_regex] = False
@@ -174,7 +175,7 @@ def terms_management():
         value_range.append(term_date)
         trackReg_list_values.append(value_range)
 
-        if tracked_regex in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+        if tracked_regex.encode('utf8') in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
             notificationEnabledDict[tracked_regex] = True
 
     #Set
@@ -182,8 +183,9 @@ def terms_management():
     trackSet_list_values = []
     trackSet_list_num_of_paste = []
     for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
+        tracked_set = tracked_set.decode('utf8')
 
-        notificationEMailTermMapping[tracked_set] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set))
+        notificationEMailTermMapping[tracked_set] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)).decode('utf8') )
 
 
         if tracked_set not in notificationEnabledDict:
@@ -200,7 +202,7 @@ def terms_management():
         value_range.append(term_date)
         trackSet_list_values.append(value_range)
 
-        if tracked_set in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+        if tracked_set.encode('utf8') in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
             notificationEnabledDict[tracked_set] = True
 
     #Tracked terms
@@ -208,8 +210,12 @@ def terms_management():
     track_list_values = []
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
+        tracked_term = tracked_term.decode('utf8')
 
-        notificationEMailTermMapping[tracked_term] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
+        #print(TrackedTermsNotificationEmailsPrefix_Name)
+        print(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
+        #print(tracked_term)
+        notificationEMailTermMapping[tracked_term] = "\n".join( r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
 
         if tracked_term not in notificationEnabledDict:
             notificationEnabledDict[tracked_term] = False
@@ -220,12 +226,12 @@ def terms_management():
         term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
 
         set_paste_name = "tracked_" + tracked_term
-        track_list_num_of_paste.append(r_serv_term.scard(set_paste_name))
+        track_list_num_of_paste.append( r_serv_term.scard(set_paste_name) )
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         value_range.append(term_date)
         track_list_values.append(value_range)
 
-        if tracked_term in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+        if tracked_term.encode('utf8') in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
             notificationEnabledDict[tracked_term] = True
 
     #blacklist terms
@@ -233,7 +239,7 @@ def terms_management():
     for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
         term_date = r_serv_term.hget(BlackListTermsDate_Name, blacked_term)
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-        black_list.append([blacked_term, term_date])
+        black_list.append([blacked_term.decode('utf8'), term_date])
 
     return render_template("terms_management.html",
             black_list=black_list, track_list=track_list, trackReg_list=trackReg_list, trackSet_list=trackSet_list,
@@ -251,13 +257,14 @@ def terms_management_query_paste():
     # check if regex or not
     if term.startswith('/') and term.endswith('/'):
         set_paste_name = "regex_" + term
-        track_list_path = (r_serv_term.smembers(set_paste_name)).decode('utf8')
+        track_list_path = r_serv_term.smembers(set_paste_name)
     elif term.startswith('\\') and term.endswith('\\'):
         set_paste_name = "set_" + term
-        track_list_path = (r_serv_term.smembers(set_paste_name)).decode('utf8')
+        track_list_path = r_serv_term.smembers(set_paste_name)
     else:
         set_paste_name = "tracked_" + term
-        track_list_path = (r_serv_term.smembers(set_paste_name)).decode('utf8')
+        print(r_serv_term.smembers(set_paste_name))
+        track_list_path = r_serv_term.smembers(set_paste_name)
 
     for path in track_list_path:
         paste = Paste.Paste(path)

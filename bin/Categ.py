@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # FUNCTIONS #
     publisher.info("Script Categ started")
 
-    categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve']
+    categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve', 'Dox']
     tmp_dict = {}
     for filename in categories:
         bname = os.path.basename(filename)
@@ -77,6 +77,7 @@ if __name__ == "__main__":
             tmp_dict[bname] = re.compile('|'.join(patterns), re.IGNORECASE)
 
     prec_filename = None
+    print(tmp_dict)
 
     while True:
         filename = p.get_from_set()
@@ -89,10 +90,10 @@ if __name__ == "__main__":
         paste = Paste.Paste(filename)
         content = paste.get_p_content()
 
-        print('-----------------------------------------------------')
-        print(filename)
-        print(content)
-        print('-----------------------------------------------------')
+        #print('-----------------------------------------------------')
+        #print(filename)
+        #print(content)
+        #print('-----------------------------------------------------')
 
         for categ, pattern in tmp_dict.items():
             found = set(re.findall(pattern, content))

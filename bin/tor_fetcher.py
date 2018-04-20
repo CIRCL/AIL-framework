@@ -4,7 +4,7 @@
 import socks
 import socket
 import urllib.request
-import StringIO
+import io
 import gzip
 import base64
 import sys
@@ -26,12 +26,15 @@ def get_page(url, torclient_host='127.0.0.1', torclient_port=9050):
     request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0')
     return urllib.request.urlopen(request, timeout=5).read(max_size * 100000)
 
-
+#FIXME don't work at all
 def makegzip64(s):
-    out = StringIO.StringIO()
-    with gzip.GzipFile(fileobj=out, mode="w") as f:
-        f.write(s)
-    return base64.standard_b64encode(out.getvalue())
+
+    out = io.BytesIO()
+
+    with gzip.GzipFile(fileobj=out, mode='ab') as fo:
+        fo.write(base64.standard_b64encode(s))
+
+    return out.getvalue()
 
 
 if __name__ == "__main__":
@@ -41,7 +44,8 @@ if __name__ == "__main__":
         exit(1)
 
     try:
-        url = base64.standard_b64decode(sys.argv[1])
+        url = base64.standard_b64decode(sys.argv[1]).decode('utf8')
+        print(url)
     except:
         print('unable to decode')
         exit(1)
@@ -61,7 +65,7 @@ if __name__ == "__main__":
 
     to_write = makegzip64(page)
     t, path = tempfile.mkstemp()
-    with open(path,  'w') as f:
-        f.write(to_write)
+    #with open(path,  'w') as f:
+        #f.write(to_write)
     print(path)
     exit(0)

@@ -27,6 +27,18 @@ from pubsublogger import publisher
 
 from Helper import Process
 
+import magic
+import io
+import gzip
+
+def gunzip_bytes_obj(bytes_obj):
+    in_ = io.BytesIO()
+    in_.write(bytes_obj)
+    in_.seek(0)
+    with gzip.GzipFile(fileobj=in_, mode='rb') as fo:
+        gunzipped_bytes_obj = fo.read()
+
+    return gunzipped_bytes_obj.decode()
 
 if __name__ == '__main__':
     publisher.port = 6380
@@ -68,14 +80,29 @@ if __name__ == '__main__':
         # Creating the full filepath
         filename = os.path.join(os.environ['AIL_HOME'],
                                 p.config.get("Directories", "pastes"), paste)
-        #print(filename)
+        
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        with open(filename, 'wb') as f:
-            f.write(base64.standard_b64decode(gzip64encoded))
+        decoded = base64.standard_b64decode(gzip64encoded)
 
-        print(filename)
+        with open(filename, 'wb') as f:
+            f.write(decoded)
+        try:
+            decoded2 = gunzip_bytes_obj(decoded)
+        except:
+            decoded2 =''
+
+        type = magic.from_buffer(decoded2, mime=True)
+
+        if type!= 'text/x-c++' and type!= 'text/html' and type!= 'text/x-c' and type!= 'text/x-python' and type!= 'text/x-php' and type!= 'application/xml' and type!= 'text/x-shellscript' and type!= 'text/plain' and type!= 'text/x-diff' and type!= 'text/x-ruby':
+
+            print('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+            print(filename)
+            print(type)
+            print(decoded2)
+            print('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+
         p.populate_set_out(filename)
         processed_paste+=1

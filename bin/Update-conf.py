@@ -63,12 +63,12 @@ def main():
             print("  - "+item[0])
     print("+--------------------------------------------------------------------+")
 
-    resp = raw_input("Do you want to auto fix it? [y/n] ")
+    resp = input("Do you want to auto fix it? [y/n] ")
 
     if resp != 'y':
         return False
     else:
-        resp2 = raw_input("Do you want to keep a backup of the old configuration file? [y/n] ")
+        resp2 = input("Do you want to keep a backup of the old configuration file? [y/n] ")
         if resp2 == 'y':
             shutil.move(configfile, configfileBackup)
 

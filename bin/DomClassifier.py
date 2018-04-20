@@ -44,7 +44,7 @@ def main():
                 continue
             paste = PST.get_p_content()
             mimetype = PST._get_p_encoding()
-    
+
             if mimetype == "text/plain":
                 c.text(rawtext=paste)
                 c.potentialdomain()
