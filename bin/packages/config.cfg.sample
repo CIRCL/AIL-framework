@@ -2,6 +2,7 @@
 bloomfilters = Blooms
 dicofilters = Dicos
 pastes = PASTES
+base64 = BASE64
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile

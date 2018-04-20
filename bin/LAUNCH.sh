@@ -142,6 +142,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
     sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Dox" bash -c './Dox.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
@@ -157,6 +159,8 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Base64" bash -c './Base64.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
     sleep 0.1
