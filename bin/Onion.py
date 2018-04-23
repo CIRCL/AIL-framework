@@ -37,12 +37,12 @@ from Helper import Process
 def fetch(p, r_cache, urls, domains, path):
     failed = []
     downloaded = []
-    print(len(urls), 'Urls to fetch.')
+    print('{} Urls to fetch'.format(len(urls)))
     for url, domain in zip(urls, domains):
         if r_cache.exists(url) or url in failed:
             continue
         to_fetch = base64.standard_b64encode(url.encode('utf8'))
-        print(to_fetch)
+        print('fetching url: {}'.format(to_fetch))
         process = subprocess.Popen(["python", './tor_fetcher.py', to_fetch],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
@@ -52,9 +52,10 @@ def fetch(p, r_cache, urls, domains, path):
             r_cache.setbit(url, 0, 1)
             r_cache.expire(url, 360000)
             downloaded.append(url)
-            tempfile = process.stdout.read().strip()
+            print('downloaded : {}'.format(downloaded))
+            '''tempfile = process.stdout.read().strip()
             tempfile = tempfile.decode('utf8')
-            with open(tempfile, 'r') as f:
+            #with open(tempfile, 'r') as f:
                 filename = path + domain + '.gz'
                 fetched = f.read()
                 content = base64.standard_b64decode(fetched)
@@ -68,9 +69,9 @@ def fetch(p, r_cache, urls, domains, path):
                     ff.write(content)
                 p.populate_set_out(save_path, 'Global')
                 p.populate_set_out(url, 'ValidOnion')
-                p.populate_set_out(fetched, 'FetchedOnion')
-                yield url
-            os.unlink(tempfile)
+                p.populate_set_out(fetched, 'FetchedOnion')'''
+            yield url
+            #os.unlink(tempfile)
         else:
             r_cache.setbit(url, 0, 0)
             r_cache.expire(url, 3600)
@@ -133,6 +134,8 @@ if __name__ == "__main__":
                 PST.save_attribute_redis(channel, domains_list)
                 to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date,
                                                     PST.p_name)
+
+                print(len(domains_list))
                 if len(domains_list) > 0:
 
                     publisher.warning('{}Detected {} .onion(s);{}'.format(

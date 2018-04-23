@@ -25,7 +25,7 @@ import time
 from hashlib import sha256
 
 
-# thank http://rosettacode.org/wiki/Bitcoin/address_validation#Python for this 2 functions
+#### thank http://rosettacode.org/wiki/Bitcoin/address_validation#Python for this 2 functions
 
 def decode_base58(bc, length):
     n = 0
@@ -38,7 +38,7 @@ def check_bc(bc):
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
     except Exception:
         return False
-########################################################3
+########################################################
 
 def search_key(content, message):
     bitcoin_address = re.findall(regex_bitcoin_public_address, content)
