@@ -18,7 +18,8 @@ import base64
 from hashlib import sha1
 import magic
 
-def search_base64(content):
+def search_base64(content, message):
+    find = False
     base64_list = re.findall(regex_base64, content)
     if(len(base64_list) > 0):
 
@@ -30,7 +31,16 @@ def search_base64(content):
                 #print(type)
                 #print(decode)
 
+                find = True
                 save_base64_as_file(decode, type)
+                print('found {} '.format(type))
+    if(find):
+        publisher.warning('base64 decoded')
+        #Send to duplicate
+        p.populate_set_out(message, 'Duplicate')
+        #send to Browse_warning_paste
+        msg = ('base64;{}'.format(message))
+        p.populate_set_out( msg, 'alertHandler')
 
 def save_base64_as_file(decode, type):
 
@@ -85,7 +95,7 @@ if __name__ == '__main__':
         content = paste.get_p_content()
 
         #print(filename)
-        search_base64(content)
+        search_base64(content,message)
 
         # (Optional) Send that thing to the next queue
         #p.populate_set_out(something_has_been_done)

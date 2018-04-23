@@ -22,7 +22,7 @@
 </table>
 </br>
 <div id="nbr_entry" class="alert alert-info">
- 
+
 </div>
 <div id="div_stil_data">
     <button id="load_more_json_button1" type="button" class="btn btn-default" onclick="add_entries(100)" style="display: none">Load 100 entries</button>
@@ -194,20 +194,20 @@ $(document).ready(function(){
        var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + modal.attr('data-path') + "&num=" + modal.attr('data-num');
        last_clicked_paste =  modal.attr('data-num');
        $.get(url, function (data) {
-       
-           // verify that the reveived data is really the current clicked paste. Otherwise, ignore it. 
+
+           // verify that the reveived data is really the current clicked paste. Otherwise, ignore it.
            var received_num = parseInt(data.split("|num|")[1]);
            if (received_num == last_clicked_paste && can_change_modal_content) {
                can_change_modal_content = false;
-       
+
                // clear data by removing html, body, head tags. prevent dark modal background stack bug.
                var cleared_data = data.split("<body>")[1].split("</body>")[0];
                $("#mymodalbody").html(cleared_data);
-       
+
                var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
                button.tooltip();
                $("#mymodalbody").children(".panel-default").append(button);
-       
+
                $("#button_show_path").attr('href', $(modal).attr('data-url'));
                $("#button_show_path").show('fast');
                $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
@@ -245,4 +245,3 @@ $(document).ready(function(){
    } );
 
 </script>
-
