@@ -40,10 +40,11 @@ def check_bc(bc):
         return False
 ########################################################
 
-def search_key(content, message):
+def search_key(content, message, paste):
     bitcoin_address = re.findall(regex_bitcoin_public_address, content)
     bitcoin_private_key = re.findall(regex_bitcoin_private_key, content)
     validate_address = False
+    key = False
     if(len(bitcoin_address) >0):
         #print(message)
         for address in bitcoin_address:
@@ -53,14 +54,20 @@ def search_key(content, message):
                 if(len(bitcoin_private_key) > 0):
                     for private_key in bitcoin_private_key:
                         print('Bitcoin private key found : {}'.format(private_key))
+                        key = True
 
         if(validate_address):
             p.populate_set_out(message, 'Duplicate')
-            to_print = 'bitcoin found: {} address and {} private Keys'.format(len(bitcoin_address), len(bitcoin_private_key))
+            to_print = 'Bitcoin found: {} address and {} private Keys'.format(len(bitcoin_address), len(bitcoin_private_key))
             print(to_print)
             publisher.warning(to_print)
             msg = ('bitcoin;{}'.format(message))
             p.populate_set_out( msg, 'alertHandler')
+            if(key):
+                to_print = 'Bitcoin;{};{};{};'.format(paste.p_source, paste.p_date,
+                                                    paste.p_name)
+                publisher.warning('{}Detected {} Bitcoin private key;{}'.format(
+                    to_print, len(bitcoin_private_key),paste.p_path))
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -91,4 +98,4 @@ if __name__ == "__main__":
         # Do something with the message from the queue
         paste = Paste.Paste(message)
         content = paste.get_p_content()
-        search_key(content, message)
+        search_key(content, message, paste)
