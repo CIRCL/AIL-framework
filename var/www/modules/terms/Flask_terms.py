@@ -158,6 +158,7 @@ def terms_management():
     trackReg_list_num_of_paste = []
     for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
         tracked_regex = tracked_regex.decode('utf8')
+        print(tracked_regex)
 
         notificationEMailTermMapping[tracked_regex] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)).decode('utf8') )
 
@@ -211,6 +212,8 @@ def terms_management():
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
         tracked_term = tracked_term.decode('utf8')
+        print('tracked_term : .')
+        print(tracked_term)
 
         #print(TrackedTermsNotificationEmailsPrefix_Name)
         print(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
@@ -226,7 +229,11 @@ def terms_management():
         term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
 
         set_paste_name = "tracked_" + tracked_term
+        print('set_paste_name : .')
+        print(set_paste_name)
         track_list_num_of_paste.append( r_serv_term.scard(set_paste_name) )
+        print('track_list_num_of_paste : .')
+        print(track_list_num_of_paste)
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         value_range.append(term_date)
         track_list_values.append(value_range)
@@ -252,6 +259,8 @@ def terms_management():
 @terms.route("/terms_management_query_paste/")
 def terms_management_query_paste():
     term =  request.args.get('term')
+    print('term :')
+    print(term)
     paste_info = []
 
     # check if regex or not
@@ -263,10 +272,10 @@ def terms_management_query_paste():
         track_list_path = r_serv_term.smembers(set_paste_name)
     else:
         set_paste_name = "tracked_" + term
-        print(r_serv_term.smembers(set_paste_name))
         track_list_path = r_serv_term.smembers(set_paste_name)
 
     for path in track_list_path:
+        path = path.decode('utf8')
         paste = Paste.Paste(path)
         p_date = str(paste._get_p_date())
         p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
@@ -523,6 +532,7 @@ def credentials_management_query_paste():
     paste_info = []
     for pathNum in allPath:
         path = r_serv_cred.hget(REDIS_KEY_ALL_PATH_SET_REV, pathNum)
+        path = path.decode('utf8')
         paste = Paste.Paste(path)
         p_date = str(paste._get_p_date())
         p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
@@ -531,7 +541,7 @@ def credentials_management_query_paste():
         p_size = paste.p_size
         p_mime = paste.p_mime
         p_lineinfo = paste.get_lines_info()
-        p_content = paste.get_p_content().decode('utf-8', 'ignore')
+        p_content = paste.get_p_content()
         if p_content != 0:
             p_content = p_content[0:400]
         paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})

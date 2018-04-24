@@ -49,7 +49,7 @@ top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
 def check_if_tracked_term(term, path):
-    if term in server_term.smembers(TrackedTermsSet_Name):
+    if term.encode('utf8') in server_term.smembers(TrackedTermsSet_Name):
         #add_paste to tracked_word_set
         set_name = "tracked_" + term
         server_term.sadd(set_name, path)
@@ -132,7 +132,7 @@ if __name__ == "__main__":
             curr_word_value_perPaste = int(server_term.hincrby("per_paste_" + str(timestamp), low_word, int(1)))
 
             # Add in set only if term is not in the blacklist
-            if low_word not in server_term.smembers(BlackListTermsSet_Name):
+            if low_word.encode('utf8') not in server_term.smembers(BlackListTermsSet_Name):
                 #consider the num of occurence of this term
                 server_term.zincrby(curr_set, low_word, float(score))
                 #1 term per paste

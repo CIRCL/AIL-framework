@@ -28,6 +28,12 @@ def checking_MX_record(r_serv, adress_set):
     names: on example@gmail.com it will try to resolve gmail.com
 
     """
+    print('mails:')
+    print(adress_set)
+
+    #remove duplicate
+    adress_set = list(set(adress_set))
+
     score = 0
     num = len(adress_set)
     WalidMX = set([])
