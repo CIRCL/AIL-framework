@@ -24,6 +24,7 @@ script:
     - ./launch_lvldb.sh
     - ./launch_logs.sh
     - ./launch_queues.sh
+    - popd
     - cd tests
     - nosetests --with-coverage --cover-package=../bin -d
 
