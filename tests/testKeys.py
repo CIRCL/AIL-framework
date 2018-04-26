@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys,os
 import unittest
-
 import magic
 
-from bin.packages.Paste import Paste
-import bin.Keys as Keys
-from bin.Helper import Process
+sys.path.append(os.environ['AIL_BIN'])
+
+from packages.Paste import Paste
+import Keys as Keys
+from Helper import Process
 import pubsublogger
 
 
 class TestKeysModule(unittest.TestCase):
 
     def setUp(self):
-        self.paste = Paste('samples/2018/01/01/keys_certificat_sample.gz')
+        self.paste = Paste('../samples/2018/01/01/keys_certificat_sample.gz')
 
         # Section name in bin/packages/modules.cfg
         self.config_section = 'Keys'
