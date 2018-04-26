@@ -130,7 +130,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Lines" bash -c 'python3 Lines.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
+    #screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Categ" bash -c 'python3 Categ.py; read x'
     sleep 0.1
@@ -142,7 +142,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Dox" bash -c './Dox.py; read x'
+    screen -S "Script_AIL" -X screen -t "ApiKey" bash -c './ApiKey.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
     sleep 0.1

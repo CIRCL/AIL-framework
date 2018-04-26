@@ -118,7 +118,7 @@ if __name__ == "__main__":
             site_occurence = re.findall(regex_site_for_stats, content)
             for site in site_occurence:
                 site_domain = site[1:-1]
-                if site_domain in creds_sites.keys():
+                if site_domain.encode('utf8') in creds_sites.keys():
                     creds_sites[site_domain] += 1
                 else:
                     creds_sites[site_domain] = 1
@@ -132,6 +132,11 @@ if __name__ == "__main__":
                     creds_sites[domain] = 1
 
             for site, num in creds_sites.items(): # Send for each different site to moduleStats
+                try:
+                    site = site.decode('utf8')
+                except:
+                    pass
+
                 mssg = 'credential;{};{};{}'.format(num, site, paste.p_date)
                 print(mssg)
                 p.populate_set_out(mssg, 'ModuleStats')

@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # FUNCTIONS #
     publisher.info("Script Categ started")
 
-    categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve', 'Dox']
+    categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve', 'ApiKey']
     tmp_dict = {}
     for filename in categories:
         bname = os.path.basename(filename)
