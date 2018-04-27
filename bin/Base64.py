@@ -7,6 +7,7 @@
 """
 import time
 import os
+import datetime
 
 from pubsublogger import publisher
 
@@ -17,6 +18,8 @@ import re
 import base64
 from hashlib import sha1
 import magic
+import json
+
 
 def search_base64(content, message):
     find = False
@@ -32,8 +35,18 @@ def search_base64(content, message):
                 #print(decode)
 
                 find = True
-                save_base64_as_file(decode, type)
+                hash = sha1(decode).hexdigest()
+
+                data = {}
+                data['name'] = hash
+                data['date'] = datetime.datetime.now().strftime("%d/%m/%y")
+                data['origin'] = message
+                data['estimated type'] = type
+                json_data = json.dumps(data)
+
+                save_base64_as_file(decode, type, hash, json_data)
                 print('found {} '.format(type))
+
     if(find):
         publisher.warning('base64 decoded')
         #Send to duplicate
@@ -42,19 +55,23 @@ def search_base64(content, message):
         msg = ('base64;{}'.format(message))
         p.populate_set_out( msg, 'alertHandler')
 
-def save_base64_as_file(decode, type):
+def save_base64_as_file(decode, type, hash, json_data):
 
-    hash = sha1(decode).hexdigest()
-
-    filename = os.path.join(os.environ['AIL_HOME'],
+    filename_b64 = os.path.join(os.environ['AIL_HOME'],
                             p.config.get("Directories", "base64"), type, hash[:2], hash)
 
-    dirname = os.path.dirname(filename)
+    filename_json = os.path.join(os.environ['AIL_HOME'],
+                            p.config.get("Directories", "base64"), type, hash[:2], hash + '.json')
+
+    dirname = os.path.dirname(filename_b64)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    with open(filename, 'wb') as f:
+    with open(filename_b64, 'wb') as f:
         f.write(decode)
+
+    with open(filename_json, 'w') as f:
+        f.write(json_data)
 
 
 
