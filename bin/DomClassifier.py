@@ -24,10 +24,11 @@ def main():
     config_section = 'DomClassifier'
 
     p = Process(config_section)
+    addr_dns = p.config.get("DomClassifier", "dns")
 
     publisher.info("""ZMQ DomainClassifier is Running""")
 
-    c = DomainClassifier.domainclassifier.Extract(rawtext="")
+    c = DomainClassifier.domainclassifier.Extract(rawtext="", nameservers=[addr_dns])
 
     cc = p.config.get("DomClassifier", "cc")
     cc_tld = p.config.get("DomClassifier", "cc_tld")

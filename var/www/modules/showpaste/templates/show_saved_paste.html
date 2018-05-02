@@ -69,13 +69,12 @@
           <tbody>
           {% for dup_path in duplicate_list %}
               <tr>
-                  <td>{{ hashtype_list[i] }}</td>
-                  <td>Similarity: {{ simil_list[i] }}%</td>
-                  <td>{{ date_list[i] }}</td>
+                  <td>{{ hashtype_list[loop.index - 1] }}</td>
+                  <td>Similarity: {{ simil_list[loop.index - 1] }}%</td>
+                  <td>{{ date_list[loop.index - 1] }}</td>
                   <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ dup_path }}" id='dup_path'>{{ dup_path }}</a></td>
                   <td><a target="_blank" href="{{ url_for('showsavedpastes.showDiff') }}?s1={{ request.args.get('paste') }}&s2={{ dup_path }}" class="fa fa-columns" title="Show differences"></a></td>
               </tr>
-              {% set i = i + 1 %}
           {% endfor %}
           </tbody>
           </table>

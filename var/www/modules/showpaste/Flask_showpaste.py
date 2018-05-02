@@ -20,7 +20,6 @@ cfg = Flask_config.cfg
 r_serv_pasteName = Flask_config.r_serv_pasteName
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
-tlsh_to_percent = Flask_config.tlsh_to_percent
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
@@ -48,8 +47,10 @@ def showpaste(content_range):
 
     for dup_list in p_duplicate_full_list:
         if dup_list[0] == "tlsh":
-            dup_list[2] = int(((tlsh_to_percent - float(dup_list[2])) / tlsh_to_percent)*100)
+            dup_list[2] = 100 - int(dup_list[2])
         else:
+            print('dup_list')
+            print(dup_list)
             dup_list[2] = int(dup_list[2])
 
     #p_duplicate_full_list.sort(lambda x,y: cmp(x[2], y[2]), reverse=True)
@@ -64,12 +65,13 @@ def showpaste(content_range):
         hash_types = []
         comp_vals = []
         for i in indices:
-            hash_types.append(p_duplicate_full_list[i][0].encode('utf8'))
+            hash_types.append(p_duplicate_full_list[i][0])
             comp_vals.append(p_duplicate_full_list[i][2])
             dup_list_removed.append(i)
 
         hash_types = str(hash_types).replace("[","").replace("]","") if len(hash_types)==1 else str(hash_types)
         comp_vals = str(comp_vals).replace("[","").replace("]","") if len(comp_vals)==1 else str(comp_vals)
+
         if len(p_duplicate_full_list[dup_list_index]) > 3:
             try:
                 date_paste = str(int(p_duplicate_full_list[dup_list_index][3]))
@@ -90,7 +92,6 @@ def showpaste(content_range):
 
     if content_range != 0:
        p_content = p_content[0:content_range]
-
 
     return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
 

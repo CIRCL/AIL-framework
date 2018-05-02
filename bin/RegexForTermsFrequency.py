@@ -76,9 +76,6 @@ if __name__ == "__main__":
                 dico_regex, dico_regexname_to_redis = refresh_dicos()
                 print('dico got refreshed')
 
-            print(dico_regex)
-            print(dico_regexname_to_redis)
-
             filename = message
             temp = filename.split('/')
             timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))

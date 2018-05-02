@@ -617,7 +617,9 @@ def fetchQueueData():
         for moduleNum in server.smembers(keySet):
             moduleNum = moduleNum.decode('utf8')
             value = ( server.get(key + str(moduleNum)) ).decode('utf8')
-            complete_paste_path = ( server.get(key + str(moduleNum) + "_PATH") ).decode('utf8')
+            complete_paste_path = ( server.get(key + str(moduleNum) + "_PATH") )
+            if(complete_paste_path is not None):
+                complete_paste_path = complete_paste_path.decode('utf8')
             COMPLETE_PASTE_PATH_PER_PID[moduleNum] = complete_paste_path
 
             if value is not None:

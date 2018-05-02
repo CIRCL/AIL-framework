@@ -74,18 +74,9 @@ if __name__ == "__main__":
 
         filepath, count = message.split(' ')
 
-        #if count < minTopPassList:
-            # Less than 5 matches from the top password list, false positive.
-            #print("false positive:", count)
-            #continue
-
         paste = Paste.Paste(filepath)
         content = paste.get_p_content()
         creds = set(re.findall(regex_cred, content))
-        print(len(creds))
-        print(creds)
-        print(content)
-        print('-----')
 
         publisher.warning('to_print')
 

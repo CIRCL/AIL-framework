@@ -6,6 +6,16 @@ from pubsublogger import publisher
 from Helper import Process
 import re
 
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
+
 '''
 This module takes its input from the global module.
 It applies some regex and publish matched content
@@ -16,6 +26,7 @@ if __name__ == "__main__":
     publisher.channel = "Script"
     config_section = "Release"
     p = Process(config_section)
+    max_execution_time = p.config.getint("Curve", "max_execution_time")
     publisher.info("Release scripts to find release names")
 
     movie = "[a-zA-Z0-9.]+\.[0-9]{4}.[a-zA-Z0-9.]+\-[a-zA-Z]+"
@@ -35,13 +46,22 @@ if __name__ == "__main__":
 
         paste = Paste.Paste(filepath)
         content = paste.get_p_content()
-        releases = set(re.findall(regex, content))
-        if len(releases) == 0:
-            continue
 
-        to_print = 'Release;{};{};{};{} releases;{}'.format(paste.p_source, paste.p_date, paste.p_name, len(releases), paste.p_path)
-        print(to_print)
-        if len(releases) > 30:
-            publisher.warning(to_print)
+        signal.alarm(max_execution_time)
+        try:
+            releases = set(re.findall(regex, content))
+            if len(releases) == 0:
+                continue
+
+                to_print = 'Release;{};{};{};{} releases;{}'.format(paste.p_source, paste.p_date, paste.p_name, len(releases), paste.p_path)
+                print(to_print)
+                if len(releases) > 30:
+                    publisher.warning(to_print)
+                else:
+                    publisher.info(to_print)
+
+        except TimeoutException:
+             print ("{0} processing timeout".format(paste.p_path))
+             continue
         else:
-            publisher.info(to_print)
+            signal.alarm(0)

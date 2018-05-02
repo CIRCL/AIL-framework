@@ -29,6 +29,7 @@ def get_date_range(num_day):
 
 
 def compute_most_posted(server, message):
+    print(message)
     module, num, keyword, paste_date = message.split(';')
 
     redis_progression_name_set = 'top_'+ module +'_set_' + paste_date

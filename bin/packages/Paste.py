@@ -329,6 +329,27 @@ class Paste(object):
         else:
             self.store.hset(self.p_path, attr_name, json.dumps(value))
 
+    def save_others_pastes_attribute_duplicate(self, attr_name, list_value):
+        """
+        Save a new duplicate on others pastes
+        """
+        for hash_type, path, percent, date in list_value:
+            print(hash_type, path, percent, date)
+            #get json
+            json_duplicate = self.store.hget(path, attr_name)
+            #json save on redis
+            if json_duplicate is not None:
+                list_duplicate = json.loads(json_duplicate.decode('utf8'))
+                # add new duplicate
+                list_duplicate.append([hash_type, self.p_path, percent, date])
+                self.store.hset(path, attr_name, json.dumps(list_duplicate))
+
+            else:
+                # create the new list
+                list_duplicate = [[hash_type, self.p_path, percent, date]]
+                self.store.hset(path, attr_name, json.dumps(list_duplicate))
+
+
     def _get_from_redis(self, r_serv):
         ans = {}
         for hash_name, the_hash in self.p_hash:

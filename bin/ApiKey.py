@@ -32,16 +32,7 @@ def search_api_key(message):
     aws_secret_key = regex_aws_secret_key.findall(content)
     google_api_key = regex_google_api_key.findall(content)
 
-    print(aws_access_key)
-    print(aws_secret_key)
-    print(google_api_key)
-
     if(len(aws_access_key) > 0 or len(aws_secret_key) > 0 or len(google_api_key) > 0):
-
-        print('-------------------------------')
-        print(aws_access_key)
-        print(aws_secret_key)
-        print(google_api_key)
 
         to_print = 'ApiKey;{};{};{};'.format(
             paste.p_source, paste.p_date, paste.p_name)
@@ -99,5 +90,4 @@ if __name__ == "__main__":
 
         else:
             publisher.debug("Script ApiKey is Idling 10s")
-            #print('Sleeping')
             time.sleep(10)

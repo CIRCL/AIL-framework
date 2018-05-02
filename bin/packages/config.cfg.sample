@@ -54,6 +54,10 @@ criticalNumberToAlert=8
 #Will be considered as false positive if less that X matches from the top password list
 minTopPassList=5
 
+[Base64]
+path = Base64/
+max_execution_time = 60
+
 [Modules_Duplicates]
 #Number of month to look back
 maximum_month_range = 3
@@ -145,6 +149,10 @@ cc_critical = DE
 [DomClassifier]
 cc = DE
 cc_tld = r'\.de$'
+dns = 8.8.8.8
+
+[Mail]
+dns = 8.8.8.8
 
 # Indexer configuration
 [Indexer]

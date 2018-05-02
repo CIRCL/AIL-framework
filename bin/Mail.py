@@ -28,6 +28,7 @@ if __name__ == "__main__":
     config_section = 'Mail'
 
     p = Process(config_section)
+    addr_dns = p.config.get("Mail", "dns")
 
     # REDIS #
     r_serv2 = redis.StrictRedis(
@@ -56,7 +57,7 @@ if __name__ == "__main__":
             if prec_filename is None or filename != prec_filename:
                 PST = Paste.Paste(filename)
                 MX_values = lib_refine.checking_MX_record(
-                    r_serv2, PST.get_regex(email_regex))
+                    r_serv2, PST.get_regex(email_regex), addr_dns)
 
                 if MX_values[0] >= 1:
 

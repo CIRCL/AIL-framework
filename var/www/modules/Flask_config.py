@@ -62,5 +62,4 @@ r_serv_pasteName = redis.StrictRedis(
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number of character to display in the modal
 
-tlsh_to_percent = 1000.0 #Use to display the estimated percentage instead of a raw value
 DiffMaxLineLength =  int(cfg.get("Flask", "DiffMaxLineLength"))#Use to display the estimated percentage instead of a raw value

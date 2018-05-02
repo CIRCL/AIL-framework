@@ -62,7 +62,7 @@ if __name__ == "__main__":
     while True:
         try:
             hash_dico = {}
-            dupl = []
+            dupl = set()
             dico_range_list = []
 
             x = time.time()
@@ -124,6 +124,8 @@ if __name__ == "__main__":
                                 percent = 100-ssdeep.compare(dico_hash, paste_hash)
                             else:
                                 percent = tlsh.diffxlen(dico_hash, paste_hash)
+                                if percent > 100:
+                                    percent = 100
 
                             threshold_duplicate = threshold_set[hash_type]
                             if percent < threshold_duplicate:
@@ -163,14 +165,16 @@ if __name__ == "__main__":
             if len(hash_dico) != 0:
                 # paste_tuple = (hash_type, date, paste_path, percent)
                 for dico_hash, paste_tuple in hash_dico.items():
-                    dupl.append(paste_tuple)
+                    dupl.add(paste_tuple)
 
                 # Creating the object attribute and save it.
                 to_print = 'Duplicate;{};{};{};'.format(
                     PST.p_source, PST.p_date, PST.p_name)
                 if dupl != []:
+                    dupl = list(dupl)
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis("p_duplicate", dupl)
+                    PST.save_others_pastes_attribute_duplicate("p_duplicate", dupl)
                     publisher.info('{}Detected {};{}'.format(to_print, len(dupl), PST.p_path))
                     print('{}Detected {}'.format(to_print, len(dupl)))
 

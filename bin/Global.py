@@ -29,8 +29,9 @@ from Helper import Process
 
 import magic
 import io
-import gzip
+#import gzip
 
+'''
 def gunzip_bytes_obj(bytes_obj):
     in_ = io.BytesIO()
     in_.write(bytes_obj)
@@ -38,7 +39,7 @@ def gunzip_bytes_obj(bytes_obj):
     with gzip.GzipFile(fileobj=in_, mode='rb') as fo:
         gunzipped_bytes_obj = fo.read()
 
-    return gunzipped_bytes_obj.decode()
+    return gunzipped_bytes_obj.decode()'''
 
 if __name__ == '__main__':
     publisher.port = 6380
@@ -80,7 +81,7 @@ if __name__ == '__main__':
         # Creating the full filepath
         filename = os.path.join(os.environ['AIL_HOME'],
                                 p.config.get("Directories", "pastes"), paste)
-        
+
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
@@ -89,7 +90,7 @@ if __name__ == '__main__':
 
         with open(filename, 'wb') as f:
             f.write(decoded)
-        try:
+        '''try:
             decoded2 = gunzip_bytes_obj(decoded)
         except:
             decoded2 =''
@@ -101,8 +102,7 @@ if __name__ == '__main__':
             print('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
             print(filename)
             print(type)
-            print(decoded2)
             print('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-
+            '''
         p.populate_set_out(filename)
         processed_paste+=1

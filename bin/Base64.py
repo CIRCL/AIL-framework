@@ -20,6 +20,16 @@ from hashlib import sha1
 import magic
 import json
 
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
+
 
 def search_base64(content, message):
     find = False
@@ -88,6 +98,7 @@ if __name__ == '__main__':
 
     # Setup the I/O queues
     p = Process(config_section)
+    max_execution_time = p.config.getint("Base64", "max_execution_time")
 
     # Sent to the logging a description of the module
     publisher.info("Base64 started")
@@ -105,14 +116,21 @@ if __name__ == '__main__':
             time.sleep(1)
             continue
 
-            # Do something with the message from the queue
-
         filename = message
         paste = Paste.Paste(filename)
-        content = paste.get_p_content()
 
-        #print(filename)
-        search_base64(content,message)
+        signal.alarm(max_execution_time)
+        try:
+            # Do something with the message from the queue
+            #print(filename)
+            content = paste.get_p_content()
+            search_base64(content,message)
 
-        # (Optional) Send that thing to the next queue
-        #p.populate_set_out(something_has_been_done)
+            # (Optional) Send that thing to the next queue
+            #p.populate_set_out(something_has_been_done)
+
+        except TimeoutException:
+             print ("{0} processing timeout".format(paste.p_path))
+             continue
+        else:
+            signal.alarm(0)

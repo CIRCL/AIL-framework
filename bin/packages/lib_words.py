@@ -81,7 +81,7 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
     to keep the timeline of the curve correct.
 
     """
-    threshold = 50
+    threshold = 30
     first_day = date(year, month, 1)
     last_day = date(year, month, calendar.monthrange(year, month)[1])
     words = []
@@ -135,6 +135,7 @@ def create_curve_from_redis_set(server, csvfilename, set_to_plot, year, month):
 
     redis_set_name = set_to_plot + "_set_" + str(year) + str(month).zfill(2)
     words = list(server.smembers(redis_set_name))
+    words = [x.decode('utf-8') for x in words]
 
     headers = ['Date'] + words
     with open(csvfilename+'.csv', 'w') as f:
@@ -153,5 +154,5 @@ def create_curve_from_redis_set(server, csvfilename, set_to_plot, year, month):
                     row.append(0)
                 else:
                     # if the word have a value for the day
-                    row.append(value)
+                    row.append(value.decode('utf8'))
             writer.writerow(row)

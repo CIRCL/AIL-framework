@@ -27,6 +27,7 @@ def search_key(paste):
     find = False
     if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
+
         find = True
 
     if '-----BEGIN CERTIFICATE-----' in content:
@@ -35,18 +36,27 @@ def search_key(paste):
 
     if '-----BEGIN RSA PRIVATE KEY-----' in content:
         publisher.warning('{} has a RSA private key message'.format(paste.p_name))
+        print('rsa private key message found')
         find = True
 
     if '-----BEGIN PRIVATE KEY-----' in content:
         publisher.warning('{} has a private key message'.format(paste.p_name))
+        print('private key message found')
         find = True
 
     if '-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
         publisher.warning('{} has an encrypted private key message'.format(paste.p_name))
+        print('encrypted private key message found')
         find = True
 
     if '-----BEGIN OPENSSH PRIVATE KEY-----' in content:
         publisher.warning('{} has an openssh private key message'.format(paste.p_name))
+        print('openssh private key message found')
+        find = True
+
+    if '-----BEGIN OpenVPN Static key V1-----' in content:
+        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
+        print('OpenVPN Static key message found')
         find = True
 
     if '-----BEGIN DSA PRIVATE KEY-----' in content:
