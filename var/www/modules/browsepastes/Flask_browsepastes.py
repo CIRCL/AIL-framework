@@ -48,6 +48,7 @@ def getPastebyType(server, module_name):
     all_path = []
     for path in server.smembers('WARNING_'+module_name):
         all_path.append(path)
+
     return all_path
 
 
@@ -95,8 +96,6 @@ def importantPasteByModule():
     for path in allPastes[0:10]:
         path = path.decode('utf8')
         all_path.append(path)
-        #print(path)
-        #print(type(path))
         paste = Paste.Paste(path)
         content = paste.get_p_content()
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1

@@ -112,9 +112,6 @@ class Paste(object):
         paste = self.cache.get(self.p_path)
         if paste is None:
             try:
-            #print('----------------------------------------------------------------')
-            #print(self.p_name)
-            #print('----------------------------------------------------------------')
                 with gzip.open(self.p_path, 'rb') as f:
                     paste = f.read()
                     self.cache.set(self.p_path, paste)
@@ -334,7 +331,6 @@ class Paste(object):
         Save a new duplicate on others pastes
         """
         for hash_type, path, percent, date in list_value:
-            print(hash_type, path, percent, date)
             #get json
             json_duplicate = self.store.hget(path, attr_name)
             #json save on redis

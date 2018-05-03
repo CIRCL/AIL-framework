@@ -54,7 +54,6 @@ if __name__ == "__main__":
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
                 host=p.config.get("Redis_Level_DB", "host"), port=year,
                 db=month)
-            #print("dup: "+str(year)+str(month).zfill(2)+"\n")
 
     # FUNCTIONS #
     publisher.info("Script duplicate started")
@@ -142,11 +141,12 @@ if __name__ == "__main__":
                                 paste_date = paste_date.decode('utf8')
                                 paste_date = paste_date if paste_date != None else "No date available"
                                 if paste_path != None:
-                                    hash_dico[dico_hash] = (hash_type, paste_path, percent, paste_date)
+                                    if paste_path != PST.p_path:
+                                        hash_dico[dico_hash] = (hash_type, paste_path, percent, paste_date)
 
-                                print('['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent))
+                                        print('['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent))
+
                         except Exception:
-                            #print(str(e))
                             print('hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash)
 
             # Add paste in DB after checking to prevent its analysis twice
@@ -181,7 +181,6 @@ if __name__ == "__main__":
                 y = time.time()
 
                 publisher.debug('{}Processed in {} sec'.format(to_print, y-x))
-                #print '{}Processed in {} sec'.format(to_print, y-x)
 
         except IOError:
             to_print = 'Duplicate;{};{};{};'.format(

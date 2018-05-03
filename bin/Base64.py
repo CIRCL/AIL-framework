@@ -3,7 +3,7 @@
 """
     Base64 module
 
-    Dectect Base64, decode it and send to XXX for reprocess
+    Dectect Base64 and decode it
 """
 import time
 import os

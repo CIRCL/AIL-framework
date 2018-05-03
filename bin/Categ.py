@@ -77,7 +77,6 @@ if __name__ == "__main__":
             tmp_dict[bname] = re.compile('|'.join(patterns), re.IGNORECASE)
 
     prec_filename = None
-    print(tmp_dict)
 
     while True:
         filename = p.get_from_set()
