@@ -91,9 +91,9 @@ if __name__ == '__main__':
                 complete_paste, gzip64encoded = splitted
 
                 try:
-                    feeder_name = ( complete_paste.replace("archive/","") ).split("/")[0]
-
-                    # TODO take real name ?
+                    #feeder_name = ( complete_paste.replace("archive/","") ).split("/")[0]
+                    feeder_name, paste_name = complete_paste.split('>')
+                    feeder_name.replace(" ","")
                     paste_name = complete_paste
 
                 except ValueError as e:
