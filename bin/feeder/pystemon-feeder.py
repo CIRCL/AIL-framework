@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # This file is part of AIL framework - Analysis Information Leak framework
@@ -50,7 +50,7 @@ socket = context.socket(zmq.PUB)
 socket.bind(zmq_url)
 
 # check https://github.com/cvandeplas/pystemon/blob/master/pystemon.yaml#L16
-r = redis.StrictRedis(host='localhost', db=10)
+r = redis.StrictRedis(host='localhost', db=10, decode_responses=True)
 
 # 101 pastes processed feed
 # 102 raw pastes feed

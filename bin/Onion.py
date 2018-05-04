@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 The ZMQ_Sub_Onion Module
@@ -94,7 +94,8 @@ if __name__ == "__main__":
     r_cache = redis.StrictRedis(
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),
-        db=p.config.getint("Redis_Cache", "db"))
+        db=p.config.getint("Redis_Cache", "db"),
+        decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")

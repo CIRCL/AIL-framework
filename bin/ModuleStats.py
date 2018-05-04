@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
     This module makes statistics for some modules and providers
@@ -52,7 +52,7 @@ def compute_most_posted(server, message):
         # Member set is a list of (value, score) pairs
         if int(member_set[0][1]) < keyword_total_sum:
             #remove min from set and add the new one
-            print(module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0].decode('utf8')+'('+str(member_set[0][1])+')')
+            print(module + ': adding ' +keyword+ '(' +str(keyword_total_sum)+') in set and removing '+member_set[0][0]+'('+str(member_set[0][1])+')')
             server.zrem(redis_progression_name_set, member_set[0][0])
             server.zadd(redis_progression_name_set, float(keyword_total_sum), keyword)
             print(redis_progression_name_set)
@@ -135,12 +135,14 @@ if __name__ == '__main__':
     r_serv_trend = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_Trending", "host"),
         port=p.config.get("Redis_Level_DB_Trending", "port"),
-        db=p.config.get("Redis_Level_DB_Trending", "db"))
+        db=p.config.get("Redis_Level_DB_Trending", "db"),
+        decode_responses=True)
 
     r_serv_pasteName = redis.StrictRedis(
         host=p.config.get("Redis_Paste_Name", "host"),
         port=p.config.get("Redis_Paste_Name", "port"),
-        db=p.config.get("Redis_Paste_Name", "db"))
+        db=p.config.get("Redis_Paste_Name", "db"),
+        decode_responses=True)
 
     # Endless loop getting messages from the input queue
     while True:

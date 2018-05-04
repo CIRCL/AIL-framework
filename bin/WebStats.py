@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -116,7 +116,8 @@ if __name__ == '__main__':
     r_serv_trend = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_Trending", "host"),
         port=p.config.get("Redis_Level_DB_Trending", "port"),
-        db=p.config.get("Redis_Level_DB_Trending", "db"))
+        db=p.config.get("Redis_Level_DB_Trending", "db"),
+        decode_responses=True)
 
     # FILE CURVE SECTION #
     csv_path_proto = os.path.join(os.environ['AIL_HOME'],

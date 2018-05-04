@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 This module is consuming the Redis-list created by the ZMQ_Sub_Curve_Q Module.
@@ -49,7 +49,7 @@ top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
 def check_if_tracked_term(term, path):
-    if term.encode('utf8') in server_term.smembers(TrackedTermsSet_Name):
+    if term in server_term.smembers(TrackedTermsSet_Name):
         #add_paste to tracked_word_set
         set_name = "tracked_" + term
         server_term.sadd(set_name, path)
@@ -84,12 +84,14 @@ if __name__ == "__main__":
     r_serv1 = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_Curve", "host"),
         port=p.config.get("Redis_Level_DB_Curve", "port"),
-        db=p.config.get("Redis_Level_DB_Curve", "db"))
+        db=p.config.get("Redis_Level_DB_Curve", "db"),
+        decode_responses=True)
 
     server_term = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_TermFreq", "host"),
         port=p.config.get("Redis_Level_DB_TermFreq", "port"),
-        db=p.config.get("Redis_Level_DB_TermFreq", "db"))
+        db=p.config.get("Redis_Level_DB_TermFreq", "db"),
+        decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("Script Curve started")
@@ -132,7 +134,7 @@ if __name__ == "__main__":
             curr_word_value_perPaste = int(server_term.hincrby("per_paste_" + str(timestamp), low_word, int(1)))
 
             # Add in set only if term is not in the blacklist
-            if low_word.encode('utf8') not in server_term.smembers(BlackListTermsSet_Name):
+            if low_word not in server_term.smembers(BlackListTermsSet_Name):
                 #consider the num of occurence of this term
                 server_term.zincrby(curr_set, low_word, float(score))
                 #1 term per paste

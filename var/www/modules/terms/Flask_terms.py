@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -72,7 +72,7 @@ def Term_getValueOverRange(word, startDate, num_day, per_paste=""):
     curr_to_return = 0
     for timestamp in range(startDate, startDate - max(num_day)*oneDay, -oneDay):
         value = r_serv_term.hget(per_paste+str(timestamp), word)
-        curr_to_return += int(value.decode('utf8')) if value is not None else 0
+        curr_to_return += int(value) if value is not None else 0
         for i in num_day:
             if passed_days == i-1:
                 to_return.append(curr_to_return)
@@ -157,10 +157,8 @@ def terms_management():
     trackReg_list_values = []
     trackReg_list_num_of_paste = []
     for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
-        tracked_regex = tracked_regex.decode('utf8')
-        print(tracked_regex)
 
-        notificationEMailTermMapping[tracked_regex] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)).decode('utf8') )
+        notificationEMailTermMapping[tracked_regex] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)) )
 
         if tracked_regex not in notificationEnabledDict:
             notificationEnabledDict[tracked_regex] = False
@@ -176,7 +174,7 @@ def terms_management():
         value_range.append(term_date)
         trackReg_list_values.append(value_range)
 
-        if tracked_regex.encode('utf8') in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+        if tracked_regex in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
             notificationEnabledDict[tracked_regex] = True
 
     #Set
@@ -184,9 +182,9 @@ def terms_management():
     trackSet_list_values = []
     trackSet_list_num_of_paste = []
     for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
-        tracked_set = tracked_set.decode('utf8')
+        tracked_set = tracked_set
 
-        notificationEMailTermMapping[tracked_set] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)).decode('utf8') )
+        notificationEMailTermMapping[tracked_set] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)) )
 
 
         if tracked_set not in notificationEnabledDict:
@@ -203,7 +201,7 @@ def terms_management():
         value_range.append(term_date)
         trackSet_list_values.append(value_range)
 
-        if tracked_set.encode('utf8') in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+        if tracked_set in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
             notificationEnabledDict[tracked_set] = True
 
     #Tracked terms
@@ -211,13 +209,7 @@ def terms_management():
     track_list_values = []
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
-        tracked_term = tracked_term.decode('utf8')
-        print('tracked_term : .')
-        print(tracked_term)
 
-        #print(TrackedTermsNotificationEmailsPrefix_Name)
-        print(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
-        #print(tracked_term)
         notificationEMailTermMapping[tracked_term] = "\n".join( r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
 
         if tracked_term not in notificationEnabledDict:
@@ -229,16 +221,14 @@ def terms_management():
         term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
 
         set_paste_name = "tracked_" + tracked_term
-        print('set_paste_name : .')
-        print(set_paste_name)
+
         track_list_num_of_paste.append( r_serv_term.scard(set_paste_name) )
-        print('track_list_num_of_paste : .')
-        print(track_list_num_of_paste)
+
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         value_range.append(term_date)
         track_list_values.append(value_range)
 
-        if tracked_term.encode('utf8') in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
+        if tracked_term in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
             notificationEnabledDict[tracked_term] = True
 
     #blacklist terms
@@ -246,7 +236,7 @@ def terms_management():
     for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
         term_date = r_serv_term.hget(BlackListTermsDate_Name, blacked_term)
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-        black_list.append([blacked_term.decode('utf8'), term_date])
+        black_list.append([blacked_term, term_date])
 
     return render_template("terms_management.html",
             black_list=black_list, track_list=track_list, trackReg_list=trackReg_list, trackSet_list=trackSet_list,
@@ -259,8 +249,6 @@ def terms_management():
 @terms.route("/terms_management_query_paste/")
 def terms_management_query_paste():
     term =  request.args.get('term')
-    print('term :')
-    print(term)
     paste_info = []
 
     # check if regex or not
@@ -275,7 +263,6 @@ def terms_management_query_paste():
         track_list_path = r_serv_term.smembers(set_paste_name)
 
     for path in track_list_path:
-        path = path.decode('utf8')
         paste = Paste.Paste(path)
         p_date = str(paste._get_p_date())
         p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
@@ -402,7 +389,6 @@ def terms_management_action():
                     r_serv_term.hdel(TrackedRegexDate_Name, term)
                 elif term.startswith('\\') and term.endswith('\\'):
                     r_serv_term.srem(TrackedSetSet_Name, term)
-                    #print(term)
                     r_serv_term.hdel(TrackedSetDate_Name, term)
                 else:
                     r_serv_term.srem(TrackedTermsSet_Name, term.lower())
@@ -515,7 +501,7 @@ def terms_plot_top_data():
                 curr_value_range = int(value) if value is not None else 0
                 value_range.append([timestamp, curr_value_range])
 
-            to_return.append([term.decode('utf8'), value_range, tot_value, position])
+            to_return.append([term, value_range, tot_value, position])
 
         return jsonify(to_return)
 
@@ -532,7 +518,6 @@ def credentials_management_query_paste():
     paste_info = []
     for pathNum in allPath:
         path = r_serv_cred.hget(REDIS_KEY_ALL_PATH_SET_REV, pathNum)
-        path = path.decode('utf8')
         paste = Paste.Paste(path)
         p_date = str(paste._get_p_date())
         p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
@@ -574,7 +559,6 @@ def cred_management_action():
             iter_num = 0
             tot_iter = len(AllUsernameInRedis)*len(possibilities)
             for tempUsername in AllUsernameInRedis:
-                tempUsername = tempUsername.decode('utf8')
                 for poss in possibilities:
                     #FIXME print progress
                     if(iter_num % int(tot_iter/20) == 0):
@@ -583,7 +567,7 @@ def cred_management_action():
                     iter_num += 1
 
                     if poss in tempUsername:
-                        num = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername)).decode('utf8')
+                        num = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername))
                         if num is not None:
                             uniq_num_set.add(num)
                         for num in r_serv_cred.smembers(tempUsername):
@@ -592,7 +576,7 @@ def cred_management_action():
     data = {'usr': [], 'path': [], 'numPaste': [], 'simil': []}
     for Unum in uniq_num_set:
         levenRatio = 2.0
-        username = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum)).decode('utf8')
+        username = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum))
 
         # Calculate Levenshtein distance, ignore negative ratio
         supp_splitted = supplied.split()
@@ -604,20 +588,11 @@ def cred_management_action():
 
         data['usr'].append(username)
 
-        try:
-            Unum = Unum.decode('utf8')
-        except:
-            pass
 
         allPathNum = list(r_serv_cred.smembers(REDIS_KEY_MAP_CRED_TO_PATH+'_'+Unum))
 
-        # decode bytes
-        allPathNum_str = []
-        for p in allPathNum:
-            allPathNum_str.append(p.decode('utf8'))
-
-        data['path'].append(allPathNum_str)
-        data['numPaste'].append(len(allPathNum_str))
+        data['path'].append(allPathNum)
+        data['numPaste'].append(len(allPathNum))
         data['simil'].append(levenRatioStr)
 
     to_return = {}

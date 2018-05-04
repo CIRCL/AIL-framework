@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
@@ -510,9 +510,8 @@ def clearRedisModuleInfo():
 
 def cleanRedis():
     for k in server.keys("MODULE_TYPE_*"):
-        moduleName = (k[12:].decode('utf8')).split('_')[0]
+        moduleName = k[12:].split('_')[0]
         for pid in server.smembers(k):
-            pid = pid.decode('utf8')
             flag_pid_valid = False
             proc = Popen([command_search_name.format(pid)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
             try:
@@ -530,7 +529,7 @@ def cleanRedis():
                     #print flag_pid_valid, 'cleaning', pid, 'in', k
                     server.srem(k, pid)
                     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                    log(([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + (k).decode('utf8')], 0))
+                    log(([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + (k)], 0))
 
             #Error due to resize, interrupted sys call
             except IOError as e:
@@ -607,19 +606,16 @@ def fetchQueueData():
     printarray_idle = []
     printarray_notrunning = []
     for queue, card in iter(server.hgetall("queues").items()):
-        queue = queue.decode('utf8')
-        card = card.decode('utf8')
         all_queue.add(queue)
         key = "MODULE_" + queue + "_"
         keySet = "MODULE_TYPE_" + queue
         array_module_type = []
 
         for moduleNum in server.smembers(keySet):
-            moduleNum = moduleNum.decode('utf8')
-            value = ( server.get(key + str(moduleNum)) ).decode('utf8')
+            value = server.get(key + str(moduleNum))
             complete_paste_path = ( server.get(key + str(moduleNum) + "_PATH") )
             if(complete_paste_path is not None):
-                complete_paste_path = complete_paste_path.decode('utf8')
+                complete_paste_path = complete_paste_path
             COMPLETE_PASTE_PATH_PER_PID[moduleNum] = complete_paste_path
 
             if value is not None:
@@ -814,7 +810,8 @@ if __name__ == "__main__":
     server = redis.StrictRedis(
         host=cfg.get("Redis_Queues", "host"),
         port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
+        db=cfg.getint("Redis_Queues", "db"),
+        decode_responses=True)
 
     if args.clear == 1:
         clearRedisModuleInfo()

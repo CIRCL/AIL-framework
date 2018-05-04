@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import os
 import string
 
@@ -110,7 +112,7 @@ def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month
                     # if the word have a value for the day
                     # FIXME Due to performance issues (too many tlds, leads to more than 7s to perform this procedure), I added a threshold
                     value = r_serv.hget(word, curdate)
-                    value = int(value.decode('utf8'))
+                    value = int(value)
                     if value >= threshold:
                         row.append(value)
             writer.writerow(row)
@@ -135,7 +137,7 @@ def create_curve_from_redis_set(server, csvfilename, set_to_plot, year, month):
 
     redis_set_name = set_to_plot + "_set_" + str(year) + str(month).zfill(2)
     words = list(server.smembers(redis_set_name))
-    words = [x.decode('utf-8') for x in words]
+    #words = [x.decode('utf-8') for x in words]
 
     headers = ['Date'] + words
     with open(csvfilename+'.csv', 'w') as f:
@@ -154,5 +156,5 @@ def create_curve_from_redis_set(server, csvfilename, set_to_plot, year, month):
                     row.append(0)
                 else:
                     # if the word have a value for the day
-                    row.append(value.decode('utf8'))
+                    row.append(value)
             writer.writerow(row)

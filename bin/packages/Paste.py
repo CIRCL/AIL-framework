@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3
 
 """
 The ``Paste Class``
@@ -69,11 +69,13 @@ class Paste(object):
         self.cache = redis.StrictRedis(
             host=cfg.get("Redis_Queues", "host"),
             port=cfg.getint("Redis_Queues", "port"),
-            db=cfg.getint("Redis_Queues", "db"))
+            db=cfg.getint("Redis_Queues", "db"),
+            decode_responses=True)
         self.store = redis.StrictRedis(
             host=cfg.get("Redis_Data_Merging", "host"),
             port=cfg.getint("Redis_Data_Merging", "port"),
-            db=cfg.getint("Redis_Data_Merging", "db"))
+            db=cfg.getint("Redis_Data_Merging", "db"),
+            decode_responses=True)
 
         self.p_path = p_path
         self.p_name = os.path.basename(self.p_path)
@@ -112,21 +114,17 @@ class Paste(object):
         paste = self.cache.get(self.p_path)
         if paste is None:
             try:
-                with gzip.open(self.p_path, 'rb') as f:
+                with gzip.open(self.p_path, 'r') as f:
                     paste = f.read()
                     self.cache.set(self.p_path, paste)
                     self.cache.expire(self.p_path, 300)
             except:
-                paste = b''
+                paste = ''
 
-        return paste.decode('utf8')
+        return paste
 
     def get_p_content_as_file(self):
-        try:
-            message = StringIO( (self.get_p_content()).decode('utf8') )
-        except AttributeError:
-            message = StringIO( (self.get_p_content()) )
-
+        message = StringIO(self.get_p_content())
         return message
 
     def get_p_content_with_removed_lines(self, threshold):
@@ -204,7 +202,7 @@ class Paste(object):
 
         """
         for hash_name, the_hash in self.p_hash_kind.items():
-            self.p_hash[hash_name] = the_hash.Calculate(self.get_p_content().encode('utf8'))
+            self.p_hash[hash_name] = the_hash.Calculate(self.get_p_content().encode())
         return self.p_hash
 
     def _get_p_language(self):
@@ -276,7 +274,6 @@ class Paste(object):
     def _get_p_duplicate(self):
         self.p_duplicate = self.store.hget(self.p_path, "p_duplicate")
         if self.p_duplicate is not None:
-            self.p_duplicate = self.p_duplicate.decode('utf8')
             return self.p_duplicate
         else:
             return '[]'
@@ -335,7 +332,7 @@ class Paste(object):
             json_duplicate = self.store.hget(path, attr_name)
             #json save on redis
             if json_duplicate is not None:
-                list_duplicate = json.loads(json_duplicate.decode('utf8'))
+                list_duplicate = json.loads(json_duplicate)
                 # add new duplicate
                 list_duplicate.append([hash_type, self.p_path, percent, date])
                 self.store.hset(path, attr_name, json.dumps(list_duplicate))

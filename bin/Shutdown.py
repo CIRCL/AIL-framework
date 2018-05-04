@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 The ZMQ_Feed_Q Module
@@ -37,7 +37,8 @@ def main():
     # REDIS
     r_serv = redis.StrictRedis(host=cfg.get("Redis_Queues", "host"),
                                port=cfg.getint("Redis_Queues", "port"),
-                               db=cfg.getint("Redis_Queues", "db"))
+                               db=cfg.getint("Redis_Queues", "db"),
+                               decode_responses=True)
 
     # FIXME: automatic based on the queue name.
     # ### SCRIPTS ####

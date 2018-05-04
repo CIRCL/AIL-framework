@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 This Module is used for term frequency.
@@ -56,7 +56,8 @@ if __name__ == "__main__":
     server_term = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_TermFreq", "host"),
         port=p.config.get("Redis_Level_DB_TermFreq", "port"),
-        db=p.config.get("Redis_Level_DB_TermFreq", "db"))
+        db=p.config.get("Redis_Level_DB_TermFreq", "db"),
+        decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("RegexForTermsFrequency script started")

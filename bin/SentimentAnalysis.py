@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
     Sentiment analyser module.
@@ -109,7 +109,7 @@ def Analyse(message, server):
             provider_timestamp = provider + '_' + str(timestamp)
             server.incr('UniqID')
             UniqID = server.get('UniqID')
-            print(provider_timestamp, '->', UniqID.decode('utf8'), 'dropped', num_line_removed, 'lines')
+            print(provider_timestamp, '->', UniqID, 'dropped', num_line_removed, 'lines')
             server.sadd(provider_timestamp, UniqID)
             server.set(UniqID, avg_score)
     else:
@@ -154,7 +154,8 @@ if __name__ == '__main__':
     server = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_Sentiment", "host"),
         port=p.config.get("Redis_Level_DB_Sentiment", "port"),
-        db=p.config.get("Redis_Level_DB_Sentiment", "db"))
+        db=p.config.get("Redis_Level_DB_Sentiment", "db"),
+        decode_responses=True)
 
     while True:
         message = p.get_from_set()

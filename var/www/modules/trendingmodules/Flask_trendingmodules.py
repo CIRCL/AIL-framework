@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -28,18 +28,12 @@ def get_top_relevant_data(server, module_name):
     for date in get_date_range(15):
         redis_progression_name_set = 'top_'+ module_name +'_set_' + date
         member_set = server.zrevrangebyscore(redis_progression_name_set, '+inf', '-inf', withscores=True)
-        member_set_str = []
 
-        # decode bytes
-        for domain, value in member_set:
-            m = domain.decode('utf8'), value
-            member_set_str.append(m)
-
-        if len(member_set_str) == 0: #No data for this date
+        if len(member_set) == 0: #No data for this date
             days += 1
         else:
-            member_set_str.insert(0, ("passed_days", days))
-            return member_set_str
+            member_set.insert(0, ("passed_days", days))
+            return member_set
 
 
 def get_date_range(num_day):
@@ -94,13 +88,13 @@ def providersChart():
         for date in date_range:
             curr_value_size = ( r_serv_charts.hget(keyword_name+'_'+'size', date) )
             if curr_value_size is not None:
-                curr_value_size = curr_value_size.decode('utf8')
+                curr_value_size = curr_value_size
 
             curr_value_num = r_serv_charts.hget(keyword_name+'_'+'num', date)
 
             curr_value_size_avg = r_serv_charts.hget(keyword_name+'_'+'avg', date)
             if curr_value_size_avg is not None:
-                curr_value_size_avg = curr_value_size_avg.decode('utf8')
+                curr_value_size_avg = curr_value_size_avg
 
 
             if module_name == "size":
@@ -119,16 +113,10 @@ def providersChart():
 
         member_set = r_serv_charts.zrevrangebyscore(redis_provider_name_set, '+inf', '-inf', withscores=True, start=0, num=8)
 
-        # decode bytes
-        member_set_str = []
-        for domain, value in member_set:
-            m = domain.decode('utf8'), value
-            member_set_str.append(m)
-
         # Member set is a list of (value, score) pairs
-        if len(member_set_str) == 0:
+        if len(member_set) == 0:
             member_set_str.append(("No relevant data", float(100)))
-        return jsonify(member_set_str)
+        return jsonify(member_set)
 
 
 @trendingmodules.route("/moduletrending/")

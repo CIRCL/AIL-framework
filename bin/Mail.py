@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -34,7 +34,8 @@ if __name__ == "__main__":
     r_serv2 = redis.StrictRedis(
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),
-        db=p.config.getint("Redis_Cache", "db"))
+        db=p.config.getint("Redis_Cache", "db"),
+        decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("Suscribed to channel mails_categ")

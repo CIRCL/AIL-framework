@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -54,7 +54,8 @@ if __name__ == "__main__":
     server = redis.StrictRedis(
                 host=p.config.get("Redis_Level_DB", "host"),
                 port=curYear,
-                db=p.config.get("Redis_Level_DB", "db"))
+                db=p.config.get("Redis_Level_DB", "db"),
+                decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("Script duplicate started")
@@ -62,7 +63,6 @@ if __name__ == "__main__":
     while True:
             message = p.get_from_set()
             if message is not None:
-                #decode because of pyhton3
                 module_name, p_path = message.split(';')
                 print("new alert : {}".format(module_name))
                 #PST = Paste.Paste(p_path)

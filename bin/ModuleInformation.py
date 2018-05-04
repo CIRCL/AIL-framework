@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -199,7 +199,8 @@ if __name__ == "__main__":
     server = redis.StrictRedis(
         host=cfg.get("Redis_Queues", "host"),
         port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
+        db=cfg.getint("Redis_Queues", "db"),
+        decode_responses=True)
 
     if args.clear == 1:
         clearRedisModuleInfo()

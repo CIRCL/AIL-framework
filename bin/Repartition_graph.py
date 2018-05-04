@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3
 # -*-coding:UTF-8 -*
 
 import redis
@@ -35,7 +35,8 @@ def main():
     r_serv = redis.StrictRedis(
         host=cfg.get("Redis_Level_DB_Hashs", "host"),
         port=curYear,
-        db=cfg.getint("Redis_Level_DB_Hashs", "db"))
+        db=cfg.getint("Redis_Level_DB_Hashs", "db"),
+        decode_responses=True)
 
     # LOGGING #
     publisher.port = 6380

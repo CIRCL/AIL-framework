@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 Queue helper module
@@ -45,7 +45,8 @@ class PubSub(object):
             r = redis.StrictRedis(
                 host=self.config.get('RedisPubSub', 'host'),
                 port=self.config.get('RedisPubSub', 'port'),
-                db=self.config.get('RedisPubSub', 'db'))
+                db=self.config.get('RedisPubSub', 'db'),
+                decode_responses=True)
             self.subscribers = r.pubsub(ignore_subscribe_messages=True)
             self.subscribers.psubscribe(channel)
         elif conn_name.startswith('ZMQ'):
@@ -69,7 +70,8 @@ class PubSub(object):
         if conn_name.startswith('Redis'):
             r = redis.StrictRedis(host=self.config.get('RedisPubSub', 'host'),
                                   port=self.config.get('RedisPubSub', 'port'),
-                                  db=self.config.get('RedisPubSub', 'db'))
+                                  db=self.config.get('RedisPubSub', 'db'),
+                                  decode_responses=True)
             self.publishers['Redis'].append((r, channel))
         elif conn_name.startswith('ZMQ'):
             context = zmq.Context()
@@ -99,8 +101,7 @@ class PubSub(object):
                 for sub in self.subscribers:
                     try:
                         msg = sub.recv(zmq.NOBLOCK)
-                        msg = msg.decode('utf8')
-                        yield msg.split(" ", 1)[1]
+                        yield msg.split(b" ", 1)[1]
                     except zmq.error.Again as e:
                         time.sleep(0.2)
                         pass
@@ -131,7 +132,8 @@ class Process(object):
         self.r_temp = redis.StrictRedis(
             host=self.config.get('RedisPubSub', 'host'),
             port=self.config.get('RedisPubSub', 'port'),
-            db=self.config.get('RedisPubSub', 'db'))
+            db=self.config.get('RedisPubSub', 'db'),
+            decode_responses=True)
 
         self.moduleNum = os.getpid()
 
@@ -151,11 +153,6 @@ class Process(object):
         self.r_temp.hset('queues', self.subscriber_name,
                          int(self.r_temp.scard(in_set)))
         message = self.r_temp.spop(in_set)
-
-        try:
-            message = message.decode('utf8')
-        except AttributeError:
-            pass
 
         timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
         dir_name = os.environ['AIL_HOME']+self.config.get('Directories', 'pastes')
@@ -215,11 +212,6 @@ class Process(object):
             self.pubsub.setup_publish(name)
         while True:
             message = self.r_temp.spop(self.subscriber_name + 'out')
-
-            try:
-                message = message.decode('utf8')
-            except AttributeError:
-                pass
 
             if message is None:
                 time.sleep(1)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -55,7 +55,8 @@ if __name__ == "__main__":
     server_cred = redis.StrictRedis(
         host=p.config.get("Redis_Level_DB_TermCred", "host"),
         port=p.config.get("Redis_Level_DB_TermCred", "port"),
-        db=p.config.get("Redis_Level_DB_TermCred", "db"))
+        db=p.config.get("Redis_Level_DB_TermCred", "db"),
+        decode_responses=True)
 
     criticalNumberToAlert = p.config.getint("Credential", "criticalNumberToAlert")
     minTopPassList = p.config.getint("Credential", "minTopPassList")
@@ -68,8 +69,8 @@ if __name__ == "__main__":
         message = p.get_from_set()
         if message is None:
             publisher.debug("Script Credential is Idling 10s")
-            print('sleeping 10s')
-            time.sleep(1)
+            #print('sleeping 10s')
+            time.sleep(10)
             continue
 
         filepath, count = message.split(' ')
@@ -109,7 +110,7 @@ if __name__ == "__main__":
             site_occurence = re.findall(regex_site_for_stats, content)
             for site in site_occurence:
                 site_domain = site[1:-1]
-                if site_domain.encode('utf8') in creds_sites.keys():
+                if site_domain in creds_sites.keys():
                     creds_sites[site_domain] += 1
                 else:
                     creds_sites[site_domain] = 1
@@ -123,10 +124,6 @@ if __name__ == "__main__":
                     creds_sites[domain] = 1
 
             for site, num in creds_sites.items(): # Send for each different site to moduleStats
-                try:
-                    site = site.decode('utf8')
-                except:
-                    pass
 
                 mssg = 'credential;{};{};{}'.format(num, site, paste.p_date)
                 print(mssg)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -26,23 +26,11 @@ def event_stream():
     pubsub = r_serv_log.pubsub()
     pubsub.psubscribe("Script" + '.*')
     for msg in pubsub.listen():
-        # bytes conversion
-        try:
-            type = msg['type'].decode('utf8')
-        except:
-            type = msg['type']
-        try:
-            pattern = msg['pattern'].decode('utf8')
-        except:
-            pattern = msg['pattern']
-        try:
-            channel = msg['channel'].decode('utf8')
-        except:
-            channel = msg['channel']
-        try:
-            data = msg['data'].decode('utf8')
-        except:
-            data = msg['data']
+
+        type = msg['type']
+        pattern = msg['pattern']
+        channel = msg['channel']
+        data = msg['data']
 
         msg = {'channel': channel, 'type': type, 'pattern': pattern, 'data': data}
 
@@ -54,15 +42,13 @@ def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
     newData = []
     for queue, card in r.hgetall("queues").items():
-        queue = queue.decode('utf8')
-        card = card.decode('utf8')
+
         key = "MODULE_" + queue + "_"
         keySet = "MODULE_TYPE_" + queue
 
         for moduleNum in r.smembers(keySet):
-            moduleNum = moduleNum.decode('utf8')
 
-            value = ( r.get(key + str(moduleNum)) ).decode('utf8')
+            value = r.get(key + str(moduleNum))
 
             if value is not None:
                 timestamp, path = value.split(", ")

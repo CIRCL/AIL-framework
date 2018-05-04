@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -53,7 +53,8 @@ if __name__ == "__main__":
         for month in range(0, 13):
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
                 host=p.config.get("Redis_Level_DB", "host"), port=year,
-                db=month)
+                db=month,
+                decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("Script duplicate started")
@@ -102,7 +103,7 @@ if __name__ == "__main__":
             yearly_index = str(date_today.year)+'00'
             r_serv0 = dico_redis[yearly_index]
             r_serv0.incr("current_index")
-            index = (r_serv0.get("current_index")).decode('utf8') + str(PST.p_date)
+            index = (r_serv0.get("current_index")) + str(PST.p_date)
 
             # Open selected dico range
             opened_dico = []
@@ -116,7 +117,7 @@ if __name__ == "__main__":
             for curr_dico_name, curr_dico_redis in opened_dico:
                 for hash_type, paste_hash in paste_hashes.items():
                     for dico_hash in curr_dico_redis.smembers('HASHS_'+hash_type):
-                        dico_hash = dico_hash.decode('utf8')
+                        dico_hash = dico_hash
 
                         try:
                             if hash_type == 'ssdeep':
@@ -134,11 +135,11 @@ if __name__ == "__main__":
 
                                 # index of paste
                                 index_current = r_serv_dico.get(dico_hash)
-                                index_current = index_current.decode('utf8')
+                                index_current = index_current
                                 paste_path = r_serv_dico.get(index_current)
-                                paste_path = paste_path.decode('utf8')
+                                paste_path = paste_path
                                 paste_date = r_serv_dico.get(index_current+'_date')
-                                paste_date = paste_date.decode('utf8')
+                                paste_date = paste_date
                                 paste_date = paste_date if paste_date != None else "No date available"
                                 if paste_path != None:
                                     if paste_path != PST.p_path:

@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 class Date(object):
     """docstring for Date"""
     def __init__(self, *args):
@@ -30,7 +32,7 @@ class Date(object):
 
     def _set_day(self, day):
         self.day = day
-	
+
     def substract_day(self, numDay):
         import datetime
         computed_date = datetime.date(int(self.year), int(self.month), int(self.day)) - datetime.timedelta(numDay)
@@ -38,4 +40,3 @@ class Date(object):
         comp_month = str(computed_date.month).zfill(2)
         comp_day = str(computed_date.day).zfill(2)
         return comp_year + comp_month + comp_day
-

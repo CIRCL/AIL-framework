@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -37,7 +37,8 @@ for year in os.listdir(lvdbdir):
     r_serv_db[intYear] = redis.StrictRedis(
         host=cfg.get("Redis_Level_DB", "host"),
         port=intYear,
-        db=cfg.getint("Redis_Level_DB", "db"))
+        db=cfg.getint("Redis_Level_DB", "db"),
+        decode_responses=True)
 yearList.sort(reverse=True)
 
 browsepastes = Blueprint('browsepastes', __name__, template_folder='templates')
@@ -55,8 +56,8 @@ def getPastebyType(server, module_name):
 def event_stream_getImportantPasteByModule(module_name, year):
     index = 0
     all_pastes_list = getPastebyType(r_serv_db[year], module_name)
+
     for path in all_pastes_list:
-        path = path.decode('utf8')
         index += 1
         paste = Paste.Paste(path)
         content = paste.get_p_content()
@@ -94,7 +95,6 @@ def importantPasteByModule():
     allPastes = getPastebyType(r_serv_db[currentSelectYear], module_name)
 
     for path in allPastes[0:10]:
-        path = path.decode('utf8')
         all_path.append(path)
         paste = Paste.Paste(path)
         content = paste.get_p_content()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 The Mixer Module
@@ -65,7 +65,8 @@ if __name__ == '__main__':
     server = redis.StrictRedis(
         host=cfg.get("Redis_Mixer_Cache", "host"),
         port=cfg.getint("Redis_Mixer_Cache", "port"),
-        db=cfg.getint("Redis_Mixer_Cache", "db"))
+        db=cfg.getint("Redis_Mixer_Cache", "db"),
+        decode_responses=True)
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 
@@ -139,7 +139,8 @@ if __name__ == '__main__':
     r_temp = redis.StrictRedis(
         host=cfg.get('RedisPubSub', 'host'),
         port=cfg.getint('RedisPubSub', 'port'),
-        db=cfg.getint('RedisPubSub', 'db'))
+        db=cfg.getint('RedisPubSub', 'db'),
+        decode_responses=True)
 
     timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
     value = str(timestamp) + ", " + "-"
@@ -149,7 +150,8 @@ if __name__ == '__main__':
     server_term = redis.StrictRedis(
         host=cfg.get("Redis_Level_DB_TermFreq", "host"),
         port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
-        db=cfg.getint("Redis_Level_DB_TermFreq", "db"))
+        db=cfg.getint("Redis_Level_DB_TermFreq", "db"),
+        decode_responses=True)
 
     publisher.info("Script Curve_manage_top_set started")
 
