@@ -115,7 +115,7 @@ def providersChart():
 
         # Member set is a list of (value, score) pairs
         if len(member_set) == 0:
-            member_set_str.append(("No relevant data", float(100)))
+            member_set.append(("No relevant data", float(100)))
         return jsonify(member_set)
 
 

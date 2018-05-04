@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import sys,os
@@ -10,7 +10,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from packages.Paste import Paste
 import Keys as Keys
 from Helper import Process
-import pubsublogger
+from pubsublogger import publisher
 
 
 class TestKeysModule(unittest.TestCase):
@@ -27,4 +27,10 @@ class TestKeysModule(unittest.TestCase):
 
     def test_search_key(self):
         with self.assertRaises(pubsublogger.exceptions.NoChannelError):
+            Keys.search_key(self.paste)
+
+    def test_search_key(self):
+        with self.assertRaises(NameError):
+            publisher.port = 6380
+            publisher.channel = 'Script'
             Keys.search_key(self.paste)

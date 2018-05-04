@@ -723,10 +723,6 @@ def format_string(tab, padding_row):
 
         text=""
         for ite, elem in enumerate(the_array):
-            try:
-                elem = elem.decode('utf8')
-            except AttributeError:
-                pass
 
             if len(elem) > padding_row[ite]:
                 text += "*" + elem[-padding_row[ite]+6:]
