@@ -112,37 +112,38 @@ host = localhost
 port = 6381
 db = 1
 
-##### LevelDB #####
-[Redis_Level_DB_Curve]
+##### ARDB #####
+[ARDB_Curve]
 host = localhost
 port = 6382
 db = 1
 
-[Redis_Level_DB_Sentiment]
+[ARDB_Sentiment]
 host = localhost
 port = 6382
 db = 4
 
-[Redis_Level_DB_TermFreq]
+[ARDB_TermFreq]
 host = localhost
 port = 6382
 db = 2
 
-[Redis_Level_DB_TermCred]
+[ARDB_TermCred]
 host = localhost
 port = 6382
 db = 5
 
-[Redis_Level_DB]
+[ARDB_DB]
 host = localhost
+port = 6382
 db = 0
 
-[Redis_Level_DB_Trending]
+[ARDB_Trending]
 host = localhost
 port = 6382
 db = 3
 
-[Redis_Level_DB_Hashs]
+[ARDB_Hashs]
 host = localhost
 db = 1
 

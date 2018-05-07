@@ -53,9 +53,9 @@ if __name__ == "__main__":
 
     faup = Faup()
     server_cred = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB_TermCred", "host"),
-        port=p.config.get("Redis_Level_DB_TermCred", "port"),
-        db=p.config.get("Redis_Level_DB_TermCred", "db"),
+        host=p.config.get("ARDB_TermCred", "host"),
+        port=p.config.get("ARDB_TermCred", "port"),
+        db=p.config.get("ARDB_TermCred", "db"),
         decode_responses=True)
 
     criticalNumberToAlert = p.config.getint("Credential", "criticalNumberToAlert")

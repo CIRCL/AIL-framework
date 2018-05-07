@@ -148,9 +148,9 @@ if __name__ == '__main__':
     r_temp.sadd("MODULE_TYPE_"+ "CurveManageTopSets" , str(os.getpid()))
 
     server_term = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB_TermFreq", "host"),
-        port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
-        db=cfg.getint("Redis_Level_DB_TermFreq", "db"),
+        host=cfg.get("ARDB_TermFreq", "host"),
+        port=cfg.getint("ARDB_TermFreq", "port"),
+        db=cfg.getint("ARDB_TermFreq", "db"),
         decode_responses=True)
 
     publisher.info("Script Curve_manage_top_set started")

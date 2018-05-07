@@ -54,9 +54,9 @@ if __name__ == "__main__":
 
     # REDIS #
     server_term = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB_TermFreq", "host"),
-        port=p.config.get("Redis_Level_DB_TermFreq", "port"),
-        db=p.config.get("Redis_Level_DB_TermFreq", "db"),
+        host=p.config.get("ARDB_TermFreq", "host"),
+        port=p.config.get("ARDB_TermFreq", "port"),
+        db=p.config.get("ARDB_TermFreq", "db"),
         decode_responses=True)
 
     # FUNCTIONS #

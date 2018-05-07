@@ -133,9 +133,9 @@ if __name__ == '__main__':
 
     # REDIS #
     r_serv_trend = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB_Trending", "host"),
-        port=p.config.get("Redis_Level_DB_Trending", "port"),
-        db=p.config.get("Redis_Level_DB_Trending", "db"),
+        host=p.config.get("ARDB_Trending", "host"),
+        port=p.config.get("ARDB_Trending", "port"),
+        db=p.config.get("ARDB_Trending", "db"),
         decode_responses=True)
 
     r_serv_pasteName = redis.StrictRedis(

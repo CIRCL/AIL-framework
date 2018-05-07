@@ -60,11 +60,9 @@ sudo ldconfig
 popd
 popd
 
-# REDIS LEVEL DB #
-test ! -d redis-leveldb/ && git clone https://github.com/KDr2/redis-leveldb.git
-pushd redis-leveldb/
-git submodule init
-git submodule update
+# ARDB #
+test ! -d ardb/ && git clone https://github.com/yinqiwen/ardb.git
+pushd ardb/
 make
 popd
 
@@ -84,7 +82,7 @@ if [ -z "$VIRTUAL_ENV" ]; then
     echo export AIL_BIN=$(pwd)/bin/ >> ./AILENV/bin/activate
     echo export AIL_FLASK=$(pwd)/var/www/ >> ./AILENV/bin/activate
     echo export AIL_REDIS=$(pwd)/redis/src/ >> ./AILENV/bin/activate
-    echo export AIL_LEVELDB=$(pwd)/redis-leveldb/ >> ./AILENV/bin/activate
+    echo export AIL_ARDB=$(pwd)/ardb/src/ >> ./AILENV/bin/activate
 
     . ./AILENV/bin/activate
 
@@ -93,7 +91,6 @@ fi
 year1=20`date +%y`
 year2=20`date --date='-1 year' +%y`
 mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
-mkdir -p $AIL_HOME/LEVEL_DB_DATA/{$year1,$year2}
 
 pip3 install -U pip
 pip3 install -U -r pip3_packages_requirement.txt

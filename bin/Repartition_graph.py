@@ -33,9 +33,9 @@ def main():
     # port generated automatically depending on the date
     curYear = datetime.now().year if args.year is None else args.year
     r_serv = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB_Hashs", "host"),
-        port=curYear,
-        db=cfg.getint("Redis_Level_DB_Hashs", "db"),
+        host=cfg.get("ARDB_Hashs", "host"),
+        port=cfg.getint("ARDB_Hashs", "port"),
+        db=curYear,
         decode_responses=True)
 
     # LOGGING #

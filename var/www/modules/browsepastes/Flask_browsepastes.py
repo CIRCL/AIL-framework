@@ -23,22 +23,22 @@ max_preview_modal = Flask_config.max_preview_modal
 
 #init all lvlDB servers
 curYear = datetime.now().year
+int_year = int(curYear)
 r_serv_db = {}
 # port generated automatically depending on available levelDB date
 yearList = []
-lvdbdir= os.path.join(os.environ['AIL_HOME'], "LEVEL_DB_DATA/")
-for year in os.listdir(lvdbdir):
-    try:
-        intYear = int(year)
-    except:
-        continue
 
-    yearList.append([year, intYear, int(curYear) == intYear])
+for x in range(0, (int_year - 2018) + 1):
+
+    intYear = int_year - x
+
+    yearList.append([str(intYear), intYear, int(curYear) == intYear])
     r_serv_db[intYear] = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB", "host"),
-        port=intYear,
-        db=cfg.getint("Redis_Level_DB", "db"),
+        host=cfg.get("ARDB_DB", "host"),
+        port=cfg.getint("ARDB_DB", "port"),
+        db=intYear,
         decode_responses=True)
+
 yearList.sort(reverse=True)
 
 browsepastes = Blueprint('browsepastes', __name__, template_folder='templates')
@@ -86,7 +86,13 @@ def browseImportantPaste():
 @browsepastes.route("/importantPasteByModule/", methods=['GET'])
 def importantPasteByModule():
     module_name = request.args.get('moduleName')
-    currentSelectYear = int(request.args.get('year'))
+
+    # # TODO: VERIFY YEAR VALIDITY
+    try:
+        currentSelectYear = int(request.args.get('year'))
+    except:
+        print('Invalid year input')
+        currentSelectYear = int(datetime.now().year)
 
     all_content = []
     paste_date = []

@@ -52,8 +52,9 @@ if __name__ == "__main__":
     for year in range(2013, date_today.year+1):
         for month in range(0, 13):
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
-                host=p.config.get("Redis_Level_DB", "host"), port=year,
-                db=month,
+                host=p.config.get("ARDB_DB", "host"),
+                port=p.config.get("ARDB_DB", "port"),
+                db='year' + 'month',
                 decode_responses=True)
 
     # FUNCTIONS #

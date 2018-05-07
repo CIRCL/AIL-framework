@@ -36,27 +36,27 @@ r_serv_log = redis.StrictRedis(
     decode_responses=True)
 
 r_serv_charts = redis.StrictRedis(
-    host=cfg.get("Redis_Level_DB_Trending", "host"),
-    port=cfg.getint("Redis_Level_DB_Trending", "port"),
-    db=cfg.getint("Redis_Level_DB_Trending", "db"),
+    host=cfg.get("ARDB_Trending", "host"),
+    port=cfg.getint("ARDB_Trending", "port"),
+    db=cfg.getint("ARDB_Trending", "db"),
     decode_responses=True)
 
 r_serv_sentiment = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB_Sentiment", "host"),
-        port=cfg.getint("Redis_Level_DB_Sentiment", "port"),
-        db=cfg.getint("Redis_Level_DB_Sentiment", "db"),
+        host=cfg.get("ARDB_Sentiment", "host"),
+        port=cfg.getint("ARDB_Sentiment", "port"),
+        db=cfg.getint("ARDB_Sentiment", "db"),
         decode_responses=True)
 
 r_serv_term = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB_TermFreq", "host"),
-        port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
-        db=cfg.getint("Redis_Level_DB_TermFreq", "db"),
+        host=cfg.get("ARDB_TermFreq", "host"),
+        port=cfg.getint("ARDB_TermFreq", "port"),
+        db=cfg.getint("ARDB_TermFreq", "db"),
         decode_responses=True)
 
 r_serv_cred = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB_TermCred", "host"),
-        port=cfg.getint("Redis_Level_DB_TermCred", "port"),
-        db=cfg.getint("Redis_Level_DB_TermCred", "db"),
+        host=cfg.get("ARDB_TermCred", "host"),
+        port=cfg.getint("ARDB_TermCred", "port"),
+        db=cfg.getint("ARDB_TermCred", "db"),
         decode_responses=True)
 
 r_serv_pasteName = redis.StrictRedis(

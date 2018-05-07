@@ -152,9 +152,9 @@ if __name__ == '__main__':
 
     # REDIS_LEVEL_DB #
     server = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB_Sentiment", "host"),
-        port=p.config.get("Redis_Level_DB_Sentiment", "port"),
-        db=p.config.get("Redis_Level_DB_Sentiment", "db"),
+        host=p.config.get("ARDB_Sentiment", "host"),
+        port=p.config.get("ARDB_Sentiment", "port"),
+        db=p.config.get("ARDB_Sentiment", "db"),
         decode_responses=True)
 
     while True:
