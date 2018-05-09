@@ -67,7 +67,7 @@ maximum_month_range = 3
 #The value where two pastes are considerate duplicate for ssdeep.
 threshold_duplicate_ssdeep = 50
 #The value where two pastes are considerate duplicate for tlsh.
-threshold_duplicate_tlsh = 100
+threshold_duplicate_tlsh = 52
 #Minimum size of the paste considered
 min_paste_size = 0.3
 
@@ -146,6 +146,11 @@ db = 3
 [ARDB_Hashs]
 host = localhost
 db = 1
+
+[ARDB_Tags]
+host = localhost
+port = 6382
+db = 6
 
 [Url]
 cc_critical = DE

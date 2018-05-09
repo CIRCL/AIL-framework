@@ -37,7 +37,7 @@ def createModuleFolder(modulename):
 
 
 def main():
-	rep1 = raw_input('New module name: ')
+	rep1 = input('New module name: ')
 	createModuleFolder(rep1)
 
 if __name__ == '__main__':
