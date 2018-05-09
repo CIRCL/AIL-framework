@@ -53,6 +53,11 @@ linux based distributions, you can replace it with [installing_deps_archlinux.sh
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
+Python 3 Upgrade
+------------
+
+To upgrade from an existing AIL installation, you have to launch [python3_upgrade.sh](./python3_upgrade.sh), this script will delete and create a new virtual environment. The script **will upgrade the packages but won't keep your previous data** (neverthless the data is copied into a directory called `old`). If you install from scratch, you don't require to launch the [python3_upgrade.sh](./python3_upgrade.sh).
+
 Docker Quick Start (Ubuntu 16.04 LTS)
 ------------
 
