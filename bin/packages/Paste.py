@@ -333,13 +333,11 @@ class Paste(object):
             #json save on redis
             if json_duplicate is not None:
                 list_duplicate = (json.loads(json_duplicate))
-                # avoid duplicate
-                list_duplicate = set(tuple(row) for row in list_duplicate)
-                list_duplicate = [list(item) for item in set(tuple(row) for row in list_duplicate)]
-
-                # add new duplicate
-                list_duplicate.append([hash_type, self.p_path, percent, date])
-                self.store.hset(path, attr_name, json.dumps(list_duplicate))
+                # avoid duplicate, a paste can be send by multiples modules
+                to_add = [hash_type, self.p_path, percent, date]
+                if to_add not in list_duplicate:
+                    list_duplicate.append(to_add)
+                    self.store.hset(path, attr_name, json.dumps(list_duplicate))
 
             else:
                 # create the new list

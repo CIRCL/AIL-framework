@@ -118,7 +118,6 @@ if __name__ == "__main__":
             for curr_dico_name, curr_dico_redis in opened_dico:
                 for hash_type, paste_hash in paste_hashes.items():
                     for dico_hash in curr_dico_redis.smembers('HASHS_'+hash_type):
-                        dico_hash = dico_hash
 
                         try:
                             if hash_type == 'ssdeep':

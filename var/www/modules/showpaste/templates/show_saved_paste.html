@@ -80,6 +80,7 @@
           </table>
       {% endif %}
         <h3> Content: </h3>
+        <a href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a>
         <p data-initsize="{{ initsize }}"> <pre id="paste-holder">{{ content }}</pre></p>
       </div>
     </div>

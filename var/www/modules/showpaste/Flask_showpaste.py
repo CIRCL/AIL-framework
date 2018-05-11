@@ -101,6 +101,12 @@ def showpaste(content_range):
 def showsavedpaste():
     return showpaste(0)
 
+@showsavedpastes.route("/showsavedrawpaste/") #shows raw
+def showsavedrawpaste():
+    requested_path = request.args.get('paste', '')
+    paste = Paste.Paste(requested_path)
+    content = paste.get_p_content()
+    return content, 200, {'Content-Type': 'text/plain'}
 
 @showsavedpastes.route("/showpreviewpaste/")
 def showpreviewpaste():
