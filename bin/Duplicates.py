@@ -54,7 +54,7 @@ if __name__ == "__main__":
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
                 host=p.config.get("ARDB_DB", "host"),
                 port=p.config.get("ARDB_DB", "port"),
-                db='year' + 'month',
+                db=str(year) + str(month),
                 decode_responses=True)
 
     # FUNCTIONS #

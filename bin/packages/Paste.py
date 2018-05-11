@@ -121,7 +121,7 @@ class Paste(object):
             except:
                 paste = ''
 
-        return paste
+        return str(paste)
 
     def get_p_content_as_file(self):
         message = StringIO(self.get_p_content())
@@ -332,7 +332,11 @@ class Paste(object):
             json_duplicate = self.store.hget(path, attr_name)
             #json save on redis
             if json_duplicate is not None:
-                list_duplicate = json.loads(json_duplicate)
+                list_duplicate = (json.loads(json_duplicate))
+                # avoid duplicate
+                list_duplicate = set(tuple(row) for row in list_duplicate)
+                list_duplicate = [list(item) for item in set(tuple(row) for row in list_duplicate)]
+
                 # add new duplicate
                 list_duplicate.append([hash_type, self.p_path, percent, date])
                 self.store.hset(path, attr_name, json.dumps(list_duplicate))
