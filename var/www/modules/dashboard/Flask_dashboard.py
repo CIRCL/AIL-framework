@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -26,20 +26,30 @@ def event_stream():
     pubsub = r_serv_log.pubsub()
     pubsub.psubscribe("Script" + '.*')
     for msg in pubsub.listen():
-        level = msg['channel'].split('.')[1]
+
+        type = msg['type']
+        pattern = msg['pattern']
+        channel = msg['channel']
+        data = msg['data']
+
+        msg = {'channel': channel, 'type': type, 'pattern': pattern, 'data': data}
+
+        level = (msg['channel']).split('.')[1]
         if msg['type'] == 'pmessage' and level != "DEBUG":
             yield 'data: %s\n\n' % json.dumps(msg)
 
 def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
     newData = []
-    for queue, card in r.hgetall("queues").iteritems():
+    for queue, card in r.hgetall("queues").items():
+
         key = "MODULE_" + queue + "_"
         keySet = "MODULE_TYPE_" + queue
 
         for moduleNum in r.smembers(keySet):
-    
+
             value = r.get(key + str(moduleNum))
+
             if value is not None:
                 timestamp, path = value.split(", ")
                 if timestamp is not None:

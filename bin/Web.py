@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -47,7 +47,8 @@ if __name__ == "__main__":
     r_serv2 = redis.StrictRedis(
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),
-        db=p.config.getint("Redis_Cache", "db"))
+        db=p.config.getint("Redis_Cache", "db"),
+        decode_responses=True)
 
     # Protocol file path
     protocolsfile_path = os.path.join(os.environ['AIL_HOME'],
@@ -95,17 +96,23 @@ if __name__ == "__main__":
                     subdomain = faup.get_subdomain()
                     f1 = None
 
-                    domains_list.append(domain)
-
                     publisher.debug('{} Published'.format(url))
 
                     if f1 == "onion":
-                        print domain
+                        print(domain)
 
-                    hostl = unicode(avoidNone(subdomain)+avoidNone(domain))
+                    if subdomain is not None:
+                        subdomain = subdomain.decode('utf8')
+
+                    if domain is not None:
+                        domain = domain.decode('utf8')
+                        domains_list.append(domain)
+
+                    hostl = avoidNone(subdomain) + avoidNone(domain)
+
                     try:
                         socket.setdefaulttimeout(1)
-                        ip = socket.gethostbyname(unicode(hostl))
+                        ip = socket.gethostbyname(hostl)
                     except:
                         # If the resolver is not giving any IPv4 address,
                         # ASN/CC lookup is skip.
@@ -113,31 +120,35 @@ if __name__ == "__main__":
 
                     try:
                         l = client.lookup(ip, qType='IP')
+
                     except ipaddress.AddressValueError:
                         continue
                     cc = getattr(l, 'cc')
-                    asn = getattr(l, 'asn')
+                    if getattr(l, 'asn') is not None:
+                        asn = getattr(l, 'asn')[2:] #remobe b'
 
                     # EU is not an official ISO 3166 code (but used by RIPE
                     # IP allocation)
                     if cc is not None and cc != "EU":
-                        print hostl, asn, cc, \
-                            pycountry.countries.get(alpha_2=cc).name
+                        print(hostl, asn, cc, \
+                            pycountry.countries.get(alpha_2=cc).name)
                         if cc == cc_critical:
                             to_print = 'Url;{};{};{};Detected {} {}'.format(
                                     PST.p_source, PST.p_date, PST.p_name,
                                     hostl, cc)
                             #publisher.warning(to_print)
-                            print to_print
+                            print(to_print)
                     else:
-                        print hostl, asn, cc
+                        print(hostl, asn, cc)
 
                 A_values = lib_refine.checking_A_record(r_serv2,
                                                         domains_list)
+
                 if A_values[0] >= 1:
                     PST.__setattr__(channel, A_values)
                     PST.save_attribute_redis(channel, (A_values[0],
                                              list(A_values[1])))
+
 
                     pprint.pprint(A_values)
                     publisher.info('Url;{};{};{};Checked {} URL;{}'.format(
@@ -146,7 +157,7 @@ if __name__ == "__main__":
 
         else:
             publisher.debug("Script url is Idling 10s")
-            print 'Sleeping'
+            print('Sleeping')
             time.sleep(10)
 
         message = p.get_from_set()

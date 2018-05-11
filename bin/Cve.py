@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 The CVE Module
@@ -32,7 +32,8 @@ def search_cve(message):
         publisher.warning('{} contains CVEs'.format(paste.p_name))
 
         #send to Browse_warning_paste
-        p.populate_set_out('cve;{}'.format(filepath), 'alertHandler')
+        msg = 'cve;{}'.format(filepath)
+        p.populate_set_out(msg, 'alertHandler')
         #Send to duplicate
         p.populate_set_out(filepath, 'Duplicate')
 
@@ -63,4 +64,3 @@ if __name__ == '__main__':
 
         # Do something with the message from the queue
         search_cve(message)
-

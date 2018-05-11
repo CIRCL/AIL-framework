@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -48,39 +48,39 @@ if __name__ == "__main__":
     config_section = "Credential"
     p = Process(config_section)
     publisher.info("Find credentials")
-    
+
     minimumLengthThreshold = p.config.getint("Credential", "minimumLengthThreshold")
 
     faup = Faup()
     server_cred = redis.StrictRedis(
-        host=p.config.get("Redis_Level_DB_TermCred", "host"),
-        port=p.config.get("Redis_Level_DB_TermCred", "port"),
-        db=p.config.get("Redis_Level_DB_TermCred", "db"))
+        host=p.config.get("ARDB_TermCred", "host"),
+        port=p.config.get("ARDB_TermCred", "port"),
+        db=p.config.get("ARDB_TermCred", "db"),
+        decode_responses=True)
 
     criticalNumberToAlert = p.config.getint("Credential", "criticalNumberToAlert")
     minTopPassList = p.config.getint("Credential", "minTopPassList")
 
     regex_web = "((?:https?:\/\/)[-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
-    regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
+    #regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
+    regex_cred = "[a-zA-Z0-9\\._-]+@[a-zA-Z0-9\\.-]+\.[a-zA-Z]{2,6}[\\rn :\_\-]{1,10}[a-zA-Z0-9\_\-]+"
     regex_site_for_stats = "@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:"
     while True:
         message = p.get_from_set()
         if message is None:
             publisher.debug("Script Credential is Idling 10s")
-            print('sleeping 10s')
+            #print('sleeping 10s')
             time.sleep(10)
             continue
 
-        filepath, count = message.split()
-
-        if count < minTopPassList:
-            # Less than 5 matches from the top password list, false positive.
-            print("false positive:", count)
-            continue
+        filepath, count = message.split(' ')
 
         paste = Paste.Paste(filepath)
         content = paste.get_p_content()
         creds = set(re.findall(regex_cred, content))
+
+        publisher.warning('to_print')
+
         if len(creds) == 0:
             continue
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
         message = 'Checked {} credentials found.'.format(len(creds))
         if sites_set:
-            message += ' Related websites: {}'.format(', '.join(sites_set))
+            message += ' Related websites: {}'.format( (', '.join(sites_set)) )
 
         to_print = 'Credential;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message, paste.p_path)
 
@@ -97,13 +97,14 @@ if __name__ == "__main__":
 
         #num of creds above tresh, publish an alert
         if len(creds) > criticalNumberToAlert:
-            print("========> Found more than 10 credentials in this file : {}".format(filepath))
+            print("========> Found more than 10 credentials in this file : {}".format( filepath ))
             publisher.warning(to_print)
             #Send to duplicate
             p.populate_set_out(filepath, 'Duplicate')
             #Send to alertHandler
-            p.populate_set_out('credential;{}'.format(filepath), 'alertHandler')
-            
+            msg = 'credential;{}'.format(filepath)
+            p.populate_set_out(msg, 'alertHandler')
+
             #Put in form, count occurences, then send to moduleStats
             creds_sites = {}
             site_occurence = re.findall(regex_site_for_stats, content)
@@ -122,9 +123,11 @@ if __name__ == "__main__":
                 else:
                     creds_sites[domain] = 1
 
-            for site, num in creds_sites.iteritems(): # Send for each different site to moduleStats
-                print 'credential;{};{};{}'.format(num, site, paste.p_date)
-                p.populate_set_out('credential;{};{};{}'.format(num, site, paste.p_date), 'ModuleStats')
+            for site, num in creds_sites.items(): # Send for each different site to moduleStats
+
+                mssg = 'credential;{};{};{}'.format(num, site, paste.p_date)
+                print(mssg)
+                p.populate_set_out(mssg, 'ModuleStats')
 
             if sites_set:
                 print("=======> Probably on : {}".format(', '.join(sites_set)))
@@ -148,7 +151,7 @@ if __name__ == "__main__":
                 uniq_num_cred = server_cred.incr(REDIS_KEY_NUM_USERNAME)
                 server_cred.hmset(REDIS_KEY_ALL_CRED_SET, {cred: uniq_num_cred})
                 server_cred.hmset(REDIS_KEY_ALL_CRED_SET_REV, {uniq_num_cred: cred})
-        
+
             #Add the mapping between the credential and the path
             server_cred.sadd(REDIS_KEY_MAP_CRED_TO_PATH+'_'+str(uniq_num_cred), uniq_num_path)
 
@@ -158,4 +161,3 @@ if __name__ == "__main__":
             for partCred in splitedCred:
                 if len(partCred) > minimumLengthThreshold:
                     server_cred.sadd(partCred, uniq_num_cred)
-

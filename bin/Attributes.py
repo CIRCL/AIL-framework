@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -33,7 +33,7 @@ if __name__ == "__main__":
                 PST = Paste.Paste(message)
             else:
                 publisher.debug("Script Attribute is idling 1s")
-                print 'sleeping'
+                print('sleeping')
                 time.sleep(1)
                 continue
 
@@ -45,6 +45,6 @@ if __name__ == "__main__":
             # FIXME Not used.
             PST.store.sadd("Pastes_Objects", PST.p_path)
         except IOError:
-            print "CRC Checksum Failed on :", PST.p_path
+            print("CRC Checksum Failed on :", PST.p_path)
             publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
                 PST.p_source, PST.p_date, PST.p_name))

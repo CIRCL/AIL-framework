@@ -31,6 +31,10 @@ Features
 * Terms, Set of terms and Regex tracking and occurrence
 * Many more modules for extracting phone numbers, credentials and others
 * Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
+* Detect and decode Base64 and store files
+* Detect Amazon AWS and Google API keys
+* Detect Bitcoin address and Bitcoin private keys
+* Detect private keys and certificate
 
 Installation
 ------------
@@ -52,6 +56,11 @@ The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu 
 linux based distributions, you can replace it with [installing_deps_archlinux.sh](./installing_deps_archlinux.sh).
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
+
+Python 3 Upgrade
+------------
+
+To upgrade from an existing AIL installation, you have to launch [python3_upgrade.sh](./python3_upgrade.sh), this script will delete and create a new virtual environment. The script **will upgrade the packages but won't keep your previous data** (neverthless the data is copied into a directory called `old`). If you install from scratch, you don't require to launch the [python3_upgrade.sh](./python3_upgrade.sh).
 
 Docker Quick Start (Ubuntu 16.04 LTS)
 ------------

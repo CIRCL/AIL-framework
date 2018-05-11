@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 from pubsublogger import publisher
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         if message is not None:
             f = open(dump_file, 'a')
             while message is not None:
-                print message
+                print(message)
                 date = datetime.datetime.now()
                 if message is not None:
                     f.write(date.isoformat() + ' ' + message + '\n')

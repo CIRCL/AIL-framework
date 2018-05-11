@@ -1,18 +1,18 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 import argparse
 import redis
 from pubsublogger import publisher
 from packages.lib_words import create_dirfile
-import ConfigParser
+import configparser
 
 
 def main():
     """Main Function"""
 
     # CONFIG #
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read('./packages/config.cfg')
 
     parser = argparse.ArgumentParser(
@@ -36,7 +36,8 @@ def main():
 
     r_serv = redis.StrictRedis(host=cfg.get("Redis_Queues", "host"),
                                port=cfg.getint("Redis_Queues", "port"),
-                               db=cfg.getint("Redis_Queues", "db"))
+                               db=cfg.getint("Redis_Queues", "db"),
+                               decode_responses=True)
 
     publisher.port = 6380
     publisher.channel = "Script"

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -20,7 +20,7 @@ import os
 import signal
 import argparse
 from subprocess import PIPE, Popen
-import ConfigParser
+import configparser
 import json
 from terminaltables import AsciiTable
 import textwrap
@@ -51,7 +51,7 @@ last_refresh = 0
 def getPid(module):
     p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
     for line in p.stdout:
-        print line
+        print(line)
         splittedLine = line.split()
         if 'python2' in splittedLine:
             return int(splittedLine[0])
@@ -76,7 +76,7 @@ def cleanRedis():
                     flag_pid_valid = True
 
             if not flag_pid_valid:
-                print flag_pid_valid, 'cleaning', pid, 'in', k
+                print(flag_pid_valid, 'cleaning', pid, 'in', k)
                 server.srem(k, pid)
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
                 printarrayGlob.insert(1, [inst_time, moduleName, pid, "Cleared invalid pid in " + k])
@@ -85,11 +85,11 @@ def cleanRedis():
 
 
 def kill_module(module, pid):
-    print ''
-    print '-> trying to kill module:', module
+    print('')
+    print('-> trying to kill module:', module)
 
     if pid is None:
-        print 'pid was None'
+        print('pid was None')
         printarrayGlob.insert(1, [0, module, pid, "PID was None"])
         printarrayGlob.pop()
         pid = getPid(module)
@@ -102,15 +102,15 @@ def kill_module(module, pid):
         try:
             os.kill(pid, signal.SIGUSR1)
         except OSError:
-            print pid, 'already killed'
+            print(pid, 'already killed')
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
             printarrayGlob.insert(1, [inst_time, module, pid, "Already killed"])
             printarrayGlob.pop()
             return
         time.sleep(1)
         if getPid(module) is None:
-            print module, 'has been killed'
-            print 'restarting', module, '...'
+            print(module, 'has been killed')
+            print('restarting', module, '...')
             p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
             printarrayGlob.insert(1, [inst_time, module, pid, "Killed"])
@@ -119,7 +119,7 @@ def kill_module(module, pid):
             printarrayGlob.pop()
 
         else:
-            print 'killing failed, retrying...'
+            print('killing failed, retrying...')
             inst_time = datetime.datetime.fromtimestamp(int(time.time()))
             printarrayGlob.insert(1, [inst_time, module, pid, "Killing #1 failed."])
             printarrayGlob.pop()
@@ -128,8 +128,8 @@ def kill_module(module, pid):
             os.kill(pid, signal.SIGUSR1)
             time.sleep(1)
             if getPid(module) is None:
-                print module, 'has been killed'
-                print 'restarting', module, '...'
+                print(module, 'has been killed')
+                print('restarting', module, '...')
                 p2 = Popen([command_restart_module.format(module, module)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
                 printarrayGlob.insert(1, [inst_time, module, pid, "Killed"])
@@ -137,12 +137,12 @@ def kill_module(module, pid):
                 printarrayGlob.pop()
                 printarrayGlob.pop()
             else:
-                print 'killing failed!'
+                print('killing failed!')
                 inst_time = datetime.datetime.fromtimestamp(int(time.time()))
                 printarrayGlob.insert(1, [inst_time, module, pid, "Killing failed!"])
                 printarrayGlob.pop()
     else:
-        print 'Module does not exist'
+        print('Module does not exist')
         inst_time = datetime.datetime.fromtimestamp(int(time.time()))
         printarrayGlob.insert(1, [inst_time, module, pid, "Killing failed, module not found"])
         printarrayGlob.pop()
@@ -174,7 +174,7 @@ def waiting_refresh():
         last_refresh = time.time()
         return True
 
-    
+
 
 if __name__ == "__main__":
 
@@ -192,14 +192,15 @@ if __name__ == "__main__":
                         Did you set environment variables? \
                         Or activate the virtualenv.')
 
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
     # REDIS #
     server = redis.StrictRedis(
         host=cfg.get("Redis_Queues", "host"),
         port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
+        db=cfg.getint("Redis_Queues", "db"),
+        decode_responses=True)
 
     if args.clear == 1:
         clearRedisModuleInfo()
@@ -222,17 +223,17 @@ if __name__ == "__main__":
                 #while key != 'q':
                 #    key = stdsrc.getch()
                 #    stdscr.refresh()
-    
+
                 all_queue = set()
                 printarray1 = []
                 printarray2 = []
                 printarray3 = []
-                for queue, card in server.hgetall("queues").iteritems():
+                for queue, card in server.hgetall("queues").items():
                     all_queue.add(queue)
                     key = "MODULE_" + queue + "_"
                     keySet = "MODULE_TYPE_" + queue
                     array_module_type = []
-    
+
                     for moduleNum in server.smembers(keySet):
                         value = server.get(key + str(moduleNum))
                         if value is not None:
@@ -240,7 +241,7 @@ if __name__ == "__main__":
                             if timestamp is not None and path is not None:
                                 startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
                                 processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
-    
+
                                 if int(card) > 0:
                                     if int((datetime.datetime.now() - startTime_readable).total_seconds()) > args.treshold:
                                         log = open(log_filename, 'a')
@@ -251,15 +252,15 @@ if __name__ == "__main__":
                                             last_kill_try = kill_retry_threshold+1
                                         if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                             kill_module(queue, int(moduleNum))
-    
+
                                     array_module_type.append([get_color(processed_time_readable, False) + str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path) + get_color(None, False)])
-    
+
                                 else:
                                     printarray2.append([get_color(processed_time_readable, True) + str(queue), str(moduleNum), str(card), str(startTime_readable), str(processed_time_readable), str(path) + get_color(None, True)])
                             array_module_type.sort(lambda x,y: cmp(x[4], y[4]), reverse=True)
                     for e in array_module_type:
                         printarray1.append(e)
-    
+
                 for curr_queue in module_file_array:
                     if curr_queue not in all_queue:
                             printarray3.append([curr_queue, "Not running"])
@@ -277,16 +278,16 @@ if __name__ == "__main__":
                                     printarray3.append([curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"])
                                 else:
                                     printarray3.append([curr_queue, "Stuck or idle, restarting disabled"])
-    
+
                 ## FIXME To add:
                 ## Button KILL Process using  Curses
-    
+
                 printarray1.sort(key=lambda x: x[0][9:], reverse=False)
                 printarray2.sort(key=lambda x: x[0][9:], reverse=False)
                 printarray1.insert(0,["Queue", "PID", "Amount", "Paste start time", "Processing time for current paste (H:M:S)", "Paste hash"])
                 printarray2.insert(0,["Queue", "PID","Amount", "Paste start time", "Time since idle (H:M:S)", "Last paste hash"])
                 printarray3.insert(0,["Queue", "State"])
-    
+
                 os.system('clear')
                 t1 = AsciiTable(printarray1, title="Working queues")
                 t1.column_max_width(1)
@@ -304,7 +305,7 @@ if __name__ == "__main__":
                                             temp += l + '\n'
                                         content[longest_col] = temp.strip()
                                 t1.table_data[i] = content
-    
+
                 t2 = AsciiTable(printarray2, title="Idling queues")
                 t2.column_max_width(1)
                 if not t2.ok:
@@ -321,33 +322,33 @@ if __name__ == "__main__":
                                             temp += l + '\n'
                                         content[longest_col] = temp.strip()
                                 t2.table_data[i] = content
-    
+
                 t3 = AsciiTable(printarray3, title="Not running queues")
                 t3.column_max_width(1)
-    
+
                 printarray4 = []
                 for elem in printarrayGlob:
                     if elem is not None:
                         printarray4.append(elem)
-    
+
                 t4 = AsciiTable(printarray4, title="Last actions")
                 t4.column_max_width(1)
-    
+
                 legend_array = [["Color", "Meaning"], [Back.RED+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time >=" +str(args.treshold)+Style.RESET_ALL], [Back.MAGENTA+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time >=" +str(args.treshold)+" while idle"+Style.RESET_ALL], [Back.YELLOW+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time >=" +str(args.treshold/2)+Style.RESET_ALL], [Back.GREEN+Style.BRIGHT+" "*10+Style.RESET_ALL, "Time <" +str(args.treshold)]]
                 legend = AsciiTable(legend_array, title="Legend")
                 legend.column_max_width(1)
-    
-                print legend.table
-                print '\n'
-                print t1.table
-                print '\n'
-                print t2.table
-                print '\n'
-                print t3.table
-                print '\n'
-                print t4.table
-    
-                if (datetime.datetime.now() - lastTime).total_seconds() > args.refresh*5: 
+
+                print(legend.table)
+                print('\n')
+                print(t1.table)
+                print('\n')
+                print(t2.table)
+                print('\n')
+                print(t3.table)
+                print('\n')
+                print(t4.table9)
+
+                if (datetime.datetime.now() - lastTime).total_seconds() > args.refresh*5:
                     lastTime = datetime.datetime.now()
                     cleanRedis()
                 #time.sleep(args.refresh)

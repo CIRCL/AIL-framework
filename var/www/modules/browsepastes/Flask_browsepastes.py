@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -23,21 +23,22 @@ max_preview_modal = Flask_config.max_preview_modal
 
 #init all lvlDB servers
 curYear = datetime.now().year
+int_year = int(curYear)
 r_serv_db = {}
 # port generated automatically depending on available levelDB date
 yearList = []
-lvdbdir= os.path.join(os.environ['AIL_HOME'], "LEVEL_DB_DATA/")
-for year in os.listdir(lvdbdir):
-    try:
-        intYear = int(year)
-    except:
-        continue
 
-    yearList.append([year, intYear, int(curYear) == intYear])
+for x in range(0, (int_year - 2018) + 1):
+
+    intYear = int_year - x
+
+    yearList.append([str(intYear), intYear, int(curYear) == intYear])
     r_serv_db[intYear] = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB", "host"),
-        port=intYear,
-        db=cfg.getint("Redis_Level_DB", "db"))
+        host=cfg.get("ARDB_DB", "host"),
+        port=cfg.getint("ARDB_DB", "port"),
+        db=intYear,
+        decode_responses=True)
+
 yearList.sort(reverse=True)
 
 browsepastes = Blueprint('browsepastes', __name__, template_folder='templates')
@@ -48,16 +49,18 @@ def getPastebyType(server, module_name):
     all_path = []
     for path in server.smembers('WARNING_'+module_name):
         all_path.append(path)
+
     return all_path
 
 
 def event_stream_getImportantPasteByModule(module_name, year):
     index = 0
     all_pastes_list = getPastebyType(r_serv_db[year], module_name)
+
     for path in all_pastes_list:
         index += 1
         paste = Paste.Paste(path)
-        content = paste.get_p_content().decode('utf8', 'ignore')
+        content = paste.get_p_content()
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
         curr_date = str(paste._get_p_date())
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
@@ -83,7 +86,13 @@ def browseImportantPaste():
 @browsepastes.route("/importantPasteByModule/", methods=['GET'])
 def importantPasteByModule():
     module_name = request.args.get('moduleName')
-    currentSelectYear = int(request.args.get('year'))
+
+    # # TODO: VERIFY YEAR VALIDITY
+    try:
+        currentSelectYear = int(request.args.get('year'))
+    except:
+        print('Invalid year input')
+        currentSelectYear = int(datetime.now().year)
 
     all_content = []
     paste_date = []
@@ -94,7 +103,7 @@ def importantPasteByModule():
     for path in allPastes[0:10]:
         all_path.append(path)
         paste = Paste.Paste(path)
-        content = paste.get_p_content().decode('utf8', 'ignore')
+        content = paste.get_p_content()
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
         all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
         curr_date = str(paste._get_p_date())
@@ -108,13 +117,13 @@ def importantPasteByModule():
         finished = True
 
     return render_template("important_paste_by_module.html",
-            moduleName=module_name, 
+            moduleName=module_name,
             year=currentSelectYear,
-            all_path=all_path, 
-            content=all_content, 
-            paste_date=paste_date, 
-            paste_linenum=paste_linenum, 
-            char_to_display=max_preview_modal, 
+            all_path=all_path,
+            content=all_content,
+            paste_date=paste_date,
+            paste_linenum=paste_linenum,
+            char_to_display=max_preview_modal,
             finished=finished)
 
 @browsepastes.route("/_getImportantPasteByModule", methods=['GET'])

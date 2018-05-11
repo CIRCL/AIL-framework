@@ -2,6 +2,7 @@
 bloomfilters = Blooms
 dicofilters = Dicos
 pastes = PASTES
+base64 = BASE64
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile
@@ -53,13 +54,20 @@ criticalNumberToAlert=8
 #Will be considered as false positive if less that X matches from the top password list
 minTopPassList=5
 
+[Curve]
+max_execution_time = 90
+
+[Base64]
+path = Base64/
+max_execution_time = 60
+
 [Modules_Duplicates]
 #Number of month to look back
 maximum_month_range = 3
 #The value where two pastes are considerate duplicate for ssdeep.
 threshold_duplicate_ssdeep = 50
 #The value where two pastes are considerate duplicate for tlsh.
-threshold_duplicate_tlsh = 100
+threshold_duplicate_tlsh = 52
 #Minimum size of the paste considered
 min_paste_size = 0.3
 
@@ -104,39 +112,45 @@ host = localhost
 port = 6381
 db = 1
 
-##### LevelDB #####
-[Redis_Level_DB_Curve]
+##### ARDB #####
+[ARDB_Curve]
 host = localhost
 port = 6382
 db = 1
 
-[Redis_Level_DB_Sentiment]
+[ARDB_Sentiment]
 host = localhost
 port = 6382
 db = 4
 
-[Redis_Level_DB_TermFreq]
+[ARDB_TermFreq]
 host = localhost
 port = 6382
 db = 2
 
-[Redis_Level_DB_TermCred]
+[ARDB_TermCred]
 host = localhost
 port = 6382
 db = 5
 
-[Redis_Level_DB]
+[ARDB_DB]
 host = localhost
+port = 6382
 db = 0
 
-[Redis_Level_DB_Trending]
+[ARDB_Trending]
 host = localhost
 port = 6382
 db = 3
 
-[Redis_Level_DB_Hashs]
+[ARDB_Hashs]
 host = localhost
 db = 1
+
+[ARDB_Tags]
+host = localhost
+port = 6382
+db = 6
 
 [Url]
 cc_critical = DE
@@ -144,6 +158,10 @@ cc_critical = DE
 [DomClassifier]
 cc = DE
 cc_tld = r'\.de$'
+dns = 8.8.8.8
+
+[Mail]
+dns = 8.8.8.8
 
 # Indexer configuration
 [Indexer]

@@ -1,7 +1,7 @@
 language: python
 
 python:
-    - "2.7"
+    - "3.5"
 
 sudo: required
 
@@ -16,6 +16,7 @@ env:
 
 install:
     - ./installing_deps.sh
+    - pip install coveralls codecov nose
 
 script:
     - pushd bin
@@ -23,13 +24,11 @@ script:
     - ./launch_lvldb.sh
     - ./launch_logs.sh
     - ./launch_queues.sh
-    - ./launch_scripts.sh
-    - sleep 120
-    - ./Shutdown.py
     - popd
-    - find logs/* -exec cat {} \;
+    - cd tests
+    - nosetests --with-coverage --cover-package=../bin -d
 
-notifications:
-    email:
-        on_success: change
-        on_failure: change
+
+after_success:
+    - codecov
+    - coveralls

@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import hashlib
 import crcmod
 import mmh3

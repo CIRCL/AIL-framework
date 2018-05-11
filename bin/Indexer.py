@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # Indexer configuration - index dir and schema setup
     baseindexpath = join(os.environ['AIL_HOME'],
                              p.config.get("Indexer", "path"))
-    indexRegister_path = join(os.environ['AIL_HOME'], 
+    indexRegister_path = join(os.environ['AIL_HOME'],
                              p.config.get("Indexer", "register"))
     indexertype = p.config.get("Indexer", "type")
     INDEX_SIZE_THRESHOLD = int(p.config.get("Indexer", "index_max_size"))
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                 ix = create_in(indexpath, schema)
             else:
                 ix = open_dir(indexpath)
- 
+
         last_refresh = time_now
 
     # LOGGING #
@@ -107,10 +107,11 @@ if __name__ == "__main__":
                 continue
             docpath = message.split(" ", -1)[-1]
             paste = PST.get_p_content()
-            print "Indexing - "+indexname+" :", docpath
+            print("Indexing - " + indexname + " :", docpath)
 
 
-            if time.time() - last_refresh > TIME_WAIT: #avoid calculating the index's size at each message
+            #avoid calculating the index's size at each message
+            if( time.time() - last_refresh > TIME_WAIT):
                 last_refresh = time.time()
                 if check_index_size(baseindexpath, indexname) >= INDEX_SIZE_THRESHOLD*(1000*1000):
                     timestamp = int(time.time())
@@ -128,11 +129,11 @@ if __name__ == "__main__":
             if indexertype == "whoosh":
                 indexwriter = ix.writer()
                 indexwriter.update_document(
-                    title=unicode(docpath, errors='ignore'),
-                    path=unicode(docpath, errors='ignore'),
-                    content=unicode(paste, errors='ignore'))
+                    title=docpath,
+                    path=docpath,
+                    content=paste)
                 indexwriter.commit()
         except IOError:
-            print "CRC Checksum Failed on :", PST.p_path
+            print("CRC Checksum Failed on :", PST.p_path)
             publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
                 PST.p_source, PST.p_date, PST.p_name))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -15,16 +15,19 @@ RSA private key, certificate messages
 import time
 from pubsublogger import publisher
 
-from Helper import Process
+#from bin.packages import Paste
+#from bin.Helper import Process
+
 from packages import Paste
+from Helper import Process
 
 
-def search_key(message):
-    paste = Paste.Paste(message)
+def search_key(paste):
     content = paste.get_p_content()
     find = False
     if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
+
         find = True
 
     if '-----BEGIN CERTIFICATE-----' in content:
@@ -32,15 +35,40 @@ def search_key(message):
         find = True
 
     if '-----BEGIN RSA PRIVATE KEY-----' in content:
-        publisher.warning('{} has a RSA key message'.format(paste.p_name))
+        publisher.warning('{} has a RSA private key message'.format(paste.p_name))
+        print('rsa private key message found')
         find = True
 
     if '-----BEGIN PRIVATE KEY-----' in content:
-        publisher.warning('{} has a private message'.format(paste.p_name))
+        publisher.warning('{} has a private key message'.format(paste.p_name))
+        print('private key message found')
         find = True
 
     if '-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
-        publisher.warning('{} has an encrypted private message'.format(paste.p_name))
+        publisher.warning('{} has an encrypted private key message'.format(paste.p_name))
+        print('encrypted private key message found')
+        find = True
+
+    if '-----BEGIN OPENSSH PRIVATE KEY-----' in content:
+        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
+        print('openssh private key message found')
+        find = True
+
+    if '-----BEGIN OpenVPN Static key V1-----' in content:
+        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
+        print('OpenVPN Static key message found')
+        find = True
+
+    if '-----BEGIN DSA PRIVATE KEY-----' in content:
+        publisher.warning('{} has a dsa private key message'.format(paste.p_name))
+        find = True
+
+    if '-----BEGIN EC PRIVATE KEY-----' in content:
+        publisher.warning('{} has an ec private key message'.format(paste.p_name))
+        find = True
+
+    if '-----BEGIN PGP PRIVATE KEY BLOCK-----' in content:
+        publisher.warning('{} has a pgp private key block message'.format(paste.p_name))
         find = True
 
     if find :
@@ -48,7 +76,9 @@ def search_key(message):
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
         #send to Browse_warning_paste
-        p.populate_set_out('keys;{}'.format(message), 'alertHandler')
+        msg = ('keys;{}'.format(message))
+        print(message)
+        p.populate_set_out( msg, 'alertHandler')
 
 
 if __name__ == '__main__':
@@ -77,6 +107,7 @@ if __name__ == '__main__':
             continue
 
         # Do something with the message from the queue
-        search_key(message)
+        paste = Paste.Paste(message)
+        search_key(paste)
 
         # (Optional) Send that thing to the next queue

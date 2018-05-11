@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 
 """
 The ``Paste Class``
@@ -24,15 +24,8 @@ import operator
 import string
 import re
 import json
-try: # dirty to support python3
-    import ConfigParser
-except:
-    import configparser
-    ConfigParser = configparser
-try: # dirty to support python3
-    import cStringIO
-except:
-    from io import StringIO as cStringIO
+import configparser
+from io import StringIO
 import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 from Date import Date
@@ -71,25 +64,29 @@ class Paste(object):
                             Did you set environment variables? \
                             Or activate the virtualenv.')
 
-        cfg = ConfigParser.ConfigParser()
+        cfg = configparser.ConfigParser()
         cfg.read(configfile)
         self.cache = redis.StrictRedis(
             host=cfg.get("Redis_Queues", "host"),
             port=cfg.getint("Redis_Queues", "port"),
-            db=cfg.getint("Redis_Queues", "db"))
+            db=cfg.getint("Redis_Queues", "db"),
+            decode_responses=True)
         self.store = redis.StrictRedis(
             host=cfg.get("Redis_Data_Merging", "host"),
             port=cfg.getint("Redis_Data_Merging", "port"),
-            db=cfg.getint("Redis_Data_Merging", "db"))
+            db=cfg.getint("Redis_Data_Merging", "db"),
+            decode_responses=True)
 
         self.p_path = p_path
         self.p_name = os.path.basename(self.p_path)
         self.p_size = round(os.path.getsize(self.p_path)/1024.0, 2)
+        self.p_mime = magic.from_buffer("test", mime=True)
         self.p_mime = magic.from_buffer(self.get_p_content(), mime=True)
 
         # Assuming that the paste will alway be in a day folder which is itself
         # in a month folder which is itself in a year folder.
         # /year/month/day/paste.gz
+
         var = self.p_path.split('/')
         self.p_date = Date(var[-4], var[-3], var[-2])
         self.p_source = var[-5]
@@ -117,17 +114,18 @@ class Paste(object):
         paste = self.cache.get(self.p_path)
         if paste is None:
             try:
-                with gzip.open(self.p_path, 'rb') as f:
+                with gzip.open(self.p_path, 'r') as f:
                     paste = f.read()
                     self.cache.set(self.p_path, paste)
                     self.cache.expire(self.p_path, 300)
             except:
-                return ''
-                pass
-        return paste
+                paste = ''
+
+        return str(paste)
 
     def get_p_content_as_file(self):
-        return cStringIO.StringIO(self.get_p_content())
+        message = StringIO(self.get_p_content())
+        return message
 
     def get_p_content_with_removed_lines(self, threshold):
         num_line_removed = 0
@@ -137,6 +135,7 @@ class Paste(object):
         line_id = 0
         for line_id, line in enumerate(f):
             length = len(line)
+
             if length < line_length_threshold:
                 string_content += line
             else:
@@ -202,8 +201,8 @@ class Paste(object):
         .. seealso:: _set_p_hash_kind("md5")
 
         """
-        for hash_name, the_hash in self.p_hash_kind.iteritems():
-            self.p_hash[hash_name] = the_hash.Calculate(self.get_p_content())
+        for hash_name, the_hash in self.p_hash_kind.items():
+            self.p_hash[hash_name] = the_hash.Calculate(self.get_p_content().encode())
         return self.p_hash
 
     def _get_p_language(self):
@@ -271,10 +270,13 @@ class Paste(object):
             return True, var
         else:
             return False, var
-    
+
     def _get_p_duplicate(self):
         self.p_duplicate = self.store.hget(self.p_path, "p_duplicate")
-        return self.p_duplicate if self.p_duplicate is not None else '[]'
+        if self.p_duplicate is not None:
+            return self.p_duplicate
+        else:
+            return '[]'
 
     def save_all_attributes_redis(self, key=None):
         """
@@ -321,6 +323,28 @@ class Paste(object):
         else:
             self.store.hset(self.p_path, attr_name, json.dumps(value))
 
+    def save_others_pastes_attribute_duplicate(self, attr_name, list_value):
+        """
+        Save a new duplicate on others pastes
+        """
+        for hash_type, path, percent, date in list_value:
+            #get json
+            json_duplicate = self.store.hget(path, attr_name)
+            #json save on redis
+            if json_duplicate is not None:
+                list_duplicate = (json.loads(json_duplicate))
+                # avoid duplicate, a paste can be send by multiples modules
+                to_add = [hash_type, self.p_path, percent, date]
+                if to_add not in list_duplicate:
+                    list_duplicate.append(to_add)
+                    self.store.hset(path, attr_name, json.dumps(list_duplicate))
+
+            else:
+                # create the new list
+                list_duplicate = [[hash_type, self.p_path, percent, date]]
+                self.store.hset(path, attr_name, json.dumps(list_duplicate))
+
+
     def _get_from_redis(self, r_serv):
         ans = {}
         for hash_name, the_hash in self.p_hash:
@@ -342,7 +366,7 @@ class Paste(object):
         tokenizer = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
                                     gaps=True, discard_empty=True)
 
-        blob = TextBlob(clean(self.get_p_content()), tokenizer=tokenizer)
+        blob = TextBlob(clean( (self.get_p_content()) ), tokenizer=tokenizer)
 
         for word in blob.tokens:
             if word in words.keys():
@@ -351,7 +375,7 @@ class Paste(object):
                 num = 0
             words[word] = num + 1
         if sort:
-            var = sorted(words.iteritems(), key=operator.itemgetter(1), reverse=True)
+            var = sorted(words.items(), key=operator.itemgetter(1), reverse=True)
         else:
             var = words
 

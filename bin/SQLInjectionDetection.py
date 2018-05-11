@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -13,7 +13,7 @@ It test different possibility to makes some sqlInjection.
 
 import time
 import string
-import urllib2
+import urllib.request
 import re
 from pubsublogger import publisher
 from Helper import Process
@@ -66,16 +66,16 @@ def analyse(url, path):
     result_query = 0
 
     if resource_path is not None:
-        result_path = is_sql_injection(resource_path)
+        result_path = is_sql_injection(resource_path.decode('utf8'))
 
     if query_string is not None:
-        result_query = is_sql_injection(query_string)
+        result_query = is_sql_injection(query_string.decode('utf8'))
 
     if (result_path > 0) or (result_query > 0):
         paste = Paste.Paste(path)
         if (result_path > 1) or (result_query > 1):
-            print "Detected SQL in URL: "
-            print urllib2.unquote(url)
+            print("Detected SQL in URL: ")
+            print(urllib.request.unquote(url))
             to_print = 'SQLInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL", paste.p_path)
             publisher.warning(to_print)
             #Send to duplicate
@@ -83,8 +83,8 @@ def analyse(url, path):
             #send to Browse_warning_paste
             p.populate_set_out('sqlinjection;{}'.format(path), 'alertHandler')
         else:
-            print "Potential SQL injection:"
-            print urllib2.unquote(url)
+            print("Potential SQL injection:")
+            print(urllib.request.unquote(url))
             to_print = 'SQLInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Potential SQL injection", paste.p_path)
             publisher.info(to_print)
 
@@ -92,8 +92,8 @@ def analyse(url, path):
 # Try to detect if the url passed might be an sql injection by appliying the regex
 # defined above on it.
 def is_sql_injection(url_parsed):
-    line = urllib2.unquote(url_parsed)
-    line = string.upper(line)
+    line = urllib.request.unquote(url_parsed)
+    line = str.upper(line)
     result = []
     result_suspect = []
 
@@ -104,20 +104,20 @@ def is_sql_injection(url_parsed):
 
     for word_list in word_injection:
         for word in word_list:
-            temp_res = string.find(line, string.upper(word))
+            temp_res = str.find(line, str.upper(word))
             if temp_res!=-1:
                 result.append(line[temp_res:temp_res+len(word)])
 
     for word in word_injection_suspect:
-        temp_res = string.find(line, string.upper(word))
+        temp_res = str.find(line, str.upper(word))
         if temp_res!=-1:
             result_suspect.append(line[temp_res:temp_res+len(word)])
 
     if len(result)>0:
-        print result
+        print(result)
         return 2
     elif len(result_suspect)>0:
-        print result_suspect
+        print(result_suspect)
         return 1
     else:
         return 0

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
 The DomClassifier Module
 ============================
 
-The DomClassifier modules extract and classify Internet domains/hostnames/IP addresses from 
+The DomClassifier modules extract and classify Internet domains/hostnames/IP addresses from
 the out output of the Global module.
 
 """
@@ -24,10 +24,11 @@ def main():
     config_section = 'DomClassifier'
 
     p = Process(config_section)
+    addr_dns = p.config.get("DomClassifier", "dns")
 
     publisher.info("""ZMQ DomainClassifier is Running""")
 
-    c = DomainClassifier.domainclassifier.Extract(rawtext="")
+    c = DomainClassifier.domainclassifier.Extract(rawtext="", nameservers=[addr_dns])
 
     cc = p.config.get("DomClassifier", "cc")
     cc_tld = p.config.get("DomClassifier", "cc_tld")
@@ -44,6 +45,7 @@ def main():
                 continue
             paste = PST.get_p_content()
             mimetype = PST._get_p_encoding()
+
             if mimetype == "text/plain":
                 c.text(rawtext=paste)
                 c.potentialdomain()
@@ -59,7 +61,7 @@ def main():
                     publisher.warning('DomainC;{};{};{};Checked {} located in {};{}'.format(
                         PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc, PST.p_path))
         except IOError:
-            print "CRC Checksum Failed on :", PST.p_path
+            print("CRC Checksum Failed on :", PST.p_path)
             publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
                 PST.p_source, PST.p_date, PST.p_name))
 

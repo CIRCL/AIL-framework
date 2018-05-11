@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -30,10 +30,11 @@ def search_phone(message):
 
     # if the list is greater than 4, we consider the Paste may contain a list of phone numbers
     if len(results) > 4:
-        print results
+        print(results)
         publisher.warning('{} contains PID (phone numbers)'.format(paste.p_name))
         #send to Browse_warning_paste
-        p.populate_set_out('phone;{}'.format(message), 'alertHandler')
+        msg = 'phone;{}'.format(message)
+        p.populate_set_out(msg, 'alertHandler')
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
         stats = {}

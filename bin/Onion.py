@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 The ZMQ_Sub_Onion Module
@@ -37,11 +37,12 @@ from Helper import Process
 def fetch(p, r_cache, urls, domains, path):
     failed = []
     downloaded = []
-    print len(urls), 'Urls to fetch.'
+    print('{} Urls to fetch'.format(len(urls)))
     for url, domain in zip(urls, domains):
         if r_cache.exists(url) or url in failed:
             continue
-        to_fetch = base64.standard_b64encode(url)
+        to_fetch = base64.standard_b64encode(url.encode('utf8'))
+        print('fetching url: {}'.format(to_fetch))
         process = subprocess.Popen(["python", './tor_fetcher.py', to_fetch],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
@@ -51,8 +52,10 @@ def fetch(p, r_cache, urls, domains, path):
             r_cache.setbit(url, 0, 1)
             r_cache.expire(url, 360000)
             downloaded.append(url)
-            tempfile = process.stdout.read().strip()
-            with open(tempfile, 'r') as f:
+            print('downloaded : {}'.format(downloaded))
+            '''tempfile = process.stdout.read().strip()
+            tempfile = tempfile.decode('utf8')
+            #with open(tempfile, 'r') as f:
                 filename = path + domain + '.gz'
                 fetched = f.read()
                 content = base64.standard_b64decode(fetched)
@@ -66,16 +69,16 @@ def fetch(p, r_cache, urls, domains, path):
                     ff.write(content)
                 p.populate_set_out(save_path, 'Global')
                 p.populate_set_out(url, 'ValidOnion')
-                p.populate_set_out(fetched, 'FetchedOnion')
-                yield url
-            os.unlink(tempfile)
+                p.populate_set_out(fetched, 'FetchedOnion')'''
+            yield url
+            #os.unlink(tempfile)
         else:
             r_cache.setbit(url, 0, 0)
             r_cache.expire(url, 3600)
             failed.append(url)
-            print 'Failed at downloading', url
-            print process.stdout.read()
-    print 'Failed:', len(failed), 'Downloaded:', len(downloaded)
+            print('Failed at downloading', url)
+            print(process.stdout.read())
+    print('Failed:', len(failed), 'Downloaded:', len(downloaded))
 
 
 if __name__ == "__main__":
@@ -91,7 +94,8 @@ if __name__ == "__main__":
     r_cache = redis.StrictRedis(
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),
-        db=p.config.getint("Redis_Cache", "db"))
+        db=p.config.getint("Redis_Cache", "db"),
+        decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
@@ -109,7 +113,7 @@ if __name__ == "__main__":
 
     while True:
         if message is not None:
-            print message
+            print(message)
             filename, score = message.split()
 
             # "For each new paste"
@@ -131,6 +135,8 @@ if __name__ == "__main__":
                 PST.save_attribute_redis(channel, domains_list)
                 to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date,
                                                     PST.p_name)
+
+                print(len(domains_list))
                 if len(domains_list) > 0:
 
                     publisher.warning('{}Detected {} .onion(s);{}'.format(
@@ -144,7 +150,7 @@ if __name__ == "__main__":
                                                         PST.p_date,
                                                         PST.p_name)
                     for url in fetch(p, r_cache, urls, domains_list, path):
-                        publisher.warning('{}Checked {};{}'.format(to_print, url, PST.p_path))
+                        publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
                         p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
                 else:
                     publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
@@ -152,6 +158,6 @@ if __name__ == "__main__":
             prec_filename = filename
         else:
             publisher.debug("Script url is Idling 10s")
-            print 'Sleeping'
+            #print('Sleeping')
             time.sleep(10)
         message = p.get_from_set()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 The ZMQ_Feed_Q Module
@@ -21,7 +21,7 @@ Requirements
 
 """
 import redis
-import ConfigParser
+import configparser
 import os
 
 configfile = os.path.join(os.environ['AIL_BIN'], './packages/config.cfg')
@@ -31,13 +31,14 @@ def main():
     """Main Function"""
 
     # CONFIG #
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
     # REDIS
     r_serv = redis.StrictRedis(host=cfg.get("Redis_Queues", "host"),
                                port=cfg.getint("Redis_Queues", "port"),
-                               db=cfg.getint("Redis_Queues", "db"))
+                               db=cfg.getint("Redis_Queues", "db"),
+                               decode_responses=True)
 
     # FIXME: automatic based on the queue name.
     # ### SCRIPTS ####

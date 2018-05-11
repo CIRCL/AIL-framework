@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -42,19 +42,20 @@ if __name__ == "__main__":
     threshold_duplicate_ssdeep = int(p.config.get("Modules_Duplicates", "threshold_duplicate_ssdeep"))
     threshold_duplicate_tlsh = int(p.config.get("Modules_Duplicates", "threshold_duplicate_tlsh"))
     threshold_set = {}
-    threshold_set['ssdeep'] = threshold_duplicate_ssdeep 
-    threshold_set['tlsh'] = threshold_duplicate_tlsh 
+    threshold_set['ssdeep'] = threshold_duplicate_ssdeep
+    threshold_set['tlsh'] = threshold_duplicate_tlsh
     min_paste_size = float(p.config.get("Modules_Duplicates", "min_paste_size"))
 
     # REDIS #
     dico_redis = {}
     date_today = datetime.today()
-    for year in xrange(2013, date_today.year+1):
-        for month in xrange(0, 13):
+    for year in range(2013, date_today.year+1):
+        for month in range(0, 13):
             dico_redis[str(year)+str(month).zfill(2)] = redis.StrictRedis(
-                host=p.config.get("Redis_Level_DB", "host"), port=year,
-                db=month)
-            #print("dup: "+str(year)+str(month).zfill(2)+"\n")
+                host=p.config.get("ARDB_DB", "host"),
+                port=p.config.get("ARDB_DB", "port"),
+                db=str(year) + str(month),
+                decode_responses=True)
 
     # FUNCTIONS #
     publisher.info("Script duplicate started")
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     while True:
         try:
             hash_dico = {}
-            dupl = []
+            dupl = set()
             dico_range_list = []
 
             x = time.time()
@@ -73,6 +74,7 @@ if __name__ == "__main__":
                 PST = Paste.Paste(path)
             else:
                 publisher.debug("Script Attribute is idling 10s")
+                print('sleeping')
                 time.sleep(10)
                 continue
 
@@ -90,7 +92,7 @@ if __name__ == "__main__":
             # Get the date of the range
             date_range = date_today - timedelta(days = maximum_month_range*30.4166666)
             num_of_month = (date_today.year - date_range.year)*12 + (date_today.month - date_range.month)
-            for diff_month in xrange(0, num_of_month+1):
+            for diff_month in range(0, num_of_month+1):
                 curr_date_range = date_today - timedelta(days = diff_month*30.4166666)
                 to_append = str(curr_date_range.year)+str(curr_date_range.month).zfill(2)
                 dico_range_list.append(to_append)
@@ -102,7 +104,7 @@ if __name__ == "__main__":
             yearly_index = str(date_today.year)+'00'
             r_serv0 = dico_redis[yearly_index]
             r_serv0.incr("current_index")
-            index = r_serv0.get("current_index")+str(PST.p_date)
+            index = (r_serv0.get("current_index")) + str(PST.p_date)
 
             # Open selected dico range
             opened_dico = []
@@ -114,13 +116,16 @@ if __name__ == "__main__":
 
             # Go throught the Database of the dico (of the month)
             for curr_dico_name, curr_dico_redis in opened_dico:
-                for hash_type, paste_hash in paste_hashes.iteritems():
+                for hash_type, paste_hash in paste_hashes.items():
                     for dico_hash in curr_dico_redis.smembers('HASHS_'+hash_type):
+
                         try:
                             if hash_type == 'ssdeep':
-                                percent = 100-ssdeep.compare(dico_hash, paste_hash)  
+                                percent = 100-ssdeep.compare(dico_hash, paste_hash)
                             else:
                                 percent = tlsh.diffxlen(dico_hash, paste_hash)
+                                if percent > 100:
+                                    percent = 100
 
                             threshold_duplicate = threshold_set[hash_type]
                             if percent < threshold_duplicate:
@@ -130,16 +135,20 @@ if __name__ == "__main__":
 
                                 # index of paste
                                 index_current = r_serv_dico.get(dico_hash)
+                                index_current = index_current
                                 paste_path = r_serv_dico.get(index_current)
+                                paste_path = paste_path
                                 paste_date = r_serv_dico.get(index_current+'_date')
+                                paste_date = paste_date
                                 paste_date = paste_date if paste_date != None else "No date available"
                                 if paste_path != None:
-                                    hash_dico[dico_hash] = (hash_type, paste_path, percent, paste_date)
+                                    if paste_path != PST.p_path:
+                                        hash_dico[dico_hash] = (hash_type, paste_path, percent, paste_date)
 
-                                print '['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent)
-                        except Exception,e:
-                            print str(e)
-                            #print 'hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash
+                                        print('['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent))
+
+                        except Exception:
+                            print('hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash)
 
             # Add paste in DB after checking to prevent its analysis twice
             # hash_type_i -> index_i  AND  index_i -> PST.PATH
@@ -147,7 +156,7 @@ if __name__ == "__main__":
             r_serv1.set(index+'_date', PST._get_p_date())
             r_serv1.sadd("INDEX", index)
             # Adding hashes in Redis
-            for hash_type, paste_hash in paste_hashes.iteritems():
+            for hash_type, paste_hash in paste_hashes.items():
                 r_serv1.set(paste_hash, index)
                 r_serv1.sadd("HASHS_"+hash_type, paste_hash)
 
@@ -157,24 +166,25 @@ if __name__ == "__main__":
             if len(hash_dico) != 0:
                 # paste_tuple = (hash_type, date, paste_path, percent)
                 for dico_hash, paste_tuple in hash_dico.items():
-                    dupl.append(paste_tuple)
+                    dupl.add(paste_tuple)
 
                 # Creating the object attribute and save it.
                 to_print = 'Duplicate;{};{};{};'.format(
                     PST.p_source, PST.p_date, PST.p_name)
                 if dupl != []:
+                    dupl = list(dupl)
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_redis("p_duplicate", dupl)
+                    PST.save_others_pastes_attribute_duplicate("p_duplicate", dupl)
                     publisher.info('{}Detected {};{}'.format(to_print, len(dupl), PST.p_path))
-                    print '{}Detected {}'.format(to_print, len(dupl))
+                    print('{}Detected {}'.format(to_print, len(dupl)))
 
                 y = time.time()
 
                 publisher.debug('{}Processed in {} sec'.format(to_print, y-x))
-                #print '{}Processed in {} sec'.format(to_print, y-x)
 
         except IOError:
             to_print = 'Duplicate;{};{};{};'.format(
                 PST.p_source, PST.p_date, PST.p_name)
-            print "CRC Checksum Failed on :", PST.p_path
+            print("CRC Checksum Failed on :", PST.p_path)
             publisher.error('{}CRC Checksum Failed'.format(to_print))

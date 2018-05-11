@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -27,7 +27,7 @@ max_preview_modal = Flask_config.max_preview_modal
 
 
 baseindexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
-indexRegister_path = os.path.join(os.environ['AIL_HOME'], 
+indexRegister_path = os.path.join(os.environ['AIL_HOME'],
                          cfg.get("Indexer", "register"))
 
 searches = Blueprint('searches', __name__, template_folder='templates')
@@ -108,7 +108,7 @@ def search():
     for path in r_serv_pasteName.smembers(q[0]):
         r.append(path)
         paste = Paste.Paste(path)
-        content = paste.get_p_content().decode('utf8', 'ignore')
+        content = paste.get_p_content()
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
         c.append(content[0:content_range])
         curr_date = str(paste._get_p_date())
@@ -126,7 +126,7 @@ def search():
         for x in results:
             r.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
-            content = paste.get_p_content().decode('utf8', 'ignore')
+            content = paste.get_p_content()
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             c.append(content[0:content_range])
             curr_date = str(paste._get_p_date())
@@ -138,9 +138,9 @@ def search():
 
     index_min = 1
     index_max = len(get_index_list())
-    return render_template("search.html", r=r, c=c, 
-            query=request.form['query'], paste_date=paste_date, 
-            paste_size=paste_size, char_to_display=max_preview_modal, 
+    return render_template("search.html", r=r, c=c,
+            query=request.form['query'], paste_date=paste_date,
+            paste_size=paste_size, char_to_display=max_preview_modal,
             num_res=num_res, index_min=index_min, index_max=index_max,
             index_list=get_index_list(selected_index)
            )
@@ -171,11 +171,11 @@ def get_more_search_result():
     ix = index.open_dir(selected_index)
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
-        results = searcher.search_page(query, page_offset, num_elem_to_get)   
+        results = searcher.search_page(query, page_offset, num_elem_to_get)
         for x in results:
             path_array.append(x.items()[0][1])
             paste = Paste.Paste(x.items()[0][1])
-            content = paste.get_p_content().decode('utf8', 'ignore')
+            content = paste.get_p_content()
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             preview_array.append(content[0:content_range])
             curr_date = str(paste._get_p_date())

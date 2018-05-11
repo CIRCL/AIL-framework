@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 
@@ -16,7 +16,7 @@ from packages import lib_words
 import datetime
 import calendar
 import os
-import ConfigParser
+import configparser
 
 # Config Variables
 Refresh_rate = 60*5 #sec
@@ -68,26 +68,26 @@ def manage_top_set():
 
     # convert dico into sorted array
     array_month = []
-    for w, v in dico.iteritems():
+    for w, v in dico.items():
         array_month.append((w, v))
     array_month.sort(key=lambda tup: -tup[1])
     array_month = array_month[0:20]
 
     array_week = []
-    for w, v in dico_week.iteritems():
+    for w, v in dico_week.items():
         array_week.append((w, v))
     array_week.sort(key=lambda tup: -tup[1])
     array_week = array_week[0:20]
 
     # convert dico_per_paste into sorted array
     array_month_per_paste = []
-    for w, v in dico_per_paste.iteritems():
+    for w, v in dico_per_paste.items():
         array_month_per_paste.append((w, v))
     array_month_per_paste.sort(key=lambda tup: -tup[1])
     array_month_per_paste = array_month_per_paste[0:20]
 
     array_week_per_paste = []
-    for w, v in dico_week_per_paste.iteritems():
+    for w, v in dico_week_per_paste.items():
         array_week_per_paste.append((w, v))
     array_week_per_paste.sort(key=lambda tup: -tup[1])
     array_week_per_paste = array_week_per_paste[0:20]
@@ -105,7 +105,7 @@ def manage_top_set():
         server_term.zadd(top_termFreq_setName_week[0], float(elem[1]), elem[0])
     for elem in array_week_per_paste:
         server_term.zadd("per_paste_" + top_termFreq_setName_week[0], float(elem[1]), elem[0])
-  
+
     for elem in array_month:
         server_term.zadd(top_termFreq_setName_month[0], float(elem[1]), elem[0])
     for elem in array_month_per_paste:
@@ -114,7 +114,7 @@ def manage_top_set():
     timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
     value = str(timestamp) + ", " + "-"
     r_temp.set("MODULE_"+ "CurveManageTopSets" + "_" + str(os.getpid()), value)
-    print "refreshed module"
+    print("refreshed module")
 
 
 
@@ -130,8 +130,8 @@ if __name__ == '__main__':
         raise Exception('Unable to find the configuration file. \
                         Did you set environment variables? \
                         Or activate the virtualenv.')
-    
-    cfg = ConfigParser.ConfigParser()
+
+    cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
 
@@ -139,7 +139,8 @@ if __name__ == '__main__':
     r_temp = redis.StrictRedis(
         host=cfg.get('RedisPubSub', 'host'),
         port=cfg.getint('RedisPubSub', 'port'),
-        db=cfg.getint('RedisPubSub', 'db'))
+        db=cfg.getint('RedisPubSub', 'db'),
+        decode_responses=True)
 
     timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
     value = str(timestamp) + ", " + "-"
@@ -147,9 +148,10 @@ if __name__ == '__main__':
     r_temp.sadd("MODULE_TYPE_"+ "CurveManageTopSets" , str(os.getpid()))
 
     server_term = redis.StrictRedis(
-        host=cfg.get("Redis_Level_DB_TermFreq", "host"),
-        port=cfg.getint("Redis_Level_DB_TermFreq", "port"),
-        db=cfg.getint("Redis_Level_DB_TermFreq", "db"))
+        host=cfg.get("ARDB_TermFreq", "host"),
+        port=cfg.getint("ARDB_TermFreq", "port"),
+        db=cfg.getint("ARDB_TermFreq", "db"),
+        decode_responses=True)
 
     publisher.info("Script Curve_manage_top_set started")
 
@@ -162,4 +164,3 @@ if __name__ == '__main__':
         # Get one message from the input queue (module only work if linked with a queue)
         time.sleep(Refresh_rate) # sleep a long time then manage the set
         manage_top_set()
-

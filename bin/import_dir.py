@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import zmq
 import base64
-import StringIO
+from io import StringIO
 import gzip
 import argparse
 import os
@@ -31,8 +31,7 @@ import mimetypes
 '
 '''
 
-import StringIO
-import gzip
+
 def is_hierachy_valid(path):
     var = path.split('/')
     try:
@@ -72,7 +71,12 @@ if __name__ == "__main__":
             wanted_path = wanted_path.split('/')
             wanted_path = '/'.join(wanted_path[-(4+args.hierarchy):])
 
-            messagedata = open(complete_path).read()
+            with gzip.open(complete_path, 'rb') as f:
+                messagedata = f.read()
+
+            #print(type(complete_path))
+            #file = open(complete_path)
+            #messagedata = file.read()
 
             #if paste do not have a 'date hierarchy' ignore it
             if not is_hierachy_valid(complete_path):
@@ -90,5 +94,8 @@ if __name__ == "__main__":
 
             print(args.name+'>'+wanted_path)
             path_to_send = args.name + '>' + wanted_path
-            socket.send('{} {} {}'.format(args.channel, path_to_send, base64.b64encode(messagedata)))
+            #s = b'{} {} {}'.format(args.channel, path_to_send, base64.b64encode(messagedata))
+            # use bytes object
+            s = b' '.join( [ args.channel.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
+            socket.send(s)
             time.sleep(args.seconds)

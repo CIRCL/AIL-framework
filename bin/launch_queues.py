@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 
-import ConfigParser
+import configparser
 import os
 import subprocess
 import time
@@ -23,21 +23,21 @@ if __name__ == '__main__':
         raise Exception('Unable to find the configuration file. \
                         Did you set environment variables? \
                         Or activate the virtualenv.')
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(configfile)
 
     modules = config.sections()
     pids = {}
     for module in modules:
-        pin = subprocess.Popen(["python", './QueueIn.py', '-c', module])
-        pout = subprocess.Popen(["python", './QueueOut.py', '-c', module])
+        pin = subprocess.Popen(["python3", './QueueIn.py', '-c', module])
+        pout = subprocess.Popen(["python3", './QueueOut.py', '-c', module])
         pids[module] = (pin, pout)
     is_running = True
     try:
         while is_running:
             time.sleep(5)
             is_running = False
-            for module, p in pids.iteritems():
+            for module, p in pids.items():
                 pin, pout = p
                 if pin is None:
                     # already dead
@@ -57,7 +57,7 @@ if __name__ == '__main__':
                     is_running = True
                 pids[module] = (pin, pout)
     except KeyboardInterrupt:
-        for module, p in pids.iteritems():
+        for module, p in pids.items():
             pin, pout = p
             if pin is not None:
                 pin.kill()

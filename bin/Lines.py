@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     while True:
         try:
             message = p.get_from_set()
-            print message
+            print(message)
             if message is not None:
                 PST = Paste.Paste(message)
             else:
@@ -77,8 +77,8 @@ if __name__ == '__main__':
             # FIXME Not used.
             PST.store.sadd("Pastes_Objects", PST.p_path)
             if lines_infos[1] < args.max:
-                p.populate_set_out(PST.p_path, 'LinesShort')
+                p.populate_set_out( PST.p_path , 'LinesShort')
             else:
-                p.populate_set_out(PST.p_path, 'LinesLong')
+                p.populate_set_out( PST.p_path , 'LinesLong')
         except IOError:
-            print "CRC Checksum Error on : ", PST.p_path
+            print("CRC Checksum Error on : ", PST.p_path)

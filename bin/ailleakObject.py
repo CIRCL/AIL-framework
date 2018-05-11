@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 from pymisp.tools.abstractgenerator import AbstractMISPObjectGenerator
@@ -15,7 +15,7 @@ class AilleakObject(AbstractMISPObjectGenerator):
         self._p_source = p_source.split('/')[-5:]
         self._p_source = '/'.join(self._p_source)[:-3] # -3 removes .gz
         self._p_date = p_date
-        self._p_content = p_content.encode('utf8')
+        self._p_content = p_content
         self._p_duplicate = p_duplicate
         self._p_duplicate_number = p_duplicate_number
         self.generate_attributes()
@@ -37,7 +37,7 @@ class ObjectWrapper:
         self.eventID_to_push = self.get_daily_event_id()
         cfg = configparser.ConfigParser()
         cfg.read('./packages/config.cfg')
-        self.maxDuplicateToPushToMISP = cfg.getint("ailleakObject", "maxDuplicateToPushToMISP") 
+        self.maxDuplicateToPushToMISP = cfg.getint("ailleakObject", "maxDuplicateToPushToMISP")
 
     def add_new_object(self, moduleName, path):
         self.moduleName = moduleName
@@ -45,13 +45,10 @@ class ObjectWrapper:
         self.paste = Paste.Paste(path)
         self.p_date = self.date_to_str(self.paste.p_date)
         self.p_source = self.paste.p_path
-        self.p_content = self.paste.get_p_content().decode('utf8')
-        
+        self.p_content = self.paste.get_p_content()
+
         temp = self.paste._get_p_duplicate()
-        try:
-            temp = temp.decode('utf8')
-        except AttributeError:
-            pass
+
         #beautifier
         temp = json.loads(temp)
         self.p_duplicate_number = len(temp) if len(temp) >= 0 else 0
@@ -108,8 +105,8 @@ class ObjectWrapper:
         orgc_id = None
         sharing_group_id = None
         date = None
-        event = self.pymisp.new_event(distribution, threat, 
-                analysis, info, date, 
+        event = self.pymisp.new_event(distribution, threat,
+                analysis, info, date,
                 published, orgc_id, org_id, sharing_group_id)
         return event
 

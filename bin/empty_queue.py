@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 """
@@ -27,10 +27,9 @@ if __name__ == "__main__":
     config_section = ['Curve']
 
     for queue in config_section:
-        print 'dropping: ' + queue
+        print('dropping: ' + queue)
         p = Process(queue)
         while True:
             message = p.get_from_set()
             if message is None:
                 break
-

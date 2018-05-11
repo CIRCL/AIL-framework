@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -28,6 +28,7 @@ def get_top_relevant_data(server, module_name):
     for date in get_date_range(15):
         redis_progression_name_set = 'top_'+ module_name +'_set_' + date
         member_set = server.zrevrangebyscore(redis_progression_name_set, '+inf', '-inf', withscores=True)
+
         if len(member_set) == 0: #No data for this date
             days += 1
         else:
@@ -85,9 +86,17 @@ def providersChart():
         date_range = get_date_range(num_day)
         # Retreive all data from the last num_day
         for date in date_range:
-            curr_value_size = r_serv_charts.hget(keyword_name+'_'+'size', date)
+            curr_value_size = ( r_serv_charts.hget(keyword_name+'_'+'size', date) )
+            if curr_value_size is not None:
+                curr_value_size = curr_value_size
+
             curr_value_num = r_serv_charts.hget(keyword_name+'_'+'num', date)
+
             curr_value_size_avg = r_serv_charts.hget(keyword_name+'_'+'avg', date)
+            if curr_value_size_avg is not None:
+                curr_value_size_avg = curr_value_size_avg
+
+
             if module_name == "size":
                 curr_value = float(curr_value_size_avg if curr_value_size_avg is not None else 0)
             else:
@@ -101,8 +110,9 @@ def providersChart():
         #redis_provider_name_set = 'top_size_set' if module_name == "size" else 'providers_set'
         redis_provider_name_set = 'top_avg_size_set_' if module_name == "size" else 'providers_set_'
         redis_provider_name_set = redis_provider_name_set + get_date_range(0)[0]
-        
+
         member_set = r_serv_charts.zrevrangebyscore(redis_provider_name_set, '+inf', '-inf', withscores=True, start=0, num=8)
+
         # Member set is a list of (value, score) pairs
         if len(member_set) == 0:
             member_set.append(("No relevant data", float(100)))

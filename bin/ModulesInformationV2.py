@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
@@ -10,7 +10,7 @@ from asciimatics.event import Event
 from asciimatics.event import KeyboardEvent, MouseEvent
 import sys, os
 import time, datetime
-import argparse, ConfigParser
+import argparse, configparser
 import json
 import redis
 import psutil
@@ -45,7 +45,7 @@ TABLES_PADDING = {"running": [12, 23, 8, 8, 23, 10, 55, 11, 11, 12], "idle": [9,
 QUEUE_STATUS = {}
 
 # Maintain the state of the CPU objects
-CPU_TABLE = {} 
+CPU_TABLE = {}
 CPU_OBJECT_TABLE = {}
 
 # Path of the current paste for a pid
@@ -137,7 +137,7 @@ class CListBox(ListBox):
             # Quit if press q
             elif event.key_code == ord('q'):
                 Dashboard._quit()
-            
+
             else:
                 # Ignore any other key press.
                 return event
@@ -196,7 +196,7 @@ END EXTENSION
 
 '''
 SCENE DEFINITION
-''' 
+'''
 
 class Dashboard(Frame):
     def __init__(self, screen):
@@ -497,9 +497,8 @@ MANAGE MODULES AND GET INFOS
 def getPid(module):
     p = Popen([command_search_pid.format(module+".py")], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
     for line in p.stdout:
-        print line
         splittedLine = line.split()
-        if 'python2' in splittedLine:
+        if 'python3' in splittedLine:
             return int(splittedLine[0])
     return None
 
@@ -517,15 +516,20 @@ def cleanRedis():
             proc = Popen([command_search_name.format(pid)], stdin=PIPE, stdout=PIPE, bufsize=1, shell=True)
             try:
                 for line in proc.stdout:
+                    line = line.decode('utf8')
                     splittedLine = line.split()
-                    if ('python2' in splittedLine or 'python' in splittedLine) and "./"+moduleName+".py" in splittedLine:
-                        flag_pid_valid = True
+                    if ('python3.5' in splittedLine or 'python3' in splittedLine or 'python' in splittedLine):
+                        moduleCommand = "./"+moduleName + ".py"
+                        moduleCommand2 = moduleName + ".py"
+                        if(moduleCommand in splittedLine or moduleCommand2 in splittedLine):
+                            flag_pid_valid = True
+
 
                 if not flag_pid_valid:
                     #print flag_pid_valid, 'cleaning', pid, 'in', k
                     server.srem(k, pid)
                     inst_time = datetime.datetime.fromtimestamp(int(time.time()))
-                    log(([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + k], 0))
+                    log(([str(inst_time).split(' ')[1], moduleName, pid, "Cleared invalid pid in " + (k)], 0))
 
             #Error due to resize, interrupted sys call
             except IOError as e:
@@ -601,15 +605,17 @@ def fetchQueueData():
     printarray_running = []
     printarray_idle = []
     printarray_notrunning = []
-    for queue, card in server.hgetall("queues").iteritems():
+    for queue, card in iter(server.hgetall("queues").items()):
         all_queue.add(queue)
         key = "MODULE_" + queue + "_"
         keySet = "MODULE_TYPE_" + queue
         array_module_type = []
-    
+
         for moduleNum in server.smembers(keySet):
             value = server.get(key + str(moduleNum))
-            complete_paste_path = server.get(key + str(moduleNum) + "_PATH")
+            complete_paste_path = ( server.get(key + str(moduleNum) + "_PATH") )
+            if(complete_paste_path is not None):
+                complete_paste_path = complete_paste_path
             COMPLETE_PASTE_PATH_PER_PID[moduleNum] = complete_paste_path
 
             if value is not None:
@@ -624,7 +630,7 @@ def fetchQueueData():
                         QUEUE_STATUS[moduleNum] = 1
                     else:
                         QUEUE_STATUS[moduleNum] = 0
-    
+
                     # Queue contain elements
                     if int(card) > 0:
                         # Queue need to be killed
@@ -636,7 +642,7 @@ def fetchQueueData():
                                 last_kill_try = kill_retry_threshold+1
                             if args.autokill == 1 and last_kill_try > kill_retry_threshold :
                                 kill_module(queue, int(moduleNum))
-    
+
                         # Create CPU objects
                         try:
                             cpu_percent = CPU_OBJECT_TABLE[int(moduleNum)].cpu_percent()
@@ -644,6 +650,7 @@ def fetchQueueData():
                             cpu_avg = sum(CPU_TABLE[moduleNum])/len(CPU_TABLE[moduleNum])
                             if len(CPU_TABLE[moduleNum]) > args.refresh*10:
                                 CPU_TABLE[moduleNum].pop()
+
                             mem_percent = CPU_OBJECT_TABLE[int(moduleNum)].memory_percent()
                         except psutil.NoSuchProcess:
                             del CPU_OBJECT_TABLE[int(moduleNum)]
@@ -652,6 +659,7 @@ def fetchQueueData():
                             cpu_avg = cpu_percent
                             mem_percent = 0
                         except KeyError:
+                            #print('key error2')
                             try:
                                 CPU_OBJECT_TABLE[int(moduleNum)] = psutil.Process(int(moduleNum))
                                 cpu_percent = CPU_OBJECT_TABLE[int(moduleNum)].cpu_percent()
@@ -664,17 +672,17 @@ def fetchQueueData():
                                 mem_percent = 0
 
                         array_module_type.append( ([" <K>    [ ]", str(queue), str(moduleNum), str(card), str(startTime_readable),
-                                                    str(processed_time_readable), str(path), "{0:.2f}".format(cpu_percent)+"%", 
+                                                    str(processed_time_readable), str(path), "{0:.2f}".format(cpu_percent)+"%",
                                                     "{0:.2f}".format(mem_percent)+"%", "{0:.2f}".format(cpu_avg)+"%"], moduleNum) )
-    
+
                     else:
                         printarray_idle.append( ([" <K>  ", str(queue), str(moduleNum), str(processed_time_readable), str(path)], moduleNum) )
 
                 PID_NAME_DICO[int(moduleNum)] = str(queue)
-                array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True) #Sort by num of pastes
+                #array_module_type.sort(lambda x,y: cmp(x[0][4], y[0][4]), reverse=True) #Sort by num of pastes
         for e in array_module_type:
             printarray_running.append(e)
-    
+
     for curr_queue in module_file_array:
         if curr_queue not in all_queue: #Module not running by default
                 printarray_notrunning.append( ([" <S>  ", curr_queue, "Not running by default"], curr_queue) )
@@ -692,8 +700,8 @@ def fetchQueueData():
                         printarray_notrunning.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting in " + str(abs(args.treshold - (int(time.time()) - no_info_modules[curr_queue]))) + "s"], curr_queue) )
                     else:
                         printarray_notrunning.append( ([" <S>  ", curr_queue, "Stuck or idle, restarting disabled"], curr_queue) )
-    
-    
+
+
     printarray_running.sort(key=lambda x: x[0], reverse=False)
     printarray_idle.sort(key=lambda x: x[0], reverse=False)
     printarray_notrunning.sort(key=lambda x: x[0][1], reverse=False)
@@ -715,6 +723,7 @@ def format_string(tab, padding_row):
 
         text=""
         for ite, elem in enumerate(the_array):
+
             if len(elem) > padding_row[ite]:
                 text += "*" + elem[-padding_row[ite]+6:]
                 padd_off = " "*5
@@ -761,7 +770,7 @@ def demo(screen):
 
         if time.time() - time_cooldown > args.refresh:
             cleanRedis()
-            for key, val in fetchQueueData().iteritems(): #fetch data and put it into the tables
+            for key, val in iter(fetchQueueData().items()): #fetch data and put it into the tables
                 TABLES[key] = val
             TABLES["logs"] = format_string(printarrayLog, TABLES_PADDING["logs"])
 
@@ -790,14 +799,15 @@ if __name__ == "__main__":
                         Did you set environment variables? \
                         Or activate the virtualenv.')
 
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
     # REDIS #
     server = redis.StrictRedis(
         host=cfg.get("Redis_Queues", "host"),
         port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"))
+        db=cfg.getint("Redis_Queues", "db"),
+        decode_responses=True)
 
     if args.clear == 1:
         clearRedisModuleInfo()
@@ -821,7 +831,7 @@ if __name__ == "__main__":
                     module_file_array.add(line[:-1])
     cleanRedis()
 
-    
+
     TABLES_TITLES["running"] = format_string([([" Action", "Queue name", "PID", "#", "S Time", "R Time", "Processed element", "CPU %", "Mem %", "Avg CPU%"],0)], TABLES_PADDING["running"])[0][0]
     TABLES_TITLES["idle"] = format_string([([" Action", "Queue", "PID", "Idle Time", "Last paste hash"],0)], TABLES_PADDING["idle"])[0][0]
     TABLES_TITLES["notRunning"] = format_string([([" Action", "Queue", "State"],0)], TABLES_PADDING["notRunning"])[0][0]

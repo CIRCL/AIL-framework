@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
 Queue helper module
@@ -12,11 +12,7 @@ the same Subscriber name in both of them.
 
 """
 import redis
-try: # dirty to support python3
-    import ConfigParser
-except:
-    import configparser
-    ConfigParser = configparser
+import configparser
 import os
 import zmq
 import time
@@ -32,7 +28,7 @@ class PubSub(object):
             raise Exception('Unable to find the configuration file. \
                             Did you set environment variables? \
                             Or activate the virtualenv.')
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read(configfile)
         self.redis_sub = False
         self.zmq_sub = False
@@ -49,7 +45,8 @@ class PubSub(object):
             r = redis.StrictRedis(
                 host=self.config.get('RedisPubSub', 'host'),
                 port=self.config.get('RedisPubSub', 'port'),
-                db=self.config.get('RedisPubSub', 'db'))
+                db=self.config.get('RedisPubSub', 'db'),
+                decode_responses=True)
             self.subscribers = r.pubsub(ignore_subscribe_messages=True)
             self.subscribers.psubscribe(channel)
         elif conn_name.startswith('ZMQ'):
@@ -61,7 +58,8 @@ class PubSub(object):
             for address in addresses.split(','):
                 new_sub = context.socket(zmq.SUB)
                 new_sub.connect(address)
-                new_sub.setsockopt(zmq.SUBSCRIBE, channel)
+                # bytes64 encode bytes to ascii only bytes
+                new_sub.setsockopt_string(zmq.SUBSCRIBE, channel)
                 self.subscribers.append(new_sub)
 
     def setup_publish(self, conn_name):
@@ -72,7 +70,8 @@ class PubSub(object):
         if conn_name.startswith('Redis'):
             r = redis.StrictRedis(host=self.config.get('RedisPubSub', 'host'),
                                   port=self.config.get('RedisPubSub', 'port'),
-                                  db=self.config.get('RedisPubSub', 'db'))
+                                  db=self.config.get('RedisPubSub', 'db'),
+                                  decode_responses=True)
             self.publishers['Redis'].append((r, channel))
         elif conn_name.startswith('ZMQ'):
             context = zmq.Context()
@@ -85,10 +84,12 @@ class PubSub(object):
         channel_message = m.get('channel')
         for p, channel in self.publishers['Redis']:
             if channel_message is None or channel_message == channel:
-                p.publish(channel, m['message'])
+                p.publish(channel, ( m['message']) )
         for p, channel in self.publishers['ZMQ']:
             if channel_message is None or channel_message == channel:
                 p.send('{} {}'.format(channel, m['message']))
+                #p.send(b' '.join( [channel,  mess] ) )
+
 
     def subscribe(self):
         if self.redis_sub:
@@ -100,7 +101,7 @@ class PubSub(object):
                 for sub in self.subscribers:
                     try:
                         msg = sub.recv(zmq.NOBLOCK)
-                        yield msg.split(' ', 1)[1]
+                        yield msg.split(b" ", 1)[1]
                     except zmq.error.Again as e:
                         time.sleep(0.2)
                         pass
@@ -117,9 +118,9 @@ class Process(object):
                             Did you set environment variables? \
                             Or activate the virtualenv.')
         modulesfile = os.path.join(os.environ['AIL_BIN'], 'packages/modules.cfg')
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read(configfile)
-        self.modules = ConfigParser.ConfigParser()
+        self.modules = configparser.ConfigParser()
         self.modules.read(modulesfile)
         self.subscriber_name = conf_section
 
@@ -131,10 +132,10 @@ class Process(object):
         self.r_temp = redis.StrictRedis(
             host=self.config.get('RedisPubSub', 'host'),
             port=self.config.get('RedisPubSub', 'port'),
-            db=self.config.get('RedisPubSub', 'db'))
+            db=self.config.get('RedisPubSub', 'db'),
+            decode_responses=True)
 
         self.moduleNum = os.getpid()
-
 
     def populate_set_in(self):
         # monoproc
@@ -152,6 +153,7 @@ class Process(object):
         self.r_temp.hset('queues', self.subscriber_name,
                          int(self.r_temp.scard(in_set)))
         message = self.r_temp.spop(in_set)
+
         timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
         dir_name = os.environ['AIL_HOME']+self.config.get('Directories', 'pastes')
 
@@ -159,37 +161,46 @@ class Process(object):
             return None
 
         else:
-            try:
-                if ".gz" in message:
-                    path = message.split(".")[-2].split("/")[-1]
-                    #find start of path with AIL_HOME
-                    index_s = message.find(os.environ['AIL_HOME'])
-                    #Stop when .gz
-                    index_e = message.find(".gz")+3 
+            #try:
+            if '.gz' in message:
+                path = message.split(".")[-2].split("/")[-1]
+                #find start of path with AIL_HOME
+                index_s = message.find(os.environ['AIL_HOME'])
+                #Stop when .gz
+                index_e = message.find(".gz")+3
+                if(index_s == -1):
+                    complete_path = message[0:index_e]
+                else:
                     complete_path = message[index_s:index_e]
 
-                else:
-                    path = "?"
-                value = str(timestamp) + ", " + path
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
-                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
-                return message
+            else:
+                path = "-"
+                complete_path = "?"
 
-            except:
-                path = "?"
-                value = str(timestamp) + ", " + path
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
-                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", "?")
-                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
-                return message
+            value = str(timestamp) + ", " + path
+            self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+            self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
+            self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+            return message
+
+            #except:
+                #print('except')
+                #path = "?"
+                #value = str(timestamp) + ", " + path
+                #self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                #self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", "?")
+                #self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+                #return message
 
     def populate_set_out(self, msg, channel=None):
         # multiproc
         msg = {'message': msg}
         if channel is not None:
             msg.update({'channel': channel})
-        self.r_temp.sadd(self.subscriber_name + 'out', json.dumps(msg))
+
+        # bytes64 encode bytes to ascii only bytes
+        j = json.dumps(msg)
+        self.r_temp.sadd(self.subscriber_name + 'out', j)
 
     def publish(self):
         # monoproc
@@ -201,6 +212,7 @@ class Process(object):
             self.pubsub.setup_publish(name)
         while True:
             message = self.r_temp.spop(self.subscriber_name + 'out')
+
             if message is None:
                 time.sleep(1)
                 continue

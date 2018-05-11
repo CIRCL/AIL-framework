@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
 '''
@@ -158,7 +158,7 @@ def terms_management():
     trackReg_list_num_of_paste = []
     for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
 
-        notificationEMailTermMapping[tracked_regex] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex))
+        notificationEMailTermMapping[tracked_regex] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)) )
 
         if tracked_regex not in notificationEnabledDict:
             notificationEnabledDict[tracked_regex] = False
@@ -182,8 +182,9 @@ def terms_management():
     trackSet_list_values = []
     trackSet_list_num_of_paste = []
     for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
+        tracked_set = tracked_set
 
-        notificationEMailTermMapping[tracked_set] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set))
+        notificationEMailTermMapping[tracked_set] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)) )
 
 
         if tracked_set not in notificationEnabledDict:
@@ -209,7 +210,7 @@ def terms_management():
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
 
-        notificationEMailTermMapping[tracked_term] = "\n".join(r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
+        notificationEMailTermMapping[tracked_term] = "\n".join( r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
 
         if tracked_term not in notificationEnabledDict:
             notificationEnabledDict[tracked_term] = False
@@ -220,7 +221,9 @@ def terms_management():
         term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
 
         set_paste_name = "tracked_" + tracked_term
-        track_list_num_of_paste.append(r_serv_term.scard(set_paste_name))
+
+        track_list_num_of_paste.append( r_serv_term.scard(set_paste_name) )
+
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         value_range.append(term_date)
         track_list_values.append(value_range)
@@ -268,7 +271,7 @@ def terms_management_query_paste():
         p_size = paste.p_size
         p_mime = paste.p_mime
         p_lineinfo = paste.get_lines_info()
-        p_content = paste.get_p_content().decode('utf-8', 'ignore')
+        p_content = paste.get_p_content()
         if p_content != 0:
             p_content = p_content[0:400]
         paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
@@ -310,7 +313,7 @@ def terms_management_action():
     term =  request.args.get('term')
     notificationEmailsParam = request.args.get('emailAddresses')
 
-    if action is None or term is None:
+    if action is None or term is None or notificationEmailsParam is None:
         return "None"
     else:
         if section == "followTerm":
@@ -386,7 +389,6 @@ def terms_management_action():
                     r_serv_term.hdel(TrackedRegexDate_Name, term)
                 elif term.startswith('\\') and term.endswith('\\'):
                     r_serv_term.srem(TrackedSetSet_Name, term)
-                    print(term)
                     r_serv_term.hdel(TrackedSetDate_Name, term)
                 else:
                     r_serv_term.srem(TrackedTermsSet_Name, term.lower())
@@ -524,7 +526,7 @@ def credentials_management_query_paste():
         p_size = paste.p_size
         p_mime = paste.p_mime
         p_lineinfo = paste.get_lines_info()
-        p_content = paste.get_p_content().decode('utf-8', 'ignore')
+        p_content = paste.get_p_content()
         if p_content != 0:
             p_content = p_content[0:400]
         paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
@@ -534,7 +536,7 @@ def credentials_management_query_paste():
 @terms.route("/credentials_management_action/", methods=['GET'])
 def cred_management_action():
 
-    supplied =  request.args.get('term').encode('utf-8')
+    supplied =  request.args.get('term')
     action = request.args.get('action')
     section = request.args.get('section')
     extensive = request.args.get('extensive')
@@ -565,7 +567,7 @@ def cred_management_action():
                     iter_num += 1
 
                     if poss in tempUsername:
-                        num = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername)
+                        num = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET, tempUsername))
                         if num is not None:
                             uniq_num_set.add(num)
                         for num in r_serv_cred.smembers(tempUsername):
@@ -574,7 +576,7 @@ def cred_management_action():
     data = {'usr': [], 'path': [], 'numPaste': [], 'simil': []}
     for Unum in uniq_num_set:
         levenRatio = 2.0
-        username = r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum)
+        username = (r_serv_cred.hget(REDIS_KEY_ALL_CRED_SET_REV, Unum))
 
         # Calculate Levenshtein distance, ignore negative ratio
         supp_splitted = supplied.split()
@@ -585,7 +587,10 @@ def cred_management_action():
             levenRatioStr = "{:.1%}".format(levenRatio)
 
         data['usr'].append(username)
+
+
         allPathNum = list(r_serv_cred.smembers(REDIS_KEY_MAP_CRED_TO_PATH+'_'+Unum))
+
         data['path'].append(allPathNum)
         data['numPaste'].append(len(allPathNum))
         data['simil'].append(levenRatioStr)

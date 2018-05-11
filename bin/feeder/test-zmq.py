@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # This file is part of AIL framework - Analysis Information Leak framework
@@ -24,9 +24,10 @@ socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 while True:
     message = socket.recv()
+    print('b1')
     print (message)
     if topicfilter == "102":
         topic, paste, messagedata = message.split()
-        print paste, messagedata
+        print(paste, messagedata)
     else:
         print (message)

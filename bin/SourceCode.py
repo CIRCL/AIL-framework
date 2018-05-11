@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 import time
 from packages import Paste
@@ -26,10 +26,10 @@ if __name__ == "__main__":
     adr = "0x[a-f0-9]{2}"
 
     #asm = "\"((?s).{1}x[0-9a-f]{2}){3,}" ISSUES WITH FINDALL, pattern like \x54\xaf\x23\..
- 
+
     languages = [shell, c, php, bash, python, javascript, bash, ruby, adr]
     regex = '|'.join(languages)
-    print regex
+    print(regex)
 
     while True:
         message = p.get_from_set()

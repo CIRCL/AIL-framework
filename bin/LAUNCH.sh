@@ -11,11 +11,11 @@ CYAN="\\033[1;36m"
 
 [ -z "$AIL_HOME" ] && echo "Needs the env var AIL_HOME. Run the script from the virtual environment." && exit 1;
 [ -z "$AIL_REDIS" ] && echo "Needs the env var AIL_REDIS. Run the script from the virtual environment." && exit 1;
-[ -z "$AIL_LEVELDB" ] && echo "Needs the env var AIL_LEVELDB. Run the script from the virtual environment." && exit 1;
+[ -z "$AIL_ARDB" ] && echo "Needs the env var AIL_ARDB. Run the script from the virtual environment." && exit 1;
 
 export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
-export PATH=$AIL_LEVELDB:$PATH
+export PATH=$AIL_ARDB:$PATH
 
 function helptext {
     echo -e $YELLOW"
@@ -40,7 +40,7 @@ function helptext {
     (Inside screen Daemons)
     "$RED"
     But first of all you'll need to edit few path where you installed
-    your redis & leveldb servers.
+    your redis & ardb servers.
     "$DEFAULT"
     Usage:
     -----
@@ -58,33 +58,17 @@ function launching_redis {
     screen -S "Redis_AIL" -X screen -t "6380" bash -c 'redis-server '$conf_dir'6380.conf ; read x'
     sleep 0.1
     screen -S "Redis_AIL" -X screen -t "6381" bash -c 'redis-server '$conf_dir'6381.conf ; read x'
-
-    # For Words and curves
-    sleep 0.1
-    screen -S "Redis_AIL" -X screen -t "6382" bash -c 'redis-server '$conf_dir'6382.conf ; read x'
 }
 
-function launching_lvldb {
-    lvdbhost='127.0.0.1'
-    lvdbdir="${AIL_HOME}/LEVEL_DB_DATA/"
-    nb_db=13
+function launching_ardb {
+    conf_dir="${AIL_HOME}/configs/"
 
-    db_y=`date +%Y`
-    #Verify that a dir with the correct year exists, create it otherwise
-    if [ ! -d "$lvdbdir$db_y" ]; then
-        mkdir -p "$db_y"
-    fi
-
-    screen -dmS "LevelDB_AIL"
+    screen -dmS "ARDB_AIL"
     sleep 0.1
-    echo -e $GREEN"\t* Launching Levels DB servers"$DEFAULT
+    echo -e $GREEN"\t* Launching ARDB servers"$DEFAULT
 
-    #Launch a DB for each dir
-    for pathDir in $lvdbdir*/ ; do
-        yDir=$(basename "$pathDir")
-        sleep 0.1
-        screen -S "LevelDB_AIL" -X screen -t "$yDir" bash -c 'redis-leveldb -H '$lvdbhost' -D '$pathDir'/ -P '$yDir' -M '$nb_db'; read x'
-    done
+    sleep 0.1
+    screen -S "ARDB_AIL" -X screen -t "6382" bash -c 'ardb-server '$conf_dir'6382.conf ; read x'
 }
 
 function launching_logs {
@@ -101,12 +85,12 @@ function launching_queues {
     sleep 0.1
 
     echo -e $GREEN"\t* Launching all the queues"$DEFAULT
-    screen -S "Queue_AIL" -X screen -t "Queues" bash -c './launch_queues.py; read x'
+    screen -S "Queue_AIL" -X screen -t "Queues" bash -c 'python3 launch_queues.py; read x'
 }
 
 function launching_scripts {
     echo -e "\t* Checking configuration"
-    bash -c "./Update-conf.py"
+    bash -c "python3 Update-conf.py"
     exitStatus=$?
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
@@ -142,6 +126,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "ApiKey" bash -c './ApiKey.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
@@ -157,6 +143,10 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Base64" bash -c './Base64.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c './Bitcoin.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
     sleep 0.1
@@ -183,7 +173,10 @@ function shutting_down_redis {
     bash -c $redis_dir'redis-cli -p 6380 SHUTDOWN'
     sleep 0.1
     bash -c $redis_dir'redis-cli -p 6381 SHUTDOWN'
-    sleep 0.1
+}
+
+function shutting_down_ardb {
+    redis_dir=${AIL_HOME}/redis/src/
     bash -c $redis_dir'redis-cli -p 6382 SHUTDOWN'
 }
 
@@ -208,12 +201,21 @@ function checking_redis {
        flag_redis=1
     fi
     sleep 0.1
+
+    return $flag_redis;
+}
+
+function checking_ardb {
+    flag_ardb=0
+    redis_dir=${AIL_HOME}/redis/src/
+    sleep 0.2
     bash -c $redis_dir'redis-cli -p 6382 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
        echo -e $RED"\t6382 not ready"$DEFAULT
-       flag_redis=1
+       flag_ardb=1
     fi
-    return $flag_redis;
+
+    return $flag_ardb;
 }
 
 #If no params, display the help
@@ -223,12 +225,12 @@ helptext;
 
 ############### TESTS ###################
 isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
-islvldb=`screen -ls | egrep '[0-9]+.LevelDB_AIL' | cut -d. -f1`
+isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
 islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
 isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 
-options=("Redis" "LevelDB" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config")
+options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config")
 
 menu() {
     echo "What do you want to Launch?:"
@@ -259,9 +261,9 @@ for i in ${!options[@]}; do
                     echo -e $RED"\t* A screen is already launched"$DEFAULT
                 fi
                 ;;
-            LevelDB)
-                if [[ ! $islvldb ]]; then
-                    launching_lvldb;
+            Ardb)
+                if [[ ! $isardb ]]; then
+                    launching_ardb;
                 else
                     echo -e $RED"\t* A screen is already launched"$DEFAULT
                 fi
@@ -282,12 +284,13 @@ for i in ${!options[@]}; do
                 ;;
             Scripts)
                 if [[ ! $isscripted ]]; then
-                    if checking_redis; then
+                  sleep 1
+                    if checking_redis && checking_ardb; then
                         launching_scripts;
                     else
-                        echo -e $YELLOW"\tScript not started, waiting 3 secondes"$DEFAULT
-                        sleep 3
-                        if checking_redis; then
+                        echo -e $YELLOW"\tScript not started, waiting 5 secondes"$DEFAULT
+                        sleep 5
+                        if checking_redis && checking_ardb; then
                             launching_scripts;
                         else
                             echo -e $RED"\tScript not started"$DEFAULT
@@ -298,14 +301,17 @@ for i in ${!options[@]}; do
                 fi
                 ;;
             Killall)
-                if [[ $isredis || $islvldb || $islogged || $isqueued || $isscripted ]]; then
+                if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted ]]; then
                     echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
                     shutting_down_redis;
+                    sleep 0.2
+                    echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
+                    shutting_down_ardb;
                     echo -e $GREEN"Killing all"$DEFAULT
-                    kill $isredis $islvldb $islogged $isqueued $isscripted
+                    kill $isredis $isardb $islogged $isqueued $isscripted
                     sleep 0.2
                     echo -e $ROSE`screen -ls`$DEFAULT
-                    echo -e $GREEN"\t* $isredis $islvldb $islogged $isqueued $isscripted killed."$DEFAULT
+                    echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted killed."$DEFAULT
                 else
                     echo -e $RED"\t* No screen to kill"$DEFAULT
                 fi
