@@ -31,13 +31,10 @@ Features
 * Terms, Set of terms and Regex tracking and occurrence
 * Many more modules for extracting phone numbers, credentials and others
 * Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
-
-News Features
---------
-
-* Detect and decode Base64
-* Detect AWS and google API keys
+* Detect and decode Base64 and store files
+* Detect Amazon AWS and Google API keys
 * Detect Bitcoin address and Bitcoin private keys
+* Detect private keys and certificate
 
 Installation
 ------------
