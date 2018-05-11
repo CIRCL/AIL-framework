@@ -32,6 +32,13 @@ Features
 * Many more modules for extracting phone numbers, credentials and others
 * Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
 
+News Features
+--------
+
+* Detect and decode Base64
+* Detect AWS and google API keys
+* Detect Bitcoin address and Bitcoin private keys
+
 Installation
 ------------
 
