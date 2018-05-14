@@ -8,6 +8,9 @@ sudo apt-get update
 sudo apt-get install python3-pip python-virtualenv python3-dev libfreetype6-dev \
     screen g++ python-tk unzip libsnappy-dev cmake -y
 
+# required for easy_install
+python -m pip install -U setuptools
+
 #optional tor install
 sudo apt-get install tor -y
 
