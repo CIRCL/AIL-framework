@@ -65,6 +65,18 @@ r_serv_pasteName = redis.StrictRedis(
     db=cfg.getint("Redis_Paste_Name", "db"),
     decode_responses=True)
 
+r_serv_tags = redis.StrictRedis(
+    host=cfg.get("ARDB_Tags", "host"),
+    port=cfg.getint("ARDB_Tags", "port"),
+    db=cfg.getint("ARDB_Tags", "db"),
+    decode_responses=True)
+
+r_serv_metadata = redis.StrictRedis(
+    host=cfg.get("ARDB_Metadata", "host"),
+    port=cfg.getint("ARDB_Metadata", "port"),
+    db=cfg.getint("ARDB_Metadata", "db"),
+    decode_responses=True)
+
 # VARIABLES #
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number of character to display in the modal

@@ -76,6 +76,11 @@ class Paste(object):
             port=cfg.getint("Redis_Data_Merging", "port"),
             db=cfg.getint("Redis_Data_Merging", "db"),
             decode_responses=True)
+        self.store_duplicate = redis.StrictRedis(
+            host=cfg.get("ARDB_Metadata", "host"),
+            port=cfg.getint("ARDB_Metadata", "port"),
+            db=cfg.getint("ARDB_Metadata", "db"),
+            decode_responses=True)
 
         self.p_path = p_path
         self.p_name = os.path.basename(self.p_path)
@@ -272,9 +277,9 @@ class Paste(object):
             return False, var
 
     def _get_p_duplicate(self):
-        self.p_duplicate = self.store.hget(self.p_path, "p_duplicate")
+        self.p_duplicate = self.store_duplicate.smembers('dup:'+self.p_path)
         if self.p_duplicate is not None:
-            return self.p_duplicate
+            return list(self.p_duplicate)
         else:
             return '[]'
 
@@ -323,27 +328,20 @@ class Paste(object):
         else:
             self.store.hset(self.p_path, attr_name, json.dumps(value))
 
-    def save_others_pastes_attribute_duplicate(self, attr_name, list_value):
+    def save_attribute_duplicate(self, value):
+        """
+        Save an attribute as a field
+        """
+        for tuple in value:
+            self.store_duplicate.sadd('dup:'+self.p_path, tuple)
+
+    def save_others_pastes_attribute_duplicate(self, list_value):
         """
         Save a new duplicate on others pastes
         """
         for hash_type, path, percent, date in list_value:
-            #get json
-            json_duplicate = self.store.hget(path, attr_name)
-            #json save on redis
-            if json_duplicate is not None:
-                list_duplicate = (json.loads(json_duplicate))
-                # avoid duplicate, a paste can be send by multiples modules
-                to_add = [hash_type, self.p_path, percent, date]
-                if to_add not in list_duplicate:
-                    list_duplicate.append(to_add)
-                    self.store.hset(path, attr_name, json.dumps(list_duplicate))
-
-            else:
-                # create the new list
-                list_duplicate = [[hash_type, self.p_path, percent, date]]
-                self.store.hset(path, attr_name, json.dumps(list_duplicate))
-
+            to_add = [hash_type, self.p_path, percent, date]
+            self.store_duplicate.sadd('dup:'+path,to_add)
 
     def _get_from_redis(self, r_serv):
         ans = {}

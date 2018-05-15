@@ -18,6 +18,7 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_pasteName = Flask_config.r_serv_pasteName
+r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
@@ -38,20 +39,22 @@ def showpaste(content_range):
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
     p_content = paste.get_p_content()
-    p_duplicate_full_list = json.loads(paste._get_p_duplicate())
+    p_duplicate_str_full_list = paste._get_p_duplicate()
+
+    p_duplicate_full_list = []
     p_duplicate_list = []
     p_simil_list = []
     p_date_list = []
     p_hashtype_list = []
 
 
-    for dup_list in p_duplicate_full_list:
+    for dup_list in p_duplicate_str_full_list:
+        dup_list = dup_list[1:-1].replace('\'', '').replace(' ', '').split(',')
         if dup_list[0] == "tlsh":
             dup_list[2] = 100 - int(dup_list[2])
         else:
-            print('dup_list')
-            print(dup_list)
             dup_list[2] = int(dup_list[2])
+        p_duplicate_full_list.append(dup_list)
 
     #p_duplicate_full_list.sort(lambda x,y: cmp(x[2], y[2]), reverse=True)
 
@@ -69,8 +72,8 @@ def showpaste(content_range):
             comp_vals.append(p_duplicate_full_list[i][2])
             dup_list_removed.append(i)
 
-        hash_types = str(hash_types).replace("[","").replace("]","") if len(hash_types)==1 else str(hash_types)
-        comp_vals = str(comp_vals).replace("[","").replace("]","") if len(comp_vals)==1 else str(comp_vals)
+        #hash_types = str(hash_types).replace("[","").replace("]","") if len(hash_types)==1 else str(hash_types)
+        #comp_vals = str(comp_vals).replace("[","").replace("]","") if len(comp_vals)==1 else str(comp_vals)
 
         if len(p_duplicate_full_list[dup_list_index]) > 3:
             try:
@@ -80,7 +83,7 @@ def showpaste(content_range):
                 date_paste = str(p_duplicate_full_list[dup_list_index][3])
         else:
             date_paste = "No date available"
-        new_dup_list.append([hash_types.replace("'", ""), p_duplicate_full_list[dup_list_index][1], comp_vals, date_paste])
+        new_dup_list.append([hash_types, p_duplicate_full_list[dup_list_index][1], comp_vals, date_paste])
 
     # Create the list to pass to the webpage
     for dup_list in new_dup_list:
