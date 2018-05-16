@@ -110,8 +110,6 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
     sleep 0.1
-    #screen -S "Script_AIL" -X screen -t "Attributes" bash -c './Attributes.py; read x'
-    #sleep 0.1
     screen -S "Script_AIL" -X screen -t "Lines" bash -c './Lines.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
