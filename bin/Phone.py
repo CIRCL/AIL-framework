@@ -36,6 +36,10 @@ def search_phone(message):
         msg = 'phone;{}'.format(message)
         p.populate_set_out(msg, 'alertHandler')
         #Send to duplicate
+
+        msg = 'infoleak:automatic-detection="phone-number";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
+
         p.populate_set_out(message, 'Duplicate')
         stats = {}
         for phone_number in results:

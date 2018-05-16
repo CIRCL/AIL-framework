@@ -110,6 +110,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
     sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Attributes" bash -c './Attributes.py; read x'
+    #sleep 0.1
     screen -S "Script_AIL" -X screen -t "Lines" bash -c './Lines.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
@@ -144,6 +146,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Base64" bash -c './Base64.py; read x'
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "DbDump" bash -c './DbDump.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c './Bitcoin.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
@@ -159,6 +163,8 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Tags" bash -c './Tags.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
 

@@ -96,7 +96,17 @@ def showpaste(content_range):
     if content_range != 0:
        p_content = p_content[0:content_range]
 
-    return render_template("show_saved_paste.html", date=p_date, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
+    bootstrap_label = []
+    bootstrap_label.append('primary')
+    bootstrap_label.append('success')
+    bootstrap_label.append('danger')
+    bootstrap_label.append('warning')
+    bootstrap_label.append('info')
+    bootstrap_label.append('dark')
+
+    list_tags = r_serv_metadata.smembers('tag:'+requested_path)
+
+    return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
 
 # ============ ROUTES ============
 

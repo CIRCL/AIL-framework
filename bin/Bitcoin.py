@@ -63,7 +63,14 @@ def search_key(content, message, paste):
             publisher.warning(to_print)
             msg = ('bitcoin;{}'.format(message))
             p.populate_set_out( msg, 'alertHandler')
+
+            msg = 'infoleak:automatic-detection="bitcoin-address";{}'.format(message)
+            p.populate_set_out(msg, 'Tags')
+
             if(key):
+                msg = 'infoleak:automatic-detection="bitcoin-private-key";{}'.format(message)
+                p.populate_set_out(msg, 'Tags')
+
                 to_print = 'Bitcoin;{};{};{};'.format(paste.p_source, paste.p_date,
                                                     paste.p_name)
                 publisher.warning('{}Detected {} Bitcoin private key;{}'.format(

@@ -105,6 +105,9 @@ if __name__ == "__main__":
             msg = 'credential;{}'.format(filepath)
             p.populate_set_out(msg, 'alertHandler')
 
+            msg = 'infoleak:automatic-detection="credential";{}'.format(filepath)
+            p.populate_set_out(msg, 'Tags')
+
             #Put in form, count occurences, then send to moduleStats
             creds_sites = {}
             site_occurence = re.findall(regex_site_for_stats, content)

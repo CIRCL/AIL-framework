@@ -21,7 +21,13 @@
     <div class="panel panel-default">
       <div class="panel-heading">
         <h1 class="page-header" >Paste: {{ request.args.get('paste') }}</h1>
-        <h2 class="page-header" >({{ request.args.get('num') }})</h2>
+        <h2 class="page-header" >
+          <div>
+            {% for tag in list_tags %}
+            <span class="label label-{{ bootstrap_label[loop.index0 % 6] }} pull-left">{{ tag }}</span>
+            {%  endfor %}
+          </div>
+        </h2>
 
         <table class="table table-condensed">
           <thead>

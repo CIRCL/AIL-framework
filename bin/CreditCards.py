@@ -85,6 +85,9 @@ if __name__ == "__main__":
                     #send to Browse_warning_paste
                     msg = 'creditcard;{}'.format(filename)
                     p.populate_set_out(msg, 'alertHandler')
+
+                    msg = 'infoleak:automatic-detection="credit-card";{}'.format(filename)
+                    p.populate_set_out(msg, 'Tags')
                 else:
                     publisher.info('{}CreditCard related;{}'.format(to_print, paste.p_path))
         else:

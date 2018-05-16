@@ -41,6 +41,8 @@ def search_api_key(message):
             print(to_print)
             publisher.warning('{}Checked {} found Google API Key;{}'.format(
                 to_print, len(google_api_key), paste.p_path))
+            msg = 'infoleak:automatic-detection="google-api-key";{}'.format(filename)
+            p.populate_set_out(msg, 'Tags')
 
         if(len(aws_access_key) > 0 or len(aws_secret_key) > 0):
             print('found AWS key')
@@ -48,7 +50,12 @@ def search_api_key(message):
             total = len(aws_access_key) + len(aws_secret_key)
             publisher.warning('{}Checked {} found AWS Key;{}'.format(
                 to_print, total, paste.p_path))
+            msg = 'infoleak:automatic-detection="aws-key";{}'.format(filename)
+            p.populate_set_out(msg, 'Tags')
 
+
+        msg = 'infoleak:automatic-detection="api-key";{}'.format(filename)
+        p.populate_set_out(msg, 'Tags')
 
         msg = 'apikey;{}'.format(filename)
         p.populate_set_out(msg, 'alertHandler')

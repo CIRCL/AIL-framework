@@ -76,6 +76,9 @@ if __name__ == "__main__":
                         p.populate_set_out(filename, 'Duplicate')
                         p.populate_set_out('mail;{}'.format(filename), 'alertHandler')
 
+                        msg = 'infoleak:automatic-detection="mail";{}'.format(filename)
+                        p.populate_set_out(msg, 'Tags')
+
                     else:
                         publisher.info(to_print)
                 #Send to ModuleStats
