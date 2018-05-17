@@ -24,8 +24,37 @@
         <h2 class="page-header" >
           <div>
             {% for tag in list_tags %}
-            <span class="label label-{{ bootstrap_label[loop.index0 % 6] }} pull-left">{{ tag }}</span>
+            <span class="btn btn-{{ bootstrap_label[loop.index0 % 6] }} btn-lg pull-left" data-toggle="modal" data-target="#myModal_{{ loop.index0 }}">{{ tag }}</span>
+
+              <!-- Modal edit this tag -->
+              <div class="modal fade" id="myModal_{{ loop.index0 }}" role="dialog">
+                <div class="modal-dialog">
+
+                  <div class="modal-content text-center">
+                    <div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
+                      <p class="heading">Edit this tag</p>
+
+                    </div>
+                    <div class="modal-body">
+                      <span class="label label-{{ bootstrap_label[loop.index0 % 6] }}" >{{ tag }}</span>
+                    </div>
+                    <div class="modal-footer center">
+                      <a href="{{ url_for('Tags.confirm_tag') }}?paste={{ request.args.get('paste') }}&tag={{ tag }}" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-ok "></span> Confirm this Tag
+                      </a>
+                      <a href="{{ url_for('Tags.remove_tag') }}?paste={{ request.args.get('paste') }}&tag={{ tag }}" class="btn btn-danger">
+                        <span class="glyphicon glyphicon-trash "></span> Delete this Tag
+                      </a>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
             {%  endfor %}
+            <button type="button" class="btn btn-light btn-lg" data-toggle="tooltip" title="Add Tag">
+              <span class="glyphicon glyphicon-plus "></span>
+            </span>
           </div>
         </h2>
 
@@ -55,6 +84,13 @@
             </tr>
           </tbody>
         </table>
+
+        <button type="button" class="btn btn-success btn-lg" data-toggle="tooltip" title="Good Detection">
+          <span class="glyphicon glyphicon-thumbs-up "></span>
+        </span>
+        <button type="button" class="btn btn-danger btn-lg" data-toggle="tooltip" title="Bad Detection">
+          <span class="glyphicon glyphicon-thumbs-down "></span>
+        </span>
       </div>
     <div class="panel-body" id="panel-body">
       {% if  duplicate_list|length == 0 %}

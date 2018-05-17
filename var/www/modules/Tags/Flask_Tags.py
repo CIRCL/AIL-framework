@@ -5,7 +5,7 @@
     Flask functions and routes for the trending modules page
 '''
 import redis
-from flask import Flask, render_template, jsonify, request, Blueprint
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
 import json
 
@@ -145,6 +145,44 @@ def get_tagged_paste():
 def get_tagged_paste_res():
 
     return render_template("res.html")
+
+@Tags.route("/Tags/remove_tag")
+def remove_tag():
+
+    #TODO verify input
+    path = request.args.get('paste')
+    tag = request.args.get('tag')
+
+    #remove tag
+    r_serv_metadata.srem('tag:'+path, tag)
+    r_serv_tags.srem(tag, path)
+
+    return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+
+@Tags.route("/Tags/confirm_tag")
+def confirm_tag():
+
+    #TODO verify input
+    path = request.args.get('paste')
+    tag = request.args.get('tag')
+
+    if(tag[9:28] == 'automatic-detection'):
+
+        #remove automatic tag
+        r_serv_metadata.srem('tag:'+path, tag)
+        r_serv_tags.srem(tag, path)
+
+        tag = tag.replace('automatic-detection','analyst-detection', 1)
+        #add analyst tag
+        r_serv_metadata.sadd('tag:'+path, tag)
+        r_serv_tags.sadd(tag, path)
+        #add new tag in list of all used tags
+        r_serv_tags.sadd('list_tags', tag)
+
+        return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+
+    return 'incompatible tag'
+
 
 # ========= REGISTRATION =========
 app.register_blueprint(Tags)
