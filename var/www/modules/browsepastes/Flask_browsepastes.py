@@ -20,6 +20,7 @@ app = Flask_config.app
 cfg = Flask_config.cfg
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
+r_serv_metadata = Flask_config.r_serv_metadata
 
 #init all lvlDB servers
 curYear = datetime.now().year
@@ -56,6 +57,14 @@ def getPastebyType(server, module_name):
 def event_stream_getImportantPasteByModule(module_name, year):
     index = 0
     all_pastes_list = getPastebyType(r_serv_db[year], module_name)
+    paste_tags = []
+    bootstrap_label = []
+    bootstrap_label.append('primary')
+    bootstrap_label.append('success')
+    bootstrap_label.append('danger')
+    bootstrap_label.append('warning')
+    bootstrap_label.append('info')
+    bootstrap_label.append('dark')
 
     for path in all_pastes_list:
         index += 1
@@ -64,6 +73,22 @@ def event_stream_getImportantPasteByModule(module_name, year):
         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
         curr_date = str(paste._get_p_date())
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+        p_tags = r_serv_metadata.smembers('tag:'+path)
+        l_tags = []
+        for tag in p_tags:
+            tag = tag.split('=')
+            if len(tag) > 1:
+                if tag[1] != '':
+                    tag = tag[1][1:-1]
+                # no value
+                else:
+                    tag = tag[0][1:-1]
+            # use for custom tags
+            else:
+                tag = tag[0]
+
+            l_tags.append(tag)
+
         data = {}
         data["module"] = module_name
         data["index"] = index
@@ -71,6 +96,8 @@ def event_stream_getImportantPasteByModule(module_name, year):
         data["content"] = content[0:content_range]
         data["linenum"] = paste.get_lines_info()[0]
         data["date"] = curr_date
+        data["l_tags"] = l_tags
+        data["bootstrap_label"] = bootstrap_label
         data["char_to_display"] = max_preview_modal
         data["finished"] = True if index == len(all_pastes_list) else False
         yield 'retry: 100000\ndata: %s\n\n' % json.dumps(data) #retry to avoid reconnection of the browser
@@ -98,7 +125,16 @@ def importantPasteByModule():
     paste_date = []
     paste_linenum = []
     all_path = []
+    paste_tags = []
     allPastes = getPastebyType(r_serv_db[currentSelectYear], module_name)
+
+    bootstrap_label = []
+    bootstrap_label.append('primary')
+    bootstrap_label.append('success')
+    bootstrap_label.append('danger')
+    bootstrap_label.append('warning')
+    bootstrap_label.append('info')
+    bootstrap_label.append('dark')
 
     for path in allPastes[0:10]:
         all_path.append(path)
@@ -110,6 +146,23 @@ def importantPasteByModule():
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
         paste_date.append(curr_date)
         paste_linenum.append(paste.get_lines_info()[0])
+        p_tags = r_serv_metadata.smembers('tag:'+path)
+        l_tags = []
+        for tag in p_tags:
+            tag = tag.split('=')
+            if len(tag) > 1:
+                if tag[1] != '':
+                    tag = tag[1][1:-1]
+                # no value
+                else:
+                    tag = tag[0][1:-1]
+            # use for custom tags
+            else:
+                tag = tag[0]
+
+            l_tags.append(tag)
+
+        paste_tags.append(l_tags)
 
     if len(allPastes) > 10:
         finished = False
@@ -124,6 +177,8 @@ def importantPasteByModule():
             paste_date=paste_date,
             paste_linenum=paste_linenum,
             char_to_display=max_preview_modal,
+            paste_tags=paste_tags,
+            bootstrap_label=bootstrap_label,
             finished=finished)
 
 @browsepastes.route("/_getImportantPasteByModule", methods=['GET'])
