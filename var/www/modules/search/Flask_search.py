@@ -121,6 +121,7 @@ def search():
     # Search full line
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
+    print(selected_index)
     ix = index.open_dir(selected_index)
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
@@ -139,6 +140,7 @@ def search():
             p_tags = r_serv_metadata.smembers('tag:'+path)
             l_tags = []
             for tag in p_tags:
+                complete_tag = tag
                 tag = tag.split('=')
                 if len(tag) > 1:
                     if tag[1] != '':
@@ -150,7 +152,7 @@ def search():
                 else:
                     tag = tag[0]
 
-                l_tags.append(tag)
+                l_tags.append( (tag, complete_tag) )
 
             paste_tags.append(l_tags)
         results = searcher.search(query)

@@ -19,6 +19,7 @@ app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
+r_serv_tags = Flask_config.r_serv_tags
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
@@ -96,6 +97,7 @@ def showpaste(content_range):
     if content_range != 0:
        p_content = p_content[0:content_range]
 
+    #tag color
     bootstrap_label = []
     bootstrap_label.append('primary')
     bootstrap_label.append('success')
@@ -104,9 +106,20 @@ def showpaste(content_range):
     bootstrap_label.append('info')
     bootstrap_label.append('dark')
 
-    list_tags = r_serv_metadata.smembers('tag:'+requested_path)
+    #active taxonomies
+    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
 
-    return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
+    l_tags = r_serv_metadata.smembers('tag:'+requested_path)
+
+    list_tags = []
+
+    for tag in l_tags:
+        if(tag[9:28] == 'automatic-detection'):
+            list_tags.append( (tag, True) )
+        else:
+            list_tags.append( (tag, False) )
+
+    return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
 
 # ============ ROUTES ============
 

@@ -1489,17 +1489,17 @@
 })(jQuery);
 
 
-        $(document).ready(function() {
+        /*$(document).ready(function() {
             var jsonData = [];
             var fruits = 'Apple,Orange,Banana,Strawberry'.split(',');
             //Default values
-            /*for(var i=0;i<fruits.length;i++) jsonData.push({id:i,name:fruits[i]});
+            for(var i=0;i<fruits.length;i++) jsonData.push({id:i,name:fruits[i]});
             var ms1 = $('#ms1').tagSuggest({
                 data: jsonData,
                 sortOrder: 'name',
                 maxDropHeight: 200,
                 name: 'ms1'
-            });*/
+            });
 
             $.getJSON('/Tags/get_all_tags',
                 function(data) {
@@ -1513,4 +1513,4 @@
                       name: 'ms0'
                   });
                 });
-        });
+        });*/

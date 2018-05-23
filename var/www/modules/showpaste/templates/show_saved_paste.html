@@ -9,6 +9,8 @@
    <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+   <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+
    <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
@@ -16,6 +18,17 @@
    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
    <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+  <style>
+    .scrollable-menu {
+      height: auto;
+      max-height: 200px;
+      overflow-x: hidden;
+      width:100%;
+    }
+  </style>
+
 </head>
 <body>
     <div class="panel panel-default">
@@ -23,8 +36,53 @@
         <h1 class="page-header" >Paste: {{ request.args.get('paste') }}</h1>
         <h2 class="page-header" >
           <div>
+
+            <div id="mymodal" class="modal fade" role="dialog">
+              <div class="modal-dialog modal-lg">
+
+                <!-- Modal content-->
+                <div id="mymodalcontent" class="modal-content">
+                  <div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
+                    <p class="heading">Edit this tag</p>
+
+                  </div>
+
+                  <div class="modal-body">
+
+                      <div class="form-group input-group" >
+                        <input id="ltags" style="width:850%;" type="text" name="ltags">
+
+                      </div>
+
+                    <div class="btn-group btn-block">
+                        <button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Taxonomie Selection
+                          <i class="fa fa-chevron-down"></i>
+                        </button>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="#" id="all-tags">All Tags <i class="fa fa-tags"></i></a></li>
+                            <li role="separator" class="divider"></li>
+                            {% for taxo in active_taxonomies %}
+                                <li><a href="#" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button class="btn btn-primary btn-tags" onclick="addTags()">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        <span class="label-icon">Add Tags</span>
+                    </button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
             {% for tag in list_tags %}
-            <span class="btn btn-{{ bootstrap_label[loop.index0 % 6] }} btn-lg pull-left" data-toggle="modal" data-target="#myModal_{{ loop.index0 }}">{{ tag }}</span>
+            <span class="btn btn-{{ bootstrap_label[loop.index0 % 6] }} btn-lg pull-left" data-toggle="modal" data-target="#myModal_{{ loop.index0 }}">{{ tag[0] }}</span>
 
               <!-- Modal edit this tag -->
               <div class="modal fade" id="myModal_{{ loop.index0 }}" role="dialog">
@@ -36,13 +94,15 @@
 
                     </div>
                     <div class="modal-body">
-                      <span class="label label-{{ bootstrap_label[loop.index0 % 6] }}" >{{ tag }}</span>
+                      <span class="label label-{{ bootstrap_label[loop.index0 % 6] }}" >{{ tag[0] }}</span>
                     </div>
                     <div class="modal-footer center">
-                      <a href="{{ url_for('Tags.confirm_tag') }}?paste={{ request.args.get('paste') }}&tag={{ tag }}" class="btn btn-primary">
-                        <span class="glyphicon glyphicon-ok "></span> Confirm this Tag
-                      </a>
-                      <a href="{{ url_for('Tags.remove_tag') }}?paste={{ request.args.get('paste') }}&tag={{ tag }}" class="btn btn-danger">
+                      {% if tag[1] %}
+                        <a href="{{ url_for('Tags.confirm_tag') }}?paste={{ request.args.get('paste') }}&tag={{ tag[0] }}" class="btn btn-primary">
+                          <span class="glyphicon glyphicon-ok "></span> Confirm this Tag
+                        </a>
+                      {% endif %}
+                      <a href="{{ url_for('Tags.remove_tag') }}?paste={{ request.args.get('paste') }}&tag={{ tag[0] }}" class="btn btn-danger">
                         <span class="glyphicon glyphicon-trash "></span> Delete this Tag
                       </a>
                     </div>
@@ -52,9 +112,9 @@
               </div>
 
             {%  endfor %}
-            <button type="button" class="btn btn-light btn-lg" data-toggle="tooltip" title="Add Tag">
+            <button type="button" class="btn btn-light btn-lg" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('Tags.taxonomies') }}">
               <span class="glyphicon glyphicon-plus "></span>
-            </span>
+            </button>
           </div>
         </h2>
 
@@ -85,12 +145,12 @@
           </tbody>
         </table>
 
-        <button type="button" class="btn btn-success btn-lg" data-toggle="tooltip" title="Good Detection">
+        <a href="{{ url_for('Tags.thumbs_up_paste') }}?paste={{ request.args.get('paste') }}" class="btn btn-success btn-lg" data-toggle="tooltip" title="Good Detection">
           <span class="glyphicon glyphicon-thumbs-up "></span>
-        </span>
-        <button type="button" class="btn btn-danger btn-lg" data-toggle="tooltip" title="Bad Detection">
+        </a>
+        <a href="{{ url_for('Tags.thumbs_down_paste') }}?paste={{ request.args.get('paste') }}" class="btn btn-danger btn-lg" data-toggle="tooltip" title="Bad Detection">
           <span class="glyphicon glyphicon-thumbs-down "></span>
-        </span>
+        </a>
       </div>
     <div class="panel-body" id="panel-body">
       {% if  duplicate_list|length == 0 %}
@@ -128,7 +188,54 @@
     </div>
 
 </body>
+
 <script>
-    $('#tableDup').DataTable();
+    var ltags
+    $(document).ready(function(){
+
+        $.getJSON('/Tags/get_all_tags_taxonomies',
+          function(data) {
+
+            ltags = $('#ltags').tagSuggest({
+              data: data,
+              //sortOrder: 'name',
+              maxDropHeight: 200,
+              name: 'ltags'
+          });
+        });
+
+        $('#tableDup').DataTable();
+    });
 </script>
+
+<script>
+    jQuery("#all-tags").click(function(e){
+      //change input tags list /Tags/get_tags_taxonomie?taxonomie=infoleak
+      $.getJSON('/Tags/get_all_tags_taxonomies',
+        function(data) {
+          ltags.setData(data)
+      });
+    });
+
+</script>
+
+<script>
+    function addTags() {
+      var data = ltags.getValue()
+      var path = '{{ request.args.get('paste') }}'
+      window.location.replace("{{ url_for('Tags.addTags') }}?tags=" + data + "&path=" + path);
+    }
+</script>
+
+<script>
+{% for taxo in active_taxonomies %}
+    jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
+      $.getJSON('/Tags/get_tags_taxonomie?taxonomie={{ taxo }}',
+        function(data) {
+          ltags.setData(data)
+  });
+});
+{% endfor %}
+</script>
+
 </html>

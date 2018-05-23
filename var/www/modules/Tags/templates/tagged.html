@@ -70,19 +70,17 @@
       <!-- /.col-lg-12 -->
     </div>
     <!-- /.row -->
-    <form action="/Tags/get_tagged_paste">
       <div class="form-group input-group" >
-        <input id="ltags" style="width:100%;" type="text" name="ltags">
+        <input id="ltags" style="width:100%;" type="text" name="ltags" autocomplete="off">
 
           <div class="input-group-btn">
-            <button type="submit" class="btn btn-search btn-primary btn-tags">
+            <button class="btn btn-search btn-primary btn-tags" onclick="searchTags()">
               <span class="glyphicon glyphicon-search"></span>
               <span class="label-icon">Search</span>
             </button>
           </div>
 
       </div>
-    </form>
 
     <button type="button" class="btn btn-primary" style="margin-bottom: 30px;" data-target="#filter-panel">
       <span class="glyphicon glyphicon-cog "></span> Advanced Search
@@ -106,7 +104,9 @@
               <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
                 <div>
                   {% for tag in paste_tags[loop.index0] %}
-                  <span class="label label-{{ bootstrap_label[loop.index0 % 6] }} pull-left">{{ tag }}</span>
+                  <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+                    <span class="label label-{{ bootstrap_label[loop.index0 % 6] }} pull-left">{{ tag[0] }}</span>
+                  </a>
                   {%  endfor %}
                 </div>
               </td>
@@ -129,24 +129,27 @@
       <img id="loading_gif_browse" src="/static//image/loading.gif" heigt="20" width="20" style="margin: 2px;"></div>
       </br>
 
+      <a href="{{ url_for('Tags.taxonomies') }}"> [Taxonomies list] </a>
+
   </div>
 
 </body>
 
 <script>
 var search_table;
+var ltags;
 var last_clicked_paste;
 var can_change_modal_content = true;
 $("#myTable_").attr('data-numElem', "{{ all_path|length }}");
 
 $(document).ready(function(){
+    search_table = $('#myTable_').DataTable({ "order": [[ 2, "desc" ]] });
     $('[data-toggle="tooltip"]').tooltip();
     $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
         //get_html_and_update_modal(event);
         get_html_and_update_modal(event, $(this));
     });
 
-    search_table = $('#myTable_').DataTable({ "order": [[ 2, "desc" ]] });
 
     $("#load_more_json_button1").hide();
     $("#load_more_json_button2").hide();
@@ -162,25 +165,31 @@ $(document).ready(function(){
 
     $.getJSON('/Tags/get_all_tags',
       function(data) {
-         //console.log(data)
-         //for(var i=0;i<data.length;i++) jsonData.push({id:i,name:data[i]});
-        //var slct_tags = String({{ original_tag }})
 
-        var ltags = $('#ltags').tagSuggest({
+        ltags = $('#ltags').tagSuggest({
           data: data,
-          value: '["infoleak:automatic-detection=\"bitcoin-address\"","infoleak:automatic-detection=\"aws-key\""]',
+          //value: ["infoleak:automatic-detection=\"bitcoin-address\"","infoleak:automatic-detection=\"aws-key\""],
           sortOrder: 'name',
           maxDropHeight: 200,
-          name: 'ltags'
-      });
-    });
+          name: 'ltags',
+          });
 
+        //ltags.setValue(["{{ tags }}"]);
+        ltags.setValue(["infoleak:automatic-detection='bitcoin-address'","infoleak:automatic-detection='aws-key'"]);
+      });
 
 });
 </script>
 
+<script>
+    function searchTags() {
+      var data = ltags.getValue();
+      window.location.replace("{{ url_for('Tags.get_tagged_paste') }}?ltags=" + data);
+    }
+</script>
+
 <!-- Dynamically update the modal -->
-<script type="text/javascript">
+<script>
     // static data
     var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
     var complete_paste = null;

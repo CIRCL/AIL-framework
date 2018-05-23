@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	 <link href="/static//css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="/static//js/bootstrap.min.js"></script>
+	  <script src="/static//js/jquery.dataTables.min.js"></script>
+	  <script src="/static//js/dataTables.bootstrap.js"></script>
+
+		<style>
+			.tooltip-inner {
+				text-align: left;
+				height: 200%;
+				width: 200%;
+				max-width: 500px;
+				max-height: 500px;
+				font-size: 13px;
+			}
+			xmp {
+				white-space:pre-wrap;
+				word-wrap:break-word;
+			}
+			.test thead{
+				background: #d91f2d;
+				color: #fff;
+			}
+		</style>
+
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+    <div id="page-wrapper">
+			<div class="row">
+				<div class="col-lg-12">
+          <a href="/Tags/taxonomies" class="btn btn-light pull-left">
+            <i class="fa fa-arrow-left fa"></i> List Taxonomies
+          </a>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+
+      <div class="panel panel-primary">
+        <div class="panel-heading">{{ name }}
+          {% if active %}
+            <span class="label label-success pull-right"> Enabled</span>
+          {% endif %}
+          {% if not active %}
+            <span class="label label-danger pull-right"> Disabled</span>
+          {% endif %}
+        </div>
+        <div class="panel-body">
+          {{ description }}
+          <br><br>
+          Version: {{ version }}
+          {% if active %}
+          <a href="{{ url_for('Tags.disable_taxonomie') }}?taxonomie={{ id }}" class="btn btn-danger pull-right">
+            <i class="fa fa-times fa"></i> Disable Taxonomie
+          </a>
+          {% endif %}
+          {% if not active %}
+          <a href="{{ url_for('Tags.active_taxonomie') }}?taxonomie={{ id }}" class="btn btn-success pull-right">
+            <i class="fa fa-check-square-o fa"></i> Enable Taxonomie
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <form action="/Tags/edit_taxonomie_tag" id="checkboxForm">
+				<input type="hidden" value="{{ id }}" name="taxonomie" />
+
+
+			<table class="test table table-striped table-bordered table-hover table-responsive " id="myTable_">
+				<thead>
+					<tr>
+						<th></th>
+						<th style="max-width: 800px;">Tag</th>
+						<th style="max-width: 800px;">Description</th>
+						<th>Enabled</th>
+					</tr>
+				</thead>
+				<tbody>
+
+					{% for tag in all_tags %}
+						<tr>
+								<td>
+                  {% if status[loop.index0] %}
+										<div style="display:none;">Enabled</div>
+                    <input type="checkbox" value="{{ tag }}" id="{{ tag }}" name="tag_enabled" checked>
+									{% endif %}
+                  {% if not status[loop.index0] %}
+										<div style="display:none;">Disabled</div>
+										<input type="checkbox" value="{{ tag }}" id="{{ tag }}" name="tag_disabled" >
+									{% endif %}
+                </td>
+								<td>{{ tag }}</td>
+								<td>{{ list_tag_desc[loop.index0] }}</td>
+								<td style="text-align: center;">
+									{% if status[loop.index0] %}
+										<div style="display:none;">Enabled</div>
+										<div style="color:Green; display:inline-block"><i class="fa fa-check-circle fa-2x"></i></div>
+									{% endif %}
+									{% if not status[loop.index0] %}
+										<div style="display:none;">Disabled</div>
+										<div style="color:Red; display:inline-block"><i class="fa fa-times-circle fa-2x"></i></div>
+									{% endif %}
+								</td>
+						</tr>
+					{%  endfor %}
+
+				</tbody>
+			</table>
+
+
+      <div class="input-group-btn">
+          <button class="btn btn-primary btn-lg">
+              <i class="fa fa-check-square-o fa"></i>
+              Update Tags
+          </button>
+      </div>
+
+      </form>
+
+      </div>
+            <!-- /#page-wrapper -->
+
+
+</body>
+
+<script>
+$(document).ready(function(){
+		/*$('[data-toggle="tooltip"]').tooltip();
+		$("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
+				//get_html_and_update_modal(event);
+				get_html_and_update_modal(event, $(this));
+		});
+
+		search_table = $('#myTable_').DataTable({ "order": [[ 2, "desc" ]] });*/
+
+		$('#myTable_').DataTable(
+			{
+				"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+				"iDisplayLength": 10,
+				//"order": [[ 1, "asc" ]]
+			}
+		);
+
+});
+</script>
+
+<script>
+  function submitActiveTags(){
+    document.getElementById("checkboxForm").submit();
+  }
+</script>
+
+</html>

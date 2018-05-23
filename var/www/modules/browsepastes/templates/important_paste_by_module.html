@@ -15,7 +15,9 @@
           <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
             <div>
               {% for tag in paste_tags[loop.index0] %}
-              <span class="label label-{{ bootstrap_label[loop.index0 % 6] }} pull-left">{{ tag }}</span>
+              <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+                <span class="label label-{{ bootstrap_label[loop.index0 % 6] }} pull-left">{{ tag[0] }}</span>
+              </a>
               {%  endfor %}
             </div>
           </td>
@@ -97,7 +99,9 @@ function add_entries_X(to_add) {
             elem_added++;
             var tag = ""
             for(j=0; j<feed.l_tags.length; j++) {
-              tag = tag + "<span class=\"label label-" + feed.bootstrap_label[j % 6] + " pull-left\">" + feed.l_tags[j] + "</span>"
+              console.log(feed.l_tags[j][1])
+              tag = tag + "<a href=\"{{ url_for('Tags.get_tagged_paste') }}?ltags=" + feed.l_tags[j][1] + "\">"
+              + "<span class=\"label label-" + feed.bootstrap_label[j % 6] + " pull-left\">" + feed.l_tags[j][0] + "</span>" + "</a>";
             }
             search_table.row.add( [
               feed.index,

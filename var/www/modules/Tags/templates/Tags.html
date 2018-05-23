@@ -34,28 +34,32 @@
 				<!-- /.col-lg-12 -->
 			</div>
 			<!-- /.row -->
-			<form action="/Tags/get_tagged_paste">
 				<div class="form-group input-group" >
-					<input id="ltags" style="width:100%;" type="text" name="ltags">
+					<input id="ltags" style="width:100%;" type="text" name="ltags" autocomplete="off">
 
 					<div class="input-group-btn">
-							<button type="submit" class="btn btn-search btn-primary btn-tags">
+							<button class="btn btn-search btn-primary btn-tags" onclick="searchTags()">
 									<span class="glyphicon glyphicon-search"></span>
 									<span class="label-icon">Search</span>
 							</button>
 					</div>
 
 				</div>
-			</form>
 
 			<button type="button" class="btn btn-primary" style="margin-bottom: 30px;" data-target="#filter-panel">
 				<span class="glyphicon glyphicon-cog "></span> Advanced Search
 			</button>
 
+			<div>
+				<a href="{{ url_for('Tags.taxonomies') }}"> [Taxonomies list] </a>
+			</div>
+
     </div>
+
             <!-- /#page-wrapper -->
 
             <script>
+								var ltags
                 $(document).ready(function(){
 
 										$.getJSON('/Tags/get_all_tags',
@@ -63,7 +67,7 @@
 				                 //console.log(data)
 				                 //for(var i=0;i<data.length;i++) jsonData.push({id:i,name:data[i]});
 
-				                var ltags = $('#ltags').tagSuggest({
+				                ltags = $('#ltags').tagSuggest({
 				                  data: data,
 				                  sortOrder: 'name',
 				                  maxDropHeight: 200,
@@ -72,6 +76,13 @@
 				            });
                 });
             </script>
+						<script>
+								function searchTags() {
+									var data = ltags.getValue();
+									console.log(data);
+									window.location.replace("{{ url_for('Tags.get_tagged_paste') }}?ltags=" + data);
+								}
+						</script>
             <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
         </body>
 

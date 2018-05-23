@@ -76,6 +76,7 @@ def event_stream_getImportantPasteByModule(module_name, year):
         p_tags = r_serv_metadata.smembers('tag:'+path)
         l_tags = []
         for tag in p_tags:
+            complete_tag = tag.replace('"', '&quot;')
             tag = tag.split('=')
             if len(tag) > 1:
                 if tag[1] != '':
@@ -87,7 +88,7 @@ def event_stream_getImportantPasteByModule(module_name, year):
             else:
                 tag = tag[0]
 
-            l_tags.append(tag)
+            l_tags.append( (tag, complete_tag) )
 
         data = {}
         data["module"] = module_name
@@ -149,6 +150,7 @@ def importantPasteByModule():
         p_tags = r_serv_metadata.smembers('tag:'+path)
         l_tags = []
         for tag in p_tags:
+            complete_tag = tag
             tag = tag.split('=')
             if len(tag) > 1:
                 if tag[1] != '':
@@ -160,7 +162,7 @@ def importantPasteByModule():
             else:
                 tag = tag[0]
 
-            l_tags.append(tag)
+            l_tags.append( (tag, complete_tag) )
 
         paste_tags.append(l_tags)
 
