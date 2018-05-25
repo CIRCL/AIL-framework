@@ -158,7 +158,11 @@ if __name__ == "__main__":
             # Adding hashes in Redis
             for hash_type, paste_hash in paste_hashes.items():
                 r_serv1.set(paste_hash, index)
-                r_serv1.sadd("HASHS_"+hash_type, paste_hash)
+                #bad hash
+                if paste_hash == '':
+                    print('bad Hash: ' + hash_type)
+                else:
+                    r_serv1.sadd("HASHS_"+hash_type, paste_hash)
 
     ##################### Similarity found  #######################
 
@@ -174,10 +178,11 @@ if __name__ == "__main__":
                 if dupl != []:
                     dupl = list(dupl)
                     PST.__setattr__("p_duplicate", dupl)
-                    PST.save_attribute_redis("p_duplicate", dupl)
-                    PST.save_others_pastes_attribute_duplicate("p_duplicate", dupl)
+                    PST.save_attribute_duplicate(dupl)
+                    PST.save_others_pastes_attribute_duplicate(dupl)
                     publisher.info('{}Detected {};{}'.format(to_print, len(dupl), PST.p_path))
                     print('{}Detected {}'.format(to_print, len(dupl)))
+                    print('')
 
                 y = time.time()
 
