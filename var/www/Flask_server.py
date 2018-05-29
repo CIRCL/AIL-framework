@@ -84,7 +84,6 @@ for module_name, txt in list(to_add_to_header_dico.items()):
 to_add_to_header = []
 for module_name, txt in to_add_to_header_dico.items():
     to_add_to_header.append(txt)
-print(to_add_to_header)
 
 modified_header = modified_header.replace('<!--insert here-->', '\n'.join(to_add_to_header))
 

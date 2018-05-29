@@ -12,6 +12,7 @@ import json
 import Paste
 
 from pytaxonomies import Taxonomies
+from pymispgalaxies import Galaxies, Clusters
 
 # ============ VARIABLES ============
 import Flask_config
@@ -24,6 +25,21 @@ max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 
 Tags = Blueprint('Tags', __name__, template_folder='templates')
+
+galaxies = Galaxies()
+clusters = Clusters(skip_duplicates=True)
+
+list_all_tags = {}
+for name, c in clusters.items(): #galaxy name + tags
+    list_all_tags[name] = c
+
+list_galaxies = []
+for g in galaxies.values():
+    list_galaxies.append(g.to_json())
+
+list_clusters = []
+for c in clusters.values():
+    list_clusters.append(c.to_json())
 
 # ============ FUNCTIONS ============
 def one():
@@ -336,7 +352,6 @@ def taxonomies():
                             version = version,
                             enabled = enabled,
                             n_tags=n_tags)
-    #return 'O'
 
 @Tags.route("/Tags/edit_taxonomie")
 def edit_taxonomie():
@@ -467,7 +482,204 @@ def edit_taxonomie_tag():
     else:
         return "INCORRECT INPUT"
 
+@Tags.route("/Tags/galaxies")
+def galaxies():
 
+    active_galaxies = r_serv_tags.smembers('active_galaxies')
+
+    total_tags = {}
+    for name, tags in clusters.items(): #galaxie name + tags
+        total_tags[name] = len(tags)
+
+    name = []
+    icon = []
+    version = []
+    all_type = []
+    namespace = []
+    description = []
+    enabled = []
+    n_tags = []
+
+    for galaxie_json in list_galaxies:
+
+        galaxie = json.loads(galaxie_json)
+
+        name.append(galaxie['name'])
+        icon.append(galaxie['icon'])
+        version.append(galaxie['version'])
+        type = galaxie['type']
+        if type == 'mitre-pre-attack-relashipship':
+            type = 'mitre-pre-attack-relationship'
+        all_type.append(type)
+        namespace.append(galaxie['namespace'])
+        description.append(galaxie['description'])
+
+
+        if type in active_galaxies:
+            enabled.append(True)
+        else:
+            enabled.append(False)
+
+        n = str(r_serv_tags.scard('active_tag_galaxies_' + type))
+        n_tags.append(n + '/' + str(total_tags[type]) )
+
+    return render_template("galaxies.html",
+                            name=name,
+                            icon = icon,
+                            version = version,
+                            description = description,
+                            namespace = namespace,
+                            all_type = all_type,
+                            enabled = enabled,
+                            n_tags=n_tags)
+
+
+@Tags.route("/Tags/edit_galaxy")
+def edit_galaxy():
+
+    id = request.args.get('galaxy')
+
+    for clusters_json in list_clusters:
+
+        #get clusters
+        cluster = json.loads(clusters_json)
+
+        if cluster['type'] == id:
+
+            type = id
+            active_tag = r_serv_tags.smembers('active_tag_galaxies_' + type)
+
+            name = cluster['name']
+            description = cluster['description']
+            version = cluster['version']
+            source = cluster['source']
+
+            val = cluster['values']
+
+            tags = []
+            for data in val:
+                try:
+                    meta = data['meta']
+                    '''synonyms = meta['synonyms']
+                    logo = meta['logo']
+                    refs = meta['refs']'''
+                except KeyError:
+                    meta = []
+                tag_name = data['value']
+                tag_name = 'misp-galaxy:{}="{}"'.format(type, tag_name)
+                try:
+                    tag_description = data['description']
+                except KeyError:
+                    tag_description = ''
+
+                tags.append( (tag_name, tag_description, meta) )
+
+            status = []
+            for tag in tags:
+                if tag[0] in active_tag:
+                    status.append(True)
+                else:
+                    status.append(False)
+
+            active_galaxies = r_serv_tags.smembers('active_galaxies')
+            if id in active_galaxies:
+                active = True
+            else:
+                active = False
+
+            return render_template("edit_galaxy.html",
+                id = type,
+                name = name,
+                description = description,
+                version = version,
+                active = active,
+                tags = tags,
+                status = status)
+
+
+    return 'INVALID GALAXY'
+
+
+@Tags.route("/Tags/active_galaxy")
+def active_galaxy():
+
+    id = request.args.get('galaxy')
+
+    # verify input
+    try:
+        l_tags = list_all_tags[id]
+    except KeyError:
+        return "INCORRECT INPUT"
+
+    r_serv_tags.sadd('active_galaxies', id)
+    for tag in l_tags:
+        r_serv_tags.sadd('active_tag_galaxies_' + id, 'misp-galaxy:{}="{}"'.format(id, tag))
+
+    return redirect(url_for('Tags.galaxies'))
+
+
+@Tags.route("/Tags/disable_galaxy")
+def disable_galaxy():
+
+    id = request.args.get('galaxy')
+
+    # verify input
+    try:
+        l_tags = list_all_tags[id]
+    except KeyError:
+        return "INCORRECT INPUT"
+
+    r_serv_tags.srem('active_galaxies', id)
+    for tag in l_tags:
+        r_serv_tags.srem('active_tag_galaxies_' + id, 'misp-galaxy:{}="{}"'.format(id, tag))
+
+    return redirect(url_for('Tags.galaxies'))
+
+
+@Tags.route("/Tags/edit_galaxy_tag")
+def edit_galaxy_tag():
+
+    arg1 = request.args.getlist('tag_enabled')
+    arg2 = request.args.getlist('tag_disabled')
+
+    id = request.args.get('galaxy')
+
+    #verify input
+    try:
+        l_tags = list_all_tags[id]
+    except KeyError:
+        return "INCORRECT INPUT"
+
+    #get full tags
+    list_tag = []
+    for tag in l_tags:
+        list_tag.append('misp-galaxy:{}="{}"'.format(id, tag))
+
+
+    #check tags validity
+    if ( all(elem in list_tag  for elem in arg1) or (len(arg1) == 0) ) and ( all(elem in list_tag  for elem in arg2) or (len(arg2) == 0) ):
+
+        active_tag = r_serv_tags.smembers('active_tag_galaxies_' + id)
+
+        diff = list(set(arg1) ^ set(list_tag))
+
+        #remove tags
+        for tag in diff:
+            r_serv_tags.srem('active_tag_galaxies_' + id, tag)
+
+        #all tags unchecked
+        if len(arg1) == 0 and len(arg2) == 0:
+            r_serv_tags.srem('active_galaxies', id)
+
+        #add new tags
+        for tag in arg2:
+            r_serv_tags.sadd('active_galaxies', id)
+            r_serv_tags.sadd('active_tag_galaxies_' + id, tag)
+
+        return redirect(url_for('Tags.galaxies'))
+
+    else:
+        return "INCORRECT INPUT"
 
 # ========= REGISTRATION =========
 app.register_blueprint(Tags)
