@@ -49,26 +49,51 @@
 
                   <div class="modal-body">
 
-                      <div class="form-group input-group" >
-                        <input id="ltags" style="width:850%;" type="text" name="ltags">
-
-                      </div>
+                    <div class="form-group input-group" >
+                      <input id="ltags" style="width:850%;" type="text" name="ltags">
+                    </div>
 
                     <div class="btn-group btn-block">
                         <button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Taxonomie Selection
                           <i class="fa fa-chevron-down"></i>
                         </button>
                         <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="#" id="all-tags">All Tags <i class="fa fa-tags"></i></a></li>
+                            <li><a href="#" id="all-tags-taxonomies">All Tags <i class="fa fa-tags"></i></a></li>
                             <li role="separator" class="divider"></li>
                             {% for taxo in active_taxonomies %}
                                 <li><a href="#" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</a></li>
                             {% endfor %}
                         </ul>
                     </div>
+                     <br/><br/>
+
+                    <div class="form-group input-group" >
+                      <input id="ltagsgalaxies" style="width:850%;" type="text" name="ltagsgalaxies">
+                    </div>
+
+                    <div class="btn-group btn-block">
+                        <button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Galaxy Selection
+                          <i class="fa fa-chevron-down"></i>
+                        </button>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="#" id="all-tags-galaxies">All Tags <i class="fa fa-tags"></i></a></li>
+                            <li role="separator" class="divider"></li>
+                            {% for galaxy in active_galaxies %}
+                                <li><a href="#" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                   </div>
 
                   <div class="modal-footer">
+                    <a class="btn btn-tags pull-left" href="{{ url_for('Tags.taxonomies') }}" target="_blank">
+                        <span class="label-icon">Edit Taxonomies List </span>
+                        <i class="fa fa-wrench fa-2x"></i>
+                    </a>
+                    <a class="btn btn-tags pull-left" href="{{ url_for('Tags.galaxies') }}" target="_blank">
+                        <span class="label-icon">Edit Galaxies List</span>
+                        <i class="fa fa-rocket fa-2x"></i>
+                    </a>
                     <button class="btn btn-primary btn-tags" onclick="addTags()">
                         <span class="glyphicon glyphicon-plus"></span>
                         <span class="label-icon">Add Tags</span>
@@ -82,7 +107,7 @@
 
 
             {% for tag in list_tags %}
-            <span class="btn btn-{{ bootstrap_label[loop.index0 % 6] }} btn-lg pull-left" data-toggle="modal" data-target="#myModal_{{ loop.index0 }}">{{ tag[0] }}</span>
+            <span class="btn btn-{{ bootstrap_label[loop.index0 % 5] }} btn-lg pull-left" data-toggle="modal" data-target="#myModal_{{ loop.index0 }}">{{ tag[0] }}</span>
 
               <!-- Modal edit this tag -->
               <div class="modal fade" id="myModal_{{ loop.index0 }}" role="dialog">
@@ -94,7 +119,7 @@
 
                     </div>
                     <div class="modal-body">
-                      <span class="label label-{{ bootstrap_label[loop.index0 % 6] }}" >{{ tag[0] }}</span>
+                      <span class="label label-{{ bootstrap_label[loop.index0 % 5] }}" >{{ tag[0] }}</span>
                     </div>
                     <div class="modal-footer center">
                       {% if tag[1] %}
@@ -145,12 +170,6 @@
           </tbody>
         </table>
 
-        <a href="{{ url_for('Tags.thumbs_up_paste') }}?paste={{ request.args.get('paste') }}" class="btn btn-success btn-lg" data-toggle="tooltip" title="Good Detection">
-          <span class="glyphicon glyphicon-thumbs-up "></span>
-        </a>
-        <a href="{{ url_for('Tags.thumbs_down_paste') }}?paste={{ request.args.get('paste') }}" class="btn btn-danger btn-lg" data-toggle="tooltip" title="Bad Detection">
-          <span class="glyphicon glyphicon-thumbs-down "></span>
-        </a>
       </div>
     <div class="panel-body" id="panel-body">
       {% if  duplicate_list|length == 0 %}
@@ -191,6 +210,7 @@
 
 <script>
     var ltags
+    var ltagsgalaxies
     $(document).ready(function(){
 
         $.getJSON('/Tags/get_all_tags_taxonomies',
@@ -201,15 +221,26 @@
               //sortOrder: 'name',
               maxDropHeight: 200,
               name: 'ltags'
+            });
           });
-        });
+
+        $.getJSON('/Tags/get_all_tags_galaxies',
+          function(data) {
+
+            ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
+              data: data,
+              //sortOrder: 'name',
+              maxDropHeight: 200,
+              name: 'ltagsgalaxies'
+            });
+          });
 
         $('#tableDup').DataTable();
     });
 </script>
 
 <script>
-    jQuery("#all-tags").click(function(e){
+    jQuery("#all-tags-taxonomies").click(function(e){
       //change input tags list /Tags/get_tags_taxonomie?taxonomie=infoleak
       $.getJSON('/Tags/get_all_tags_taxonomies',
         function(data) {
@@ -218,13 +249,24 @@
     });
 
 </script>
+<script>
+    jQuery("#all-tags-galaxies").click(function(e){
+      $.getJSON('/Tags/get_all_tags_galaxies',
+        function(data) {
+          ltagsgalaxies.setData(data)
+      });
+    });
+
+</script>
 
 <script>
     function addTags() {
-      var data = ltags.getValue()
+      var tags = ltags.getValue()
+      var tagsgalaxy = ltagsgalaxies.getValue()
       var path = '{{ request.args.get('paste') }}'
-      window.location.replace("{{ url_for('Tags.addTags') }}?tags=" + data + "&path=" + path);
+      window.location.replace("{{ url_for('Tags.addTags') }}?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy + "&path=" + path);
     }
+
 </script>
 
 <script>
@@ -237,5 +279,16 @@
 });
 {% endfor %}
 </script>
+<script>
+{% for galaxy in active_galaxies %}
+    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
+      $.getJSON('/Tags/get_tags_galaxy?galaxy={{ galaxy }}',
+        function(data) {
+          ltagsgalaxies.setData(data)
+  });
+});
+{% endfor %}
+</script>
+
 
 </html>

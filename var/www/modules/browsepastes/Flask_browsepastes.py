@@ -64,7 +64,6 @@ def event_stream_getImportantPasteByModule(module_name, year):
     bootstrap_label.append('danger')
     bootstrap_label.append('warning')
     bootstrap_label.append('info')
-    bootstrap_label.append('dark')
 
     for path in all_pastes_list:
         index += 1
@@ -135,7 +134,6 @@ def importantPasteByModule():
     bootstrap_label.append('danger')
     bootstrap_label.append('warning')
     bootstrap_label.append('info')
-    bootstrap_label.append('dark')
 
     for path in allPastes[0:10]:
         all_path.append(path)

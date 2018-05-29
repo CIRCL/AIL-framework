@@ -58,7 +58,18 @@ def get_all_tags():
 
     list_tags = []
     for tag in all_tags:
-        list_tags.append( tag )
+        t = tag.split(':')[0]
+        # add synonym
+        str_synonyms = ' - synonyms: '
+        if t == 'misp-galaxy':
+            synonyms = r_serv_tags.smembers('synonym_tag_' + tag)
+            for synonym in synonyms:
+                str_synonyms = str_synonyms + synonym + ', '
+        # add real tag
+        if str_synonyms != ' - synonyms: ':
+            list_tags.append({'name':tag + str_synonyms,'id':tag})
+        else:
+            list_tags.append({'name':tag,'id':tag})
 
     return jsonify(list_tags)
 
@@ -76,6 +87,28 @@ def get_all_tags_taxonomies():
         l_tags = r_serv_tags.smembers('active_tag_' + taxonomie)
         for tag in l_tags:
             list_tags.append( tag )
+
+    return jsonify(list_tags)
+
+@Tags.route("/Tags/get_all_tags_galaxies")
+def get_all_tags_galaxy():
+
+    active_galaxies = r_serv_tags.smembers('active_galaxies')
+
+    list_tags = []
+    for galaxy in active_galaxies:
+        l_tags = r_serv_tags.smembers('active_tag_galaxies_' + galaxy)
+        for tag in l_tags:
+            str_synonyms = ' - synonyms: '
+            synonyms = r_serv_tags.smembers('synonym_tag_' + tag)
+            # synonyms to display
+            for synonym in synonyms:
+                str_synonyms = str_synonyms + synonym + ', '
+            # add real tag
+            if str_synonyms != ' - synonyms: ':
+                list_tags.append({'name':tag + str_synonyms,'id':tag})
+            else:
+                list_tags.append({'name':tag,'id':tag})
 
     return jsonify(list_tags)
 
@@ -102,9 +135,37 @@ def get_tags_taxonomie():
             return jsonify(list_tags)
 
         else:
-            return 'this taxinomie is disable'
+            return 'this taxonomie is disable'
     else:
         return 'INCORRECT INPUT'
+
+@Tags.route("/Tags/get_tags_galaxy")
+def get_tags_galaxy():
+
+    galaxy = request.args.get('galaxy')
+
+    active_galaxies = r_serv_tags.smembers('active_galaxies')
+
+    #verify input
+    if galaxy in active_galaxies:
+
+        list_tags = []
+        l_tags = r_serv_tags.smembers('active_tag_galaxies_' + galaxy)
+        for tag in l_tags:
+            synonyms = r_serv_tags.smembers('synonym_tag_' + tag)
+            str_synonyms = ' - synonyms: '
+            for synonym in synonyms:
+                str_synonyms = str_synonyms + synonym + ', '
+            # add real tag
+            if str_synonyms != ' - synonyms: ':
+                list_tags.append({'name':tag + str_synonyms,'id':tag})
+            else:
+                list_tags.append({'name':tag,'id':tag})
+
+        return jsonify(list_tags)
+
+    else:
+        return 'this galaxy is disable'
 
 
 @Tags.route("/Tags/get_tagged_paste")
@@ -140,7 +201,6 @@ def get_tagged_paste():
     bootstrap_label.append('danger')
     bootstrap_label.append('warning')
     bootstrap_label.append('info')
-    bootstrap_label.append('dark')
 
     all_content = []
     paste_date = []
@@ -209,6 +269,9 @@ def remove_tag():
     r_serv_metadata.srem('tag:'+path, tag)
     r_serv_tags.srem(tag, path)
 
+    if r_serv_tags.scard(tag) == 0:
+        r_serv_tags.srem('list_tags', tag)
+
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
 @Tags.route("/Tags/confirm_tag")
@@ -239,80 +302,60 @@ def confirm_tag():
 def addTags():
 
     tags = request.args.get('tags')
+    tagsgalaxies = request.args.get('tagsgalaxies')
     path = request.args.get('path')
 
     list_tag = tags.split(',')
+    list_tag_galaxies = tagsgalaxies.split(',')
 
     taxonomies = Taxonomies()
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
 
+    active_galaxies = r_serv_tags.smembers('active_galaxies')
+
     if not path:
-        return 'INCORRECT INPUT'
+        return 'INCORRECT INPUT0'
 
-    for tag in list_tag:
-        # verify input
-        tax = tag.split(':')[0]
-        if tax in active_taxonomies:
-            if tag in r_serv_tags.smembers('active_tag_' + tax):
+    if list_tag != ['']:
+        for tag in list_tag:
+            # verify input
+            tax = tag.split(':')[0]
+            if tax in active_taxonomies:
+                if tag in r_serv_tags.smembers('active_tag_' + tax):
 
-                #add tag
-                r_serv_metadata.sadd('tag:'+path, tag)
-                r_serv_tags.sadd(tag, path)
-                #add new tag in list of all used tags
-                r_serv_tags.sadd('list_tags', tag)
+                    #add tag
+                    r_serv_metadata.sadd('tag:'+path, tag)
+                    r_serv_tags.sadd(tag, path)
+                    #add new tag in list of all used tags
+                    r_serv_tags.sadd('list_tags', tag)
 
+                else:
+                    return 'INCORRECT INPUT1'
             else:
-                return 'INCORRECT INPUT'
-        else:
-            return 'INCORRECT INPUT'
+                return 'INCORRECT INPUT2'
 
-    return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+    if list_tag_galaxies != ['']:
+        for tag in list_tag_galaxies:
+            # verify input
+            gal = tag.split(':')[1]
+            gal = gal.split('=')[0]
+            print(tag)
+            print(gal)
+            print(active_galaxies)
+            if gal in active_galaxies:
+                if tag in r_serv_tags.smembers('active_tag_galaxies_' + gal):
 
-@Tags.route("/Tags/thumbs_up_paste")
-def thumbs_up_paste():
+                    print('adding ...')
+                    #add tag
+                    r_serv_metadata.sadd('tag:'+path, tag)
+                    r_serv_tags.sadd(tag, path)
+                    #add new tag in list of all used tags
+                    r_serv_tags.sadd('list_tags', tag)
 
-    #TODO verify input
-    path = request.args.get('paste')
-
-    '''positive_t = 'infoleak:confirmed="true-positive"'
-    positive_f = 'infoleak:confirmed="false-positive"'
-
-    negative_t = 'infoleak:confirmed="true-negative"'
-
-    list_tags = r_serv_metadata.smembers('tag:'+path)
-
-    if(list_tags > 0):
-
-        if positive_f in list_tags:
-            r_serv_metadata.srem('tag:'+path, positive_f)
-            r_serv_metadata.sadd('tag:'+path, positive_t)
-
-            r_serv_tags.srem(positive_f, path)
-            r_serv_tags.sadd(positive_t, path)
-            #add new tag in list of all used tags
-            r_serv_tags.sadd('list_tags', positive_t)
-
-            return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
-
-
-
-        if positive_t in list_tags:
-            return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
-    else:
-        r_serv_metadata.sadd('tag:'+path, negative_t)
-        r_serv_tags.sadd(negative_t, path)
-        #add new tag in list of all used tags
-        r_serv_tags.sadd('list_tags', negative_t)'''
-
-    return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
-
-@Tags.route("/Tags/thumbs_down_paste")
-def thumbs_down_paste():
-
-    #TODO verify input
-    path = request.args.get('paste')
-
-    '''list_tags = r_serv_metadata.smembers('tag:'+path)'''
+                else:
+                    return 'INCORRECT INPUT3'
+            else:
+                return 'INCORRECT INPUT4'
 
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
@@ -396,10 +439,6 @@ def edit_taxonomie():
 
     else:
         return 'INVALID TAXONOMIE'
-
-@Tags.route("/Tags/test")
-def test():
-    return 'test',
 
 @Tags.route("/Tags/disable_taxonomie")
 def disable_taxonomie():
@@ -615,6 +654,32 @@ def active_galaxy():
     for tag in l_tags:
         r_serv_tags.sadd('active_tag_galaxies_' + id, 'misp-galaxy:{}="{}"'.format(id, tag))
 
+    #save synonyms
+    for clusters_json in list_clusters:
+
+        #get clusters
+        cluster = json.loads(clusters_json)
+
+        if cluster['type'] == id:
+
+            val = cluster['values']
+
+            tags = []
+            for data in val:
+                try:
+                    meta = data['meta']
+                    synonyms = meta['synonyms']
+                    tag_name = data['value']
+                    tag_name = 'misp-galaxy:{}="{}"'.format(id, tag_name)
+                    #save synonyms
+                    for synonym in synonyms:
+                        r_serv_tags.sadd('synonym_tag_' + tag_name, synonym)
+
+                except KeyError:
+                    pass
+
+            break
+
     return redirect(url_for('Tags.galaxies'))
 
 
@@ -631,7 +696,9 @@ def disable_galaxy():
 
     r_serv_tags.srem('active_galaxies', id)
     for tag in l_tags:
-        r_serv_tags.srem('active_tag_galaxies_' + id, 'misp-galaxy:{}="{}"'.format(id, tag))
+        tag_name = 'misp-galaxy:{}="{}"'.format(id, tag)
+        r_serv_tags.srem('active_tag_galaxies_' + id, tag_name)
+        r_serv_tags.delete('synonym_tag_' + tag_name)
 
     return redirect(url_for('Tags.galaxies'))
 
@@ -666,6 +733,7 @@ def edit_galaxy_tag():
         #remove tags
         for tag in diff:
             r_serv_tags.srem('active_tag_galaxies_' + id, tag)
+            r_serv_tags.delete('synonym_tag_' + tag)
 
         #all tags unchecked
         if len(arg1) == 0 and len(arg2) == 0:
@@ -676,10 +744,42 @@ def edit_galaxy_tag():
             r_serv_tags.sadd('active_galaxies', id)
             r_serv_tags.sadd('active_tag_galaxies_' + id, tag)
 
+        #get tags synonyms
+        for clusters_json in list_clusters:
+
+            #get clusters
+            cluster = json.loads(clusters_json)
+
+            if cluster['type'] == id:
+
+                val = cluster['values']
+
+                tags = []
+                for data in val:
+                    try:
+                        meta = data['meta']
+                        synonyms = meta['synonyms']
+                        tag_name = data['value']
+                        tag_name = 'misp-galaxy:{}="{}"'.format(id, tag_name)
+                        if tag_name in arg2:
+                            #save synonyms
+                            for synonym in synonyms:
+                                r_serv_tags.sadd('synonym_tag_' + tag_name, synonym)
+
+                    except KeyError:
+                        pass
+                break
+
         return redirect(url_for('Tags.galaxies'))
 
     else:
         return "INCORRECT INPUT"
+
+@Tags.route("/Tags/test")
+def test():
+
+    return render_template("test.html",
+        id = '1')
 
 # ========= REGISTRATION =========
 app.register_blueprint(Tags)

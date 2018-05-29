@@ -127,7 +127,7 @@
 
 
       <div class="input-group-btn">
-          <button class="btn btn-primary btn-lg">
+          <button class="btn btn-primary btn-lg" onclick="submitActiveTags()">
               <i class="fa fa-check-square-o fa"></i>
               Update Tags
           </button>
@@ -142,20 +142,14 @@
 </body>
 
 <script>
+var table
 $(document).ready(function(){
-		/*$('[data-toggle="tooltip"]').tooltip();
-		$("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
-				//get_html_and_update_modal(event);
-				get_html_and_update_modal(event, $(this));
-		});
 
-		search_table = $('#myTable_').DataTable({ "order": [[ 2, "desc" ]] });*/
-
-		$('#myTable_').DataTable(
+		table = $('#myTable_').DataTable(
 			{
 				"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
 				"iDisplayLength": 10,
-				//"order": [[ 1, "asc" ]]
+				"order": [[ 3, "desc" ]]
 			}
 		);
 
@@ -164,7 +158,12 @@ $(document).ready(function(){
 
 <script>
   function submitActiveTags(){
-    document.getElementById("checkboxForm").submit();
+		table.destroy()
+		table = $('#myTable_').DataTable(
+			{
+				"iDisplayLength": -1,
+			}
+		);
   }
 </script>
 

@@ -104,12 +104,14 @@ def showpaste(content_range):
     bootstrap_label.append('danger')
     bootstrap_label.append('warning')
     bootstrap_label.append('info')
-    bootstrap_label.append('dark')
 
     #active taxonomies
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
 
     l_tags = r_serv_metadata.smembers('tag:'+requested_path)
+
+    #active galaxies
+    active_galaxies = r_serv_tags.smembers('active_galaxies')
 
     list_tags = []
 
@@ -119,7 +121,7 @@ def showpaste(content_range):
         else:
             list_tags.append( (tag, False) )
 
-    return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
+    return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, active_galaxies=active_galaxies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list)
 
 # ============ ROUTES ============
 

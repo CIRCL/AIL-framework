@@ -101,7 +101,7 @@
                                     <div>
                                       {% for tag in paste_tags[loop.index0] %}
                                       <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
-                                        <span class="label label-{{ bootstrap_label[loop.index0 % 6] }} pull-left">{{ tag[0] }}</span>
+                                        <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
                                       </a>
                                       {%  endfor %}
                                     </div>
@@ -200,7 +200,7 @@
                 var curr_preview = data.preview_array[i].replace(/\"/g, "\'");
                 var tag = ""
                 for(j=0; j<data.list_tags[i].length; j++) {
-                  tag = tag + "<span class=\"label label-" + data.bootstrap_label[j % 6] + " pull-left\">" + data.list_tags[j] + "</span>"
+                  tag = tag + "<span class=\"label label-" + data.bootstrap_label[j % 5] + " pull-left\">" + data.list_tags[j] + "</span>"
                 }
                 search_table.row.add( [
                     init_num_of_elements_in_table+((offset))+i+1,

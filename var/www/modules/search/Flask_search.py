@@ -164,7 +164,6 @@ def search():
     bootstrap_label.append('danger')
     bootstrap_label.append('warning')
     bootstrap_label.append('info')
-    bootstrap_label.append('dark')
 
     index_min = 1
     index_max = len(get_index_list())
@@ -205,7 +204,6 @@ def get_more_search_result():
     bootstrap_label.append('danger')
     bootstrap_label.append('warning')
     bootstrap_label.append('info')
-    bootstrap_label.append('dark')
 
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 

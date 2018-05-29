@@ -99,7 +99,7 @@
              * Defaults to <code>'Type or click here'</code> or just <code>'Click here'</code> if not editable.
              */
             emptyText: function() {
-                return cfg.editable ? '' : '';
+                return cfg.editable ? 'Select Tags' : '';
             },
 
             /**
@@ -122,7 +122,7 @@
              * Defaults to <code>false</code>.
              */
             expandOnFocus: function() {
-                return cfg.editable ? false : true;
+                return cfg.editable ? true : true;
             },
 
             /**
