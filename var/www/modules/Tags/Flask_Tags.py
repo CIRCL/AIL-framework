@@ -41,6 +41,11 @@ list_clusters = []
 for c in clusters.values():
     list_clusters.append(c.to_json())
 
+# tags numbers in galaxies
+total_tags = {}
+for name, tags in clusters.items(): #galaxie name + tags
+    total_tags[name] = len(tags)
+
 # ============ FUNCTIONS ============
 def one():
     return 1
@@ -174,6 +179,9 @@ def get_tagged_paste():
     tags = request.args.get('ltags')
 
     list_tags = tags.split(',')
+    list_tag = []
+    for tag in list_tags:
+        list_tag.append(tag.replace('"','\"'))
 
     # TODO verify input
 
@@ -249,6 +257,7 @@ def get_tagged_paste():
             year=currentSelectYear,
             all_path=all_path,
             tags=tags,
+            list_tag = list_tag,
             paste_tags=paste_tags,
             bootstrap_label=bootstrap_label,
             content=all_content,
@@ -339,13 +348,10 @@ def addTags():
             # verify input
             gal = tag.split(':')[1]
             gal = gal.split('=')[0]
-            print(tag)
-            print(gal)
-            print(active_galaxies)
+
             if gal in active_galaxies:
                 if tag in r_serv_tags.smembers('active_tag_galaxies_' + gal):
 
-                    print('adding ...')
                     #add tag
                     r_serv_metadata.sadd('tag:'+path, tag)
                     r_serv_tags.sadd(tag, path)
@@ -416,6 +422,9 @@ def edit_taxonomie():
         else:
             active = False
 
+        n = str(r_serv_tags.scard('active_tag_' + id))
+        badge = n + '/' + str(len(taxonomies.get(id).machinetags()))
+
         name = taxonomies.get(id).name
         description = taxonomies.get(id).description
         version = taxonomies.get(id).version
@@ -430,6 +439,7 @@ def edit_taxonomie():
         return render_template("edit_taxonomie.html",
             id=id,
             name=name,
+            badge = badge,
             description = description,
             version = version,
             active=active,
@@ -526,10 +536,6 @@ def galaxies():
 
     active_galaxies = r_serv_tags.smembers('active_galaxies')
 
-    total_tags = {}
-    for name, tags in clusters.items(): #galaxie name + tags
-        total_tags[name] = len(tags)
-
     name = []
     icon = []
     version = []
@@ -588,6 +594,9 @@ def edit_galaxy():
             type = id
             active_tag = r_serv_tags.smembers('active_tag_galaxies_' + type)
 
+            n = str(r_serv_tags.scard('active_tag_galaxies_' + type))
+            badge = n + '/' + str(total_tags[type])
+
             name = cluster['name']
             description = cluster['description']
             version = cluster['version']
@@ -629,6 +638,7 @@ def edit_galaxy():
             return render_template("edit_galaxy.html",
                 id = type,
                 name = name,
+                badge = badge,
                 description = description,
                 version = version,
                 active = active,
@@ -775,11 +785,77 @@ def edit_galaxy_tag():
     else:
         return "INCORRECT INPUT"
 
-@Tags.route("/Tags/test")
-def test():
+@Tags.route("/Tags/tag_galaxy_info")
+def tag_galaxy_info():
 
-    return render_template("test.html",
-        id = '1')
+    galaxy = request.args.get('galaxy')
+    tag = request.args.get('tag')
+
+    full_tag = tag
+    title = tag.split(':')[1]
+    tag = tag.split('=')[1]
+    tag = tag[1:-1]
+
+    #get clusters
+    for clusters_json in list_clusters:
+        cluster = json.loads(clusters_json)
+
+        if cluster['type'] == galaxy:
+            val = cluster['values']
+            source = cluster['source']
+
+            for data in val:
+                if tag == data['value']:
+                    try:
+                        description = data['description']
+                    except KeyError:
+                        description = ''
+                    if r_serv_tags.sismember('active_tag_galaxies_' + galaxy, full_tag):
+                        active = True
+                    else:
+                        active = False
+
+                    synonyms = []
+                    metadata = []
+                    try:
+                        meta = data['meta']
+                        list_metadata = []
+                        for key in meta:
+                            if key != 'synonyms':
+                                if type(meta[key]) is list:
+                                    for item in meta[key]:
+                                        list_metadata.append(key + ' :    ' + item)
+                                else:
+                                    list_metadata.append(key + ' :    ' + meta[key])
+                        try:
+                            synonyms = meta['synonyms']
+                            bool_synonyms = True
+                        except KeyError:
+                            synonyms = []
+                            bool_synonyms = False
+                    except KeyError:
+                        pass
+
+                    if synonyms:
+                        bool_synonyms = True
+                    else:
+                        bool_synonyms = False
+                    if list_metadata:
+                        metadata = True
+                    else:
+                        metadata = False
+
+                    return render_template("tag_galaxy_info.html",
+                                title = title,
+                                description = description,
+                                source = source,
+                                active = active,
+                                synonyms = synonyms,
+                                bool_synonyms = bool_synonyms,
+                                metadata = metadata,
+                                list_metadata = list_metadata)
+
+    return 'INVALID INPUT'
 
 # ========= REGISTRATION =========
 app.register_blueprint(Tags)

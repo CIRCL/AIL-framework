@@ -58,6 +58,8 @@
         <div class="panel-heading">{{ name }}
           {% if active %}
             <span class="label label-success pull-right"> Enabled</span>
+						<span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
+						<span class="badge badge-light pull-right">{{ badge }}</span>
           {% endif %}
           {% if not active %}
             <span class="label label-danger pull-right"> Disabled</span>
@@ -107,7 +109,9 @@
 										<input type="checkbox" value="{{ tag[0] }}" id="{{ tag[0] }}" name="tag_disabled" >
 									{% endif %}
                 </td>
-								<td>{{ tag[0] }}</td>
+								<td>
+									<a href="{{ url_for('Tags.tag_galaxy_info') }}?galaxy={{ request.args.get('galaxy') }}&tag={{ tag[0] }}">{{ tag[0] }}</a>
+								</td>
 								<td>{{ tag[1] }}</td>
 								<td style="text-align: center;">
 									{% if status[loop.index0] %}

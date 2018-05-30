@@ -178,17 +178,25 @@ $(document).ready(function(){
 
     $.getJSON('/Tags/get_all_tags',
       function(data) {
+        activePage = "page-Tags"
+        $("#"+activePage).addClass("active");
+        //var valueData = ["infoleak:automatic-detection=\"bitcoin-address\"","infoleak:automatic-detection=\"aws-key\"",'misp-galaxy:botnet="Marina Botnet"'];
+        var valueData = [
+          {% for tag in list_tag %}
+            '{{tag|safe}}',
+          {%  endfor %}
+        ];
 
         ltags = $('#ltags').tagSuggest({
           data: data,
-          //value: ["infoleak:automatic-detection=\"bitcoin-address\"","infoleak:automatic-detection=\"aws-key\""],
+          value: valueData,
           sortOrder: 'name',
           maxDropHeight: 200,
           name: 'ltags',
           });
 
         //ltags.setValue(["{{ tags }}"]);
-        ltags.setValue(["infoleak:automatic-detection='bitcoin-address'","infoleak:automatic-detection='aws-key'"]);
+        //ltags.setValue([{id:"infoleak:automatic-detection='bitcoin-address'",name:"infoleak:automatic-detection='bitcoin-address'"}}]);
       });
 
 });
@@ -200,7 +208,6 @@ $(document).ready(function(){
       window.location.replace("{{ url_for('Tags.get_tagged_paste') }}?ltags=" + data);
     }
     function emptyTags() {
-      console.log('b');
       ltags.clear();
     }
 </script>

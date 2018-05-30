@@ -72,6 +72,8 @@
             <script>
 								var ltags
                 $(document).ready(function(){
+									activePage = "page-Tags"
+									$("#"+activePage).addClass("active");
 
 										$.getJSON('/Tags/get_all_tags',
 				              function(data) {

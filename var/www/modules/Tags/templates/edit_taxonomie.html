@@ -58,6 +58,8 @@
         <div class="panel-heading">{{ name }}
           {% if active %}
             <span class="label label-success pull-right"> Enabled</span>
+						<span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
+						<span class="badge badge-light pull-right">{{ badge }}</span>
           {% endif %}
           {% if not active %}
             <span class="label label-danger pull-right"> Disabled</span>

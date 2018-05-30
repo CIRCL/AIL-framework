@@ -123,9 +123,15 @@ r_serv_tags = redis.StrictRedis(
     decode_responses=True)
 # add default ail taxonomies
 r_serv_tags.sadd('active_taxonomies', 'infoleak')
+r_serv_tags.sadd('active_taxonomies', 'gdpr')
+r_serv_tags.sadd('active_taxonomies', 'fpf')
 # add default tags
 taxonomies = Taxonomies()
 for tag in taxonomies.get('infoleak').machinetags():
+    r_serv_tags.sadd('active_tag_infoleak', tag)
+for tag in taxonomies.get('gdpr').machinetags():
+    r_serv_tags.sadd('active_tag_infoleak', tag)
+for tag in taxonomies.get('fpf').machinetags():
     r_serv_tags.sadd('active_tag_infoleak', tag)
 
 # ============ MAIN ============
