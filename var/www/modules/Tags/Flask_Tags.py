@@ -553,6 +553,7 @@ def galaxies():
         icon.append(galaxie['icon'])
         version.append(galaxie['version'])
         type = galaxie['type']
+        # FIXME remove this
         if type == 'mitre-pre-attack-relashipship':
             type = 'mitre-pre-attack-relationship'
         all_type.append(type)

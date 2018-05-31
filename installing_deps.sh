@@ -95,6 +95,11 @@ mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
 pip3 install -U pip
 pip3 install -U -r pip3_packages_requirement.txt
 
+#MISP PyTaxonomies
+pip3 install -U git+https://github.com/MISP/PyTaxonomies
+#MISP PyMISPGalaxies
+pip3 install -U git+https://github.com/MISP/PyMISPGalaxies
+
 # Pyfaup
 pushd faup/src/lib/bindings/python/
 python3 setup.py install
