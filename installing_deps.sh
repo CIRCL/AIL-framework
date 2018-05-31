@@ -26,9 +26,6 @@ sudo apt-get install libev-dev libgmp-dev -y
 #Need for generate-data-flow graph
 sudo apt-get install graphviz -y
 
-#needed for mathplotlib
-sudo pip3 install setuptools
-sudo python3 -m easy_install -U distribute
 # ssdeep
 sudo apt-get install libfuzzy-dev
 sudo apt-get install build-essential libffi-dev automake autoconf libtool -y
