@@ -816,9 +816,9 @@ def tag_galaxy_info():
 
                     synonyms = []
                     metadata = []
+                    list_metadata = []
                     try:
                         meta = data['meta']
-                        list_metadata = []
                         for key in meta:
                             if key != 'synonyms':
                                 if type(meta[key]) is list:

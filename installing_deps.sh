@@ -26,8 +26,11 @@ sudo apt-get install libev-dev libgmp-dev -y
 #Need for generate-data-flow graph
 sudo apt-get install graphviz -y
 
+# install nosetests
+sudo pip install nose -y
+
 # ssdeep
-sudo apt-get install libfuzzy-dev
+sudo apt-get install libfuzzy-dev -y
 sudo apt-get install build-essential libffi-dev automake autoconf libtool -y
 
 # REDIS #
@@ -107,9 +110,6 @@ python3 setup.py install
 HOME=$(pwd) python3 -m textblob.download_corpora
 python3 -m nltk.downloader vader_lexicon
 python3 -m nltk.downloader punkt
-
-# install nosetests
-sudo pip install nose
 
 #Create the file all_module and update the graph in doc
 $AIL_HOME/doc/generate_modules_data_flow_graph.sh
