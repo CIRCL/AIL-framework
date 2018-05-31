@@ -8,6 +8,7 @@ import redis
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
 import json
+from datetime import datetime
 
 import Paste
 
@@ -200,8 +201,8 @@ def get_tagged_paste():
     else :
         return 'INCORRECT INPUT'
 
-    #currentSelectYear = int(datetime.now().year)
-    currentSelectYear = 2018
+    #TODO FIXME
+    currentSelectYear = int(datetime.now().year)
 
     bootstrap_label = []
     bootstrap_label.append('primary')
@@ -553,9 +554,6 @@ def galaxies():
         icon.append(galaxie['icon'])
         version.append(galaxie['version'])
         type = galaxie['type']
-        # FIXME remove this
-        if type == 'mitre-pre-attack-relashipship':
-            type = 'mitre-pre-attack-relationship'
         all_type.append(type)
         namespace.append(galaxie['namespace'])
         description.append(galaxie['description'])

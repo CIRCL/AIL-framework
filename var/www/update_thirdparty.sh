@@ -66,7 +66,7 @@ wget https://www.circl.lu/assets/images/logos/AIL.png -O AIL.png
 popd
 
 #active virtualenv
-. ./../../AILENV/bin/activate
+source ./../../AILENV/bin/activate
 #Update MISP Taxonomies and Galaxies
-pip3 install --upgrade git+https://github.com/MISP/PyTaxonomies
-pip3 install --upgrade git+https://github.com/MISP/PyMISPGalaxies
+python3 -m pip install git+https://github.com/MISP/PyTaxonomies
+python3 -m pip install --upgrade git+https://github.com/MISP/PyMISPGalaxies

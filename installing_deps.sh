@@ -70,10 +70,6 @@ if [ ! -f bin/packages/config.cfg ]; then
     cp bin/packages/config.cfg.sample bin/packages/config.cfg
 fi
 
-pushd var/www/
-sudo ./update_thirdparty.sh
-popd
-
 if [ -z "$VIRTUAL_ENV" ]; then
 
     virtualenv -p python3 AILENV
@@ -88,17 +84,16 @@ if [ -z "$VIRTUAL_ENV" ]; then
 
 fi
 
+pushd var/www/
+./update_thirdparty.sh
+popd
+
 year1=20`date +%y`
 year2=20`date --date='-1 year' +%y`
 mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
 
 pip3 install -U pip
 pip3 install -U -r pip3_packages_requirement.txt
-
-#MISP PyTaxonomies
-pip3 install -U git+https://github.com/MISP/PyTaxonomies
-#MISP PyMISPGalaxies
-pip3 install -U git+https://github.com/MISP/PyMISPGalaxies
 
 # Pyfaup
 pushd faup/src/lib/bindings/python/
@@ -107,8 +102,6 @@ popd
 
 # Py tlsh
 pushd tlsh/py_ext
-#python setup.py build
-#python setup.py install
 python3 setup.py build
 python3 setup.py install
 
