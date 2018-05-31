@@ -35,6 +35,7 @@ Features
 * Detect Amazon AWS and Google API keys
 * Detect Bitcoin address and Bitcoin private keys
 * Detect private keys and certificate
+* Tagging system with [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies) tags
 
 Installation
 ------------
@@ -143,6 +144,11 @@ Browsing
 --------
 
 ![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
+
+Tagging system
+--------
+
+![Tags](./doc/screenshots/tags.png?raw=true "AIL framework tags")
 
 Sentiment analysis
 ------------------
