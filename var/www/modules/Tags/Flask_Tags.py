@@ -52,6 +52,18 @@ for name, tags in clusters.items(): #galaxie name + tags
 def one():
     return 1
 
+def get_tags_with_synonyms(tag):
+    str_synonyms = ' - synonyms: '
+    synonyms = r_serv_tags.smembers('synonym_tag_' + tag)
+    # synonyms to display
+    for synonym in synonyms:
+        str_synonyms = str_synonyms + synonym + ', '
+    # add real tag
+    if str_synonyms != ' - synonyms: ':
+        return {'name':tag + str_synonyms,'id':tag}
+    else:
+        return {'name':tag,'id':tag}
+
 # ============= ROUTES ==============
 
 @Tags.route("/Tags/", methods=['GET'])
@@ -106,16 +118,7 @@ def get_all_tags_galaxy():
     for galaxy in active_galaxies:
         l_tags = r_serv_tags.smembers('active_tag_galaxies_' + galaxy)
         for tag in l_tags:
-            str_synonyms = ' - synonyms: '
-            synonyms = r_serv_tags.smembers('synonym_tag_' + tag)
-            # synonyms to display
-            for synonym in synonyms:
-                str_synonyms = str_synonyms + synonym + ', '
-            # add real tag
-            if str_synonyms != ' - synonyms: ':
-                list_tags.append({'name':tag + str_synonyms,'id':tag})
-            else:
-                list_tags.append({'name':tag,'id':tag})
+            list_tags.append(get_tags_with_synonyms(tag))
 
     return jsonify(list_tags)
 
@@ -134,7 +137,6 @@ def get_tags_taxonomie():
         if taxonomie in active_taxonomie:
 
             list_tags = []
-            #l_tags = taxonomies.get(taxonomie).machinetags()
             l_tags = r_serv_tags.smembers('active_tag_' + taxonomie)
             for tag in l_tags:
                 list_tags.append( tag )
@@ -159,15 +161,7 @@ def get_tags_galaxy():
         list_tags = []
         l_tags = r_serv_tags.smembers('active_tag_galaxies_' + galaxy)
         for tag in l_tags:
-            synonyms = r_serv_tags.smembers('synonym_tag_' + tag)
-            str_synonyms = ' - synonyms: '
-            for synonym in synonyms:
-                str_synonyms = str_synonyms + synonym + ', '
-            # add real tag
-            if str_synonyms != ' - synonyms: ':
-                list_tags.append({'name':tag + str_synonyms,'id':tag})
-            else:
-                list_tags.append({'name':tag,'id':tag})
+            list_tags.append(get_tags_with_synonyms(tag))
 
         return jsonify(list_tags)
 
@@ -601,9 +595,6 @@ def edit_galaxy():
             for data in val:
                 try:
                     meta = data['meta']
-                    '''synonyms = meta['synonyms']
-                    logo = meta['logo']
-                    refs = meta['refs']'''
                 except KeyError:
                     meta = []
                 tag_name = data['value']
