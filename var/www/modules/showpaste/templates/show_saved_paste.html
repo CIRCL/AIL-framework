@@ -218,7 +218,6 @@
 
             ltags = $('#ltags').tagSuggest({
               data: data,
-              //sortOrder: 'name',
               maxDropHeight: 200,
               name: 'ltags'
             });
@@ -229,7 +228,6 @@
 
             ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
               data: data,
-              //sortOrder: 'name',
               maxDropHeight: 200,
               name: 'ltagsgalaxies'
             });
@@ -241,7 +239,7 @@
 
 <script>
     jQuery("#all-tags-taxonomies").click(function(e){
-      //change input tags list /Tags/get_tags_taxonomie?taxonomie=infoleak
+      //change input tags list
       $.getJSON('/Tags/get_all_tags_taxonomies',
         function(data) {
           ltags.setData(data)

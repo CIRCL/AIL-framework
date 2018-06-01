@@ -137,7 +137,6 @@ $("#myTable_"+moduleName).attr('data-numElem', "{{ all_path|length }}");
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
     $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
-        //get_html_and_update_modal(event);
         get_html_and_update_modal(event, $(this));
     });
 

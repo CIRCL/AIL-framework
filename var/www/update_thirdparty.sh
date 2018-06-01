@@ -69,4 +69,4 @@ popd
 source ./../../AILENV/bin/activate
 #Update MISP Taxonomies and Galaxies
 python3 -m pip install git+https://github.com/MISP/PyTaxonomies
-python3 -m pip install --upgrade git+https://github.com/MISP/PyMISPGalaxies
+python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies

@@ -25,6 +25,7 @@ r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
+bootstrap_label = Flask_config.bootstrap_label
 
 
 baseindexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
@@ -158,13 +159,6 @@ def search():
         results = searcher.search(query)
         num_res = len(results)
 
-    bootstrap_label = []
-    bootstrap_label.append('primary')
-    bootstrap_label.append('success')
-    bootstrap_label.append('danger')
-    bootstrap_label.append('warning')
-    bootstrap_label.append('info')
-
     index_min = 1
     index_max = len(get_index_list())
     return render_template("search.html", r=r, c=c,
@@ -197,13 +191,6 @@ def get_more_search_result():
     date_array = []
     size_array = []
     list_tags = []
-
-    bootstrap_label = []
-    bootstrap_label.append('primary')
-    bootstrap_label.append('success')
-    bootstrap_label.append('danger')
-    bootstrap_label.append('warning')
-    bootstrap_label.append('info')
 
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 

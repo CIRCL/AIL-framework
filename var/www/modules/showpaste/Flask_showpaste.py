@@ -23,6 +23,7 @@ r_serv_tags = Flask_config.r_serv_tags
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
+bootstrap_label = Flask_config.bootstrap_label
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
@@ -96,14 +97,6 @@ def showpaste(content_range):
 
     if content_range != 0:
        p_content = p_content[0:content_range]
-
-    #tag color
-    bootstrap_label = []
-    bootstrap_label.append('primary')
-    bootstrap_label.append('success')
-    bootstrap_label.append('danger')
-    bootstrap_label.append('warning')
-    bootstrap_label.append('info')
 
     #active taxonomies
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')

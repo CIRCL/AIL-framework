@@ -24,6 +24,7 @@ r_serv_tags = Flask_config.r_serv_tags
 r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
+bootstrap_label = Flask_config.bootstrap_label
 
 Tags = Blueprint('Tags', __name__, template_folder='templates')
 
@@ -203,13 +204,6 @@ def get_tagged_paste():
 
     #TODO FIXME
     currentSelectYear = int(datetime.now().year)
-
-    bootstrap_label = []
-    bootstrap_label.append('primary')
-    bootstrap_label.append('success')
-    bootstrap_label.append('danger')
-    bootstrap_label.append('warning')
-    bootstrap_label.append('info')
 
     all_content = []
     paste_date = []

@@ -97,19 +97,11 @@
 
 <script>
 $(document).ready(function(){
-		/*$('[data-toggle="tooltip"]').tooltip();
-		$("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
-				//get_html_and_update_modal(event);
-				get_html_and_update_modal(event, $(this));
-		});
-
-		search_table = $('#myTable_').DataTable({ "order": [[ 2, "desc" ]] });*/
 
 		$('#myTable_').DataTable(
 			{
 				"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
 				"iDisplayLength": 15,
-				//"order": [[ 1, "asc" ]]
 			}
 		);
 

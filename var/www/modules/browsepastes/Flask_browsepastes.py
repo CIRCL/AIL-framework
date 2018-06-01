@@ -21,6 +21,7 @@ cfg = Flask_config.cfg
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 r_serv_metadata = Flask_config.r_serv_metadata
+bootstrap_label = Flask_config.bootstrap_label
 
 #init all lvlDB servers
 curYear = datetime.now().year
@@ -58,12 +59,6 @@ def event_stream_getImportantPasteByModule(module_name, year):
     index = 0
     all_pastes_list = getPastebyType(r_serv_db[year], module_name)
     paste_tags = []
-    bootstrap_label = []
-    bootstrap_label.append('primary')
-    bootstrap_label.append('success')
-    bootstrap_label.append('danger')
-    bootstrap_label.append('warning')
-    bootstrap_label.append('info')
 
     for path in all_pastes_list:
         index += 1
@@ -127,13 +122,6 @@ def importantPasteByModule():
     all_path = []
     paste_tags = []
     allPastes = getPastebyType(r_serv_db[currentSelectYear], module_name)
-
-    bootstrap_label = []
-    bootstrap_label.append('primary')
-    bootstrap_label.append('success')
-    bootstrap_label.append('danger')
-    bootstrap_label.append('warning')
-    bootstrap_label.append('info')
 
     for path in allPastes[0:10]:
         all_path.append(path)
