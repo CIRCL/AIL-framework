@@ -75,7 +75,7 @@
                           <div class="panel-body">
                               <div class="row">
                               <div class="col-md-12">
-                                  <strong style="">Index: </strong> 
+                                  <strong style="">Index: </strong>
                                   <select class="form-control" id="index_name" style="display: inline-block; margin-bottom: 5px; width: 30%">
                                       {% for indexElem in index_list %}
                                       <option {% if indexElem[2] %} selected="selected" {% endif %}  value="{{ indexElem[0] }}" >{{ indexElem[1] }}</option>
@@ -96,11 +96,19 @@
                               <tbody id="table_body">
                           {% for path in r %}
                                 <tr>
-                                    <td>{{ loop.index0 + 1 }}</td>
-                                    <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}"> {{ path }}</a></td>
-                                    <td>{{ paste_date[loop.index0] }}</td>
-                                    <td>{{ paste_size[loop.index0] }}</td>
-                                    <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[loop.index0] }}"></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                  <td> {{ loop.index0 }}</td>
+                                  <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
+                                    <div>
+                                      {% for tag in paste_tags[loop.index0] %}
+                                      <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+                                        <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
+                                      </a>
+                                      {%  endfor %}
+                                    </div>
+                                  </td>
+                                  <td>{{ paste_date[loop.index0] }}</td>
+                                  <td>{{ paste_size[loop.index0] }}</td>
+                                  <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
                                 </tr>
                           {% endfor %}
                               </tbody>
@@ -160,7 +168,7 @@
             input1.setAttribute("name", "index_name");
             input1.setAttribute("value", this.value);
             form.appendChild(input1);
-            
+
             var input2 = document.createElement('input');
             input2.setAttribute("type", "hidden");
             input2.setAttribute("name", "query");
@@ -190,9 +198,14 @@
 
             for(i=0; i<data.path_array.length; i++) {
                 var curr_preview = data.preview_array[i].replace(/\"/g, "\'");
+                var tag = ""
+                for(j=0; j<data.list_tags[i].length; j++) {
+                  tag = tag + "<span class=\"label label-" + data.bootstrap_label[j % 5] + " pull-left\">" + data.list_tags[j] + "</span>"
+                }
                 search_table.row.add( [
                     init_num_of_elements_in_table+((offset))+i+1,
-                   "<a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>",
+                   "<a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>"
+                   + "<div>" + tag + "</div>",
                     data.date_array[i],
                     data.size_array[i],
                     "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
@@ -245,7 +258,7 @@
 
        if (final_index != start_index){ // still have data to display
            // Append the new content using text() and not append (XSS)
-           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text() + complete_paste.substring(start_index+1, final_index+1)); 
+           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text() + complete_paste.substring(start_index+1, final_index+1));
            start_index = final_index;
            if (flag_stop)
                nothing_to_display();
@@ -272,7 +285,7 @@
            last_clicked_paste =  $(this).attr('data-num');
            $.get(url, function (data) {
 
-               // verify that the reveived data is really the current clicked paste. Otherwise, ignore it. 
+               // verify that the reveived data is really the current clicked paste. Otherwise, ignore it.
                var received_num = parseInt(data.split("|num|")[1]);
                if (received_num == last_clicked_paste && can_change_modal_content) {
                    can_change_modal_content = false;
@@ -285,7 +298,7 @@
                    var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
                    button.tooltip();
                    $("#mymodalbody").children(".panel-default").append(button);
-   
+
                    $("#button_show_path").attr('href', $(modal).attr('data-url'));
                    $("#button_show_path").show('fast');
                    $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF

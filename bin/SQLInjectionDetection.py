@@ -82,6 +82,9 @@ def analyse(url, path):
             p.populate_set_out(path, 'Duplicate')
             #send to Browse_warning_paste
             p.populate_set_out('sqlinjection;{}'.format(path), 'alertHandler')
+
+            msg = 'infoleak:automatic-detection="sql-injection";{}'.format(path)
+            p.populate_set_out(msg, 'Tags')
         else:
             print("Potential SQL injection:")
             print(urllib.request.unquote(url))

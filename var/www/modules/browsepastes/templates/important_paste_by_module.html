@@ -12,7 +12,15 @@
       {% for path in all_path %}
       <tr>
           <td> {{ loop.index0 }}</td>
-          <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}&num={{loop.index0+1}}">{{ path }}</a></td>
+          <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
+            <div>
+              {% for tag in paste_tags[loop.index0] %}
+              <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+                <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
+              </a>
+              {%  endfor %}
+            </div>
+          </td>
           <td>{{ paste_date[loop.index0] }}</td>
           <td>{{ paste_linenum[loop.index0] }}</td>
           <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
@@ -89,14 +97,21 @@ function add_entries_X(to_add) {
         } else {
             var feed = json_array.shift();
             elem_added++;
-             search_table.row.add( [
-                 feed.index,
-                "<a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\"> "+ feed.path +"</a>",
-                 feed.date,
-                 feed.linenum,
-                 "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+feed.content.replace(/\"/g, "\'").replace(/\r/g, "\'").replace(/\n/g, "\'")+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+feed.index+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\" data-path=\""+feed.path+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
-             ] ).draw( false );
-             $("#myTable_"+moduleName).attr('data-numElem', curr_numElem+1);
+            var tag = ""
+            for(j=0; j<feed.l_tags.length; j++) {
+              console.log(feed.l_tags[j][1])
+              tag = tag + "<a href=\"{{ url_for('Tags.get_tagged_paste') }}?ltags=" + feed.l_tags[j][1] + "\">"
+              + "<span class=\"label label-" + feed.bootstrap_label[j % 5] + " pull-left\">" + feed.l_tags[j][0] + "</span>" + "</a>";
+            }
+            search_table.row.add( [
+              feed.index,
+              "<a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\"> "+ feed.path +"</a>"
+              + "<div>" + tag + "</div>" ,
+              feed.date,
+              feed.linenum,
+              "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+feed.content.replace(/\"/g, "\'").replace(/\r/g, "\'").replace(/\n/g, "\'")+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+feed.index+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+feed.path+"&num="+feed.index+"\" data-path=\""+feed.path+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
+            ] ).draw( false );
+            $("#myTable_"+moduleName).attr('data-numElem', curr_numElem+1);
         }
     }
     $("#load_more_json_button1").removeAttr('disabled');
@@ -122,7 +137,6 @@ $("#myTable_"+moduleName).attr('data-numElem', "{{ all_path|length }}");
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
     $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
-        //get_html_and_update_modal(event);
         get_html_and_update_modal(event, $(this));
     });
 

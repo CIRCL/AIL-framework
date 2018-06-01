@@ -22,8 +22,10 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_pasteName = Flask_config.r_serv_pasteName
+r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
+bootstrap_label = Flask_config.bootstrap_label
 
 
 baseindexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
@@ -95,6 +97,7 @@ def search():
     c = [] #preview of the paste content
     paste_date = []
     paste_size = []
+    paste_tags = []
     index_name = request.form['index_name']
     num_elem_to_get = 50
 
@@ -119,13 +122,15 @@ def search():
     # Search full line
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
+    print(selected_index)
     ix = index.open_dir(selected_index)
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))
         results = searcher.search_page(query, 1, pagelen=num_elem_to_get)
         for x in results:
             r.append(x.items()[0][1])
-            paste = Paste.Paste(x.items()[0][1])
+            path = x.items()[0][1]
+            paste = Paste.Paste(path)
             content = paste.get_p_content()
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             c.append(content[0:content_range])
@@ -133,6 +138,24 @@ def search():
             curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
             paste_date.append(curr_date)
             paste_size.append(paste._get_p_size())
+            p_tags = r_serv_metadata.smembers('tag:'+path)
+            l_tags = []
+            for tag in p_tags:
+                complete_tag = tag
+                tag = tag.split('=')
+                if len(tag) > 1:
+                    if tag[1] != '':
+                        tag = tag[1][1:-1]
+                    # no value
+                    else:
+                        tag = tag[0][1:-1]
+                # use for custom tags
+                else:
+                    tag = tag[0]
+
+                l_tags.append( (tag, complete_tag) )
+
+            paste_tags.append(l_tags)
         results = searcher.search(query)
         num_res = len(results)
 
@@ -142,6 +165,8 @@ def search():
             query=request.form['query'], paste_date=paste_date,
             paste_size=paste_size, char_to_display=max_preview_modal,
             num_res=num_res, index_min=index_min, index_max=index_max,
+            bootstrap_label=bootstrap_label,
+            paste_tags=paste_tags,
             index_list=get_index_list(selected_index)
            )
 
@@ -165,6 +190,7 @@ def get_more_search_result():
     preview_array = []
     date_array = []
     size_array = []
+    list_tags = []
 
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
@@ -173,8 +199,9 @@ def get_more_search_result():
         query = QueryParser("content", ix.schema).parse(" ".join(q))
         results = searcher.search_page(query, page_offset, num_elem_to_get)
         for x in results:
-            path_array.append(x.items()[0][1])
-            paste = Paste.Paste(x.items()[0][1])
+            path = x.items()[0][1]
+            path_array.append(path)
+            paste = Paste.Paste(path)
             content = paste.get_p_content()
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             preview_array.append(content[0:content_range])
@@ -182,11 +209,30 @@ def get_more_search_result():
             curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
             date_array.append(curr_date)
             size_array.append(paste._get_p_size())
+            p_tags = r_serv_metadata.smembers('tag:'+path)
+            l_tags = []
+            for tag in p_tags:
+                tag = tag.split('=')
+                if len(tag) > 1:
+                    if tag[1] != '':
+                        tag = tag[1][1:-1]
+                    # no value
+                    else:
+                        tag = tag[0][1:-1]
+                # use for custom tags
+                else:
+                    tag = tag[0]
+
+                l_tags.append(tag)
+            list_tags.append(l_tags)
+
         to_return = {}
         to_return["path_array"] = path_array
         to_return["preview_array"] = preview_array
         to_return["date_array"] = date_array
         to_return["size_array"] = size_array
+        to_return["list_tags"] = list_tags
+        to_return["bootstrap_label"] = bootstrap_label
         if len(path_array) < num_elem_to_get: #pagelength
             to_return["moreData"] = False
         else:

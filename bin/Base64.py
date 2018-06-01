@@ -65,6 +65,9 @@ def search_base64(content, message):
         msg = ('base64;{}'.format(message))
         p.populate_set_out( msg, 'alertHandler')
 
+        msg = 'infoleak:automatic-detection="base64";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
+
 def save_base64_as_file(decode, type, hash, json_data):
 
     filename_b64 = os.path.join(os.environ['AIL_HOME'],

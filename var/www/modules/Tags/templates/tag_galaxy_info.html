@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	 <link href="/static//css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="/static//js/bootstrap.min.js"></script>
+	  <script src="/static//js/jquery.dataTables.min.js"></script>
+	  <script src="/static//js/dataTables.bootstrap.js"></script>
+
+		<style>
+			.tooltip-inner {
+				text-align: left;
+				height: 200%;
+				width: 200%;
+				max-width: 500px;
+				max-height: 500px;
+				font-size: 13px;
+			}
+			xmp {
+				white-space:pre-wrap;
+				word-wrap:break-word;
+			}
+			.test thead{
+				background: #d91f2d;
+				color: #fff;
+			}
+		</style>
+
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+    <div id="page-wrapper">
+			<div class="row">
+				<div class="col-lg-12">
+          <a href="{{ url_for('Tags.edit_galaxy') }}?galaxy={{ request.args.get('galaxy') }}" class="btn btn-light pull-left">
+            <i class="fa fa-arrow-left fa"></i> {{ request.args.get('galaxy') }} Galaxy
+          </a>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+
+			<div class="panel panel-primary">
+        <div class="panel-heading">{{ title }}
+          {% if active %}
+            <span class="label label-success pull-right"> Enabled</span>
+          {% endif %}
+          {% if not active %}
+            <span class="label label-danger pull-right"> Disabled</span>
+          {% endif %}
+        </div>
+        <div class="panel-body">
+          {{ description }}
+          <br><br>
+          Source: {{ source }}
+					{% if metadata %}
+						<div class="panel panel-info pull-right" style="width: 60%;">
+							<div class="panel-heading"> Metadata :
+								<ul class="list-group">
+								{% for meta in list_metadata %}
+									<li class="list-group-item">{{ meta }}</li>
+								{% endfor %}
+								</ul>
+								</div>
+						</div>
+					{% endif %}
+					{% if bool_synonyms %}
+					<br><br>
+					<ul class="list-group" style="width: 30%;">
+						<li class="list-group-item active">synonyms :</li>
+						{% for synonym in synonyms %}
+							<li class="list-group-item">{{ synonym }}</li>
+						{% endfor %}
+					</ul>
+					{% endif %}
+        </div>
+      </div>
+
+
+    </div>
+            <!-- /#page-wrapper -->
+
+
+</body>
+
+<script>
+$(document).ready(function(){
+
+		$('#myTable_').DataTable(
+			{
+				"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+				"iDisplayLength": 15,
+			}
+		);
+
+});
+</script>
+
+</html>

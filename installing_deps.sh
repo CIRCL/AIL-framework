@@ -26,10 +26,11 @@ sudo apt-get install libev-dev libgmp-dev -y
 #Need for generate-data-flow graph
 sudo apt-get install graphviz -y
 
-#needed for mathplotlib
-sudo easy_install -U distribute
+# install nosetests
+sudo pip install nose -y
+
 # ssdeep
-sudo apt-get install libfuzzy-dev
+sudo apt-get install libfuzzy-dev -y
 sudo apt-get install build-essential libffi-dev automake autoconf libtool -y
 
 # REDIS #
@@ -70,10 +71,6 @@ if [ ! -f bin/packages/config.cfg ]; then
     cp bin/packages/config.cfg.sample bin/packages/config.cfg
 fi
 
-pushd var/www/
-sudo ./update_thirdparty.sh
-popd
-
 if [ -z "$VIRTUAL_ENV" ]; then
 
     virtualenv -p python3 AILENV
@@ -87,6 +84,10 @@ if [ -z "$VIRTUAL_ENV" ]; then
     . ./AILENV/bin/activate
 
 fi
+
+pushd var/www/
+./update_thirdparty.sh
+popd
 
 year1=20`date +%y`
 year2=20`date --date='-1 year' +%y`
@@ -102,8 +103,6 @@ popd
 
 # Py tlsh
 pushd tlsh/py_ext
-#python setup.py build
-#python setup.py install
 python3 setup.py build
 python3 setup.py install
 
@@ -111,9 +110,6 @@ python3 setup.py install
 HOME=$(pwd) python3 -m textblob.download_corpora
 python3 -m nltk.downloader vader_lexicon
 python3 -m nltk.downloader punkt
-
-# install nosetests
-sudo pip install nose
 
 #Create the file all_module and update the graph in doc
 $AIL_HOME/doc/generate_modules_data_flow_graph.sh

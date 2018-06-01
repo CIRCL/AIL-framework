@@ -18,6 +18,8 @@ sys.path.append('./modules/')
 import Paste
 from Date import Date
 
+from pytaxonomies import Taxonomies
+
 # Import config
 import Flask_config
 
@@ -112,6 +114,25 @@ def add_header(response):
 def searchbox():
     return render_template("searchbox.html")
 
+
+# ========== INITIAL taxonomies ============
+r_serv_tags = redis.StrictRedis(
+    host=cfg.get("ARDB_Tags", "host"),
+    port=cfg.getint("ARDB_Tags", "port"),
+    db=cfg.getint("ARDB_Tags", "db"),
+    decode_responses=True)
+# add default ail taxonomies
+r_serv_tags.sadd('active_taxonomies', 'infoleak')
+r_serv_tags.sadd('active_taxonomies', 'gdpr')
+r_serv_tags.sadd('active_taxonomies', 'fpf')
+# add default tags
+taxonomies = Taxonomies()
+for tag in taxonomies.get('infoleak').machinetags():
+    r_serv_tags.sadd('active_tag_infoleak', tag)
+for tag in taxonomies.get('gdpr').machinetags():
+    r_serv_tags.sadd('active_tag_infoleak', tag)
+for tag in taxonomies.get('fpf').machinetags():
+    r_serv_tags.sadd('active_tag_infoleak', tag)
 
 # ============ MAIN ============
 

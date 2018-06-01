@@ -160,6 +160,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Tags" bash -c './Tags.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
 
 }
@@ -228,7 +230,7 @@ islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
 isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 
-options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config")
+options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config" "Update-thirdparty")
 
 menu() {
     echo "What do you want to Launch?:"
@@ -320,6 +322,17 @@ for i in ${!options[@]}; do
             Update-config)
                 echo -e "\t* Checking configuration"
                 bash -c "./Update-conf.py"
+                exitStatus=$?
+                if [ $exitStatus -ge 1 ]; then
+                    echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
+                    exit
+                else
+                    echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
+                fi
+                ;;
+            Update-thirdparty)
+                echo -e "\t* Updating thirdparty..."
+                bash -c "(cd ../var/www && ./update_thirdparty.sh)"
                 exitStatus=$?
                 if [ $exitStatus -ge 1 ]; then
                     echo -e $RED"\t* Configuration not up-to-date"$DEFAULT

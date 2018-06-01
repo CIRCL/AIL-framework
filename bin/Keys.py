@@ -28,47 +28,76 @@ def search_key(paste):
     if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
 
+        msg = 'infoleak:automatic-detection="pgp-message";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN CERTIFICATE-----' in content:
         publisher.warning('{} has a certificate message'.format(paste.p_name))
+
+        msg = 'infoleak:automatic-detection="certificate";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN RSA PRIVATE KEY-----' in content:
         publisher.warning('{} has a RSA private key message'.format(paste.p_name))
         print('rsa private key message found')
+
+        msg = 'infoleak:automatic-detection="rsa-private-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN PRIVATE KEY-----' in content:
         publisher.warning('{} has a private key message'.format(paste.p_name))
         print('private key message found')
+
+        msg = 'infoleak:automatic-detection="private-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
         publisher.warning('{} has an encrypted private key message'.format(paste.p_name))
         print('encrypted private key message found')
+
+        msg = 'infoleak:automatic-detection="encrypted-private-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN OPENSSH PRIVATE KEY-----' in content:
         publisher.warning('{} has an openssh private key message'.format(paste.p_name))
         print('openssh private key message found')
+
+        msg = 'infoleak:automatic-detection="private-ssh-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN OpenVPN Static key V1-----' in content:
         publisher.warning('{} has an openssh private key message'.format(paste.p_name))
         print('OpenVPN Static key message found')
+
+        msg = 'infoleak:automatic-detection="vpn-static-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN DSA PRIVATE KEY-----' in content:
         publisher.warning('{} has a dsa private key message'.format(paste.p_name))
+
+        msg = 'infoleak:automatic-detection="dsa-private-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN EC PRIVATE KEY-----' in content:
         publisher.warning('{} has an ec private key message'.format(paste.p_name))
+
+        msg = 'infoleak:automatic-detection="ec-private-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if '-----BEGIN PGP PRIVATE KEY BLOCK-----' in content:
         publisher.warning('{} has a pgp private key block message'.format(paste.p_name))
+
+        msg = 'infoleak:automatic-detection="pgp-private-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
         find = True
 
     if find :

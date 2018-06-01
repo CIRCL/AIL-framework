@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Analysis Information Leak framework Dashboard</title>
+
+  <!-- Core CSS -->
+  <link href="/static//css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static//font-awesome/css/font-awesome.css" rel="stylesheet">
+  <link href="/static//css/sb-admin-2.css" rel="stylesheet">
+  <link href="/static//css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+  <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+  <script language="javascript" src="/static//js/jquery.js"></script>
+  <script src="/static//js/bootstrap.min.js"></script>
+  <script src="/static//js/jquery.dataTables.min.js"></script>
+  <script src="/static//js/dataTables.bootstrap.js"></script>
+  <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+  <style>
+      .tooltip-inner {
+         text-align: left;
+         height: 200%;
+         width: 200%;
+         max-width: 500px;
+         max-height: 500px;
+         font-size: 13px;
+      }
+      xmp {
+         white-space:pre-wrap;
+         word-wrap:break-word;
+      }
+      .test thead{
+      	background: #d91f2d;
+	      color: #fff;
+      }
+  </style>
+
+</head>
+<body>
+
+
+    {% include 'navbar.html' %}
+
+  <!-- Modal -->
+  <div id="mymodal" class="modal fade" role="dialog">
+   <div class="modal-dialog modal-lg">
+
+     <!-- Modal content-->
+     <div id="mymodalcontent" class="modal-content">
+       <div id="mymodalbody" class="modal-body" max-width="850px">
+         <p>Loading paste information...</p>
+         <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
+       </div>
+       <div class="modal-footer">
+         <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
+         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+       </div>
+     </div>
+   </div>
+  </div>
+
+  <div id="page-wrapper">
+    <div class="row">
+      <div class="col-lg-12">
+        <h1 class="page-header" data-page="page-tags" >Tags</h1>
+      </div>
+      <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+      <div class="form-group input-group" >
+        <input id="ltags" style="width:100%;" type="text" name="ltags" autocomplete="off">
+
+          <div class="input-group-btn">
+            <button type="button" class="btn btn-search btn-primary btn-tags" onclick="searchTags()">
+                <span class="glyphicon glyphicon-search "></span>
+                <span class="label-icon">Search Tags</span>
+            </button>
+          </div>
+
+      </div>
+
+      <button class="btn btn-primary" onclick="emptyTags()" style="margin-bottom: 30px;">
+        <span class="glyphicon glyphicon-remove"></span>
+        <span class="label-icon">Clear Tags</span>
+      </button>
+
+    <table class="test table table-striped table-bordered table-hover table-responsive " id="myTable_">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th style="max-width: 800px;">Path</th>
+          <th>Date</th>
+          <th># of lines</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% for path in all_path %}
+          <tr>
+              <td> {{ loop.index0 }}</td>
+              <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
+                <div>
+                  {% for tag in paste_tags[loop.index0] %}
+                  <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+                    <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
+                  </a>
+                  {%  endfor %}
+                </div>
+              </td>
+              <td>{{ paste_date[loop.index0] }}</td>
+              <td>{{ paste_linenum[loop.index0] }}</td>
+              <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+          </tr>
+        {%  endfor %}
+
+      </tbody>
+    </table>
+
+    </br>
+    <div id="nbr_entry" class="alert alert-info">
+
+    </div>
+    <div id="div_stil_data">
+      <button id="load_more_json_button1" type="button" class="btn btn-default" onclick="add_entries(100)" style="display: True">Load 100 entries</button>
+      <button id="load_more_json_button2" type="button" class="btn btn-warning" onclick="add_entries(300)" style="display: True">Load 300 entries</button>
+      <img id="loading_gif_browse" src="/static//image/loading.gif" heigt="20" width="20" style="margin: 2px;"></div>
+      </br>
+
+      <div>
+				<br></br>
+				<a class="btn btn-tags" href="{{ url_for('Tags.taxonomies') }}" target="_blank">
+						<i class="fa fa-wrench fa-2x"></i>
+						<br></br>
+						<span class="label-icon">Edit Taxonomies List </span>
+				</a>
+				<a class="btn btn-tags" href="{{ url_for('Tags.galaxies') }}" target="_blank">
+						<i class="fa fa-rocket fa-2x"></i>
+						<br></br>
+						<span class="label-icon">Edit Galaxies List</span>
+				</a>
+			</div>
+
+  </div>
+
+</body>
+
+<script>
+var search_table;
+var ltags;
+var last_clicked_paste;
+var can_change_modal_content = true;
+$("#myTable_").attr('data-numElem', "{{ all_path|length }}");
+
+$(document).ready(function(){
+    search_table = $('#myTable_').DataTable({ "order": [[ 2, "desc" ]] });
+    $('[data-toggle="tooltip"]').tooltip();
+    $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
+        get_html_and_update_modal(event, $(this));
+    });
+
+
+    $("#load_more_json_button1").hide();
+    $("#load_more_json_button2").hide();
+    $("#nbr_entry").hide();
+    $("#loading_gif_browse").hide();
+
+    $.getJSON('/Tags/get_all_tags',
+      function(data) {
+        activePage = "page-Tags"
+        $("#"+activePage).addClass("active");
+        var valueData = [
+          {% for tag in list_tag %}
+            '{{tag|safe}}',
+          {%  endfor %}
+        ];
+
+        ltags = $('#ltags').tagSuggest({
+          data: data,
+          value: valueData,
+          sortOrder: 'name',
+          maxDropHeight: 200,
+          name: 'ltags',
+          });
+
+      });
+
+});
+</script>
+
+<script>
+    function searchTags() {
+      var data = ltags.getValue();
+      window.location.replace("{{ url_for('Tags.get_tagged_paste') }}?ltags=" + data);
+    }
+    function emptyTags() {
+      ltags.clear();
+    }
+</script>
+
+<!-- Dynamically update the modal -->
+<script>
+    // static data
+    var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
+    var complete_paste = null;
+    var char_to_display = {{ char_to_display }};
+    var start_index = 0;
+
+    // When the modal goes out, refresh it to normal content
+    $("#mymodal").on('hidden.bs.modal', function () {
+        can_change_modal_content = true;
+        $("#mymodalbody").html("<p>Loading paste information...</p>");
+        var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
+        $("#mymodalbody").append(loading_gif); // Show the loading GIF
+        $("#button_show_path").attr('href', '');
+        $("#button_show_path").hide();
+        complete_paste = null;
+        start_index = 0;
+    });
+
+   // Update the paste preview in the modal
+   function update_preview() {
+       if (start_index + char_to_display > complete_paste.length-1){ // end of paste reached
+           var final_index = complete_paste.length-1;
+           var flag_stop = true;
+       } else {
+           var final_index = start_index + char_to_display;
+       }
+
+       if (final_index != start_index){ // still have data to display
+           // Append the new content using text() and not append (XSS)
+           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text()+complete_paste.substring(start_index+1, final_index+1));
+           start_index = final_index;
+           if (flag_stop)
+               nothing_to_display();
+       } else {
+          nothing_to_display();
+      }
+   }
+   // Update the modal when there is no more data
+   function nothing_to_display() {
+       var new_content = $(alert_message).hide();
+       $("#mymodalbody").find("#panel-body").append(new_content);
+       new_content.show('fast');
+       $("#load-more-button").hide();
+   }
+
+   function get_html_and_update_modal(event, truemodal) {
+       event.preventDefault();
+
+       var modal=truemodal;
+       var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + modal.attr('data-path') + "&num=" + modal.attr('data-num');
+       last_clicked_paste =  modal.attr('data-num');
+       $.get(url, function (data) {
+
+           // verify that the reveived data is really the current clicked paste. Otherwise, ignore it.
+           var received_num = parseInt(data.split("|num|")[1]);
+           if (received_num == last_clicked_paste && can_change_modal_content) {
+               can_change_modal_content = false;
+
+               // clear data by removing html, body, head tags. prevent dark modal background stack bug.
+               var cleared_data = data.split("<body>")[1].split("</body>")[0];
+               $("#mymodalbody").html(cleared_data);
+
+               var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
+               button.tooltip();
+               $("#mymodalbody").children(".panel-default").append(button);
+
+               $("#button_show_path").attr('href', $(modal).attr('data-url'));
+               $("#button_show_path").show('fast');
+               $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
+               if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
+                   nothing_to_display();
+               }
+               // On click, donwload all paste's content
+               $("#load-more-button").on("click", function (event) {
+                   if (complete_paste == null) { //Donwload only once
+                       $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                           complete_paste = data;
+                           update_preview();
+                       });
+                   } else {
+                       update_preview();
+                   }
+               });
+           } else if (can_change_modal_content) {
+               $("#mymodalbody").html("Ignoring previous not finished query of paste #" + received_num);
+           }
+       });
+   }
+
+   // Use to bind the button with the new displayed data
+   // (The bind do not happens if the dataTable is in tabs and the clicked data is in another page)
+
+   search_table.on( 'draw.dt', function () {
+       // Bind tooltip each time we draw a new page
+       $('[data-toggle="tooltip"]').tooltip();
+       // On click, get html content from url and update the corresponding modal
+       $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
+           get_html_and_update_modal(event, $(this));
+       });
+   } );
+
+</script>

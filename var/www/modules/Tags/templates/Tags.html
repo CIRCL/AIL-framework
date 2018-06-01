@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+					<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+    <div id="page-wrapper">
+			<div class="row">
+				<div class="col-lg-12">
+				<h1 class="page-header" data-page="page-tags" >Tags</h1>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+				<div class="form-group input-group" >
+					<input id="ltags" style="width:100%;" type="text" name="ltags" autocomplete="off">
+
+					<div class="input-group-btn">
+							<button type="button" class="btn btn-search btn-primary btn-tags" onclick="searchTags()"<button class="btn btn-primary" onclick="emptyTags()">
+									<span class="glyphicon glyphicon-search "></span>
+									<span class="label-icon">Search Tags</span>
+							</button>
+					</div>
+
+				</div>
+
+			<button class="btn btn-primary" onclick="emptyTags()" style="margin-bottom: 30px;">
+				<span class="glyphicon glyphicon-remove"></span>
+				<span class="label-icon">Clear Tags</span>
+			</button>
+
+			<div>
+				<br></br>
+				<a class="btn btn-tags" href="{{ url_for('Tags.taxonomies') }}" target="_blank">
+						<i class="fa fa-wrench fa-2x"></i>
+						<br></br>
+						<span class="label-icon">Edit Taxonomies List </span>
+				</a>
+				<a class="btn btn-tags" href="{{ url_for('Tags.galaxies') }}" target="_blank">
+						<i class="fa fa-rocket fa-2x"></i>
+						<br></br>
+						<span class="label-icon">Edit Galaxies List</span>
+				</a>
+			</div>
+
+    </div>
+
+            <!-- /#page-wrapper -->
+
+            <script>
+								var ltags
+                $(document).ready(function(){
+									activePage = "page-Tags"
+									$("#"+activePage).addClass("active");
+
+										$.getJSON('/Tags/get_all_tags',
+				              function(data) {
+
+				                ltags = $('#ltags').tagSuggest({
+				                  data: data,
+				                  sortOrder: 'name',
+				                  maxDropHeight: 200,
+				                  name: 'ltags'
+				              });
+				            });
+                });
+            </script>
+						<script>
+								function searchTags() {
+									var data = ltags.getValue();
+									window.location.replace("{{ url_for('Tags.get_tagged_paste') }}?ltags=" + data);
+								}
+								function emptyTags() {
+									console.log('b');
+									ltags.clear();
+								}
+						</script>
+            <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        </body>
+
+</html>

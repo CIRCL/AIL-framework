@@ -5,23 +5,27 @@ set -e
 wget http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.js
 
 SBADMIN_VERSION='3.3.7'
+FONT_AWESOME_VERSION='4.7.0'
 
 rm -rf temp
 mkdir temp
 
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}.zip
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin-2/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}-2.zip
+wget https://github.com/FortAwesome/Font-Awesome/archive/v${FONT_AWESOME_VERSION}.zip -O temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip
 unzip temp/${SBADMIN_VERSION}.zip -d temp/
 unzip temp/${SBADMIN_VERSION}-2.zip -d temp/
+unzip temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip -d temp/
 mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin
 mv temp/startbootstrap-sb-admin-2-${SBADMIN_VERSION} temp/sb-admin-2
+mv temp/Font-Awesome-${FONT_AWESOME_VERSION} temp/font-awesome
 
 rm -rf ./static/js/plugins
 mv temp/sb-admin/js/* ./static/js/
 
 rm -rf ./static/fonts/ ./static/font-awesome/
 mv temp/sb-admin/fonts/ ./static/
-mv temp/sb-admin/font-awesome/ ./static/
+mv temp/font-awesome/ ./static/
 
 rm -rf ./static/css/plugins/
 mv temp/sb-admin/css/* ./static/css/
@@ -60,3 +64,9 @@ mkdir -p ./static/image
 pushd static/image
 wget https://www.circl.lu/assets/images/logos/AIL.png -O AIL.png
 popd
+
+#active virtualenv
+source ./../../AILENV/bin/activate
+#Update MISP Taxonomies and Galaxies
+python3 -m pip install git+https://github.com/MISP/PyTaxonomies
+python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies
