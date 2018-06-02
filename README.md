@@ -182,6 +182,7 @@ License
     Copyright (c) 2014-2018 Raphaël Vinot
     Copyright (c) 2014-2018 Alexandre Dulaunoy
     Copyright (c) 2016-2018 Sami Mokaddem
+    Copyright (c) 2018 Thirion Aurélien
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
