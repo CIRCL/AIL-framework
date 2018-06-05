@@ -28,6 +28,7 @@ cfg = Flask_config.cfg
 
 Flask_config.app = Flask(__name__, static_url_path='/static/')
 app = Flask_config.app
+#app.secret_key = Flask_config.secret_key
 
 # ========= HEADER GENERATION ========
 

@@ -10,6 +10,7 @@ import os
 
 # FLASK #
 app = None
+#secret_key = 'ail-super-secret_key01C'
 
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -33,6 +34,12 @@ r_serv_log = redis.StrictRedis(
     host=cfg.get("Redis_Log", "host"),
     port=cfg.getint("Redis_Log", "port"),
     db=cfg.getint("Redis_Log", "db"),
+    decode_responses=True)
+
+r_serv_log_submit = redis.StrictRedis(
+    host=cfg.get("Redis_Log_submit", "host"),
+    port=cfg.getint("Redis_Log_submit", "port"),
+    db=cfg.getint("Redis_Log_submit", "db"),
     decode_responses=True)
 
 r_serv_charts = redis.StrictRedis(

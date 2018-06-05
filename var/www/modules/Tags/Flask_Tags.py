@@ -64,6 +64,7 @@ def get_tags_with_synonyms(tag):
     else:
         return {'name':tag,'id':tag}
 
+
 # ============= ROUTES ==============
 
 @Tags.route("/Tags/", methods=['GET'])
