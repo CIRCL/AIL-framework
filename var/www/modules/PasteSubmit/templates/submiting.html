@@ -292,6 +292,7 @@ function submitPaste(){
 						}
 					} else {
 						//error handler
+						document.getElementById('files_submitted').innerHTML = in_progress;
 						if(isError){
 							document.getElementById('error_message').innerHTML = error;
 							$("#panel_error").removeClass('hidden');

@@ -131,9 +131,9 @@ taxonomies = Taxonomies()
 for tag in taxonomies.get('infoleak').machinetags():
     r_serv_tags.sadd('active_tag_infoleak', tag)
 for tag in taxonomies.get('gdpr').machinetags():
-    r_serv_tags.sadd('active_tag_infoleak', tag)
+    r_serv_tags.sadd('active_tag_gdpr', tag)
 for tag in taxonomies.get('fpf').machinetags():
-    r_serv_tags.sadd('active_tag_infoleak', tag)
+    r_serv_tags.sadd('active_tag_fpf', tag)
 
 # ============ MAIN ============
 

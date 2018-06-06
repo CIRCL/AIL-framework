@@ -5,7 +5,7 @@
     Flask functions and routes for the trending modules page
 '''
 import redis
-from flask import Flask, render_template, jsonify, request, Blueprint, session
+from flask import Flask, render_template, jsonify, request, Blueprint
 
 '''import random'''
 
@@ -31,9 +31,15 @@ PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder='templates')
 
 valid_filename_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 
+ALLOWED_EXTENSIONS = set(['txt', 'zip', 'gzip'])
+
 # ============ FUNCTIONS ============
 def one():
     return 1
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
     # replace characters
@@ -123,47 +129,58 @@ def submit():
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
 
-    if paste_content != '':
-        if sys.getsizeof(paste_content) < 900000:
+    if ltags or ltagsgalaxies:
+        if not addTagsVerification(ltags, ltagsgalaxies):
+            return 'INVALID TAGS'
 
-            if ltags or ltagsgalaxies:
-                if not addTagsVerification(ltags, ltagsgalaxies):
-                    return 'INVALID TAGS'
+    if 'file' not in request.files:
 
-            to_launch = os.environ['AIL_BIN'] + 'submit_paste.py'
-            # get id
-            id = str(r_serv_tags.get('submit_id'))
+        file = request.files['file']
 
-            if paste_name:
-                # clean file name
-                id = clean_filename(paste_name)
+        if file.filename == '':
 
-            # create logs
-            r_serv_log_submit.set(id + ':end', 0)
-            r_serv_log_submit.set(id + ':nb_total', 1)
-            r_serv_log_submit.set(id + ':nb_end', 0)
-            r_serv_log_submit.set(id + ':error', 'error:')
+            if paste_content != '':
+                if sys.getsizeof(paste_content) < 900000:
 
-            #incr id
-            r_serv_tags.incr('submit_id')
+                    to_launch = os.environ['AIL_BIN'] + 'submit_paste.py'
+                    # get id
+                    id = str(r_serv_tags.get('submit_id'))
 
-            # add submitted tags
-            if(ltags != ''):
-                ltags = ltags + ',submitted'
-            else:
-                ltags ='submitted'
-                
-            # launch process
-            process = subprocess.Popen(["python", to_launch, ltags, ltagsgalaxies, paste_content, paste_name, id],
-                                           stdout=subprocess.PIPE)
+                    if paste_name:
+                        # clean file name
+                        id = clean_filename(paste_name)
 
-            return render_template("submiting.html",
-                                        id = id)
+                    # create logs
+                    r_serv_log_submit.set(id + ':end', 0)
+                    r_serv_log_submit.set(id + ':nb_total', 1)
+                    r_serv_log_submit.set(id + ':nb_end', 0)
+                    r_serv_log_submit.set(id + ':error', 'error:')
 
-        else:
-            return 'size error'
+                    #incr id
+                    r_serv_tags.incr('submit_id')
 
-    return 'submit'
+                    # add submitted tags
+                    if(ltags != ''):
+                        ltags = ltags + ',submitted'
+                    else:
+                        ltags ='submitted'
+
+                    # launch process
+                    process = subprocess.Popen(["python", to_launch, ltags, ltagsgalaxies, paste_content, paste_name, id],
+                                                   stdout=subprocess.PIPE)
+
+                    return render_template("submiting.html",
+                                                id = id)
+
+                else:
+                    return 'size error'
+
+            return 'submit'
+
+         if file and allowed_file(file.filename):
+            print(file.read())
+
+    return 'error'
 
 @PasteSubmit.route("/PasteSubmit/submit_status", methods=['GET'])
 def submit_status():
