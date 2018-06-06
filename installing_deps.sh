@@ -27,7 +27,7 @@ sudo apt-get install libev-dev libgmp-dev -y
 sudo apt-get install graphviz -y
 
 # install nosetests
-sudo pip install nose -y
+sudo pip install nose
 
 # ssdeep
 sudo apt-get install libfuzzy-dev -y
