@@ -84,6 +84,12 @@ r_serv_metadata = redis.StrictRedis(
     db=cfg.getint("ARDB_Metadata", "db"),
     decode_responses=True)
 
+r_serv_db = redis.StrictRedis(
+    host=cfg.get("ARDB_DB", "host"),
+    port=cfg.getint("ARDB_DB", "port"),
+    db=cfg.getint("ARDB_DB", "db"),
+    decode_responses=True)
+
 # VARIABLES #
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number of character to display in the modal
@@ -91,3 +97,5 @@ max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number 
 DiffMaxLineLength =  int(cfg.get("Flask", "DiffMaxLineLength"))#Use to display the estimated percentage instead of a raw value
 
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
+
+UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')

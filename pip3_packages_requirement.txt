@@ -56,6 +56,9 @@ pycountry
 # To fetch Onion urls
 PySocks
 
+# decompress files
+sflock
+
 #ASN lookup requirements
 #https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/adns-python/adns-python-1.2.1.tar.gz
 https://github.com/trolldbois/python3-adns/archive/master.zip

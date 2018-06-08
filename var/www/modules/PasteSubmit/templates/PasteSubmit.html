@@ -36,22 +36,18 @@
 						<input type="hidden" id="tags_galaxies" name="tags_galaxies" value="test">
 
 					<div class="panel panel-primary pull-left" style="width: 40%;">
-		        <div class="panel-heading">paste info
+		        <div class="panel-heading">Files submission
 		        </div>
 		        <div class="panel-body">
 
-							<div class="form-group row">
-						    <label class="col-sm-2 col-form-label">ID: 34</label>
+							<div class="form-group">
+						    <label for="file">Submit a file</label>
+						    <input type="file" class="form-control-file" id="file" name="file">
 						  </div>
 
 							<div class="form-group">
-						    <label for="paste_name">Name</label>
-						    <input type="text" class="form-control" id="paste_name" name="paste_name" placeholder="Optionnal">
-						  </div>
-
-							<div class="form-group">
-						    <label for="file_submit">Or submit a file</label>
-						    <input type="file" class="form-control-file" id="file_submit">
+						    <label for="paste_name">Archive Password</label>
+						    <input type="password" class="form-control" id="password" name="password" placeholder="Optionnal">
 						  </div>
 		        </div>
 		      </div>
@@ -129,6 +125,9 @@
     var ltagsgalaxies
     $(document).ready(function(){
 
+			activePage = "page-PasteSubmit"
+			$("#"+activePage).addClass("active");
+
         $.getJSON('/Tags/get_all_tags_taxonomies',
           function(data) {
 
@@ -148,9 +147,6 @@
               name: 'ltagsgalaxies'
             });
           });
-
-				activePage = "page-PasteSubmit"
-				$("#"+activePage).addClass("active");
     });
 </script>
 

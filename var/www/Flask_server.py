@@ -7,7 +7,7 @@ import json
 import datetime
 import time
 import calendar
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Request
 import flask
 import importlib
 import os
@@ -28,7 +28,7 @@ cfg = Flask_config.cfg
 
 Flask_config.app = Flask(__name__, static_url_path='/static/')
 app = Flask_config.app
-#app.secret_key = Flask_config.secret_key
+app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 
 # ========= HEADER GENERATION ========
 
