@@ -226,7 +226,7 @@ if __name__ == "__main__":
                                     #print(files.children)
                                 else:
                                     try:
-                                        files = unpack(file_full_path.encode(), password)
+                                        files = unpack(file_full_path.encode(), password=password.encode())
                                         #print(files.children)
                                     except sflock.exception.IncorrectUsageException:
                                         abord_file_submission(uuid, "Wrong Password")

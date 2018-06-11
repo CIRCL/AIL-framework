@@ -19,104 +19,104 @@
           <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+					<script src="/static//js/bootstrap.min.js"></script>
 					<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 	</head>
 	<body>
 
-            {% include 'navbar.html' %}
+		{% include 'navbar.html' %}
 
-      <div id="page-wrapper">
-				<div class="row">
-				  <!-- /.col-lg-12 -->
+<div id="page-wrapper">
+<div class="row">
+	<!-- /.col-lg-12 -->
 
-					<form action="/PasteSubmit/submit" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+	<form action="/PasteSubmit/submit" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
 
-						<input type="hidden" id="tags_taxonomies" name="tags_taxonomies" value="test">
-						<input type="hidden" id="tags_galaxies" name="tags_galaxies" value="test">
+		<input type="hidden" id="tags_taxonomies" name="tags_taxonomies" value="test">
+		<input type="hidden" id="tags_galaxies" name="tags_galaxies" value="test">
 
-					<div class="panel panel-primary pull-left" style="width: 40%;">
-		        <div class="panel-heading">Files submission
-		        </div>
-		        <div class="panel-body">
+	<div class="panel panel-primary pull-left" style="width: 40%;">
+		<div class="panel-heading">Files submission
+		</div>
+		<div class="panel-body">
 
-							<div class="form-group">
-						    <label for="file">Submit a file</label>
-						    <input type="file" class="form-control-file" id="file" name="file">
-						  </div>
+			<div class="form-group">
+				<label for="file">Submit a file</label>
+				<input type="file" class="form-control-file" id="file" name="file">
+			</div>
 
-							<div class="form-group">
-						    <label for="paste_name">Archive Password</label>
-						    <input type="password" class="form-control" id="password" name="password" placeholder="Optionnal">
-						  </div>
-		        </div>
-		      </div>
+			<div class="form-group">
+				<label for="paste_name">Archive Password</label>
+				<input type="password" class="form-control" id="password" name="password" placeholder="Optionnal">
+			</div>
+		</div>
+	</div>
 
-					<div class="panel panel-info pull-right" style="width: auto;">
-						<div class="panel-heading"> Tags :
-							<ul class="list-group">
-								<li class="list-group-item">
+	<div class="panel panel-info pull-right" style="width: auto;">
+		<div class="panel-heading"> Tags :
+			<ul class="list-group">
+				<li class="list-group-item">
 
-									<div class="form-group input-group" >
-										<input id="ltags" style="width:450%;" type="text">
-									</div>
-
-									<div class="btn-group btn-block">
-											<button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Taxonomie Selection
-												<i class="fa fa-chevron-down"></i>
-											</button>
-											<ul class="dropdown-menu scrollable-menu" role="menu">
-													<li><a href="#" id="all-tags-taxonomies">All Tags <i class="fa fa-tags"></i></a></li>
-													<li role="separator" class="divider"></li>
-													{% for taxo in active_taxonomies %}
-															<li><a href="#" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</a></li>
-													{% endfor %}
-											</ul>
-									</div>
-
-								</li>
-								<li class="list-group-item">
-
-									<div class="form-group input-group" >
-										<input id="ltagsgalaxies" style="width:450%;" type="text">
-									</div>
-
-									<div class="btn-group btn-block">
-											<button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Galaxy Selection
-												<i class="fa fa-chevron-down"></i>
-											</button>
-											<ul class="dropdown-menu scrollable-menu" role="menu">
-													<li><a href="#" id="all-tags-galaxies">All Tags <i class="fa fa-tags"></i></a></li>
-													<li role="separator" class="divider"></li>
-													{% for galaxy in active_galaxies %}
-															<li><a href="#" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</a></li>
-													{% endfor %}
-											</ul>
-									</div>
-
-								</li>
-							</ul>
-							</div>
+					<div class="form-group input-group" >
+						<input id="ltags" style="width:450%;" type="text">
 					</div>
 
-					<div>
+					<div class="btn-group btn-block">
+							<button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Taxonomie Selection
+								<i class="fa fa-chevron-down"></i>
+							</button>
+							<ul class="dropdown-menu scrollable-menu" role="menu">
+									<li><a href="#" id="all-tags-taxonomies">All Tags <i class="fa fa-tags"></i></a></li>
+									<li role="separator" class="divider"></li>
+									{% for taxo in active_taxonomies %}
+											<li><a href="#" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</a></li>
+									{% endfor %}
+							</ul>
+					</div>
 
-							<div class="form-group">
-								<textarea class="form-control" id="paste_content" name="paste_content" rows="25"></textarea>
-							</div>
+				</li>
+				<li class="list-group-item">
 
-							<div class="form-group">
-								<button class="btn btn-primary " name="submit" type="submit">Submit this paste</button>
-							</div>
+					<div class="form-group input-group" >
+						<input id="ltagsgalaxies" style="width:450%;" type="text">
+					</div>
+
+					<div class="btn-group btn-block">
+							<button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Galaxy Selection
+								<i class="fa fa-chevron-down"></i>
+							</button>
+							<ul class="dropdown-menu scrollable-menu" role="menu">
+									<li><a href="#" id="all-tags-galaxies">All Tags <i class="fa fa-tags"></i></a></li>
+									<li role="separator" class="divider"></li>
+									{% for galaxy in active_galaxies %}
+											<li><a href="#" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</a></li>
+									{% endfor %}
+							</ul>
+					</div>
+
+				</li>
+			</ul>
+			</div>
+	</div>
+
+	<div>
+
+			<div class="form-group">
+				<textarea class="form-control" id="paste_content" name="paste_content" rows="25"></textarea>
+			</div>
+
+			<div class="form-group">
+				<button class="btn btn-primary " name="submit" type="submit">Submit this paste</button>
+			</div>
 
 					</form>
-					<div>
 
-				</div>
 				<!-- /.row -->
 
       </div>
       <!-- /#page-wrapper -->
+		</div>
 
 	</body>
 
@@ -124,9 +124,6 @@
     var ltags
     var ltagsgalaxies
     $(document).ready(function(){
-
-			activePage = "page-PasteSubmit"
-			$("#"+activePage).addClass("active");
 
         $.getJSON('/Tags/get_all_tags_taxonomies',
           function(data) {
@@ -147,6 +144,11 @@
               name: 'ltagsgalaxies'
             });
           });
+
+				activePage = "page-PasteSubmit"
+				$("#"+activePage).addClass("active");
+
+				$('#modalsubmit').modal({backdrop: 'static'})
     });
 </script>
 
@@ -194,6 +196,5 @@ function submitPaste(){
 });
 {% endfor %}
 </script>
-
 
 </html>
