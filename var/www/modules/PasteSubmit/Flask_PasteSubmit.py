@@ -14,9 +14,16 @@ import os
 import sys
 import datetime
 import uuid
+from io import BytesIO
+from Date import Date
+
+import Paste
 
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
+
+from pymisp.mispevent import MISPObject
+from thehive4py.models import Case, CaseTask, CustomFieldHelper, CaseObservable
 
 # ============ VARIABLES ============
 import Flask_config
@@ -28,12 +35,19 @@ r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_db = Flask_config.r_serv_db
 r_serv_log_submit = Flask_config.r_serv_log_submit
 
+pymisp = Flask_config.pymisp
+
+HiveApi = Flask_config.HiveApi
+
 PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder='templates')
 
 valid_filename_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 
 ALLOWED_EXTENSIONS = set(['txt', 'zip', 'gz', 'tar.gz'])
 UPLOAD_FOLDER = Flask_config.UPLOAD_FOLDER
+
+misp_event_url = Flask_config.misp_event_url
+hive_case_url = Flask_config.hive_case_url
 
 # ============ FUNCTIONS ============
 def one():
@@ -57,8 +71,6 @@ def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
     return ''.join(c for c in cleaned_filename if c in whitelist)
 
 def launch_submit(ltags, ltagsgalaxies, paste_content, UUID,  password, isfile = False):
-
-    print(UUID)
 
     # save temp value on disk
     r_serv_db.set(UUID + ':ltags', ltags)
@@ -116,6 +128,105 @@ def addTagsVerification(tags, tagsgalaxies):
             else:
                 return False
     return True
+
+def date_to_str(date):
+    return "{0}-{1}-{2}".format(date.year, date.month, date.day)
+
+def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, path):
+
+    paste = Paste.Paste(path)
+    source = path.split('/')[-6:]
+    source = '/'.join(source)[:-3]
+    ail_uuid = r_serv_db.get('ail:uuid')
+    pseudofile = BytesIO(paste.get_p_content().encode())
+
+    today = datetime.date.today()
+    # [0-3]
+    published = False
+    org_id = None
+    orgc_id = None
+    sharing_group_id = None
+    date = today
+    event = pymisp.new_event(distribution, threat_level_id,
+            analysis, info, date,
+            published, orgc_id, org_id, sharing_group_id)
+    eventUuid = event['Event']['uuid']
+    eventid = event['Event']['id']
+
+    # add tags
+    for tag in l_tags:
+        pymisp.tag(eventUuid, tag)
+
+    # create attributes
+    obj_name = 'ail-leak'
+    leak_obj = MISPObject(obj_name)
+    leak_obj.add_attribute('sensor', value=ail_uuid, type="text")
+    leak_obj.add_attribute('origin', value=source, type='text')
+    leak_obj.add_attribute('last-seen', value=date_to_str(paste.p_date), type='datetime')
+    leak_obj.add_attribute('raw-data', value=source, data=pseudofile, type="attachment")
+    # FIXME TODO: delete this
+    leak_obj.add_attribute('type', value='Onion', type='text')
+
+    try:
+        templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == obj_name][0]
+    except IndexError:
+        valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
+        print ("Template for type {} not found! Valid types are: {%s}".format(obj_name, valid_types))
+    r = pymisp.add_object(eventid, templateID, leak_obj)
+    if 'errors' in r:
+        return False
+    else:
+    #if self._p_duplicate_number > 0:
+        #event.add_attribute('duplicate', value=self._p_duplicate, type='text')
+        #event.add_attribute('duplicate_number', value=self._p_duplicate_number, type='counter')
+        event_url = misp_event_url + eventid
+        return eventid
+
+def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, l_tags, path):
+
+    ail_uuid = r_serv_db.get('ail:uuid')
+    source = path.split('/')[-6:]
+    source = '/'.join(source)[:-3]
+    # get paste date
+    var = path.split('/')
+    last_seen = "{0}-{1}-{2}".format(var[-4], var[-3], var[-2])
+
+    case = Case(title=hive_case_title,
+                tlp=hive_tlp,
+                severity=threat_level,
+                flag=False,
+                tags=l_tags,
+                description='hive_description')
+
+    # Create the case
+    id = None
+    response = HiveApi.create_case(case)
+    if response.status_code == 201:
+        id = response.json()['id']
+
+        observ_sensor = CaseObservable(dataType="other", data=[ail_uuid], message="sensor")
+        observ_file = CaseObservable(dataType="file", data=[path], tags=l_tags)
+        observ_source = CaseObservable(dataType="other", data=[source], message="source")
+        observ_last_seen = CaseObservable(dataType="other", data=[last_seen], message="last-seen")
+
+        res = HiveApi.create_case_observable(id,observ_sensor)
+        if res.status_code != 201:
+            print('ko: {}/{}'.format(res.status_code, res.text))
+        res = HiveApi.create_case_observable(id, observ_source)
+        if res.status_code != 201:
+            print('ko: {}/{}'.format(res.status_code, res.text))
+        res = HiveApi.create_case_observable(id, observ_file)
+        if res.status_code != 201:
+            print('ko: {}/{}'.format(res.status_code, res.text))
+        res = HiveApi.create_case_observable(id, observ_last_seen)
+        if res.status_code != 201:
+            print('ko: {}/{}'.format(res.status_code, res.text))
+
+        return hive_case_url.replace('id_here', id)
+    else:
+        print('ko: {}/{}'.format(response.status_code, response.text))
+        return False
+
 # ============= ROUTES ==============
 
 @PasteSubmit.route("/PasteSubmit/", methods=['GET'])
@@ -150,10 +261,7 @@ def submit():
     else:
         ltags ='submitted'
 
-    print(request.files)
-
     if 'file' in request.files:
-        print(request.files)
 
         file = request.files['file']
         if file:
@@ -196,7 +304,6 @@ def submit():
 
             # get id
             UUID = str(uuid.uuid4())
-            print(UUID)
 
             #if paste_name:
                 # clean file name
@@ -279,6 +386,43 @@ def submit_status():
             return 'to do'
     else:
         return 'INVALID UUID'
+
+
+@PasteSubmit.route("/PasteSubmit/create_misp_event", methods=['POST'])
+def create_misp_event():
+
+    distribution = int(request.form['misp_data[Event][distribution]'])
+    threat_level_id = int(request.form['misp_data[Event][threat_level_id]'])
+    analysis = int(request.form['misp_data[Event][analysis]'])
+    info = request.form['misp_data[Event][info]']
+    path = request.form['paste']
+
+    #verify input
+    if (0 <= distribution <= 3) and (1 <= threat_level_id <= 4) and (0 <= analysis <= 2):
+
+        l_tags = list(r_serv_metadata.smembers('tag:'+path))
+        event = misp_create_event(distribution, threat_level_id, analysis, info, l_tags, path)
+
+
+    return event
+
+@PasteSubmit.route("/PasteSubmit/create_hive_case", methods=['POST'])
+def create_hive_case():
+
+    hive_tlp = int(request.form['hive_tlp'])
+    threat_level = int(request.form['threat_level_hive'])
+    hive_description = request.form['hive_description']
+    hive_case_title = request.form['hive_case_title']
+    path = request.form['paste']
+
+    #verify input
+    if (0 <= hive_tlp <= 3) and (1 <= threat_level <= 4):
+
+        l_tags = list(r_serv_metadata.smembers('tag:'+path))
+        case = hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, l_tags, path)
+
+
+    return case
 
 # ========= REGISTRATION =========
 app.register_blueprint(PasteSubmit)

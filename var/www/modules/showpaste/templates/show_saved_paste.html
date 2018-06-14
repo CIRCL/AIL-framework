@@ -170,8 +170,136 @@
           </tbody>
         </table>
 
+        <div>
+          <button class="btn btn-default btn-lg" data-toggle="modal" data-target="#myModal_MISP">
+            Create
+            <img id="misp-logo" src="{{url_for('static', filename='image/misp-logo.png') }}" height="32">
+            Event
+          </button>
+          <!-- Modal MISP-->
+          <div class="modal fade" id="myModal_MISP" role="dialog">
+            <div class="modal-dialog">
+
+              <div class="modal-content">
+                <div class="modal-header text-center">
+                  <img id="misp-logo" src="{{url_for('static', filename='image/misp-logo.png') }}" >
+                </div>
+                <div class="modal-body">
+
+                  <form method="post" action="/PasteSubmit/create_misp_event"target="_blank">
+
+                  <div class="input select required">
+                    <label for="EventDistribution">Distribution</label>
+                    <select name="misp_data[Event][distribution]" id="EventDistribution" required="required">
+                      <option value="0" selected="selected">Your organisation only</option>
+                      <option value="1">This community only</option>
+                      <option value="2">Connected communities</option>
+                      <option value="3">All communities</option>
+                    </select>
+                  </div>
+                  <div class="input clear required">
+                    <label for="EventThreatLevelId">Threat Level</label>
+                    <select name="misp_data[Event][threat_level_id]" id="EventThreatLevelId" required="required">
+                      <option value="1" selected="selected">High</option>
+                      <option value="2">Medium</option>
+                      <option value="3">Low</option>
+                      <option value="4">Undefined</option>
+                    </select>
+                  </div>
+                  <div class="input select required">
+                    <label for="EventAnalysis">Analysis</label>
+                    <select name="misp_data[Event][analysis]" id="EventAnalysis" required="required">
+                      <option value="0">Initial</option>
+                      <option value="1">Ongoing</option>
+                      <option value="2">Completed</option>
+                    </select>
+                  </div>
+                  <div class="clear required">
+                    <label for="EventInfo">Event Info</label>
+                    <input name="misp_data[Event][info]" class="form-control span6" placeholder="Quick Event Description or Tracking Info" type="text" id="EventInfo" required="required"/>
+                  </div>
+                  <input type="hidden" id="paste" name="paste" value="{{ request.args.get('paste') }}">
+
+                </div>
+                <div class="modal-footer center">
+                  <button class="btn btn-primary">
+                    <span class="glyphicon glyphicon-ok "></span> Create Event
+                  </button>
+
+                </form>
+                  <button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal_hive">
+            Create
+            <img id="thehive-icon" src="{{url_for('static', filename='image/thehive_icon.png') }}">
+            Case
+          </button>
+          <!-- Modal HIVE-->
+          <div class="modal fade" id="myModal_hive" role="dialog">
+            <div class="modal-dialog">
+
+              <div class="modal-content">
+                <div class="modal-header text-center">
+                  <img id="misp-logo" src="{{url_for('static', filename='image/thehive-logo.png') }}" width="500" >
+                </div>
+
+                <div class="modal-body">
+
+                  <form method="post" action="/PasteSubmit/create_hive_case" target="_blank">
+
+                  <div class="input clear required">
+                    <label for="EventThreatLevelId">Threat Level</label>
+                    <select name="threat_level_hive" id="EventThreatLevelId" required="required">
+                      <option value="1">High</option>
+                      <option value="2" selected="selected">Medium</option>
+                      <option value="3">Low</option>
+                    </select>
+                  </div>
+                  <div class="input select required">
+                    <label for="TLP">TLP</label>
+                    <select name="hive_tlp" id="hive_tlp" required="required" class="selectpicker">
+                      <option value="0">White</option>
+                      <option value="1">Green</option>
+                      <option value="2" selected="selected">Amber</option>
+                      <option value="3">Red</option>
+                    </select>
+                  </div>
+                  <div class="clear required">
+                    <label for="hive_case_title">Title</label>
+                    <input name="hive_case_title" class="form-control span6" placeholder="Title" type="text" id="hive_case_title" required="required"/>
+                  </div>
+                  <div class="clear required">
+                    <label for="hive_description">Description</label>
+                    <input name="hive_description" class="form-control span6" placeholder="Quick Case Description" type="text" id="hive_description" required="required"/>
+                  </div>
+                  <input type="hidden" id="paste" name="paste" value="{{ request.args.get('paste') }}">
+
+                </div>
+                <div class="modal-footer center">
+                  <button href="" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-ok "></span> Create Case
+                  </button>
+
+                </form>
+                  <button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
       </div>
+
     <div class="panel-body" id="panel-body">
+
       {% if  duplicate_list|length == 0 %}
           <h3> No Duplicate </h3>
       {% else %}
@@ -203,8 +331,8 @@
         <h3> Content: </h3>
         <a href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a>
         <p data-initsize="{{ initsize }}"> <pre id="paste-holder">{{ content }}</pre></p>
-      </div>
     </div>
+  </div>
 
 </body>
 

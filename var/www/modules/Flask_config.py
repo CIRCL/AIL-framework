@@ -7,6 +7,7 @@
 import configparser
 import redis
 import os
+import sys
 
 # FLASK #
 app = None
@@ -21,7 +22,6 @@ if not os.path.exists(configfile):
 
 cfg = configparser.ConfigParser()
 cfg.read(configfile)
-
 
 # REDIS #
 r_serv = redis.StrictRedis(
@@ -89,6 +89,32 @@ r_serv_db = redis.StrictRedis(
     port=cfg.getint("ARDB_DB", "port"),
     db=cfg.getint("ARDB_DB", "db"),
     decode_responses=True)
+
+
+sys.path.append('../../configs/keys')
+# MISP #
+from pymisp import PyMISP
+try:
+    from mispKEYS import misp_url, misp_key, misp_verifycert
+    pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
+    misp_event_url = misp_url + '/events/view/'
+    print('Misp connected')
+except:
+    print('Misp not connected')
+    pymisp = None
+    misp_event_url = '#'
+# The Hive #
+from thehive4py.api import TheHiveApi
+import thehive4py.exceptions
+try:
+    from theHiveKEYS import the_hive_url, the_hive_key
+    HiveApi = TheHiveApi(the_hive_url, the_hive_key)
+    hive_case_url = the_hive_url+'/index.html#/case/id_here/details'
+    print('The Hive connected')
+except:
+    print('The HIVE not connected')
+    HiveApi = None
+    hive_case_url = '#'
 
 # VARIABLES #
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip

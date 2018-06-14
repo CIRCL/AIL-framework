@@ -1,5 +1,7 @@
 pymisp
 
+thehive4py
+
 redis
 #filemagic conflict with magic
 crcmod
