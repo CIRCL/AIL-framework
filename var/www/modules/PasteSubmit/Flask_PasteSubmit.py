@@ -5,7 +5,7 @@
     Flask functions and routes for the trending modules page
 '''
 import redis
-from flask import Flask, render_template, jsonify, request, Blueprint, url_for
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect
 
 import unicodedata
 import string
@@ -16,6 +16,7 @@ import datetime
 import uuid
 from io import BytesIO
 from Date import Date
+import json
 
 import Paste
 
@@ -140,6 +141,28 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pat
     ail_uuid = r_serv_db.get('ail:uuid')
     pseudofile = BytesIO(paste.get_p_content().encode())
 
+    temp = paste._get_p_duplicate()
+
+    #beautifier
+    if not temp:
+        temp = ''
+
+    p_duplicate_number = len(temp) if len(temp) >= 0 else 0
+
+    to_ret = ""
+    for dup in temp[:10]:
+        dup = dup.replace('\'','\"').replace('(','[').replace(')',']')
+        dup = json.loads(dup)
+        algo = dup[0]
+        path = dup[1].split('/')[-6:]
+        path = '/'.join(path)[:-3] # -3 removes .gz
+        if algo == 'tlsh':
+            perc = 100 - int(dup[2])
+        else:
+            perc = dup[2]
+        to_ret += "{}: {} [{}%]\n".format(path, algo, perc)
+    p_duplicate = to_ret
+
     today = datetime.date.today()
     # [0-3]
     published = False
@@ -167,6 +190,10 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pat
     # FIXME TODO: delete this
     leak_obj.add_attribute('type', value='Onion', type='text')
 
+    if p_duplicate_number > 0:
+        leak_obj.add_attribute('duplicate', value=p_duplicate, type='text')
+        leak_obj.add_attribute('duplicate_number', value=p_duplicate_number, type='counter')
+
     try:
         templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == obj_name][0]
     except IndexError:
@@ -176,11 +203,8 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pat
     if 'errors' in r:
         return False
     else:
-    #if self._p_duplicate_number > 0:
-        #event.add_attribute('duplicate', value=self._p_duplicate, type='text')
-        #event.add_attribute('duplicate_number', value=self._p_duplicate_number, type='counter')
         event_url = misp_event_url + eventid
-        return eventid
+        return event_url
 
 def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, l_tags, path):
 
@@ -403,8 +427,11 @@ def create_misp_event():
         l_tags = list(r_serv_metadata.smembers('tag:'+path))
         event = misp_create_event(distribution, threat_level_id, analysis, info, l_tags, path)
 
-
-    return event
+        if event != False:
+            return redirect(event)
+        else:
+            return 'error'
+    return 'error'
 
 @PasteSubmit.route("/PasteSubmit/create_hive_case", methods=['POST'])
 def create_hive_case():
@@ -421,8 +448,104 @@ def create_hive_case():
         l_tags = list(r_serv_metadata.smembers('tag:'+path))
         case = hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, l_tags, path)
 
+        if case != False:
+            return redirect(case)
+        else:
+            return 'error'
 
-    return case
+    return 'error'
+
+@PasteSubmit.route("/PasteSubmit/edit_tag_export")
+def edit_tag_export():
+    misp_auto_events = r_serv_db.get('misp:auto-events')
+    hive_auto_alerts = r_serv_db.get('hive:auto-alerts')
+
+    whitelist_misp = r_serv_db.scard('whitelist_misp')
+    whitelist_hive = r_serv_db.scard('whitelist_hive')
+
+    list_export_tags = list(r_serv_db.smembers('list_export_tags'))
+    status_misp = []
+    status_hive = []
+
+    # empty whitelist
+    if whitelist_misp == 0:
+        for tag in list_export_tags:
+            status_misp.append(True)
+    else:
+        for tag in list_export_tags:
+            if r_serv_db.sismember('whitelist_misp', tag):
+                status_misp.append(True)
+            else:
+                status_misp.append(False)
+
+    # empty whitelist
+    if whitelist_hive == 0:
+        for tag in list_export_tags:
+            status_hive.append(True)
+    else:
+        for tag in list_export_tags:
+            if r_serv_db.sismember('whitelist_hive', tag):
+                status_hive.append(True)
+            else:
+                status_hive.append(False)
+
+    if int(misp_auto_events) == 1:
+        misp_active = True
+    else:
+        misp_active = False
+    if int(hive_auto_alerts)  == 1:
+        hive_active = True
+    else:
+        hive_active = False
+    return render_template("edit_tag_export.html",
+                            misp_active=misp_active,
+                            hive_active=hive_active,
+                            list_export_tags=list_export_tags,
+                            status_misp=status_misp,
+                            status_hive=status_hive)
+
+@PasteSubmit.route("/PasteSubmit/tag_export_edited", methods=['POST'])
+def tag_export_edited():
+    tag_enabled_misp = request.form.getlist('tag_enabled_misp')
+    tag_enabled_hive = request.form.getlist('tag_enabled_hive')
+
+    list_export_tags = list(r_serv_db.smembers('list_export_tags'))
+
+    r_serv_db.delete('whitelist_misp')
+    r_serv_db.delete('whitelist_hive')
+
+    for tag in tag_enabled_misp:
+        if r_serv_db.sismember('list_export_tags', tag):
+            r_serv_db.sadd('whitelist_misp', tag)
+        else:
+            return 'invalid input'
+
+    for tag in tag_enabled_hive:
+        if r_serv_db.sismember('list_export_tags', tag):
+            r_serv_db.sadd('whitelist_hive', tag)
+        else:
+            return 'invalid input'
+    return redirect(url_for('PasteSubmit.edit_tag_export'))
+
+@PasteSubmit.route("/PasteSubmit/enable_misp_auto_event")
+def enable_misp_auto_event():
+    r_serv_db.set('misp:auto-events', 1)
+    return edit_tag_export()
+
+@PasteSubmit.route("/PasteSubmit/disable_misp_auto_event")
+def disable_misp_auto_event():
+    r_serv_db.set('misp:auto-events', 0)
+    return edit_tag_export()
+
+@PasteSubmit.route("/PasteSubmit/enable_hive_auto_alert")
+def enable_hive_auto_alert():
+    r_serv_db.set('hive:auto-alerts', 1)
+    return edit_tag_export()
+
+@PasteSubmit.route("/PasteSubmit/disable_hive_auto_alert")
+def disable_hive_auto_alert():
+    r_serv_db.set('hive:auto-alerts', 0)
+    return edit_tag_export()
 
 # ========= REGISTRATION =========
 app.register_blueprint(PasteSubmit)

@@ -171,6 +171,7 @@
         </table>
 
         <div>
+          {% if misp %}
           <button class="btn btn-default btn-lg" data-toggle="modal" data-target="#myModal_MISP">
             Create
             <img id="misp-logo" src="{{url_for('static', filename='image/misp-logo.png') }}" height="32">
@@ -234,7 +235,9 @@
 
             </div>
           </div>
+          {% endif %}
 
+          {% if hive %}
           <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal_hive">
             Create
             <img id="thehive-icon" src="{{url_for('static', filename='image/thehive_icon.png') }}">
@@ -294,6 +297,7 @@
 
             </div>
           </div>
+          {% endif %}
         </div>
 
       </div>

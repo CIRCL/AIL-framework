@@ -51,29 +51,29 @@ class ObjectWrapper:
         self.p_content = self.paste.get_p_content()
         self.p_tag = tag
 
-        '''print(path)
         temp = self.paste._get_p_duplicate()
 
         #beautifier
         if not temp:
             temp = ''
 
-        temp = json.dumps(temp)
-        print(temp)
-        self.p_duplicate_number = len(temp) if len(temp) >= 0 else 0
+        p_duplicate_number = len(temp) if len(temp) >= 0 else 0
+
         to_ret = ""
-        for dup in temp[:self.maxDuplicateToPushToMISP]:
-            print(dup)
+        for dup in temp[:10]:
+            dup = dup.replace('\'','\"').replace('(','[').replace(')',']')
+            dup = json.loads(dup)
             algo = dup[0]
             path = dup[1].split('/')[-6:]
             path = '/'.join(path)[:-3] # -3 removes .gz
-            perc = dup[2]
+            if algo == 'tlsh':
+                perc = 100 - int(dup[2])
+            else:
+                perc = dup[2]
             to_ret += "{}: {} [{}%]\n".format(path, algo, perc)
-        self.p_duplicate = to_ret'''
-        self.p_duplicate = ""
-        self.p_duplicate_number = 0
+        p_duplicate = to_ret
 
-        self.mispObject = AilLeakObject(self.uuid_ail, self.p_source, self.p_date, self.p_content, self.p_duplicate, self.p_duplicate_number)
+        self.mispObject = AilLeakObject(self.uuid_ail, self.p_source, self.p_date, self.p_content, p_duplicate, p_duplicate_number)
 
     def date_to_str(self, date):
         return "{0}-{1}-{2}".format(date.year, date.month, date.day)

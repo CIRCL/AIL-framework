@@ -38,7 +38,10 @@ except:
 # import The Hive Keys
 try:
     from theHiveKEYS import the_hive_url, the_hive_key
-    flag_the_hive = True
+    if the_hive_url == '':
+        flag_the_hive = False
+    else:
+        flag_the_hive = True
 except:
     print('The HIVE keys not present')
     flag_the_hive = False
@@ -73,16 +76,18 @@ def create_the_hive_alert(source, path, content, tag):
 
     # Create the Alert
     id = None
-    response = HiveApi.create_alert(alert)
-    if response.status_code == 201:
-        #print(json.dumps(response.json(), indent=4, sort_keys=True))
-        print('Alert Created')
-        print('')
-        id = response.json()['id']
-    else:
-        print('ko: {}/{}'.format(response.status_code, response.text))
-        return 0
-
+    try:
+        response = HiveApi.create_alert(alert)
+        if response.status_code == 201:
+            #print(json.dumps(response.json(), indent=4, sort_keys=True))
+            print('Alert Created')
+            print('')
+            id = response.json()['id']
+        else:
+            print('ko: {}/{}'.format(response.status_code, response.text))
+            return 0
+    except:
+        print('hive connection error')
 
 if __name__ == "__main__":
 
@@ -121,14 +126,14 @@ if __name__ == "__main__":
     p = Process(config_section)
     # create MISP connection
     if flag_misp:
-        #try:
-        pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
-        misp_wrapper = ailleakObject.ObjectWrapper(pymisp)
-        r_serv_db.set('ail:misp', True)
-        print('Connected to MISP:', misp_url)
-        #except:
-            #flag_misp = False
-            #print('Not connected to MISP')
+        try:
+            pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
+            misp_wrapper = ailleakObject.ObjectWrapper(pymisp)
+            r_serv_db.set('ail:misp', True)
+            print('Connected to MISP:', misp_url)
+        except:
+            flag_misp = False
+            print('Not connected to MISP')
 
     # create The HIVE connection
     if flag_the_hive:
@@ -158,8 +163,18 @@ if __name__ == "__main__":
                 full_path = os.path.join(os.environ['AIL_HOME'],
                                         p.config.get("Directories", "pastes"), path)
 
-                if HiveApi != False:
-                    create_the_hive_alert(source, path, full_path, tag)
 
+                if HiveApi != False:
+                    if int(r_serv_db.get('hive:auto-alerts')) == 1:
+                        whitelist_hive = r_serv_db.scard('whitelist_hive')
+                        if r_serv_db.scard('whitelist_hive') == 0 or r_serv_db.sismember('whitelist_hive', tag):
+                            create_the_hive_alert(source, path, full_path, tag)
+
+                    else:
+                        print('hive, auto alerts creation disable')
                 if flag_misp:
-                    misp_wrapper.pushToMISP(uuid_ail, path, tag)
+                    if int(r_serv_db.get('misp:auto-events')) == 1:
+                        if r_serv_db.scard('whitelist_misp') == 0 or r_serv_db.sismember('whitelist_misp', tag):
+                            misp_wrapper.pushToMISP(uuid_ail, path, tag)
+                    else:
+                        print('misp, auto events creation disable')

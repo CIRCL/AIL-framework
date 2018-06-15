@@ -135,6 +135,19 @@ for tag in taxonomies.get('gdpr').machinetags():
 for tag in taxonomies.get('fpf').machinetags():
     r_serv_tags.sadd('active_tag_fpf', tag)
 
+# ========== INITIAL tags auto export ============
+r_serv_db = redis.StrictRedis(
+    host=cfg.get("ARDB_DB", "host"),
+    port=cfg.getint("ARDB_DB", "port"),
+    db=cfg.getint("ARDB_DB", "db"),
+    decode_responses=True)
+infoleak_tags = taxonomies.get('infoleak').machinetags()
+infoleak_automatic_tags = []
+for tag in taxonomies.get('infoleak').machinetags():
+    if tag.split('=')[0][:] == 'infoleak:automatic-detection':
+        r_serv_db.sadd('list_export_tags', tag)
+
+r_serv_db.sadd('list_export_tags', 'submitted')
 # ============ MAIN ============
 
 if __name__ == "__main__":

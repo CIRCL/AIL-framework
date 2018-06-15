@@ -101,19 +101,24 @@ try:
     print('Misp connected')
 except:
     print('Misp not connected')
-    pymisp = None
+    pymisp = False
     misp_event_url = '#'
 # The Hive #
 from thehive4py.api import TheHiveApi
 import thehive4py.exceptions
 try:
     from theHiveKEYS import the_hive_url, the_hive_key
-    HiveApi = TheHiveApi(the_hive_url, the_hive_key)
-    hive_case_url = the_hive_url+'/index.html#/case/id_here/details'
-    print('The Hive connected')
+    if the_hive_url == '':
+        HiveApi = False
+        hive_case_url = '#'
+        print('The HIVE not connected')
+    else:
+        HiveApi = TheHiveApi(the_hive_url, the_hive_key)
+        hive_case_url = the_hive_url+'/index.html#/case/id_here/details'
+        print('The Hive connected')
 except:
     print('The HIVE not connected')
-    HiveApi = None
+    HiveApi = False
     hive_case_url = '#'
 
 # VARIABLES #
