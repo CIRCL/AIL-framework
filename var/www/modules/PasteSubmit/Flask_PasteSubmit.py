@@ -179,7 +179,7 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pub
     eventUuid = event['Event']['uuid']
     eventid = event['Event']['id']
 
-    r_serv_metadata.set('misp_events:path', eventid)
+    r_serv_metadata.set('misp_events:'+path, eventid)
 
     # add tags
     for tag in l_tags:
@@ -192,8 +192,6 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pub
     leak_obj.add_attribute('origin', value=source, type='text')
     leak_obj.add_attribute('last-seen', value=date_to_str(paste.p_date), type='datetime')
     leak_obj.add_attribute('raw-data', value=source, data=pseudofile, type="attachment")
-    # FIXME TODO: delete this
-    leak_obj.add_attribute('type', value='Onion', type='text')
 
     if p_duplicate_number > 0:
         leak_obj.add_attribute('duplicate', value=p_duplicate, type='text')
@@ -206,6 +204,7 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pub
         print ("Template for type {} not found! Valid types are: {%s}".format(obj_name, valid_types))
     r = pymisp.add_object(eventid, templateID, leak_obj)
     if 'errors' in r:
+        print(r)
         return False
     else:
         event_url = misp_event_url + eventid
@@ -251,7 +250,7 @@ def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, 
         if res.status_code != 201:
             print('ko: {}/{}'.format(res.status_code, res.text))
 
-        r_serv_metadata.set('hive_cases:path', id)
+        r_serv_metadata.set('hive_cases:'+path, id)
 
         return hive_case_url.replace('id_here', id)
     else:
@@ -286,7 +285,8 @@ def submit():
 
     if ltags or ltagsgalaxies:
         if not addTagsVerification(ltags, ltagsgalaxies):
-            return 'INVALID TAGS'
+            content = {'INVALID TAGS'}
+            return content, status.HTTP_400_BAD_REQUEST
 
     # add submitted tags
     if(ltags != ''):
@@ -329,10 +329,11 @@ def submit():
                                             UUID = UUID)
 
             else:
-                print('wrong file type')
+                content = {'wrong file type'}
+                return content, status.HTTP_400_BAD_REQUEST
 
 
-    if paste_content != '':
+    elif paste_content != '':
         if sys.getsizeof(paste_content) < 900000:
 
             # get id
@@ -348,9 +349,11 @@ def submit():
                                         UUID = UUID)
 
         else:
-            return 'size error'
+            content = {'size error'}
+            return content, status.HTTP_400_BAD_REQUEST
 
-        return 'submit'
+        content = {'submit aborded'}
+        return content, status.HTTP_400_BAD_REQUEST
 
 
     return PasteSubmit_page()
@@ -440,8 +443,8 @@ def create_misp_event():
         if event != False:
             return redirect(event)
         else:
-            return 'error'
-    return 'error'
+            return 'error1'
+    return 'error0'
 
 @PasteSubmit.route("/PasteSubmit/create_hive_case", methods=['POST'])
 def create_hive_case():

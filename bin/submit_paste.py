@@ -201,10 +201,14 @@ if __name__ == "__main__":
                     filename = file_full_path.split('/')[-1]
                     if not '.' in filename:
                         # read file
-                        with open(file_full_path,'r') as f:
-                            content = f.read()
+                        try:
+                            with open(file_full_path,'r') as f:
+                                content = f.read()
+                        except:
+                            abord_file_submission(uuid, "file error")
+                            continue
                         r_serv_log_submit.set(uuid + ':nb_total', 1)
-                        create_paste(uuid, content.encode(), ltags, ltagsgalaxies, uuid)
+                        create_paste(uuid, content, ltags, ltagsgalaxies, uuid)
                         remove_submit_uuid(uuid)
 
                     else:
