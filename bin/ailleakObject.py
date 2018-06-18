@@ -29,8 +29,6 @@ class AilLeakObject(AbstractMISPObjectGenerator):
         res = self.add_attribute('raw-data', value=self._p_source, data=self._pseudofile, type="attachment")# , ShadowAttribute=self.p_tag)
         #res.add_shadow_attributes(tag)
         self.add_attribute('sensor', value=self._uuid, type="text")
-        # FIXME TODO: delete this
-        self.add_attribute('type', value='Onion', type='text')
 
 class ObjectWrapper:
     def __init__(self, pymisp):
