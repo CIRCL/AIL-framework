@@ -24,6 +24,8 @@ max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
 bootstrap_label = Flask_config.bootstrap_label
+misp_event_url = Flask_config.misp_event_url
+hive_case_url = Flask_config.hive_case_url
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
@@ -124,8 +126,24 @@ def showpaste(content_range):
     else:
         hive = True
 
+    misp_event = r_serv_metadata.get('misp_events:path')
+    if misp_event is None:
+        misp_eventid = False
+        misp_url = ''
+    else:
+        misp_eventid = True
+        misp_url = misp_event_url + misp_event
+
+    hive_case = r_serv_metadata.get('hive_cases:path')
+    if hive_case is None:
+        hive_caseid = False
+        hive_url = ''
+    else:
+        hive_caseid = True
+        hive_url = hive_case_url.replace('id_here', hive_case)
+
     return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, active_galaxies=active_galaxies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list,
-                            misp=misp, hive=hive)
+                            misp=misp, hive=hive, misp_eventid=misp_eventid, misp_url=misp_url, hive_caseid=hive_caseid, hive_url=hive_url)
 
 # ============ ROUTES ============
 

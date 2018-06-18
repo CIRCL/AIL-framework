@@ -133,7 +133,7 @@ def addTagsVerification(tags, tagsgalaxies):
 def date_to_str(date):
     return "{0}-{1}-{2}".format(date.year, date.month, date.day)
 
-def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, path):
+def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, publish, path):
 
     paste = Paste.Paste(path)
     source = path.split('/')[-6:]
@@ -165,7 +165,10 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pat
 
     today = datetime.date.today()
     # [0-3]
-    published = False
+    if publish == 'True':
+        published = True
+    else:
+        published = False
     org_id = None
     orgc_id = None
     sharing_group_id = None
@@ -175,6 +178,8 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pat
             published, orgc_id, org_id, sharing_group_id)
     eventUuid = event['Event']['uuid']
     eventid = event['Event']['id']
+
+    r_serv_metadata.set('misp_events:path', eventid)
 
     # add tags
     for tag in l_tags:
@@ -246,6 +251,8 @@ def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, 
         if res.status_code != 201:
             print('ko: {}/{}'.format(res.status_code, res.text))
 
+        r_serv_metadata.set('hive_cases:path', id)
+
         return hive_case_url.replace('id_here', id)
     else:
         print('ko: {}/{}'.format(response.status_code, response.text))
@@ -275,15 +282,17 @@ def submit():
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
 
+    submitted_tag = 'infoleak:submission="manual"'
+
     if ltags or ltagsgalaxies:
         if not addTagsVerification(ltags, ltagsgalaxies):
             return 'INVALID TAGS'
 
     # add submitted tags
     if(ltags != ''):
-        ltags = ltags + ',submitted'
+        ltags = ltags + ',' + submitted_tag
     else:
-        ltags ='submitted'
+        ltags = submitted_tag
 
     if 'file' in request.files:
 
@@ -420,12 +429,13 @@ def create_misp_event():
     analysis = int(request.form['misp_data[Event][analysis]'])
     info = request.form['misp_data[Event][info]']
     path = request.form['paste']
+    publish = request.form.get('misp_publish')
 
     #verify input
     if (0 <= distribution <= 3) and (1 <= threat_level_id <= 4) and (0 <= analysis <= 2):
 
         l_tags = list(r_serv_metadata.smembers('tag:'+path))
-        event = misp_create_event(distribution, threat_level_id, analysis, info, l_tags, path)
+        event = misp_create_event(distribution, threat_level_id, analysis, info, l_tags, publish, path)
 
         if event != False:
             return redirect(event)
@@ -467,16 +477,12 @@ def edit_tag_export():
     status_misp = []
     status_hive = []
 
-    # empty whitelist
-    if whitelist_misp == 0:
-        for tag in list_export_tags:
+
+    for tag in list_export_tags:
+        if r_serv_db.sismember('whitelist_misp', tag):
             status_misp.append(True)
-    else:
-        for tag in list_export_tags:
-            if r_serv_db.sismember('whitelist_misp', tag):
-                status_misp.append(True)
-            else:
-                status_misp.append(False)
+        else:
+            status_misp.append(False)
 
     # empty whitelist
     if whitelist_hive == 0:
@@ -497,12 +503,19 @@ def edit_tag_export():
         hive_active = True
     else:
         hive_active = False
+
+    nb_tags = str(r_serv_db.scard('list_export_tags'))
+    nb_tags_whitelist_misp = str(r_serv_db.scard('whitelist_misp')) + ' / ' + nb_tags
+    nb_tags_whitelist_hive = str(r_serv_db.scard('whitelist_hive')) + ' / ' + nb_tags
+
     return render_template("edit_tag_export.html",
                             misp_active=misp_active,
                             hive_active=hive_active,
                             list_export_tags=list_export_tags,
                             status_misp=status_misp,
-                            status_hive=status_hive)
+                            status_hive=status_hive,
+                            nb_tags_whitelist_misp=nb_tags_whitelist_misp,
+                            nb_tags_whitelist_hive=nb_tags_whitelist_hive)
 
 @PasteSubmit.route("/PasteSubmit/tag_export_edited", methods=['POST'])
 def tag_export_edited():
@@ -525,6 +538,7 @@ def tag_export_edited():
             r_serv_db.sadd('whitelist_hive', tag)
         else:
             return 'invalid input'
+
     return redirect(url_for('PasteSubmit.edit_tag_export'))
 
 @PasteSubmit.route("/PasteSubmit/enable_misp_auto_event")

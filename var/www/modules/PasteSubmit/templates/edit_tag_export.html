@@ -90,8 +90,6 @@
 				      <div class="panel-heading">The hive auto export
 				        {% if hive_active %}
 				          <span class="label label-success pull-right"> Enabled</span>
-									<span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
-									<span class="badge badge-light pull-right">{{ badge }}</span>
 				        {% endif %}
 				        {% if not hive_active %}
 				          <span class="label label-danger pull-right"> Disabled</span>
@@ -130,7 +128,9 @@
 
 								<div class="panel panel-info">
 									<div class="panel-heading">
-								Metadata :
+										Metadata :
+										<span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
+										<span class="badge pull-right">{{ nb_tags_whitelist_misp }}</span>
 							 	<ul class="list-group"><li class="list-group-item">
 									<table class="test table table-striped table-bordered table-hover table-responsive " id="myTable_misp">
 										<thead>
@@ -167,7 +167,9 @@
 
 								<div class="panel panel-info">
 									<div class="panel-heading">
-								Metadata :
+										Metadata :
+										<span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
+										<span class="badge pull-right">{{ nb_tags_whitelist_hive }}</span>
 							 	<ul class="list-group"><li class="list-group-item">
 
 									<table class="test table table-striped table-bordered table-hover table-responsive " id="myTable_hive">

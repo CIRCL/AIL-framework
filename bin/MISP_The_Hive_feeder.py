@@ -167,14 +167,14 @@ if __name__ == "__main__":
                 if HiveApi != False:
                     if int(r_serv_db.get('hive:auto-alerts')) == 1:
                         whitelist_hive = r_serv_db.scard('whitelist_hive')
-                        if r_serv_db.scard('whitelist_hive') == 0 or r_serv_db.sismember('whitelist_hive', tag):
+                        if r_serv_db.sismember('whitelist_hive', tag):
                             create_the_hive_alert(source, path, full_path, tag)
 
                     else:
                         print('hive, auto alerts creation disable')
                 if flag_misp:
                     if int(r_serv_db.get('misp:auto-events')) == 1:
-                        if r_serv_db.scard('whitelist_misp') == 0 or r_serv_db.sismember('whitelist_misp', tag):
+                        if r_serv_db.sismember('whitelist_misp', tag):
                             misp_wrapper.pushToMISP(uuid_ail, path, tag)
                     else:
                         print('misp, auto events creation disable')

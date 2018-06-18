@@ -121,7 +121,7 @@ class ObjectWrapper:
                 analysis, info, date,
                 published, orgc_id, org_id, sharing_group_id)
         eventUuid = event['Event']['uuid']
-        self.pymisp.tag(eventUuid, 'infoleak:source="unknown"')
+        self.pymisp.tag(eventUuid, 'infoleak:output-format="ail-daily"')
         return event
 
     # Publish object to MISP
