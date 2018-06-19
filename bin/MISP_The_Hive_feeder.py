@@ -37,7 +37,7 @@ except:
 
 # import The Hive Keys
 try:
-    from theHiveKEYS import the_hive_url, the_hive_key
+    from theHiveKEYS import the_hive_url, the_hive_key, the_hive_verifycert
     if the_hive_url == '':
         flag_the_hive = False
     else:
@@ -47,6 +47,7 @@ except:
     flag_the_hive = False
 
 from thehive4py.api import TheHiveApi
+import thehive4py.exceptions
 from thehive4py.models import Alert, AlertArtifact
 from thehive4py.models import Case, CaseTask, CustomFieldHelper
 
@@ -128,21 +129,40 @@ if __name__ == "__main__":
     if flag_misp:
         try:
             pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
-            misp_wrapper = ailleakObject.ObjectWrapper(pymisp)
-            r_serv_db.set('ail:misp', True)
-            print('Connected to MISP:', misp_url)
         except:
             flag_misp = False
+            r_serv_db.set('ail:misp', False)
             print('Not connected to MISP')
+
+        if flag_misp:
+            try:
+                misp_wrapper = ailleakObject.ObjectWrapper(pymisp)
+                r_serv_db.set('ail:misp', True)
+                print('Connected to MISP:', misp_url)
+            except e:
+                flag_misp = False
+                r_serv_db.set('ail:misp', False)
+                print(e)
+                print('Not connected to MISP')
 
     # create The HIVE connection
     if flag_the_hive:
         try:
-            HiveApi = TheHiveApi(the_hive_url, the_hive_key)
+            HiveApi = TheHiveApi(the_hive_url, the_hive_key, cert = the_hive_verifycert)
             r_serv_db.set('ail:thehive', True)
-            print('Connected to The HIVE:', the_hive_url)
         except:
             HiveApi = False
+            flag_the_hive = False
+            r_serv_db.set('ail:thehive', False)
+            print('Not connected to The HIVE')
+
+    if HiveApi != False and flag_the_hive:
+        try:
+            HiveApi.get_alert(0)
+            print('Connected to The HIVE:', the_hive_url)
+        except thehive4py.exceptions.AlertException:
+            HiveApi = False
+            flag_the_hive = False
             print('Not connected to The HIVE')
 
     while True:
@@ -155,7 +175,7 @@ if __name__ == "__main__":
             continue
         else:
 
-            if HiveApi or flag_misp:
+            if flag_the_hive or flag_misp:
                 tag, path = message.split(';')
                 paste = Paste.Paste(path)
                 source = '/'.join(paste.p_path.split('/')[-6:])

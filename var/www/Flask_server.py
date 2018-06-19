@@ -147,7 +147,7 @@ for tag in taxonomies.get('infoleak').machinetags():
     if tag.split('=')[0][:] == 'infoleak:automatic-detection':
         r_serv_db.sadd('list_export_tags', tag)
 
-r_serv_db.sadd('list_export_tags', 'submitted')
+r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":
