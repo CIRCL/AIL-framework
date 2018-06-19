@@ -71,16 +71,24 @@
 									</div>
 									<br>
 
-				          {% if misp_active %}
-				          <a href="{{ url_for('PasteSubmit.disable_misp_auto_event') }}" class="btn btn-danger pull-right">
-				            <i class="fa fa-times fa"></i> Disable Event Creation
-				          </a>
-				          {% endif %}
-				          {% if not misp_active %}
-				          <a href="{{ url_for('PasteSubmit.enable_misp_auto_event') }}" class="btn btn-success pull-right">
-				            <i class="fa fa-check-square-o fa"></i> Enable Event Creation
-				          </a>
-				          {% endif %}
+									{% if flag_misp %}
+					          {% if misp_active %}
+					          <a href="{{ url_for('PasteSubmit.disable_misp_auto_event') }}" class="btn btn-danger pull-right">
+					            <i class="fa fa-times fa"></i> Disable Event Creation
+					          </a>
+					          {% endif %}
+					          {% if not misp_active %}
+					          <a href="{{ url_for('PasteSubmit.enable_misp_auto_event') }}" class="btn btn-success pull-right">
+					            <i class="fa fa-check-square-o fa"></i> Enable Event Creation
+					          </a>
+					          {% endif %}
+									{% endif %}
+
+									{% if not flag_misp %}
+										<button class="btn btn-danger pull-right disabled">
+											<i class="fa fa-times fa"></i> MISP is not connected
+										</button>
+									{% endif %}
 				        </div>
 				      </div>
 						</div>
@@ -101,16 +109,23 @@
 									<img id="misp-logo" src="{{url_for('static', filename='image/thehive-logo.png') }}" width="500">
 								</div>
 
-				        {% if hive_active %}
-				        <a href="{{ url_for('PasteSubmit.disable_hive_auto_alert') }}" class="btn btn-danger pull-right">
-				          <i class="fa fa-times fa"></i> Disable Alert Creation
-				        </a>
-				        {% endif %}
-				        {% if not hive_active %}
-				        <a href="{{ url_for('PasteSubmit.enable_hive_auto_alert') }}" class="btn btn-success pull-right">
-				          <i class="fa fa-check-square-o fa"></i> Enable Alert Creation
-				        </a>
-				        {% endif %}
+								{% if flag_hive %}
+					        {% if hive_active %}
+					        <a href="{{ url_for('PasteSubmit.disable_hive_auto_alert') }}" class="btn btn-danger pull-right">
+					          <i class="fa fa-times fa"></i> Disable Alert Creation
+					        </a>
+					        {% endif %}
+					        {% if not hive_active %}
+					        <a href="{{ url_for('PasteSubmit.enable_hive_auto_alert') }}" class="btn btn-success pull-right">
+					          <i class="fa fa-check-square-o fa"></i> Enable Alert Creation
+					        </a>
+					        {% endif %}
+								{% endif %}
+								{% if not flag_hive %}
+									<button class="btn btn-danger pull-right disabled">
+										<i class="fa fa-times fa"></i> The Hive is not connected
+									</button>
+								{% endif %}
 				      </div>
 				    </div>
 					</div>

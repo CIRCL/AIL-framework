@@ -70,3 +70,9 @@ source ./../../AILENV/bin/activate
 #Update MISP Taxonomies and Galaxies
 python3 -m pip install git+https://github.com/MISP/PyTaxonomies
 python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies
+
+#Update PyMISP
+python3 -m pip install git+https://github.com/MISP/PyMISP
+
+#Update the Hive
+python3 -m pip install git+https://github.com/TheHive-Project/TheHive4py

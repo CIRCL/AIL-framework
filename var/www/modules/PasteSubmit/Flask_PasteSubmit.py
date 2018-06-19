@@ -23,8 +23,16 @@ import Paste
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 
-from pymisp.mispevent import MISPObject
-from thehive4py.models import Case, CaseTask, CustomFieldHelper, CaseObservable
+try:
+    from pymisp.mispevent import MISPObject
+    flag_misp = True
+except:
+    flag_misp = False
+try:
+    from thehive4py.models import Case, CaseTask, CustomFieldHelper, CaseObservable
+    flag_hive = True
+except:
+    flag_hive = False
 
 # ============ VARIABLES ============
 import Flask_config
@@ -37,8 +45,12 @@ r_serv_db = Flask_config.r_serv_db
 r_serv_log_submit = Flask_config.r_serv_log_submit
 
 pymisp = Flask_config.pymisp
+if pymisp is False:
+    flag_misp = False
 
 HiveApi = Flask_config.HiveApi
+if HiveApi is False:
+    flag_hive = False
 
 PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder='templates')
 
@@ -308,6 +320,10 @@ def submit():
                     # clean file name
                     UUID = clean_filename(paste_name)'''
 
+                # create submitted dir
+                if not os.path.exists(UPLOAD_FOLDER):
+                    os.makedirs(UPLOAD_FOLDER)
+
                 if not '.' in file.filename:
                     full_path = os.path.join(UPLOAD_FOLDER, UUID)
                 else:
@@ -518,7 +534,9 @@ def edit_tag_export():
                             status_misp=status_misp,
                             status_hive=status_hive,
                             nb_tags_whitelist_misp=nb_tags_whitelist_misp,
-                            nb_tags_whitelist_hive=nb_tags_whitelist_hive)
+                            nb_tags_whitelist_hive=nb_tags_whitelist_hive,
+                            flag_misp=flag_misp,
+                            flag_hive=flag_hive)
 
 @PasteSubmit.route("/PasteSubmit/tag_export_edited", methods=['POST'])
 def tag_export_edited():

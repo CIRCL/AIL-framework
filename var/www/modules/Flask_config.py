@@ -93,8 +93,8 @@ r_serv_db = redis.StrictRedis(
 
 sys.path.append('../../configs/keys')
 # MISP #
-from pymisp import PyMISP
 try:
+    from pymisp import PyMISP
     from mispKEYS import misp_url, misp_key, misp_verifycert
     pymisp = PyMISP(misp_url, misp_key, misp_verifycert)
     misp_event_url = misp_url + '/events/view/'
@@ -104,22 +104,29 @@ except:
     pymisp = False
     misp_event_url = '#'
 # The Hive #
-from thehive4py.api import TheHiveApi
-import thehive4py.exceptions
 try:
-    from theHiveKEYS import the_hive_url, the_hive_key
+    from thehive4py.api import TheHiveApi
+    import thehive4py.exceptions
+    from theHiveKEYS import the_hive_url, the_hive_key, the_hive_verifycert
     if the_hive_url == '':
         HiveApi = False
         hive_case_url = '#'
         print('The HIVE not connected')
     else:
-        HiveApi = TheHiveApi(the_hive_url, the_hive_key)
+        HiveApi = TheHiveApi(the_hive_url, the_hive_key, cert=the_hive_verifycert)
         hive_case_url = the_hive_url+'/index.html#/case/id_here/details'
-        print('The Hive connected')
+        #HiveApi.do_patch(the_hive_url)
 except:
     print('The HIVE not connected')
     HiveApi = False
     hive_case_url = '#'
+
+try:
+    HiveApi.get_alert(0)
+    print('The Hive connected')
+except thehive4py.exceptions.AlertException:
+    HiveApi = False
+    print('The Hive not connected')
 
 # VARIABLES #
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
