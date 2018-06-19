@@ -120,7 +120,7 @@ except:
     HiveApi = False
     hive_case_url = '#'
 
-if HiveApi != False
+if HiveApi != False:
     try:
         HiveApi.get_alert(0)
         print('The Hive connected')
