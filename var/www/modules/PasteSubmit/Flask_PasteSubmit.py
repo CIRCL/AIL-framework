@@ -459,7 +459,7 @@ def create_misp_event():
         if event != False:
             return redirect(event)
         else:
-            return 'error1'
+            return 'error, event creation'
     return 'error0'
 
 @PasteSubmit.route("/PasteSubmit/create_hive_case", methods=['POST'])

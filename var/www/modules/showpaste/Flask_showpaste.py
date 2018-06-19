@@ -126,7 +126,7 @@ def showpaste(content_range):
     else:
         hive = True
 
-    misp_event = r_serv_metadata.get('misp_events:path')
+    misp_event = r_serv_metadata.get('misp_events:' + requested_path)
     if misp_event is None:
         misp_eventid = False
         misp_url = ''
@@ -134,7 +134,7 @@ def showpaste(content_range):
         misp_eventid = True
         misp_url = misp_event_url + misp_event
 
-    hive_case = r_serv_metadata.get('hive_cases:path')
+    hive_case = r_serv_metadata.get('hive_cases:' + requested_path)
     if hive_case is None:
         hive_caseid = False
         hive_url = ''
