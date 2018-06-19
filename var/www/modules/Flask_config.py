@@ -115,18 +115,18 @@ try:
     else:
         HiveApi = TheHiveApi(the_hive_url, the_hive_key, cert=the_hive_verifycert)
         hive_case_url = the_hive_url+'/index.html#/case/id_here/details'
-        #HiveApi.do_patch(the_hive_url)
 except:
     print('The HIVE not connected')
     HiveApi = False
     hive_case_url = '#'
 
-try:
-    HiveApi.get_alert(0)
-    print('The Hive connected')
-except thehive4py.exceptions.AlertException:
-    HiveApi = False
-    print('The Hive not connected')
+if HiveApi != False
+    try:
+        HiveApi.get_alert(0)
+        print('The Hive connected')
+    except thehive4py.exceptions.AlertException:
+        HiveApi = False
+        print('The Hive not connected')
 
 # VARIABLES #
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
