@@ -162,6 +162,11 @@ host = localhost
 port = 6382
 db = 7
 
+[ARDB_Statistics]
+host = localhost
+port = 6382
+db = 8
+
 [Url]
 cc_critical = DE
 

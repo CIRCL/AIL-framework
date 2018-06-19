@@ -9,6 +9,7 @@ import json
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint, make_response
 import difflib
+import ssdeep
 
 import Paste
 
@@ -20,6 +21,7 @@ cfg = Flask_config.cfg
 r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_tags = Flask_config.r_serv_tags
+r_serv_statistics = Flask_config.r_serv_statistics
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
@@ -112,9 +114,21 @@ def showpaste(content_range):
 
     for tag in l_tags:
         if(tag[9:28] == 'automatic-detection'):
-            list_tags.append( (tag, True) )
+            automatic = True
         else:
-            list_tags.append( (tag, False) )
+            automatic = False
+
+        tag_hash = ssdeep.hash(tag)
+        if r_serv_statistics.hexists(tag_hash, 'tp'):
+            tag_status_tp = True
+        else:
+            tag_status_tp = False
+        if r_serv_statistics.hexists(tag_hash, 'fp'):
+            tag_status_fp = True
+        else:
+            tag_status_fp = False
+
+        list_tags.append( (tag, automatic, tag_status_tp, tag_status_fp) )
 
     if Flask_config.pymisp is False:
         misp = False

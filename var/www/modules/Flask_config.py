@@ -90,6 +90,12 @@ r_serv_db = redis.StrictRedis(
     db=cfg.getint("ARDB_DB", "db"),
     decode_responses=True)
 
+r_serv_statistics = redis.StrictRedis(
+    host=cfg.get("ARDB_Statistics", "host"),
+    port=cfg.getint("ARDB_Statistics", "port"),
+    db=cfg.getint("ARDB_Statistics", "db"),
+    decode_responses=True)
+
 
 sys.path.append('../../configs/keys')
 # MISP #

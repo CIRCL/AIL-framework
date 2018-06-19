@@ -122,6 +122,28 @@
                       <span class="label label-{{ bootstrap_label[loop.index0 % 5] }}" >{{ tag[0] }}</span>
                     </div>
                     <div class="modal-footer center">
+
+                        {% if not tag[2] %}
+                          <a href="{{ url_for('Tags.tag_validation') }}?paste={{ request.args.get('paste') }}&tag={{ tag[0] }}&status=tp" class="btn btn-success pull-left" data-toggle="tooltip" title="Good Detection">
+                            <span class="glyphicon glyphicon-thumbs-up "></span>
+                          </a>
+                        {% endif %}
+                        {% if tag[2] %}
+                          <button class="btn btn-success pull-left disabled" data-toggle="tooltip" title="Good Detection">
+                            <span class="glyphicon glyphicon-thumbs-up "></span>
+                          </button>
+                        {% endif %}
+                        {% if not tag[3] %}
+                          <a href="{{ url_for('Tags.tag_validation') }}?paste={{ request.args.get('paste') }}&tag={{ tag[0] }}&status=fp" class="btn btn-danger pull-left" data-toggle="tooltip" title="Bad Detection">
+                            <span class="glyphicon glyphicon-thumbs-down "></span>
+                          </a>
+                        {% endif %}
+                        {% if tag[3] %}
+                          <button class="btn btn-danger pull-left disabled" data-toggle="tooltip" title="Bad Detection">
+                            <span class="glyphicon glyphicon-thumbs-down "></span>
+                          </button>
+                        {% endif %}
+
                       {% if tag[1] %}
                         <a href="{{ url_for('Tags.confirm_tag') }}?paste={{ request.args.get('paste') }}&tag={{ tag[0] }}" class="btn btn-primary">
                           <span class="glyphicon glyphicon-ok "></span> Confirm this Tag
