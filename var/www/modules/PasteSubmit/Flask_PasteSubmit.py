@@ -514,13 +514,18 @@ def edit_tag_export():
             else:
                 status_hive.append(False)
 
-    if int(misp_auto_events) == 1:
-        misp_active = True
+    if (misp_auto_events is not None) and (hive_auto_alerts is not None):
+
+        if int(misp_auto_events) == 1:
+            misp_active = True
+        else:
+            misp_active = False
+        if int(hive_auto_alerts)  == 1:
+            hive_active = True
+        else:
+            hive_active = False
     else:
         misp_active = False
-    if int(hive_auto_alerts)  == 1:
-        hive_active = True
-    else:
         hive_active = False
 
     nb_tags = str(r_serv_db.scard('list_export_tags'))
