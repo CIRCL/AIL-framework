@@ -188,7 +188,7 @@ Terms manager and occurence
 Command line module manager
 ---------------------------
 
-![Module-Manager](./doc/screenshots/module-manager.png?raw=true "AIL framework ModuleInformationV2.py")
+![Module-Manager](./doc/screenshots/module_information.png?raw=true "AIL framework ModuleInformationV2.py")
 
 License
 =======
