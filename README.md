@@ -133,6 +133,10 @@ HOWTO
 
 HOWTO are available in [HOWTO.md](HOWTO.md)
 
+Privacy and GDPR
+----------------
+
+[AIL information leaks analysis and the GDPR in the context of collection, analysis and sharing information leaks](https://www.circl.lu/assets/files/information-leaks-analysis-and-gdpr.pdf) document provides an overview how to use AIL in a lawfulness context especially in the scope of General Data Protection Regulation.
 
 Screenshots
 ===========
