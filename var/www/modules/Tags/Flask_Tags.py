@@ -308,12 +308,12 @@ def tag_validation():
 
     if (status == 'fp' or status == 'tp') and r_serv_tags.sismember('list_tags', tag):
 
-        tag_hash = ssdeep.hash(tag)
-        r_serv_statistics.hset(tag_hash, status, path)
         if status == 'tp':
-            r_serv_statistics.hdel(tag_hash, 'fp')
+            r_serv_statistics.sadd('tp:'+tag, path)
+            r_serv_statistics.srem('fp:'+tag, path)
         else:
-            r_serv_statistics.hdel(tag_hash, 'tp')
+            r_serv_statistics.sadd('fp:'+tag, path)
+            r_serv_statistics.srem('tp:'+tag, path)
 
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
     else:

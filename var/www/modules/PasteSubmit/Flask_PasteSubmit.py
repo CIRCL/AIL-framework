@@ -56,7 +56,7 @@ PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder='templates')
 
 valid_filename_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 
-ALLOWED_EXTENSIONS = set(['txt', 'zip', 'gz', 'tar.gz'])
+ALLOWED_EXTENSIONS = set(['txt', 'sh', 'pdf', 'zip', 'gz', 'tar.gz'])
 UPLOAD_FOLDER = Flask_config.UPLOAD_FOLDER
 
 misp_event_url = Flask_config.misp_event_url
@@ -297,8 +297,8 @@ def submit():
 
     if ltags or ltagsgalaxies:
         if not addTagsVerification(ltags, ltagsgalaxies):
-            content = {'INVALID TAGS'}
-            return content, status.HTTP_400_BAD_REQUEST
+            content = 'INVALID TAGS'
+            return content, 400
 
     # add submitted tags
     if(ltags != ''):
@@ -345,8 +345,8 @@ def submit():
                                             UUID = UUID)
 
             else:
-                content = {'wrong file type'}
-                return content, status.HTTP_400_BAD_REQUEST
+                content = 'wrong file type, allowed_extensions: sh, pdf, zip, gz, tar.gz or remove the extension'
+                return content, 400
 
 
     elif paste_content != '':
@@ -365,11 +365,11 @@ def submit():
                                         UUID = UUID)
 
         else:
-            content = {'size error'}
-            return content, status.HTTP_400_BAD_REQUEST
+            content = 'size error'
+            return content, 400
 
-        content = {'submit aborded'}
-        return content, status.HTTP_400_BAD_REQUEST
+        content = 'submit aborded'
+        return content, 400
 
 
     return PasteSubmit_page()

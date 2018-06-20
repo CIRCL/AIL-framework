@@ -119,11 +119,11 @@ def showpaste(content_range):
             automatic = False
 
         tag_hash = ssdeep.hash(tag)
-        if r_serv_statistics.hexists(tag_hash, 'tp'):
+        if r_serv_statistics.sismember('tp:'+tag, requested_path):
             tag_status_tp = True
         else:
             tag_status_tp = False
-        if r_serv_statistics.hexists(tag_hash, 'fp'):
+        if r_serv_statistics.sismember('fp:'+tag, requested_path):
             tag_status_fp = True
         else:
             tag_status_fp = False

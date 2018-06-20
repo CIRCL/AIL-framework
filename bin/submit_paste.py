@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     expire_time = 120
     MAX_FILE_SIZE = 1000000000
-    ALLOWED_EXTENSIONS = 'txt'
+    ALLOWED_EXTENSIONS = ['txt', 'sh', 'pdf']
 
     config_section = 'submit_paste'
     p = Process(config_section)
@@ -215,7 +215,7 @@ if __name__ == "__main__":
                         file_type = filename.rsplit('.', 1)[1]
 
                         #txt file
-                        if file_type == 'txt':
+                        if file_type in ALLOWED_EXTENSIONS:
                             with open(file_full_path,'r') as f:
                                 content = f.read()
                             r_serv_log_submit.set(uuid + ':nb_total', 1)
