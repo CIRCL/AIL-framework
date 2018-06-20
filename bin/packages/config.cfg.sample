@@ -92,6 +92,11 @@ host = localhost
 port = 6380
 db = 0
 
+[Redis_Log_submit]
+host = localhost
+port = 6380
+db = 1
+
 [Redis_Queues]
 host = localhost
 port = 6381
@@ -156,6 +161,11 @@ db = 6
 host = localhost
 port = 6382
 db = 7
+
+[ARDB_Statistics]
+host = localhost
+port = 6382
+db = 8
 
 [Url]
 cc_critical = DE

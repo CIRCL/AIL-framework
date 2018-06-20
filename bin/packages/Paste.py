@@ -76,7 +76,7 @@ class Paste(object):
             port=cfg.getint("Redis_Data_Merging", "port"),
             db=cfg.getint("Redis_Data_Merging", "db"),
             decode_responses=True)
-        self.store_duplicate = redis.StrictRedis(
+        self.store_metadata = redis.StrictRedis(
             host=cfg.get("ARDB_Metadata", "host"),
             port=cfg.getint("ARDB_Metadata", "port"),
             db=cfg.getint("ARDB_Metadata", "db"),
@@ -105,6 +105,7 @@ class Paste(object):
         self.p_max_length_line = None
         self.array_line_above_threshold = None
         self.p_duplicate = None
+        self.p_tags = None
 
     def get_p_content(self):
         """
@@ -277,9 +278,16 @@ class Paste(object):
             return False, var
 
     def _get_p_duplicate(self):
-        self.p_duplicate = self.store_duplicate.smembers('dup:'+self.p_path)
+        self.p_duplicate = self.store_metadata.smembers('dup:'+self.p_path)
         if self.p_duplicate is not None:
             return list(self.p_duplicate)
+        else:
+            return '[]'
+
+    def _get_p_tags(self):
+        self.p_tags = self.store_metadata.smembers('tag:'+path, tag)
+        if self.self.p_tags is not None:
+            return list(self.p_tags)
         else:
             return '[]'
 
@@ -333,7 +341,7 @@ class Paste(object):
         Save an attribute as a field
         """
         for tuple in value:
-            self.store_duplicate.sadd('dup:'+self.p_path, tuple)
+            self.store_metadata.sadd('dup:'+self.p_path, tuple)
 
     def save_others_pastes_attribute_duplicate(self, list_value):
         """
@@ -341,7 +349,7 @@ class Paste(object):
         """
         for hash_type, path, percent, date in list_value:
             to_add = (hash_type, self.p_path, percent, date)
-            self.store_duplicate.sadd('dup:'+path,to_add)
+            self.store_metadata.sadd('dup:'+path,to_add)
 
     def _get_from_redis(self, r_serv):
         ans = {}

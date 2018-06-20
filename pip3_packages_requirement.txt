@@ -1,5 +1,7 @@
 pymisp
 
+thehive4py
+
 redis
 #filemagic conflict with magic
 crcmod
@@ -55,6 +57,9 @@ pycountry
 
 # To fetch Onion urls
 PySocks
+
+# decompress files
+sflock
 
 #ASN lookup requirements
 #https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/adns-python/adns-python-1.2.1.tar.gz

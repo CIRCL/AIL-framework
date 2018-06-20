@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
+          <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+					<script src="/static//js/bootstrap.min.js"></script>
+					<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+	</head>
+	<body>
+
+		{% include 'navbar.html' %}
+
+<div id="page-wrapper">
+<div class="row">
+	<!-- /.col-lg-12 -->
+
+	<form action="/PasteSubmit/submit" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+
+		<input type="hidden" id="tags_taxonomies" name="tags_taxonomies" value="test">
+		<input type="hidden" id="tags_galaxies" name="tags_galaxies" value="test">
+
+	<div class="panel panel-primary pull-left" style="width: 40%;">
+		<div class="panel-heading">Files submission
+		</div>
+		<div class="panel-body">
+
+			<div class="form-group">
+				<label for="file">Submit a file </label>
+				<input type="file" class="form-control-file" id="file" name="file">
+			</div>
+
+			<div class="form-group">
+				<label for="paste_name">Archive Password</label>
+				<input type="password" class="form-control" id="password" name="password" placeholder="Optionnal">
+			</div>
+		</div>
+	</div>
+
+	<div class="panel panel-info pull-right" style="width: auto;">
+		<div class="panel-heading"> Tags :
+			<ul class="list-group">
+				<li class="list-group-item">
+
+					<div class="form-group input-group" >
+						<input id="ltags" style="width:450%;" type="text">
+					</div>
+
+					<div class="btn-group btn-block">
+							<button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Taxonomie Selection
+								<i class="fa fa-chevron-down"></i>
+							</button>
+							<ul class="dropdown-menu scrollable-menu" role="menu">
+									<li><a href="#" id="all-tags-taxonomies">All Tags <i class="fa fa-tags"></i></a></li>
+									<li role="separator" class="divider"></li>
+									{% for taxo in active_taxonomies %}
+											<li><a href="#" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</a></li>
+									{% endfor %}
+							</ul>
+					</div>
+
+				</li>
+				<li class="list-group-item">
+
+					<div class="form-group input-group" >
+						<input id="ltagsgalaxies" style="width:450%;" type="text">
+					</div>
+
+					<div class="btn-group btn-block">
+							<button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown">Galaxy Selection
+								<i class="fa fa-chevron-down"></i>
+							</button>
+							<ul class="dropdown-menu scrollable-menu" role="menu">
+									<li><a href="#" id="all-tags-galaxies">All Tags <i class="fa fa-tags"></i></a></li>
+									<li role="separator" class="divider"></li>
+									{% for galaxy in active_galaxies %}
+											<li><a href="#" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</a></li>
+									{% endfor %}
+							</ul>
+					</div>
+
+				</li>
+			</ul>
+			</div>
+	</div>
+
+	<div>
+
+			<div class="form-group">
+				<textarea class="form-control" id="paste_content" name="paste_content" rows="25"></textarea>
+			</div>
+
+			<div class="form-group">
+				<button class="btn btn-primary " name="submit" type="submit">Submit this paste</button>
+			</div>
+
+					</form>
+
+				<!-- /.row -->
+
+      </div>
+      <!-- /#page-wrapper -->
+		</div>
+
+	</body>
+
+<script>
+    var ltags
+    var ltagsgalaxies
+    $(document).ready(function(){
+
+        $.getJSON('/Tags/get_all_tags_taxonomies',
+          function(data) {
+
+            ltags = $('#ltags').tagSuggest({
+              data: data,
+              maxDropHeight: 200,
+              name: 'ltags'
+            });
+          });
+
+        $.getJSON('/Tags/get_all_tags_galaxies',
+          function(data) {
+
+            ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
+              data: data,
+              maxDropHeight: 200,
+              name: 'ltagsgalaxies'
+            });
+          });
+
+				activePage = "page-PasteSubmit"
+				$("#"+activePage).addClass("active");
+
+				$('#modalsubmit').modal({backdrop: 'static'})
+    });
+</script>
+
+<script>
+function submitPaste(){
+	document.getElementById("tags_taxonomies").value = ltags.getValue();
+  document.getElementById("tags_galaxies").value = ltagsgalaxies.getValue();
+}
+</script>
+
+<script>
+    jQuery("#all-tags-taxonomies").click(function(e){
+      //change input tags list
+      $.getJSON('/Tags/get_all_tags_taxonomies',
+        function(data) {
+          ltags.setData(data)
+      });
+    });
+
+</script>
+<script>
+    jQuery("#all-tags-galaxies").click(function(e){
+      $.getJSON('/Tags/get_all_tags_galaxies',
+        function(data) {
+          ltagsgalaxies.setData(data)
+      });
+    });
+
+{% for taxo in active_taxonomies %}
+    jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
+      $.getJSON('/Tags/get_tags_taxonomie?taxonomie={{ taxo }}',
+        function(data) {
+          ltags.setData(data)
+  });
+});
+{% endfor %}
+</script>
+<script>
+{% for galaxy in active_galaxies %}
+    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
+      $.getJSON('/Tags/get_tags_galaxy?galaxy={{ galaxy }}',
+        function(data) {
+          ltagsgalaxies.setData(data)
+  });
+});
+{% endfor %}
+</script>
+
+</html>

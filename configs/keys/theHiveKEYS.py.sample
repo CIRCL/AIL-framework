@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+the_hive_url = 'http://10.1.0.145:9000'
+the_hive_key = 'KfiPGz3Bi8E5styWbC2eU4WiTKDGdf22' # The Hive auth key can be found on the The Hive web interface under the User Management
+the_hive_verifycert = True

@@ -160,9 +160,13 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c './MISP_The_Hive_feeder.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tags" bash -c './Tags.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c './submit_paste.py; read x'
 
 }
 

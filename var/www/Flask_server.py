@@ -7,7 +7,7 @@ import json
 import datetime
 import time
 import calendar
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Request
 import flask
 import importlib
 import os
@@ -28,6 +28,7 @@ cfg = Flask_config.cfg
 
 Flask_config.app = Flask(__name__, static_url_path='/static/')
 app = Flask_config.app
+app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 
 # ========= HEADER GENERATION ========
 
@@ -134,6 +135,19 @@ for tag in taxonomies.get('gdpr').machinetags():
 for tag in taxonomies.get('fpf').machinetags():
     r_serv_tags.sadd('active_tag_fpf', tag)
 
+# ========== INITIAL tags auto export ============
+r_serv_db = redis.StrictRedis(
+    host=cfg.get("ARDB_DB", "host"),
+    port=cfg.getint("ARDB_DB", "port"),
+    db=cfg.getint("ARDB_DB", "db"),
+    decode_responses=True)
+infoleak_tags = taxonomies.get('infoleak').machinetags()
+infoleak_automatic_tags = []
+for tag in taxonomies.get('infoleak').machinetags():
+    if tag.split('=')[0][:] == 'infoleak:automatic-detection':
+        r_serv_db.sadd('list_export_tags', tag)
+
+r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":

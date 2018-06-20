@@ -122,7 +122,6 @@ def search():
     # Search full line
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
-    print(selected_index)
     ix = index.open_dir(selected_index)
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(" ".join(q))

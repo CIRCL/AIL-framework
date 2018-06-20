@@ -36,6 +36,9 @@ Features
 * Detect Bitcoin address and Bitcoin private keys
 * Detect private keys and certificate
 * Tagging system with [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies) tags
+* UI paste submission
+* Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
+* Automatic paste export on [MISP](https://github.com/MISP/MISP) (events) and [The Hive](https://github.com/TheHive-Project/TheHive) (alerts) on selected tags
 
 Installation
 ------------
@@ -153,6 +156,16 @@ Tagging system
 --------
 
 ![Tags](./doc/screenshots/tags.png?raw=true "AIL framework tags")
+
+MISP and The Hive, automatic events and alerts creation
+--------
+
+![paste_submit](./doc/screenshots/tag_auto_export.png?raw=true "AIL framework MISP and Hive auto export")
+
+Paste submission
+--------
+
+![paste_submit](./doc/screenshots/paste_submit.png?raw=true "AIL framework paste submission")
 
 Sentiment analysis
 ------------------

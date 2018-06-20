@@ -33,6 +33,9 @@ sudo pip install nose
 sudo apt-get install libfuzzy-dev -y
 sudo apt-get install build-essential libffi-dev automake autoconf libtool -y
 
+# sflock, gz requirement
+sudo apt-get install p7zip-full -y
+
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/

@@ -9,6 +9,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 
 import json
 from datetime import datetime
+import ssdeep
 
 import Paste
 
@@ -22,6 +23,7 @@ app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_metadata = Flask_config.r_serv_metadata
+r_serv_statistics = Flask_config.r_serv_statistics
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
@@ -63,6 +65,7 @@ def get_tags_with_synonyms(tag):
         return {'name':tag + str_synonyms,'id':tag}
     else:
         return {'name':tag,'id':tag}
+
 
 # ============= ROUTES ==============
 
@@ -295,6 +298,26 @@ def confirm_tag():
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
     return 'incompatible tag'
+
+@Tags.route("/Tags/tag_validation")
+def tag_validation():
+
+    path = request.args.get('paste')
+    tag = request.args.get('tag')
+    status = request.args.get('status')
+
+    if (status == 'fp' or status == 'tp') and r_serv_tags.sismember('list_tags', tag):
+
+        if status == 'tp':
+            r_serv_statistics.sadd('tp:'+tag, path)
+            r_serv_statistics.srem('fp:'+tag, path)
+        else:
+            r_serv_statistics.sadd('fp:'+tag, path)
+            r_serv_statistics.srem('tp:'+tag, path)
+
+        return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+    else:
+        return 'input error'
 
 @Tags.route("/Tags/addTags")
 def addTags():

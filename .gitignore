@@ -17,6 +17,7 @@ BASE64
 DATA_ARDB
 indexdir/
 logs/
+old/
 
 # Webstuff
 var/www/static/
@@ -26,9 +27,11 @@ var/www/static/
 !var/www/static/js/plot-graph.js
 !var/www/static/js/trendingchart.js
 var/www/templates/header.html
+var/www/submitted
 
 # Local config
 bin/packages/config.cfg
+configs/keys
 
 # installed files
 nltk_data/

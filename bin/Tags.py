@@ -66,3 +66,5 @@ if __name__ == '__main__':
                 print("new paste: {}".format(path))
                 print("   tagged: {}".format(tag))
             server_metadata.sadd('tag:'+path, tag)
+
+            p.populate_set_out(message, 'MISP_The_Hive_feeder')
