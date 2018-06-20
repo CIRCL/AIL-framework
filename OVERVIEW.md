@@ -1,7 +1,7 @@
 Overview
 ========
 
-Redis and LevelDB overview
+Redis and ARDB overview
 --------------------------
 
 * Redis on TCP port 6379
@@ -11,12 +11,13 @@ Redis and LevelDB overview
 * Redis on TCP port 6381
     - DB 0 - PubSub + Queue and Paste content LRU cache
     - DB 1 - _Mixer_ Cache
-* LevelDB on TCP port 6382
+* ARDB on TCP port 6382
     - DB 1 - Curve
     - DB 2 - Trending
     - DB 3 - Terms
     - DB 4 - Sentiments
-* LevelDB on TCP port <year>
+* ARDB on TCP port <year>
     - DB 0 - Lines duplicate
-    - DB 1 - Hashs
+    - DB 1 - Hashes
 
+To be updated
