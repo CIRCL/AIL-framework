@@ -20,4 +20,7 @@ WORKDIR /opt/AIL/var/www
 RUN ./update_thirdparty.sh
 WORKDIR /opt/AIL
 
+# Default to UTF-8 file.encoding
+ENV LANG C.UTF-8
+
 CMD bash docker_start.sh
