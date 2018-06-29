@@ -11,6 +11,7 @@ This module create tags.
 import redis
 
 import time
+import datetime
 
 from pubsublogger import publisher
 from Helper import Process
@@ -41,6 +42,12 @@ if __name__ == '__main__':
                 db=p.config.get("ARDB_Metadata", "db"),
                 decode_responses=True)
 
+    serv_statistics = redis.StrictRedis(
+        host=p.config.get('ARDB_Statistics', 'host'),
+        port=p.config.get('ARDB_Statistics', 'port'),
+        db=p.config.get('ARDB_Statistics', 'db'),
+        decode_responses=True)
+
     # Sent to the logging a description of the module
     publisher.info("Tags module started")
 
@@ -67,4 +74,6 @@ if __name__ == '__main__':
                 print("   tagged: {}".format(tag))
             server_metadata.sadd('tag:'+path, tag)
 
+            curr_date = datetime.date.today()
+            serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'paste_tagged:'+tag, 1)
             p.populate_set_out(message, 'MISP_The_Hive_feeder')

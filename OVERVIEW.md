@@ -1,7 +1,7 @@
 Overview
 ========
 
-Redis and LevelDB overview
+Redis and ARDB overview
 --------------------------
 
 * Redis on TCP port 6379
@@ -19,4 +19,33 @@ Redis and LevelDB overview
 * LevelDB on TCP port <year>
     - DB 0 - Lines duplicate
     - DB 1 - Hashs
+
+
+ARDB overview
+---------------------------
+
+* DB 7 - Metadata:
+	----------------------------------------- BASE64 ----------------------------------------
+
+	HSET - 'metadata_hash:'+hash	'saved_path'		saved_path
+					'size'			size
+					'first_seen'		first_seen
+					'last_seen'		last_seen
+					'estimated_type'	estimated_type
+					'vt_link'		vt_link
+					'vt_report'		vt_report
+					'nb_seen_in_all_pastes'	nb_seen_in_all_pastes
+
+	SET  - 'base64_paste:'+paste	hash *
+
+	ZADD - 'base64_date:'+20180622	hash *			nb_seen_this_day
+
+	ZADD - 'base64_hash'+hash	paste *			nb_seen_in_paste
+
+	SET  - 'hash_all_type'		hash_type
+
+	ZADD - 'base64_type:'+type	date			nb_seen
+
+
+
 

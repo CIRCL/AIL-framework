@@ -8,6 +8,7 @@
 import time
 import os
 import datetime
+import redis
 
 from pubsublogger import publisher
 
@@ -31,7 +32,7 @@ def timeout_handler(signum, frame):
 signal.signal(signal.SIGALRM, timeout_handler)
 
 
-def search_base64(content, message):
+def search_base64(content, message, date):
     find = False
     base64_list = re.findall(regex_base64, content)
     if(len(base64_list) > 0):
@@ -46,6 +47,8 @@ def search_base64(content, message):
 
                 find = True
                 hash = sha1(decode).hexdigest()
+                print(message)
+                print(hash)
 
                 data = {}
                 data['name'] = hash
@@ -54,8 +57,36 @@ def search_base64(content, message):
                 data['estimated type'] = type
                 json_data = json.dumps(data)
 
-                save_base64_as_file(decode, type, hash, json_data)
-                print('found {} '.format(type))
+                date_paste = '{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])
+                date_key = date[0:4] + date[4:6] + date[6:8]
+
+                serv_metadata.zincrby('base64_date:'+date_key, hash, 1)
+
+                # first time we see this hash
+                if not serv_metadata.hexists('metadata_hash:'+hash, 'estimated_type'):
+                    serv_metadata.hset('metadata_hash:'+hash, 'first_seen', date_paste)
+                    serv_metadata.hset('metadata_hash:'+hash, 'last_seen', date_paste)
+                else:
+                    serv_metadata.hset('metadata_hash:'+hash, 'last_seen', date_paste)
+
+                # first time we see this file on this paste
+                if serv_metadata.zscore('base64_hash:'+hash, message) is None:
+                    print('first')
+                    serv_metadata.hincrby('metadata_hash:'+hash, 'nb_seen_in_all_pastes', 1)
+
+                    serv_metadata.sadd('base64_paste:'+message, hash) # paste - hash map
+                    serv_metadata.zincrby('base64_hash:'+hash, message, 1)# hash - paste map
+
+                    # create hash metadata
+                    serv_metadata.hset('metadata_hash:'+hash, 'estimated_type', type)
+                    serv_metadata.sadd('hash_all_type', type)
+                    serv_metadata.zincrby('base64_type:'+type, date_key, 1)
+
+                    save_base64_as_file(decode, type, hash, json_data, id)
+                    print('found {} '.format(type))
+                # duplicate
+                else:
+                    serv_metadata.zincrby('base64_hash:'+hash, message, 1) # number of b64 on this paste
 
     if(find):
         publisher.warning('base64 decoded')
@@ -68,10 +99,10 @@ def search_base64(content, message):
         msg = 'infoleak:automatic-detection="base64";{}'.format(message)
         p.populate_set_out(msg, 'Tags')
 
-def save_base64_as_file(decode, type, hash, json_data):
+def save_base64_as_file(decode, type, hash, json_data, id):
 
-    filename_b64 = os.path.join(os.environ['AIL_HOME'],
-                            p.config.get("Directories", "base64"), type, hash[:2], hash)
+    local_filename_b64 = os.path.join(p.config.get("Directories", "base64"), type, hash[:2], hash)
+    filename_b64 = os.path.join(os.environ['AIL_HOME'], local_filename_b64)
 
     filename_json = os.path.join(os.environ['AIL_HOME'],
                             p.config.get("Directories", "base64"), type, hash[:2], hash + '.json')
@@ -82,6 +113,10 @@ def save_base64_as_file(decode, type, hash, json_data):
 
     with open(filename_b64, 'wb') as f:
         f.write(decode)
+
+    # create hash metadata
+    serv_metadata.hset('metadata_hash:'+hash, 'saved_path', local_filename_b64)
+    serv_metadata.hset('metadata_hash:'+hash, 'size', os.path.getsize(filename_b64))
 
     with open(filename_json, 'w') as f:
         f.write(json_data)
@@ -102,6 +137,12 @@ if __name__ == '__main__':
     # Setup the I/O queues
     p = Process(config_section)
     max_execution_time = p.config.getint("Base64", "max_execution_time")
+
+    serv_metadata = redis.StrictRedis(
+        host=p.config.get("ARDB_Metadata", "host"),
+        port=p.config.getint("ARDB_Metadata", "port"),
+        db=p.config.getint("ARDB_Metadata", "db"),
+        decode_responses=True)
 
     # Sent to the logging a description of the module
     publisher.info("Base64 started")
@@ -127,13 +168,12 @@ if __name__ == '__main__':
             # Do something with the message from the queue
             #print(filename)
             content = paste.get_p_content()
-            search_base64(content,message)
-
-            # (Optional) Send that thing to the next queue
-            #p.populate_set_out(something_has_been_done)
+            date = str(paste._get_p_date())
+            search_base64(content,message, date)
 
         except TimeoutException:
-             print ("{0} processing timeout".format(paste.p_path))
-             continue
+            p.incr_module_timeout_statistic()
+            print ("{0} processing timeout".format(paste.p_path))
+            continue
         else:
             signal.alarm(0)

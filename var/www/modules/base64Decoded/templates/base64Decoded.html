@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.js') }}"></script>
+		<style>
+			.red_table thead{
+				background: #d91f2d;
+				color: #fff;
+			}
+			.line {
+    		fill: none;
+    		stroke: #000;
+    		stroke-width: 2.0px;
+			}
+			.bar {
+        fill: steelblue;
+      }
+      .bar:hover{
+        fill: brown;
+      }
+		</style>
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+				<div class="row">
+				  <div class="col-lg-12">
+					  <h1 class="page-header" data-page="page-termsfrequency" >Base64 Files</h1>
+						<div>
+
+	          </div>
+				  </div>
+				  <!-- /.col-lg-12 -->
+
+					{% if  type %}
+					<div id="barchart_type">
+          </div>
+					{% endif %}
+					{% if  daily_type_chart %}
+					<div id="barchart_type">
+          </div>
+					{% endif %}
+
+					<!-- /#page-wrapper -->
+					{% if  l_64|length != 0 %}
+							<h3> Today Base64 files: </h3>
+							<table id="tableb64" class="red_table table table-striped table-bordered">
+							<thead>
+							<tr>
+									<th>estimated type</th>
+									<th>hash</th>
+									<th>first seen</th>
+									<th>last seen</th>
+									<th>nb paste</th>
+									<th>size</th>
+									<th>Virus Total</th>
+									<th>Test</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for b64 in l_64 %}
+									<tr>
+											<td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
+											<td>{{ b64[2] }}</td>
+											<td>{{ b64[5] }}</td>
+											<td>{{ b64[6] }}</td>
+											<td>{{ b64[3] }}</td>
+											<td>{{ b64[4] }}</td>
+											<td style="text-align:center;max-width:150px;">
+												{% if  vt_enabled %}
+													{% if not b64[7] %}
+														<form action="/base64Decoded/send_file_to_vt" id="vt_submit" method='post'>
+															<input type="hidden" id="hash" name="hash" value="b64[2]">
+															<button class="btn btn-primary">
+																<i class="fa fa-paper-plane"></i>     Send this file to VT
+															</button>
+													</form>
+													{% else %}
+														<a class="btn btn-default" target="_blank" href="{{ b64[8] }}"><i class="fa fa-link"> VT scan reports</i></a>
+													{% endif %}
+													<button class="btn btn-default" onclick="updateVTReport('{{ b64[2] }}')">
+		                        <div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[8] }}</div>
+		                      </button>
+												{% else %}
+													Virus Total submission is disabled
+												{% endif %}
+											</td>
+											<td id="sparklines_{{ b64[2] }}" style="text-align:center;">
+											</td>
+									</tr>
+							{% endfor %}
+							</tbody>
+							</table>
+					{% else %}
+						<h3>{{daily_date[0:4]}}/{{daily_date[4:6]}}/{{daily_date[6:8]}}, No base64</h3>
+					{% endif %}
+
+				</div>
+				<!-- /.row -->
+
+            <script>
+                $(document).ready(function(){
+                    activePage = "page-base64Decoded"
+                    $("#"+activePage).addClass("active");
+
+										$('#tableb64').DataTable({
+						  				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+						  				"iDisplayLength": 10,
+						  				"order": [[ 3, "desc" ]]
+						  			});
+
+										{% if  type %}
+										barchart_type('/base64Decoded/hash_by_type_json?type={{type}}', '#barchart_type');
+										{% endif %}
+										{% if  daily_type_chart %}
+										barchart_type('/base64Decoded/daily_type_json?date={{daily_date}}', '#barchart_type');
+										console.log('cool')
+										{% endif %}
+
+                });
+            </script>
+<script>
+	function updateVTReport(hash) {
+		//updateReport
+		$.getJSON('/base64Decoded/update_vt_result?hash='+hash,
+			function(data) {
+				content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
+				$( "#report_vt_"+hash ).html(content);
+		});
+	}
+
+</script>
+<script>
+//var data = [6,3,3,2,5,3,9];
+
+// a sparklines plot
+function sparklines(id, points) {
+    var width = 100, height = 60;
+
+    var data = []
+    for (i = 0; i < points.length; i++) {
+        data[i] = {
+            'x': i,
+            'y': +points[i]
+        }
+    }
+
+    var x = d3.scaleLinear()
+        .range([0, width - 10])
+        .domain([0,5]);
+
+    var y = d3.scaleLinear()
+        .range([height, 0])
+        .domain([0,10]);
+
+    var line = d3.line()
+                .x(function(d) {return x(d.x)})
+                .y(function(d) {return y(d.y)});
+
+    d3.select("#"+id).append('svg')
+            .attr('width', width)
+            .attr('height', height)
+         .append('path')
+            .attr('class','line')
+            .datum(data)
+            .attr('d', line);
+
+}
+</script>
+<script>
+	{% for b64 in l_64 %}
+		sparklines("sparklines_{{ b64[2] }}", {{ b64[9] }})
+	{% endfor %}
+</script>
+
+<script>
+function barchart_type(url, id) {
+
+
+  var margin = {top: 20, right: 20, bottom: 70, left: 40};
+
+  var width = 960 - margin.left - margin.right;
+  var height = 500 - margin.top - margin.bottom;
+
+  var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+  var y = d3.scaleLinear().rangeRound([height, 0]);
+
+  var xAxis = d3.axisBottom(x)
+    //.tickFormat(d3.time.format("%Y-%m"));
+
+  var yAxis = d3.axisLeft(y)
+    .ticks(10);
+
+  var svg = d3.select(id).append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+
+  d3.json(url)
+    .then(function(data){
+
+        data.forEach(function(d) {
+          d.value = +d.value;
+        });
+
+				{% if  daily_type_chart %}
+				x.domain(data.map(function(d) { return d.date; }));
+				{% else %}
+				x.domain(data.map(function(d) { return d.date.substring(5); }));
+				{% endif %}
+        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+        var label = svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+          .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", "-.55em")
+						{% if  daily_type_chart %}
+						.attr("transform", "rotate(-20)" );
+						{% else %}
+						.attr("transform", "rotate(-70)" );
+						{% endif %}
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Value ($)");
+
+        var bar = svg.selectAll("bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "bar")
+            //.style("fill", "steelblue")
+						{% if  daily_type_chart %}
+						.attr("x", function(d) { return x(d.date); })
+						{% else %}
+						.attr("x", function(d) { return x(d.date.substring(5)); })
+						{% endif %}
+            .attr("width", x.bandwidth())
+            .attr("y", function(d) { return y(d.value); })
+            .attr("height", function(d) { return height - y(d.value); })
+						{% if  type %}
+            .on("click", function(d){ window.location.href = "/base64Decoded/" +'?type={{type}}&date_from='+ d.date +'&date_to='+ d.date; });
+						{% endif  %}
+						{% if  daily_type_chart %}
+						.on("click", function(d){ window.location.href = "/base64Decoded/" +'?type='+d.date+'&date_from={{ daily_date }}&date_to={{ daily_date }}'; });
+						{% endif  %}
+
+
+        data.forEach(function(d) {
+          if(d.value != 0){
+            svg.append("text")
+                .attr("class", "bar")
+                .attr("dy", "-.35em")
+                //.text(function(d) { return d.value; });
+                .text(d.value)
+								{% if  daily_type_chart %}
+								.attr('x', x(d.date) + x.bandwidth()/4)
+								{% else %}
+								.attr('x', x(d.date.substring(5)) + x.bandwidth()/4)
+								{% endif %}
+                .attr('y', y(d.value));
+          }
+        });
+
+    });
+
+}
+</script>
+
+
+        </body>
+
+</html>

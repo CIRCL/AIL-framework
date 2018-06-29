@@ -27,6 +27,11 @@
       overflow-x: hidden;
       width:100%;
     }
+
+		.red_table thead{
+			background: #d91f2d;
+			color: #fff;
+		}
   </style>
 
 </head>
@@ -372,6 +377,52 @@
           </tbody>
           </table>
       {% endif %}
+
+      {% if  l_64|length != 0 %}
+          <h3> Base64 files: </h3>
+          <table id="tableb64" class="red_table table table-striped table-bordered">
+          <thead>
+          <tr>
+              <th>estimated type</th>
+              <th>hash</th>
+              <th>saved_path</th>
+              <th>Virus Total</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for b64 in l_64 %}
+              <tr>
+                  <td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
+                  <td>{{ b64[2] }} ({{ b64[4] }})</td>
+                  <td>{{ b64[3] }}</td>
+                  <td style="text-align:center;">
+                    {% if  vt_enabled %}
+                      {% if not b64[5] %}
+                        <form action="/base64Decoded/send_file_to_vt" id="vt_submit" method='post'>
+                          <input type="hidden" id="hash" name="hash" value="{{ b64[2] }}">
+                          <input type="hidden" id="paste" name="paste" value="{{ request.args.get('paste') }}">
+                          <button class="btn btn-primary">
+                            <i class="fa fa-paper-plane"></i>     Send this file to VT
+                          </button>
+                        </form>
+                      {% else %}
+                        <a class="btn btn-default" target="_blank" href="{{ b64[6] }}"><i class="fa fa-link"> VT scan reports</i></a>
+                      {% endif %}
+                      <button class="btn btn-default" onclick="updateVTReport('{{ b64[2] }}')">
+                        <div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[7] }}</div>
+                      </button>
+
+                      </button>
+                    {% else %}
+                      Virus Total submission is disabled
+                    {% endif %}
+                  </td>
+              </tr>
+          {% endfor %}
+          </tbody>
+          </table>
+      {% endif %}
+
         <h3> Content: </h3>
         <a href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a>
         <p data-initsize="{{ initsize }}"> <pre id="paste-holder">{{ content }}</pre></p>
@@ -406,7 +457,24 @@
           });
 
         $('#tableDup').DataTable();
+        $('#tableb64').DataTable({
+  				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+  				"iDisplayLength": 5,
+  				"order": [[ 1, "asc" ]]
+  			});
     });
+</script>
+
+<script>
+    function updateVTReport(hash) {
+      //updateReport
+      $.getJSON('/base64Decoded/update_vt_result?hash='+hash,
+        function(data) {
+          content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
+          $( "#report_vt_"+hash ).html(content);
+      });
+    }
+
 </script>
 
 <script>

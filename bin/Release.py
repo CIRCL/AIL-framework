@@ -61,7 +61,8 @@ if __name__ == "__main__":
                     publisher.info(to_print)
 
         except TimeoutException:
-             print ("{0} processing timeout".format(paste.p_path))
-             continue
+            p.incr_module_timeout_statistic()
+            print ("{0} processing timeout".format(paste.p_path))
+            continue
         else:
             signal.alarm(0)

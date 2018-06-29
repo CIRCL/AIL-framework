@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.js') }}"></script>
+		<style>
+			.red_table thead{
+				background: #d91f2d;
+				color: #fff;
+			}
+      .bar {
+        fill: steelblue;
+      }
+      .bar:hover{
+        fill: brown;
+      }
+
+      .bar span {
+          position: relative;
+      }
+
+      .bar span .tooltiptext {
+          visibility: hidden;
+          width: 120px;
+          background-color: #555;
+          color: #fff;
+          text-align: center;
+          border-radius: 6px;
+          padding: 5px 0;
+          position: absolute;
+          z-index: 1;
+          bottom: 125%;
+          left: 50%;
+          margin-left: -60px;
+          opacity: 0;
+          transition: opacity 0.3s;
+      }
+
+
+      .bar span:hover .tooltiptext {
+          visibility: visible;
+          opacity: 1;
+      }
+		</style>
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+				<div class="row">
+				  <div class="col-lg-12">
+				  <h1 class="page-header" data-page="page-termsfrequency" >Base64 Files</h1>
+				  </div>
+				  <!-- /.col-lg-12 -->
+
+          <div id="barchart_type">
+          </div>
+
+				</div>
+				<!-- /.row -->
+
+            <script>
+                $(document).ready(function(){
+                    activePage = "page-base64Decoded"
+                    $("#"+activePage).addClass("active");
+                    barchart_type('url', 'id')
+                });
+            </script>
+
+<script>
+function barchart_type(url, id) {
+
+
+  var margin = {top: 20, right: 20, bottom: 70, left: 40};
+
+  var width = 960 - margin.left - margin.right;
+  var height = 500 - margin.top - margin.bottom;
+
+  var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+  var y = d3.scaleLinear().rangeRound([height, 0]);
+
+  var xAxis = d3.axisBottom(x)
+    //.tickFormat(d3.time.format("%Y-%m"));
+
+  var yAxis = d3.axisLeft(y)
+    .ticks(10);
+
+  var svg = d3.select("#barchart_type").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+
+  d3.json("/base64Decoded/hash_by_type_json?type={{type}}")
+    .then(function(data){
+
+        data.forEach(function(d) {
+          d.value = +d.value;
+        });
+
+        x.domain(data.map(function(d) { return d.date.substring(5); }));
+        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+        var label = svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+          .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", "-.55em")
+            .attr("transform", "rotate(-70)" );
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Value ($)");
+
+        var bar = svg.selectAll("bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "bar")
+            //.style("fill", "steelblue")
+            .attr("x", function(d) { return x(d.date.substring(5)); })
+            .attr("width", x.bandwidth())
+            .attr("y", function(d) { return y(d.value); })
+            .attr("height", function(d) { return height - y(d.value); })
+            .on("click", function(d){ window.location.href = "/base64Decoded/" +'?type={{type}}&date_from='+ d.date +'&date_to='+ d.date; });
+
+            bar.append("span")
+                .attr("class", "tooltiptext")
+                .text('bonjour');
+
+        data.forEach(function(d) {
+          if(d.value != 0){
+            svg.append("text")
+                .attr("class", "bar")
+                .attr("dy", "-.35em")
+                //.text(function(d) { return d.value; });
+                .text(d.value)
+                .attr('x', x(d.date.substring(5)) + x.bandwidth()/4)
+                .attr('y', y(d.value));
+          }
+        });
+
+    });
+
+}
+</script>
+
+        </body>
+
+</html>

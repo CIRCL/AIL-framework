@@ -155,6 +155,8 @@ if __name__ == "__main__":
             flag_the_hive = False
             r_serv_db.set('ail:thehive', False)
             print('Not connected to The HIVE')
+    else:
+        HiveApi = False
 
     if HiveApi != False and flag_the_hive:
         try:
