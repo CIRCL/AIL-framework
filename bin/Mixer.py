@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
                 try:
                     #feeder_name = ( complete_paste.replace("archive/","") ).split("/")[0]
-                    feeder_name, paste_name = complete_paste.split('>')
+                    feeder_name, paste_name = complete_paste.split('>>')
                     feeder_name.replace(" ","")
                     paste_name = complete_paste
 
