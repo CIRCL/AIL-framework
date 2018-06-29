@@ -4,6 +4,7 @@ cd bin
 export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
 export PATH=$AIL_LEVELDB:$PATH
+export PATH=$AIL_ARDB:$PATH
 export AILENV=/opt/AIL
 
 conf_dir="${AIL_HOME}/configs/"
@@ -15,7 +16,8 @@ screen -S "Redis" -X screen -t "6381" bash -c 'redis-server '$conf_dir'6381.conf
 
 # For Words and curves
 sleep 0.1
-screen -S "Redis" -X screen -t "6382" bash -c 'redis-server '$conf_dir'6382.conf ; read x'
+screen -dmS "ARDB_AIL"
+screen -S "ARDB_AIL" -X screen -t "6382" bash -c 'ardb-server '$conf_dir'6382.conf ; read x'
 
 #Want to launch more level_db?
 lvdbhost='127.0.0.1'
