@@ -29,8 +29,12 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
         addError(uuid, 'File: ' + save_path + ' already exist in submitted pastes')
         return 1
 
-    gzipencoded = gzip.compress(paste_content)
-    gzip64encoded = base64.standard_b64encode(gzipencoded).decode()
+    try:
+        gzipencoded = gzip.compress(paste_content)
+        gzip64encoded = base64.standard_b64encode(gzipencoded).decode()
+    except:
+        abord_file_submission(uuid, "file error")
+        continue
 
     # send paste to Global module
     relay_message = "{0} {1}".format(save_path, gzip64encoded)
