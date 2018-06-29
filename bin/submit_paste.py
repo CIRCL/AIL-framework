@@ -212,7 +212,7 @@ if __name__ == "__main__":
                             abord_file_submission(uuid, "file error")
                             continue
                         r_serv_log_submit.set(uuid + ':nb_total', 1)
-                        create_paste(uuid, content, ltags, ltagsgalaxies, uuid)
+                        create_paste(uuid, content.encode(), ltags, ltagsgalaxies, uuid)
                         remove_submit_uuid(uuid)
 
                     else:
