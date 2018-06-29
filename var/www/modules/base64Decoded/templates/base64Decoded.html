@@ -12,6 +12,7 @@
     <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
 	  <!-- JS -->
 		<script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
@@ -20,6 +21,8 @@
     <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.js') }}"></script>
 		<style>
 			.red_table thead{
@@ -53,68 +56,74 @@
 				  </div>
 				  <!-- /.col-lg-12 -->
 
-					{% if  type %}
-					<div id="barchart_type">
-          </div>
-					{% endif %}
-					{% if  daily_type_chart %}
-					<div id="barchart_type">
-          </div>
-					{% endif %}
+					<div class="col-md-6">
+						{% if  type %}
+						<div id="barchart_type">
+	          </div>
+						{% endif %}
+						{% if  daily_type_chart %}
+						<div id="barchart_type">
+	          </div>
+						{% endif %}
 
-					<!-- /#page-wrapper -->
-					{% if  l_64|length != 0 %}
-							<h3> Today Base64 files: </h3>
-							<table id="tableb64" class="red_table table table-striped table-bordered">
-							<thead>
-							<tr>
-									<th>estimated type</th>
-									<th>hash</th>
-									<th>first seen</th>
-									<th>last seen</th>
-									<th>nb paste</th>
-									<th>size</th>
-									<th>Virus Total</th>
-									<th>Test</th>
-							</tr>
-							</thead>
-							<tbody>
-							{% for b64 in l_64 %}
-									<tr>
-											<td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-											<td>{{ b64[2] }}</td>
-											<td>{{ b64[5] }}</td>
-											<td>{{ b64[6] }}</td>
-											<td>{{ b64[3] }}</td>
-											<td>{{ b64[4] }}</td>
-											<td style="text-align:center;max-width:150px;">
-												{% if  vt_enabled %}
-													{% if not b64[7] %}
-														<form action="/base64Decoded/send_file_to_vt" id="vt_submit" method='post'>
-															<input type="hidden" id="hash" name="hash" value="b64[2]">
-															<button class="btn btn-primary">
-																<i class="fa fa-paper-plane"></i>     Send this file to VT
-															</button>
-													</form>
+						<!-- /#page-wrapper -->
+						{% if  l_64|length != 0 %}
+								<h3> Today Base64 files: </h3>
+								<table id="tableb64" class="red_table table table-striped table-bordered">
+								<thead>
+								<tr>
+										<th>estimated type</th>
+										<th>hash</th>
+										<th>first seen</th>
+										<th>last seen</th>
+										<th>nb paste</th>
+										<th>size</th>
+										<th>Virus Total</th>
+										<th>Test</th>
+								</tr>
+								</thead>
+								<tbody>
+								{% for b64 in l_64 %}
+										<tr>
+												<td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
+												<td>{{ b64[2] }}</td>
+												<td>{{ b64[5] }}</td>
+												<td>{{ b64[6] }}</td>
+												<td>{{ b64[3] }}</td>
+												<td>{{ b64[4] }}</td>
+												<td style="text-align:center;max-width:150px;">
+													{% if  vt_enabled %}
+														{% if not b64[7] %}
+															<form action="/base64Decoded/send_file_to_vt" id="vt_submit" method='post'>
+																<input type="hidden" id="hash" name="hash" value="b64[2]">
+																<button class="btn btn-primary">
+																	<i class="fa fa-paper-plane"></i>     Send this file to VT
+																</button>
+														</form>
+														{% else %}
+															<a class="btn btn-default" target="_blank" href="{{ b64[8] }}"><i class="fa fa-link"> VT scan reports</i></a>
+														{% endif %}
+														<button class="btn btn-default" onclick="updateVTReport('{{ b64[2] }}')">
+			                        <div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[8] }}</div>
+			                      </button>
 													{% else %}
-														<a class="btn btn-default" target="_blank" href="{{ b64[8] }}"><i class="fa fa-link"> VT scan reports</i></a>
+														Virus Total submission is disabled
 													{% endif %}
-													<button class="btn btn-default" onclick="updateVTReport('{{ b64[2] }}')">
-		                        <div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[8] }}</div>
-		                      </button>
-												{% else %}
-													Virus Total submission is disabled
-												{% endif %}
-											</td>
-											<td id="sparklines_{{ b64[2] }}" style="text-align:center;">
-											</td>
-									</tr>
-							{% endfor %}
-							</tbody>
-							</table>
-					{% else %}
-						<h3>{{daily_date[0:4]}}/{{daily_date[4:6]}}/{{daily_date[6:8]}}, No base64</h3>
-					{% endif %}
+												</td>
+												<td id="sparklines_{{ b64[2] }}" style="text-align:center;">
+												</td>
+										</tr>
+								{% endfor %}
+								</tbody>
+								</table>
+						{% else %}
+							<h3>{{daily_date[0:4]}}/{{daily_date[4:6]}}/{{daily_date[6:8]}}, No base64</h3>
+						{% endif %}
+					</div>
+					<div class="col-md-6">
+						<input id="date-range-from" size="40" value="">
+						<input id="date-range-to" size="40" value="">
+					</div>
 
 				</div>
 				<!-- /.row -->
@@ -123,6 +132,37 @@
                 $(document).ready(function(){
                     activePage = "page-base64Decoded"
                     $("#"+activePage).addClass("active");
+
+										$('#date-range-from').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
+										$('#date-range-to').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
 
 										$('#tableb64').DataTable({
 						  				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
@@ -135,7 +175,6 @@
 										{% endif %}
 										{% if  daily_type_chart %}
 										barchart_type('/base64Decoded/daily_type_json?date={{daily_date}}', '#barchart_type');
-										console.log('cool')
 										{% endif %}
 
                 });
