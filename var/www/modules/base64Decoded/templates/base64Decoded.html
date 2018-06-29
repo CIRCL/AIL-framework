@@ -56,15 +56,24 @@
 				  </div>
 				  <!-- /.col-lg-12 -->
 
-					<div class="col-md-6">
-						{% if  type %}
-						<div id="barchart_type">
-	          </div>
-						{% endif %}
-						{% if  daily_type_chart %}
-						<div id="barchart_type">
-	          </div>
-						{% endif %}
+					<div class="row">
+						<div class="col-md-6">
+							{% if  type %}
+							<div id="barchart_type">
+		          </div>
+							{% endif %}
+							{% if  daily_type_chart %}
+							<div id="barchart_type">
+		          </div>
+							{% endif %}
+						</div>
+
+							<div class="col-md-6">
+								<input id="date-range-from" size="40" value="">
+								<input id="date-range-to" size="40" value="">
+							</div>
+						</div>
+					</div>
 
 						<!-- /#page-wrapper -->
 						{% if  l_64|length != 0 %}
@@ -119,10 +128,6 @@
 						{% else %}
 							<h3>{{daily_date[0:4]}}/{{daily_date[4:6]}}/{{daily_date[6:8]}}, No base64</h3>
 						{% endif %}
-					</div>
-					<div class="col-md-6">
-						<input id="date-range-from" size="40" value="">
-						<input id="date-range-to" size="40" value="">
 					</div>
 
 				</div>

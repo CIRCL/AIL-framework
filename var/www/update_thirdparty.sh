@@ -6,6 +6,7 @@ wget http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.js
 
 SBADMIN_VERSION='3.3.7'
 FONT_AWESOME_VERSION='4.7.0'
+D3_JS_VERSION='5.5.0'
 
 rm -rf temp
 mkdir temp
@@ -13,9 +14,11 @@ mkdir temp
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}.zip
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin-2/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}-2.zip
 wget https://github.com/FortAwesome/Font-Awesome/archive/v${FONT_AWESOME_VERSION}.zip -O temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip
+wget https://github.com/d3/d3/releases/download/v${D3_JS_VERSION}/d3.zip -O  temp/d3_${D3_JS_VERSION}.zip
 unzip temp/${SBADMIN_VERSION}.zip -d temp/
 unzip temp/${SBADMIN_VERSION}-2.zip -d temp/
 unzip temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip -d temp/
+unzip temp/d3_${D3_JS_VERSION}.zip -d temp/
 mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin
 mv temp/startbootstrap-sb-admin-2-${SBADMIN_VERSION} temp/sb-admin-2
 mv temp/Font-Awesome-${FONT_AWESOME_VERSION} temp/font-awesome
@@ -31,10 +34,17 @@ rm -rf ./static/css/plugins/
 mv temp/sb-admin/css/* ./static/css/
 mv temp/sb-admin-2/dist/css/* ./static/css/
 
+mv temp/d3.min.js ./static/js/
+
 rm -rf temp
 
 JQVERSION="1.12.4"
 wget http://code.jquery.com/jquery-${JQVERSION}.js -O ./static/js/jquery.js
+
+#Ressources for pickerdatarange
+wget https://raw.githubusercontent.com/moment/moment/master/min/moment.min.js -O ./static/js/moment.min.js
+wget https://raw.githubusercontent.com/longbill/jquery-date-range-picker/master/dist/jquery.daterangepicker.min.js -O ./static/js/jquery.daterangepicker.min.js
+wget https://raw.githubusercontent.com/longbill/jquery-date-range-picker/master/dist/daterangepicker.min.css -O ./static/css/daterangepicker.min.css
 
 #Ressources for dataTable
 wget https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js -O ./static/js/jquery.dataTables.min.js
