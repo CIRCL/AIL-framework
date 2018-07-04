@@ -67,3 +67,6 @@ https://github.com/trolldbois/python3-adns/archive/master.zip
 https://github.com/trolldbois/python-cymru-services/archive/master.zip
 
 https://github.com/saffsd/langid.py/archive/master.zip
+
+#LibInjection bindings
+pylibinjection
