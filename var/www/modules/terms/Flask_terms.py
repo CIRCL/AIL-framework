@@ -265,7 +265,7 @@ def terms_management_query_paste():
     for path in track_list_path:
         paste = Paste.Paste(path)
         p_date = str(paste._get_p_date())
-        p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+        p_date = p_date[0:4]+'/'+p_date[4:6]+'/'+p_date[6:8]
         p_source = paste.p_source
         p_encoding = paste._get_p_encoding()
         p_size = paste.p_size
@@ -520,7 +520,7 @@ def credentials_management_query_paste():
         path = r_serv_cred.hget(REDIS_KEY_ALL_PATH_SET_REV, pathNum)
         paste = Paste.Paste(path)
         p_date = str(paste._get_p_date())
-        p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
+        p_date = p_date[0:4]+'/'+p_date[4:6]+'/'+p_date[6:8]
         p_source = paste.p_source
         p_encoding = paste._get_p_encoding()
         p_size = paste.p_size
