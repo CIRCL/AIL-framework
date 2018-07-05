@@ -49,6 +49,13 @@ def one():
     return 1
 
 # ============= ROUTES ==============
+@base64Decoded.route("/base64Decoded/all_base64_search", methods=['POST'])
+def all_base64_search():
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    type = request.form.get('type')
+    print(type)
+    return redirect(url_for('base64Decoded.base64Decoded_page', date_from=date_from, date_to=date_to, type=type))
 
 @base64Decoded.route("/base64Decoded/", methods=['GET'])
 def base64Decoded_page():
@@ -59,8 +66,11 @@ def base64Decoded_page():
     #date_from = '20180628'
     #date_to = '20180628'
 
-    if type not in r_serv_metadata.smembers('hash_all_type'):
-        type = None
+    if type is not None:
+        #retrieve + char
+        type = type.replace(' ', '+')
+        if type not in r_serv_metadata.smembers('hash_all_type'):
+            type = None
 
     date_range = []
     if date_from is not None and date_to is not None:
@@ -72,6 +82,12 @@ def base64Decoded_page():
 
     if not date_range:
         date_range.append(datetime.date.today().strftime("%Y%m%d"))
+        date_from = date_range[0][0:4] + '-' + date_range[0][4:6] + '-' + date_range[0][6:8]
+        date_to = date_from
+
+    else:
+        date_from = date_from[0:4] + '-' + date_from[4:6] + '-' + date_from[6:8]
+        date_to = date_to[0:4] + '-' + date_to[4:6] + '-' + date_to[6:8]
 
     # display day type bar chart
     if len(date_range) == 1 and type is None:
@@ -142,7 +158,10 @@ def base64Decoded_page():
 
             b64_metadata.append( (file_icon, estimated_type, hash, nb_seen_in_paste, size, first_seen, last_seen, b64_vt, b64_vt_link, sparklines_value) )
 
-    return render_template("base64Decoded.html", l_64=b64_metadata, vt_enabled=vt_enabled, type=type, daily_type_chart=daily_type_chart, daily_date=daily_date)
+    l_type = r_serv_metadata.smembers('hash_all_type')
+
+    return render_template("base64Decoded.html", l_64=b64_metadata, vt_enabled=vt_enabled, l_type=l_type, type=type, daily_type_chart=daily_type_chart, daily_date=daily_date,
+                                                date_from=date_from, date_to=date_to)
 
 @base64Decoded.route('/base64Decoded/hash_by_type')
 def hash_by_type():
@@ -153,6 +172,9 @@ def hash_by_type():
 @base64Decoded.route('/base64Decoded/hash_by_type_json')
 def hash_by_type_json():
     type = request.args.get('type')
+
+    #retrieve + char
+    type = type.replace(' ', '+')
 
     num_day_type = 30
     date_range_sparkline = get_date_range(num_day_type)
@@ -186,6 +208,7 @@ def daily_type_json():
     for day_type in daily_type:
         num_day_type = r_serv_metadata.zscore('base64_type:'+day_type, date)
         type_value.append({ 'date' : day_type, 'value' : int( num_day_type )})
+
     return jsonify(type_value)
 
 @base64Decoded.route('/base64Decoded/send_file_to_vt', methods=['POST'])

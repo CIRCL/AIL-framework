@@ -57,7 +57,7 @@
 				  <!-- /.col-lg-12 -->
 
 					<div class="row">
-						<div class="col-md-6">
+						<div class="col-md-10">
 							{% if  type %}
 							<div id="barchart_type">
 		          </div>
@@ -68,9 +68,37 @@
 							{% endif %}
 						</div>
 
-							<div class="col-md-6">
-								<input id="date-range-from" size="40" value="">
-								<input id="date-range-to" size="40" value="">
+							<div class="col-md-2">
+								<div class="panel panel-info" style="text-align:center;">
+									<div class="panel-heading">
+										Select a date range :
+										<form action="/base64Decoded/all_base64_search" id="base64_selector_form" method='post'>
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-from" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from">
+											</div>
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-to" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to">
+											</div>
+											File Type :
+											<select class="form-control" name="type" style="width=100%;">
+										    <option></option>
+												{% for typ in l_type %}
+													{% if type|string() == typ|string() %}
+													<option selected>{{ typ }}</option>
+													{% else %}
+													<option>{{ typ }}</option>
+													{% endif %}
+												{% endfor %}
+											</select>
+											<br>
+											<button class="btn btn-primary" style="text-align:center;">
+												<i class="fa fa-files-o"></i> Base64
+											</button>
+										<form>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -126,7 +154,7 @@
 								</tbody>
 								</table>
 						{% else %}
-							<h3>{{daily_date[0:4]}}/{{daily_date[4:6]}}/{{daily_date[6:8]}}, No base64</h3>
+							<h3>{{ date_from }} to {{ date_to }}, No base64</h3>
 						{% endif %}
 					</div>
 
