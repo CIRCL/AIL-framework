@@ -75,10 +75,13 @@ def base64Decoded_page():
     date_range = []
     if date_from is not None and date_to is not None:
         #change format
-        if len(date_from) != 8:
-            date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
-            date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
-        date_range = substract_date(date_from, date_to)
+        try:
+            if len(date_from) != 8:
+                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+            date_range = substract_date(date_from, date_to)
+        except:
+            pass
 
     if not date_range:
         date_range.append(datetime.date.today().strftime("%Y%m%d"))
@@ -121,8 +124,6 @@ def base64Decoded_page():
         last_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'last_seen')
         nb_seen_in_paste = r_serv_metadata.hget('metadata_hash:'+hash, 'nb_seen_in_all_pastes')
         size = r_serv_metadata.hget('metadata_hash:'+hash, 'size')
-
-        estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
 
         if hash is not None and first_seen is not None and \
                                 last_seen is not None and \
@@ -210,6 +211,52 @@ def daily_type_json():
         type_value.append({ 'date' : day_type, 'value' : int( num_day_type )})
 
     return jsonify(type_value)
+
+@base64Decoded.route('/base64Decoded/range_type_json')
+def range_type_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    date_from = '20180601'
+    date_to = '20180706'
+
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        if len(date_from) != 8:
+            date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+            date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+        date_range = substract_date(date_from, date_to)
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+
+    all_type = set()
+    for date in date_range:
+        l_hash = r_serv_metadata.zrange('base64_date:' +date, 0, -1)
+        if l_hash:
+            for hash in l_hash:
+                estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
+                all_type.add(estimated_type)
+
+    range_type = []
+    for date in date_range:
+        day_type = {}
+        day_type['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+        for type in all_type:
+            num_day_type = r_serv_metadata.zscore('base64_type:'+type, date)
+            if num_day_type is None:
+                num_day_type = 0
+            day_type[type]= num_day_type
+        range_type.append(day_type)
+
+    return jsonify(range_type)
+
+@base64Decoded.route('/base64Decoded/base64_types')
+def base64_types():
+    date_from = 20180701
+    date_to = 20180706
+    return render_template('base64_types.html', date_from=date_from, date_to=date_to)
 
 @base64Decoded.route('/base64Decoded/send_file_to_vt', methods=['POST'])
 def send_file_to_vt():
