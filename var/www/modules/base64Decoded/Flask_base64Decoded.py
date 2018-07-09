@@ -45,6 +45,31 @@ def substract_date(date_from, date_to):
         l_date.append( date.strftime('%Y%m%d') )
     return l_date
 
+def list_sparkline_values(date_range_sparkline, hash):
+    sparklines_value = []
+    for date_day in date_range_sparkline:
+        nb_seen_this_day = r_serv_metadata.zscore('base64_date:'+date_day, hash)
+        if nb_seen_this_day is None:
+            nb_seen_this_day = 0
+        sparklines_value.append(int(nb_seen_this_day))
+    return sparklines_value
+
+def get_file_icon(estimated_type):
+    file_type = estimated_type.split('/')[0]
+    # set file icon
+    if file_type == 'application':
+        file_icon = 'fa-file-o '
+    elif file_type == 'audio':
+        file_icon = 'fa-file-video-o '
+    elif file_type == 'image':
+        file_icon = 'fa-file-image-o'
+    elif file_type == 'text':
+        file_icon = 'fa-file-text-o'
+    else:
+        file_icon =  'fa-file'
+
+    return file_icon
+
 def one():
     return 1
 
@@ -130,18 +155,7 @@ def base64Decoded_page():
                                 nb_seen_in_paste is not None and \
                                 size is not None:
 
-            file_type = estimated_type.split('/')[0]
-            # set file icon
-            if file_type == 'application':
-                file_icon = 'fa-file-o '
-            elif file_type == 'audio':
-                file_icon = 'fa-file-video-o '
-            elif file_type == 'image':
-                file_icon = 'fa-file-image-o'
-            elif file_type == 'text':
-                file_icon = 'fa-file-text-o'
-            else:
-                file_icon =  'fa-file'
+            file_icon = get_file_icon(estimated_type)
 
             if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
                 b64_vt = True
@@ -150,12 +164,7 @@ def base64Decoded_page():
                 b64_vt = False
                 b64_vt_link = ''
 
-            sparklines_value = []
-            for date_day in date_range_sparkline:
-                nb_seen_this_day = r_serv_metadata.zscore('base64_date:'+date_day, hash)
-                if nb_seen_this_day is None:
-                    nb_seen_this_day = 0
-                sparklines_value.append(int(nb_seen_this_day))
+            sparklines_value = list_sparkline_values(date_range_sparkline, hash)
 
             b64_metadata.append( (file_icon, estimated_type, hash, nb_seen_in_paste, size, first_seen, last_seen, b64_vt, b64_vt_link, sparklines_value) )
 
@@ -169,6 +178,38 @@ def hash_by_type():
     type = request.args.get('type')
     type = 'text/plain'
     return render_template('base64_type.html',type = type)
+
+@base64Decoded.route('/base64Decoded/base64_hash')
+def base64_hash():
+    hash = request.args.get('hash')
+    return render_template('base64_hash.html')
+
+@base64Decoded.route('/base64Decoded/showHash')
+def showHash():
+    hash = request.args.get('hash')
+    #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
+
+    estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
+    # hash not found
+    if estimated_type is None:
+        base64Decoded_page()
+
+    else:
+        file_icon = get_file_icon(estimated_type)
+        size = r_serv_metadata.hget('metadata_hash:'+hash, 'size')
+        first_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'first_seen')
+        last_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'last_seen')
+        nb_seen_in_all_pastes = r_serv_metadata.hget('metadata_hash:'+hash, 'nb_seen_in_all_pastes')
+
+        num_day_type = 6
+        date_range_sparkline = get_date_range(num_day_type)
+        sparkline_values = list_sparkline_values(date_range_sparkline, hash)
+
+        print(sparkline_values)
+
+        return render_template('showHash.html', hash=hash, size=size, estimated_type=estimated_type, file_icon=file_icon,
+                                first_seen=first_seen,
+                                last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
 @base64Decoded.route('/base64Decoded/hash_by_type_json')
 def hash_by_type_json():
@@ -216,9 +257,6 @@ def daily_type_json():
 def range_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
-
-    date_from = '20180601'
-    date_to = '20180709'
 
     date_range = []
     if date_from is not None and date_to is not None:

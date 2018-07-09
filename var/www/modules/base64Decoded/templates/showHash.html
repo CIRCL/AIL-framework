@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Analysis Information Leak framework Dashboard</title>
+
+	  <!-- Core CSS -->
+		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<style>
+			.red_table thead{
+				background: #d91f2d;
+				color: #fff;
+			}
+			.panelText {
+				color: black;
+			}
+			.line {
+    		fill: none;
+    		stroke: #000;
+    		stroke-width: 2.0px;
+			}
+			.bar {
+        fill: steelblue;
+      }
+      .bar:hover{
+        fill: brown;
+				cursor: pointer;
+      }
+			.bar_stack:hover{
+				cursor: pointer;
+      }
+			.svgText {
+    		pointer-events: none;
+			}
+		</style>
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+				<div class="row">
+
+
+					</div>
+
+						<!-- /#page-wrapper -->
+						<div class="panel panel-info">
+									<div class="panel-heading panelText">
+										<h3>{{ hash }} :</h3>
+										<span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
+										<span class="badge pull-right">6 / 26</span>
+							 	<ul class="list-group"><li class="list-group-item">
+
+									<div class="row">
+										<div class="col-md-10">
+
+											<table class="table table-condensed">
+							          <thead>
+							            <tr>
+							              <th>Estimated type</th>
+							              <th>First_seen</th>
+							              <th>Last_seen</th>
+							              <th>Size (Kb)</th>
+							              <th>nb_seen_in_all_pastes</th>
+							            </tr>
+							          </thead>
+							          <tbody>
+							            <tr>
+								            <td class="panelText"><i class="fa {{ file_icon }}"></i>&nbsp;&nbsp;{{ estimated_type }}</td>
+								            <td class="panelText">{{ first_seen }}</td>
+								            <td class="panelText">{{ last_seen }}</td>
+								            <td class="panelText">{{ size }}</td>
+								            <td class="panelText">{{ nb_seen_in_all_pastes }}</td>
+							            </tr>
+							          </tbody>
+							        </table>
+										</div>
+										<div class="col-md-1">
+											<div id="sparkline"></div>
+										</div>
+
+									</div>
+
+								</li></ul>
+								</div></div>
+					</div>
+
+				</div>
+				<!-- /.row -->
+
+            <script>
+							var chart = {};
+                $(document).ready(function(){
+									sparklines("sparkline", {{ sparkline_values }})
+                });
+            </script>
+<script>
+	function updateVTReport(hash) {
+		//updateReport
+		$.getJSON('/base64Decoded/update_vt_result?hash='+hash,
+			function(data) {
+				content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
+				$( "#report_vt_"+hash ).html(content);
+		});
+	}
+
+</script>
+<script>
+//var data = [6,3,3,2,5,3,9];
+
+// a sparklines plot
+function sparklines(id, points) {
+    var width = 100, height = 60;
+
+    var data = []
+    for (i = 0; i < points.length; i++) {
+        data[i] = {
+            'x': i,
+            'y': +points[i]
+        }
+    }
+
+    var x = d3.scaleLinear()
+        .range([0, width - 10])
+        .domain([0,5]);
+
+    var y = d3.scaleLinear()
+        .range([height, 0])
+        .domain([0,10]);
+
+    var line = d3.line()
+                .x(function(d) {return x(d.x)})
+                .y(function(d) {return y(d.y)});
+
+    d3.select("#"+id).append('svg')
+            .attr('width', width)
+            .attr('height', height)
+         .append('path')
+            .attr('class','line')
+            .datum(data)
+            .attr('d', line);
+
+}
+</script>
+
+<script>
+
+
+</script>
+
+        </body>
+
+</html>
