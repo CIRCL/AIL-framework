@@ -63,8 +63,8 @@ def base64Decoded_page():
     date_to = request.args.get('date_to')
     type = request.args.get('type')
 
-    #date_from = '20180628'
-    #date_to = '20180628'
+    #date_from = '20180628' or date_from = '2018-06-28'
+    #date_to = '20180628' or date_to = '2018-06-28'
 
     if type is not None:
         #retrieve + char
@@ -218,7 +218,7 @@ def range_type_json():
     date_to = request.args.get('date_to')
 
     date_from = '20180601'
-    date_to = '20180706'
+    date_to = '20180709'
 
     date_range = []
     if date_from is not None and date_to is not None:

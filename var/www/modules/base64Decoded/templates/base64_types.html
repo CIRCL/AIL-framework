@@ -48,23 +48,23 @@
 				  </div>
 				  <!-- /.col-lg-12 -->
 
-          <div id="chart">
+          <div id="barchart_type">
           </div>
 
 				</div>
 				<!-- /.row -->
 
             <script>
-								var VIZ = {};
+								var chart = {};
                 $(document).ready(function(){
                     activePage = "page-base64Decoded"
                     $("#"+activePage).addClass("active");
 
-										VIZ.stackBarChart = barchart_type('url', 'id')
-										VIZ.onResize();
+										chart.stackBarChart = barchart_type('url', 'id')
+										chart.onResize();
                 });
 								$(window).on("resize", function() {
-									VIZ.onResize();
+									chart.onResize();
 								});
             </script>
 
@@ -82,7 +82,7 @@ var yAxis = d3.axisLeft(y);
 
 var color = d3.scaleOrdinal(d3.schemeSet3);
 
-var svg = d3.select("#chart").append("svg")
+var svg = d3.select("#barchart_type").append("svg")
 				.attr("id", "thesvg")
 				.attr("viewBox", "0 0 1000 500")
 				.attr("width",  width  + margin.left + margin.right)
@@ -91,20 +91,6 @@ var svg = d3.select("#chart").append("svg")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 function barchart_type(url, id) {
-
-  /*var stack = d3.stack()
-          stack.values(function (d) { return d.values; })
-					.offset("zero")
-          .x(function (d) { return x(d.label); })
-          .y(function (d) { return d.value; });*/
-
-  /*var area = d3.svg.area()
-          .interpolate("cardinal")
-          .x(function (d) { return x(d.label); })
-          .y0(function (d) { return y(d.y0); })
-          .y1(function (d) { return y(d.y0 + d.y); });*/
-
-			//var color = d3.scale.ordinal().range(["#001c9c","#101b4d","#475003","#9c8305","#d3c47c"]);
 
   d3.json("/base64Decoded/range_type_json")
     .then(function(data){
@@ -125,6 +111,8 @@ function barchart_type(url, id) {
 		    });
 		    d.total = d.mapping[d.mapping.length - 1].y1;
 		  });
+
+			console.log(data)
 
 		  x.domain(data.map(function (d) { return (d.date).substring(5); })); //E
 		  y.domain([0, d3.max(data, function (d) { return d.total; })]);
@@ -164,6 +152,18 @@ function barchart_type(url, id) {
 	      .on("mouseover", function (d) { showPopover.call(this, d); })
 				.on("mouseout", function (d) { removePopovers(); })
 				.on("click", function(d){ window.location.href = "/base64Decoded/" +'?type='+ d.name +'&date_from='+d.label+'&date_to='+d.label; });
+
+				data.forEach(function(d) {
+					if(d.total != 0){
+						svg.append("text")
+								.attr("class", "bar")
+								.attr("dy", "-.35em")
+								.attr('x', x(d.date.substring(5)) + x.bandwidth()/2)
+								.attr('y', y(d.total))
+								.style("text-anchor", "middle")
+								.text(d.total);
+					}
+				});
 
 			drawLegend(varNames);
     });
@@ -213,14 +213,14 @@ function showPopover (d) {
   $(this).popover('show')
 }
 
-VIZ.onResize = function () {
+chart.onResize = function () {
     var aspect = 1000 / 500, chart = $("#thesvg");
     var targetWidth = chart.parent().width();
     chart.attr("width", targetWidth);
     chart.attr("height", targetWidth / aspect);
   }
 
-window.VIZ = VIZ;
+window.chart = chart;
 
 </script>
 
