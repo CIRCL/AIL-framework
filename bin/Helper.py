@@ -167,39 +167,39 @@ class Process(object):
             return None
 
         else:
-            #try:
-            if '.gz' in message:
-                path = message.split(".")[-2].split("/")[-1]
-                #find start of path with AIL_HOME
-                index_s = message.find(os.environ['AIL_HOME'])
-                #Stop when .gz
-                index_e = message.find(".gz")+3
-                if(index_s == -1):
-                    complete_path = message[0:index_e]
+            try:
+                if '.gz' in message:
+                    path = message.split(".")[-2].split("/")[-1]
+                    #find start of path with AIL_HOME
+                    index_s = message.find(os.environ['AIL_HOME'])
+                    #Stop when .gz
+                    index_e = message.find(".gz")+3
+                    if(index_s == -1):
+                        complete_path = message[0:index_e]
+                    else:
+                        complete_path = message[index_s:index_e]
+
                 else:
-                    complete_path = message[index_s:index_e]
+                    path = "-"
+                    complete_path = "?"
 
-            else:
-                path = "-"
-                complete_path = "?"
+                value = str(timestamp) + ", " + path
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
 
-            value = str(timestamp) + ", " + path
-            self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
-            self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", complete_path)
-            self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+                curr_date = datetime.date.today()
+                self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'paste_by_modules_in:'+self.subscriber_name, 1)
+                return message
 
-            curr_date = datetime.date.today()
-            self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'paste_by_modules_in:'+self.subscriber_name, 1)
-            return message
-
-            #except:
-                #print('except')
-                #path = "?"
-                #value = str(timestamp) + ", " + path
-                #self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
-                #self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", "?")
-                #self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
-                #return message
+            except:
+                print('except')
+                path = "?"
+                value = str(timestamp) + ", " + path
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum), value)
+                self.r_temp.set("MODULE_"+self.subscriber_name + "_" + str(self.moduleNum) + "_PATH", "?")
+                self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
+                return message
 
     def populate_set_out(self, msg, channel=None):
         # multiproc

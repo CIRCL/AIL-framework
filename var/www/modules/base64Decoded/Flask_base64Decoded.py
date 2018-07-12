@@ -70,6 +70,22 @@ def get_file_icon(estimated_type):
 
     return file_icon
 
+def get_file_icon_text(estimated_type):
+    file_type = estimated_type.split('/')[0]
+    # set file icon
+    if file_type == 'application':
+        file_icon_text = '\uf15b'
+    elif file_type == 'audio':
+        file_icon_text = '\uf1c7'
+    elif file_type == 'image':
+        file_icon_text = '\uf03e'
+    elif file_type == 'text':
+        file_icon_text = '\uf15c'
+    else:
+        file_icon_text = '\uf15b'
+
+    return file_icon_text
+
 def one():
     return 1
 
@@ -87,6 +103,9 @@ def base64Decoded_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     type = request.args.get('type')
+
+    if type == 'All types':
+        type = None
 
     #date_from = '20180628' or date_from = '2018-06-28'
     #date_to = '20180628' or date_to = '2018-06-28'
@@ -189,10 +208,15 @@ def showHash():
     hash = request.args.get('hash')
     #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
 
+    # TODO FIXME show error
+    if hash is None:
+        return base64Decoded_page()
+
     estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
     # hash not found
+    # TODO FIXME show error
     if estimated_type is None:
-        base64Decoded_page()
+        return base64Decoded_page()
 
     else:
         file_icon = get_file_icon(estimated_type)
@@ -289,6 +313,66 @@ def range_type_json():
         range_type.append(day_type)
 
     return jsonify(range_type)
+
+@base64Decoded.route('/base64Decoded/hash_graph_node_json')
+def hash_graph_node_json():
+    hash = request.args.get('hash')
+
+    estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
+
+    if hash is not None and estimated_type is not None:
+
+        nodes_set_hash = set()
+        nodes_set_paste = set()
+        links_set = set()
+
+        url = hash
+        first_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'first_seen')
+        last_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'last_seen')
+        nb_seen_in_paste = r_serv_metadata.hget('metadata_hash:'+hash, 'nb_seen_in_all_pastes')
+        size = r_serv_metadata.hget('metadata_hash:'+hash, 'size')
+
+        nodes_set_hash.add((hash, 1, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
+
+        #get related paste
+        l_pastes = r_serv_metadata.zrange('base64_hash:'+hash, 0, -1)
+        for paste in l_pastes:
+            url = paste
+            #nb_seen_in_this_paste = nb_in_file = int(r_serv_metadata.zscore('base64_hash:'+hash, paste))
+            nb_base64_in_paste = r_serv_metadata.scard('base64_paste:'+paste)
+
+            nodes_set_paste.add((paste, 2,nb_base64_in_paste,url))
+            links_set.add((hash, paste))
+
+            l_hash = r_serv_metadata.smembers('base64_paste:'+paste)
+            for child_hash in l_hash:
+                if child_hash != hash:
+                    url = child_hash
+                    first_seen = r_serv_metadata.hget('metadata_hash:'+child_hash, 'first_seen')
+                    last_seen = r_serv_metadata.hget('metadata_hash:'+child_hash, 'last_seen')
+                    nb_seen_in_paste = r_serv_metadata.hget('metadata_hash:'+child_hash, 'nb_seen_in_all_pastes')
+                    size = r_serv_metadata.hget('metadata_hash:'+child_hash, 'size')
+                    estimated_type = r_serv_metadata.hget('metadata_hash:'+child_hash, 'estimated_type')
+
+                    nodes_set_hash.add((child_hash, 1, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
+                    links_set.add((child_hash, paste))
+
+                    #l_pastes_child = r_serv_metadata.zrange('base64_hash:'+child_hash, 0, -1)
+                    #for child_paste in l_pastes_child:
+
+        nodes = []
+        for node in nodes_set_hash:
+            nodes.append({"id": node[0], "group": node[1], "first_seen": node[2], "last_seen": node[3], 'estimated_type': node[4], "nb_seen_in_paste": node[5], "size": node[6], 'icon': get_file_icon_text(node[4]),"url": url_for('base64Decoded.showHash', hash=node[7]), 'hash': True})
+        for node in nodes_set_paste:
+            nodes.append({"id": node[0], "group": node[1], "nb_seen_in_paste": node[2],"url": url_for('showsavedpastes.showsavedpaste', paste=node[3]), 'hash': False})
+        links = []
+        for link in links_set:
+            links.append({"source": link[0], "target": link[1]})
+        json = {"nodes": nodes, "links": links}
+        return jsonify(json)
+
+    else:
+        return jsonify({})
 
 @base64Decoded.route('/base64Decoded/base64_types')
 def base64_types():

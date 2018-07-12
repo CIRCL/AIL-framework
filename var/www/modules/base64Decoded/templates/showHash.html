@@ -25,31 +25,51 @@
 		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 		<style>
-			.red_table thead{
-				background: #d91f2d;
-				color: #fff;
-			}
-			.panelText {
-				color: black;
-			}
-			.line {
-    		fill: none;
-    		stroke: #000;
-    		stroke-width: 2.0px;
-			}
-			.bar {
-        fill: steelblue;
-      }
-      .bar:hover{
-        fill: brown;
-				cursor: pointer;
-      }
-			.bar_stack:hover{
-				cursor: pointer;
-      }
-			.svgText {
-    		pointer-events: none;
-			}
+		line.link {
+			stroke: #666;
+		}
+		line.link:hover{
+			stroke: red;
+			stroke-width: 2px
+		}
+		.line_sparkline {
+			fill: none;
+			stroke: #000;
+			stroke-width: 2.0px;
+		}
+		.node {
+			pointer-events: all;
+		}
+
+		circle {
+			stroke: none;
+		}
+
+		.graph_text_node {
+			font: 8px sans-serif;
+			pointer-events: none;
+		}
+
+		.node text {
+			font: 8px sans-serif;
+			pointer-events: auto;
+		}
+
+		div.tooltip {
+			position: absolute;
+			text-align: center;
+			padding: 2px;
+			font: 12px sans-serif;
+			background: #ebf4fb;
+			border: 2px solid #b7ddf2;
+			border-radius: 8px;
+			pointer-events: none;
+			color: #000000;
+		}
+
+		.graph_panel {
+			padding: unset;
+		}
 		</style>
 	</head>
 	<body>
@@ -102,16 +122,52 @@
 
 								</li></ul>
 								</div></div>
+
+								<div class="row">
+									<div class="col-md-10">
+
+										<div class="panel panel-default">
+					            <div class="panel-heading">
+					              <i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
+					            </div>
+					            <div class="panel-body graph_panel">
+												<div id="graph">
+									     	</div>
+					            </div>
+					          </div>
+									</div>
+
+									<div class="col-md-2">
+										<div class="panel panel-default">
+											<div class="panel-heading">
+												<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
+											</div>
+											<div class="panel-body" style="text-align:center;">
+												<button class="btn btn-primary" onclick="redraw_graph();">
+			                    <span class="glyphicon glyphicon-refresh"></span>&nbsp;Redraw Graph</div>
+			                  </button>
+											</div>
+										</div>
+									</div>
+								</div>
+
 					</div>
 
 				</div>
 				<!-- /.row -->
 
             <script>
-							var chart = {};
+							var all_graph = {};
                 $(document).ready(function(){
 									sparklines("sparkline", {{ sparkline_values }})
+
+									all_graph.node_graph = create_graph('/base64Decoded/hash_graph_node_json?hash={{hash}}');
+									all_graph.onResize();
                 });
+
+								$(window).on("resize", function() {
+									all_graph.onResize();
+								});
             </script>
 <script>
 	function updateVTReport(hash) {
@@ -125,11 +181,18 @@
 
 </script>
 <script>
+	function redraw_graph() {
+		container_graph.attr("transform", "translate(40,0)")
+				.attr("transform", "scale(2)");
+	}
+
+</script>
+<script>
 //var data = [6,3,3,2,5,3,9];
 
 // a sparklines plot
 function sparklines(id, points) {
-    var width = 100, height = 60;
+    var width_spark = 100, height_spark = 60;
 
     var data = []
     for (i = 0; i < points.length; i++) {
@@ -140,11 +203,11 @@ function sparklines(id, points) {
     }
 
     var x = d3.scaleLinear()
-        .range([0, width - 10])
+        .range([0, width_spark - 10])
         .domain([0,5]);
 
     var y = d3.scaleLinear()
-        .range([height, 0])
+        .range([height_spark, 0])
         .domain([0,10]);
 
     var line = d3.line()
@@ -152,10 +215,10 @@ function sparklines(id, points) {
                 .y(function(d) {return y(d.y)});
 
     d3.select("#"+id).append('svg')
-            .attr('width', width)
-            .attr('height', height)
+            .attr('width', width_spark)
+            .attr('height', height_spark)
          .append('path')
-            .attr('class','line')
+            .attr('class','line_sparkline')
             .datum(data)
             .attr('d', line);
 
@@ -163,8 +226,189 @@ function sparklines(id, points) {
 </script>
 
 <script>
+var width = 400,
+		height = 400;
+
+var link;
+
+var transform = d3.zoomIdentity;
+
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+var div = d3.select("body").append("div")
+		.attr("class", "tooltip")
+		.style("opacity", 0);
+
+var simulation = d3.forceSimulation()
+		.force("link", d3.forceLink().id(function(d) { return d.id; }))
+		.force("charge", d3.forceManyBody())
+		.force("center", d3.forceCenter(width / 2, height / 2));
+		//.on("tick", ticked);
+
+var svg_node = d3.select("#graph").append("svg")
+		.attr("id", "graph_div")
+		.attr("width", width)
+		.attr("height", height)
+		.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed))
+		.on("dblclick.zoom", null)
+
+var container_graph = svg_node.append("g")
+		.attr("transform", "translate(40,0)")
+		.attr("transform", "scale(2)");
+
+function create_graph(url){
+
+d3.json(url)
+.then(function(data){
+
+	link = container_graph.append("g")
+	.selectAll("line")
+	.data(data.links)
+	.enter().append("line")
+		.attr("class", "link");
+		//.attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+
+	var node = container_graph.selectAll(".node")
+				.data(data.nodes)
+			.enter().append("g")
+			.attr("class", "nodes")
+			.on("dblclick", doubleclick)
+			.on("click", click)
+			.on("mouseover", mouseovered)
+			.on("mouseout", mouseouted)
+			.call(d3.drag()
+					.on("start", drag_start)
+					.on("drag", dragged)
+					.on("end", drag_end));
 
 
+	node.append("circle")
+			.attr("r", function(d) {
+				return (d.hash) ? 6 : 5; })
+			.attr("fill", function(d) {
+				if(!d.hash){return color(d.group)}
+				return 'white'; });
+
+	node.append('text')
+		  .attr('text-anchor', 'middle')
+		  .attr('dominant-baseline', 'central')
+		  //.text(function(d) { return ICON_UNICODE[d.nodeType]; });
+    	.attr('font-family', 'FontAwesome')
+    	.attr('font-size', '12px' )
+    	.text(function(d) {
+				if(d.hash){
+					return d.icon
+				} });
+
+/*	node.append("text")
+		      .attr("dy", 3)
+					.attr("dx", 7)
+					.attr("class", "graph_text_node")
+		      //.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+		      .text(function(d) { return d.id; });*/
+
+	simulation
+			.nodes(data.nodes)
+			.on("tick", ticked);
+
+	simulation.force("link")
+			.links(data.links);
+
+	function ticked() {
+		link
+				.attr("x1", function(d) { return d.source.x; })
+				.attr("y1", function(d) { return d.source.y; })
+				.attr("x2", function(d) { return d.target.x; })
+				.attr("y2", function(d) { return d.target.y; });
+
+		/*node
+				.attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });*/
+		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+	}
+
+});
+}
+
+function zoomed() {
+container_graph.attr("transform", d3.event.transform);
+}
+
+function doubleclick (d) {
+window.open(d.url, '_blank');
+}
+
+function click (d) {
+console.log('clicked')
+}
+
+function drag_start(d) {
+if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+d.fx = d.x;
+d.fy = d.y;
+}
+
+function dragged(d) {
+d.fx = d3.event.x;
+d.fy = d3.event.y;
+}
+
+function drag_end(d) {
+if (!d3.event.active) simulation.alphaTarget(0);
+d.fx = d.x;
+d.fy = d.y;
+}
+
+function mouseovered(d) {
+
+// tooltip
+var content;
+
+if(d.hash == true){
+	content = "<b>"+d.id+"</b>"+"<br/>"+
+						"<br/>"+
+						"<i>First seen</i>: "+d.first_seen+"<br/>"+
+						"<i>Last seen</i>: "+d.last_seen+"<br/>"+
+						"<i>nb_seen_in_paste</i>: "+d.nb_seen_in_paste+"<br/>"+
+						"<i>Size (kb)</i>: "+d.size+"<br/>"+
+						"<br/>"+
+						"<i>Estimated type</i>: "+d.estimated_type;
+} else {
+	content = "<b>"+d.id+"</b>"+"<br/>";
+}
+
+	div.transition()
+		.duration(200)
+		.style("opacity", .9);
+	div.html(content)
+		.style("left", (d3.event.pageX) + "px")
+		.style("top", (d3.event.pageY - 28) + "px");
+
+	//links
+	/*link.style("stroke-opacity", function(o) {
+			return o.source === d || o.target === d ? 1 : opacity;
+	});*/
+	link.style("stroke", function(o){
+			return o.source === d || o.target === d ? "#666" : "#ddd";
+	});
+}
+
+function mouseouted() {
+	div.transition()
+		.duration(500)
+		.style("opacity", 0);
+
+	link.style("stroke", "#666");
+}
+
+all_graph.onResize = function () {
+	var aspect = 1000 / 500, all_graph = $("#graph_div");
+	var targetWidth = all_graph.parent().width();
+	all_graph.attr("width", targetWidth);
+	all_graph.attr("height", targetWidth / aspect);
+}
+
+window.all_graph = all_graph;
 </script>
 
         </body>
