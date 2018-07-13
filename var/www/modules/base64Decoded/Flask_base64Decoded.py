@@ -78,7 +78,7 @@ def get_file_icon_text(estimated_type):
     elif file_type == 'audio':
         file_icon_text = '\uf1c7'
     elif file_type == 'image':
-        file_icon_text = '\uf03e'
+        file_icon_text = '\uf1c5'
     elif file_type == 'text':
         file_icon_text = '\uf15c'
     else:
@@ -354,7 +354,7 @@ def hash_graph_node_json():
                     size = r_serv_metadata.hget('metadata_hash:'+child_hash, 'size')
                     estimated_type = r_serv_metadata.hget('metadata_hash:'+child_hash, 'estimated_type')
 
-                    nodes_set_hash.add((child_hash, 1, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
+                    nodes_set_hash.add((child_hash, 3, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
                     links_set.add((child_hash, paste))
 
                     #l_pastes_child = r_serv_metadata.zrange('base64_hash:'+child_hash, 0, -1)

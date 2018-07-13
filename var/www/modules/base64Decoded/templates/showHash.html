@@ -50,6 +50,10 @@
 			pointer-events: none;
 		}
 
+		.graph_node_icon {
+			pointer-events: none;
+		}
+
 		.node text {
 			font: 8px sans-serif;
 			pointer-events: auto;
@@ -286,15 +290,17 @@ d3.json(url)
 			.attr("r", function(d) {
 				return (d.hash) ? 6 : 5; })
 			.attr("fill", function(d) {
-				if(!d.hash){return color(d.group)}
-				return 'white'; });
+				if(!d.hash){ return color(d.group);}
+				if(d.group == 1){ return "orange";}
+				return "rgb(141, 211, 199)"; });
 
 	node.append('text')
 		  .attr('text-anchor', 'middle')
 		  .attr('dominant-baseline', 'central')
-		  //.text(function(d) { return ICON_UNICODE[d.nodeType]; });
+		  .attr("class", "graph_node_icon")
     	.attr('font-family', 'FontAwesome')
-    	.attr('font-size', '12px' )
+    	.attr('font-size', '8px' )
+			.attr('pointer-events', 'none')
     	.text(function(d) {
 				if(d.hash){
 					return d.icon

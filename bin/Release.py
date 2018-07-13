@@ -37,6 +37,7 @@ if __name__ == "__main__":
 
     regex = '|'.join(regexs)
     while True:
+        signal.alarm(max_execution_time)
         filepath = p.get_from_set()
         if filepath is None:
             publisher.debug("Script Release is Idling 10s")
@@ -47,7 +48,7 @@ if __name__ == "__main__":
         paste = Paste.Paste(filepath)
         content = paste.get_p_content()
 
-        signal.alarm(max_execution_time)
+        #signal.alarm(max_execution_time)
         try:
             releases = set(re.findall(regex, content))
             if len(releases) == 0:
