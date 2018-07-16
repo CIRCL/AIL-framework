@@ -74,6 +74,16 @@
 		.graph_panel {
 			padding: unset;
 		}
+
+		.line_graph {
+		  fill: none;
+		  stroke: steelblue;
+		  stroke-width: 2px;
+			stroke-linejoin: round;
+			stroke-linecap: round;
+			stroke-width: 1.5;
+			/*attr('stroke', '#bcbd22').*/
+		}
 		</style>
 	</head>
 	<body>
@@ -153,6 +163,17 @@
 											</div>
 										</div>
 									</div>
+
+									<div class="panel panel-default">
+										<div class="panel-heading">
+											<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
+										</div>
+										<div class="panel-body ">
+											<div id="graph_line">
+											</div>
+										</div>
+									</div>
+
 								</div>
 
 					</div>
@@ -166,6 +187,7 @@
 									sparklines("sparkline", {{ sparkline_values }})
 
 									all_graph.node_graph = create_graph('/base64Decoded/hash_graph_node_json?hash={{hash}}');
+									all_graph.line_chart = create_line_chart('graph_line', '/base64Decoded/hash_graph_line_json?hash={{hash}}');
 									all_graph.onResize();
                 });
 
@@ -415,6 +437,104 @@ all_graph.onResize = function () {
 }
 
 window.all_graph = all_graph;
+</script>
+
+<script>
+function create_line_chart(id, url){
+
+	var width = 900;
+	var height = Math.round(width / 4);
+
+	var margin = {top: 20, right: 55, bottom: 50, left: 40};
+
+	var x = d3.scaleTime().range([0, width]);
+  //var x = d3.scaleBand().rangeRound([0, width]);
+	//var x = d3.scaleLinear().rangeRound([0, width]);
+	var y = d3.scaleLinear().rangeRound([height, 0]);
+
+	var xAxis = d3.axisBottom(x);
+	var yAxis = d3.axisLeft(y);
+
+	var parseTime = d3.timeParse("%Y-%m-%d");
+
+	var line = d3.line()
+							.x(function(d) {
+          			return x(d.date);
+        			}).y(function(d) {
+          			return y(d.value);
+        			});
+
+	var svg_line = d3.select('#'+id).append('svg')
+				.attr("id", "graph_div")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append('g')
+						.attr('transform', "translate("+ margin.left +","+ margin.top +")");
+
+	var div = d3.select('body').append('div')
+				.attr('class', 'tooltip')
+				.style('opacity', 0);
+
+	//add div tooltip
+
+d3.json(url)
+	.then(function(data){
+
+		data.forEach(function(d) {
+			d.date = parseTime(d.date);
+			//d.date = d['date'];	// not usefull ?
+			d.value = +d.value;
+			/*d.mapping = varNames.map(function (name) {
+				return {
+					y1: y0 += +d[value],
+					label: d['date']
+				};
+			});*/
+		});
+
+		// fit the data
+		x.domain(d3.extent(data, function(d) { return d.date; }));
+		//x.domain(data.map(function (d) { return d.date; })); //E
+		y.domain([0, d3.max(data, function(d){ return d.value ; })]);
+
+		//line
+		svg_line.append("path")
+				.data([data])
+				.attr("class", "line_graph")
+				.attr("d", line);
+
+		// add X axis
+		svg_line.append("g")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(d3.axisBottom(x))
+				.selectAll("text")
+					.style("text-anchor", "end")
+					.attr("transform", "rotate(-45)" );
+
+		// Add the Y Axis
+		svg_line.append("g")
+		    .call(d3.axisLeft(y));
+
+		//add a dot at each data point to which hover behaviour can be attached
+    svg_line.selectAll('dot')
+				.data(data).enter()
+				.append('circle')
+						.attr('r', 2)
+							.attr('cx', function(d) { return x(d.date); })
+							.attr('cy', function(d) { return y(d.value); })
+
+            	.on('mouseover', function(d) {
+	            	div.transition().style('opacity', .9);
+	            	div.html('' + d.value + '<br/>' + d.date).style('left', (d3.event.pageX) + 'px')
+	            	.style('top', (d3.event.pageY) + 'px');
+          		})
+            	.on('mouseout', function(d)
+          			{
+            			div.transition().style('opacity', 0);
+          			});
+
+	});
+}
 </script>
 
         </body>

@@ -235,10 +235,6 @@ def showHash():
                                 first_seen=first_seen,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
-@base64Decoded.route('/base64Decoded/test_json')
-def test_json():
-    return jsonify([{'date': "2018-09-09", 'value': 34}, {'date': "2018-09-10", 'value': 56}, {'date': "2018-09-11", 'value': 0}, {'date': "2018-09-12", 'value': 12}])
-
 @base64Decoded.route('/base64Decoded/hash_by_type_json')
 def hash_by_type_json():
     type = request.args.get('type')
@@ -317,6 +313,37 @@ def range_type_json():
         range_type.append(day_type)
 
     return jsonify(range_type)
+
+@base64Decoded.route('/base64Decoded/hash_graph_line_json')
+def hash_graph_line_json():
+    hash = request.args.get('hash')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    #hash = '9c748d28d78a64aef99e7ba866a433eb635c6d7a'
+
+    if date_from is None or date_to is None:
+        nb_days_seen_in_pastes = 30
+    else:
+        # # TODO: # FIXME:
+        nb_days_seen_in_pastes = 30
+
+    date_range_seen_in_pastes = get_date_range(nb_days_seen_in_pastes)
+
+    #verify input
+    if r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type') is not None:
+        json_seen_in_paste = []
+        for date in date_range_seen_in_pastes:
+            nb_seen_this_day = r_serv_metadata.zscore('base64_date:'+date, hash)
+            if nb_seen_this_day is None:
+                nb_seen_this_day = 0
+            date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+            json_seen_in_paste.append({ 'date' : date, 'value' : int( nb_seen_this_day )})
+
+        return jsonify(json_seen_in_paste)
+    else:
+        return jsonify()
+
 
 @base64Decoded.route('/base64Decoded/hash_graph_node_json')
 def hash_graph_node_json():
