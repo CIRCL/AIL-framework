@@ -235,6 +235,10 @@ def showHash():
                                 first_seen=first_seen,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
+@base64Decoded.route('/base64Decoded/test_json')
+def test_json():
+    return jsonify([{'date': "2018-09-09", 'value': 34}, {'date': "2018-09-10", 'value': 56}, {'date': "2018-09-11", 'value': 0}, {'date': "2018-09-12", 'value': 12}])
+
 @base64Decoded.route('/base64Decoded/hash_by_type_json')
 def hash_by_type_json():
     type = request.args.get('type')
