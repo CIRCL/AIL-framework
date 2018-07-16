@@ -158,6 +158,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c './LibInjection.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c './MISP_The_Hive_feeder.py; read x'
