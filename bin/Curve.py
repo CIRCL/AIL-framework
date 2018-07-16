@@ -48,6 +48,9 @@ top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
 top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
+# create direct link in mail
+full_paste_url = "http://localhost:7000/showsavedpaste/?paste="
+
 def check_if_tracked_term(term, path):
     if term in server_term.smembers(TrackedTermsSet_Name):
         #add_paste to tracked_word_set
@@ -59,9 +62,14 @@ def check_if_tracked_term(term, path):
         # Send a notification only when the member is in the set
         if term in server_term.smembers(TrackedTermsNotificationEnabled_Name):
 
+            # create mail body
+            mail_body = ("AIL Framework,\n"
+                        "New occurrence for term: " + term + "\n"
+                        ''+full_paste_url + path)
+
             # Send to every associated email adress
             for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + term):
-                sendEmailNotification(email, term)
+                sendEmailNotification(email, 'Term', mail_body)
 
 
 def getValueOverRange(word, startDate, num_day):

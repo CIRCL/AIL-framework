@@ -21,7 +21,7 @@ TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
 # Keys will be e.g. TrackedNotificationEmails<TERMNAME>
 TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
 
-def sendEmailNotification(recipient, term):
+def sendEmailNotification(recipient, alert_name, content):
 
     if not os.path.exists(configfile):
         raise Exception('Unable to find the configuration file. \
@@ -57,7 +57,13 @@ def sendEmailNotification(recipient, term):
 
     try:
         if sender_pw is not None:
-            smtp_server = smtplib.SMTP_SSL(sender_host, sender_port)
+            try:
+                smtp_server = smtplib.SMTP(sender_host, sender_port)
+                smtp_server.starttls()
+            except smtplib.SMTPNotSupportedError:
+                print("The server does not support the STARTTLS extension.")
+                smtp_server = smtplib.SMTP_SSL(sender_host, sender_port)
+
             smtp_server.ehlo()
             smtp_server.login(sender, sender_pw)
         else:
@@ -67,13 +73,14 @@ def sendEmailNotification(recipient, term):
         mime_msg = MIMEMultipart()
         mime_msg['From'] = sender
         mime_msg['To'] = recipient
-        mime_msg['Subject'] = "AIL Term Alert"
+        mime_msg['Subject'] = "AIL Framework "+ alert_name + " Alert"
 
-        body = "New occurrence for term: " + term
+        body = content
         mime_msg.attach(MIMEText(body, 'plain'))
 
         smtp_server.sendmail(sender, recipient, mime_msg.as_string())
         smtp_server.quit()
+        print('Send notification '+ alert_name + ' to '+recipient)
 
     except Exception as e:
         print(str(e))

@@ -34,6 +34,9 @@ top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
 top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
+# create direct link in mail
+full_paste_url = "http://localhost:7000/showsavedpaste/?paste="
+
 def add_quote_inside_tab(tab):
     quoted_tab = "["
     for elem in tab[1:-1].split(','):
@@ -105,9 +108,15 @@ if __name__ == "__main__":
                 if eff_percent >= dico_percent[the_set]:
                     # Send a notification only when the member is in the set
                     if dico_setname_to_redis[str(the_set)] in server_term.smembers(TrackedTermsNotificationEnabled_Name):
+
+                        # create mail body
+                        mail_body = ("AIL Framework,\n"
+                                    "New occurrence for term: " + dico_setname_to_redis[str(the_set)] + "\n"
+                                    ''+full_paste_url + filename)
+
                         # Send to every associated email adress
                         for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + dico_setname_to_redis[str(the_set)]):
-                            sendEmailNotification(email, dico_setname_to_redis[str(the_set)])
+                            sendEmailNotification(email, 'Term', mail_body)
 
                     print(the_set, "matched in", filename)
                     set_name = 'set_' + dico_setname_to_redis[the_set]

@@ -35,6 +35,8 @@ top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
 top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
+# create direct link in mail
+full_paste_url = "http://localhost:7000/showsavedpaste/?paste="
 
 def refresh_dicos():
     dico_regex = {}
@@ -96,9 +98,15 @@ if __name__ == "__main__":
                     if regex_str_complete not in server_term.smembers(BlackListTermsSet_Name):
                         # Send a notification only when the member is in the set
                         if regex_str_complete in server_term.smembers(TrackedTermsNotificationEnabled_Name):
+
+                            # create mail body
+                            mail_body = ("AIL Framework,\n"
+                                        "New occurrence for regex: " + regex_str + "\n"
+                                        ''+full_paste_url + filename)
+
                             # Send to every associated email adress
                             for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + regex_str_complete):
-                                sendEmailNotification(email, regex_str)
+                                sendEmailNotification(email, 'Term', mail_body)
 
                         set_name = 'regex_' + dico_regexname_to_redis[regex_str]
                         new_to_the_set = server_term.sadd(set_name, filename)
