@@ -36,7 +36,7 @@ top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
 # create direct link in mail
-full_paste_url = "http://localhost:7000/showsavedpaste/?paste="
+full_paste_url = "/showsavedpaste/?paste="
 
 def refresh_dicos():
     dico_regex = {}
@@ -63,6 +63,9 @@ if __name__ == "__main__":
 
     # FUNCTIONS #
     publisher.info("RegexForTermsFrequency script started")
+
+    # create direct link in mail
+    full_paste_url = p.config.get("Notifications", "ail_domain") + full_paste_url
 
     #compile the regex
     dico_refresh_cooldown = time.time()

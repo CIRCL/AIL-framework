@@ -49,7 +49,7 @@ top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
 # create direct link in mail
-full_paste_url = "http://localhost:7000/showsavedpaste/?paste="
+full_paste_url = "/showsavedpaste/?paste="
 
 def check_if_tracked_term(term, path):
     if term in server_term.smembers(TrackedTermsSet_Name):
@@ -103,6 +103,9 @@ if __name__ == "__main__":
 
     # FUNCTIONS #
     publisher.info("Script Curve started")
+
+    # create direct link in mail
+    full_paste_url = p.config.get("Notifications", "ail_domain") + full_paste_url
 
     # FILE CURVE SECTION #
     csv_path = os.path.join(os.environ['AIL_HOME'],
