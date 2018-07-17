@@ -179,13 +179,18 @@ def base64Decoded_page():
             if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
                 b64_vt = True
                 b64_vt_link = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_link')
+                b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
             else:
                 b64_vt = False
                 b64_vt_link = ''
+                b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+                # hash never refreshed
+                if b64_vt_report is None:
+                    b64_vt_report = ''
 
             sparklines_value = list_sparkline_values(date_range_sparkline, hash)
 
-            b64_metadata.append( (file_icon, estimated_type, hash, nb_seen_in_paste, size, first_seen, last_seen, b64_vt, b64_vt_link, sparklines_value) )
+            b64_metadata.append( (file_icon, estimated_type, hash, nb_seen_in_paste, size, first_seen, last_seen, b64_vt, b64_vt_link, b64_vt_report, sparklines_value) )
 
     l_type = r_serv_metadata.smembers('hash_all_type')
 
@@ -229,9 +234,21 @@ def showHash():
         date_range_sparkline = get_date_range(num_day_type)
         sparkline_values = list_sparkline_values(date_range_sparkline, hash)
 
-        print(sparkline_values)
+        if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
+            b64_vt = True
+            b64_vt_link = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_link')
+            b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+        else:
+            b64_vt = False
+            b64_vt_link = ''
+            b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+            # hash never refreshed
+            if b64_vt_report is None:
+                b64_vt_report = ''
 
-        return render_template('showHash.html', hash=hash, size=size, estimated_type=estimated_type, file_icon=file_icon,
+        return render_template('showHash.html', hash=hash, vt_enabled=vt_enabled, b64_vt=b64_vt, b64_vt_link=b64_vt_link,
+                                b64_vt_report=b64_vt_report,
+                                size=size, estimated_type=estimated_type, file_icon=file_icon,
                                 first_seen=first_seen,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
@@ -411,10 +428,9 @@ def base64_types():
     date_to = 20180706
     return render_template('base64_types.html', date_from=date_from, date_to=date_to)
 
-@base64Decoded.route('/base64Decoded/send_file_to_vt', methods=['POST'])
-def send_file_to_vt():
-    paste = request.form['paste']
-    hash = request.form['hash']
+@base64Decoded.route('/base64Decoded/send_file_to_vt_js')
+def send_file_to_vt_js():
+    hash = request.args.get('hash')
 
     b64_path = r_serv_metadata.hget('metadata_hash:'+hash, 'saved_path')
     b64_full_path = os.path.join(os.environ['AIL_HOME'], b64_path)
@@ -427,11 +443,13 @@ def send_file_to_vt():
     json_response = response.json()
     print(json_response)
 
-    vt_b64_link = json_response['permalink'].split('analysis')[0] + 'analysis/'
-    r_serv_metadata.hset('metadata_hash:'+hash, 'vt_link', vt_b64_link)
-    b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report', '')
+    vt_link = json_response['permalink'].split('analysis')[0] + 'analysis/'
+    r_serv_metadata.hset('metadata_hash:'+hash, 'vt_link', vt_link)
+    vt_report = 'Please Refresh'
+    r_serv_metadata.hset('metadata_hash:'+hash, 'vt_report', vt_report)
 
-    return redirect(url_for('showsavedpastes.showsavedpaste', paste=paste))
+    return jsonify({'vt_link': vt_link, 'vt_report': vt_report})
+
 
 @base64Decoded.route('/base64Decoded/update_vt_result')
 def update_vt_result():

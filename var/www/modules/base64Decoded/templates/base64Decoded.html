@@ -139,21 +139,21 @@
 												<td style="text-align:center;max-width:150px;">
 													{% if  vt_enabled %}
 														{% if not b64[7] %}
-															<form action="/base64Decoded/send_file_to_vt" id="vt_submit" method='post'>
-																<input type="hidden" id="hash" name="hash" value="b64[2]">
-																<button class="btn btn-primary">
-																	<i class="fa fa-paper-plane"></i>     Send this file to VT
+															<darkbutton_{{ b64[2] }}>
+																<button id="submit_vt_{{ b64[2] }}" class="btn btn-primary" onclick="sendFileToVT('{{ b64[2] }}')">
+																	<i class="fa fa-paper-plane"></i>&nbsp;Send this file to VT
 																</button>
-														</form>
+															</darkbutton_{{ b64[2] }}>
 														{% else %}
-															<a class="btn btn-default" target="_blank" href="{{ b64[8] }}"><i class="fa fa-link"> VT scan reports</i></a>
+															<a class="btn btn-primary" target="_blank" href="{{ b64[8] }}"><i class="fa fa-link"> VT Report</i></a>
 														{% endif %}
 														<button class="btn btn-default" onclick="updateVTReport('{{ b64[2] }}')">
-			                        <div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[8] }}</div>
-			                      </button>
+															<div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[9] }}</div>
+														</button>
 													{% else %}
 														Virus Total submission is disabled
 													{% endif %}
+
 												</td>
 												<td id="sparklines_{{ b64[2] }}" style="text-align:center;">
 												</td>
@@ -240,6 +240,15 @@
 		});
 	}
 
+	function sendFileToVT(hash) {
+		//send file to vt
+		$.getJSON('/base64Decoded/send_file_to_vt_js?hash='+hash,
+			function(data) {
+				var content = '<a id="submit_vt_'+hash+'" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
+				$('#submit_vt_'+hash).remove();
+				$('darkbutton_'+hash).append(content);
+		});
+	}
 </script>
 <script>
 //var data = [6,3,3,2,5,3,9];
@@ -280,7 +289,7 @@ function sparklines(id, points) {
 </script>
 <script>
 	{% for b64 in l_64 %}
-		sparklines("sparklines_{{ b64[2] }}", {{ b64[9] }})
+		sparklines("sparklines_{{ b64[2] }}", {{ b64[10] }})
 	{% endfor %}
 </script>
 

@@ -131,10 +131,26 @@
 										<div class="col-md-1">
 											<div id="sparkline"></div>
 										</div>
-
 									</div>
-
 								</li></ul>
+
+								{% if  vt_enabled %}
+									{% if not b64_vt %}
+										<darkbutton>
+											<button id="submit_vt_b" class="btn btn-primary" onclick="sendFileToVT('{{ hash }}')">
+												<i class="fa fa-paper-plane"></i>&nbsp;Send this file to VT
+											</button>
+										</darkbutton>
+									{% else %}
+										<a class="btn btn-primary" target="_blank" href="{{ b64_vt_link }}"><i class="fa fa-link"> VT Report</i></a>
+									{% endif %}
+									<button class="btn btn-default" onclick="updateVTReport('{{ hash }}')">
+										<div id="report_vt_b"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64_vt_report }}</div>
+									</button>
+								{% else %}
+									Virus Total submission is disabled
+								{% endif %}
+
 								</div></div>
 
 								<div class="row">
@@ -166,7 +182,7 @@
 
 									<div class="panel panel-default">
 										<div class="panel-heading">
-											<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
+											<i id="flash-tld" class="glyphicon glyphicon-stats" flash-tld=""></i> Graph
 										</div>
 										<div class="panel-body ">
 											<div id="graph_line">
@@ -196,12 +212,22 @@
 								});
             </script>
 <script>
+	function sendFileToVT(hash) {
+		//send file to vt
+		$.getJSON('/base64Decoded/send_file_to_vt_js?hash='+hash,
+			function(data) {
+				var content = '<a id="submit_vt_b" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
+				$('#submit_vt_b').remove();
+				$('darkbutton').append(content);
+		});
+	}
+
 	function updateVTReport(hash) {
 		//updateReport
 		$.getJSON('/base64Decoded/update_vt_result?hash='+hash,
 			function(data) {
-				content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
-				$( "#report_vt_"+hash ).html(content);
+				var content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt'];
+				$( "#report_vt_b" ).html(content);
 		});
 	}
 
@@ -448,8 +474,6 @@ function create_line_chart(id, url){
 	var margin = {top: 20, right: 55, bottom: 50, left: 40};
 
 	var x = d3.scaleTime().range([0, width]);
-  //var x = d3.scaleBand().rangeRound([0, width]);
-	//var x = d3.scaleLinear().rangeRound([0, width]);
 	var y = d3.scaleLinear().rangeRound([height, 0]);
 
 	var xAxis = d3.axisBottom(x);
@@ -481,15 +505,9 @@ d3.json(url)
 	.then(function(data){
 
 		data.forEach(function(d) {
+			d.date_label = d.date;
 			d.date = parseTime(d.date);
-			//d.date = d['date'];	// not usefull ?
 			d.value = +d.value;
-			/*d.mapping = varNames.map(function (name) {
-				return {
-					y1: y0 += +d[value],
-					label: d['date']
-				};
-			});*/
 		});
 
 		// fit the data
@@ -515,7 +533,7 @@ d3.json(url)
 		svg_line.append("g")
 		    .call(d3.axisLeft(y));
 
-		//add a dot at each data point to which hover behaviour can be attached
+		//add a dot circle
     svg_line.selectAll('dot')
 				.data(data).enter()
 				.append('circle')
@@ -525,8 +543,9 @@ d3.json(url)
 
             	.on('mouseover', function(d) {
 	            	div.transition().style('opacity', .9);
-	            	div.html('' + d.value + '<br/>' + d.date).style('left', (d3.event.pageX) + 'px')
-	            	.style('top', (d3.event.pageY) + 'px');
+	            	div.html('' + d.date_label+ '<br/>' + d.value).style('left', (d3.event.pageX) + 'px')
+								.style("left", (d3.event.pageX) + "px")
+								.style("top", (d3.event.pageY - 28) + "px");
           		})
             	.on('mouseout', function(d)
           			{

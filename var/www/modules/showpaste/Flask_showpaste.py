@@ -156,11 +156,14 @@ def showpaste(content_range, requested_path):
             if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
                 b64_vt = True
                 b64_vt_link = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_link')
-                print(b64_vt_report)
+                b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
             else:
                 b64_vt = False
                 b64_vt_link = ''
-            b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+                b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+                # hash never refreshed
+                if b64_vt_report is None:
+                    b64_vt_report = ''
 
             l_64.append( (file_icon, estimated_type, hash, saved_path, nb_in_file, b64_vt, b64_vt_link, b64_vt_report) )
 
