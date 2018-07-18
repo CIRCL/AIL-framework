@@ -30,8 +30,12 @@ def timeout_handler(signum, frame):
 
 signal.signal(signal.SIGALRM, timeout_handler)
 
-def decode_binary_string(s):
+def decode_binary_string(binary_string):
     return ''.join(chr(int(s[i*8:i*8+8],2)) for i in range(len(s)//8))
+
+def decode_binary(binary_string):
+    return bytes(bytearray([int(binary_string[i:i+8], 2) for i in range(0, len(binary_string), 8)]))
+
 
 def search_binary(content, message, date):
     find = False
@@ -40,11 +44,11 @@ def search_binary(content, message, date):
 
         for binary in binary_list:
             if len(binary) >= 40 :
-                decode = decode_binary_string(binary).encode()
-                print(decode)
+                decode = decode_binary(binary)
                 print(message)
 
                 type = magic.from_buffer(decode, mime=True)
+                print(type)
 
                 find = True
                 hash = sha1(decode).hexdigest()
