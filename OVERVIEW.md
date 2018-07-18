@@ -36,12 +36,18 @@ ARDB overview
 					'vt_report'		vt_report
 					'nb_seen_in_all_pastes'	nb_seen_in_all_pastes
 
+	SET  - 'hash_base64_all_type'	hash_type *
+	SET  - 'hash_binary_all_type'	hash_type *
+
 	SET  - 'base64_paste:'+paste	hash *
+	SET  - 'binary_paste:'+paste	hash *
 
 	ZADD - 'base64_date:'+20180622	hash *			nb_seen_this_day
 
 	ZADD - 'base64_hash'+hash	paste *			nb_seen_in_paste
+	ZADD - 'binary_hash'+hash	paste *			nb_seen_in_paste
 
 	SET  - 'hash_all_type'		hash_type
 
 	ZADD - 'base64_type:'+type	date			nb_seen
+	ZADD - 'binary_type:'+type	date			nb_seen

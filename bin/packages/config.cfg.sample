@@ -61,6 +61,10 @@ max_execution_time = 90
 path = Base64/
 max_execution_time = 60
 
+[Binary]
+path = Base64/
+max_execution_time = 60
+
 [Modules_Duplicates]
 #Number of month to look back
 maximum_month_range = 3

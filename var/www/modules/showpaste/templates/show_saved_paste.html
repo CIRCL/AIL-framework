@@ -393,7 +393,7 @@
           {% for b64 in l_64 %}
               <tr>
                   <td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-                  <td>{{ b64[2] }} ({{ b64[4] }})</td>
+                  <td><a target="_blank" href="{{ url_for('base64Decoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a> ({{ b64[4] }})</td>
                   <td>{{ b64[3] }}</td>
                   <td style="text-align:center;">
                     {% if  vt_enabled %}
