@@ -9,8 +9,12 @@ import os
 import datetime
 import json
 from Date import Date
+
+from io import BytesIO
+import zipfile
+
 import requests
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, send_file
 
 # ============ VARIABLES ============
 import Flask_config
@@ -251,6 +255,41 @@ def showHash():
                                 size=size, estimated_type=estimated_type, file_icon=file_icon,
                                 first_seen=first_seen,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
+
+@app.route('/base64Decoded/downloadHash')
+def downloadHash():
+    hash = request.args.get('hash')
+    # sanitize hash
+    hash = hash.split('/')[0]
+
+    # hash exist
+    if r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type') is not None:
+
+        b64_path = r_serv_metadata.hget('metadata_hash:'+hash, 'saved_path')
+        b64_full_path = os.path.join(os.environ['AIL_HOME'], b64_path)
+        hash_content = ''
+        try:
+            with open(b64_full_path, 'rb') as f:
+                hash_content = f.read()
+
+            # zip buffer
+            result = BytesIO()
+            temp = BytesIO()
+            temp.write(hash_content)
+
+            with zipfile.ZipFile(result, "w") as zf:
+                #zf.setpassword(b"infected")
+                zf.writestr( hash, temp.getvalue())
+
+            filename = hash + '.zip'
+            result.seek(0)
+
+            return send_file(result, attachment_filename=filename, as_attachment=True)
+        except Exception as e:
+            print(e)
+            return 'Server Error'
+    else:
+        return 'hash: ' + hash + " don't exist"
 
 @base64Decoded.route('/base64Decoded/hash_by_type_json')
 def hash_by_type_json():
