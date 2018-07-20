@@ -176,7 +176,7 @@ if __name__ == '__main__':
     re.compile(regex_base64)
 
     # map decoder function
-    decoder_function = {'binary':binary_decoder,'hex':hex_decoder, 'base64':base64_decoder}
+    decoder_function = {'binary':binary_decoder,'hexadecimal':hex_decoder, 'base64':base64_decoder}
 
     hex_max_execution_time = p.config.getint("Hex", "max_execution_time")
     binary_max_execution_time = p.config.getint("Binary", "max_execution_time")
@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
     # list all decoder yith regex, the order is use to search content by order
     all_decoder = [ {'name': 'binary', 'regex': regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time},
-                    {'name': 'hex', 'regex': regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time},
+                    {'name': 'hexadecimal', 'regex': regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time},
                     {'name': 'base64', 'regex': regex_base64, 'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}]
 
     for decoder in all_decoder:

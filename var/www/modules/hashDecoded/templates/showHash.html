@@ -114,7 +114,7 @@
 							              <th>First_seen</th>
 							              <th>Last_seen</th>
 							              <th>Size (Kb)</th>
-							              <th>nb_seen_in_all_pastes</th>
+							              <th>Nb seen</th>
 							            </tr>
 							          </thead>
 							          <tbody>
@@ -172,6 +172,20 @@
 									</div>
 
 									<div class="col-md-2">
+
+										<div class="panel panel-info">
+											<div class="panel-heading">
+												<i class="fa fa-unlock-alt" aria-hidden="true"></i> Encoding
+											</div>
+											<div class="panel-body" style="text-align:center;">
+												{% for encoding in list_hash_decoder %}
+												<button id="" class="btn btn-default">
+													{{encoding['encoding']}} <span class="badge">{{encoding['nb_seen']}}</span>
+												</button>
+												{% endfor %}
+											</div>
+										</div>
+
 										<div class="panel panel-default">
 											<div class="panel-heading">
 												<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
