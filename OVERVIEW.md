@@ -42,18 +42,18 @@ ARDB overview
 	SET  - 'hash_base64_all_type'	hash_type *
 	SET  - 'hash_binary_all_type'	hash_type *
 
-	SET  - 'hash_paste:'+paste	hash * °°°
+	SET  - 'hash_paste:'+paste	hash *
 	SET  - 'base64_paste:'+paste	hash *
 	SET  - 'binary_paste:'+paste	hash *
 
-	ZADD - 'hash_date:'+20180622	hash *	°°°		nb_seen_this_day
+	ZADD - 'hash_date:'+20180622	hash *			nb_seen_this_day
 	ZADD - 'base64_date:'+20180622	hash *			nb_seen_this_day
 	ZADD - 'binary_date:'+20180622	hash *			nb_seen_this_day
 
-	ZADD - 'nb_seen_hash:'+hash	paste *	°°°		nb_seen_in_paste
+	ZADD - 'nb_seen_hash:'+hash	paste *			nb_seen_in_paste
 	ZADD - 'base64_hash:'+hash	paste *			nb_seen_in_paste
 	ZADD - 'binary_hash:'+hash	paste *			nb_seen_in_paste
 
-	ZADD - 'hash_type:'+type	date	°°°		nb_seen
+	ZADD - 'hash_type:'+type	date			nb_seen
 	ZADD - 'base64_type:'+type	date			nb_seen
 	ZADD - 'binary_type:'+type	date			nb_seen

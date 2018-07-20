@@ -32,7 +32,6 @@ signal.signal(signal.SIGALRM, timeout_handler)
 
 def hex_decoder(hexStr):
     #hexStr = ''.join( hex_string.split(" ") )
-    print( bytes(bytearray([int(hexStr[i:i+2], 16) for i in range(0, len(hexStr), 2)])) )
     return bytes(bytearray([int(hexStr[i:i+2], 16) for i in range(0, len(hexStr), 2)]))
 
 def binary_decoder(binary_string):
@@ -43,11 +42,7 @@ def base64_decoder(base64_string):
 
 def decode_string(content, message, date, encoded_list, decoder_name, encoded_min_size):
     find = False
-    print('list')
-    print(encoded_min_size)
-    print(encoded_list)
     for encoded in encoded_list:
-        print(len(encoded))
         if len(encoded) >=  encoded_min_size:
             decode = decoder_function[decoder_name](encoded)
             find = True
@@ -79,6 +74,7 @@ def save_hash(decoder_name, message, date, decoded):
     date_paste = '{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])
     date_key = date[0:4] + date[4:6] + date[6:8]
 
+    serv_metadata.zincrby('hash_date:'+date_key, hash, 1)
     serv_metadata.zincrby(decoder_name+'_date:'+date_key, hash, 1)
 
     # first time we see this hash
@@ -93,14 +89,16 @@ def save_hash(decoder_name, message, date, decoded):
         print('first '+decoder_name)
         serv_metadata.hincrby('metadata_hash:'+hash, 'nb_seen_in_all_pastes', 1)
 
+        serv_metadata.sadd('hash_paste:'+message, hash) # paste - hash map
         serv_metadata.sadd(decoder_name+'_paste:'+message, hash) # paste - hash map
-        serv_metadata.sadd(decoder_name+'_paste:'+message, hash) # paste - hash map
+        serv_metadata.zincrby('nb_seen_hash:'+hash, message, 1)# hash - paste map
         serv_metadata.zincrby(decoder_name+'_hash:'+hash, message, 1)# hash - paste map
 
         # create hash metadata
         serv_metadata.hset('metadata_hash:'+hash, 'estimated_type', type)
         serv_metadata.sadd('hash_all_type', type)
         serv_metadata.sadd('hash_'+ decoder_name +'_all_type', type)
+        serv_metadata.zincrby('hash_type:'+type, date_key, 1)
         serv_metadata.zincrby(decoder_name+'_type:'+type, date_key, 1)
 
         save_hash_on_disk(decoded, type, hash, json_data)
@@ -171,9 +169,9 @@ if __name__ == '__main__':
     regex_hex = '[A-Fa-f0-9]{40,}'
     regex_base64 = '(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)'
 
-    '''re.compile(regex_binary)
+    re.compile(regex_binary)
     re.compile(regex_hex)
-    re.compile(regex_base64)'''
+    re.compile(regex_base64)
 
     # map decoder function
     decoder_function = {'binary':binary_decoder,'hex':hex_decoder, 'base64':base64_decoder}
@@ -213,11 +211,7 @@ if __name__ == '__main__':
             # max execution time on regex
             signal.alarm(decoder['max_execution_time'])
             try:
-                print(content)
                 encoded_list = re.findall(decoder['regex'], content)
-                #encoded_list = re.findall(decoder['regex'], content)
-                print(decoder['regex'])
-                print(encoded_list)
             except TimeoutException:
                 encoded_list = []
                 p.incr_module_timeout_statistic() # add encoder type
