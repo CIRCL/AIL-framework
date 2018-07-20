@@ -134,11 +134,11 @@ def showpaste(content_range, requested_path):
         list_tags.append( (tag, automatic, tag_status_tp, tag_status_fp) )
 
     l_64 = []
-    # load base64 files
-    if r_serv_metadata.scard('base64_paste:'+requested_path) > 0:
-        set_b64 = r_serv_metadata.smembers('base64_paste:'+requested_path)
+    # load hash files
+    if r_serv_metadata.scard('hash_paste:'+requested_path) > 0:
+        set_b64 = r_serv_metadata.smembers('hash_paste:'+requested_path)
         for hash in set_b64:
-            nb_in_file = int(r_serv_metadata.zscore('base64_hash:'+hash, requested_path))
+            nb_in_file = int(r_serv_metadata.zscore('nb_seen_hash:'+hash, requested_path))
             estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
             file_type = estimated_type.split('/')[0]
             # set file icon

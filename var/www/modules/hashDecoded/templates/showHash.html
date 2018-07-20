@@ -151,7 +151,7 @@
 									Virus Total submission is disabled
 								{% endif %}
 
-								<a href="/base64Decoded/downloadHash?hash={{hash}}" target="blank">
+								<a href="/hashDecoded/downloadHash?hash={{hash}}" target="blank">
 									<button class='btn btn-info pull-right'><i id="flash-tld" class="glyphicon glyphicon-download-alt " flash-tld=""></i> Download Hash file
 									</button>
 								</a>
@@ -206,8 +206,8 @@
                 $(document).ready(function(){
 									sparklines("sparkline", {{ sparkline_values }})
 
-									all_graph.node_graph = create_graph('/base64Decoded/hash_graph_node_json?hash={{hash}}');
-									all_graph.line_chart = create_line_chart('graph_line', '/base64Decoded/hash_graph_line_json?hash={{hash}}');
+									all_graph.node_graph = create_graph('/hashDecoded/hash_graph_node_json?hash={{hash}}');
+									all_graph.line_chart = create_line_chart('graph_line', '/hashDecoded/hash_graph_line_json?hash={{hash}}');
 									all_graph.onResize();
                 });
 
@@ -218,7 +218,7 @@
 <script>
 	function sendFileToVT(hash) {
 		//send file to vt
-		$.getJSON('/base64Decoded/send_file_to_vt_js?hash='+hash,
+		$.getJSON('/hashDecoded/send_file_to_vt_js?hash='+hash,
 			function(data) {
 				var content = '<a id="submit_vt_b" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
 				$('#submit_vt_b').remove();
@@ -228,7 +228,7 @@
 
 	function updateVTReport(hash) {
 		//updateReport
-		$.getJSON('/base64Decoded/update_vt_result?hash='+hash,
+		$.getJSON('/hashDecoded/update_vt_result?hash='+hash,
 			function(data) {
 				var content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt'];
 				$( "#report_vt_b" ).html(content);

@@ -35,6 +35,8 @@ ARDB overview
 					'vt_link'		vt_link
 					'vt_report'		vt_report
 					'nb_seen_in_all_pastes'	nb_seen_in_all_pastes
+					'base64_decoder'	nb_encoded
+					'binary_decoder'	nb_encoded
 
 	SET  - 'all_decoder'		decoder*
 

@@ -59,6 +59,7 @@ def decode_string(content, message, date, encoded_list, decoder_name, encoded_mi
 
 # # TODO: FIXME check db
 def save_hash(decoder_name, message, date, decoded):
+    print(decoder_name)
     type = magic.from_buffer(decoded, mime=True)
     print(type)
     hash = sha1(decoded).hexdigest()
@@ -88,6 +89,7 @@ def save_hash(decoder_name, message, date, decoded):
     if serv_metadata.zscore(decoder_name+'_hash:'+hash, message) is None:
         print('first '+decoder_name)
         serv_metadata.hincrby('metadata_hash:'+hash, 'nb_seen_in_all_pastes', 1)
+        serv_metadata.hincrby('metadata_hash:'+hash, decoder_name+'_decoder', 1)
 
         serv_metadata.sadd('hash_paste:'+message, hash) # paste - hash map
         serv_metadata.sadd(decoder_name+'_paste:'+message, hash) # paste - hash map
@@ -206,7 +208,6 @@ if __name__ == '__main__':
         date = str(paste._get_p_date())
 
         for decoder in all_decoder: # add threshold and size limit
-            print(decoder['name'])
 
             # max execution time on regex
             signal.alarm(decoder['max_execution_time'])

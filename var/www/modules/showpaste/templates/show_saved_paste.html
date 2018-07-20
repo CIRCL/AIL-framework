@@ -379,7 +379,7 @@
       {% endif %}
 
       {% if  l_64|length != 0 %}
-          <h3> Base64 files: </h3>
+          <h3> Hash files: </h3>
           <table id="tableb64" class="red_table table table-striped table-bordered">
           <thead>
           <tr>
@@ -393,7 +393,7 @@
           {% for b64 in l_64 %}
               <tr>
                   <td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-                  <td><a target="_blank" href="{{ url_for('base64Decoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a> ({{ b64[4] }})</td>
+                  <td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a> ({{ b64[4] }})</td>
                   <td>{{ b64[3] }}</td>
                   <td style="text-align:center;">
                     {% if  vt_enabled %}
@@ -464,7 +464,7 @@
 <script>
   function updateVTReport(hash) {
     //updateReport
-    $.getJSON('/base64Decoded/update_vt_result?hash='+hash,
+    $.getJSON('/hashDecoded/update_vt_result?hash='+hash,
       function(data) {
         content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
         $( "#report_vt_"+hash ).html(content);
@@ -473,7 +473,7 @@
 
   function sendFileToVT(hash) {
     //send file to vt
-    $.getJSON('/base64Decoded/send_file_to_vt_js?hash='+hash,
+    $.getJSON('/hashDecoded/send_file_to_vt_js?hash='+hash,
       function(data) {
         var content = '<a id="submit_vt_'+hash+'" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
         $('#submit_vt_'+hash).remove();

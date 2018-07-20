@@ -25,7 +25,7 @@ r_serv_metadata = Flask_config.r_serv_metadata
 vt_enabled = Flask_config.vt_enabled
 vt_auth = Flask_config.vt_auth
 
-base64Decoded = Blueprint('base64Decoded', __name__, template_folder='templates')
+hashDecoded = Blueprint('hashDecoded', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
 
@@ -52,7 +52,7 @@ def substract_date(date_from, date_to):
 def list_sparkline_values(date_range_sparkline, hash):
     sparklines_value = []
     for date_day in date_range_sparkline:
-        nb_seen_this_day = r_serv_metadata.zscore('base64_date:'+date_day, hash)
+        nb_seen_this_day = r_serv_metadata.zscore('hash_date:'+date_day, hash)
         if nb_seen_this_day is None:
             nb_seen_this_day = 0
         sparklines_value.append(int(nb_seen_this_day))
@@ -94,16 +94,16 @@ def one():
     return 1
 
 # ============= ROUTES ==============
-@base64Decoded.route("/base64Decoded/all_base64_search", methods=['POST'])
-def all_base64_search():
+@hashDecoded.route("/hashDecoded/all_hash_search", methods=['POST'])
+def all_hash_search():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
     type = request.form.get('type')
     print(type)
-    return redirect(url_for('base64Decoded.base64Decoded_page', date_from=date_from, date_to=date_to, type=type))
+    return redirect(url_for('hashDecoded.hashDecoded_page', date_from=date_from, date_to=date_to, type=type))
 
-@base64Decoded.route("/base64Decoded/", methods=['GET'])
-def base64Decoded_page():
+@hashDecoded.route("/hashDecoded/", methods=['GET'])
+def hashDecoded_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     type = request.args.get('type')
@@ -150,7 +150,7 @@ def base64Decoded_page():
 
     l_64 = set()
     for date in date_range:
-        l_hash = r_serv_metadata.zrange('base64_date:' +date, 0, -1)
+        l_hash = r_serv_metadata.zrange('hash_date:' +date, 0, -1)
         if l_hash:
             for hash in l_hash:
                 l_64.add(hash)
@@ -198,34 +198,34 @@ def base64Decoded_page():
 
     l_type = r_serv_metadata.smembers('hash_all_type')
 
-    return render_template("base64Decoded.html", l_64=b64_metadata, vt_enabled=vt_enabled, l_type=l_type, type=type, daily_type_chart=daily_type_chart, daily_date=daily_date,
+    return render_template("hashDecoded.html", l_64=b64_metadata, vt_enabled=vt_enabled, l_type=l_type, type=type, daily_type_chart=daily_type_chart, daily_date=daily_date,
                                                 date_from=date_from, date_to=date_to)
 
-@base64Decoded.route('/base64Decoded/hash_by_type')
+@hashDecoded.route('/hashDecoded/hash_by_type')
 def hash_by_type():
     type = request.args.get('type')
     type = 'text/plain'
-    return render_template('base64_type.html',type = type)
+    return render_template('hash_type.html',type = type)
 
-@base64Decoded.route('/base64Decoded/base64_hash')
-def base64_hash():
+@hashDecoded.route('/hashDecoded/hash_hash')
+def hash_hash():
     hash = request.args.get('hash')
-    return render_template('base64_hash.html')
+    return render_template('hash_hash.html')
 
-@base64Decoded.route('/base64Decoded/showHash')
+@hashDecoded.route('/hashDecoded/showHash')
 def showHash():
     hash = request.args.get('hash')
     #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
 
     # TODO FIXME show error
     if hash is None:
-        return base64Decoded_page()
+        return hashDecoded_page()
 
     estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
     # hash not found
     # TODO FIXME show error
     if estimated_type is None:
-        return base64Decoded_page()
+        return hashDecoded_page()
 
     else:
         file_icon = get_file_icon(estimated_type)
@@ -256,7 +256,7 @@ def showHash():
                                 first_seen=first_seen,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
-@app.route('/base64Decoded/downloadHash')
+@app.route('/hashDecoded/downloadHash')
 def downloadHash():
     hash = request.args.get('hash')
     # sanitize hash
@@ -291,7 +291,7 @@ def downloadHash():
     else:
         return 'hash: ' + hash + " don't exist"
 
-@base64Decoded.route('/base64Decoded/hash_by_type_json')
+@hashDecoded.route('/hashDecoded/hash_by_type_json')
 def hash_by_type_json():
     type = request.args.get('type')
 
@@ -305,7 +305,7 @@ def hash_by_type_json():
     if type in r_serv_metadata.smembers('hash_all_type'):
         type_value = []
         for date in date_range_sparkline:
-            num_day_type = r_serv_metadata.zscore('base64_type:'+type, date)
+            num_day_type = r_serv_metadata.zscore('hash_type:'+type, date)
             if num_day_type is None:
                 num_day_type = 0
             date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
@@ -315,12 +315,12 @@ def hash_by_type_json():
     else:
         return jsonify()
 
-@base64Decoded.route('/base64Decoded/daily_type_json')
+@hashDecoded.route('/hashDecoded/daily_type_json')
 def daily_type_json():
     date = request.args.get('date')
 
     daily_type = set()
-    l_b64 = r_serv_metadata.zrange('base64_date:' +date, 0, -1)
+    l_b64 = r_serv_metadata.zrange('hash_date:' +date, 0, -1)
     for hash in l_b64:
         estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
         if estimated_type is not None:
@@ -328,12 +328,12 @@ def daily_type_json():
 
     type_value = []
     for day_type in daily_type:
-        num_day_type = r_serv_metadata.zscore('base64_type:'+day_type, date)
+        num_day_type = r_serv_metadata.zscore('hash_type:'+day_type, date)
         type_value.append({ 'date' : day_type, 'value' : int( num_day_type )})
 
     return jsonify(type_value)
 
-@base64Decoded.route('/base64Decoded/range_type_json')
+@hashDecoded.route('/hashDecoded/range_type_json')
 def range_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -351,7 +351,7 @@ def range_type_json():
 
     all_type = set()
     for date in date_range:
-        l_hash = r_serv_metadata.zrange('base64_date:' +date, 0, -1)
+        l_hash = r_serv_metadata.zrange('hash_date:' +date, 0, -1)
         if l_hash:
             for hash in l_hash:
                 estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
@@ -362,7 +362,7 @@ def range_type_json():
         day_type = {}
         day_type['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
         for type in all_type:
-            num_day_type = r_serv_metadata.zscore('base64_type:'+type, date)
+            num_day_type = r_serv_metadata.zscore('hash_type:'+type, date)
             if num_day_type is None:
                 num_day_type = 0
             day_type[type]= num_day_type
@@ -370,7 +370,7 @@ def range_type_json():
 
     return jsonify(range_type)
 
-@base64Decoded.route('/base64Decoded/hash_graph_line_json')
+@hashDecoded.route('/hashDecoded/hash_graph_line_json')
 def hash_graph_line_json():
     hash = request.args.get('hash')
     date_from = request.args.get('date_from')
@@ -390,7 +390,7 @@ def hash_graph_line_json():
     if r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type') is not None:
         json_seen_in_paste = []
         for date in date_range_seen_in_pastes:
-            nb_seen_this_day = r_serv_metadata.zscore('base64_date:'+date, hash)
+            nb_seen_this_day = r_serv_metadata.zscore('hash_date:'+date, hash)
             if nb_seen_this_day is None:
                 nb_seen_this_day = 0
             date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
@@ -401,7 +401,7 @@ def hash_graph_line_json():
         return jsonify()
 
 
-@base64Decoded.route('/base64Decoded/hash_graph_node_json')
+@hashDecoded.route('/hashDecoded/hash_graph_node_json')
 def hash_graph_node_json():
     hash = request.args.get('hash')
 
@@ -422,16 +422,16 @@ def hash_graph_node_json():
         nodes_set_hash.add((hash, 1, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
 
         #get related paste
-        l_pastes = r_serv_metadata.zrange('base64_hash:'+hash, 0, -1)
+        l_pastes = r_serv_metadata.zrange('nb_seen_hash:'+hash, 0, -1)
         for paste in l_pastes:
             url = paste
-            #nb_seen_in_this_paste = nb_in_file = int(r_serv_metadata.zscore('base64_hash:'+hash, paste))
-            nb_base64_in_paste = r_serv_metadata.scard('base64_paste:'+paste)
+            #nb_seen_in_this_paste = nb_in_file = int(r_serv_metadata.zscore('nb_seen_hash:'+hash, paste))
+            nb_hash_in_paste = r_serv_metadata.scard('hash_paste:'+paste)
 
-            nodes_set_paste.add((paste, 2,nb_base64_in_paste,url))
+            nodes_set_paste.add((paste, 2,nb_hash_in_paste,url))
             links_set.add((hash, paste))
 
-            l_hash = r_serv_metadata.smembers('base64_paste:'+paste)
+            l_hash = r_serv_metadata.smembers('hash_paste:'+paste)
             for child_hash in l_hash:
                 if child_hash != hash:
                     url = child_hash
@@ -444,12 +444,12 @@ def hash_graph_node_json():
                     nodes_set_hash.add((child_hash, 3, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
                     links_set.add((child_hash, paste))
 
-                    #l_pastes_child = r_serv_metadata.zrange('base64_hash:'+child_hash, 0, -1)
+                    #l_pastes_child = r_serv_metadata.zrange('nb_seen_hash:'+child_hash, 0, -1)
                     #for child_paste in l_pastes_child:
 
         nodes = []
         for node in nodes_set_hash:
-            nodes.append({"id": node[0], "group": node[1], "first_seen": node[2], "last_seen": node[3], 'estimated_type': node[4], "nb_seen_in_paste": node[5], "size": node[6], 'icon': get_file_icon_text(node[4]),"url": url_for('base64Decoded.showHash', hash=node[7]), 'hash': True})
+            nodes.append({"id": node[0], "group": node[1], "first_seen": node[2], "last_seen": node[3], 'estimated_type': node[4], "nb_seen_in_paste": node[5], "size": node[6], 'icon': get_file_icon_text(node[4]),"url": url_for('hashDecoded.showHash', hash=node[7]), 'hash': True})
         for node in nodes_set_paste:
             nodes.append({"id": node[0], "group": node[1], "nb_seen_in_paste": node[2],"url": url_for('showsavedpastes.showsavedpaste', paste=node[3]), 'hash': False})
         links = []
@@ -461,13 +461,13 @@ def hash_graph_node_json():
     else:
         return jsonify({})
 
-@base64Decoded.route('/base64Decoded/base64_types')
-def base64_types():
+@hashDecoded.route('/hashDecoded/hash_types')
+def hash_types():
     date_from = 20180701
     date_to = 20180706
-    return render_template('base64_types.html', date_from=date_from, date_to=date_to)
+    return render_template('hash_types.html', date_from=date_from, date_to=date_to)
 
-@base64Decoded.route('/base64Decoded/send_file_to_vt_js')
+@hashDecoded.route('/hashDecoded/send_file_to_vt_js')
 def send_file_to_vt_js():
     hash = request.args.get('hash')
 
@@ -490,7 +490,7 @@ def send_file_to_vt_js():
     return jsonify({'vt_link': vt_link, 'vt_report': vt_report})
 
 
-@base64Decoded.route('/base64Decoded/update_vt_result')
+@hashDecoded.route('/hashDecoded/update_vt_result')
 def update_vt_result():
     hash = request.args.get('hash')
 
@@ -525,4 +525,4 @@ def update_vt_result():
         return jsonify()
 
 # ========= REGISTRATION =========
-app.register_blueprint(base64Decoded)
+app.register_blueprint(hashDecoded)
