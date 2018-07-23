@@ -1,3 +1,11 @@
+:warning:
+Not maintained at the moment.
+If you are interested to get this running, please:
+
+Fork -> Branch -> PR
+
+In case of questions please Join our (GITTER](https://gitter.im/SteveClement/AIL-framework) chat.
+
 # AIL-framework-ansible
 This Ansible role can be used to deploy the AIL-Framework on a host.
 
