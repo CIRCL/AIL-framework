@@ -350,10 +350,23 @@ def decoder_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
 
-    type = request.args.get('type')
-    encoding = request.args.get('encoding')
+    typ = request.args.get('type')
+
+    if typ == 'All types':
+        typ = None
+
+    # verify file type input
+    if typ is not None:
+        #retrieve + char
+        typ = typ.replace(' ', '+')
+        if typ not in r_serv_metadata.smembers('hash_all_type'):
+            typ = None
 
     all_decoder = r_serv_metadata.smembers('all_decoder')
+    # sort DESC decoder for color
+    all_decoder = sorted(all_decoder, reverse=True)
+    print(all_decoder)
+    print(type(all_decoder))
 
     date_range = []
     if date_from is not None and date_to is not None:
@@ -372,10 +385,10 @@ def decoder_type_json():
     nb_decoded = {}
     for date in date_range:
         for decoder in all_decoder:
-            if type is None:
+            if typ is None:
                 nb_decoded[decoder] = r_serv_metadata.get(decoder+'_decoded:'+date)
             else:
-                nb_decoded[decoder] = r_serv_metadata.hget(decoder+'_type:'+type, date)
+                nb_decoded[decoder] = r_serv_metadata.zscore(decoder+'_type:'+typ, date)
             if nb_decoded[decoder] is None:
                 nb_decoded[decoder] = 0
 

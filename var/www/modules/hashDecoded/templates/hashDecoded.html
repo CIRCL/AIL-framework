@@ -525,11 +525,12 @@ var arc_pie = d3.arc()
 		.innerRadius(0)
 		.outerRadius(radius_pie);
 
-d3.json("/hashDecoded/decoder_type_json?date_from={{date_from}}&date_to={{date_to}}")
+d3.json("/hashDecoded/decoder_type_json?date_from={{date_from}}&date_to={{date_to}}&type={{type}}")
 	.then(function(data){
 
 	var pie_pie = d3.pie()
-			.value(function(d) { return d.value; });
+			.value(function(d) { return d.value; })
+			.sort(null);
 
 	var path_pie = g_pie.selectAll('path')
 		  .data(pie_pie(data))
