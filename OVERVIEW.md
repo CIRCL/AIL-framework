@@ -59,3 +59,7 @@ ARDB overview
 	ZADD - 'hash_type:'+type	date			nb_seen
 	ZADD - 'base64_type:'+type	date			nb_seen
 	ZADD - 'binary_type:'+type	date			nb_seen
+
+	GET  - 'base64_decoded:'+date	nd_decoded
+	GET  - 'binary_decoded:'+date	nd_decoded
+

@@ -50,6 +50,17 @@
 			.svgText {
     		pointer-events: none;
 			}
+			div.tooltip {
+				position: absolute;
+				text-align: center;
+				padding: 2px;
+				font: 12px sans-serif;
+				background: #ebf4fb;
+				border: 2px solid #b7ddf2;
+				border-radius: 8px;
+				pointer-events: none;
+				color: #000000;
+			}
 		</style>
 	</head>
 	<body>
@@ -114,6 +125,8 @@
 										<form>
 									</div>
 								</div>
+								<div id="pie_chart_encoded">
+			          </div>
 							</div>
 						</div>
 					</div>
@@ -482,7 +495,78 @@ window.chart = chart;
 
 </script>
 
+<script>
 
+var width_pie = 200;
+var height_pie = 200;
+var padding_pie = 10;
+var opacity_pie = .8;
+
+var radius_pie = Math.min(width_pie - padding_pie, height_pie - padding_pie) / 2;
+//var color_pie = d3.scaleOrdinal(d3.schemeCategory10);
+var color_pie = d3.scaleOrdinal(d3.schemeSet3);
+
+var div_pie = d3.select("body").append("div")
+		.attr("class", "tooltip")
+		.style("opacity", 0);
+
+var svg_pie = d3.select("#pie_chart_encoded")
+		.append('svg')
+		.attr("width", '100%')
+		.attr("height", '100%')
+		.attr('viewBox','0 0 '+Math.min(width_pie,height_pie) +' '+Math.min(width_pie,height_pie) )
+		.attr('preserveAspectRatio','xMinYMin')
+
+
+var g_pie = svg_pie.append('g')
+		.attr('transform', 'translate(' + (width_pie/2) + ',' + (height_pie/2) + ')');
+
+var arc_pie = d3.arc()
+		.innerRadius(0)
+		.outerRadius(radius_pie);
+
+d3.json("/hashDecoded/decoder_type_json?date_from={{date_from}}&date_to={{date_to}}")
+	.then(function(data){
+
+	var pie_pie = d3.pie()
+			.value(function(d) { return d.value; });
+
+	var path_pie = g_pie.selectAll('path')
+		  .data(pie_pie(data))
+		  .enter()
+		  .append("g")
+		  .append('path')
+		  .attr('d', arc_pie)
+		  .attr('fill', (d,i) => color_pie(i))
+			.on("mouseover", mouseovered_pie)
+			.on("mouseout", mouseouted_pie)
+		  .style('opacity', opacity_pie)
+		  .style('stroke', 'white');
+	});
+
+function mouseovered_pie(d) {
+
+	// tooltip
+	var content;
+
+	content = "<b>"+d.data.name+"</b>"+"<br/>"+
+						"<br/>"+
+						"<i>Decoded</i>: "+d.data.value+"<br/>"
+
+	div_pie.transition()
+		.duration(200)
+		.style("opacity", .9);
+	div_pie.html(content)
+		.style("left", (d3.event.pageX) + "px")
+		.style("top", (d3.event.pageY - 28) + "px");
+}
+
+function mouseouted_pie() {
+	div_pie.transition()
+		.duration(500)
+		.style("opacity", 0);
+}
+</script>
 
 
 

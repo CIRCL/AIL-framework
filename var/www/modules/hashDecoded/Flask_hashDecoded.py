@@ -100,7 +100,6 @@ def all_hash_search():
     date_to = request.form.get('date_to')
     type = request.form.get('type')
     encoding = request.form.get('encoding')
-    print(encoding)
     return redirect(url_for('hashDecoded.hashDecoded_page', date_from=date_from, date_to=date_to, type=type, encoding=encoding))
 
 @hashDecoded.route("/hashDecoded/", methods=['GET'])
@@ -131,7 +130,6 @@ def hashDecoded_page():
     if encoding is not None:
         if encoding not in all_encoding:
             encoding = None
-    print(encoding)
 
     date_range = []
     if date_from is not None and date_to is not None:
@@ -347,43 +345,45 @@ def hash_by_type_json():
     else:
         return jsonify()
 
-    ####################################
-    all_type = set()
-    for date in date_range:
-        l_hash = r_serv_metadata.zrange('hash_date:' +date, 0, -1)
-        if l_hash:
-            for hash in l_hash:
-                estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
-                all_type.add(estimated_type)
+@hashDecoded.route('/hashDecoded/decoder_type_json')
+def decoder_type_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
 
-    range_type = []
+    type = request.args.get('type')
+    encoding = request.args.get('encoding')
 
+    all_decoder = r_serv_metadata.smembers('all_decoder')
+
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        try:
+            if len(date_from) != 8:
+                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+            date_range = substract_date(date_from, date_to)
+        except:
+            pass
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+
+    nb_decoded = {}
     for date in date_range:
-        if len(date_range) == 1:
-            if date==date_from and date==date_to:
-                for type in all_type:
-                    day_type = {}
-                    day_type['date']= type
-                    list_decoder = r_serv_metadata.smembers('all_decoder')
-                    for decoder in list_decoder:
-                        num_day_decoder = r_serv_metadata.zscore(decoder+'_type:'+type, date)
-                        if num_day_decoder is None:
-                            num_day_decoder = 0
-                        day_type[decoder]= num_day_decoder
-                    range_type.append(day_type)
+        for decoder in all_decoder:
+            if type is None:
+                nb_decoded[decoder] = r_serv_metadata.get(decoder+'_decoded:'+date)
             else:
-                range_type = ''
-        else:
-            day_type = {}
-            day_type['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
-            for type in all_type:
-                num_day_type = r_serv_metadata.zscore('hash_type:'+type, date)
-                if num_day_type is None:
-                    num_day_type = 0
-                day_type[type]= num_day_type
-            range_type.append(day_type)
+                nb_decoded[decoder] = r_serv_metadata.hget(decoder+'_type:'+type, date)
+            if nb_decoded[decoder] is None:
+                nb_decoded[decoder] = 0
 
-    return jsonify(range_type)
+    to_json = []
+    for decoder in all_decoder:
+        to_json.append({'name': decoder, 'value': nb_decoded[decoder]})
+    return jsonify(to_json)
+
 
 @hashDecoded.route('/hashDecoded/daily_type_json')
 def daily_type_json():

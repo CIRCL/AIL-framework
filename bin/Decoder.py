@@ -61,7 +61,6 @@ def decode_string(content, message, date, encoded_list, decoder_name, encoded_mi
 def save_hash(decoder_name, message, date, decoded):
     print(decoder_name)
     type = magic.from_buffer(decoded, mime=True)
-    print(type)
     hash = sha1(decoded).hexdigest()
     print(hash)
 
@@ -75,6 +74,7 @@ def save_hash(decoder_name, message, date, decoded):
     date_paste = '{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])
     date_key = date[0:4] + date[4:6] + date[6:8]
 
+    serv_metadata.incrby(decoder_name+'_decoded:'+date_key, 1)
     serv_metadata.zincrby('hash_date:'+date_key, hash, 1)
     serv_metadata.zincrby(decoder_name+'_date:'+date_key, hash, 1)
 
