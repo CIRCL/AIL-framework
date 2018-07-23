@@ -5,7 +5,11 @@ export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
 export PATH=$AIL_LEVELDB:$PATH
 export PATH=$AIL_ARDB:$PATH
-export AILENV=/opt/AIL
+if [ -z $1 ]; then
+    export AILENV=/opt/AIL
+  else
+    export AILENV=$1
+fi
 
 conf_dir="${AIL_HOME}/configs/"
 
