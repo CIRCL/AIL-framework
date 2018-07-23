@@ -1,3 +1,6 @@
+echo "Currently unmaintained, continue at your own risk of not having a working AIL at the end :("
+exit 1
+
 source ./AILENV/bin/activate
 cd bin
 
