@@ -21,6 +21,13 @@ export PATH=$AIL_ARDB:$PATH
 export PATH=$AIL_BIN:$PATH
 export PATH=$AIL_FLASK:$PATH
 
+isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
+isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
+islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
+isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
+isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
+isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
+
 function helptext {
     echo -e $YELLOW"
 
@@ -276,14 +283,16 @@ function launch_queues {
 function launch_scripts {
     if [[ ! $isscripted ]]; then
       sleep 1
-        if checking_redis && checking_ardb; then
+        if checking_ardb && checking_redis; then
             launching_scripts $1;
         else
-            while [[ (checking_ardb) && (checking_redis) ]]; do
-                echo -e $YELLOW"\tScript not started, waiting 5 secondes"$DEFAULT
+            no_script_launched=true
+            while $no_script_launched; do
+                echo -e $YELLOW"\tScript not started, waiting 5 more secondes"$DEFAULT
                 sleep 5
                 if checking_redis && checking_ardb; then
                     launching_scripts $1;
+                    no_script_launched=false
                 else
                     echo -e $RED"\tScript not started"$DEFAULT
                 fi;
@@ -347,15 +356,6 @@ function launch_all {
     launch_scripts $1;
     launch_flask;
 }
-
-
-############### TESTS ###################
-isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
-isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
-islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
-isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
-isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
-isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
 
 #If no params, display the menu
 [[ $@ ]] || {
