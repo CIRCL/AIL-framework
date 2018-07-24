@@ -164,6 +164,7 @@ if __name__ == "__main__":
         except thehive4py.exceptions.AlertException:
             HiveApi = False
             flag_the_hive = False
+            r_serv_db.set('ail:thehive', False)
             print('Not connected to The HIVE')
 
     while True:

@@ -503,29 +503,26 @@ def edit_tag_export():
         else:
             status_misp.append(False)
 
-    # empty whitelist
-    if whitelist_hive == 0:
-        for tag in list_export_tags:
+    for tag in list_export_tags:
+        if r_serv_db.sismember('whitelist_hive', tag):
             status_hive.append(True)
-    else:
-        for tag in list_export_tags:
-            if r_serv_db.sismember('whitelist_hive', tag):
-                status_hive.append(True)
-            else:
-                status_hive.append(False)
+        else:
+            status_hive.append(False)
 
-    if (misp_auto_events is not None) and (hive_auto_alerts is not None):
-
+    if misp_auto_events is not None:
         if int(misp_auto_events) == 1:
             misp_active = True
         else:
             misp_active = False
+    else:
+        misp_active = False
+
+    if hive_auto_alerts is not None:
         if int(hive_auto_alerts)  == 1:
             hive_active = True
         else:
             hive_active = False
     else:
-        misp_active = False
         hive_active = False
 
     nb_tags = str(r_serv_db.scard('list_export_tags'))
