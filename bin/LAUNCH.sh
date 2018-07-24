@@ -12,10 +12,21 @@ CYAN="\\033[1;36m"
 [ -z "$AIL_HOME" ] && echo "Needs the env var AIL_HOME. Run the script from the virtual environment." && exit 1;
 [ -z "$AIL_REDIS" ] && echo "Needs the env var AIL_REDIS. Run the script from the virtual environment." && exit 1;
 [ -z "$AIL_ARDB" ] && echo "Needs the env var AIL_ARDB. Run the script from the virtual environment." && exit 1;
+[ -z "$AIL_BIN" ] && echo "Needs the env var AIL_ARDB. Run the script from the virtual environment." && exit 1;
+[ -z "$AIL_FLASK" ] && echo "Needs the env var AIL_FLASK. Run the script from the virtual environment." && exit 1;
 
 export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
 export PATH=$AIL_ARDB:$PATH
+export PATH=$AIL_BIN:$PATH
+export PATH=$AIL_FLASK:$PATH
+
+isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
+isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
+islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
+isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
+isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
+isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
 
 function helptext {
     echo -e $YELLOW"
@@ -35,15 +46,18 @@ function helptext {
     - All the ZMQ queuing modules.
     - All the ZMQ processing modules.
     - All Redis in memory servers.
-    - All Level-DB on disk servers.
+    - All ARDB on disk servers.
     "$DEFAULT"
     (Inside screen Daemons)
-    "$RED"
-    But first of all you'll need to edit few path where you installed
-    your redis & ardb servers.
     "$DEFAULT"
     Usage:
     -----
+    LAUNCH.sh
+      [-l | --launchAuto]
+      [-k | --killAll]
+      [-c | --configUpdate]
+      [-t | --thirdpartyUpdate]
+      [-h | --help]
     "
 }
 
@@ -68,16 +82,16 @@ function launching_ardb {
     echo -e $GREEN"\t* Launching ARDB servers"$DEFAULT
 
     sleep 0.1
-    screen -S "ARDB_AIL" -X screen -t "6382" bash -c 'ardb-server '$conf_dir'6382.conf ; read x'
+    screen -S "ARDB_AIL" -X screen -t "6382" bash -c 'cd '${AIL_HOME}'; ardb-server '$conf_dir'6382.conf ; read x'
 }
 
 function launching_logs {
     screen -dmS "Logging_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching logging process"$DEFAULT
-    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c 'log_subscriber -p 6380 -c Queuing -l ../logs/; read x'
+    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c 'cd '${AIL_BIN}'; log_subscriber -p 6380 -c Queuing -l ../logs/; read x'
     sleep 0.1
-    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c 'log_subscriber -p 6380 -c Script -l ../logs/; read x'
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c 'cd '${AIL_BIN}'; log_subscriber -p 6380 -c Script -l ../logs/; read x'
 }
 
 function launching_queues {
@@ -85,90 +99,100 @@ function launching_queues {
     sleep 0.1
 
     echo -e $GREEN"\t* Launching all the queues"$DEFAULT
-    screen -S "Queue_AIL" -X screen -t "Queues" bash -c 'python3 launch_queues.py; read x'
+    screen -S "Queue_AIL" -X screen -t "Queues" bash -c 'cd '${AIL_BIN}'; python3 launch_queues.py; read x'
 }
 
-function launching_scripts {
+function checking_configuration {
+    bin_dir=${AIL_HOME}/bin
     echo -e "\t* Checking configuration"
-    bash -c "python3 Update-conf.py"
+    if [ "$1" == "automatic" ]; then
+        bash -c "python3 $bin_dir/Update-conf.py True"
+    else
+        bash -c "python3 $bin_dir/Update-conf.py False"
+    fi
+
     exitStatus=$?
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
         exit
     fi
     echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
+}
+
+function launching_scripts {
+    checking_configuration $1;
 
     screen -dmS "Script_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
-    screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c './ModulesInformationV2.py -k 0 -c 1; read x'
+    screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c 'cd '${AIL_BIN}'; ./ModulesInformationV2.py -k 0 -c 1; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Mixer" bash -c './Mixer.py; read x'
+    screen -S "Script_AIL" -X screen -t "Mixer" bash -c 'cd '${AIL_BIN}'; ./Mixer.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Global" bash -c './Global.py; read x'
+    screen -S "Script_AIL" -X screen -t "Global" bash -c 'cd '${AIL_BIN}'; ./Global.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c './Duplicates.py; read x'
+    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c 'cd '${AIL_BIN}'; ./Duplicates.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Lines" bash -c './Lines.py; read x'
+    screen -S "Script_AIL" -X screen -t "Lines" bash -c 'cd '${AIL_BIN}'; ./Lines.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c './DomClassifier.py; read x'
+    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c 'cd '${AIL_BIN}'; ./DomClassifier.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Categ" bash -c './Categ.py; read x'
+    screen -S "Script_AIL" -X screen -t "Categ" bash -c 'cd '${AIL_BIN}'; ./Categ.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c './Tokenize.py; read x'
+    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c 'cd '${AIL_BIN}'; ./Tokenize.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c './CreditCards.py; read x'
+    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c 'cd '${AIL_BIN}'; ./CreditCards.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Onion" bash -c './Onion.py; read x'
+    screen -S "Script_AIL" -X screen -t "Onion" bash -c 'cd '${AIL_BIN}'; ./Onion.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Mail" bash -c './Mail.py; read x'
+    screen -S "Script_AIL" -X screen -t "Mail" bash -c 'cd '${AIL_BIN}'; ./Mail.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ApiKey" bash -c './ApiKey.py; read x'
+    screen -S "Script_AIL" -X screen -t "ApiKey" bash -c 'cd '${AIL_BIN}'; ./ApiKey.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Web" bash -c './Web.py; read x'
+    screen -S "Script_AIL" -X screen -t "Web" bash -c 'cd '${AIL_BIN}'; ./Web.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Credential" bash -c './Credential.py; read x'
+    screen -S "Script_AIL" -X screen -t "Credential" bash -c 'cd '${AIL_BIN}'; ./Credential.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Curve" bash -c './Curve.py; read x'
+    screen -S "Script_AIL" -X screen -t "Curve" bash -c 'cd '${AIL_BIN}'; ./Curve.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c './CurveManageTopSets.py; read x'
+    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c 'cd '${AIL_BIN}'; ./CurveManageTopSets.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c './RegexForTermsFrequency.py; read x'
+    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c 'cd '${AIL_BIN}'; ./RegexForTermsFrequency.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c './SetForTermsFrequency.py; read x'
+    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c 'cd '${AIL_BIN}'; ./SetForTermsFrequency.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Indexer" bash -c './Indexer.py; read x'
+    screen -S "Script_AIL" -X screen -t "Indexer" bash -c 'cd '${AIL_BIN}'; ./Indexer.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Keys" bash -c './Keys.py; read x'
+    screen -S "Script_AIL" -X screen -t "Keys" bash -c 'cd '${AIL_BIN}'; ./Keys.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Base64" bash -c './Base64.py; read x'
+    screen -S "Script_AIL" -X screen -t "Base64" bash -c 'cd '${AIL_BIN}'; ./Base64.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c './Bitcoin.py; read x'
+    screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c 'cd '${AIL_BIN}'; ./Bitcoin.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Phone" bash -c './Phone.py; read x'
+    screen -S "Script_AIL" -X screen -t "Phone" bash -c 'cd '${AIL_BIN}'; ./Phone.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Release" bash -c './Release.py; read x'
+    screen -S "Script_AIL" -X screen -t "Release" bash -c 'cd '${AIL_BIN}'; ./Release.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Cve" bash -c './Cve.py; read x'
+    screen -S "Script_AIL" -X screen -t "Cve" bash -c 'cd '${AIL_BIN}'; ./Cve.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "WebStats" bash -c './WebStats.py; read x'
+    screen -S "Script_AIL" -X screen -t "WebStats" bash -c 'cd '${AIL_BIN}'; ./WebStats.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c './ModuleStats.py; read x'
+    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c 'cd '${AIL_BIN}'; ./ModuleStats.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c './SQLInjectionDetection.py; read x'
+    screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c 'cd '${AIL_BIN}'; ./SQLInjectionDetection.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c './LibInjection.py; read x'
+    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c 'cd '${AIL_BIN}'; ./LibInjection.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c './alertHandler.py; read x'
+    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c 'cd '${AIL_BIN}'; ./alertHandler.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c './MISP_The_Hive_feeder.py; read x'
+    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c 'cd '${AIL_BIN}'; ./MISP_The_Hive_feeder.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Tags" bash -c './Tags.py; read x'
+    screen -S "Script_AIL" -X screen -t "Tags" bash -c 'cd '${AIL_BIN}'; ./Tags.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c './SentimentAnalysis.py; read x'
+    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c 'cd '${AIL_BIN}'; ./SentimentAnalysis.py; read x'
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c './submit_paste.py; read x'
+    screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c 'cd '${AIL_BIN}'; ./submit_paste.py; read x'
 
 }
 
@@ -217,136 +241,203 @@ function checking_ardb {
     sleep 0.2
     bash -c $redis_dir'redis-cli -p 6382 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6382 not ready"$DEFAULT
+       echo -e $RED"\t6382 ARDB not ready"$DEFAULT
        flag_ardb=1
     fi
 
     return $flag_ardb;
 }
 
-#If no params, display the help
-#[[ $@ ]] || { helptext; exit 1;}
-
-helptext;
-
-############### TESTS ###################
-isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
-isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
-islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
-isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
-isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
-
-options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Killall" "Shutdown" "Update-config" "Update-thirdparty")
-
-menu() {
-    echo "What do you want to Launch?:"
-    for i in ${!options[@]}; do
-        printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
-    done
-    [[ "$msg" ]] && echo "$msg"; :
+function launch_redis {
+    if [[ ! $isredis ]]; then
+        launching_redis;
+    else
+        echo -e $RED"\t* A screen is already launched"$DEFAULT
+    fi
 }
 
-prompt="Check an option (again to uncheck, ENTER when done): "
-while menu && read -rp "$prompt" numinput && [[ "$numinput" ]]; do
-    for num in $numinput; do
-        [[ "$num" != *[![:digit:]]* ]] && (( num > 0 && num <= ${#options[@]} )) || {
-            msg="Invalid option: $num"; break
-        }
-        ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
-        [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
-    done
-done
-
-for i in ${!options[@]}; do
-    if [[ "${choices[i]}" ]]; then
-        case ${options[i]} in
-            Redis)
-                if [[ ! $isredis ]]; then
-                    launching_redis;
-                else
-                    echo -e $RED"\t* A screen is already launched"$DEFAULT
-                fi
-                ;;
-            Ardb)
-                if [[ ! $isardb ]]; then
-                    launching_ardb;
-                else
-                    echo -e $RED"\t* A screen is already launched"$DEFAULT
-                fi
-                ;;
-            Logs)
-                if [[ ! $islogged ]]; then
-                    launching_logs;
-                else
-                    echo -e $RED"\t* A screen is already launched"$DEFAULT
-                fi
-                ;;
-            Queues)
-                if [[ ! $isqueued ]]; then
-                    launching_queues;
-                else
-                    echo -e $RED"\t* A screen is already launched"$DEFAULT
-                fi
-                ;;
-            Scripts)
-                if [[ ! $isscripted ]]; then
-                  sleep 1
-                    if checking_redis && checking_ardb; then
-                        launching_scripts;
-                    else
-                        echo -e $YELLOW"\tScript not started, waiting 5 secondes"$DEFAULT
-                        sleep 5
-                        if checking_redis && checking_ardb; then
-                            launching_scripts;
-                        else
-                            echo -e $RED"\tScript not started"$DEFAULT
-                        fi;
-                    fi;
-                else
-                    echo -e $RED"\t* A screen is already launched"$DEFAULT
-                fi
-                ;;
-            Killall)
-                if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted ]]; then
-                    echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
-                    shutting_down_redis;
-                    sleep 0.2
-                    echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
-                    shutting_down_ardb;
-                    echo -e $GREEN"Killing all"$DEFAULT
-                    kill $isredis $isardb $islogged $isqueued $isscripted
-                    sleep 0.2
-                    echo -e $ROSE`screen -ls`$DEFAULT
-                    echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted killed."$DEFAULT
-                else
-                    echo -e $RED"\t* No screen to kill"$DEFAULT
-                fi
-                ;;
-            Shutdown)
-                bash -c "./Shutdown.py"
-                ;;
-            Update-config)
-                echo -e "\t* Checking configuration"
-                bash -c "./Update-conf.py"
-                exitStatus=$?
-                if [ $exitStatus -ge 1 ]; then
-                    echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
-                    exit
-                else
-                    echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
-                fi
-                ;;
-            Update-thirdparty)
-                echo -e "\t* Updating thirdparty..."
-                bash -c "(cd ../var/www && ./update_thirdparty.sh)"
-                exitStatus=$?
-                if [ $exitStatus -ge 1 ]; then
-                    echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
-                    exit
-                else
-                    echo -e $GREEN"\t* Configuration up-to-date"$DEFAULT
-                fi
-                ;;
-        esac
+function launch_ardb {
+    if [[ ! $isardb ]]; then
+        launching_ardb;
+    else
+        echo -e $RED"\t* A screen is already launched"$DEFAULT
     fi
+}
+
+function launch_logs {
+    if [[ ! $islogged ]]; then
+        launching_logs;
+    else
+        echo -e $RED"\t* A screen is already launched"$DEFAULT
+    fi
+}
+
+function launch_queues {
+    if [[ ! $isqueued ]]; then
+        launching_queues;
+    else
+        echo -e $RED"\t* A screen is already launched"$DEFAULT
+    fi
+}
+
+function launch_scripts {
+    if [[ ! $isscripted ]]; then
+      sleep 1
+        if checking_ardb && checking_redis; then
+            launching_scripts $1;
+        else
+            no_script_launched=true
+            while $no_script_launched; do
+                echo -e $YELLOW"\tScript not started, waiting 5 more secondes"$DEFAULT
+                sleep 5
+                if checking_redis && checking_ardb; then
+                    launching_scripts $1;
+                    no_script_launched=false
+                else
+                    echo -e $RED"\tScript not started"$DEFAULT
+                fi;
+            done
+        fi;
+    else
+        echo -e $RED"\t* A screen is already launched"$DEFAULT
+    fi
+}
+
+function launch_flask {
+    if [[ ! $isflasked ]]; then
+        flask_dir=${AIL_FLASK}
+        screen -dmS "Flask_AIL"
+        sleep 0.1
+        echo -e $GREEN"\t* Launching Flask server"$DEFAULT
+        screen -S "Flask_AIL" -X screen -t "Flask_server" bash -c "cd $flask_dir; ls; ./Flask_server.py; read x"
+    else
+        echo -e $RED"\t* A Flask screen is already launched"$DEFAULT
+    fi
+}
+
+function killall {
+    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked ]]; then
+        echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
+        shutting_down_redis;
+        sleep 0.2
+        echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
+        shutting_down_ardb;
+        echo -e $GREEN"Killing all"$DEFAULT
+        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked
+        sleep 0.2
+        echo -e $ROSE`screen -ls`$DEFAULT
+        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted killed."$DEFAULT
+    else
+        echo -e $RED"\t* No screen to kill"$DEFAULT
+    fi
+}
+
+function shutdown {
+    bash -c "./Shutdown.py"
+}
+
+function update_thirdparty {
+    echo -e "\t* Updating thirdparty..."
+    bash -c "(cd ${AIL_FLASK}; ./update_thirdparty.sh)"
+    exitStatus=$?
+    if [ $exitStatus -ge 1 ]; then
+        echo -e $RED"\t* Thirdparty not up-to-date"$DEFAULT
+        exit
+    else
+        echo -e $GREEN"\t* Thirdparty updated"$DEFAULT
+    fi
+}
+
+function launch_all {
+    launch_redis;
+    launch_ardb;
+    launch_logs;
+    launch_queues;
+    launch_scripts $1;
+    launch_flask;
+}
+
+#If no params, display the menu
+[[ $@ ]] || {
+
+    helptext;
+
+    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update-config" "Update-thirdparty")
+
+    menu() {
+        echo "What do you want to Launch?:"
+        for i in ${!options[@]}; do
+            printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+        done
+        [[ "$msg" ]] && echo "$msg"; :
+    }
+
+    prompt="Check an option (again to uncheck, ENTER when done): "
+    while menu && read -rp "$prompt" numinput && [[ "$numinput" ]]; do
+        for num in $numinput; do
+            [[ "$num" != *[![:digit:]]* ]] && (( num > 0 && num <= ${#options[@]} )) || {
+                msg="Invalid option: $num"; break
+            }
+            ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+            [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
+        done
+    done
+
+    for i in ${!options[@]}; do
+        if [[ "${choices[i]}" ]]; then
+            case ${options[i]} in
+                Redis)
+                    launch_redis
+                    ;;
+                Ardb)
+                    launch_ardb;
+                    ;;
+                Logs)
+                    launch_logs;
+                    ;;
+                Queues)
+                    launch_queues;
+                    ;;
+                Scripts)
+                    launch_scripts;
+                    ;;
+                Flask)
+                    launch_flask;
+                    ;;
+                Killall)
+                    killall;
+                    ;;
+                Shutdown)
+                    shutdown;
+                    ;;
+                Update-config)
+                    checking_configuration "manual";
+                    ;;
+                Update-thirdparty)
+                    update_thirdparty;
+                    ;;
+            esac
+        fi
+    done
+
+    exit
+}
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -l | --launchAuto )         launch_all "automatic";
+                                    ;;
+        -k | --killAll )            killall;
+                                    ;;
+        -c | --configUpdate )       checking_configuration "manual";
+                                    ;;
+        -t | --thirdpartyUpdate )    update_thirdparty;
+                                    ;;
+        -h | --help )               helptext;
+                                    exit
+                                    ;;
+        * )                         helptext
+                                    exit 1
+    esac
+    shift
 done

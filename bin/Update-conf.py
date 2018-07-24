@@ -11,6 +11,15 @@ import shutil
 
 #return true if the configuration is up-to-date
 def main():
+    if len(sys.argv) != 2:
+        print('usage:', 'Update-conf.py', 'Automatic (boolean)')
+        exit(1)
+    else:
+        automatic = sys.argv[1]
+        if automatic == 'True':
+            automatic = True
+        else:
+            automatic = False
 
     configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
     configfileBackup = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg') + '.backup'
@@ -63,12 +72,19 @@ def main():
             print("  - "+item[0])
     print("+--------------------------------------------------------------------+")
 
-    resp = input("Do you want to auto fix it? [y/n] ")
+    if automatic:
+        resp = 'y'
+    else:
+        resp = input("Do you want to auto fix it? [y/n] ")
 
     if resp != 'y':
         return False
     else:
-        resp2 = input("Do you want to keep a backup of the old configuration file? [y/n] ")
+        if automatic:
+            resp2 = 'y'
+        else:
+            resp2 = input("Do you want to keep a backup of the old configuration file? [y/n] ")
+
         if resp2 == 'y':
             shutil.move(configfile, configfileBackup)
 
