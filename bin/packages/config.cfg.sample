@@ -22,6 +22,7 @@ sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon
 
 ##### Notifications ######
 [Notifications]
+ail_domain = http://localhost:7000
 sender = sender@example.com
 sender_host = smtp.example.com
 sender_port = 1337

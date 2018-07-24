@@ -369,12 +369,7 @@ function perform_operation(){
                     if(json.action == "add") {
                         // query data
                         $.get("{{ url_for('terms.terms_management_query') }}", { term: json.term, section: json.section }, function(data2, status){
-                            var delete_button = "<button class=\"btn-link btn-interaction\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Remove this term\" data-content=\"" + json.term + "\" data-section=\"followTerm\" data-action=\"delete\"><span class=\"glyphicon glyphicon-trash\"></span></button>";
-                            var info_button = "<span data-toggle=\"modal\" data-target=\"#mymodal\" data-term=\"" + json.term + "\" ><button class=\"btn-link\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Show concerned paste(s)\"><span class=\"glyphicon glyphicon-info-sign\"></span></button></span>";
-                            var enabled_checkbox = "<input id=\"checkBoxEMailAlerts\" type=\"checkbox\" title=\"Toggle E-Mail notifications\" class=\"btn-link btn-interaction\" data-content=\"" + json.term + "\" data-section=\"followTerm\" data-action=\"toggleEMailNotification\" checked>";
-                            var action_buttons = "<p style=\"margin: 0px; white-space: nowrap;\">" + info_button + delete_button + " &nbsp; " + enabled_checkbox + "</p>";
-                            table_track.row.add( [ json.term, data2[3], data2[0], data2[1], data2[2], 0, action_buttons, $('#followTermEMailNotificationReceiversInput').val().replace(",", "\n") ] ).draw( false );
-                            perform_binding();
+                            reload_per_paste();
                         });
                    } else if (json.action == "delete") {
                        // Find indexes of row which have the term in the first column
@@ -408,6 +403,3 @@ function perform_operation(){
     }
 }
 </script>
-
-
-

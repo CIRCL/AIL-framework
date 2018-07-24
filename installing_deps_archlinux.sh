@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+echo "Currently unmaintained, continue at your own risk of not having a working AIL at the end :( Will be merged into main install deps later on."
+exit 1
+
 set -e
 set -x
 

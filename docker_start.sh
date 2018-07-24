@@ -1,3 +1,6 @@
+echo "Currently unmaintained, continue at your own risk of not having a working AIL at the end :("
+exit 1
+
 source ./AILENV/bin/activate
 cd bin
 
@@ -5,7 +8,11 @@ export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
 export PATH=$AIL_LEVELDB:$PATH
 export PATH=$AIL_ARDB:$PATH
-export AILENV=/opt/AIL
+if [ -z $1 ]; then
+    export AILENV=/opt/AIL
+  else
+    export AILENV=$1
+fi
 
 conf_dir="${AIL_HOME}/configs/"
 

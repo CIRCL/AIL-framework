@@ -61,6 +61,11 @@ linux based distributions, you can replace it with [installing_deps_archlinux.sh
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
+Installation Notes
+------------
+
+In order to use AIL combined with **ZFS** or **unprivileged LXC** it's necessary to disable Direct I/O in `$AIL_HOME/configs/6382.conf` by changing the value of the directive `use_direct_io_for_flush_and_compaction` to `false`.
+
 Python 3 Upgrade
 ------------
 

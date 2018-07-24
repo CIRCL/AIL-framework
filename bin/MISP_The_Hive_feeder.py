@@ -45,6 +45,7 @@ try:
 except:
     print('The HIVE keys not present')
     flag_the_hive = False
+    HiveApi = False
 
 from thehive4py.api import TheHiveApi
 import thehive4py.exceptions

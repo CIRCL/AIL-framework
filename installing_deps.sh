@@ -55,7 +55,7 @@ sudo ldconfig
 popd
 
 # tlsh
-test ! -d tlsh && git clone git://github.com/trendmicro/tlsh.git
+test ! -d tlsh && git clone https://github.com/trendmicro/tlsh.git
 pushd tlsh/
 ./make.sh
 pushd build/release/
