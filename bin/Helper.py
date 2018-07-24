@@ -140,12 +140,15 @@ class Process(object):
     def populate_set_in(self):
         # monoproc
         src = self.modules.get(self.subscriber_name, 'subscribe')
-        self.pubsub.setup_subscribe(src)
-        for msg in self.pubsub.subscribe():
-            in_set = self.subscriber_name + 'in'
-            self.r_temp.sadd(in_set, msg)
-            self.r_temp.hset('queues', self.subscriber_name,
-                             int(self.r_temp.scard(in_set)))
+        if src != 'Redis':
+            self.pubsub.setup_subscribe(src)
+            for msg in self.pubsub.subscribe():
+                in_set = self.subscriber_name + 'in'
+                self.r_temp.sadd(in_set, msg)
+                self.r_temp.hset('queues', self.subscriber_name,
+                                 int(self.r_temp.scard(in_set)))
+        else:
+            print('{} has no suscriber'.format(self.subscriber_name))
 
     def get_from_set(self):
         # multiproc
