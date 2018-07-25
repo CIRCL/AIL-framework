@@ -364,9 +364,7 @@ def decoder_type_json():
 
     all_decoder = r_serv_metadata.smembers('all_decoder')
     # sort DESC decoder for color
-    all_decoder = sorted(all_decoder, reverse=True)
-    print(all_decoder)
-    print(type(all_decoder))
+    all_decoder = sorted(all_decoder)
 
     date_range = []
     if date_from is not None and date_to is not None:

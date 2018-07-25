@@ -85,29 +85,33 @@ def save_hash(decoder_name, message, date, decoded):
     else:
         serv_metadata.hset('metadata_hash:'+hash, 'last_seen', date_paste)
 
-    # first time we see this file encoding on this paste
-    if serv_metadata.zscore(decoder_name+'_hash:'+hash, message) is None:
-        print('first '+decoder_name)
+    # first time we see this hash (all encoding) on this paste
+    if serv_metadata.zscore('nb_seen_hash:'+hash, message) is None:
         serv_metadata.hincrby('metadata_hash:'+hash, 'nb_seen_in_all_pastes', 1)
-        serv_metadata.hincrby('metadata_hash:'+hash, decoder_name+'_decoder', 1)
-
         serv_metadata.sadd('hash_paste:'+message, hash) # paste - hash map
-        serv_metadata.sadd(decoder_name+'_paste:'+message, hash) # paste - hash map
-        serv_metadata.zincrby('nb_seen_hash:'+hash, message, 1)# hash - paste map
-        serv_metadata.zincrby(decoder_name+'_hash:'+hash, message, 1)# hash - paste map
-
         # create hash metadata
         serv_metadata.hset('metadata_hash:'+hash, 'estimated_type', type)
         serv_metadata.sadd('hash_all_type', type)
+
+    # first time we see this hash encoding on this paste
+    if serv_metadata.zscore(decoder_name+'_hash:'+hash, message) is None:
+        print('first '+decoder_name)
+
+        serv_metadata.sadd(decoder_name+'_paste:'+message, hash) # paste - hash map
+
+        # create hash metadata
         serv_metadata.sadd('hash_'+ decoder_name +'_all_type', type)
-        serv_metadata.zincrby('hash_type:'+type, date_key, 1)
-        serv_metadata.zincrby(decoder_name+'_type:'+type, date_key, 1)
 
         save_hash_on_disk(decoded, type, hash, json_data)
         print('found {} '.format(type))
-    # duplicate
-    else:
-        serv_metadata.zincrby(decoder_name+'_hash:'+hash, message, 1) # number of b64 on this paste
+
+    serv_metadata.hincrby('metadata_hash:'+hash, decoder_name+'_decoder', 1)
+
+    serv_metadata.zincrby('hash_type:'+type, date_key, 1)
+    serv_metadata.zincrby(decoder_name+'_type:'+type, date_key, 1)
+
+    serv_metadata.zincrby('nb_seen_hash:'+hash, message, 1)# hash - paste map
+    serv_metadata.zincrby(decoder_name+'_hash:'+hash, message, 1) # number of b64 on this paste
 
 
 def save_hash_on_disk(decode, type, hash, json_data):
@@ -182,12 +186,14 @@ if __name__ == '__main__':
     binary_max_execution_time = p.config.getint("Binary", "max_execution_time")
     base64_max_execution_time = p.config.getint("Base64", "max_execution_time")
 
-    # list all decoder yith regex, the order is use to search content by order
-    all_decoder = [ {'name': 'binary', 'regex': regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time},
-                    {'name': 'hexadecimal', 'regex': regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time},
-                    {'name': 'base64', 'regex': regex_base64, 'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}]
+    # list all decoder yith regex,
+    decoder_binary = {'name': 'binary', 'regex': regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time}
+    decoder_hexadecimal = {'name': 'hexadecimal', 'regex': regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time}
+    decoder_base64 = {'name': 'base64', 'regex': regex_base64, 'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}
 
-    for decoder in all_decoder:
+    decoder_order = [ decoder_base64, decoder_binary, decoder_hexadecimal, decoder_base64]
+
+    for decoder in decoder_order:
         serv_metadata.sadd('all_decoder', decoder['name'])
 
     # Endless loop getting messages from the input queue
@@ -207,7 +213,7 @@ if __name__ == '__main__':
         content = paste.get_p_content()
         date = str(paste._get_p_date())
 
-        for decoder in all_decoder: # add threshold and size limit
+        for decoder in decoder_order: # add threshold and size limit
 
             # max execution time on regex
             signal.alarm(decoder['max_execution_time'])
