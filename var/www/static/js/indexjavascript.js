@@ -115,7 +115,7 @@ function update_processed_pastes(graph, dataset, graph_type) {
 }
 
 
-// END PROCESSED PASTES    
+// END PROCESSED PASTES
 
 function initfunc( csvay, scroot) {
   window.csv = csvay;
@@ -134,6 +134,7 @@ function pad_2(number) {
 }
 
 function create_log_table(obj_json) {
+  console.log(obj_json);
     tableBody = document.getElementById("tab_body")
     var tr = document.createElement('TR')
     var time = document.createElement('TD')
@@ -149,11 +150,11 @@ function create_log_table(obj_json) {
     var chansplit = obj_json.channel.split('.');
     var parsedmess = obj_json.data.split(';');
 
-  
+
     if (parsedmess[0] == "Mixer"){
         var feeder = parsedmess[4].split(" ")[1];
         var paste_processed = parsedmess[4].split(" ")[3];
-        var msg_type = parsedmess[4].split(" ")[2]; 
+        var msg_type = parsedmess[4].split(" ")[2];
 
         if (feeder == "All_feeders"){
             if(list_feeder.indexOf("global") == -1) {
@@ -246,7 +247,7 @@ function create_log_table(obj_json) {
     var action_icon_span = document.createElement('SPAN');
     action_icon_span.className = "fa fa-search-plus";
     action_icon_a.appendChild(action_icon_span);
- 
+
     inspect.appendChild(action_icon_a);
 
     tr.appendChild(time)
@@ -281,7 +282,7 @@ function create_queue_table() {
     document.getElementById("queueing").innerHTML = "";
     var Tablediv = document.getElementById("queueing")
     var table = document.createElement('TABLE')
-    table.className = "table table-bordered table-hover table-striped";
+    table.className = "table table-bordered table-hover table-striped tableQueue";
     var tableHead = document.createElement('THEAD')
     var tableBody = document.createElement('TBODY')
 
@@ -295,7 +296,11 @@ function create_queue_table() {
 
     for (i = 0; i < heading.length; i++) {
         var th = document.createElement('TH')
-        th.width = '100';
+        if (heading[i] == "Amount") {
+          th.width = '50';
+        } else {
+          th.width = '100';
+        }
         th.appendChild(document.createTextNode(heading[i]));
         tr.appendChild(th);
     }
@@ -441,7 +446,7 @@ function load_queues() {
                                 queues_pushed.push(glob_tabvar.row1[i][0].split(".")[0]);
                                 tmp_values.push(parseInt(glob_tabvar.row1[i][1]));
                             }
-                            
+
                         }
                     }
                     tmp_values.unshift(x);
@@ -494,5 +499,3 @@ function manage_undefined() {
 $(document).ready(function () {
     manage_undefined();
 });
-
-
