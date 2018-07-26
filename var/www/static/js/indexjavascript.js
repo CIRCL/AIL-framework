@@ -134,7 +134,6 @@ function pad_2(number) {
 }
 
 function create_log_table(obj_json) {
-  console.log(obj_json);
     tableBody = document.getElementById("tab_body")
     var tr = document.createElement('TR')
     var time = document.createElement('TD')

@@ -144,10 +144,13 @@
             <div class="pull-right">
                 <label style="padding-bottom:2px;">
 		<select class="form-control input-sm" id="log_select">
-		<option value="10">10</option>
-		<option value="25">25</option>
-		<option value="50">50</option>
-		<option value="100">100</option>
+      {% for log_selection in log_select %}
+        {% if log_selection == selected %}
+          <option value="{{ log_selection }}" selected>{{ log_selection }}</option>
+        {% else %}
+    		  <option value="{{ log_selection }}">{{ log_selection }}</option>
+        {% endif %}
+      {% endfor %}
 		</select>
                 </label>
 		<input id="checkbox_log_info" type="checkbox" value="info"> INFO
@@ -193,7 +196,6 @@
 
         var tableBody = document.getElementById('tab_body')
         $.getJSON('/_get_last_logs_json', function(data) {
-          console.log(data);
           data.forEach(function (d) {
             var tr = document.createElement('TR')
             var time = document.createElement('TD')

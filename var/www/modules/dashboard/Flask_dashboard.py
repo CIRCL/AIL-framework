@@ -22,6 +22,8 @@ cfg = Flask_config.cfg
 r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
 
+max_dashboard_logs = Flask_config.max_dashboard_logs
+
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
@@ -114,7 +116,7 @@ def get_last_logs_json():
     max_day_search = 6
     day_search = 0
     warning_found = 0
-    warning_to_found = 10
+    warning_to_found = max_dashboard_logs
 
     last_logs = []
 
@@ -157,7 +159,12 @@ def stuff():
 def index():
     default_minute = cfg.get("Flask", "minute_processed_paste")
     threshold_stucked_module = cfg.getint("Module_ModuleInformation", "threshold_stucked_module")
-    return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module)
+    log_select = {10, 25, 50, 100}
+    log_select.add(max_dashboard_logs)
+    log_select = list(log_select)
+    log_select.sort()
+    return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module,
+                            log_select=log_select, selected=max_dashboard_logs)
 
 # ========= REGISTRATION =========
 app.register_blueprint(dashboard)
