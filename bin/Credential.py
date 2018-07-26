@@ -79,8 +79,6 @@ if __name__ == "__main__":
         content = paste.get_p_content()
         creds = set(re.findall(regex_cred, content))
 
-        publisher.warning('to_print')
-
         if len(creds) == 0:
             continue
 
