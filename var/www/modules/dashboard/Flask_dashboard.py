@@ -7,11 +7,12 @@
 import json
 import os
 import datetime
+import time
 import flask
 
 from Date import Date
 
-from flask import Flask, render_template, jsonify, request, Blueprint
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for
 
 # ============ VARIABLES ============
 import Flask_config
@@ -38,8 +39,6 @@ def event_stream():
         msg = {'channel': channel, 'type': type, 'pattern': pattern, 'data': data}
 
         level = (msg['channel']).split('.')[1]
-        #if msg['type'] == 'pmessage' and (level == "WARNING" or level == "CRITICAL"):
-            #print(msg)
         if msg['type'] == 'pmessage' and level != "DEBUG":
             yield 'data: %s\n\n' % json.dumps(msg)
 
@@ -81,16 +80,26 @@ def dashboard_alert(log):
     # check if we need to display this log
     if len(log)>50:
         date = log[1:5]+log[6:8]+log[9:11]
-        time = log[12:20]
+        utc_str = log[1:20]
         log = log[46:].split(';')
         if len(log) == 6:
-            res = {'date': date, 'time': time, 'script': log[0], 'domain': log[1], 'date_paste': log[2], 'paste': log[3], 'message': log[4]}
+            time = datetime_from_utc_to_local(utc_str)
+            path = url_for('showsavedpastes.showsavedpaste',paste=log[5])
+
+            res = {'date': date, 'time': time, 'script': log[0], 'domain': log[1], 'date_paste': log[2],
+                  'paste': log[3], 'message': log[4], 'path': path}
             return res
         else:
             return False
     else:
         return False
 
+def datetime_from_utc_to_local(utc_str):
+    utc_datetime = datetime.datetime.strptime(utc_str, '%Y-%m-%d %H:%M:%S')
+    now_timestamp = time.time()
+    offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+    local_time_str = (utc_datetime + offset).strftime('%H:%M:%S')
+    return local_time_str
 
 # ============ ROUTES ============
 
@@ -110,7 +119,7 @@ def get_last_logs_json():
     last_logs = []
 
     date_range = get_date_range(date, max_day_search)
-    while max_day_search != day_search | warning_found != warning_to_found:
+    while max_day_search != day_search and warning_found != warning_to_found:
 
         filename_warning_log = 'logs/Script_warn-'+ date_range[day_search] +'.log'
         filename_log = os.path.join(os.environ['AIL_HOME'], filename_warning_log)
@@ -136,7 +145,7 @@ def get_last_logs_json():
             # check previous warning log file
             day_search = day_search + 1
 
-    return jsonify(last_logs)
+    return jsonify(list(reversed(last_logs)))
 
 
 @dashboard.route("/_stuff", methods=['GET'])

@@ -249,6 +249,7 @@ function create_log_table(obj_json) {
     action_icon_a.appendChild(action_icon_span);
 
     inspect.appendChild(action_icon_a);
+    inspect.setAttribute("style", "text-align:center;");
 
     tr.appendChild(time)
     tr.appendChild(chan);

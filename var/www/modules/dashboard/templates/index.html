@@ -206,6 +206,7 @@
             var msage = document.createElement('TD')
             var inspect = document.createElement('TD')
 
+            tr.className = "warning";
             time.appendChild(document.createTextNode(d.time))
             chan.appendChild(document.createTextNode('Script'))
             level.appendChild(document.createTextNode('WARNING'))
@@ -226,7 +227,15 @@
             msage.appendChild(iconspan);
             msage.appendChild(document.createTextNode(message.join(" ")));
 
-            inspect.appendChild(document.createTextNode(' '))
+            var action_icon_a = document.createElement("A");
+            action_icon_a.setAttribute("TARGET", "_blank");
+            action_icon_a.setAttribute("HREF", d.path);
+            var action_icon_span = document.createElement('SPAN');
+            action_icon_span.className = "fa fa-search-plus";
+            action_icon_a.appendChild(action_icon_span);
+            inspect.appendChild(action_icon_a)
+            inspect.setAttribute("style", "text-align:center;");
+
 
             tr.appendChild(time)
             tr.appendChild(chan);
