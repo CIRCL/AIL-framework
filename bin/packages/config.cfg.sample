@@ -43,6 +43,9 @@ minute_processed_paste = 10
 DiffMaxLineLength = 10000
 
 #### Modules ####
+[BankAccount]
+max_execution_time = 60
+
 [Categ]
 #Minimum number of match between the paste and the category file
 matchingThreshold=1
