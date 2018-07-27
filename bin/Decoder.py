@@ -102,12 +102,19 @@ def save_hash(decoder_name, message, date, decoded):
         # create hash metadata
         serv_metadata.sadd('hash_'+ decoder_name +'_all_type', type)
 
+        # first time we see this hash today
+        if serv_metadata.zscore('hash_date:'+date_key, hash) is None:
+            serv_metadata.zincrby('hash_type:'+type, date_key, 1)
+
+        # first time we see this hash encoding today
+        if serv_metadata.zscore(decoder_name+'_date:'+date_key, hash) is None:
+            serv_metadata.zincrby(decoder_name+'_type:'+type, date_key, 1)
+
         save_hash_on_disk(decoded, type, hash, json_data)
         print('found {} '.format(type))
 
     serv_metadata.hincrby('metadata_hash:'+hash, decoder_name+'_decoder', 1)
 
-    serv_metadata.zincrby('hash_type:'+type, date_key, 1)
     serv_metadata.zincrby(decoder_name+'_type:'+type, date_key, 1)
 
     serv_metadata.zincrby('nb_seen_hash:'+hash, message, 1)# hash - paste map

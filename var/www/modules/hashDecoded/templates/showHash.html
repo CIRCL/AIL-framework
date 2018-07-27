@@ -191,8 +191,8 @@
 												<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
 											</div>
 											<div class="panel-body" style="text-align:center;">
-												<button class="btn btn-primary" onclick="redraw_graph();">
-			                    <span class="glyphicon glyphicon-refresh"></span>&nbsp;Redraw Graph</div>
+												<button class="btn btn-primary" onclick="resize_graph();">
+			                    <span class="glyphicon glyphicon-refresh"></span>&nbsp;Resize Graph</div>
 			                  </button>
 											</div>
 										</div>
@@ -251,9 +251,9 @@
 
 </script>
 <script>
-	function redraw_graph() {
-		container_graph.attr("transform", "translate(40,0)")
-				.attr("transform", "scale(2)");
+	function resize_graph() {
+		zoom.translateTo(svg_node, 200, 200);
+		zoom.scaleTo(svg_node, 2);
 	}
 
 </script>
@@ -301,7 +301,11 @@ var width = 400,
 
 var link;
 
-var transform = d3.zoomIdentity;
+var zoom = d3.zoom()
+	.scaleExtent([.2, 10])
+	.on("zoom", zoomed);
+
+//var transform = d3.zoomIdentity;
 
 var color = d3.scaleOrdinal(d3.schemeCategory10);
 
@@ -322,9 +326,9 @@ var svg_node = d3.select("#graph").append("svg")
 		.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed))
 		.on("dblclick.zoom", null)
 
-var container_graph = svg_node.append("g")
-		.attr("transform", "translate(40,0)")
-		.attr("transform", "scale(2)");
+var container_graph = svg_node.append("g");
+		//.attr("transform", "translate(40,0)")
+		//.attr("transform", "scale(2)");
 
 function create_graph(url){
 
@@ -372,6 +376,9 @@ d3.json(url)
 					return d.icon
 				} });
 
+	zoom.translateTo(svg_node, 200, 200);
+	zoom.scaleTo(svg_node, 2);
+
 /*	node.append("text")
 		      .attr("dy", 3)
 					.attr("dx", 7)
@@ -403,7 +410,7 @@ d3.json(url)
 }
 
 function zoomed() {
-container_graph.attr("transform", d3.event.transform);
+	container_graph.attr("transform", d3.event.transform);
 }
 
 function doubleclick (d) {
