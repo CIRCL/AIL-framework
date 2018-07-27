@@ -380,15 +380,21 @@ def decoder_type_json():
     if not date_range:
         date_range.append(datetime.date.today().strftime("%Y%m%d"))
 
+    print(date_range)
+
     nb_decoded = {}
+    for decoder in all_decoder:
+        nb_decoded[decoder] = 0
+
     for date in date_range:
         for decoder in all_decoder:
             if typ is None:
-                nb_decoded[decoder] = r_serv_metadata.get(decoder+'_decoded:'+date)
+                nb_decod = r_serv_metadata.get(decoder+'_decoded:'+date)
             else:
-                nb_decoded[decoder] = r_serv_metadata.zscore(decoder+'_type:'+typ, date)
-            if nb_decoded[decoder] is None:
-                nb_decoded[decoder] = 0
+                nb_decod = r_serv_metadata.zscore(decoder+'_type:'+typ, date)
+
+            if nb_decod is not None:
+                nb_decoded[decoder] = nb_decoded[decoder] + int(nb_decod)
 
     to_json = []
     for decoder in all_decoder:
