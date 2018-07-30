@@ -59,6 +59,12 @@ if __name__ == "__main__":
         db=p.config.get("ARDB_TermCred", "db"),
         decode_responses=True)
 
+    server_statistics = redis.StrictRedis(
+        host=p.config.get("ARDB_Statistics", "host"),
+        port=p.config.getint("ARDB_Statistics", "port"),
+        db=p.config.getint("ARDB_Statistics", "db"),
+        decode_responses=True)
+
     criticalNumberToAlert = p.config.getint("Credential", "criticalNumberToAlert")
     minTopPassList = p.config.getint("Credential", "minTopPassList")
 
@@ -143,10 +149,11 @@ if __name__ == "__main__":
         #for searching credential in termFreq
         date = datetime.datetime.now().strftime("%Y%m")
         for cred in creds:
-            mail = cred.split('@')[-1]
+            mail = cred.split('@')[-1].split()[0]
+            faup.decode(mail)
             tld = faup.get()['tld']
             print(tld)
-            server_statistics.hincrby('credential_by_tld:'+date, tld, MX_values[1][mail])
+            server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
 
             cred = cred.split('@')[0] #Split to ignore mail address
 

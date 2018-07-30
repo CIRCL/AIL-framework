@@ -11,7 +11,9 @@ It apply phone number regexes on paste content and warn if above a threshold.
 
 """
 
+import datetime
 import time
+import redis
 import re
 import phonenumbers
 from packages import Paste
@@ -23,8 +25,10 @@ def search_phone(message):
     paste = Paste.Paste(message)
     content = paste.get_p_content()
     # regex to find phone numbers, may raise many false positives (shalt thou seek optimization, upgrading is required)
-    reg_phone = re.compile(r'(\+\d{1,4}(\(\d\))?\d?|0\d?)(\d{6,8}|([-/\. ]{1}\d{2,3}){3,4})')
-    reg_phone = re.compile(r'(\+\d{1,4}(\(\d\))?\d?|0\d?)(\d{6,8}|([-/\. ]{1}\(?\d{2,4}\)?){3,4})')
+    #reg_phone = re.compile(r'(\+\d{1,4}(\(\d\))?\d?|0\d?)(\d{6,8}|([-/\. ]{1}\d{2,3}){3,4})')
+    #reg_phone = re.compile(r'(\+\d{1,4}(\(\d\))?\d?|0\d?)(\d{6,8}|([-/\. ]{1}\(?\d{2,4}\)?){3,4})')
+    # use non capturing group
+    reg_phone = re.compile(r'(?:\+\d{1,4}(?:\(\d\))?\d?|0\d?)(?:\d{6,8}|(?:[-/\. ]{1}\(?\d{2,4}\)?){3,4})')
     # list of the regex results in the Paste, may be null
     results = reg_phone.findall(content)
 
@@ -45,16 +49,22 @@ def search_phone(message):
         for phone_number in results:
             try:
                 x = phonenumbers.parse(phone_number, None)
+                print(x)
                 country_code = x.country_code
                 if stats.get(country_code) is None:
                     stats[country_code] = 1
                 else:
                     stats[country_code] = stats[country_code] + 1
-            except:
+            except Exception as e:
+                #print(e)
                 pass
+
+        date = datetime.datetime.now().strftime("%Y%m")
         for country_code in stats:
+            print(country_code)
             if stats[country_code] > 4:
                 publisher.warning('{} contains Phone numbers with country code {}'.format(paste.p_name, country_code))
+
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
@@ -71,6 +81,13 @@ if __name__ == '__main__':
 
     # Sent to the logging a description of the module
     publisher.info("Run Phone module")
+
+    # ARDB #
+    server_statistics = redis.StrictRedis(
+        host=p.config.get("ARDB_Statistics", "host"),
+        port=p.config.getint("ARDB_Statistics", "port"),
+        db=p.config.getint("ARDB_Statistics", "db"),
+        decode_responses=True)
 
     # Endless loop getting messages from the input queue
     while True:
