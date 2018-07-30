@@ -20,6 +20,8 @@ from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
 
+from pyfaup.faup import Faup
+
 from Helper import Process
 
 if __name__ == "__main__":
@@ -27,6 +29,8 @@ if __name__ == "__main__":
     publisher.channel = "Script"
 
     config_section = 'Mail'
+
+    faup = Faup()
 
     p = Process(config_section)
     addr_dns = p.config.get("Mail", "dns")
@@ -92,9 +96,11 @@ if __name__ == "__main__":
                 for mail in MX_values[1]:
                     print('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date))
                     p.populate_set_out('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date), 'ModuleStats')
-                    
-                    country = mail.split('.')[-1]
-                    server_statistics.hincrby('mail_by_country:'+date, country, MX_values[1][mail])
+
+                    faup.decode(mail)
+                    tld = faup.get()['tld']
+                    print(tld)
+                    server_statistics.hincrby('mail_by_tld:'+date, tld, MX_values[1][mail])
 
             prec_filename = filename
 

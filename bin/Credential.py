@@ -28,6 +28,7 @@ import sys
 from packages import Paste
 from pubsublogger import publisher
 from Helper import Process
+import datetime
 import re
 import redis
 from pyfaup.faup import Faup
@@ -140,7 +141,13 @@ if __name__ == "__main__":
 
 
         #for searching credential in termFreq
+        date = datetime.datetime.now().strftime("%Y%m")
         for cred in creds:
+            mail = cred.split('@')[-1]
+            tld = faup.get()['tld']
+            print(tld)
+            server_statistics.hincrby('credential_by_tld:'+date, tld, MX_values[1][mail])
+
             cred = cred.split('@')[0] #Split to ignore mail address
 
             #unique number attached to unique path
