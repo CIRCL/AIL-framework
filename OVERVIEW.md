@@ -20,4 +20,14 @@ Redis and ARDB overview
     - DB 0 - Lines duplicate
     - DB 1 - Hashes
 
-To be updated
+ARDB overview
+---------------------------
+ARDB_DB
+* DB 1 - Curve
+* DB 2 - TermFreq
+* DB 3 - Trending
+* DB 4 - Sentiment
+* DB 5 - TermCred
+* DB 6 - Tags
+* DB 7 - Metadata
+* DB 8 - Statistics

@@ -14,6 +14,7 @@ It apply mail regexes on paste content and warn if above a threshold.
 import redis
 import pprint
 import time
+import datetime
 import dns.exception
 from packages import Paste
 from packages import lib_refine
@@ -35,6 +36,12 @@ if __name__ == "__main__":
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),
         db=p.config.getint("Redis_Cache", "db"),
+        decode_responses=True)
+    # ARDB #
+    server_statistics = redis.StrictRedis(
+        host=p.config.get("ARDB_Statistics", "host"),
+        port=p.config.getint("ARDB_Statistics", "port"),
+        db=p.config.getint("ARDB_Statistics", "db"),
         decode_responses=True)
 
     # FUNCTIONS #
@@ -66,7 +73,6 @@ if __name__ == "__main__":
                     PST.save_attribute_redis(channel, (MX_values[0],
                                              list(MX_values[1])))
 
-                    pprint.pprint(MX_values)
                     to_print = 'Mails;{};{};{};Checked {} e-mail(s);{}'.\
                         format(PST.p_source, PST.p_date, PST.p_name,
                                MX_values[0], PST.p_path)
@@ -81,10 +87,14 @@ if __name__ == "__main__":
 
                     else:
                         publisher.info(to_print)
-                #Send to ModuleStats
+                #Send to ModuleStats and create country statistics
+                date = datetime.datetime.now().strftime("%Y%m")
                 for mail in MX_values[1]:
-                    print('mail;{};{};{}'.format(1, mail, PST.p_date))
-                    p.populate_set_out('mail;{};{};{}'.format(1, mail, PST.p_date), 'ModuleStats')
+                    print('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date))
+                    p.populate_set_out('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date), 'ModuleStats')
+                    
+                    country = mail.split('.')[-1]
+                    server_statistics.hincrby('mail_by_country:'+date, country, MX_values[1][mail])
 
             prec_filename = filename
 
