@@ -111,7 +111,7 @@ class PubSub(object):
 
 class Process(object):
 
-    def __init__(self, conf_section):
+    def __init__(self, conf_section, module=True):
         configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
         if not os.path.exists(configfile):
             raise Exception('Unable to find the configuration file. \
@@ -125,17 +125,18 @@ class Process(object):
         self.subscriber_name = conf_section
 
         self.pubsub = None
-        if self.modules.has_section(conf_section):
-            self.pubsub = PubSub()
-        else:
-            raise Exception('Your process has to listen to at least one feed.')
-        self.r_temp = redis.StrictRedis(
-            host=self.config.get('RedisPubSub', 'host'),
-            port=self.config.get('RedisPubSub', 'port'),
-            db=self.config.get('RedisPubSub', 'db'),
-            decode_responses=True)
+        if module:
+            if self.modules.has_section(conf_section):
+                self.pubsub = PubSub()
+            else:
+                raise Exception('Your process has to listen to at least one feed.')
+            self.r_temp = redis.StrictRedis(
+                host=self.config.get('RedisPubSub', 'host'),
+                port=self.config.get('RedisPubSub', 'port'),
+                db=self.config.get('RedisPubSub', 'db'),
+                decode_responses=True)
 
-        self.moduleNum = os.getpid()
+            self.moduleNum = os.getpid()
 
     def populate_set_in(self):
         # monoproc

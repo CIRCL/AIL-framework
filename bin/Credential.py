@@ -72,6 +72,7 @@ if __name__ == "__main__":
     #regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
     regex_cred = "[a-zA-Z0-9\\._-]+@[a-zA-Z0-9\\.-]+\.[a-zA-Z]{2,6}[\\rn :\_\-]{1,10}[a-zA-Z0-9\_\-]+"
     regex_site_for_stats = "@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:"
+
     while True:
         message = p.get_from_set()
         if message is None:
@@ -141,20 +142,20 @@ if __name__ == "__main__":
 
             if sites_set:
                 print("=======> Probably on : {}".format(', '.join(sites_set)))
+
+            date = datetime.datetime.now().strftime("%Y%m")
+            for cred in creds:
+                maildomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
+                faup.decode(maildomains)
+                tld = faup.get()['tld']
+                server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
         else:
             publisher.info(to_print)
             print('found {} credentials'.format(len(creds)))
 
 
         #for searching credential in termFreq
-        date = datetime.datetime.now().strftime("%Y%m")
         for cred in creds:
-            mail = cred.split('@')[-1].split()[0]
-            faup.decode(mail)
-            tld = faup.get()['tld']
-            print(tld)
-            server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
-
             cred = cred.split('@')[0] #Split to ignore mail address
 
             #unique number attached to unique path

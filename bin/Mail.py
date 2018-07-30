@@ -2,7 +2,7 @@
 # -*-coding:UTF-8 -*
 
 """
-The CreditCards Module
+The Mail Module
 ======================
 
 This module is consuming the Redis-list created by the Categ module.
@@ -12,7 +12,6 @@ It apply mail regexes on paste content and warn if above a threshold.
 """
 
 import redis
-import pprint
 import time
 import datetime
 import dns.exception
@@ -89,18 +88,22 @@ if __name__ == "__main__":
                         msg = 'infoleak:automatic-detection="mail";{}'.format(filename)
                         p.populate_set_out(msg, 'Tags')
 
+                        #create country statistics
+                        date = datetime.datetime.now().strftime("%Y%m")
+                        for mail in MX_values[1]:
+                            print('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date))
+                            p.populate_set_out('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date), 'ModuleStats')
+
+                            faup.decode(mail)
+                            tld = faup.get()['tld']
+                            server_statistics.hincrby('mail_by_tld:'+date, tld, MX_values[1][mail])
+
                     else:
                         publisher.info(to_print)
-                #Send to ModuleStats and create country statistics
-                date = datetime.datetime.now().strftime("%Y%m")
+                #create country statistics
                 for mail in MX_values[1]:
                     print('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date))
                     p.populate_set_out('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date), 'ModuleStats')
-
-                    faup.decode(mail)
-                    tld = faup.get()['tld']
-                    print(tld)
-                    server_statistics.hincrby('mail_by_tld:'+date, tld, MX_values[1][mail])
 
             prec_filename = filename
 
