@@ -8,6 +8,7 @@ lu
 import os
 import sys
 import redis
+import argparse
 import datetime
 import heapq
 import operator
@@ -18,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 
 from Helper import Process
 
-def create_pie_chart(db_key, date, pie_title, path, save_name):
+def create_pie_chart(country ,db_key, date, pie_title, path, save_name):
 
     monthly_credential_by_tld = server_statistics.hkeys(db_key + date)
 
@@ -37,19 +38,23 @@ def create_pie_chart(db_key, date, pie_title, path, save_name):
     labels = []
     sizes = []
     explode = []  # only "explode" the 2nd slice (i.e. 'Hogs')
+    explode_value = 0
     for tld in mail_tld_top5:
-        labels.append(tld[0])
+        labels.append(tld[0] +' ('+str(tld[1])+')')
         sizes.append(tld[1])
-        explode.append(0)
+        explode.append(explode_value)
+        explode_value = explode_value +0.1
 
-    nb_tld = server_statistics.hget(db_key + date, 'lu')
+    nb_tld = server_statistics.hget(db_key + date, country)
     if nb_tld is not None:
         nb_tld = int(nb_tld)
     else:
         nb_tld = 0
-    labels.append('lu')
-    sizes.append(nb_tld)
-    explode.append(0.3)  # only "explode" lu slice
+    country_label = country + ' ('+str(nb_tld)+')'
+    if country_label not in labels:
+        labels.append(country_label)
+        sizes.append(nb_tld)
+        explode.append(explode_value)
     explode = tuple(explode)
 
     fig1, ax1 = plt.subplots()
@@ -85,13 +90,14 @@ def create_donut_chart(db_key, date, pie_title, path, save_name):
         recipe.append(tld[0])
         data.append(tld[1])
 
-    nb_tld = server_statistics.hget(db_key + date, 'lu')
+    nb_tld = server_statistics.hget(db_key + date, country)
     if nb_tld is not None:
         nb_tld = int(nb_tld)
     else:
         nb_tld = 0
-    recipe.append('lu')
-    data.append(nb_tld)
+    if country not in recipe:
+        recipe.append(country)
+        data.append(nb_tld)
 
     fig1, ax1 = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
 
@@ -118,6 +124,29 @@ def create_donut_chart(db_key, date, pie_title, path, save_name):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(
+        description='''This script is a part of the Analysis Information Leak
+        framework. It create pie charts on a country statistics".''',
+        epilog='Example: ./create_lu_graph.py 0 lu now, create_lu_graph.py 0 lu 201807')
+
+    parser.add_argument('type', type=int, default=0,
+                        help='''The graph type (default 0),
+                        0: all,
+                        1: credential_pie,
+                        2: mail_pie
+                        3: sqlinjection_pie,
+                        4: domain_pie,''',
+                        choices=[0, 1, 2, 3, 4], action='store')
+
+    parser.add_argument('country', type=str, default="de",
+                        help='''The country code, de:default''',
+                        action='store')
+
+    parser.add_argument('date', type=str, default="now",
+                        help='''month %Y%m, example: 201810''', action='store')
+
+    args = parser.parse_args()
+
     path = os.path.join(os.environ['AIL_HOME'], 'doc') # path to module config file
 
     config_section = 'ARDB_Statistics'
@@ -131,7 +160,21 @@ if __name__ == '__main__':
         db=p.config.getint("ARDB_Statistics", "db"),
         decode_responses=True)
 
-    date = datetime.datetime.now().strftime("%Y%m")
-    create_pie_chart('credential_by_tld:', date, "AIL: Credential leak by tld", path, 'AIL_credential_by_tld.png')
-    create_pie_chart('mail_by_tld:', date, "AIL: mail leak by tld", path, 'AIL_mail_by_tld.png')
-    create_pie_chart('SQLInjection_by_tld:', date, "AIL: sqlInjection by tld", path, 'AIL_sqlInjectionl_by_tld.png')
+    if args.date == 'now' or len(args.date) != 6:
+        date = datetime.datetime.now().strftime("%Y%m")
+    else:
+        date = args.date
+
+    if args.type == 0:
+        create_pie_chart(args.country, 'credential_by_tld:', date, "AIL: Credential leak by tld", path, 'AIL_credential_by_tld.png')
+        create_pie_chart(args.country, 'mail_by_tld:', date, "AIL: mail leak by tld", path, 'AIL_mail_by_tld.png')
+        create_pie_chart(args.country, 'SQLInjection_by_tld:', date, "AIL: SQLInjection by tld", path, 'AIL_SQLInjection_by_tld.png')
+        create_pie_chart(args.country.upper(), 'domain_by_tld:', date, "AIL: Domain by tld", path, 'AIL_domain_by_tld.png')
+    elif args.type == 1:
+        create_pie_chart(args.country, 'credential_by_tld:', date, "AIL: Credential leak by tld", path, 'AIL_credential_by_tld.png')
+    elif args.type == 2:
+        create_pie_chart(args.country, 'mail_by_tld:', date, "AIL: mail leak by tld", path, 'AIL_mail_by_tld.png')
+    elif args.type == 3:
+        create_pie_chart(args.country, 'SQLInjection_by_tld:', date, "AIL: sqlInjection by tld", path, 'AIL_sqlInjectionl_by_tld.png')
+    elif args.type == 4:
+        create_pie_chart(args.country.upper(), 'domain_by_tld:', date, "AIL: Domain by tld", path, 'AIL_domain_by_tld.png')
