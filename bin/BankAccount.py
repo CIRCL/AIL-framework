@@ -32,7 +32,6 @@ def timeout_handler(signum, frame):
 
 signal.signal(signal.SIGALRM, timeout_handler)
 
-#LETTERS_IBAN = {ord(d): str(i) for i, d in enumerate(string.digits + string.ascii_uppercase)}
 _LETTERS_IBAN = chain(enumerate(string.digits + string.ascii_uppercase),
                  enumerate(string.ascii_lowercase, 10))
 LETTERS_IBAN = {ord(d): str(i) for i, d in _LETTERS_IBAN}
@@ -43,13 +42,10 @@ def iban_number(iban):
 def is_valid_iban(iban):
     iban_numb = iban_number(iban)
     iban_numb_check = iban_number(iban[:2] + '00' + iban[4:])
-    print(iban_numb)
-    print(iban_numb_check)
     check_digit = '{:0>2}'.format(98 - (int(iban_numb_check) % 97))
     if check_digit == iban[2:4] and int(iban_numb) % 97 == 1:
         # valid iban
         print('valid iban')
-        print(iban)
         return True
     return False
 
