@@ -5,9 +5,7 @@
 The BankAccount Module
 ======================
 
-This module is consuming the Redis-list created by the Categ module.
-
-It apply BankAccount regexes on paste content and warn if above a threshold.
+It apply IBAN regexes on paste content and warn if above a threshold.
 
 """
 
