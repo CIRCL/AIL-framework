@@ -71,6 +71,14 @@ def search_key(paste):
         p.populate_set_out(msg, 'Tags')
         find = True
 
+    if '---- BEGIN SSH2 ENCRYPTED PRIVATE KEY ----' in content:
+        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
+        print('SSH2 private key message found')
+
+        msg = 'infoleak:automatic-detection="private-ssh-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
+        find = True
+
     if '-----BEGIN OpenVPN Static key V1-----' in content:
         publisher.warning('{} has an openssh private key message'.format(paste.p_name))
         print('OpenVPN Static key message found')
