@@ -143,3 +143,5 @@ DiffMaxLineLength =  int(cfg.get("Flask", "DiffMaxLineLength"))#Use to display t
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
+
+max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
