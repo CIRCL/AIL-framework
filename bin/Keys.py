@@ -72,7 +72,7 @@ def search_key(paste):
         find = True
 
     if '---- BEGIN SSH2 ENCRYPTED PRIVATE KEY ----' in content:
-        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
+        publisher.warning('{} has an ssh2 private key message'.format(paste.p_name))
         print('SSH2 private key message found')
 
         msg = 'infoleak:automatic-detection="private-ssh-key";{}'.format(message)
