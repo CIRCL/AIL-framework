@@ -135,8 +135,9 @@ if __name__ == '__main__':
                         1: credential_pie,
                         2: mail_pie
                         3: sqlinjection_pie,
-                        4: domain_pie,''',
-                        choices=[0, 1, 2, 3, 4], action='store')
+                        4: domain_pie,
+                        5: iban_pie,''',
+                        choices=[0, 1, 2, 3, 4, 5], action='store')
 
     parser.add_argument('country', type=str, default="de",
                         help='''The country code, de:default''',
@@ -170,6 +171,7 @@ if __name__ == '__main__':
         create_pie_chart(args.country, 'mail_by_tld:', date, "AIL: mail leak by tld", path, 'AIL_mail_by_tld.png')
         create_pie_chart(args.country, 'SQLInjection_by_tld:', date, "AIL: SQLInjection by tld", path, 'AIL_SQLInjection_by_tld.png')
         create_pie_chart(args.country.upper(), 'domain_by_tld:', date, "AIL: Domain by tld", path, 'AIL_domain_by_tld.png')
+        create_pie_chart(args.country.upper(), 'iban_by_tld:', date, "AIL: Iban by tld", path, 'AIL_iban_by_tld.png')
     elif args.type == 1:
         create_pie_chart(args.country, 'credential_by_tld:', date, "AIL: Credential leak by tld", path, 'AIL_credential_by_tld.png')
     elif args.type == 2:
@@ -178,3 +180,5 @@ if __name__ == '__main__':
         create_pie_chart(args.country, 'SQLInjection_by_tld:', date, "AIL: sqlInjection by tld", path, 'AIL_sqlInjectionl_by_tld.png')
     elif args.type == 4:
         create_pie_chart(args.country.upper(), 'domain_by_tld:', date, "AIL: Domain by tld", path, 'AIL_domain_by_tld.png')
+    elif args.type == 5:
+        create_pie_chart(args.country.upper(), 'iban_by_tld:', date, "AIL: Iban by tld", path, 'AIL_iban_by_tld.png')
