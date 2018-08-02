@@ -40,6 +40,9 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
     relay_message = "{0} {1}".format(save_path, gzip64encoded)
     p.populate_set_out(relay_message, 'Mixer')
 
+    # increase nb of paste by feeder name
+    r_serv_log_submit.hincrby("mixer_cache:list_feeder", "submitted", 1)
+
     # add tags
     add_tags(ltags, ltagsgalaxies, full_path)
 
