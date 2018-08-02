@@ -5,7 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Analysis Information Leak framework Dashboard</title>
+  <title>Sentiment Trending - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -36,7 +37,7 @@
       strong {
           font-size: 16px;
       }
-      
+
       .table {
           margin-bottom: 0px;
       }
@@ -45,7 +46,7 @@
           padding-left:0;
           list-style:none
       }
-      
+
       .sparkLineStats {
           position: relative;
           margin-bottom: -4px;
@@ -64,7 +65,7 @@
       .sparkLineStats ul li div:first-child {
           margin-right: 5px;
       }
-      
+
       .panelInside {
           padding: 5px;
       }
@@ -119,7 +120,7 @@
                                    <div id="today_divr" class="sparkLineStats">
 
                                    </div>
-                                </div> 
+                                </div>
                             </div>
                             <!-- right column -->
                             <div class="col-lg-3">
@@ -167,9 +168,9 @@
                                 </div>
                                 <div class="col-lg-6">
                                    <div id="week_divr" class="sparkLineStats">
-                                       
+
                                    </div>
-                                </div> 
+                                </div>
                             </div>
                             <!-- right column -->
                             <div class="col-lg-3">
@@ -221,7 +222,7 @@
         </div>
     </div>
 
-    
+
     <!-- /.row -->
     </div>
 <!-- /#page-wrapper -->
@@ -236,7 +237,7 @@
     $(document).ready(function(){
         activePage = $('h1.page-header').attr('data-page');
         $("#"+activePage).addClass("active");
-        $('[data-toggle="tooltip"]').tooltip(); 
+        $('[data-toggle="tooltip"]').tooltip();
 
         $("#LoadAll").click(function(){ draw_page("True"); });
         draw_page("False");

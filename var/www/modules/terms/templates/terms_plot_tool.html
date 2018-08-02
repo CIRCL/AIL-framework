@@ -5,7 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Analysis Information Leak framework Dashboard</title>
+  <title>Terms Plot Tool - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -82,7 +83,7 @@
             <!-- /.panel -->
         </div>
     </div>
-    
+
     <!-- Panel PLOT -->
     <div class="row">
         <div class="col-lg-12">
@@ -138,9 +139,9 @@
 
         $( "#amount" ).val( new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +
           " - " + new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString() );
-        
-        $('#plot-btn').click(plotData); 
-        $('#plot-btn-add').click(addData); 
+
+        $('#plot-btn').click(plotData);
+        $('#plot-btn-add').click(addData);
 
         $("#TermInput").val($("#TermInput").attr("data-init-plot"));
         if($("#TermInput").attr("data-init-plot") != "") {
@@ -163,16 +164,16 @@ var graph_data = [];
 var plotted_terms = [];
 var graph_options = {
                         series: {
-                            lines: { 
+                            lines: {
                                 show: true,
                                 lineWidth: 2
                             },
                             bars: {show: false, barWidth: 60*60*1000},
                             shadowSize: 0
                         },
-                        grid: { 
-                            hoverable: true, 
-                            clickable: true, 
+                        grid: {
+                            hoverable: true,
+                            clickable: true,
                             tickColor: "#f9f9f9",
                             borderWidth: 0
                         },
@@ -203,7 +204,7 @@ function plotData() {
         for(i=1; i<data.length; i++) {
             curr_data.push([data[i][0]*1000, data[i][1]]);
         }
-        to_plot.push({ data: curr_data, label: term}); 
+        to_plot.push({ data: curr_data, label: term});
         graph_data.push({ data: curr_data, label: term});
         plot = $.plot($("#graph"), to_plot, graph_options);
 
@@ -212,7 +213,7 @@ function plotData() {
                 var date = new Date(item.datapoint[0]);
                 var x = parseInt(date.getUTCMonth())+1 + "/" + date.getUTCDate();
                 var y = item.datapoint[1];
-    
+
                 $("#tooltip").html(item.series.label + " for "+x + " = " + y)
                     .css({top: item.pageY-15, left: item.pageX+5})
                     .fadeIn(200);
@@ -264,13 +265,11 @@ function replot() {
             $("#TermInput").val("");
         }))
     }
-    
+
     $.when.apply($, promises).done( function () {
         plot = $.plot($("#graph"), graph_data, graph_options);
     });
-    
+
 }
 
 </script>
-
-

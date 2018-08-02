@@ -5,7 +5,8 @@
 	  <meta charset="utf-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	  <title>Analysis Information Leak framework Dashboard</title>
+	  <title>Modules Statistics - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
 	  <!-- Core CSS -->
 	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -44,7 +45,7 @@
 
                 $("[align]").css({padding: "2px", width: 'auto', 'background': "rgba(102, 102, 102, 0.15)" , 'border': "3px solid rgb(102, 102, 102)"})
 
-               refreshPlot(true); 
+               refreshPlot(true);
             });
 
             function refreshPlot(init){
@@ -63,7 +64,7 @@
                 setTimeout(function() { $("[flash]").css('color', 'black'); }, 1000);
             }
         </script>
-        
+
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 </body>
