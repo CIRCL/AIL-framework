@@ -144,4 +144,7 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
-max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
+try:
+    max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
+except configparser.NoOptionError:
+    max_dashboard_logs = 2
