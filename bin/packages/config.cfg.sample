@@ -3,6 +3,8 @@ bloomfilters = Blooms
 dicofilters = Dicos
 pastes = PASTES
 base64 = BASE64
+crawled = crawled
+crawled_screenshot = CRAWLED_SCREENSHOT
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile
@@ -171,6 +173,11 @@ host = localhost
 port = 6382
 db = 8
 
+[ARDB_Onion]
+host = localhost
+port = 6382
+db = 9
+
 [Url]
 cc_critical = DE
 
@@ -215,3 +222,8 @@ channel = FetchedOnion
 host = localhost
 port = 6381
 db = 0
+
+[Crawler]
+crawler_depth_limit = 1
+splash_url = http://127.0.0.1:8050
+http_proxy = http://127.0.0.1:9050

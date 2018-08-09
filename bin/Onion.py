@@ -21,7 +21,6 @@ Requirements
 *Need the ZMQ_Sub_Onion_Q Module running to be able to work properly.
 
 """
-import pprint
 import time
 from packages import Paste
 from pubsublogger import publisher
@@ -123,6 +122,7 @@ if __name__ == "__main__":
                 PST = Paste.Paste(filename)
 
                 for x in PST.get_regex(url_regex):
+                    print(x)
                     # Extracting url with regex
                     url, s, credential, subdomain, domain, host, port, \
                         resource_path, query_string, f1, f2, f3, f4 = x
@@ -149,12 +149,18 @@ if __name__ == "__main__":
                     to_print = 'Onion;{};{};{};'.format(PST.p_source,
                                                         PST.p_date,
                                                         PST.p_name)
+                    '''
                     for url in fetch(p, r_cache, urls, domains_list, path):
                         publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
                         p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
 
                         msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
                         p.populate_set_out(msg, 'Tags')
+                    '''
+                    for url in urls:
+                        msg = '{};{}'.format(url,PST.p_path)
+                        print('send to crawler')
+                        p.populate_set_out(msg, 'Crawler')
                 else:
                     publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
 
