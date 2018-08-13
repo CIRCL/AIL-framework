@@ -8,8 +8,8 @@ from TorSplashCrawler import TorSplashCrawler
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 4:
-        print('usage:', 'tor_crawler.py', 'url', 'paste', 'super_father')
+    if len(sys.argv) != 5:
+        print('usage:', 'tor_crawler.py', 'url', 'domain', 'paste', 'super_father')
         exit(1)
 
     configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -26,8 +26,9 @@ if __name__ == '__main__':
     crawler_depth_limit = cfg.getint("Crawler", "crawler_depth_limit")
 
     url = sys.argv[1]
-    paste = sys.argv[2]
-    super_father = sys.argv[3]
+    domain = sys.argv[2]
+    paste = sys.argv[3]
+    super_father = sys.argv[4]
 
     crawler = TorSplashCrawler(splash_url, http_proxy, crawler_depth_limit)
-    crawler.crawl(url, paste, super_father)
+    crawler.crawl(url, domain, paste, super_father)

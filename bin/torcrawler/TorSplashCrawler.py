@@ -9,13 +9,10 @@ import uuid
 import datetime
 import base64
 import redis
-from urllib.parse import urlparse
 
 from scrapy import Spider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.crawler import CrawlerProcess, Crawler
-
-from twisted.internet import reactor
 
 from scrapy_splash import SplashRequest
 
@@ -40,19 +37,20 @@ class TorSplashCrawler():
             'DEPTH_LIMIT': crawler_depth_limit
             })
 
-    def crawl(self, url, original_paste, super_father):
-        self.process.crawl(self.crawler, url=url, original_paste=original_paste, super_father=super_father)
+    def crawl(self, url, domain, original_paste, super_father):
+        self.process.crawl(self.crawler, url=url, domain=domain,original_paste=original_paste, super_father=super_father)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, url, original_paste, super_father, *args, **kwargs):
+        def __init__(self, url, domain,original_paste, super_father, *args, **kwargs):
             self.original_paste = original_paste
             self.super_father = super_father
             self.start_urls = url
-            self.domains = [urlparse(url).netloc]
+            self.domains = [domain]
             date = datetime.datetime.now().strftime("%Y/%m/%d")
+            self.full_date = datetime.datetime.now().strftime("%Y%m%d")
 
             config_section = 'Crawler'
             self.p = Process(config_section)
@@ -73,6 +71,12 @@ class TorSplashCrawler():
                 host=self.p.config.get("ARDB_Metadata", "host"),
                 port=self.p.config.getint("ARDB_Metadata", "port"),
                 db=self.p.config.getint("ARDB_Metadata", "db"),
+                decode_responses=True)
+
+            self.r_serv_onion = redis.StrictRedis(
+                host=self.p.config.get("ARDB_Onion", "host"),
+                port=self.p.config.getint("ARDB_Onion", "port"),
+                db=self.p.config.getint("ARDB_Onion", "db"),
                 decode_responses=True)
 
             self.crawled_paste_filemame = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "pastes"),
@@ -96,6 +100,7 @@ class TorSplashCrawler():
             print(response.headers)
             print(response.status)
 
+            # # TODO: # FIXME:
             self.r_cache.setbit(response.url, 0, 1)
             self.r_cache.expire(response.url, 360000)
 
@@ -105,8 +110,19 @@ class TorSplashCrawler():
 
             # save new paste on disk
             if self.save_crawled_paste(filename_paste, response.data['html']):
+
+                # create onion metadata
+                if not self.r_serv_onion.exists('onion_metadata:{}'.format(self.domain[0])):
+                    self.r_serv_onion.hset('onion_metadata:{}'.format(self.domain[0]), 'first_seen', self.full_date)
+                self.r_serv_onion.hset('onion_metadata:{}'.format(self.domain[0]), 'last_seen', self.full_date)
+
+                # add onion screenshot history
+                self.r_serv_onion.sadd('onion_history:{}'.format(self.domain[0]), self.full_date)
+
+                #create paste metadata
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['parent'])
+                self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'domain', self.domains[0])
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'real_link', response.url)
 
                 self.r_serv_metadata.sadd('paste_children:'+response.meta['parent'], filename_paste)
@@ -114,6 +130,13 @@ class TorSplashCrawler():
                 dirname = os.path.dirname(filename_screenshot)
                 if not os.path.exists(dirname):
                     os.makedirs(dirname)
+
+                print(sys.getsizeof(response.data['png']))
+                print(sys.getsizeof(response.data['html']))
+                print(self.domains[0])
+
+
+
                 with open(filename_screenshot, 'wb') as f:
                     f.write(base64.standard_b64decode(response.data['png'].encode()))
 
@@ -140,7 +163,6 @@ class TorSplashCrawler():
 
         def save_crawled_paste(self, filename, content):
 
-            print(filename)
             if os.path.isfile(filename):
                 print('File: {} already exist in submitted pastes'.format(filename))
                 return False

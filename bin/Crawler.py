@@ -3,6 +3,7 @@
 
 import os
 import sys
+import re
 import redis
 import datetime
 import time
@@ -15,6 +16,33 @@ from pubsublogger import publisher
 
 def signal_handler(sig, frame):
     sys.exit(0)
+
+def crawl_onion(url, domain):
+    date = datetime.datetime.now().strftime("%Y%m%d")
+
+    if not r_onion.sismember('onion_up:'+date , domain):
+        super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
+        if super_father is None:
+            super_father=paste
+
+        process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', url, domain, paste, super_father],
+                                   stdout=subprocess.PIPE)
+        while process.poll() is None:
+            time.sleep(1)
+
+        if process.returncode == 0:
+            if r_serv_metadata.exists('paste_children:'+paste):
+                msg = 'infoleak:automatic-detection="onion";{}'.format(paste)
+                p.populate_set_out(msg, 'Tags')
+            print(process.stdout.read())
+
+            r_onion.sadd('onion_up:'+date , domain)
+            r_onion.sadd('onion_up_link:'+date , url)
+        else:
+            r_onion.sadd('onion_down:'+date , domain)
+            r_onion.sadd('onion_down_link:'+date , url)
+            print(process.stdout.read())
+
 
 if __name__ == '__main__':
 
@@ -52,6 +80,9 @@ if __name__ == '__main__':
         db=p.config.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
+    url_regex = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    re.compile(url_regex)
+
     while True:
 
         message = p.get_from_set()
@@ -61,30 +92,24 @@ if __name__ == '__main__':
             if len(splitted) == 2:
                 url, paste = splitted
 
-                print(url)
+                url_list = re.findall(url_regex, url)[0]
+                if url_list[1] == '':
+                    url= 'http://{}'.format(url)
 
-                if not r_cache.exists(url):
-                    super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
-                    if super_father is None:
-                        super_father=paste
+                link, s, credential, subdomain, domain, host, port, \
+                    resource_path, query_string, f1, f2, f3, f4 = url_list
+                domain = url_list[4]
 
-                    process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', url, paste, super_father],
-                                               stdout=subprocess.PIPE)
-                    while process.poll() is None:
-                        time.sleep(1)
+                domain_url = 'http://{}'.format(domain)
 
-                    date = datetime.datetime.now().strftime("%Y%m%d")
-                    print(date)
-                    url_domain = url.replace('http://', '')
-                    if process.returncode == 0:
-                        if r_serv_metadata.exists('paste_children:'+paste):
-                            msg = 'infoleak:automatic-detection="onion";{}'.format(paste)
-                            p.populate_set_out(msg, 'Tags')
+                print('------------------START ONIOM CRAWLER------------------')
+                print('url:         {}'.format(url))
+                print('domain:      {}'.format(domain))
+                print('domain_url:  {}'.format(domain_url))
 
-                        r_onion.sadd('onion_up:'+date , url_domain)
-                    else:
-                        r_onion.sadd('onion_down:'+date , url_domain)
-                        print(process.stdout.read())
+                crawl_onion(url, domain)
+                if url != domain_url:
+                    crawl_onion(domain_url, domain)
 
             else:
                 continue
