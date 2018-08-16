@@ -5,9 +5,10 @@
     Flask functions and routes for the trending modules page
 '''
 import redis
+import os
 import json
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response
+from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory
 import difflib
 import ssdeep
 
@@ -22,12 +23,14 @@ r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_statistics = Flask_config.r_serv_statistics
+r_serv_onion = Flask_config.r_serv_onion
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
 bootstrap_label = Flask_config.bootstrap_label
 misp_event_url = Flask_config.misp_event_url
 hive_case_url = Flask_config.hive_case_url
+SCREENSHOT_FOLDER = Flask_config.SCREENSHOT_FOLDER
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
@@ -130,6 +133,16 @@ def showpaste(content_range):
 
         list_tags.append( (tag, automatic, tag_status_tp, tag_status_fp) )
 
+    crawler_metadata = {}
+    if 'infoleak:submission="crawler"' in l_tags:
+        crawler_metadata['get_metadata'] = True
+        crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
+        crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
+        crawler_metadata['external_links'] =r_serv_metadata.scard('paste_onion_external_links:'+requested_path)
+        crawler_metadata['screenshot'] = paste.get_p_rel_path()
+    else:
+        crawler_metadata['get_metadata'] = False
+
     if Flask_config.pymisp is False:
         misp = False
     else:
@@ -157,6 +170,7 @@ def showpaste(content_range):
         hive_url = hive_case_url.replace('id_here', hive_case)
 
     return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, active_galaxies=active_galaxies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list,
+                            crawler_metadata=crawler_metadata,
                             misp=misp, hive=hive, misp_eventid=misp_eventid, misp_url=misp_url, hive_caseid=hive_caseid, hive_url=hive_url)
 
 # ============ ROUTES ============
@@ -201,6 +215,10 @@ def showDiff():
     lines2 = p2.get_p_content().splitlines()
     the_html = htmlD.make_file(lines1, lines2)
     return the_html
+
+@showsavedpastes.route('/screenshot/<path:filename>')
+def screenshot(filename):
+    return send_from_directory(SCREENSHOT_FOLDER, filename+'.png', as_attachment=True)
 
 # ========= REGISTRATION =========
 app.register_blueprint(showsavedpastes)

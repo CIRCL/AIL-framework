@@ -32,6 +32,7 @@ var/www/submitted
 # Local config
 bin/packages/config.cfg
 configs/keys
+files
 
 # installed files
 nltk_data/

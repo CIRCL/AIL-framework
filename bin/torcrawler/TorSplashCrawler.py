@@ -10,6 +10,10 @@ import datetime
 import base64
 import redis
 
+from scrapy.spidermiddlewares.httperror import HttpError
+from twisted.internet.error import DNSLookupError
+from twisted.internet.error import TimeoutError
+
 from scrapy import Spider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.crawler import CrawlerProcess, Crawler
@@ -79,6 +83,8 @@ class TorSplashCrawler():
                 db=self.p.config.getint("ARDB_Onion", "db"),
                 decode_responses=True)
 
+            self.crawler_path = os.path.join(self.p.config.get("Directories", "crawled"), date )
+
             self.crawled_paste_filemame = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "pastes"),
                                             self.p.config.get("Directories", "crawled"), date )
 
@@ -89,7 +95,7 @@ class TorSplashCrawler():
                 self.start_urls,
                 self.parse,
                 endpoint='render.json',
-                meta={'parent': self.original_paste},
+                meta={'father': self.original_paste},
                 args={  'html': 1,
                         'wait': 10,
                         'render_all': 1,
@@ -106,44 +112,47 @@ class TorSplashCrawler():
 
             UUID = self.domains[0]+str(uuid.uuid4())
             filename_paste = os.path.join(self.crawled_paste_filemame, UUID)
+            relative_filename_paste = os.path.join(self.crawler_path, UUID)
             filename_screenshot = os.path.join(self.crawled_screenshot, UUID +'.png')
 
             # save new paste on disk
             if self.save_crawled_paste(filename_paste, response.data['html']):
 
+                self.r_serv_onion.sadd('onion_up:'+self.full_date , self.domains[0])
+                self.r_serv_onion.sadd('full_onion_up', self.domains[0])
+
                 # create onion metadata
-                if not self.r_serv_onion.exists('onion_metadata:{}'.format(self.domain[0])):
-                    self.r_serv_onion.hset('onion_metadata:{}'.format(self.domain[0]), 'first_seen', self.full_date)
-                self.r_serv_onion.hset('onion_metadata:{}'.format(self.domain[0]), 'last_seen', self.full_date)
+                if not self.r_serv_onion.exists('onion_metadata:{}'.format(self.domains[0])):
+                    self.r_serv_onion.hset('onion_metadata:{}'.format(self.domains[0]), 'first_seen', self.full_date)
+                self.r_serv_onion.hset('onion_metadata:{}'.format(self.domains[0]), 'last_seen', self.full_date)
 
                 # add onion screenshot history
-                self.r_serv_onion.sadd('onion_history:{}'.format(self.domain[0]), self.full_date)
+                self.r_serv_onion.sadd('onion_history:{}'.format(self.domains[0]), self.full_date)
 
                 #create paste metadata
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
-                self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['parent'])
+                self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['father'])
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'domain', self.domains[0])
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'real_link', response.url)
 
-                self.r_serv_metadata.sadd('paste_children:'+response.meta['parent'], filename_paste)
+                self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], filename_paste)
 
                 dirname = os.path.dirname(filename_screenshot)
                 if not os.path.exists(dirname):
                     os.makedirs(dirname)
 
-                print(sys.getsizeof(response.data['png']))
-                print(sys.getsizeof(response.data['html']))
-                print(self.domains[0])
+                size_screenshot = (len(response.data['png'])*3) /4
+                print(size_screenshot)
 
-
-
-                with open(filename_screenshot, 'wb') as f:
-                    f.write(base64.standard_b64decode(response.data['png'].encode()))
+                if size_screenshot < 5000000: #bytes
+                    with open(filename_screenshot, 'wb') as f:
+                        f.write(base64.standard_b64decode(response.data['png'].encode()))
 
                 # save external links in set
                 lext = LinkExtractor(deny_domains=self.domains, unique=True)
                 for link in lext.extract_links(response):
-                    self.r_serv_metadata.sadd('paste_crawler:filename_paste', link)
+                    self.r_serv_onion.sadd('domain_onion_external_links:{}'.format(self.domains[0]), link.url)
+                    self.r_serv_metadata.sadd('paste_onion_external_links:{}'.format(filename_paste), link.url)
 
                 #le = LinkExtractor(unique=True)
                 le = LinkExtractor(allow_domains=self.domains, unique=True)
@@ -154,12 +163,38 @@ class TorSplashCrawler():
                         link.url,
                         self.parse,
                         endpoint='render.json',
-                        meta={'parent': UUID},
+                        meta={'father': relative_filename_paste},
                         args={  'html': 1,
                                 'png': 1,
                                 'render_all': 1,
                                 'wait': 10}
+                        #errback=self.errback_catcher
                     )
+        '''
+        def errback_catcher(self, failure):
+            # catch all errback failures,
+            self.logger.error(repr(failure))
+
+            #if isinstance(failure.value, HttpError):
+            if failure.check(HttpError):
+                # you can get the response
+                response = failure.value.response
+                print('HttpError')
+                self.logger.error('HttpError on %s', response.url)
+
+            #elif isinstance(failure.value, DNSLookupError):
+            elif failure.check(DNSLookupError):
+                # this is the original request
+                request = failure.request
+                print(DNSLookupError)
+                self.logger.error('DNSLookupError on %s', request.url)
+
+            #elif isinstance(failure.value, TimeoutError):
+            elif failure.check(TimeoutError):
+                request = failure.request
+                print(TimeoutError)
+                self.logger.error('TimeoutError on %s', request.url)
+        '''
 
         def save_crawled_paste(self, filename, content):
 

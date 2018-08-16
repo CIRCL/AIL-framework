@@ -373,6 +373,42 @@
           </tbody>
           </table>
       {% endif %}
+
+        {% if crawler_metadata['get_metadata'] %}
+          <div class="row">
+            <div class="col-md-7">
+              <img src="{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}" onError="this.onerror=null;this.src='{{ url_for('static', filename='image/AIL.png') }}';" style="width:100%;" />
+            </div>
+
+            <div class="col-md-5">
+              <div class="row">
+                <div class="panel panel-default">
+      						<div class="panel-heading">
+      							<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
+      						</div>
+
+                      <table class="table table-hover table-striped">
+                        <tbody>
+                          <tr>
+                            <td>Father</td>
+                            <td>{{ crawler_metadata['paste_father'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>Source link</td>
+                            <td>{{ crawler_metadata['real_link'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>External links</td>
+                            <td>{{ crawler_metadata['external_links'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
         <h3> Content: </h3>
         <a href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a>
         <p data-initsize="{{ initsize }}"> <pre id="paste-holder">{{ content }}</pre></p>
