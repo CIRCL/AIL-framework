@@ -18,40 +18,41 @@ from pubsublogger import publisher
 def signal_handler(sig, frame):
     sys.exit(0)
 
-def crawl_onion(url, domain, date):
+def crawl_onion(url, domain, date, date_month):
 
-    if not r_onion.sismember('onion_up:'+date , domain) and not r_onion.sismember('onion_down:'+date , domain):
     #if not r_onion.sismember('full_onion_up', domain) and not r_onion.sismember('onion_down:'+date , domain):
-        super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
-        if super_father is None:
-            super_father=paste
+    super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
+    if super_father is None:
+        super_father=paste
 
-        try:
-            r = requests.get(splash_url , timeout=0.010)
-        except Exception:
-            ## FIXME: # TODO: relaunch docker
-            exit(0)
+    try:
+        r = requests.get(splash_url , timeout=30.0)
+    except Exception:
+        ## FIXME: # TODO: relaunch docker or send error message
+        print('--------------------------------------')
+        print('          DOCKER SPLASH DOWN')
+        exit(0)
 
-        if r.status_code == 200:
-            process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', url, domain, paste, super_father],
-                                       stdout=subprocess.PIPE)
-            while process.poll() is None:
-                time.sleep(1)
+    if r.status_code == 200:
+        process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', url, domain, paste, super_father],
+                                   stdout=subprocess.PIPE)
+        while process.poll() is None:
+            time.sleep(1)
 
-            if process.returncode == 0:
-                if r_serv_metadata.exists('paste_children:'+paste):
-                    msg = 'infoleak:automatic-detection="onion";{}'.format(paste)
-                    p.populate_set_out(msg, 'Tags')
+        if process.returncode == 0:
+            if r_serv_metadata.exists('paste_children:'+paste):
+                msg = 'infoleak:automatic-detection="onion";{}'.format(paste)
+                p.populate_set_out(msg, 'Tags')
 
-                print(process.stdout.read())
+            print(process.stdout.read())
 
-            else:
-                r_onion.sadd('onion_down:'+date , domain)
-                r_onion.sadd('onion_down_link:'+date , url)
-                print(process.stdout.read())
         else:
-            ## FIXME: # TODO: relaunch docker
-            exit(0)
+            r_onion.sadd('onion_down:'+date , domain)
+            r_onion.sadd('onion_down_link:'+date , url)
+            print(process.stdout.read())
+    else:
+        ## FIXME: # TODO: relaunch docker
+        exit(0)
 
 
 if __name__ == '__main__':
@@ -97,10 +98,22 @@ if __name__ == '__main__':
 
         message = p.get_from_set()
         # Recovering the streamed message informations.
+        #message = r_onion.spop('mess_onion')
+        print(message)
+
+        if message is None:
+            print('get ardb message')
+            message = r_onion.spop('mess_onion')
+
         if message is not None:
+
             splitted = message.split(';')
             if len(splitted) == 2:
                 url, paste = splitted
+
+                if not '.onion' in url:
+                    print('not onion')
+                    continue
 
                 url_list = re.findall(url_regex, url)[0]
                 if url_list[1] == '':
@@ -117,46 +130,55 @@ if __name__ == '__main__':
                 print('domain:      {}'.format(domain))
                 print('domain_url:  {}'.format(domain_url))
 
+                '''if not r_onion.sismember('full_onion_up', domain):
+                    r_onion.sadd('mess_onion', message)
+                    print('added ..............')'''
+
+
                 if not r_onion.sismember('banned_onion', domain):
 
                     date = datetime.datetime.now().strftime("%Y%m%d")
+                    date_month = datetime.datetime.now().strftime("%Y%m")
 
-                    crawl_onion(url, domain, date)
-                    if url != domain_url:
-                        crawl_onion(domain_url, domain, date)
+                    if not r_onion.sismember('month_onion_up:{}'.format(date_month), domain) and not r_onion.sismember('onion_down:'+date , domain):
 
-                    # save dowm onion
-                    if not r_onion.sismember('onion_up:'+date , domain):
-                        r_onion.sadd('onion_down:'+date , domain)
-                        r_onion.sadd('onion_down_link:'+date , url)
-                        r_onion.hincrby('onion_link_down', url, 1)
-                        if not r_onion.exists('onion_metadata:{}'.format(domain)):
-                            r_onion.hset('onion_metadata:{}'.format(domain), 'first_seen', date)
-                        r_onion.hset('onion_metadata:{}'.format(domain), 'last_seen', date)
-                    else:
-                        r_onion.hincrby('onion_link_up', url, 1)
+                        crawl_onion(url, domain, date, date_month)
+                        if url != domain_url:
+                            crawl_onion(domain_url, domain, date, date_month)
 
-                    # last check
-                    r_onion.hset('onion_metadata:{}'.format(domain), 'last_check', date)
-
-                    # check external onions links (full_scrawl)
-                    external_domains = set()
-                    for link in r_onion.smembers('domain_onion_external_links:{}'.format(domain)):
-                        print(link)
-                        external_domain = re.findall(url_regex, link)
-                        print(external_domain)
-                        if len(external_domain) > 0:
-                            external_domain = external_domain[0][4]
+                        # save down onion
+                        if not r_onion.sismember('onion_up:'+date , domain):
+                            r_onion.sadd('onion_down:'+date , domain)
+                            r_onion.sadd('onion_down_link:'+date , url)
+                            r_onion.hincrby('onion_link_down', url, 1)
+                            if not r_onion.exists('onion_metadata:{}'.format(domain)):
+                                r_onion.hset('onion_metadata:{}'.format(domain), 'first_seen', date)
+                            r_onion.hset('onion_metadata:{}'.format(domain), 'last_seen', date)
                         else:
-                            continue
-                        print(external_domain)
-                        # # TODO: add i2p
-                        if '.onion' in external_domain and external_domain != domain:
-                            external_domains.add(external_domain)
-                    if len(external_domains) >= 10:
-                        r_onion.sadd('onion_potential_source', domain)
-                    r_onion.delete('domain_onion_external_links:{}'.format(domain))
-                    print(r_onion.smembers('domain_onion_external_links:{}'.format(domain)))
+                            r_onion.hincrby('onion_link_up', url, 1)
+
+                        # last check
+                        r_onion.hset('onion_metadata:{}'.format(domain), 'last_check', date)
+
+                        # check external onions links (full_scrawl)
+                        external_domains = set()
+                        for link in r_onion.smembers('domain_onion_external_links:{}'.format(domain)):
+                            external_domain = re.findall(url_regex, link)
+                            if len(external_domain) > 0:
+                                external_domain = external_domain[0][4]
+                            else:
+                                continue
+                            # # TODO: add i2p
+                            if '.onion' in external_domain and external_domain != domain:
+                                external_domains.add(external_domain)
+                        if len(external_domains) >= 10:
+                            r_onion.sadd('onion_potential_source', domain)
+                        r_onion.delete('domain_onion_external_links:{}'.format(domain))
+                        print(r_onion.smembers('domain_onion_external_links:{}'.format(domain)))
+
+                        r_onion.lpush('last_onions', domain)
+                        r_onion.ltrim('last_onions', 0, 15)
+
             else:
                 continue
         else:

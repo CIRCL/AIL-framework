@@ -29,6 +29,7 @@ import os
 import base64
 import subprocess
 import redis
+import re
 
 from Helper import Process
 
@@ -96,6 +97,12 @@ if __name__ == "__main__":
         db=p.config.getint("Redis_Cache", "db"),
         decode_responses=True)
 
+    r_onion = redis.StrictRedis(
+        host=p.config.get("ARDB_Onion", "host"),
+        port=p.config.getint("ARDB_Onion", "port"),
+        db=p.config.getint("ARDB_Onion", "db"),
+        decode_responses=True)
+
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
 
@@ -109,6 +116,9 @@ if __name__ == "__main__":
     # Thanks to Faup project for this regex
     # https://github.com/stricaud/faup
     url_regex = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    i2p_regex = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    re.compile(url_regex)
+
 
     while True:
         if message is not None:
@@ -127,8 +137,22 @@ if __name__ == "__main__":
                     url, s, credential, subdomain, domain, host, port, \
                         resource_path, query_string, f1, f2, f3, f4 = x
 
-                    domains_list.append(domain)
-                    urls.append(url)
+                    if '.onion' in url:
+                        print(url)
+                        domains_list.append(domain)
+                        urls.append(url)
+
+                for x in PST.get_regex(i2p_regex):
+                    # Extracting url with regex
+                    url, s, credential, subdomain, domain, host, port, \
+                        resource_path, query_string, f1, f2, f3, f4 = x
+
+                    if '.i2p' in url:
+                        print('add i2p')
+                        print(domain)
+                        if not r_onion.sismember('i2p_domain', domain):
+                            r_onion.sadd('i2p_domain', domain)
+                            r_onion.sadd('i2p_link', url)
 
                 # Saving the list of extracted onion domains.
                 PST.__setattr__(channel, domains_list)
@@ -157,10 +181,21 @@ if __name__ == "__main__":
                         msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
                         p.populate_set_out(msg, 'Tags')
                     '''
+
+                    date_month = datetime.datetime.now().strftime("%Y%m")
+                    date = datetime.datetime.now().strftime("%Y%m%d")
                     for url in urls:
-                        msg = '{};{}'.format(url,PST.p_path)
-                        print('send to crawler')
-                        p.populate_set_out(msg, 'Crawler')
+
+                        domain = re.findall(url_regex, url)
+                        if len(domain) > 0:
+                            domain = domain[0][4]
+                        else:
+                            continue
+
+                        if not r_onion.sismember('month_onion_up:{}'.format(date_month), domain) and not r_onion.sismember('onion_down:'+date , domain):
+                            msg = '{};{}'.format(url,PST.p_path)
+                            print('send to crawler')
+                            p.populate_set_out(msg, 'Crawler')
                 else:
                     publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
 

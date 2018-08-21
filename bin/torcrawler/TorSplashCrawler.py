@@ -55,6 +55,7 @@ class TorSplashCrawler():
             self.domains = [domain]
             date = datetime.datetime.now().strftime("%Y/%m/%d")
             self.full_date = datetime.datetime.now().strftime("%Y%m%d")
+            self.date_month = datetime.datetime.now().strftime("%Y%m")
 
             config_section = 'Crawler'
             self.p = Process(config_section)
@@ -120,6 +121,7 @@ class TorSplashCrawler():
 
                 self.r_serv_onion.sadd('onion_up:'+self.full_date , self.domains[0])
                 self.r_serv_onion.sadd('full_onion_up', self.domains[0])
+                self.r_serv_onion.sadd('month_onion_up:{}'.format(self.date_month), self.domains[0])
 
                 # create onion metadata
                 if not self.r_serv_onion.exists('onion_metadata:{}'.format(self.domains[0])):
