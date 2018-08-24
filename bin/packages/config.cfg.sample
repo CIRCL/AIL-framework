@@ -225,5 +225,7 @@ db = 0
 
 [Crawler]
 crawler_depth_limit = 1
-splash_url = http://127.0.0.1:8050
-http_proxy = http://127.0.0.1:9050
+splash_url_onion = http://127.0.0.1:8050
+splash_url_i2p = http://127.0.0.1:8050
+http_proxy_onion = http://127.0.0.1:9050
+http_proxy_i2p = http://127.0.0.1:9050

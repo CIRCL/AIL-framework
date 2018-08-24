@@ -115,22 +115,17 @@ if __name__ == '__main__':
 
         # Recovering the streamed message informations.
         message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
-        #message='https://www.myip.com/;/home/aurelien/git/python3/AIL-framework/PASTES/crawled/2018/08/10/onionsnjajzkhm5g.onion49eac19d-d71b-48b5-bc55-9a3c63e5b1e2'
 
         # # FIXME: remove
         if message is None:
             print('get ardb message')
             message = r_onion.spop('mess_onion')
 
-        print(message)
-
         if message is not None:
 
             splitted = message.split(';')
             if len(splitted) == 2:
                 url, paste = splitted
-
-
                 if not '.onion' in url:
                     print('not onion')
                     continue
@@ -143,7 +138,6 @@ if __name__ == '__main__':
                     resource_path, query_string, f1, f2, f3, f4 = url_list
                 domain = url_list[4]
                 r_onion.srem('onion_domain_crawler_queue', domain)
-                #domain = 'myip.com'
 
                 domain_url = 'http://{}'.format(domain)
 
