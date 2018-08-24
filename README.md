@@ -152,6 +152,12 @@ Trending charts
 ![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
 ![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
 
+Extracted encoded files from pastes
+-----------------------------------
+
+![Extracted files from pastes](./doc/screenshots/ail-hashedfiles.png?raw=true "AIL extracted decoded files statistics")
+![Relationships between extracted files from encoded file in unstructured data](./doc/screenshots/hashedfile-graph.png?raw=true "Relationships between extracted files from encoded file in unstructured data")
+
 Browsing
 --------
 
