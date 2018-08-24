@@ -31,7 +31,7 @@ Features
 * Terms, Set of terms and Regex tracking and occurrence
 * Many more modules for extracting phone numbers, credentials and others
 * Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
-* Detect and decode Base64 and store files
+* Detect and decode encoded file (Base64, hex encoded or your own decoding scheme) and store files
 * Detect Amazon AWS and Google API keys
 * Detect Bitcoin address and Bitcoin private keys
 * Detect private keys and certificate
@@ -39,6 +39,8 @@ Features
 * UI paste submission
 * Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
 * Automatic paste export at detection on [MISP](https://github.com/MISP/MISP) (events) and [The Hive](https://github.com/TheHive-Project/TheHive) (alerts) on selected tags
+* Extracted and decoded files can be searched by date range, type of file (mime-type) and encoding discovered
+* Graph relationships between decoded file (hashes)
 
 Installation
 ------------
