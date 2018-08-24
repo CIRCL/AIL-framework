@@ -9,6 +9,7 @@ import uuid
 import datetime
 import base64
 import redis
+import json
 
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
@@ -30,7 +31,6 @@ class TorSplashCrawler():
         self.crawler = Crawler(self.TorSplashSpider, {
             'USER_AGENT': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0',
             'SPLASH_URL': splash_url,
-            'HTTP_PROXY': http_proxy,
             'ROBOTSTXT_OBEY': False,
             'DOWNLOADER_MIDDLEWARES': {'scrapy_splash.SplashCookiesMiddleware': 723,
                                        'scrapy_splash.SplashMiddleware': 725,
@@ -41,14 +41,15 @@ class TorSplashCrawler():
             'DEPTH_LIMIT': crawler_depth_limit
             })
 
-    def crawl(self, url, domain, original_paste, super_father):
-        self.process.crawl(self.crawler, url=url, domain=domain,original_paste=original_paste, super_father=super_father)
+    def crawl(self, type, url, domain, original_paste, super_father):
+        self.process.crawl(self.crawler, type=type, url=url, domain=domain,original_paste=original_paste, super_father=super_father)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, url, domain,original_paste, super_father, *args, **kwargs):
+        def __init__(self, type, url, domain,original_paste, super_father, *args, **kwargs):
+            self.type = type
             self.original_paste = original_paste
             self.super_father = super_father
             self.start_urls = url
@@ -100,12 +101,13 @@ class TorSplashCrawler():
                 args={  'html': 1,
                         'wait': 10,
                         'render_all': 1,
+                        'har': 1,
                         'png': 1}
             )
 
         def parse(self,response):
-            print(response.headers)
-            print(response.status)
+            #print(response.headers)
+            #print(response.status)
 
             # # TODO: # FIXME:
             self.r_cache.setbit(response.url, 0, 1)
@@ -119,17 +121,18 @@ class TorSplashCrawler():
             # save new paste on disk
             if self.save_crawled_paste(filename_paste, response.data['html']):
 
-                self.r_serv_onion.sadd('onion_up:'+self.full_date , self.domains[0])
-                self.r_serv_onion.sadd('full_onion_up', self.domains[0])
-                self.r_serv_onion.sadd('month_onion_up:{}'.format(self.date_month), self.domains[0])
+                self.r_serv_onion.sadd('{}_up:{}'.format(self.type, self.full_date), self.domains[0])
+                self.r_serv_onion.sadd('full_{}_up'.format(self.type), self.domains[0])
+                self.r_serv_onion.sadd('month_{}_up:{}'.format(self.type, self.date_month), self.domains[0])
 
                 # create onion metadata
-                if not self.r_serv_onion.exists('onion_metadata:{}'.format(self.domains[0])):
-                    self.r_serv_onion.hset('onion_metadata:{}'.format(self.domains[0]), 'first_seen', self.full_date)
-                self.r_serv_onion.hset('onion_metadata:{}'.format(self.domains[0]), 'last_seen', self.full_date)
+                if not self.r_serv_onion.exists('{}_metadata:{}'.format(self.type, self.domains[0])):
+                    self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'first_seen', self.full_date)
+                self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'last_seen', self.full_date)
+                self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'paste_parent', self.original_paste)
 
                 # add onion screenshot history
-                self.r_serv_onion.sadd('onion_history:{}'.format(self.domains[0]), self.full_date)
+                self.r_serv_onion.sadd('{}_history:{}'.format(self.type, self.domains[0]), self.full_date)
 
                 #create paste metadata
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
@@ -144,17 +147,20 @@ class TorSplashCrawler():
                     os.makedirs(dirname)
 
                 size_screenshot = (len(response.data['png'])*3) /4
-                print(size_screenshot)
 
                 if size_screenshot < 5000000: #bytes
                     with open(filename_screenshot, 'wb') as f:
                         f.write(base64.standard_b64decode(response.data['png'].encode()))
 
+                #interest = response.data['har']['log']['entries'][0]['response']['header'][0]
+                with open(filename_screenshot+'har.txt', 'wb') as f:
+                    f.write(json.dumps(response.data['har']).encode())
+
                 # save external links in set
                 lext = LinkExtractor(deny_domains=self.domains, unique=True)
                 for link in lext.extract_links(response):
-                    self.r_serv_onion.sadd('domain_onion_external_links:{}'.format(self.domains[0]), link.url)
-                    self.r_serv_metadata.sadd('paste_onion_external_links:{}'.format(filename_paste), link.url)
+                    self.r_serv_onion.sadd('domain_{}_external_links:{}'.format(self.type, self.domains[0]), link.url)
+                    self.r_serv_metadata.sadd('paste_{}_external_links:{}'.format(self.type, filename_paste), link.url)
 
                 #le = LinkExtractor(unique=True)
                 le = LinkExtractor(allow_domains=self.domains, unique=True)
@@ -169,6 +175,7 @@ class TorSplashCrawler():
                         args={  'html': 1,
                                 'png': 1,
                                 'render_all': 1,
+                                'har': 1,
                                 'wait': 10}
                         #errback=self.errback_catcher
                     )

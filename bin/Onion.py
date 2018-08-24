@@ -150,9 +150,12 @@ if __name__ == "__main__":
                     if '.i2p' in url:
                         print('add i2p')
                         print(domain)
-                        if not r_onion.sismember('i2p_domain', domain):
+                        if not r_onion.sismember('i2p_domain', domain) and not r_onion.sismember('i2p_domain_crawler_queue', domain):
                             r_onion.sadd('i2p_domain', domain)
                             r_onion.sadd('i2p_link', url)
+                            r_onion.sadd('i2p_domain_crawler_queue', domain)
+                            msg = '{};{}'.format(url,PST.p_path)
+                            r_onion.sadd('i2p_crawler_queue', msg)
 
                 # Saving the list of extracted onion domains.
                 PST.__setattr__(channel, domains_list)
@@ -193,9 +196,12 @@ if __name__ == "__main__":
                             continue
 
                         if not r_onion.sismember('month_onion_up:{}'.format(date_month), domain) and not r_onion.sismember('onion_down:'+date , domain):
-                            msg = '{};{}'.format(url,PST.p_path)
-                            print('send to crawler')
-                            p.populate_set_out(msg, 'Crawler')
+                            if not r_onion.sismember('onion_domain_crawler_queue', domain):
+                                print('send to onion crawler')
+                                r_onion.sadd('onion_domain_crawler_queue', domain)
+                                msg = '{};{}'.format(url,PST.p_path)
+                                r_onion.sadd('onion_crawler_queue', msg)
+                            #p.populate_set_out(msg, 'Crawler')
                 else:
                     publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
 

@@ -49,6 +49,12 @@
 													<td>Last Check</td>
 													<td>{{ last_check }}</td>
 												</tr>
+												<tr>
+													<td>Origin Paste</td>
+													<td>
+														<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=domain_paste) }}" />{{ domain_paste }}</a>
+													</td>
+												</tr>
 											</tbody>
 										</table>
 							</div>

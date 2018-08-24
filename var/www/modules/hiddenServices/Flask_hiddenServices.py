@@ -43,7 +43,7 @@ def get_onion_status(domain, date):
 
 @hiddenServices.route("/hiddenServices/", methods=['GET'])
 def hiddenServices_page():
-    last_onions = r_serv_onion.lrange('last_onions', 0 ,-1)
+    last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
     list_onion = []
 
     for onion in last_onions:
@@ -72,9 +72,11 @@ def onion_domain():
 
     last_check = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'last_check')
     first_seen = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'first_seen')
+    domain_paste = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'paste_parent')
     date_crawled = r_serv_onion.smembers('onion_history:{}'.format(onion_domain))
 
-    return render_template("showDomain.html", domain=onion_domain, last_check=last_check, first_seen=first_seen)
+    return render_template("showDomain.html", domain=onion_domain, last_check=last_check, first_seen=first_seen,
+                            domain_paste=domain_paste)
 
 # ============= JSON ==============
 @hiddenServices.route("/hiddenServices/domain_crawled_7days_json", methods=['GET'])
