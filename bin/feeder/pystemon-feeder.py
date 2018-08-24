@@ -62,12 +62,13 @@ while True:
     print(paste)
     if paste is None:
         continue
-    socket.send("%d %s" % (topic, paste))
+    socket.send_string("%d %s" % (topic, paste))
     topic = 102
     try:
-        messagedata = open(pystemonpath+paste).read()
-        socket.send("%d %s %s" % (topic, paste, base64.b64encode(messagedata)))
-        sleep_inc = sleep_inc-0.01 if sleep_inc-0.01 > 0 else 0
+        with open(pystemonpath+paste, 'rb') as f: #.read()
+            messagedata = f.read()
+            socket.send_string("%d %s %s" % (topic, paste, base64.b64encode(messagedata).decode()))
+            sleep_inc = sleep_inc-0.01 if sleep_inc-0.01 > 0 else 0
     except IOError as e:
         # file not found, could be a buffering issue -> increase sleeping time
         print('IOError: Increasing sleep time')

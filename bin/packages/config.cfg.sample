@@ -32,6 +32,8 @@ sender_port = 1337
 
 ##### Flask #####
 [Flask]
+#Number of logs to display in the dashboard
+max_dashboard_logs = 15
 #Maximum number of character to display in the toolip
 max_preview_char = 250
 #Maximum number of character to display in the modal
@@ -44,6 +46,9 @@ minute_processed_paste = 10
 DiffMaxLineLength = 10000
 
 #### Modules ####
+[BankAccount]
+max_execution_time = 60
+
 [Categ]
 #Minimum number of match between the paste and the category file
 matchingThreshold=1

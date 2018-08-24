@@ -144,6 +144,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "CreditCards" bash -c 'cd '${AIL_BIN}'; ./CreditCards.py; read x'
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "BankAccount" bash -c 'cd '${AIL_BIN}'; ./BankAccount.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Onion" bash -c 'cd '${AIL_BIN}'; ./Onion.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c 'cd '${AIL_BIN}'; ./Mail.py; read x'

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Analysis Information Leak framework Dashboard</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -31,6 +32,14 @@
       };
       update_values();
   </script>
+  <style>
+			.tableQueue tbody tr td,
+      .tableQueue tbody tr th,
+      .tableQueue thead tr td,
+      .tableQueue thead tr th{
+				padding: 1px;
+			}
+	</style>
 
 </head>
 <body>
@@ -136,10 +145,13 @@
             <div class="pull-right">
                 <label style="padding-bottom:2px;">
 		<select class="form-control input-sm" id="log_select">
-		<option value="10">10</option>
-		<option value="25">25</option>
-		<option value="50">50</option>
-		<option value="100">100</option>
+      {% for log_selection in log_select %}
+        {% if log_selection == selected %}
+          <option value="{{ log_selection }}" selected>{{ log_selection }}</option>
+        {% else %}
+    		  <option value="{{ log_selection }}">{{ log_selection }}</option>
+        {% endif %}
+      {% endfor %}
 		</select>
                 </label>
 		<input id="checkbox_log_info" type="checkbox" value="info"> INFO
@@ -182,6 +194,66 @@
     <script>
         activePage = "page-index";
         $("#"+activePage).addClass("active");
+
+        var tableBody = document.getElementById('tab_body')
+        $.getJSON('/_get_last_logs_json', function(data) {
+          data.forEach(function (d) {
+            var tr = document.createElement('TR')
+            var time = document.createElement('TD')
+            var chan = document.createElement('TD')
+            var level = document.createElement('TD')
+            var scrpt = document.createElement('TD')
+            var src = document.createElement('TD')
+            var pdate = document.createElement('TD')
+            var nam = document.createElement('TD')
+            var msage = document.createElement('TD')
+            var inspect = document.createElement('TD')
+
+            tr.className = "warning";
+            time.appendChild(document.createTextNode(d.time))
+            chan.appendChild(document.createTextNode('Script'))
+            level.appendChild(document.createTextNode('WARNING'))
+            scrpt.appendChild(document.createTextNode(d.script))
+            src.appendChild(document.createTextNode(d.domain))
+            pdate.appendChild(document.createTextNode(d.date_paste))
+            nam.appendChild(document.createTextNode(d.paste))
+
+            var iconspan = document.createElement('SPAN');
+            var message = d.message.split(" ")
+            if (message[0] == "Detected"){
+                iconspan.className = "glyphicon glyphicon-eye-open";
+            }
+            else if (message[0] == "Checked"){
+                iconspan.className = "glyphicon glyphicon-thumbs-up";
+            }
+            iconspan.innerHTML = "&nbsp;";
+            msage.appendChild(iconspan);
+            msage.appendChild(document.createTextNode(message.join(" ")));
+
+            var action_icon_a = document.createElement("A");
+            action_icon_a.setAttribute("TARGET", "_blank");
+            action_icon_a.setAttribute("HREF", d.path);
+            var action_icon_span = document.createElement('SPAN');
+            action_icon_span.className = "fa fa-search-plus";
+            action_icon_a.appendChild(action_icon_span);
+            inspect.appendChild(action_icon_a)
+            inspect.setAttribute("style", "text-align:center;");
+
+
+            tr.appendChild(time)
+            tr.appendChild(chan);
+            tr.appendChild(level);
+            tr.appendChild(scrpt);
+            tr.appendChild(src);
+            tr.appendChild(pdate);
+            tr.appendChild(nam);
+            tr.appendChild(msage);
+            tr.appendChild(inspect);
+
+            tableBody.appendChild(tr);
+
+		      });
+        });
     </script>
 
     <script type="text/javascript">

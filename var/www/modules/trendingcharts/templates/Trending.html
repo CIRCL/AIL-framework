@@ -9,7 +9,8 @@
           <meta http-equiv="Pragma" content="no-cache" />
           <meta http-equiv="Expires" content="0" />
 
-	  <title>Analysis Information Leak framework Dashboard</title>
+	  <title>Trending Charts - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
 	  <!-- Core CSS -->
 	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -22,7 +23,7 @@
           <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
-          <script> 
+          <script>
               var default_display = {{ default_display }};
               var current_displayed_graph;
           </script>
@@ -50,7 +51,7 @@
                 <li><a data-toggle="tab" href="#words-tab" data-pannel="WordTrending" data-path="../static//csv/wordstrendingdata.csv">Words</a></li>
             </ul>
             </br>
-              
+
 <script>
 var chart_1_num_day = 5;
 var chart_2_num_day = 15;
@@ -59,7 +60,7 @@ $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 
 <script type="text/javascript" src="{{ url_for('static', filename='js/trendingchart.js')}}"></script>
 
-            <div class="tab-content">  
+            <div class="tab-content">
                 <div class="col-lg-12 tab-pane fade in active" id="tld-tab" >
                      {% include 'trending_graphs/Tldstrending.html' %}
                 </div>
@@ -71,7 +72,7 @@ $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
                 </div>
                 <div class="col-lg-12 tab-pane fade" id="words-tab">
                      {% include 'trending_graphs/Wordstrending.html' %}
-                </div> 
+                </div>
             </div> <!-- tab-content -->
             <!-- /.row -->
         </div>
@@ -93,7 +94,7 @@ $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
                     $("[flash-"+attr_name+"]").css('color', '#fece00');
                     setTimeout(function() { $("[flash-"+attr_name+"]").css('color', 'black'); }, 1000);
                     refresh_top_chart(attr_name, false);
-                    if (active_tab_name == attr_name) 
+                    if (active_tab_name == attr_name)
                         plot_top_graph(attr_name, false);
                 }, refresh_interval);
             }
@@ -115,7 +116,7 @@ $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 
             // When a pannel is shown, create_and_plot.
             $('.nav-tabs a').on('shown.bs.tab', function(event){
-                create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));    
+                create_and_plot($(event.target).attr('data-pannel'), $(event.target).attr('data-path'));
                 active_tab_name = $(event.target).attr('data-attribute-name')
                 //Top progression chart
                 if(launched_refresher.indexOf($(event.target).attr('data-attribute-name')) == -1){
@@ -133,7 +134,7 @@ $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
                 $("[align]").css({padding: "2px", width: 'auto', 'background': "rgba(102, 102, 102, 0.15)" , 'border': "3px solid rgb(102, 102, 102)"})
 
                 // Create the graph when the page has just loaded
-                create_and_plot("TldTrending", '../static//csv/tldstrendingdata.csv') 
+                create_and_plot("TldTrending", '../static//csv/tldstrendingdata.csv')
                 //Top progression chart
                 refresh_top_chart("tld", true);
             });

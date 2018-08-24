@@ -8,7 +8,7 @@ import redis
 import json
 import os
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint, make_response, redirect, url_for
+from flask import Flask, render_template, jsonify, request, Blueprint, make_response, redirect, url_for, Response
 import difflib
 import ssdeep
 
@@ -209,7 +209,7 @@ def showsavedrawpaste():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
     content = paste.get_p_content()
-    return content, 200, {'Content-Type': 'text/plain'}
+    return Response(content, mimetype='text/plain')
 
 @showsavedpastes.route("/showpreviewpaste/")
 def showpreviewpaste():
