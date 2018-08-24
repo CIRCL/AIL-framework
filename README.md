@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/CIRCL/AIL-framework.svg?branch=master)](https://travis-ci.org/CIRCL/AIL-framework)
-
 AIL
 ===
 
@@ -10,6 +8,22 @@ AIL framework - Framework for Analysis of Information Leaks
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
+
+<table>
+<tr>
+  <td>Latest Release</td>
+  <td><a href="https://badge.fury.io/gh/CIRCL%2FAIL-Framework"><img src="https://badge.fury.io/gh/CIRCL%2FAIL-Framework.svg" alt="GitHub version" height="18"></a></td>
+</tr>
+<tr>
+  <td>Contributors</td>
+  <td><img src="https://img.shields.io/github/contributors/CIRCL/AIL-Framework.svg" /></td>
+</tr>
+<tr>
+  <td>License</td>
+  <td><img src="https://img.shields.io/github/license/CIRCL/AIL-Framework.svg" /></td>
+</tr>
+</table>
+
 
 Features
 --------
