@@ -86,8 +86,7 @@ if __name__ == "__main__":
 
         if message is not None:
 
-            search_api_key(message)
-
+            search_api_key(message)        
 
         else:
             publisher.debug("Script ApiKey is Idling 10s")

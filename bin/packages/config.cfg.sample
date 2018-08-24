@@ -2,6 +2,7 @@
 bloomfilters = Blooms
 dicofilters = Dicos
 pastes = PASTES
+hash = HASHS
 base64 = BASE64
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
@@ -64,6 +65,14 @@ minTopPassList=5
 max_execution_time = 90
 
 [Base64]
+path = Base64/
+max_execution_time = 60
+
+[Binary]
+path = Base64/
+max_execution_time = 60
+
+[Hex]
 path = Base64/
 max_execution_time = 60
 

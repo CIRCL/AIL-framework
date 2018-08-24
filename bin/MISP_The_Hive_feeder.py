@@ -150,16 +150,18 @@ if __name__ == "__main__":
     if flag_the_hive:
         try:
             HiveApi = TheHiveApi(the_hive_url, the_hive_key, cert = the_hive_verifycert)
-            r_serv_db.set('ail:thehive', True)
         except:
             HiveApi = False
             flag_the_hive = False
             r_serv_db.set('ail:thehive', False)
             print('Not connected to The HIVE')
+    else:
+        HiveApi = False
 
     if HiveApi != False and flag_the_hive:
         try:
             HiveApi.get_alert(0)
+            r_serv_db.set('ail:thehive', True)
             print('Connected to The HIVE:', the_hive_url)
         except thehive4py.exceptions.AlertException:
             HiveApi = False

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>HashesDecoded - AIL</title>
+
+	  <!-- Core CSS -->
+		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<style>
+			.input-group .form-control {
+				position: unset;
+			}
+			.red_table thead{
+				background: #d91f2d;
+				color: #fff;
+			}
+			.line {
+    		fill: none;
+    		stroke: #000;
+    		stroke-width: 2.0px;
+			}
+			.bar {
+        fill: steelblue;
+      }
+      .bar:hover{
+        fill: brown;
+				cursor: pointer;
+      }
+			.bar_stack:hover{
+				cursor: pointer;
+      }
+			.pie_path:hover{
+				cursor: pointer;
+			}
+			.svgText {
+    		pointer-events: none;
+			}
+			div.tooltip {
+				position: absolute;
+				text-align: center;
+				padding: 2px;
+				font: 12px sans-serif;
+				background: #ebf4fb;
+				border: 2px solid #b7ddf2;
+				border-radius: 8px;
+				pointer-events: none;
+				color: #000000;
+			}
+		</style>
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+				<div class="row">
+				  <div class="col-lg-12">
+					  <h1 class="page-header" data-page="page-termsfrequency" >Hashed Files</h1>
+						<div>
+
+	          </div>
+				  </div>
+				  <!-- /.col-lg-12 -->
+
+					<div class="row">
+						<div class="col-md-10">
+							<div id="barchart_type">
+		          </div>
+						</div>
+
+							<div class="col-md-2">
+								<div class="panel panel-info" style="text-align:center;">
+									<div class="panel-heading">
+										Select a date range :
+										<form action="/hashDecoded/all_hash_search" id="hash_selector_form" method='post'>
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-from" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from">
+											</div>
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-to" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to">
+											</div>
+											Encoding :
+											<select class="form-control" name="encoding" style="width=100%;">
+										    <option>All encoding</option>
+												{% for encod in all_encoding %}
+													{% if encoding|string() == encod|string() %}
+													<option selected>{{ encod }}</option>
+													{% else %}
+													<option>{{ encod }}</option>
+													{% endif %}
+												{% endfor %}
+											</select>
+											File Type :
+											<select class="form-control" name="type" style="width=100%;">
+										    <option>All types</option>
+												{% for typ in l_type %}
+													{% if type|string() == typ|string() %}
+													<option selected>{{ typ }}</option>
+													{% else %}
+													<option>{{ typ }}</option>
+													{% endif %}
+												{% endfor %}
+											</select>
+											<br>
+											<button class="btn btn-primary" style="text-align:center;">
+												<i class="fa fa-files-o"></i> Search
+											</button>
+										<form>
+									</div>
+								</div>
+								<div id="pie_chart_encoded">
+			          </div>
+							</div>
+						</div>
+					</div>
+
+						<!-- /#page-wrapper -->
+						{% if  l_64|length != 0 %}
+								{% if date_from|string == date_to|string %}
+								<h3> {{ date_from }} Hashed files: </h3>
+								{% else %}
+								<h3> {{ date_from }} to {{ date_to }} Hashed files: </h3>
+								{% endif %}
+								<table id="tableb64" class="red_table table table-striped table-bordered">
+								<thead>
+								<tr>
+										<th>estimated type</th>
+										<th>hash</th>
+										<th>first seen</th>
+										<th>last seen</th>
+										<th>nb paste</th>
+										<th>size</th>
+										<th>Virus Total</th>
+										<th>Sparkline</th>
+								</tr>
+								</thead>
+								<tbody>
+								{% for b64 in l_64 %}
+										<tr>
+												<td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
+												<td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a></td>
+												<td>{{ b64[5] }}</td>
+												<td>{{ b64[6] }}</td>
+												<td>{{ b64[3] }}</td>
+												<td>{{ b64[4] }}</td>
+												<td style="text-align:center;max-width:150px;">
+													{% if  vt_enabled %}
+														{% if not b64[7] %}
+															<darkbutton_{{ b64[2] }}>
+																<button id="submit_vt_{{ b64[2] }}" class="btn btn-primary" onclick="sendFileToVT('{{ b64[2] }}')">
+																	<i class="fa fa-paper-plane"></i>&nbsp;Send this file to VT
+																</button>
+															</darkbutton_{{ b64[2] }}>
+														{% else %}
+															<a class="btn btn-primary" target="_blank" href="{{ b64[8] }}"><i class="fa fa-link"> VT Report</i></a>
+														{% endif %}
+														<button class="btn btn-default" onclick="updateVTReport('{{ b64[2] }}')">
+															<div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[9] }}</div>
+														</button>
+													{% else %}
+														Virus Total submission is disabled
+													{% endif %}
+
+												</td>
+												<td id="sparklines_{{ b64[2] }}" style="text-align:center;">
+												</td>
+										</tr>
+								{% endfor %}
+								</tbody>
+								</table>
+						{% else %}
+							{% if date_from|string == date_to|string %}
+							<h3> {{ date_from }}, No Hashes</h3>
+							{% else %}
+							<h3> {{ date_from }} to {{ date_to }}, No Hashes</h3>
+							{% endif %}
+						{% endif %}
+					</div>
+
+				</div>
+				<!-- /.row -->
+
+            <script>
+							var chart = {};
+                $(document).ready(function(){
+                    activePage = "page-hashDecoded"
+                    $("#"+activePage).addClass("active");
+
+										$('#date-range-from').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
+										$('#date-range-to').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
+
+										$('#tableb64').DataTable({
+						  				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+						  				"iDisplayLength": 10,
+						  				"order": [[ 3, "desc" ]]
+						  			});
+
+										{% if  type %}
+										chart.stackBarChart =barchart_type_stack('/hashDecoded/hash_by_type_json?type={{type}}', 'id');
+										{% elif  daily_type_chart %}
+										chart.stackBarChart =barchart_type_stack('/hashDecoded/range_type_json?date_from={{daily_date}}&date_to={{daily_date}}', 'id');
+										{% else %}
+										chart.stackBarChart = barchart_type_stack("/hashDecoded/range_type_json?date_from={{date_from}}&date_to={{date_to}}", 'id')
+										{% endif %}
+
+										chart.onResize();
+										$(window).on("resize", function() {
+											chart.onResize();
+										});
+                });
+            </script>
+<script>
+	function updateVTReport(hash) {
+		//updateReport
+		$.getJSON('/hashDecoded/update_vt_result?hash='+hash,
+			function(data) {
+				content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
+				$( "#report_vt_"+hash ).html(content);
+		});
+	}
+
+	function sendFileToVT(hash) {
+		//send file to vt
+		$.getJSON('/hashDecoded/send_file_to_vt_js?hash='+hash,
+			function(data) {
+				var content = '<a id="submit_vt_'+hash+'" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
+				$('#submit_vt_'+hash).remove();
+				$('darkbutton_'+hash).append(content);
+		});
+	}
+</script>
+<script>
+//var data = [6,3,3,2,5,3,9];
+
+// a sparklines plot
+function sparklines(id, points) {
+    var width = 100, height = 60;
+
+    var data = []
+    for (i = 0; i < points.length; i++) {
+        data[i] = {
+            'x': i,
+            'y': +points[i]
+        }
+    }
+
+    var x = d3.scaleLinear()
+        .range([0, width - 10])
+        .domain([0,5]);
+
+    var y = d3.scaleLinear()
+        .range([height, 0])
+        .domain([0,10]);
+
+    var line = d3.line()
+                .x(function(d) {return x(d.x)})
+                .y(function(d) {return y(d.y)});
+
+    d3.select("#"+id).append('svg')
+            .attr('width', width)
+            .attr('height', height)
+         .append('path')
+            .attr('class','line')
+            .datum(data)
+            .attr('d', line);
+
+}
+</script>
+<script>
+	{% for b64 in l_64 %}
+		sparklines("sparklines_{{ b64[2] }}", {{ b64[10] }})
+	{% endfor %}
+</script>
+
+<script>
+var margin = {top: 20, right: 100, bottom: 55, left: 45},
+				width  = 1000 - margin.left - margin.right,
+				height = 500  - margin.top  - margin.bottom;
+var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+
+var y = d3.scaleLinear().rangeRound([height, 0]);
+
+var xAxis = d3.axisBottom(x);
+
+var yAxis = d3.axisLeft(y);
+
+var color = d3.scaleOrdinal(d3.schemeSet3);
+
+var svg = d3.select("#barchart_type").append("svg")
+				.attr("id", "thesvg")
+				.attr("viewBox", "0 0 1000 500")
+				.attr("width",  width  + margin.left + margin.right)
+				.attr("height", height + margin.top  + margin.bottom)
+			.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+function barchart_type_stack(url, id) {
+
+  d3.json(url)
+    .then(function(data){
+
+			var labelVar = 'date';  //A
+		  var varNames = d3.keys(data[0])
+		      .filter(function (key) { return key !== labelVar;}); //B
+
+		  data.forEach(function (d) { //D
+		    var y0 = 0;
+		    d.mapping = varNames.map(function (name) {
+		      return {
+		        name: name,
+		        label: d[labelVar],
+		        y0: y0,
+		        y1: y0 += +d[name]
+		      };
+		    });
+		    d.total = d.mapping[d.mapping.length - 1].y1;
+		  });
+
+		  x.domain(data.map(function (d) { return (d.date); })); //E
+		  y.domain([0, d3.max(data, function (d) { return d.total; })]);
+
+			svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+				.selectAll("text")
+					.attr("class", "bar")
+					{% if  date_from|string == date_to|string and type is none %}
+						.on("click", function (d) { window.location.href = '/hashDecoded/?date_from={{date_from}}&date_to={{date_to}}&type='+d })
+						.attr("transform", "rotate(-18)" )
+					{% elif  date_from|string == date_to|string and type is not none %}
+						.on("click", function (d) { window.location.href = '/hashDecoded/?date_from='+d+'&date_to='+d })
+						.attr("transform", "rotate(-18)" )
+					{% else %}
+						.on("click", function (d) { window.location.href = '/hashDecoded/?date_from='+d+'&date_to='+d })
+						.attr("transform", "rotate(-40)" )
+					{% endif %}
+					.style("text-anchor", "end");
+
+    	svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      	.append("text")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 6)
+        	.attr("dy", ".71em")
+        	.style("text-anchor", "end");
+
+			var selection = svg.selectAll(".series")
+		    .data(data)
+		    .enter().append("g")
+		      .attr("class", "series")
+		      .attr("transform", function (d) { return "translate(" + x((d.date)) + ",0)"; });
+
+			selection.selectAll("rect")
+	      .data(function (d) { return d.mapping; })
+	    .enter().append("rect")
+				.attr("class", "bar_stack")
+	      .attr("width", x.bandwidth())
+	      .attr("y", function (d) { return y(d.y1); })
+	      .attr("height", function (d) { return y(d.y0) - y(d.y1); })
+	      .style("fill", function (d) { return color(d.name); })
+	      .style("stroke", "grey")
+	      .on("mouseover", function (d) { showPopover.call(this, d); })
+				.on("mouseout", function (d) { removePopovers(); })
+				{% if  date_from|string == date_to|string and type is none %}
+					.on("click", function(d){ window.location.href = "/hashDecoded/" +'?date_from={{date_from}}&date_to={{date_to}}&type='+d.label+'&encoding='+d.name; });
+				{% elif  date_from|string == date_to|string and type is not none %}
+					.on("click", function(d){ window.location.href = "/hashDecoded/" +'?type={{type}}&date_from='+d.label+'&date_to='+d.label+'&encoding='+d.name; });
+				{% else %}
+					.on("click", function(d){ window.location.href = "/hashDecoded/" +'?type='+ d.name +'&date_from='+d.label+'&date_to='+d.label; });
+				{% endif %}
+
+				data.forEach(function(d) {
+					if(d.total != 0){
+						svg.append("text")
+								.attr("class", "bar")
+								.attr("dy", "-.35em")
+								//.on("click", (window.location.href = "/hashDecoded/"+'?date_from='+d.date) )
+								.attr('x', x(d.date) + x.bandwidth()/2)
+								.attr('y', y(d.total))
+								{% if  date_from|string == date_to|string and type is none %}
+									.on("click", function () {window.location.href = "/hashDecoded/"+'?date_from={{date_from}}&date_to={{date_to}}&type='+d.date })
+								{% elif  date_from|string == date_to|string and type is not none %}
+									.on("click", function () {window.location.href = '/hashDecoded/?type={{type}}&date_from='+d.date+'&date_to='+d.date })
+								{% else %}
+									.on("click", function () {window.location.href = "/hashDecoded/"+'?date_from='+d.date+'&date_to='+d.date })
+								{% endif %}
+								.style("text-anchor", "middle")
+								.text(d.total);
+					}
+				});
+
+			drawLegend(varNames);
+    });
+
+}
+
+function drawLegend (varNames) {
+    var legend = svg.selectAll(".legend")
+        .data(varNames.slice().reverse())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", 943)
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("fill", color)
+        .style("stroke", "grey");
+
+    legend.append("text")
+				.attr("class", "svgText")
+        .attr("x", 941)
+        .attr("y", 6)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function (d) { return d; });
+}
+
+function removePopovers () {
+    $('.popover').each(function() {
+      $(this).remove();
+    });
+  }
+
+function showPopover (d) {
+  $(this).popover({
+    title: d.name,
+    placement: 'auto top',
+    container: 'body',
+    trigger: 'manual',
+    html : true,
+    content: function() {
+      return d.label +
+            "<br/>num: " + d3.format(",")(d.value ? d.value: d.y1 - d.y0); }
+  });
+  $(this).popover('show')
+}
+
+chart.onResize = function () {
+    var aspect = 1000 / 500, chart = $("#thesvg");
+    var targetWidth = chart.parent().width();
+    chart.attr("width", targetWidth);
+    chart.attr("height", targetWidth / aspect);
+  }
+
+window.chart = chart;
+
+</script>
+
+<script>
+
+var width_pie = 200;
+var height_pie = 200;
+var padding_pie = 10;
+var opacity_pie = .8;
+
+var radius_pie = Math.min(width_pie - padding_pie, height_pie - padding_pie) / 2;
+//var color_pie = d3.scaleOrdinal(d3.schemeCategory10);
+var color_pie = d3.scaleOrdinal(d3.schemeSet3);
+
+var div_pie = d3.select("body").append("div")
+		.attr("class", "tooltip")
+		.style("opacity", 0);
+
+var svg_pie = d3.select("#pie_chart_encoded")
+		.append('svg')
+		.attr("width", '100%')
+		.attr("height", '100%')
+		.attr('viewBox','0 0 '+Math.min(width_pie,height_pie) +' '+Math.min(width_pie,height_pie) )
+		.attr('preserveAspectRatio','xMinYMin')
+
+
+var g_pie = svg_pie.append('g')
+		.attr('transform', 'translate(' + (width_pie/2) + ',' + (height_pie/2) + ')');
+
+var arc_pie = d3.arc()
+		.innerRadius(0)
+		.outerRadius(radius_pie);
+
+d3.json("/hashDecoded/decoder_type_json?date_from={{date_from}}&date_to={{date_to}}&type={{type}}")
+	.then(function(data){
+
+	var pie_pie = d3.pie()
+			.value(function(d) { return d.value; })
+			.sort(null);
+
+	var path_pie = g_pie.selectAll('path')
+		  .data(pie_pie(data))
+		  .enter()
+		  .append("g")
+		  .append('path')
+		  .attr('d', arc_pie)
+		  .attr('fill', (d,i) => color_pie(i))
+			.attr('class', 'pie_path')
+			.on("mouseover", mouseovered_pie)
+			.on("mouseout", mouseouted_pie)
+			.on("click", function (d) {window.location.href = '/hashDecoded/?date_from={{date_from}}&date_to={{date_to}}&type={{type}}&encoding='+d.data.name })
+		  .style('opacity', opacity_pie)
+		  .style('stroke', 'white');
+	});
+
+function mouseovered_pie(d) {
+
+	// tooltip
+	var content;
+
+	content = "<b>"+d.data.name+"</b>"+"<br/>"+
+						"<br/>"+
+						"<i>Decoded</i>: "+d.data.value+"<br/>"
+
+	div_pie.transition()
+		.duration(200)
+		.style("opacity", .9);
+	div_pie.html(content)
+		.style("left", (d3.event.pageX) + "px")
+		.style("top", (d3.event.pageY - 28) + "px");
+}
+
+function mouseouted_pie() {
+	div_pie.transition()
+		.duration(500)
+		.style("opacity", 0);
+}
+</script>
+
+
+
+<script>
+function barchart_type(url, id) {
+
+
+  var margin = {top: 20, right: 20, bottom: 70, left: 40};
+
+  var width = 960 - margin.left - margin.right;
+  var height = 500 - margin.top - margin.bottom;
+
+  var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+  var y = d3.scaleLinear().rangeRound([height, 0]);
+
+  var xAxis = d3.axisBottom(x)
+    //.tickFormat(d3.time.format("%Y-%m"));
+
+  var yAxis = d3.axisLeft(y)
+    .ticks(10);
+
+/*var svg = d3.select(id).append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+			.attr("id", "thesvg")
+      .append("g")
+        .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");*/
+
+
+  d3.json(url)
+    .then(function(data){
+
+        data.forEach(function(d) {
+          d.value = +d.value;
+        });
+
+				x.domain(data.map(function(d) { return d.date; }));
+        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+        var label = svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+          .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", "-.55em")
+						{% if  daily_type_chart %}
+						.attr("transform", "rotate(-20)" );
+						{% else %}
+						.attr("transform", "rotate(-70)" )
+						.attr("class", "bar")
+						.on("click", function (d) { window.location.href = "/hashDecoded/"+'?date_from='+d+'&date_to='+d });
+						{% endif %}
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Value ($)");
+
+        var bar = svg.selectAll("bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "bar")
+            //.style("fill", "steelblue")
+						.attr("x", function(d) { return x(d.date); })
+            .attr("width", x.bandwidth())
+            .attr("y", function(d) { return y(d.value); })
+            .attr("height", function(d) { return height - y(d.value); })
+						{% if  type %}
+            .on("click", function(d){ window.location.href = "/hashDecoded/" +'?type={{type}}&date_from='+ d.date +'&date_to='+ d.date; });
+						{% endif  %}
+						{% if  daily_type_chart %}
+						.on("click", function(d){ window.location.href = "/hashDecoded/" +'?type='+d.date+'&date_from={{ daily_date }}&date_to={{ daily_date }}'; });
+						{% endif  %}
+
+
+        data.forEach(function(d) {
+          if(d.value != 0){
+            svg.append("text")
+                .attr("class", "bar")
+                .attr("dy", "-.35em")
+                //.text(function(d) { return d.value; });
+                .text(d.value)
+								.style("text-anchor", "middle")
+								.attr('x', x(d.date) + x.bandwidth()/2)
+                .attr('y', y(d.value));
+          }
+        });
+
+    });
+
+}
+</script>
+
+
+        </body>
+
+</html>
