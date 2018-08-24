@@ -48,7 +48,8 @@ Features
 * Detect and decode encoded file (Base64, hex encoded or your own decoding scheme) and store files
 * Detect Amazon AWS and Google API keys
 * Detect Bitcoin address and Bitcoin private keys
-* Detect private keys and certificate
+* Detect private keys, certificate, keys (including SSH, OpenVPN)
+* Detect IBAN bank accounts
 * Tagging system with [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies) tags
 * UI paste submission
 * Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
