@@ -5,7 +5,7 @@
 	  <meta charset="utf-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	  <title>HashDecoded - AIL</title>
+	  <title>HashesDecoded - AIL</title>
 
 	  <!-- Core CSS -->
 		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -73,7 +73,7 @@
             <div id="page-wrapper">
 				<div class="row">
 				  <div class="col-lg-12">
-					  <h1 class="page-header" data-page="page-termsfrequency" >Hash Files</h1>
+					  <h1 class="page-header" data-page="page-termsfrequency" >Hashed Files</h1>
 						<div>
 
 	          </div>
@@ -137,9 +137,9 @@
 						<!-- /#page-wrapper -->
 						{% if  l_64|length != 0 %}
 								{% if date_from|string == date_to|string %}
-								<h3> {{ date_from }} Hash files: </h3>
+								<h3> {{ date_from }} Hashed files: </h3>
 								{% else %}
-								<h3> {{ date_from }} to {{ date_to }} Hash files: </h3>
+								<h3> {{ date_from }} to {{ date_to }} Hashed files: </h3>
 								{% endif %}
 								<table id="tableb64" class="red_table table table-striped table-bordered">
 								<thead>
@@ -190,9 +190,9 @@
 								</table>
 						{% else %}
 							{% if date_from|string == date_to|string %}
-							<h3> {{ date_from }}, No Hash</h3>
+							<h3> {{ date_from }}, No Hashes</h3>
 							{% else %}
-							<h3> {{ date_from }} to {{ date_to }}, No Hash</h3>
+							<h3> {{ date_from }} to {{ date_to }}, No Hashes</h3>
 							{% endif %}
 						{% endif %}
 					</div>
