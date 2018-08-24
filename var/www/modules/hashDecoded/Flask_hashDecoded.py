@@ -62,7 +62,7 @@ def get_file_icon(estimated_type):
     file_type = estimated_type.split('/')[0]
     # set file icon
     if file_type == 'application':
-        file_icon = 'fa-file-o '
+        file_icon = 'fa-file '
     elif file_type == 'audio':
         file_icon = 'fa-file-video-o '
     elif file_type == 'image':
@@ -70,7 +70,7 @@ def get_file_icon(estimated_type):
     elif file_type == 'text':
         file_icon = 'fa-file-text-o'
     else:
-        file_icon =  'fa-file'
+        file_icon =  'fa-file-o'
 
     return file_icon
 
@@ -380,8 +380,6 @@ def decoder_type_json():
     if not date_range:
         date_range.append(datetime.date.today().strftime("%Y%m%d"))
 
-    print(date_range)
-
     nb_decoded = {}
     for decoder in all_decoder:
         nb_decoded[decoder] = 0
@@ -583,7 +581,7 @@ def send_file_to_vt_js():
     files = {'file': (hash, b64_content)}
     response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params= {'apikey': vt_auth})
     json_response = response.json()
-    print(json_response)
+    #print(json_response)
 
     vt_link = json_response['permalink'].split('analysis')[0] + 'analysis/'
     r_serv_metadata.hset('metadata_hash:'+hash, 'vt_link', vt_link)
