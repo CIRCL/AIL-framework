@@ -9,11 +9,7 @@ import os
 import json
 import os
 import flask
-<<<<<<< HEAD
-from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory
-=======
-from flask import Flask, render_template, jsonify, request, Blueprint, make_response, redirect, url_for, Response, send_from_directory
->>>>>>> master
+from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory, redirect, url_for
 import difflib
 import ssdeep
 
