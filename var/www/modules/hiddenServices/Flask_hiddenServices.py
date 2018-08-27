@@ -6,10 +6,12 @@
 '''
 import redis
 import datetime
+import sys
+import os
 from flask import Flask, render_template, jsonify, request, Blueprint
 
-import HiddenServices
 from Date import Date
+from HiddenServices import HiddenServices
 
 # ============ VARIABLES ============
 import Flask_config
@@ -75,8 +77,12 @@ def onion_domain():
     domain_paste = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'paste_parent')
     date_crawled = r_serv_onion.smembers('onion_history:{}'.format(onion_domain))
 
+    h = HiddenServices(onion_domain, 'onion')
+    l_pastes = h.get_last_crawled_pastes()
+    screenshot = h.get_domain_random_screenshot(l_pastes)[0]
+
     return render_template("showDomain.html", domain=onion_domain, last_check=last_check, first_seen=first_seen,
-                            domain_paste=domain_paste)
+                            domain_paste=domain_paste, screenshot=screenshot)
 
 # ============= JSON ==============
 @hiddenServices.route("/hiddenServices/domain_crawled_7days_json", methods=['GET'])

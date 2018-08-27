@@ -19,6 +19,7 @@ Conditions to fulfill to be able to use this class correctly:
 import os
 import gzip
 import redis
+import random
 
 import configparser
 import sys
@@ -52,11 +53,19 @@ class HiddenServices(object):
             db=cfg.getint("ARDB_Onion", "db"),
             decode_responses=True)
 
+        self.r_serv_metadata = redis.StrictRedis(
+            host=cfg.get("ARDB_Metadata", "host"),
+            port=cfg.getint("ARDB_Metadata", "port"),
+            db=cfg.getint("ARDB_Metadata", "db"),
+            decode_responses=True)
+
         self.domain = domain
         self.type = type
 
         if type == 'onion':
-            self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"), cfg.get("Directories", "crawled"))
+            self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+            self.paste_crawled_directory = os.path.join(self.paste_directory, cfg.get("Directories", "crawled"))
+            self.paste_crawled_directory_name = cfg.get("Directories", "crawled")
             self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
         elif type == 'i2p':
             self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
@@ -65,15 +74,57 @@ class HiddenServices(object):
             ## TODO: # FIXME: add error
             pass
 
-
+    #todo use the right paste
     def get_last_crawled_pastes(self):
+        paste_parent = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'paste_parent')
+        #paste_parent = paste_parent.replace(self.paste_directory, '')[1:]
+        return self.get_all_pastes_domain(paste_parent)
 
-        last_check = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'last_check')
-        return self.get_crawled_pastes_by_date(last_check)
+    def get_all_pastes_domain(self, father):
+        l_crawled_pastes = []
+        paste_parent = father.replace(self.paste_directory, '')[1:]
+        paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_parent))
+        ## TODO: # FIXME: remove me
+        if not paste_childrens:
+            paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
+        for children in paste_childrens:
+            if self.domain in children:
+                l_crawled_pastes.append(children)
+                l_crawled_pastes.extend(self.get_all_pastes_domain(children))
+        return l_crawled_pastes
+
+    def get_domain_random_screenshot(self, l_crawled_pastes, num_screenshot = 1):
+        l_screenshot_paste = []
+        for paste in l_crawled_pastes:
+            ## FIXME: # TODO: remove me
+            paste= paste.replace(self.paste_directory, '')[1:]
+
+            paste = paste.replace(self.paste_crawled_directory_name, '')
+            if os.path.isfile( '{}{}.png'.format(self.screenshot_directory, paste) ):
+                l_screenshot_paste.append(paste[1:])
+
+        if len(l_screenshot_paste) > num_screenshot:
+            l_random_screenshot = []
+            for index in random.sample( range(0, len(l_screenshot_paste)), num_screenshot ):
+                l_random_screenshot.append(l_screenshot_paste[index])
+            return l_random_screenshot
+        else:
+            return l_screenshot_paste
 
     def get_crawled_pastes_by_date(self, date):
-        pastes_path = os.path.join(self.paste_directory, date[0:4], date[4:6], date[6:8])
+
+        pastes_path = os.path.join(self.paste_crawled_directory, date[0:4], date[4:6], date[6:8])
+        paste_parent = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'last_check')
+
+        l_crawled_pastes = []
+        return l_crawled_pastes
+
+    def get_last_crawled_pastes_fileSearch(self):
+
+        last_check = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'last_check')
+        return self.get_crawled_pastes_by_date_fileSearch(last_check)
+
+    def get_crawled_pastes_by_date_fileSearch(self, date):
+        pastes_path = os.path.join(self.paste_crawled_directory, date[0:4], date[4:6], date[6:8])
         l_crawled_pastes = [f for f in os.listdir(pastes_path) if self.domain in f]
-        print(len(l_crawled_pastes))
-        print(l_crawled_pastes)
         return l_crawled_pastes
