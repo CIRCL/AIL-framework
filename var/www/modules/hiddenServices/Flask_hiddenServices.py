@@ -19,6 +19,9 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 r_serv_onion = Flask_config.r_serv_onion
+r_serv_metadata = Flask_config.r_serv_metadata
+bootstrap_label = Flask_config.bootstrap_label
+PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 hiddenServices = Blueprint('hiddenServices', __name__, template_folder='templates')
 
@@ -79,9 +82,36 @@ def onion_domain():
 
     h = HiddenServices(onion_domain, 'onion')
     l_pastes = h.get_last_crawled_pastes()
-    screenshot = h.get_domain_random_screenshot(l_pastes)[0]
+    screenshot = h.get_domain_random_screenshot(l_pastes)
+    if screenshot:
+        screenshot = screenshot[0]
+    else:
+        screenshot = 'None'
+
+    paste_tags = []
+    path_name = []
+    for path in l_pastes:
+        path_name.append(path.replace(PASTES_FOLDER, ''))
+        p_tags = r_serv_metadata.smembers('tag:'+path)
+        l_tags = []
+        for tag in p_tags:
+            complete_tag = tag
+            tag = tag.split('=')
+            if len(tag) > 1:
+                if tag[1] != '':
+                    tag = tag[1][1:-1]
+                # no value
+                else:
+                    tag = tag[0][1:-1]
+            # use for custom tags
+            else:
+                tag = tag[0]
+            l_tags.append( (tag, complete_tag) )
+        paste_tags.append(l_tags)
 
     return render_template("showDomain.html", domain=onion_domain, last_check=last_check, first_seen=first_seen,
+                            l_pastes=l_pastes, paste_tags=paste_tags, l_tags=l_tags, bootstrap_label=bootstrap_label,
+                            path_name=path_name,
                             domain_paste=domain_paste, screenshot=screenshot)
 
 # ============= JSON ==============

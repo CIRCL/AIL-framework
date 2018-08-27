@@ -15,9 +15,15 @@
 	  <!-- JS -->
 	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
 	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-          <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
-          <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
-          <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+		<script src="/static//js/jquery.dataTables.min.js"></script>
+		<script src="/static//js/dataTables.bootstrap.js"></script>
+
+		<style>
+	      .test thead{
+	      	background: #d91f2d;
+		      color: #fff;
+	      }
+	  </style>
 
 	</head>
 	<body>
@@ -28,8 +34,9 @@
 
 				<div class="row">
 
-					<div class="col-md-5">
+					<div class="col-md-6">
 						<div class="row">
+							<div class="row">
 							<div class="panel panel-default">
 								<div class="panel-heading">
 									<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
@@ -57,11 +64,38 @@
 												</tr>
 											</tbody>
 										</table>
+									</div>
 							</div>
+
+								<table class="test table table-striped table-bordered table-hover table-responsive " id="myTable_">
+						      <thead>
+						        <tr>
+						          <th style="max-width: 800px;">Crawled Pastes</th>
+						        </tr>
+						      </thead>
+						      <tbody>
+
+						        {% for path in l_pastes %}
+						          <tr>
+						              <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path_name[loop.index0] }}</a>
+						                <div>
+						                  {% for tag in paste_tags[loop.index0] %}
+						                  <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+						                    <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
+						                  </a>
+						                  {%  endfor %}
+						                </div>
+						              </td>
+						          </tr>
+						        {%  endfor %}
+
+						      </tbody>
+						    </table>
+
 						</div>
 					</div>
 
-					<div class="col-md-7">
+					<div class="col-md-6">
 						<img src="{{ url_for('showsavedpastes.screenshot', filename=screenshot) }}" onError="this.onerror=null;this.src='{{ url_for('static', filename='image/AIL.png') }}';" style="width:100%;" />
 					</div>
 
@@ -74,6 +108,13 @@
                 $(document).ready(function(){
                     activePage = "page-hiddenServices"
                     $("#"+activePage).addClass("active");
+										table = $('#myTable_').DataTable(
+											{
+												"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+												"iDisplayLength": 5,
+												"order": [[ 0, "desc" ]]
+											}
+										);
                 });
             </script>
 

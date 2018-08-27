@@ -85,8 +85,8 @@ class HiddenServices(object):
         paste_parent = father.replace(self.paste_directory, '')[1:]
         paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_parent))
         ## TODO: # FIXME: remove me
-        if not paste_childrens:
-            paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
+        paste_children = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
+        paste_childrens = paste_childrens | paste_children
         for children in paste_childrens:
             if self.domain in children:
                 l_crawled_pastes.append(children)
