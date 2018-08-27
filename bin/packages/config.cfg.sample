@@ -33,6 +33,8 @@ sender_port = 1337
 
 ##### Flask #####
 [Flask]
+#Number of logs to display in the dashboard
+max_dashboard_logs = 15
 #Maximum number of character to display in the toolip
 max_preview_char = 250
 #Maximum number of character to display in the modal
