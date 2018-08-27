@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/CIRCL/AIL-framework.svg?branch=master)](https://travis-ci.org/CIRCL/AIL-framework)
-
 AIL
 ===
 
@@ -10,6 +8,22 @@ AIL framework - Framework for Analysis of Information Leaks
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
 
 ![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
+
+<table>
+<tr>
+  <td>Latest Release</td>
+  <td><a href="https://badge.fury.io/gh/CIRCL%2FAIL-Framework"><img src="https://badge.fury.io/gh/CIRCL%2FAIL-Framework.svg" alt="GitHub version" height="18"></a></td>
+</tr>
+<tr>
+  <td>Contributors</td>
+  <td><img src="https://img.shields.io/github/contributors/CIRCL/AIL-Framework.svg" /></td>
+</tr>
+<tr>
+  <td>License</td>
+  <td><img src="https://img.shields.io/github/license/CIRCL/AIL-Framework.svg" /></td>
+</tr>
+</table>
+
 
 Features
 --------
@@ -31,14 +45,17 @@ Features
 * Terms, Set of terms and Regex tracking and occurrence
 * Many more modules for extracting phone numbers, credentials and others
 * Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
-* Detect and decode Base64 and store files
+* Detect and decode encoded file (Base64, hex encoded or your own decoding scheme) and store files
 * Detect Amazon AWS and Google API keys
 * Detect Bitcoin address and Bitcoin private keys
-* Detect private keys and certificate
+* Detect private keys, certificate, keys (including SSH, OpenVPN)
+* Detect IBAN bank accounts
 * Tagging system with [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies) tags
 * UI paste submission
 * Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
 * Automatic paste export at detection on [MISP](https://github.com/MISP/MISP) (events) and [The Hive](https://github.com/TheHive-Project/TheHive) (alerts) on selected tags
+* Extracted and decoded files can be searched by date range, type of file (mime-type) and encoding discovered
+* Graph relationships between decoded file (hashes)
 
 Installation
 ------------
@@ -151,6 +168,12 @@ Trending charts
 
 ![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
 ![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
+
+Extracted encoded files from pastes
+-----------------------------------
+
+![Extracted files from pastes](./doc/screenshots/ail-hashedfiles.png?raw=true "AIL extracted decoded files statistics")
+![Relationships between extracted files from encoded file in unstructured data](./doc/screenshots/hashedfile-graph.png?raw=true "Relationships between extracted files from encoded file in unstructured data")
 
 Browsing
 --------

@@ -124,6 +124,7 @@ if __name__ == "__main__":
                     except ipaddress.AddressValueError:
                         continue
                     cc = getattr(l, 'cc')
+                    asn = ''
                     if getattr(l, 'asn') is not None:
                         asn = getattr(l, 'asn')[2:] #remobe b'
 

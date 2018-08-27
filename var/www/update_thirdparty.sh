@@ -6,6 +6,7 @@ wget http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.js
 
 SBADMIN_VERSION='3.3.7'
 FONT_AWESOME_VERSION='4.7.0'
+D3_JS_VERSION='5.5.0'
 
 rm -rf temp
 mkdir temp
@@ -13,9 +14,21 @@ mkdir temp
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}.zip
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin-2/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}-2.zip
 wget https://github.com/FortAwesome/Font-Awesome/archive/v${FONT_AWESOME_VERSION}.zip -O temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip
+wget https://github.com/d3/d3/releases/download/v${D3_JS_VERSION}/d3.zip -O  temp/d3_${D3_JS_VERSION}.zip
+
+# dateRangePicker
+wget https://github.com/moment/moment/archive/2.22.2.zip -O temp/moment_2.22.2.zip
+wget https://github.com/longbill/jquery-date-range-picker/archive/v0.18.0.zip -O temp/daterangepicker_v0.18.0.zip
+
+
 unzip temp/${SBADMIN_VERSION}.zip -d temp/
 unzip temp/${SBADMIN_VERSION}-2.zip -d temp/
 unzip temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip -d temp/
+unzip temp/d3_${D3_JS_VERSION}.zip -d temp/
+
+unzip temp/moment_2.22.2.zip -d temp/
+unzip temp/daterangepicker_v0.18.0.zip -d temp/
+
 mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin
 mv temp/startbootstrap-sb-admin-2-${SBADMIN_VERSION} temp/sb-admin-2
 mv temp/Font-Awesome-${FONT_AWESOME_VERSION} temp/font-awesome
@@ -30,6 +43,11 @@ mv temp/font-awesome/ ./static/
 rm -rf ./static/css/plugins/
 mv temp/sb-admin/css/* ./static/css/
 mv temp/sb-admin-2/dist/css/* ./static/css/
+mv temp/jquery-date-range-picker-0.18.0/dist/daterangepicker.min.css ./static/css/
+
+mv temp/d3.min.js ./static/js/
+mv temp/moment-2.22.2/min/moment.min.js ./static/js/
+mv temp/jquery-date-range-picker-0.18.0/dist/jquery.daterangepicker.min.js ./static/js/
 
 rm -rf temp
 

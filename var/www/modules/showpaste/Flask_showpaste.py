@@ -7,12 +7,18 @@
 import redis
 import os
 import json
+import os
 import flask
+<<<<<<< HEAD
 from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory
+=======
+from flask import Flask, render_template, jsonify, request, Blueprint, make_response, redirect, url_for, Response, send_from_directory
+>>>>>>> master
 import difflib
 import ssdeep
 
 import Paste
+import requests
 
 # ============ VARIABLES ============
 import Flask_config
@@ -30,14 +36,16 @@ DiffMaxLineLength = Flask_config.DiffMaxLineLength
 bootstrap_label = Flask_config.bootstrap_label
 misp_event_url = Flask_config.misp_event_url
 hive_case_url = Flask_config.hive_case_url
+vt_enabled = Flask_config.vt_enabled
 SCREENSHOT_FOLDER = Flask_config.SCREENSHOT_FOLDER
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
 
-def showpaste(content_range):
-    requested_path = request.args.get('paste', '')
+def showpaste(content_range, requested_path):
+    vt_enabled = Flask_config.vt_enabled
+
     paste = Paste.Paste(requested_path)
     p_date = str(paste._get_p_date())
     p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
@@ -121,7 +129,6 @@ def showpaste(content_range):
         else:
             automatic = False
 
-        tag_hash = ssdeep.hash(tag)
         if r_serv_statistics.sismember('tp:'+tag, requested_path):
             tag_status_tp = True
         else:
@@ -132,6 +139,40 @@ def showpaste(content_range):
             tag_status_fp = False
 
         list_tags.append( (tag, automatic, tag_status_tp, tag_status_fp) )
+
+    l_64 = []
+    # load hash files
+    if r_serv_metadata.scard('hash_paste:'+requested_path) > 0:
+        set_b64 = r_serv_metadata.smembers('hash_paste:'+requested_path)
+        for hash in set_b64:
+            nb_in_file = int(r_serv_metadata.zscore('nb_seen_hash:'+hash, requested_path))
+            estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
+            file_type = estimated_type.split('/')[0]
+            # set file icon
+            if file_type == 'application':
+                file_icon = 'fa-file-o '
+            elif file_type == 'audio':
+                file_icon = 'fa-file-video-o '
+            elif file_type == 'image':
+                file_icon = 'fa-file-image-o'
+            elif file_type == 'text':
+                file_icon = 'fa-file-text-o'
+            else:
+                file_icon =  'fa-file'
+            saved_path = r_serv_metadata.hget('metadata_hash:'+hash, 'saved_path')
+            if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
+                b64_vt = True
+                b64_vt_link = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_link')
+                b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+            else:
+                b64_vt = False
+                b64_vt_link = ''
+                b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+                # hash never refreshed
+                if b64_vt_report is None:
+                    b64_vt_report = ''
+
+            l_64.append( (file_icon, estimated_type, hash, saved_path, nb_in_file, b64_vt, b64_vt_link, b64_vt_report) )
 
     crawler_metadata = {}
     if 'infoleak:submission="crawler"' in l_tags:
@@ -171,13 +212,15 @@ def showpaste(content_range):
 
     return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, active_galaxies=active_galaxies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list,
                             crawler_metadata=crawler_metadata,
-                            misp=misp, hive=hive, misp_eventid=misp_eventid, misp_url=misp_url, hive_caseid=hive_caseid, hive_url=hive_url)
+                            l_64=l_64, vt_enabled=vt_enabled, misp=misp, hive=hive, misp_eventid=misp_eventid, misp_url=misp_url, hive_caseid=hive_caseid, hive_url=hive_url)
 
 # ============ ROUTES ============
 
 @showsavedpastes.route("/showsavedpaste/") #completely shows the paste in a new tab
 def showsavedpaste():
-    return showpaste(0)
+    requested_path = request.args.get('paste', '')
+    print(requested_path)
+    return showpaste(0, requested_path)
 
 @showsavedpastes.route("/showsavedrawpaste/") #shows raw
 def showsavedrawpaste():
@@ -189,7 +232,8 @@ def showsavedrawpaste():
 @showsavedpastes.route("/showpreviewpaste/")
 def showpreviewpaste():
     num = request.args.get('num', '')
-    return "|num|"+num+"|num|"+showpaste(max_preview_modal)
+    requested_path = request.args.get('paste', '')
+    return "|num|"+num+"|num|"+showpaste(max_preview_modal, requested_path)
 
 
 @showsavedpastes.route("/getmoredata/")
@@ -219,6 +263,27 @@ def showDiff():
 @showsavedpastes.route('/screenshot/<path:filename>')
 def screenshot(filename):
     return send_from_directory(SCREENSHOT_FOLDER, filename+'.png', as_attachment=True)
+
+@showsavedpastes.route('/send_file_to_vt/', methods=['POST'])
+def send_file_to_vt():
+    b64_path = request.form['b64_path']
+    paste = request.form['paste']
+    hash = request.form['hash']
+
+    b64_full_path = os.path.join(os.environ['AIL_HOME'], b64_path)
+    b64_content = ''
+    with open(b64_full_path, 'rb') as f:
+        b64_content = f.read()
+
+    files = {'file': (hash, b64_content)}
+    response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params=vt_auth)
+    json_response = response.json()
+    print(json_response)
+
+    vt_b64_link = json_response['permalink'].split('analysis')[0] + 'analysis/'
+    r_serv_metadata.hset('metadata_hash:'+hash, 'vt_link', vt_b64_link)
+
+    return redirect(url_for('showsavedpastes.showsavedpaste', paste=paste))
 
 # ========= REGISTRATION =========
 app.register_blueprint(showsavedpastes)

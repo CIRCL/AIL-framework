@@ -153,3 +153,18 @@ UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
 
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
+
+# VT
+try:
+    from virusTotalKEYS import vt_key
+    if vt_key != '':
+        vt_auth = vt_key
+        vt_enabled = True
+        print('VT submission is enabled')
+    else:
+        vt_enabled = False
+        print('VT submission is disabled')
+except:
+    vt_auth = {'apikey': cfg.get("Flask", "max_preview_char")}
+    vt_enabled = False
+    print('VT submission is disabled')

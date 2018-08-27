@@ -167,6 +167,7 @@ if __name__ == '__main__':
         try:
             Analyse(message, server)
         except TimeoutException:
+            p.incr_module_timeout_statistic()
             print ("{0} processing timeout".format(message))
             continue
         else:
