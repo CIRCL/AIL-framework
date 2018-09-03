@@ -23,4 +23,7 @@ WORKDIR /opt/AIL
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
-CMD bash docker_start.sh
+RUN ./pystemon/install.sh
+
+COPY docker.sh /docker.sh
+ENTRYPOINT ["/bin/bash", "docker.sh"]
