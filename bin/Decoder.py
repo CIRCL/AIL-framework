@@ -3,7 +3,7 @@
 """
     Decoder module
 
-    Dectect Binary and decode it
+    Dectect and decode content based on the provided decoder function.
 """
 import time
 import os

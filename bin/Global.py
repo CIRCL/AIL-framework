@@ -4,20 +4,11 @@
 The ZMQ_Feed_Q Module
 =====================
 
-This module is consuming the Redis-list created by the ZMQ_Feed_Q Module,
+This module is consuming the Redis-list created by the Mixer Module,
 And save the paste on disk to allow others modules to work on them.
 
 ..todo:: Be able to choose to delete or not the saved paste after processing.
 ..todo:: Store the empty paste (unprocessed) somewhere in Redis.
-
-..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
-the same Subscriber name in both of them.
-
-Requirements
-------------
-
-*Need running Redis instances.
-*Need the ZMQ_Feed_Q Module running to be able to work properly.
 
 """
 import base64

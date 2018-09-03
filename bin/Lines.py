@@ -2,11 +2,10 @@
 # -*-coding:UTF-8 -*
 
 """
-The ZMQ_PubSub_Lines Module
+The Lines Module
 ============================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Line_Q
-Module.
+This module is consuming the Redis-list created by Global Module.
 
 It perform a sorting on the line's length and publish/forward them to
 differents channels:
@@ -16,15 +15,6 @@ differents channels:
 
 The collected informations about the processed pastes
 (number of lines and maximum length line) are stored in Redis.
-
-..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
-the same Subscriber name in both of them.
-
-Requirements
-------------
-
-*Need running Redis instances. (LevelDB & Redis)
-*Need the ZMQ_PubSub_Line_Q Module running to be able to work properly.
 
 """
 import argparse

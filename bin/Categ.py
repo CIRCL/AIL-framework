@@ -4,12 +4,9 @@
 The ZMQ_PubSub_Categ Module
 ============================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q
-Module.
-
 Each words files created under /files/ are representing categories.
 This modules take these files and compare them to
-the stream of data given by the ZMQ_PubSub_Tokenize_Q  Module.
+the stream of data.
 
 When a word from a paste match one or more of these words file, the filename of
 the paste is published/forwarded to the next modules.
@@ -25,15 +22,10 @@ Implementing modules can start here, create your own category file,
 and then create your own module to treat the specific paste matching this
 category.
 
-..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
-the same Subscriber name in both of them.
-
 Requirements
 ------------
 
-*Need running Redis instances. (Redis)
 *Categories files of words in /files/ need to be created
-*Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
 import os

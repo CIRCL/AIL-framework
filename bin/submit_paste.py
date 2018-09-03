@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+'''
+This module can be used to manually submit a paste to the system.
+'''
+
 import configparser
 import os
 import sys

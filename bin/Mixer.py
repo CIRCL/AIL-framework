@@ -4,7 +4,8 @@
 The Mixer Module
 ================
 
-This module is consuming the Redis-list created by the ZMQ_Feed_Q Module.
+This module is consuming the Redis-list created by the ZMQ_Feed Module.
+It is responsible to feeding data to the all plateform.
 
 This module take all the feeds provided in the config.
 Depending on the configuration, this module will process the feed as follow:

@@ -2,7 +2,7 @@
 # -*-coding:UTF-8 -*
 
 """
-The CreditCards Module
+The Mail Module
 ======================
 
 This module is consuming the Redis-list created by the Categ module.

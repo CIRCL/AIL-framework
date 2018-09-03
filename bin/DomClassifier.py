@@ -6,7 +6,7 @@ The DomClassifier Module
 ============================
 
 The DomClassifier modules extract and classify Internet domains/hostnames/IP addresses from
-the out output of the Global module.
+the output of the Global module. Also performs DNS lookup.
 
 """
 import time
