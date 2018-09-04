@@ -25,5 +25,5 @@ ENV LANG C.UTF-8
 
 RUN ./pystemon/install.sh
 
-COPY docker.sh /docker.sh
-ENTRYPOINT ["/bin/bash", "docker.sh"]
+COPY docker_start.sh /docker_start.sh
+ENTRYPOINT ["/bin/bash", "docker_start.sh"]
