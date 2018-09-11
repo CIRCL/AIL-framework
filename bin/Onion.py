@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
-The Onion Module
+The ZMQ_Sub_Onion Module
 ============================
+
+This module is consuming the Redis-list created by the ZMQ_Sub_Onion_Q Module.
 
 It trying to extract url from paste and returning only ones which are tor
 related (.onion)
 
     ..seealso:: Paste method (get_regex)
+
+..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
+the same Subscriber name in both of them.
+
+Requirements
+------------
+
+*Need running Redis instances. (Redis)
+*Need the ZMQ_Sub_Onion_Q Module running to be able to work properly.
 
 """
 import pprint

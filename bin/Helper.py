@@ -7,6 +7,9 @@ Queue helper module
 This module subscribe to a Publisher stream and put the received messages
 into a Redis-list waiting to be popped later by others scripts.
 
+..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
+the same Subscriber name in both of them.
+
 """
 import redis
 import configparser

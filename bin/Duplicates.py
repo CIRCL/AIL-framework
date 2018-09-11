@@ -9,6 +9,8 @@ This huge module is, in short term, checking duplicates.
 Its input comes from other modules, namely:
     Credential, CreditCard, Keys, Mails, SQLinjectionDetection, CVE and Phone
 
+This one differ from v1 by only using redis and not json file stored on disk
+
 Perform comparisions with ssdeep and tlsh
 
 Requirements:

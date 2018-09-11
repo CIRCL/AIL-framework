@@ -2,10 +2,10 @@
 # -*-coding:UTF-8 -*
 
 """
-The Indexer Module
+The ZMQ_Sub_Indexer Module
 ============================
 
-This module is fetching the list of files to be processed
+The ZMQ_Sub_Indexer modules is fetching the list of files to be processed
 and index each file with a full-text indexer (Whoosh until now).
 
 """
