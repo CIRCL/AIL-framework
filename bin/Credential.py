@@ -162,3 +162,13 @@ if __name__ == "__main__":
             for partCred in splitedCred:
                 if len(partCred) > minimumLengthThreshold:
                     server_cred.sadd(partCred, uniq_num_cred)
+
+            build_top_username(uniq_num_path, paste._get_p_date(), server_cred)
+
+# hset:
+# mostPostedUser:DATE -> uniq_cred_id -> count
+def build_top_username(uniq, date, serv):
+    pass
+
+
+

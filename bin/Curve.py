@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
-This module is consuming the Redis-list created by the ZMQ_Sub_Curve_Q Module.
-
 This modules update a .csv file used to draw curves representing selected
 words and their occurency per day.
 
 ..note:: The channel will have the name of the file created.
-
-..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
-the same Subscriber name in both of them.
 
 
 This Module is also used for term frequency.

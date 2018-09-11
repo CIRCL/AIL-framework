@@ -4,17 +4,13 @@
 The Tokenize Module
 ===================
 
-This module is consuming the Redis-list created by the ZMQ_PubSub_Tokenize_Q
-Module.
+This module is consuming the Redis-list created by the Global Module.
 
 It tokenize the content of the paste and publish the result in the following
 format:
     channel_name+' '+/path/of/the/paste.gz+' '+tokenized_word+' '+scoring
 
     ..seealso:: Paste method (_get_top_words)
-
-..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
-the same Subscriber name in both of them.
 
 Requirements
 ------------
