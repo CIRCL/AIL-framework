@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-'''
-This module can be used to see the health of modules in the system, and also
-perform basics statistics about performances.
-'''
 
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
     Button, Label

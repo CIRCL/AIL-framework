@@ -8,10 +8,6 @@ from collections import OrderedDict
 import sys
 import shutil
 
-'''
-Helper module to update the configuration file, looking if the config is up-to-date.
-'''
-
 
 #return true if the configuration is up-to-date
 def main():

@@ -8,6 +8,11 @@ It trying to extract Bitcoin address and secret key from paste
 
     ..seealso:: Paste method (get_regex)
 
+Requirements
+------------
+
+*Need running Redis instances. (Redis).
+
 """
 
 from packages import Paste

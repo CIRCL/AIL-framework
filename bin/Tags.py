@@ -5,7 +5,7 @@
 The Tags Module
 ================================
 
-This module create tags on pastes.
+This module create tags.
 
 """
 import redis

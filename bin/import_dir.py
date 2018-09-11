@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
-This module can be used to import a directory and its subsequent folder in AIL.
-''
-
 import zmq
 import base64
 from io import StringIO
