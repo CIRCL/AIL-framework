@@ -171,7 +171,6 @@ if __name__ == '__main__':
         create_pie_chart(args.country, 'credential_by_tld:', date, "AIL: Credential leak by tld", path, 'AIL_credential_by_tld.png')
         create_pie_chart(args.country, 'mail_by_tld:', date, "AIL: mail leak by tld", path, 'AIL_mail_by_tld.png')
         create_pie_chart(args.country, 'SQLInjection_by_tld:', date, "AIL: SQLInjection by tld", path, 'AIL_SQLInjection_by_tld.png')
-        create_pie_chart(args.country.upper(), 'domain_by_tld:', date, "AIL: Domain by tld", path, 'AIL_domain_by_tld.png')
         create_pie_chart(args.country.upper(), 'iban_by_country:', date, "AIL: Iban by country", path, 'AIL_iban_by_country.png')
     elif args.type == 1:
         create_pie_chart(args.country, 'credential_by_tld:', date, "AIL: Credential leak by tld", path, 'AIL_credential_by_tld.png')
