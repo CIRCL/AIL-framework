@@ -2,7 +2,9 @@
 # -*-coding:UTF-8 -*
 
 '''
-lu
+Create statistics pie charts by tld
+
+Default tld: lu
 '''
 
 import os
@@ -64,7 +66,7 @@ def create_pie_chart(country ,db_key, date, pie_title, path, save_name):
 
     ax1.set_title(pie_title)
     #plt.show()
-    plt.savefig(os.path.join(path, save_name))
+    plt.savefig(os.path.join(path,save_name))
     plt.close(fig1)
 
 def create_donut_chart(db_key, date, pie_title, path, save_name):
@@ -126,7 +128,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='''This script is a part of the Analysis Information Leak
-        framework. It create pie charts on a country statistics".''',
+        framework. Create statistics pie charts".''',
         epilog='Example: ./create_lu_graph.py 0 lu now, create_lu_graph.py 0 lu 201807')
 
     parser.add_argument('type', type=int, default=0,
@@ -135,12 +137,11 @@ if __name__ == '__main__':
                         1: credential_pie,
                         2: mail_pie
                         3: sqlinjection_pie,
-                        4: domain_pie,
-                        5: iban_pie,''',
-                        choices=[0, 1, 2, 3, 4, 5], action='store')
+                        4: iban_pie,''',
+                        choices=[0, 1, 2, 3, 4], action='store')
 
-    parser.add_argument('country', type=str, default="de",
-                        help='''The country code, de:default''',
+    parser.add_argument('country', type=str, default="lu",
+                        help='''The country code, lu:default''',
                         action='store')
 
     parser.add_argument('date', type=str, default="now",
@@ -148,7 +149,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    path = os.path.join(os.environ['AIL_HOME'], 'doc') # path to module config file
+    path = os.path.join(os.environ['AIL_HOME'], 'doc', 'statistics') # save path
 
     config_section = 'ARDB_Statistics'
 
@@ -171,7 +172,7 @@ if __name__ == '__main__':
         create_pie_chart(args.country, 'mail_by_tld:', date, "AIL: mail leak by tld", path, 'AIL_mail_by_tld.png')
         create_pie_chart(args.country, 'SQLInjection_by_tld:', date, "AIL: SQLInjection by tld", path, 'AIL_SQLInjection_by_tld.png')
         create_pie_chart(args.country.upper(), 'domain_by_tld:', date, "AIL: Domain by tld", path, 'AIL_domain_by_tld.png')
-        create_pie_chart(args.country.upper(), 'iban_by_tld:', date, "AIL: Iban by tld", path, 'AIL_iban_by_tld.png')
+        create_pie_chart(args.country.upper(), 'iban_by_country:', date, "AIL: Iban by country", path, 'AIL_iban_by_country.png')
     elif args.type == 1:
         create_pie_chart(args.country, 'credential_by_tld:', date, "AIL: Credential leak by tld", path, 'AIL_credential_by_tld.png')
     elif args.type == 2:
@@ -179,6 +180,4 @@ if __name__ == '__main__':
     elif args.type == 3:
         create_pie_chart(args.country, 'SQLInjection_by_tld:', date, "AIL: sqlInjection by tld", path, 'AIL_sqlInjectionl_by_tld.png')
     elif args.type == 4:
-        create_pie_chart(args.country.upper(), 'domain_by_tld:', date, "AIL: Domain by tld", path, 'AIL_domain_by_tld.png')
-    elif args.type == 5:
-        create_pie_chart(args.country.upper(), 'iban_by_tld:', date, "AIL: Iban by tld", path, 'AIL_iban_by_tld.png')
+        create_pie_chart(args.country.upper(), 'iban_by_country:', date, "AIL: Iban by country", path, 'AIL_iban_by_country.png')

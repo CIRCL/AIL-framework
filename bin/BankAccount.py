@@ -62,7 +62,7 @@ def check_all_iban(l_iban, paste, filename):
             if is_valid_iban(iban):
                 print('------')
                 nb_valid_iban = nb_valid_iban + 1
-                server_statistics.hincrby('iban_by_tld:'+date, iban[0:2], 1)
+                server_statistics.hincrby('iban_by_country:'+date, iban[0:2], 1)
 
     if(nb_valid_iban > 0):
         to_print = 'Iban;{};{};{};'.format(paste.p_source, paste.p_date, paste.p_name)
