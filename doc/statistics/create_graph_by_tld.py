@@ -7,6 +7,8 @@ Create statistics pie charts by tld
 Default tld: lu
 '''
 
+import matplotlib
+matplotlib.use('Agg')
 import os
 import sys
 import redis

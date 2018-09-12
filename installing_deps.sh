@@ -5,7 +5,7 @@ set -x
 
 sudo apt-get update
 
-sudo apt-get install python3-pip python-virtualenv python3-dev libfreetype6-dev \
+sudo apt-get install python3-pip python-virtualenv python3-dev python3-tk libfreetype6-dev \
     screen g++ python-tk unzip libsnappy-dev cmake -y
 
 #optional tor install
