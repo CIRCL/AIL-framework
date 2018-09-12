@@ -38,6 +38,7 @@ def checking_MX_record(r_serv, adress_set, addr_dns):
     score = 0
     num = len(adress_set)
     WalidMX = set([])
+    validMX = {}
     # Transforming the set into a string
     MXdomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", str(adress_set).lower())
     resolver = dns.resolver.Resolver()
@@ -46,20 +47,23 @@ def checking_MX_record(r_serv, adress_set, addr_dns):
     resolver.lifetime = 2
     if MXdomains != []:
 
-            for MXdomain in set(MXdomains):
+            for MXdomain in MXdomains:
                 try:
+                    MXdomain = MXdomain[1:]
                     # Already in Redis living.
-                    if r_serv.exists(MXdomain[1:]):
+                    if r_serv.exists(MXdomain):
                         score += 1
-                        WalidMX.add(MXdomain[1:])
+                        WalidMX.add(MXdomain)
+                        validMX[MXdomain] = validMX.get(MXdomain, 0) + 1
                     # Not already in Redis
                     else:
                         # If I'm Walid MX domain
-                        if resolver.query(MXdomain[1:], rdtype=dns.rdatatype.MX):
+                        if resolver.query(MXdomain, rdtype=dns.rdatatype.MX):
                             # Gonna be added in redis.
-                            r_serv.setex(MXdomain[1:], 1, timedelta(days=1))
+                            r_serv.setex(MXdomain, 1, timedelta(days=1))
                             score += 1
-                            WalidMX.add(MXdomain[1:])
+                            WalidMX.add(MXdomain)
+                            validMX[MXdomain] = validMX.get(MXdomain, 0) + 1
                         else:
                             pass
 
@@ -86,13 +90,14 @@ def checking_MX_record(r_serv, adress_set, addr_dns):
 
                 except dns.resolver.Timeout:
                     print('timeout')
-                    r_serv.setex(MXdomain[1:], 1, timedelta(days=1))
+                    r_serv.setex(MXdomain, 1, timedelta(days=1))
 
                 except Exception as e:
                     print(e)
 
     publisher.debug("emails before: {0} after: {1} (valid)".format(num, score))
-    return (num, WalidMX)
+    #return (num, WalidMX)
+    return (num, validMX)
 
 
 def checking_A_record(r_serv, domains_set):

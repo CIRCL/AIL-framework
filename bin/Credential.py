@@ -28,6 +28,7 @@ import sys
 from packages import Paste
 from pubsublogger import publisher
 from Helper import Process
+import datetime
 import re
 import redis
 from pyfaup.faup import Faup
@@ -58,6 +59,12 @@ if __name__ == "__main__":
         db=p.config.get("ARDB_TermCred", "db"),
         decode_responses=True)
 
+    server_statistics = redis.StrictRedis(
+        host=p.config.get("ARDB_Statistics", "host"),
+        port=p.config.getint("ARDB_Statistics", "port"),
+        db=p.config.getint("ARDB_Statistics", "db"),
+        decode_responses=True)
+
     criticalNumberToAlert = p.config.getint("Credential", "criticalNumberToAlert")
     minTopPassList = p.config.getint("Credential", "minTopPassList")
 
@@ -65,6 +72,7 @@ if __name__ == "__main__":
     #regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
     regex_cred = "[a-zA-Z0-9\\._-]+@[a-zA-Z0-9\\.-]+\.[a-zA-Z]{2,6}[\\rn :\_\-]{1,10}[a-zA-Z0-9\_\-]+"
     regex_site_for_stats = "@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:"
+
     while True:
         message = p.get_from_set()
         if message is None:
@@ -132,6 +140,13 @@ if __name__ == "__main__":
 
             if sites_set:
                 print("=======> Probably on : {}".format(', '.join(sites_set)))
+
+            date = datetime.datetime.now().strftime("%Y%m")
+            for cred in creds:
+                maildomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
+                faup.decode(maildomains)
+                tld = faup.get()['tld']
+                server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
         else:
             publisher.info(to_print)
             print('found {} credentials'.format(len(creds)))
