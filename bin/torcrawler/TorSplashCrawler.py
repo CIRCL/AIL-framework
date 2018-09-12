@@ -96,6 +96,7 @@ class TorSplashCrawler():
             yield SplashRequest(
                 self.start_urls,
                 self.parse,
+                errback=self.errback_catcher,
                 endpoint='render.json',
                 meta={'father': self.original_paste},
                 args={  'html': 1,
@@ -121,6 +122,9 @@ class TorSplashCrawler():
             # save new paste on disk
             if self.save_crawled_paste(filename_paste, response.data['html']):
 
+                # add this paste to the domain crawled set # TODO: # FIXME:  put this on cache ?
+                self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
+
                 self.r_serv_onion.sadd('{}_up:{}'.format(self.type, self.full_date), self.domains[0])
                 self.r_serv_onion.sadd('full_{}_up'.format(self.type), self.domains[0])
                 self.r_serv_onion.sadd('month_{}_up:{}'.format(self.type, self.date_month), self.domains[0])
@@ -129,10 +133,6 @@ class TorSplashCrawler():
                 if not self.r_serv_onion.exists('{}_metadata:{}'.format(self.type, self.domains[0])):
                     self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'first_seen', self.full_date)
                 self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'last_seen', self.full_date)
-                self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'paste_parent', self.original_paste)
-
-                # add onion screenshot history
-                self.r_serv_onion.sadd('{}_history:{}'.format(self.type, self.domains[0]), self.full_date)
 
                 #create paste metadata
                 self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
@@ -170,6 +170,7 @@ class TorSplashCrawler():
                     yield SplashRequest(
                         link.url,
                         self.parse,
+                        errback=self.errback_catcher,
                         endpoint='render.json',
                         meta={'father': relative_filename_paste},
                         args={  'html': 1,
@@ -179,10 +180,13 @@ class TorSplashCrawler():
                                 'wait': 10}
                         #errback=self.errback_catcher
                     )
-        '''
+
         def errback_catcher(self, failure):
             # catch all errback failures,
             self.logger.error(repr(failure))
+            print('failure')
+            print(failure)
+            print(failure.request.meta['item'])
 
             #if isinstance(failure.value, HttpError):
             if failure.check(HttpError):
@@ -196,14 +200,16 @@ class TorSplashCrawler():
                 # this is the original request
                 request = failure.request
                 print(DNSLookupError)
+                print('DNSLookupError')
                 self.logger.error('DNSLookupError on %s', request.url)
 
             #elif isinstance(failure.value, TimeoutError):
             elif failure.check(TimeoutError):
                 request = failure.request
+                print('TimeoutError')
                 print(TimeoutError)
                 self.logger.error('TimeoutError on %s', request.url)
-        '''
+
 
         def save_crawled_paste(self, filename, content):
 

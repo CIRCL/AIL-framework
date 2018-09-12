@@ -57,6 +57,12 @@ def crawl_onion(url, domain, date, date_month):
 
 if __name__ == '__main__':
 
+    if len(sys.argv) != 2:
+        print('usage:', 'Crawler.py', 'type_hidden_service (onion or i2p or regular)')
+        exit(1)
+
+    type_hidden_service = sys.argv[1]
+
     publisher.port = 6380
     publisher.channel = "Script"
 
@@ -72,7 +78,6 @@ if __name__ == '__main__':
     url_i2p = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
     re.compile(url_i2p)
 
-    type_hidden_service = 'onion'
     if type_hidden_service == 'onion':
         regex_hidden_service = url_onion
         splash_url = p.config.get("Crawler", "splash_url_onion")
@@ -89,7 +94,11 @@ if __name__ == '__main__':
         print('incorrect crawler type: {}'.format(type_hidden_service))
         exit(0)
 
+    print(type_hidden_service)
+
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
+
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
     #signal.signal(signal.SIGINT, signal_handler)
 
@@ -113,8 +122,10 @@ if __name__ == '__main__':
 
     while True:
 
-        # Recovering the streamed message informations.
+        # Recovering the streamed message informations. http://eepsites.i2p
         message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
+        #message = 'http://i2pwiki.i2p;test'
+        #message = 'http://i2host.i2p;test'
 
         # # FIXME: remove
         if message is None:
@@ -122,13 +133,19 @@ if __name__ == '__main__':
             message = r_onion.spop('mess_onion')
 
         if message is not None:
+            print(message)
 
             splitted = message.split(';')
             if len(splitted) == 2:
                 url, paste = splitted
+                paste = paste.replace(PASTES_FOLDER+'/', '')
+                print(paste)
+                '''
                 if not '.onion' in url:
                     print('not onion')
                     continue
+                '''
+
 
                 url_list = re.findall(regex_hidden_service, url)[0]
                 if url_list[1] == '':
@@ -137,7 +154,7 @@ if __name__ == '__main__':
                 link, s, credential, subdomain, domain, host, port, \
                     resource_path, query_string, f1, f2, f3, f4 = url_list
                 domain = url_list[4]
-                r_onion.srem('onion_domain_crawler_queue', domain)
+                r_onion.srem('{}_domain_crawler_queue'.format(type_hidden_service), domain)
 
                 domain_url = 'http://{}'.format(domain)
 
@@ -157,6 +174,8 @@ if __name__ == '__main__':
 
                         crawl_onion(url, domain, date, date_month)
                         if url != domain_url:
+                            print(url)
+                            print(domain_url)
                             crawl_onion(domain_url, domain, date, date_month)
 
                         # save down onion
@@ -172,6 +191,17 @@ if __name__ == '__main__':
 
                         # last check
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
+
+                        # last_father
+                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'paste_parent', paste)
+
+                        # add onion screenshot history
+                            # add crawled days
+                        if r_onion.lindex('{}_history:{}'.format(type_hidden_service, domain), 0) != date:
+                            r_onion.lpush('{}_history:{}'.format(type_hidden_service, domain), date)
+                            # add crawled history by date
+                        r_onion.lpush('{}_history:{}:{}'.format(type_hidden_service, domain, date), paste) #add datetime here
+
 
                         # check external onions links (full_scrawl)
                         external_domains = set()
@@ -193,6 +223,12 @@ if __name__ == '__main__':
 
                         r_onion.lpush('last_{}'.format(type_hidden_service), domain)
                         r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
+
+                        #send all crawled domain past
+                        msg = domain
+                        p.populate_set_out(msg, 'DomainSubject')
+
+                        #time.sleep(30)
 
             else:
                 continue

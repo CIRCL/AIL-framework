@@ -39,6 +39,23 @@ def get_date_range(num_day):
 
     return list(reversed(date_list))
 
+def unpack_paste_tags(p_tags):
+    l_tags = []
+    for tag in p_tags:
+        complete_tag = tag
+        tag = tag.split('=')
+        if len(tag) > 1:
+            if tag[1] != '':
+                tag = tag[1][1:-1]
+            # no value
+            else:
+                tag = tag[0][1:-1]
+        # use for custom tags
+        else:
+            tag = tag[0]
+        l_tags.append( (tag, complete_tag) )
+    return l_tags
+
 def get_onion_status(domain, date):
     if r_serv_onion.sismember('onion_up:'+date , domain):
         return True
@@ -76,43 +93,39 @@ def onion_domain():
         # # TODO: FIXME return 404
 
     last_check = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'last_check')
+    last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
     first_seen = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'first_seen')
-    domain_paste = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'paste_parent')
-    date_crawled = r_serv_onion.smembers('onion_history:{}'.format(onion_domain))
+    first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
+    origin_paste = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'paste_parent')
 
     h = HiddenServices(onion_domain, 'onion')
     l_pastes = h.get_last_crawled_pastes()
+    if l_pastes:
+        status = True
+    else:
+        status = False
     screenshot = h.get_domain_random_screenshot(l_pastes)
     if screenshot:
         screenshot = screenshot[0]
     else:
         screenshot = 'None'
 
+    domain_tags = h.get_domain_tags()
+
+    origin_paste_name = h.get_origin_paste_name()
+    origin_paste_tags = unpack_paste_tags(r_serv_metadata.smembers('tag:{}'.format(origin_paste)))
     paste_tags = []
     path_name = []
     for path in l_pastes:
-        path_name.append(path.replace(PASTES_FOLDER, ''))
+        path_name.append(path.replace(PASTES_FOLDER+'/', ''))
         p_tags = r_serv_metadata.smembers('tag:'+path)
-        l_tags = []
-        for tag in p_tags:
-            complete_tag = tag
-            tag = tag.split('=')
-            if len(tag) > 1:
-                if tag[1] != '':
-                    tag = tag[1][1:-1]
-                # no value
-                else:
-                    tag = tag[0][1:-1]
-            # use for custom tags
-            else:
-                tag = tag[0]
-            l_tags.append( (tag, complete_tag) )
-        paste_tags.append(l_tags)
+        paste_tags.append(unpack_paste_tags(p_tags))
 
     return render_template("showDomain.html", domain=onion_domain, last_check=last_check, first_seen=first_seen,
-                            l_pastes=l_pastes, paste_tags=paste_tags, l_tags=l_tags, bootstrap_label=bootstrap_label,
-                            path_name=path_name,
-                            domain_paste=domain_paste, screenshot=screenshot)
+                            l_pastes=l_pastes, paste_tags=paste_tags, bootstrap_label=bootstrap_label,
+                            path_name=path_name, origin_paste_tags=origin_paste_tags, status=status,
+                            origin_paste=origin_paste, origin_paste_name=origin_paste_name,
+                            domain_tags=domain_tags, screenshot=screenshot)
 
 # ============= JSON ==============
 @hiddenServices.route("/hiddenServices/domain_crawled_7days_json", methods=['GET'])

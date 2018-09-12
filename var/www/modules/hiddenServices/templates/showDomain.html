@@ -36,35 +36,61 @@
 
 					<div class="col-md-6">
 						<div class="row">
-							<div class="row">
-							<div class="panel panel-default">
+							<div class="panel panel-info">
 								<div class="panel-heading">
-									<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
-								</div>
+									{% if status %}
+										<div class="pull-right" style="color:Green;">
+											<i class="fa fa-check-circle fa-2x"></i>
+												UP
+										</div>
+									{% else %}
+										<div class="pull-right" style="color:Red;">
+											<i class="fa fa-times-circle fa-2x"></i>
+												DOWN
+										</div>
+									{% endif %}
+									<h3>{{ domain }} :</h3>
+									<ul class="list-group">
+										<li class="list-group-item">
 
-										<table class="table table-hover table-striped">
-											<tbody>
-												<tr>
-													<td>Domain</td>
-													<td>{{ domain }}</td>
-												</tr>
-												<tr>
-													<td>First Seen</td>
-													<td>{{ first_seen }}</td>
-												</tr>
-												<tr>
-													<td>Last Check</td>
-													<td>{{ last_check }}</td>
-												</tr>
-												<tr>
-													<td>Origin Paste</td>
-													<td>
-														<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=domain_paste) }}" />{{ domain_paste }}</a>
-													</td>
-												</tr>
-											</tbody>
-										</table>
-									</div>
+											<table class="table table-condensed">
+							          <thead>
+							            <tr>
+							              <th>First Seen</th>
+							              <th>Last Check</th>
+							            </tr>
+							          </thead>
+							          <tbody>
+							            <tr>
+								            <td class="panelText"><a href="#">{{ first_seen }}</a></td>
+								            <td class="panelText"><a href="#">{{ last_check }}</a></td>
+							            </tr>
+							          </tbody>
+							        </table>
+
+										</li>
+										<li class="list-group-item">
+											Origin Paste: <a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=origin_paste) }}" />{{ origin_paste_name }}</a>
+											<div>
+												{% for tag in origin_paste_tags %}
+												<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+													<span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
+												</a>
+												{%  endfor %}
+												<br>
+											</div>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div>
+								{% for tag in domain_tags %}
+								<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+									<span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }} <i>{{ domain_tags[tag] }}</i></span>
+								</a>
+								{%  endfor %}
+								<br>
+								<br>
 							</div>
 
 								<table class="test table table-striped table-bordered table-hover table-responsive " id="myTable_">

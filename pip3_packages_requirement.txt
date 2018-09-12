@@ -58,6 +58,9 @@ pycountry
 # To fetch Onion urls
 PySocks
 
+#extract subject
+newspaper3k
+
 # decompress files
 sflock
 

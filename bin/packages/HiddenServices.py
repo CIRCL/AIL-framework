@@ -61,6 +61,7 @@ class HiddenServices(object):
 
         self.domain = domain
         self.type = type
+        self.tags = {}
 
         if type == 'onion':
             self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
@@ -74,6 +75,20 @@ class HiddenServices(object):
             ## TODO: # FIXME: add error
             pass
 
+    def get_origin_paste_name(self):
+        origin_paste = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'paste_parent')
+        if origin_paste is None:
+            return ''
+        return origin_paste.replace(self.paste_directory+'/', '')
+
+    def get_domain_tags(self):
+        return self.tags
+
+    def update_domain_tags(self, children):
+        p_tags = self.r_serv_metadata.smembers('tag:'+children)
+        for tag in p_tags:
+            self.tags[tag] = self.tags.get(tag, 0) + 1
+
     #todo use the right paste
     def get_last_crawled_pastes(self):
         paste_parent = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'paste_parent')
@@ -81,8 +96,10 @@ class HiddenServices(object):
         return self.get_all_pastes_domain(paste_parent)
 
     def get_all_pastes_domain(self, father):
+        if father is None:
+            return []
         l_crawled_pastes = []
-        paste_parent = father.replace(self.paste_directory, '')[1:]
+        paste_parent = father.replace(self.paste_directory+'/', '')
         paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_parent))
         ## TODO: # FIXME: remove me
         paste_children = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
@@ -90,6 +107,7 @@ class HiddenServices(object):
         for children in paste_childrens:
             if self.domain in children:
                 l_crawled_pastes.append(children)
+                self.update_domain_tags(children)
                 l_crawled_pastes.extend(self.get_all_pastes_domain(children))
         return l_crawled_pastes
 
@@ -97,7 +115,7 @@ class HiddenServices(object):
         l_screenshot_paste = []
         for paste in l_crawled_pastes:
             ## FIXME: # TODO: remove me
-            paste= paste.replace(self.paste_directory, '')[1:]
+            paste= paste.replace(self.paste_directory+'/', '')
 
             paste = paste.replace(self.paste_crawled_directory_name, '')
             if os.path.isfile( '{}{}.png'.format(self.screenshot_directory, paste) ):

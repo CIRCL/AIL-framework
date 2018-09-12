@@ -11,9 +11,10 @@ ardb
 faup
 tlsh
 Blooms
-LEVEL_DB_DATA
 PASTES
+CRAWLED_SCREENSHOT
 BASE64
+HASHS
 DATA_ARDB
 indexdir/
 logs/
