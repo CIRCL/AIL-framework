@@ -68,6 +68,12 @@ if __name__ == '__main__':
         db=cfg.getint("Redis_Mixer_Cache", "db"),
         decode_responses=True)
 
+    server_cache = redis.StrictRedis(
+        host=cfg.get("Redis_Log_submit", "host"),
+        port=cfg.getint("Redis_Log_submit", "port"),
+        db=cfg.getint("Redis_Log_submit", "db"),
+        decode_responses=True)
+
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")
 
@@ -184,7 +190,17 @@ if __name__ == '__main__':
                 publisher.debug("Empty Paste: {0} not processed".format(message))
         else:
             print("Empty Queues: Waiting...")
+
             if int(time.time() - time_1) > refresh_time:
+                # update internal feeder
+                list_feeder = server_cache.hkeys("mixer_cache:list_feeder")
+                if list_feeder:
+                    for feeder in list_feeder:
+                        count = int(server_cache.hget("mixer_cache:list_feeder", feeder))
+                        if count is None:
+                            count = 0
+                        processed_paste_per_feeder[feeder] = processed_paste_per_feeder.get(feeder, 0) + count
+                        processed_paste = processed_paste + count
                 print(processed_paste_per_feeder)
                 to_print = 'Mixer; ; ; ;mixer_all All_feeders Processed {0} paste(s) in {1}sec'.format(processed_paste, refresh_time)
                 print(to_print)
@@ -204,5 +220,8 @@ if __name__ == '__main__':
                     duplicated_paste_per_feeder[feeder] = 0
 
                 time_1 = time.time()
+
+                # delete internal feeder list
+                server_cache.delete("mixer_cache:list_feeder")
             time.sleep(0.5)
             continue

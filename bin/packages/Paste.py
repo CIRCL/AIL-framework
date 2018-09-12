@@ -52,7 +52,7 @@ class Paste(object):
 
     :Example:
 
-    PST = Paste("/home/2013/ZEeGaez5.gz")
+    PST = Paste("/home/2013/01/12/ZEeGaez5.gz")
 
     """
 

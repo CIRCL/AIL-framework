@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Paste information</title>
+  <title>Paste information - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -27,6 +28,11 @@
       overflow-x: hidden;
       width:100%;
     }
+
+		.red_table thead{
+			background: #d91f2d;
+			color: #fff;
+		}
   </style>
 
 </head>
@@ -372,6 +378,48 @@
           </tbody>
           </table>
       {% endif %}
+
+      {% if  l_64|length != 0 %}
+          <h3> Hash files: </h3>
+          <table id="tableb64" class="red_table table table-striped table-bordered">
+          <thead>
+          <tr>
+              <th>estimated type</th>
+              <th>hash</th>
+              <th>saved_path</th>
+              <th>Virus Total</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for b64 in l_64 %}
+              <tr>
+                  <td><i class="fa {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
+                  <td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a> ({{ b64[4] }})</td>
+                  <td>{{ b64[3] }}</td>
+                  <td style="text-align:center;">
+                    {% if  vt_enabled %}
+                      {% if not b64[5] %}
+                        <darkbutton_{{ b64[2] }}>
+                          <button id="submit_vt_{{ b64[2] }}" class="btn btn-primary" onclick="sendFileToVT('{{ b64[2] }}')">
+                            <i class="fa fa-paper-plane"></i>&nbsp;Send this file to VT
+                          </button>
+                        </darkbutton_{{ b64[2] }}>
+                      {% else %}
+                        <a class="btn btn-primary" target="_blank" href="{{ b64[6] }}"><i class="fa fa-link"> VT Report</i></a>
+                      {% endif %}
+                      <button class="btn btn-default" onclick="updateVTReport('{{ b64[2] }}')">
+                        <div id="report_vt_{{ b64[2] }}"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64[7] }}</div>
+                      </button>
+                    {% else %}
+                      Virus Total submission is disabled
+                    {% endif %}
+                  </td>
+              </tr>
+          {% endfor %}
+          </tbody>
+          </table>
+      {% endif %}
+
         <h3> Content: </h3>
         <a href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a>
         <p data-initsize="{{ initsize }}"> <pre id="paste-holder">{{ content }}</pre></p>
@@ -406,7 +454,34 @@
           });
 
         $('#tableDup').DataTable();
+        $('#tableb64').DataTable({
+  				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+  				"iDisplayLength": 5,
+  				"order": [[ 1, "asc" ]]
+  			});
     });
+</script>
+
+<script>
+  function updateVTReport(hash) {
+    //updateReport
+    $.getJSON('/hashDecoded/update_vt_result?hash='+hash,
+      function(data) {
+        content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
+        $( "#report_vt_"+hash ).html(content);
+    });
+  }
+
+  function sendFileToVT(hash) {
+    //send file to vt
+    $.getJSON('/hashDecoded/send_file_to_vt_js?hash='+hash,
+      function(data) {
+        var content = '<a id="submit_vt_'+hash+'" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
+        $('#submit_vt_'+hash).remove();
+        $('darkbutton_'+hash).append(content);
+    });
+  }
+
 </script>
 
 <script>

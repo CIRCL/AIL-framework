@@ -40,6 +40,9 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
     relay_message = "{0} {1}".format(save_path, gzip64encoded)
     p.populate_set_out(relay_message, 'Mixer')
 
+    # increase nb of paste by feeder name
+    r_serv_log_submit.hincrby("mixer_cache:list_feeder", "submitted", 1)
+
     # add tags
     add_tags(ltags, ltagsgalaxies, full_path)
 
@@ -51,6 +54,9 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
 
     print('    {} send to Global'.format(save_path))
     r_serv_log_submit.sadd(uuid + ':paste_submit_link', full_path)
+
+    curr_date = datetime.date.today()
+    serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'submit_paste', 1)
 
     return 0
 
@@ -64,6 +70,8 @@ def addError(uuid, errorMessage):
 def abord_file_submission(uuid, errorMessage):
     addError(uuid, errorMessage)
     r_serv_log_submit.set(uuid + ':end', 1)
+    curr_date = datetime.date.today()
+    serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'submit_abord', 1)
     remove_submit_uuid(uuid)
 
 
@@ -156,6 +164,12 @@ if __name__ == "__main__":
         host=cfg.get("ARDB_Metadata", "host"),
         port=cfg.getint("ARDB_Metadata", "port"),
         db=cfg.getint("ARDB_Metadata", "db"),
+        decode_responses=True)
+
+    serv_statistics = redis.StrictRedis(
+        host=cfg.get('ARDB_Statistics', 'host'),
+        port=cfg.getint('ARDB_Statistics', 'port'),
+        db=cfg.getint('ARDB_Statistics', 'db'),
         decode_responses=True)
 
     expire_time = 120

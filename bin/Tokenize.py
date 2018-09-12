@@ -60,8 +60,9 @@ if __name__ == "__main__":
                         msg = '{} {} {}'.format(paste.p_path, word, score)
                         p.populate_set_out(msg)
             except TimeoutException:
-                 print ("{0} processing timeout".format(paste.p_path))
-                 continue
+                p.incr_module_timeout_statistic()
+                print ("{0} processing timeout".format(paste.p_path))
+                continue
             else:
                 signal.alarm(0)
         else:

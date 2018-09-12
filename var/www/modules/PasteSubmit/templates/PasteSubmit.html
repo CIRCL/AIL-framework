@@ -5,7 +5,8 @@
 	  <meta charset="utf-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	  <title>Analysis Information Leak framework Dashboard</title>
+	  <title>Submit Paste - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
 	  <!-- Core CSS -->
 	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -30,6 +31,8 @@
 <div id="page-wrapper">
 <div class="row">
 	<!-- /.col-lg-12 -->
+
+	
 
 	<form action="/PasteSubmit/submit" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
 
