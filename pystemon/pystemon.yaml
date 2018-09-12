@@ -1,0 +1,230 @@
+#network:   # Network settings
+#  ip: '1.1.1.1'  # Specify source IP address if you want to bind on a specific one
+
+archive:
+  save: yes             # Keep a copy of pasties that triggered alerts
+  save-all: yes         # Keep a copy of all pasties
+  dir: "alerts"         # Directory where matching pasties should be kept
+  dir-all: "archive"    # Directory where all pasties should be kept (if save-all is set to yes)
+  compress: yes         # Store the pasties compressed
+
+engine: re              # Only re (default) or regex (pip install regex) are supported.
+strict_regex: no        # when compiling regex, hard fail or not on error
+
+save-thread: no         # Use a separate thread to save pasties
+
+db:
+  sqlite3:              # Store information about the pastie in a database
+    enable: no          # Activate this DB engine   # NOT FULLY IMPLEMENTED
+    file: 'db.sqlite3'  # The filename of the database
+    lookup: no          # lookup sqlite for already seen pasties
+
+mongo:
+  save: no              # Keep a copy of pasties that triggered alerts
+  save-all: no          # Keep a copy of all pasties
+  save-profile:         # configure which data to save
+    content-on-miss: no # save the content even on miss
+    timestamp: no       # add the timestamp (UTC)
+    url: no             # add the public URL
+    site: no            # add the site
+    id: no              # add the per-site id
+    matched: no         # add the matched status (usefull if content-on-miss = yes)
+    filename: no        # add the local filename (to no store content in mongodb)
+  lookup: no            # lookup mongodb for already seen pasties
+  database: "paste"
+  collection: "paste"
+  url: "mongodb://localhost"
+  user:
+  password:
+
+redis:
+  queue: yes             # Keep a copy of pasties that triggered alerts
+  queue-all: yes         # Keep a copy of all pasties
+  server: "localhost"
+  port: 6379
+  database: 10
+  lookup: no            # lookup redisdb for already seen pasties (NOT IMPLEMENTED)
+
+email:
+  alert: no             # Enable/disable email alerts
+  from: alert@example.com
+  to: alert@example.com
+  server: 127.0.0.1     # Address of the server (hostname or IP)
+  port: 25              # Outgoing SMTP port: 25, 587, ...
+  tls: no               # Enable/disable tls support
+  username: ''          # (optional) Username for authentication. Leave blank for no authentication.
+  password: ''          # (optional) Password for authentication. Leave blank for no authentication.
+  subject: '[pystemon] - {subject}'
+
+#####
+# Definition of regular expressions to search for in the pasties
+#
+search:
+#  - description: ''    # (optional) A human readable description used in alerts.
+#                       #            If left unspecified the search regular expression
+#                       #            will be used as description.
+#    search: ''         # The regular expression to search for.
+#    count: ''          # (optional) How many hits should it have to be interesting?
+#    exclude: ''        # (optional) Do not alert if this regular expression matches
+#    regex-flags: ''    # (optional) Regular expression flags to give to the find function.
+#                       #            Default = re.IGNORECASE
+#                       #            Set to 0 to have no flags set
+#                       #            See http://docs.python.org/2/library/re.html#re.DEBUG for more info.
+#                       #            Warning: when setting this the default is overridden
+#                       #  example: 're.MULTILINE + re.DOTALL + re.IGNORECASE'
+#    to: ''             # (optional) Additional recipients for email alert, comma separated list
+
+  - search: '[^a-zA-Z0-9]example\.com'
+  - search: '[^a-zA-Z0-9]foobar\.com'
+  - description: 'Download (non-porn)'
+    search: 'download'
+    exclude: 'porn|sex|teen'
+    count: 4
+
+#####
+# Configuration section for the paste sites
+#
+threads: 1              # number of download threads per site
+site:
+#  example.com:
+#    archive-url:       # the url where the list of last pasties is present
+#                       # example: 'http://pastebin.com/archive'
+#    archive-regex:     # a regular expression to extract the pastie-id from the page.
+#                       # do not forget the () to extract the pastie-id
+#                       # example: '<a href="/(\w{8})">.+</a></td>'
+#    download-url:      # url for the raw pastie.
+#                       # Should contain {id} on the place where the ID of the pastie needs to be placed
+#                       # example: 'http://pastebin.com/raw.php?i={id}'
+#    public-url:        # optional, defaults to be the same as download-url, so it should meet the same requirements
+#                       # is used for display in logging and e-mail notifications
+#    update-max: 40     # every X seconds check for new updates to see if new pasties are available
+#    update-min: 30     # a random number will be chosen between these two numbers
+#    pastie-classname:  # OPTIONAL: The name of a custom Class that inherits from Pastie
+#                       # This is practical for sites that require custom fetchPastie() functions
+
+  pastebin.com:
+    archive-url: 'https://pastebin.com/archive'
+    archive-regex: '<a href="/(\w{8})">.+</a></td>'
+    download-url: 'https://pastebin.com/raw/{id}'
+    update-max: 50
+    update-min: 40
+
+  # See https://pastebin.com/api_scraping_faq , you will need a pro account on pastebin
+  pastebin.com_pro:
+    archive-url: 'https://scrape.pastebin.com/api_scraping.php?limit=500'
+    archive-regex: '"key": "(.+)",'
+    download-url: 'https://scrape.pastebin.com/api_scrape_item.php?i={id}'
+    public-url: 'https://pastebin.com/raw/{id}'
+    update-max: 50
+    update-min: 40
+
+  slexy.org:
+    archive-url: 'https://slexy.org/recent'
+    archive-regex: '<a href="/view/([a-zA-Z0-9]+)">View paste</a>'
+    download-url: 'https://slexy.org/view/{id}'
+    pastie-classname: PastieSlexyOrg
+
+  gist.github.com:
+    archive-url: 'https://gist.github.com/discover'
+    archive-regex: '<a href="/([A-Za-z0-9]+/[A-Za-z0-9]+)">'
+    download-url: 'https://gist.githubusercontent.com/{id}/raw/'
+
+  codepad.org:
+    archive-url: 'http://codepad.org/recent'
+    archive-regex: '<a href="http://codepad.org/([a-zA-Z0-9]+)">view'
+    download-url: 'http://codepad.org/{id}/raw.txt'
+
+  kpaste.net:
+    archive-url: 'http://kpaste.net/'
+    archive-regex: '" href="/(\w+)">'
+    download-url: 'http://kpaste.net/{id}?raw'
+
+  ideone.com:
+    archive-url: 'http://ideone.com/recent'
+    archive-regex: '<a href="/([a-zA-Z0-9]+)">#'
+    download-url: 'http://ideone.com/plain/{id}'
+
+  pastebin.ru:
+    archive-url: 'http://pastebin.ru/'
+    archive-regex: '<a href="/(\w+)">'
+    download-url: 'http://pastebin.ru/{id}'
+
+  pastebin.fr:
+    archive-url: 'http://pastebin.fr'
+    archive-regex: '<a href="http://pastebin.fr/(\d+)'
+    download-url: 'http://pastebin.fr/{id}'
+
+# Sites that are offline:
+  # pastesite.com:
+  #   pastie-classname: PastiePasteSiteCom
+  #   archive-url: 'http://pastesite.com/recent'
+  #   archive-regex: '<a href="(\d+)" title="View this Paste'
+  #   download-url: 'http://pastesite.com/plain/{id}.txt'
+
+  # pastie.org:
+  #   archive-url: 'http://pastie.org/pastes'
+  #   archive-regex: '<a href="http://pastie.org/pastes/(\d+)">'
+  #   download-url: 'http://pastie.org/pastes/{id}/text'
+
+  # pastebin.ca:
+  #   archive-url: 'http://pastebin.ca'
+  #   archive-regex: 'rel="/preview.php\?id=(\d+)'
+  #   download-url: 'http://pastebin.ca/{id}'
+
+  # nopaste.me:
+  #  archive-url: 'http://nopaste.me/recent'
+  #  archive-regex: '<a href="http://nopaste.me/paste/([a-zA-Z0-9]+)">'
+  #  download-url: 'http://nopaste.me/download/{id}.txt'
+
+  # cdv.lt:
+  #  pastie-classname: PastieCdvLt
+  #  archive-url: 'http://cdv.lt/snippets'
+  #  archive-regex: '<a href="/([a-zA-Z0-9]+)">[0-9]'
+  #  download-url: 'http://cdv.lt/api/snippet/{id}'
+
+  # snipt.net:
+  #   pastie-classname: PastieSniptNet
+  #   archive-url: 'https://snipt.net/public/?rss'
+  #   archive-regex: '<link>https://snipt.net/(.+)/</link>'
+  #   download-url: 'https://snipt.net/{id}/'
+
+  # quickleak.se:
+  #   archive-url: 'http://www.quickleak.se/last-pastes.html'
+  #   archive-regex: '<td><a href="([A-Za-z0-9]+)">'
+  #   download-url: 'http://www.quickleak.se/{id}'
+
+#  safebin.net:  # FIXME not finished
+#    archive-url: 'http://safebin.net/?archive'
+#    archive-regex: '<a title="[a-zA-Z0-9 :,]+" href="/([0-9]+)">'
+#    download-url: 'http://safebin.net/{id}'
+#    update-max: 60
+#    update-min: 50
+
+
+# TODO
+# http://www.safebin.net/       # more complex site
+# http://www.heypasteit.com/    # http://www.heypasteit.com/clip/0IZA => incremental
+
+# http://hastebin.com/          # no list of last pastes
+# http://sebsauvage.net/paste/  # no list of last pastes
+# http://tny.cz/                # no list of last pastes
+# https://pastee.org/           # no list of last pastes
+# http://paste2.org/            # no list of last pastes
+# http://0bin.net/              # no list of last pastes
+# http://markable.in/           # no list of last pastes
+
+
+#####
+# Configuration section to configure proxies
+# Currently only HTTP proxies are permitted
+#
+proxy:
+  random: no
+  file: 'proxies.txt'
+
+#####
+# Configuration section for User-Agents
+#
+user-agent:
+  random: no
+  file: 'user-agents.txt'
