@@ -33,6 +33,7 @@ bootstrap_label = Flask_config.bootstrap_label
 misp_event_url = Flask_config.misp_event_url
 hive_case_url = Flask_config.hive_case_url
 vt_enabled = Flask_config.vt_enabled
+PASTES_FOLDER = Flask_config.PASTES_FOLDER
 SCREENSHOT_FOLDER = Flask_config.SCREENSHOT_FOLDER
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
@@ -40,6 +41,14 @@ showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templa
 # ============ FUNCTIONS ============
 
 def showpaste(content_range, requested_path):
+    if PASTES_FOLDER not in requested_path:
+        requested_path = os.path.join(PASTES_FOLDER, requested_path)
+    # remove old full path
+    #requested_path = requested_path.replace(PASTES_FOLDER, '')
+    # escape directory transversal
+    if os.path.commonprefix((os.path.realpath(requested_path),PASTES_FOLDER)) != PASTES_FOLDER:
+        return 'path transversal detected'
+
     vt_enabled = Flask_config.vt_enabled
 
     paste = Paste.Paste(requested_path)
@@ -173,6 +182,7 @@ def showpaste(content_range, requested_path):
     crawler_metadata = {}
     if 'infoleak:submission="crawler"' in l_tags:
         crawler_metadata['get_metadata'] = True
+        crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
         crawler_metadata['external_links'] =r_serv_metadata.scard('paste_onion_external_links:'+requested_path)

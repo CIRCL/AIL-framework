@@ -38,6 +38,7 @@ class TorSplashCrawler():
                                        },
             'SPIDER_MIDDLEWARES': {'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,},
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
+            'HTTPERROR_ALLOW_ALL': True,
             'DEPTH_LIMIT': crawler_depth_limit
             })
 
@@ -96,7 +97,7 @@ class TorSplashCrawler():
             yield SplashRequest(
                 self.start_urls,
                 self.parse,
-                errback=self.errback_catcher,
+                #errback=self.errback_catcher,
                 endpoint='render.json',
                 meta={'father': self.original_paste},
                 args={  'html': 1,
@@ -109,84 +110,89 @@ class TorSplashCrawler():
         def parse(self,response):
             #print(response.headers)
             #print(response.status)
+            print('   |   ')
+            if response.status == 504:
+                # down ?
+                print('504 detected')
+            #elif response.status in in range(400, 600):
+            elif response.status != 200:
+                print('other: {}'.format(response.status))
+            else:
 
-            # # TODO: # FIXME:
-            self.r_cache.setbit(response.url, 0, 1)
-            self.r_cache.expire(response.url, 360000)
+                UUID = self.domains[0]+str(uuid.uuid4())
+                filename_paste = os.path.join(self.crawled_paste_filemame, UUID)
+                relative_filename_paste = os.path.join(self.crawler_path, UUID)
+                filename_screenshot = os.path.join(self.crawled_screenshot, UUID +'.png')
 
-            UUID = self.domains[0]+str(uuid.uuid4())
-            filename_paste = os.path.join(self.crawled_paste_filemame, UUID)
-            relative_filename_paste = os.path.join(self.crawler_path, UUID)
-            filename_screenshot = os.path.join(self.crawled_screenshot, UUID +'.png')
+                # save new paste on disk
+                if self.save_crawled_paste(filename_paste, response.data['html']):
 
-            # save new paste on disk
-            if self.save_crawled_paste(filename_paste, response.data['html']):
+                    # add this paste to the domain crawled set # TODO: # FIXME:  put this on cache ?
+                    self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
 
-                # add this paste to the domain crawled set # TODO: # FIXME:  put this on cache ?
-                self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
+                    self.r_serv_onion.sadd('{}_up:{}'.format(self.type, self.full_date), self.domains[0])
+                    self.r_serv_onion.sadd('full_{}_up'.format(self.type), self.domains[0])
+                    self.r_serv_onion.sadd('month_{}_up:{}'.format(self.type, self.date_month), self.domains[0])
 
-                self.r_serv_onion.sadd('{}_up:{}'.format(self.type, self.full_date), self.domains[0])
-                self.r_serv_onion.sadd('full_{}_up'.format(self.type), self.domains[0])
-                self.r_serv_onion.sadd('month_{}_up:{}'.format(self.type, self.date_month), self.domains[0])
+                    # create onion metadata
+                    if not self.r_serv_onion.exists('{}_metadata:{}'.format(self.type, self.domains[0])):
+                        self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'first_seen', self.full_date)
+                    self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'last_seen', self.full_date)
 
-                # create onion metadata
-                if not self.r_serv_onion.exists('{}_metadata:{}'.format(self.type, self.domains[0])):
-                    self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'first_seen', self.full_date)
-                self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'last_seen', self.full_date)
+                    #create paste metadata
+                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
+                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['father'])
+                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'domain', self.domains[0])
+                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'real_link', response.url)
 
-                #create paste metadata
-                self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
-                self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['father'])
-                self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'domain', self.domains[0])
-                self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'real_link', response.url)
+                    self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], filename_paste)
 
-                self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], filename_paste)
+                    dirname = os.path.dirname(filename_screenshot)
+                    if not os.path.exists(dirname):
+                        os.makedirs(dirname)
 
-                dirname = os.path.dirname(filename_screenshot)
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
+                    size_screenshot = (len(response.data['png'])*3) /4
 
-                size_screenshot = (len(response.data['png'])*3) /4
+                    if size_screenshot < 5000000: #bytes
+                        with open(filename_screenshot, 'wb') as f:
+                            f.write(base64.standard_b64decode(response.data['png'].encode()))
 
-                if size_screenshot < 5000000: #bytes
-                    with open(filename_screenshot, 'wb') as f:
-                        f.write(base64.standard_b64decode(response.data['png'].encode()))
+                    #interest = response.data['har']['log']['entries'][0]['response']['header'][0]
+                    with open(filename_screenshot+'har.txt', 'wb') as f:
+                        f.write(json.dumps(response.data['har']).encode())
 
-                #interest = response.data['har']['log']['entries'][0]['response']['header'][0]
-                with open(filename_screenshot+'har.txt', 'wb') as f:
-                    f.write(json.dumps(response.data['har']).encode())
+                    # save external links in set
+                    lext = LinkExtractor(deny_domains=self.domains, unique=True)
+                    for link in lext.extract_links(response):
+                        self.r_serv_onion.sadd('domain_{}_external_links:{}'.format(self.type, self.domains[0]), link.url)
+                        self.r_serv_metadata.sadd('paste_{}_external_links:{}'.format(self.type, filename_paste), link.url)
 
-                # save external links in set
-                lext = LinkExtractor(deny_domains=self.domains, unique=True)
-                for link in lext.extract_links(response):
-                    self.r_serv_onion.sadd('domain_{}_external_links:{}'.format(self.type, self.domains[0]), link.url)
-                    self.r_serv_metadata.sadd('paste_{}_external_links:{}'.format(self.type, filename_paste), link.url)
+                    #le = LinkExtractor(unique=True)
+                    le = LinkExtractor(allow_domains=self.domains, unique=True)
+                    for link in le.extract_links(response):
+                        self.r_cache.setbit(link, 0, 0)
+                        self.r_cache.expire(link, 360000)
+                        yield SplashRequest(
+                            link.url,
+                            self.parse,
+                            #errback=self.errback_catcher,
+                            endpoint='render.json',
+                            meta={'father': relative_filename_paste},
+                            args={  'html': 1,
+                                    'png': 1,
+                                    'render_all': 1,
+                                    'har': 1,
+                                    'wait': 10}
+                        )
 
-                #le = LinkExtractor(unique=True)
-                le = LinkExtractor(allow_domains=self.domains, unique=True)
-                for link in le.extract_links(response):
-                    self.r_cache.setbit(link, 0, 0)
-                    self.r_cache.expire(link, 360000)
-                    yield SplashRequest(
-                        link.url,
-                        self.parse,
-                        errback=self.errback_catcher,
-                        endpoint='render.json',
-                        meta={'father': relative_filename_paste},
-                        args={  'html': 1,
-                                'png': 1,
-                                'render_all': 1,
-                                'har': 1,
-                                'wait': 10}
-                        #errback=self.errback_catcher
-                    )
-
+        '''
         def errback_catcher(self, failure):
             # catch all errback failures,
             self.logger.error(repr(failure))
             print('failure')
-            print(failure)
-            print(failure.request.meta['item'])
+            #print(failure)
+            print(failure.type)
+            #print(failure.request.meta['item'])
 
             #if isinstance(failure.value, HttpError):
             if failure.check(HttpError):
@@ -209,7 +215,7 @@ class TorSplashCrawler():
                 print('TimeoutError')
                 print(TimeoutError)
                 self.logger.error('TimeoutError on %s', request.url)
-
+        '''
 
         def save_crawled_paste(self, filename, content):
 

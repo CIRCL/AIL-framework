@@ -436,8 +436,12 @@
                       <table class="table table-hover table-striped">
                         <tbody>
                           <tr>
+                            <td>Domain</td>
+                            <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ crawler_metadata['domain'] }}" id='onion_domain'>{{ crawler_metadata['domain'] }}</a></td>
+                          </tr>
+                          <tr>
                             <td>Father</td>
-                            <td>{{ crawler_metadata['paste_father'] }}</td>
+                            <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ crawler_metadata['paste_father'] }}" id='paste_father'>{{ crawler_metadata['paste_father'] }}</a></td>
                           </tr>
                           <tr>
                             <td>Source link</td>
