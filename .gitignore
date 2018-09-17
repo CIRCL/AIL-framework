@@ -31,6 +31,7 @@ var/www/submitted
 
 # Local config
 bin/packages/config.cfg
+bin/packages/config.cfg.backup
 configs/keys
 
 # installed files
@@ -39,3 +40,4 @@ doc/all_modules.txt
 # auto generated
 doc/module-data-flow.png
 doc/data-flow.png
+doc/statistics
