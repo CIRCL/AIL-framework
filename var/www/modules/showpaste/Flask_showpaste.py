@@ -31,12 +31,19 @@ bootstrap_label = Flask_config.bootstrap_label
 misp_event_url = Flask_config.misp_event_url
 hive_case_url = Flask_config.hive_case_url
 vt_enabled = Flask_config.vt_enabled
+PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
 
 def showpaste(content_range, requested_path):
+    if PASTES_FOLDER not in requested_path:
+        requested_path = os.path.join(PASTES_FOLDER, requested_path)
+    # escape directory transversal
+    if os.path.commonprefix((os.path.realpath(requested_path),PASTES_FOLDER)) != PASTES_FOLDER:
+        return 'path transversal detected'
+
     vt_enabled = Flask_config.vt_enabled
 
     paste = Paste.Paste(requested_path)
