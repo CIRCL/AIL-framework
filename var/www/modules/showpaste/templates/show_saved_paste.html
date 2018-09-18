@@ -351,7 +351,6 @@
     <div class="panel-body" id="panel-body">
 
       {% if  duplicate_list|length == 0 %}
-          <h3> No Duplicate </h3>
       {% else %}
           <h3> Duplicate list: </h3>
           <table id="tableDup" class="table table-striped table-bordered">
@@ -422,28 +421,9 @@
 
         {% if crawler_metadata['get_metadata'] %}
           <div class="row">
-            <div class="col-md-7">
-              <div class="panel panel-info" style="text-align:center;">
-                <div class="panel-heading">
-                    <div class="row">
-                      <div class="col-md-8">
-                        <input class="center" id="blocks" type="range" min="1" max="50" value="13">
-                      </div>
-                      <div class="col-md-4">
-                        <button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">
-                            <span class="glyphicon glyphicon-zoom-in"></span>
-                            <span class="label-icon">Full resolution</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              <canvas id="canvas" style="width:100%;"></canvas>
-            </div>
 
             <div class="col-md-5">
               <div class="row">
-                <br>
                 <div class="panel panel-default">
       						<div class="panel-heading">
       							<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
@@ -471,6 +451,25 @@
                       </table>
                 </div>
               </div>
+            </div>
+
+            <div class="col-md-7">
+              <div class="panel panel-info" style="text-align:center;">
+                <div class="panel-heading">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <input class="center" id="blocks" type="range" min="1" max="50" value="13">
+                      </div>
+                      <div class="col-md-4">
+                        <button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">
+                            <span class="glyphicon glyphicon-zoom-in"></span>
+                            <span class="label-icon">Full resolution</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <canvas id="canvas" style="width:100%;"></canvas>
             </div>
           </div>
         {% endif %}
