@@ -423,11 +423,27 @@
         {% if crawler_metadata['get_metadata'] %}
           <div class="row">
             <div class="col-md-7">
-              <img src="{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}" onError="this.onerror=null;this.src='{{ url_for('static', filename='image/AIL.png') }}';" style="width:100%;" />
+              <div class="panel panel-info" style="text-align:center;">
+                <div class="panel-heading">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <input class="center" id="blocks" type="range" min="1" max="50" value="13">
+                      </div>
+                      <div class="col-md-4">
+                        <button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">
+                            <span class="glyphicon glyphicon-zoom-in"></span>
+                            <span class="label-icon">Full resolution</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <canvas id="canvas" style="width:100%;"></canvas>
             </div>
 
             <div class="col-md-5">
               <div class="row">
+                <br>
                 <div class="panel panel-default">
       						<div class="panel-heading">
       							<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
@@ -574,5 +590,50 @@
 {% endfor %}
 </script>
 
+<script>
+var ctx = canvas.getContext('2d'), img = new Image();
+
+/// turn off image smoothing
+ctx.webkitImageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
+
+/// wait until image is actually available
+img.onload = pixelate;
+var draw_img = false;
+img.onError = "img.onerror=null;img.src='{{ url_for('static', filename='image/AIL.png') }}';"
+
+/// some image, we are not struck with CORS restrictions as we
+/// do not use pixel buffer to pixelate, so any image will do
+img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
+
+/// MAIN function
+function pixelate() {
+
+  /// use slider value
+  if( blocks.value == 50 ){
+      size = 1;
+  } else {
+      var size = (blocks.value) * 0.01;
+  }
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  /// cache scaled width and height
+  w = canvas.width * size;
+  h = canvas.height * size;
+
+  /// draw original image to the scaled size
+  ctx.drawImage(img, 0, 0, w, h);
+
+  /// then draw that scaled image thumb back to fill canvas
+  /// As smoothing is off the result will be pixelated
+  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+}
+
+/// event listeneners for slider and button
+blocks.addEventListener('change', pixelate, false);
+</script>
 
 </html>

@@ -47,9 +47,8 @@ def crawl_onion(url, domain, date, date_month):
             print(process.stdout.read())
 
         else:
-            r_onion.sadd('{}_down:{}'.format(type_hidden_service, date), domain)
-            r_onion.sadd('{}_down_link:{}'.format(type_hidden_service, date), url)
             print(process.stdout.read())
+            exit(0)
     else:
         ## FIXME: # TODO: relaunch docker
         exit(0)
