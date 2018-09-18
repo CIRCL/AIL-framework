@@ -596,16 +596,12 @@ var ctx = canvas.getContext('2d'), img = new Image();
 ctx.webkitImageSmoothingEnabled = false;
 ctx.imageSmoothingEnabled = false;
 
-/// wait until image is actually available
 img.onload = pixelate;
+img.addEventListener("error", img_error);
 var draw_img = false;
-img.onError = "img.onerror=null;img.src='{{ url_for('static', filename='image/AIL.png') }}';"
 
-/// some image, we are not struck with CORS restrictions as we
-/// do not use pixel buffer to pixelate, so any image will do
 img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
 
-/// MAIN function
 function pixelate() {
 
   /// use slider value
@@ -625,13 +621,18 @@ function pixelate() {
   /// draw original image to the scaled size
   ctx.drawImage(img, 0, 0, w, h);
 
-  /// then draw that scaled image thumb back to fill canvas
-  /// As smoothing is off the result will be pixelated
+  /// pixelated
   ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
 
 }
 
-/// event listeneners for slider and button
+function img_error() {
+  img.onerror=null;
+  img.src="{{ url_for('static', filename='image/AIL.png') }}";
+  blocks.value = 50;
+  pixelate;
+}
+
 blocks.addEventListener('change', pixelate, false);
 </script>
 
