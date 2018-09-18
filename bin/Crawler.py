@@ -18,7 +18,7 @@ from pubsublogger import publisher
 def signal_handler(sig, frame):
     sys.exit(0)
 
-def crawl_onion(url, domain, date, date_month):
+def crawl_onion(url, domain, date, date_month, message):
 
     #if not r_onion.sismember('full_onion_up', domain) and not r_onion.sismember('onion_down:'+date , domain):
     super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
@@ -29,6 +29,12 @@ def crawl_onion(url, domain, date, date_month):
         r = requests.get(splash_url , timeout=30.0)
     except Exception:
         ## FIXME: # TODO: relaunch docker or send error message
+
+        # send this msg back in the queue
+        if not r_onion.sismember('{}_domain_crawler_queue'.format(type_hidden_service), domain):
+            r_onion.sadd('{}_domain_crawler_queue'.format(type_hidden_service), domain)
+            r_onion.sadd('{}_crawler_queue'.format(type_hidden_service), message)
+
         print('--------------------------------------')
         print('          DOCKER SPLASH DOWN')
         exit(0)
@@ -171,11 +177,11 @@ if __name__ == '__main__':
 
                     if not r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and not r_onion.sismember('{}_down:{}'.format(type_hidden_service, date), domain):
 
-                        crawl_onion(url, domain, date, date_month)
+                        crawl_onion(url, domain, date, date_month, message)
                         if url != domain_url:
                             print(url)
                             print(domain_url)
-                            crawl_onion(domain_url, domain, date, date_month)
+                            crawl_onion(domain_url, domain, date, date_month, message)
 
                         # save down onion
                         if not r_onion.sismember('{}_up:{}'.format(type_hidden_service, date), domain):
