@@ -101,6 +101,8 @@ if __name__ == '__main__':
                     #feeder_name = ( complete_paste.replace("archive/","") ).split("/")[0]
                     feeder_name, paste_name = complete_paste.split('>>')
                     feeder_name.replace(" ","")
+                    if 'import_dir' in feeder_name:
+                        feeder_name = feeder_name.split('/')[1]
                     paste_name = complete_paste
 
                 except ValueError as e:
