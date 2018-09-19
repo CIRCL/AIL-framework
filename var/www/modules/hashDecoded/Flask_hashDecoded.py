@@ -444,13 +444,13 @@ def range_type_json():
 
     range_type = []
 
+    list_decoder = r_serv_metadata.smembers('all_decoder')
     for date in date_range:
         if len(date_range) == 1:
             if date==date_from and date==date_to:
                 for type in all_type:
                     day_type = {}
                     day_type['date']= type
-                    list_decoder = r_serv_metadata.smembers('all_decoder')
                     for decoder in list_decoder:
                         num_day_decoder = r_serv_metadata.zscore(decoder+'_type:'+type, date)
                         if num_day_decoder is None:
@@ -463,9 +463,11 @@ def range_type_json():
             day_type = {}
             day_type['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
             for type in all_type:
-                num_day_type = r_serv_metadata.zscore('hash_type:'+type, date)
-                if num_day_type is None:
-                    num_day_type = 0
+                num_day_type = 0
+                for decoder in list_decoder:
+                    num_day_type_decoder = r_serv_metadata.zscore(decoder+'_type:'+type, date)
+                    if num_day_type_decoder is not None:
+                        num_day_type += num_day_type_decoder
                 day_type[type]= num_day_type
             range_type.append(day_type)
 
