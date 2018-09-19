@@ -724,13 +724,15 @@ def format_string(tab, padding_row):
         text=""
         for ite, elem in enumerate(the_array):
 
-            if len(elem) > padding_row[ite]:
-                text += "*" + elem[-padding_row[ite]+6:]
-                padd_off = " "*5
-            else:
-                text += elem
-                padd_off = " "*0
-            text += (padding_row[ite] - len(elem))*" " + padd_off
+            if elem is not None and type(elem) is str:
+                if len(elem) > padding_row[ite]:
+                    text += "*" + elem[-padding_row[ite]+6:]
+                    padd_off = " "*5
+                else:
+                    text += elem
+                    padd_off = " "*0
+                text += (padding_row[ite] - len(elem))*" " + padd_off
+
         printstring.append( (text, the_pid) )
     return printstring
 
