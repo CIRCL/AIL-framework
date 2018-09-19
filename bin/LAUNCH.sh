@@ -27,7 +27,7 @@ islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
 isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
-isfeeded=`screen -ls | egrep '[0-9]+.Feeder' | cut -d. -f1`
+isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
 
 function helptext {
     echo -e $YELLOW"
@@ -320,19 +320,19 @@ function launch_flask {
 
 function launch_feeder {
     if [[ ! $isfeeded ]]; then
-        screen -dmS "Feeder"
+        screen -dmS "Feeder_Pystemon"
         sleep 0.1
         echo -e $GREEN"\t* Launching Pystemon feeder"$DEFAULT
-        screen -S "Feeder" -X screen -t "Pystemon_feeder" bash -c 'cd '${AIL_BIN}'; ./feeder/pystemon-feeder.py; read x'
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon_feeder" bash -c 'cd '${AIL_BIN}'; ./feeder/pystemon-feeder.py; read x'
         sleep 0.1
-        screen -S "Feeder" -X screen -t "Pystemon" bash -c 'cd '${AIL_HOME}/../pystemon'; python2 pystemon.py; read x'
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon" bash -c 'cd '${AIL_HOME}/../pystemon'; python2 pystemon.py; read x'
     else
         echo -e $RED"\t* A Feeder screen is already launched"$DEFAULT
     fi
 }
 
 function killall {
-    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked ]]; then
+    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded ]]; then
         echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
         shutting_down_redis;
         sleep 0.2
@@ -371,7 +371,6 @@ function launch_all {
     launch_queues;
     launch_scripts $1;
     launch_flask;
-    launch_feeder;
 }
 
 #If no params, display the menu
@@ -449,6 +448,8 @@ while [ "$1" != "" ]; do
         -c | --configUpdate )       checking_configuration "manual";
                                     ;;
         -t | --thirdpartyUpdate )    update_thirdparty;
+                                    ;;
+        -f | --launchFeeder )       launch_feeder;
                                     ;;
         -h | --help )               helptext;
                                     exit
