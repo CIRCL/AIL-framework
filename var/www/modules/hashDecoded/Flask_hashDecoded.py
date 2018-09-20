@@ -21,6 +21,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_metadata = Flask_config.r_serv_metadata
 vt_enabled = Flask_config.vt_enabled
 vt_auth = Flask_config.vt_auth
@@ -628,4 +629,4 @@ def update_vt_result():
         return jsonify()
 
 # ========= REGISTRATION =========
-app.register_blueprint(hashDecoded)
+app.register_blueprint(hashDecoded, url_prefix=baseUrl)
