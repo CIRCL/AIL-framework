@@ -21,6 +21,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_statistics = Flask_config.r_serv_statistics
@@ -865,4 +866,4 @@ def tag_galaxy_info():
     return 'INVALID INPUT'
 
 # ========= REGISTRATION =========
-app.register_blueprint(Tags)
+app.register_blueprint(Tags, url_prefix=baseUrl)

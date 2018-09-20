@@ -39,6 +39,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_db = Flask_config.r_serv_db
@@ -585,4 +586,4 @@ def disable_hive_auto_alert():
     return edit_tag_export()
 
 # ========= REGISTRATION =========
-app.register_blueprint(PasteSubmit)
+app.register_blueprint(PasteSubmit, url_prefix=baseUrl)

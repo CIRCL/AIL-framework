@@ -21,6 +21,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
@@ -241,4 +242,4 @@ def get_more_search_result():
 
 
 # ========= REGISTRATION =========
-app.register_blueprint(searches)
+app.register_blueprint(searches, url_prefix=baseUrl)

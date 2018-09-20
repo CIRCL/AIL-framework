@@ -135,6 +135,11 @@ if HiveApi != False:
         print('The Hive not connected')
 
 # VARIABLES #
+baseUrl = cfg.get("Flask", "baseurl")
+baseUrl = baseUrl.replace('/', '')
+if baseUrl != '':
+    baseUrl = '/'+baseUrl
+
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number of character to display in the modal
 
