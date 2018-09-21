@@ -111,6 +111,41 @@ class HiddenServices(object):
                 l_crawled_pastes.extend(self.get_all_pastes_domain(children))
         return l_crawled_pastes
 
+    def get_domain_son(self, l_paste):
+        if l_paste is None:
+            return None
+
+        set_domain = set()
+        for paste in l_paste:
+            paste_full = paste.replace(self.paste_directory+'/', '')
+            paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_full))
+            ## TODO: # FIXME: remove me
+            paste_children = self.r_serv_metadata.smembers('paste_children:{}'.format(paste))
+            paste_childrens = paste_childrens | paste_children
+            for children in paste_childrens:
+                if not self.domain in children:
+                    print(children)
+                    set_domain.add((children.split('.onion')[0]+'.onion').split('/')[-1])
+
+        return set_domain
+
+    def get_all_domain_son(self, father):
+        if father is None:
+            return []
+        l_crawled_pastes = []
+        paste_parent = father.replace(self.paste_directory+'/', '')
+        paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_parent))
+        ## TODO: # FIXME: remove me
+        paste_children = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
+        paste_childrens = paste_childrens | paste_children
+        for children in paste_childrens:
+            if not self.domain in children:
+                l_crawled_pastes.append(children)
+                #self.update_domain_tags(children)
+                l_crawled_pastes.extend(self.get_all_domain_son(children))
+
+        return l_crawled_pastes
+
     def get_domain_random_screenshot(self, l_crawled_pastes, num_screenshot = 1):
         l_screenshot_paste = []
         for paste in l_crawled_pastes:

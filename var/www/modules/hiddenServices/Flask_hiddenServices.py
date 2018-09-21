@@ -89,7 +89,7 @@ def hiddenServices_page():
 def onion_domain():
     onion_domain = request.args.get('onion_domain')
     if onion_domain is None or not r_serv_onion.exists('onion_metadata:{}'.format(onion_domain)):
-        pass
+        return '404'
         # # TODO: FIXME return 404
 
     last_check = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'last_check')
@@ -126,6 +126,16 @@ def onion_domain():
                             path_name=path_name, origin_paste_tags=origin_paste_tags, status=status,
                             origin_paste=origin_paste, origin_paste_name=origin_paste_name,
                             domain_tags=domain_tags, screenshot=screenshot)
+
+@hiddenServices.route("/hiddenServices/onion_son", methods=['GET'])
+def onion_son():
+    onion_domain = request.args.get('onion_domain')
+
+    h = HiddenServices(onion_domain, 'onion')
+    l_pastes = h.get_last_crawled_pastes()
+    l_son = h.get_domain_son(l_pastes)
+    print(l_son)
+    return 'l_son'
 
 # ============= JSON ==============
 @hiddenServices.route("/hiddenServices/domain_crawled_7days_json", methods=['GET'])
