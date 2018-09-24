@@ -27,6 +27,7 @@ islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
 isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
+iscrawler=`screen -ls | egrep '[0-9]+.Crawler_AIL' | cut -d. -f1`
 
 function helptext {
     echo -e $YELLOW"
@@ -196,6 +197,26 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c 'cd '${AIL_BIN}'; ./submit_paste.py; read x'
 
+}
+
+function launching_crawler {
+  CONFIG=$AIL_BIN/packages/config.cfg
+  lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_onion_port/{print $3;exit}' "${CONFIG}")
+  echo $lport
+
+  IFS='-' read -ra PORTS <<< "$lport"
+  first_port=${PORTS[0]}
+  last_port=${PORTS[1]}
+
+  screen -dmS "Crawler_AIL"
+  sleep 0.1
+
+  for ((i=first_port;i<=last_port;i++)); do
+      screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c 'cd '${AIL_BIN}'; ./Crawler.py onion '$i'; read x'
+      sleep 0.1
+  done
+
+  echo -e $GREEN"\t* Launching Crawler_AIL scripts"$DEFAULT
 }
 
 function shutting_down_redis {
@@ -406,6 +427,9 @@ function launch_all {
                 Flask)
                     launch_flask;
                     ;;
+                Crawler)
+                    launching_crawler;
+                    ;;
                 Killall)
                     killall;
                     ;;
@@ -427,13 +451,13 @@ function launch_all {
 
 while [ "$1" != "" ]; do
     case $1 in
-        -l | --launchAuto )         launch_all "automatic";
+        -l | --launchAuto )         launch_all "automatic"; launching_crawler
                                     ;;
         -k | --killAll )            killall;
                                     ;;
-        -c | --configUpdate )       checking_configuration "manual";
+        -t | --thirdpartyUpdate )   update_thirdparty;
                                     ;;
-        -t | --thirdpartyUpdate )    update_thirdparty;
+        -c | --crawler )            launching_crawler;
                                     ;;
         -h | --help )               helptext;
                                     exit

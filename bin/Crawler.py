@@ -40,16 +40,13 @@ def crawl_onion(url, domain, date, date_month, message):
         exit(0)
 
     if r.status_code == 200:
-        process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', splash_url, http_proxy, type_hidden_service, url, domain, paste, super_father],
+        process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', splash_url, type_hidden_service, url, domain, paste, super_father],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
             time.sleep(1)
 
         if process.returncode == 0:
-            if r_serv_metadata.exists('paste_children:'+paste):
-                msg = 'infoleak:automatic-detection="{}";{}'.format(type_hidden_service, paste)
-                p.populate_set_out(msg, 'Tags')
-
+            # onion up
             print(process.stdout.read())
 
         else:
@@ -59,14 +56,19 @@ def crawl_onion(url, domain, date, date_month, message):
         ## FIXME: # TODO: relaunch docker
         exit(0)
 
+    time.sleep(60)
+
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 2:
-        print('usage:', 'Crawler.py', 'type_hidden_service (onion or i2p or regular)')
+    if len(sys.argv) != 3:
+        print('usage:', 'Crawler.py', 'type_hidden_service (onion or i2p or regular)', 'splash_port')
+        print(sys.argv[1])
+        print(sys.argv[2])
         exit(1)
 
     type_hidden_service = sys.argv[1]
+    splash_port = sys.argv[2]
 
     publisher.port = 6380
     publisher.channel = "Script"
@@ -85,21 +87,19 @@ if __name__ == '__main__':
 
     if type_hidden_service == 'onion':
         regex_hidden_service = url_onion
-        splash_url = p.config.get("Crawler", "splash_url_onion")
-        http_proxy = p.config.get("Crawler", "http_proxy_onion")
+        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     elif type_hidden_service == 'i2p':
         regex_hidden_service = url_i2p
-        splash_url = p.config.get("Crawler", "splash_url_i2p")
-        http_proxy = p.config.get("Crawler", "http_proxy_i2p")
+        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_i2p"),  splash_port)
     elif type_hidden_service == 'regular':
         regex_hidden_service = url_i2p
-        splash_url = p.config.get("Crawler", "splash_url_onion")
-        http_proxy = p.config.get("Crawler", "http_proxy_onion")
+        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     else:
         print('incorrect crawler type: {}'.format(type_hidden_service))
         exit(0)
 
     print(type_hidden_service)
+    print(splash_url)
 
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
 
@@ -129,8 +129,6 @@ if __name__ == '__main__':
 
         # Recovering the streamed message informations. http://eepsites.i2p
         message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
-        #message = 'http://i2pwiki.i2p;test'
-        #message = 'http://i2host.i2p;test'
 
         # # FIXME: remove
         if message is None:
@@ -186,13 +184,16 @@ if __name__ == '__main__':
                         # save down onion
                         if not r_onion.sismember('{}_up:{}'.format(type_hidden_service, date), domain):
                             r_onion.sadd('{}_down:{}'.format(type_hidden_service, date), domain)
-                            r_onion.sadd('{}_down_link:{}'.format(type_hidden_service, date), url)
-                            r_onion.hincrby('{}_link_down'.format(type_hidden_service), url, 1)
+                            #r_onion.sadd('{}_down_link:{}'.format(type_hidden_service, date), url)
+                            #r_onion.hincrby('{}_link_down'.format(type_hidden_service), url, 1)
                             if not r_onion.exists('{}_metadata:{}'.format(type_hidden_service, domain)):
                                 r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen', date)
                             r_onion.hset('{}_metadata:{}'.format(type_hidden_service,domain), 'last_seen', date)
                         else:
-                            r_onion.hincrby('{}_link_up'.format(type_hidden_service), url, 1)
+                            #r_onion.hincrby('{}_link_up'.format(type_hidden_service), url, 1)
+                            if r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and r_serv_metadata.exists('paste_children:'+paste):
+                                msg = 'infoleak:automatic-detection="{}";{}'.format(type_hidden_service, paste)
+                                p.populate_set_out(msg, 'Tags')
 
                         # last check
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
@@ -226,12 +227,13 @@ if __name__ == '__main__':
                         r_onion.delete('domain_{}_external_links:{}'.format(type_hidden_service, domain))
                         print(r_onion.smembers('domain_{}_external_links:{}'.format(type_hidden_service, domain)))
 
+                        # update list, last crawled onions
                         r_onion.lpush('last_{}'.format(type_hidden_service), domain)
                         r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
 
                         #send all crawled domain past
-                        msg = domain
-                        p.populate_set_out(msg, 'DomainSubject')
+                        #msg = domain
+                        #p.populate_set_out(msg, 'DomainSubject')
 
                         #time.sleep(30)
 

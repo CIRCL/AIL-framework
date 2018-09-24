@@ -26,7 +26,7 @@ from Helper import Process
 
 class TorSplashCrawler():
 
-    def __init__(self, splash_url, http_proxy, crawler_depth_limit):
+    def __init__(self, splash_url, crawler_depth_limit):
         self.process = CrawlerProcess({'LOG_ENABLED': False})
         self.crawler = Crawler(self.TorSplashSpider, {
             'USER_AGENT': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0',
@@ -114,7 +114,6 @@ class TorSplashCrawler():
             if response.status == 504:
                 # down ?
                 print('504 detected')
-            #elif response.status in in range(400, 600):
             elif response.status != 200:
                 print('other: {}'.format(response.status))
             else:
@@ -128,7 +127,7 @@ class TorSplashCrawler():
                 if self.save_crawled_paste(filename_paste, response.data['html']):
 
                     # add this paste to the domain crawled set # TODO: # FIXME:  put this on cache ?
-                    self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
+                    #self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
 
                     self.r_serv_onion.sadd('{}_up:{}'.format(self.type, self.full_date), self.domains[0])
                     self.r_serv_onion.sadd('full_{}_up'.format(self.type), self.domains[0])
@@ -157,21 +156,17 @@ class TorSplashCrawler():
                         with open(filename_screenshot, 'wb') as f:
                             f.write(base64.standard_b64decode(response.data['png'].encode()))
 
-                    #interest = response.data['har']['log']['entries'][0]['response']['header'][0]
                     with open(filename_screenshot+'har.txt', 'wb') as f:
                         f.write(json.dumps(response.data['har']).encode())
 
                     # save external links in set
-                    lext = LinkExtractor(deny_domains=self.domains, unique=True)
-                    for link in lext.extract_links(response):
-                        self.r_serv_onion.sadd('domain_{}_external_links:{}'.format(self.type, self.domains[0]), link.url)
-                        self.r_serv_metadata.sadd('paste_{}_external_links:{}'.format(self.type, filename_paste), link.url)
+                    #lext = LinkExtractor(deny_domains=self.domains, unique=True)
+                    #for link in lext.extract_links(response):
+                    #    self.r_serv_onion.sadd('domain_{}_external_links:{}'.format(self.type, self.domains[0]), link.url)
+                    #    self.r_serv_metadata.sadd('paste_{}_external_links:{}'.format(self.type, filename_paste), link.url)
 
-                    #le = LinkExtractor(unique=True)
                     le = LinkExtractor(allow_domains=self.domains, unique=True)
                     for link in le.extract_links(response):
-                        self.r_cache.setbit(link, 0, 0)
-                        self.r_cache.expire(link, 360000)
                         yield SplashRequest(
                             link.url,
                             self.parse,
