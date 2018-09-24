@@ -61,8 +61,6 @@ if __name__ == '__main__':
 
     if len(sys.argv) != 3:
         print('usage:', 'Crawler.py', 'type_hidden_service (onion or i2p or regular)', 'splash_port')
-        print(sys.argv[1])
-        print(sys.argv[2])
         exit(1)
 
     type_hidden_service = sys.argv[1]
@@ -96,8 +94,8 @@ if __name__ == '__main__':
         print('incorrect crawler type: {}'.format(type_hidden_service))
         exit(0)
 
-    print(type_hidden_service)
-    print(splash_url)
+    print('crawler type: {}'.format(type_hidden_service))
+    print('splash url: {}'.format(splash_url))
 
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
 

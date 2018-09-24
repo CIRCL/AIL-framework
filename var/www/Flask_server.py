@@ -48,8 +48,6 @@ activate_crawler = cfg.get("Crawler", "activate_crawler")
 if activate_crawler != 'True':
     toIgnoreModule.add('hiddenServices')
 
-print(toIgnoreModule)
-
 # Dynamically import routes and functions from modules
 # Also, prepare header.html
 to_add_to_header_dico = {}

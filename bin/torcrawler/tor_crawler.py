@@ -9,7 +9,6 @@ from TorSplashCrawler import TorSplashCrawler
 if __name__ == '__main__':
 
     if len(sys.argv) != 7:
-        print(sys.argv)
         print('usage:', 'tor_crawler.py', 'splash_url', 'type', 'url', 'domain', 'paste', 'super_father')
         exit(1)
 
