@@ -103,8 +103,8 @@ def save_hash(decoder_name, message, date, decoded):
         serv_metadata.sadd('hash_'+ decoder_name +'_all_type', type)
 
         # first time we see this hash today
-        if serv_metadata.zscore('hash_date:'+date_key, hash) is None:
-            serv_metadata.zincrby('hash_type:'+type, date_key, 1)
+        #if serv_metadata.zscore('hash_date:'+date_key, hash) is None:
+        #    serv_metadata.zincrby('hash_type:'+type, date_key, 1)
 
         # first time we see this hash encoding today
         if serv_metadata.zscore(decoder_name+'_date:'+date_key, hash) is None:

@@ -28,6 +28,7 @@ isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
 iscrawler=`screen -ls | egrep '[0-9]+.Crawler_AIL' | cut -d. -f1`
+isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
 
 function helptext {
     echo -e $YELLOW"
@@ -338,15 +339,28 @@ function launch_flask {
     fi
 }
 
+function launch_feeder {
+    if [[ ! $isfeeded ]]; then
+        screen -dmS "Feeder_Pystemon"
+        sleep 0.1
+        echo -e $GREEN"\t* Launching Pystemon feeder"$DEFAULT
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon_feeder" bash -c 'cd '${AIL_BIN}'; ./feeder/pystemon-feeder.py; read x'
+        sleep 0.1
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon" bash -c 'cd '${AIL_HOME}/../pystemon'; python2 pystemon.py; read x'
+    else
+        echo -e $RED"\t* A Feeder screen is already launched"$DEFAULT
+    fi
+}
+
 function killall {
-    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked ]]; then
+    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded ]]; then
         echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
         shutting_down_redis;
         sleep 0.2
         echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
         shutting_down_ardb;
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked
+        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
         echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted killed."$DEFAULT
@@ -458,6 +472,8 @@ while [ "$1" != "" ]; do
         -t | --thirdpartyUpdate )   update_thirdparty;
                                     ;;
         -c | --crawler )            launching_crawler;
+                                    ;;
+        -f | --launchFeeder )       launch_feeder;
                                     ;;
         -h | --help )               helptext;
                                     exit

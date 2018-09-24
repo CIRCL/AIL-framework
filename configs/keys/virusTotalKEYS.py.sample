@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+vt_key = 'YOUR_API_KEY' #virus total API key

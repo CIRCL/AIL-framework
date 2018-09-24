@@ -21,6 +21,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_term = Flask_config.r_serv_term
 r_serv_cred = Flask_config.r_serv_cred
 
@@ -605,4 +606,4 @@ def cred_management_action():
 
 
 # ========= REGISTRATION =========
-app.register_blueprint(terms)
+app.register_blueprint(terms, url_prefix=baseUrl)

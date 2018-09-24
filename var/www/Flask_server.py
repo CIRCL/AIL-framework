@@ -25,8 +25,12 @@ import Flask_config
 
 # CONFIG #
 cfg = Flask_config.cfg
+baseUrl = cfg.get("Flask", "baseurl")
+baseUrl = baseUrl.replace('/', '')
+if baseUrl != '':
+    baseUrl = '/'+baseUrl
 
-Flask_config.app = Flask(__name__, static_url_path='/static/')
+Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
 app = Flask_config.app
 app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 

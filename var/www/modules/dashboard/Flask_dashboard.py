@@ -19,6 +19,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
 
@@ -167,4 +168,4 @@ def index():
                             log_select=log_select, selected=max_dashboard_logs)
 
 # ========= REGISTRATION =========
-app.register_blueprint(dashboard)
+app.register_blueprint(dashboard, url_prefix=baseUrl)

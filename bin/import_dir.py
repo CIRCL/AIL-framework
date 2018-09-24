@@ -4,6 +4,7 @@
 import zmq
 import base64
 from io import StringIO
+import datetime
 import gzip
 import argparse
 import os
@@ -13,10 +14,10 @@ import mimetypes
 '''
 '
 '   Import content/pastes into redis.
-'   If content is not compressed yet, compress it.
+'   If content is not compressed yet, compress it (only text).
 '
 '   /!\ WARNING /!\
-        Content to be imported must be placed in a directory tree of the form
+        Content to be imported can be placed in a directory tree of the form
         root/
         |
         +-- Year/
@@ -28,6 +29,10 @@ import mimetypes
                     +-- Content
     e.g.:
     ~/to_import/2017/08/22/paste1.gz
+
+    or this directory tree will be created with the current date
+    e.g.:
+    ~/to_import/paste1.gz
 '
 '''
 
@@ -66,36 +71,34 @@ if __name__ == "__main__":
         for filename in filenames:
             complete_path = os.path.join(dirname, filename)
 
-            #take wanted path of the file
-            wanted_path = os.path.realpath(complete_path)
-            wanted_path = wanted_path.split('/')
-            wanted_path = '/'.join(wanted_path[-(4+args.hierarchy):])
-
-            with gzip.open(complete_path, 'rb') as f:
+            with open(complete_path, 'rb') as f:
                 messagedata = f.read()
-
-            #print(type(complete_path))
-            #file = open(complete_path)
-            #messagedata = file.read()
-
-            #if paste do not have a 'date hierarchy' ignore it
-            if not is_hierachy_valid(complete_path):
-                print('/!\ hierarchy not valid, should have the format yyyy/mm/dd/paste.gz /!\ ')
-                print(complete_path)
-                break
 
             #verify that the data is gzipEncoded. if not compress it
             if 'text' in str(mimetypes.guess_type(complete_path)[0]):
-                out = StringIO.StringIO()
-                with gzip.GzipFile(fileobj=out, mode="w") as f:
-                    f.write(messagedata)
-                messagedata = out.getvalue()
-                wanted_path += '.gz'
+                messagedata = gzip.compress(messagedata)
+                complete_path += '.gz'
 
-            print(args.name+'>'+wanted_path)
-            path_to_send = args.name + '>' + wanted_path
-            #s = b'{} {} {}'.format(args.channel, path_to_send, base64.b64encode(messagedata))
-            # use bytes object
-            s = b' '.join( [ args.channel.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
-            socket.send(s)
-            time.sleep(args.seconds)
+
+            if complete_path[-4:] != '.gz':
+
+                #if paste do not have a 'date hierarchy', create it
+                if not is_hierachy_valid(complete_path):
+                    now = datetime.datetime.now()
+                    paste_name = complete_path.split('/')[-1]
+                    directory = complete_path.split('/')[-2]
+                    wanted_path = os.path.join(directory, now.strftime("%Y"), now.strftime("%m"), now.strftime("%d"), paste_name)
+                else:
+                    #take wanted path of the file
+                    wanted_path = os.path.realpath(complete_path)
+                    wanted_path = wanted_path.split('/')
+                    wanted_path = '/'.join(wanted_path[-(4+args.hierarchy):])
+
+                path_to_send = 'import_dir/' + args.name + '>>' + wanted_path
+                s = b' '.join( [ args.channel.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
+                socket.send(s)
+                print('import_dir/' + args.name+'>>'+wanted_path)
+                time.sleep(args.seconds)
+
+            else:
+                print('{} : incorrect type'.format(complete_path))

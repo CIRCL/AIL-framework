@@ -21,6 +21,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_tags = Flask_config.r_serv_tags
@@ -292,4 +293,4 @@ def send_file_to_vt():
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=paste))
 
 # ========= REGISTRATION =========
-app.register_blueprint(showsavedpastes)
+app.register_blueprint(showsavedpastes, url_prefix=baseUrl)

@@ -73,3 +73,6 @@ https://github.com/saffsd/langid.py/archive/master.zip
 
 #LibInjection bindings
 pylibinjection
+
+# Graph
+matplotlib

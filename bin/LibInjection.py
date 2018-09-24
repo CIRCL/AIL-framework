@@ -12,6 +12,8 @@ It tries to identify SQL Injections with libinjection.
 """
 
 import time
+import datetime
+import redis
 import string
 import urllib.request
 import re
@@ -54,6 +56,12 @@ def analyse(url, path):
         msg = 'infoleak:automatic-detection="sql-injection";{}'.format(path)
         p.populate_set_out(msg, 'Tags')
 
+        #statistics
+        tld = url_parsed['tld']
+        if tld is not None:
+            date = datetime.datetime.now().strftime("%Y%m")
+            server_statistics.hincrby('SQLInjection_by_tld:'+date, tld, 1)
+
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
     # Port of the redis instance used by pubsublogger
@@ -69,6 +77,12 @@ if __name__ == '__main__':
 
     # Sent to the logging a description of the module
     publisher.info("Try to detect SQL injection with LibInjection")
+
+    server_statistics = redis.StrictRedis(
+        host=p.config.get("ARDB_Statistics", "host"),
+        port=p.config.getint("ARDB_Statistics", "port"),
+        db=p.config.getint("ARDB_Statistics", "db"),
+        decode_responses=True)
 
     faup = Faup()
 

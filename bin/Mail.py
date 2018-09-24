@@ -2,7 +2,7 @@
 # -*-coding:UTF-8 -*
 
 """
-The CreditCards Module
+The Mail Module
 ======================
 
 This module is consuming the Redis-list created by the Categ module.
@@ -12,12 +12,14 @@ It apply mail regexes on paste content and warn if above a threshold.
 """
 
 import redis
-import pprint
 import time
+import datetime
 import dns.exception
 from packages import Paste
 from packages import lib_refine
 from pubsublogger import publisher
+
+from pyfaup.faup import Faup
 
 from Helper import Process
 
@@ -27,6 +29,8 @@ if __name__ == "__main__":
 
     config_section = 'Mail'
 
+    faup = Faup()
+
     p = Process(config_section)
     addr_dns = p.config.get("Mail", "dns")
 
@@ -35,6 +39,12 @@ if __name__ == "__main__":
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),
         db=p.config.getint("Redis_Cache", "db"),
+        decode_responses=True)
+    # ARDB #
+    server_statistics = redis.StrictRedis(
+        host=p.config.get("ARDB_Statistics", "host"),
+        port=p.config.getint("ARDB_Statistics", "port"),
+        db=p.config.getint("ARDB_Statistics", "db"),
         decode_responses=True)
 
     # FUNCTIONS #
@@ -66,7 +76,6 @@ if __name__ == "__main__":
                     PST.save_attribute_redis(channel, (MX_values[0],
                                              list(MX_values[1])))
 
-                    pprint.pprint(MX_values)
                     to_print = 'Mails;{};{};{};Checked {} e-mail(s);{}'.\
                         format(PST.p_source, PST.p_date, PST.p_name,
                                MX_values[0], PST.p_path)
@@ -79,12 +88,22 @@ if __name__ == "__main__":
                         msg = 'infoleak:automatic-detection="mail";{}'.format(filename)
                         p.populate_set_out(msg, 'Tags')
 
+                        #create country statistics
+                        date = datetime.datetime.now().strftime("%Y%m")
+                        for mail in MX_values[1]:
+                            print('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date))
+                            p.populate_set_out('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date), 'ModuleStats')
+
+                            faup.decode(mail)
+                            tld = faup.get()['tld']
+                            server_statistics.hincrby('mail_by_tld:'+date, tld, MX_values[1][mail])
+
                     else:
                         publisher.info(to_print)
-                #Send to ModuleStats
+                #create country statistics
                 for mail in MX_values[1]:
-                    print('mail;{};{};{}'.format(1, mail, PST.p_date))
-                    p.populate_set_out('mail;{};{};{}'.format(1, mail, PST.p_date), 'ModuleStats')
+                    print('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date))
+                    p.populate_set_out('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date), 'ModuleStats')
 
             prec_filename = filename
 
