@@ -56,8 +56,6 @@ def crawl_onion(url, domain, date, date_month, message):
         ## FIXME: # TODO: relaunch docker
         exit(0)
 
-    time.sleep(60)
-
 
 if __name__ == '__main__':
 
