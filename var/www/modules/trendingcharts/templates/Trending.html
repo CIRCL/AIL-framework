@@ -55,10 +55,11 @@
 <script>
 var chart_1_num_day = 5;
 var chart_2_num_day = 15;
-$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 
-<script type="text/javascript" src="{{ url_for('static', filename='js/trendingchart.js')}}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/trendingchart.js')}}"
+		data-url_progressionCharts="{{ url_for('trendings.progressionCharts') }}">
+</script>
 
             <div class="tab-content">
                 <div class="col-lg-12 tab-pane fade in active" id="tld-tab" >

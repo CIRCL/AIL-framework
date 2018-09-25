@@ -3,6 +3,19 @@ var data_for_processed_paste = {};
 var list_feeder = [];
 window.paste_num_tabvar_all = {};
 
+function getSyncScriptParams() {
+         var scripts = document.getElementsByTagName('script');
+         var lastScript = scripts[scripts.length-1];
+         var scriptName = lastScript;
+         return {
+             urlstuff : scriptName.getAttribute('data-urlstuff'),
+             urllog : scriptName.getAttribute('data-urllog')
+         };
+}
+
+var urlstuff = getSyncScriptParams().urlstuff;
+var urllog = getSyncScriptParams().urllog;
+
 //If we do not received info from mixer, set pastes_num to 0
 function checkIfReceivedData(){
     for (i in list_feeder) {
@@ -27,8 +40,7 @@ function initfunc( csvay, scroot) {
 };
 
 function update_values() {
-    $SCRIPT_ROOT = window.scroot ;
-    $.getJSON($SCRIPT_ROOT+"/_stuff",
+    $.getJSON(urlstuff,
         function(data) {
             window.glob_tabvar = data;
     });
@@ -122,7 +134,7 @@ function initfunc( csvay, scroot) {
   window.scroot = scroot;
 };
 
-var source = new EventSource('/_logs');
+var source = new EventSource(urllog);
 
 source.onmessage = function(event) {
     var feed = jQuery.parseJSON( event.data );

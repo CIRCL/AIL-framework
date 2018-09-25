@@ -34,10 +34,12 @@
         <script>
             var chart_1_num_day = 5;
             var chart_2_num_day = 15;
-            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
         </script>
 
-        <script src="{{ url_for('static', filename='js/moduleTrending.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/moduleTrending.js') }}"
+						data-url_providersChart="{{ url_for('trendingmodules.providersChart') }}"
+						data-url_moduleCharts="{{ url_for('trendingmodules.modulesCharts') }}">
+				</script>
         <script>
             $(document).ready(function(){
                 activePage = "page-modulestats"

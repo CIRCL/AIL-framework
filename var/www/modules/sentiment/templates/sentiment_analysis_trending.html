@@ -230,7 +230,9 @@
 
 
 <!-- import graph function -->
-<script src="{{ url_for('static', filename='js/sentiment_trending.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sentiment_trending.js') }}"
+    data-url_sentiment_analysis_getplotdata="{{ url_for('sentiments.sentiment_analysis_getplotdata') }}">
+</script>
 <script>
     $("#LoadAll").hide();
 
