@@ -433,7 +433,7 @@
     var ltagsgalaxies
     $(document).ready(function(){
 
-        $.getJSON('/Tags/get_all_tags_taxonomies',
+        $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
           function(data) {
 
             ltags = $('#ltags').tagSuggest({
@@ -443,7 +443,7 @@
             });
           });
 
-        $.getJSON('/Tags/get_all_tags_galaxies',
+        $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
           function(data) {
 
             ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
@@ -465,7 +465,7 @@
 <script>
   function updateVTReport(hash) {
     //updateReport
-    $.getJSON('/hashDecoded/update_vt_result?hash='+hash,
+    $.getJSON("{{ url_for('hashDecoded.update_vt_result') }}?hash="+hash,
       function(data) {
         content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
         $( "#report_vt_"+hash ).html(content);
@@ -474,7 +474,7 @@
 
   function sendFileToVT(hash) {
     //send file to vt
-    $.getJSON('/hashDecoded/send_file_to_vt_js?hash='+hash,
+    $.getJSON("{{ url_for('hashDecoded.send_file_to_vt_js') }}?hash="+hash,
       function(data) {
         var content = '<a id="submit_vt_'+hash+'" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
         $('#submit_vt_'+hash).remove();
@@ -487,7 +487,7 @@
 <script>
     jQuery("#all-tags-taxonomies").click(function(e){
       //change input tags list
-      $.getJSON('/Tags/get_all_tags_taxonomies',
+      $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
         function(data) {
           ltags.setData(data)
       });
@@ -496,7 +496,7 @@
 </script>
 <script>
     jQuery("#all-tags-galaxies").click(function(e){
-      $.getJSON('/Tags/get_all_tags_galaxies',
+      $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
         function(data) {
           ltagsgalaxies.setData(data)
       });
@@ -517,7 +517,7 @@
 <script>
 {% for taxo in active_taxonomies %}
     jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
-      $.getJSON('/Tags/get_tags_taxonomie?taxonomie={{ taxo }}',
+      $.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
         function(data) {
           ltags.setData(data)
   });
@@ -527,7 +527,7 @@
 <script>
 {% for galaxy in active_galaxies %}
     jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
-      $.getJSON('/Tags/get_tags_galaxy?galaxy={{ galaxy }}',
+      $.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
         function(data) {
           ltagsgalaxies.setData(data)
   });

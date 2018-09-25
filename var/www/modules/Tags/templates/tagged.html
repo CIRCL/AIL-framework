@@ -178,7 +178,7 @@ $(document).ready(function(){
     $("#nbr_entry").hide();
     $("#loading_gif_browse").hide();
 
-    $.getJSON('/Tags/get_all_tags',
+    $.getJSON("{{ url_for('Tags.get_all_tags') }}",
       function(data) {
         activePage = "page-Tags"
         $("#"+activePage).addClass("active");
