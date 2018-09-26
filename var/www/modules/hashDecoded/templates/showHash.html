@@ -151,7 +151,7 @@
 									Virus Total submission is disabled
 								{% endif %}
 
-								<a href="/hashDecoded/downloadHash?hash={{hash}}" target="blank">
+								<a href="{{ url_for('hashDecoded.downloadHash') }}?hash={{hash}}" target="blank">
 									<button class='btn btn-info pull-right'><i id="flash-tld" class="glyphicon glyphicon-download-alt " flash-tld=""></i> Download Hashed file
 									</button>
 								</a>

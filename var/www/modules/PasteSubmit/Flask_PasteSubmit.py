@@ -296,6 +296,11 @@ def submit():
 
     submitted_tag = 'infoleak:submission="manual"'
 
+    #active taxonomies
+    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
+    #active galaxies
+    active_galaxies = r_serv_tags.smembers('active_galaxies')
+
     if ltags or ltagsgalaxies:
         if not addTagsVerification(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
@@ -343,6 +348,8 @@ def submit():
                 launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password ,True)
 
                 return render_template("submiting.html",
+                                            active_taxonomies = active_taxonomies,
+                                            active_galaxies = active_galaxies,
                                             UUID = UUID)
 
             else:
@@ -363,6 +370,8 @@ def submit():
             launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password)
 
             return render_template("submiting.html",
+                                        active_taxonomies = active_taxonomies,
+                                        active_galaxies = active_galaxies,
                                         UUID = UUID)
 
         else:

@@ -215,7 +215,7 @@
                 </div>
                 <div class="modal-body">
 
-                  <form method="post" action="/PasteSubmit/create_misp_event"target="_blank">
+                  <form method="post" action="{{ url_for('PasteSubmit.create_misp_event') }}" target="_blank">
 
                   <div class="input select required">
                     <label for="EventDistribution">Distribution</label>
@@ -293,7 +293,7 @@
 
                 <div class="modal-body">
 
-                  <form method="post" action="/PasteSubmit/create_hive_case" target="_blank">
+                  <form method="post" action="{{ url_for('PasteSubmit.create_hive_case') }}" target="_blank">
 
                   <div class="input clear required">
                     <label for="EventThreatLevelId">Threat Level</label>

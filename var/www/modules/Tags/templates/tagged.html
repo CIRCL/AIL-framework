@@ -9,15 +9,15 @@
   <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
-  <link href="/static//css/bootstrap.min.css" rel="stylesheet">
-  <link href="/static//font-awesome/css/font-awesome.css" rel="stylesheet">
-  <link href="/static//css/sb-admin-2.css" rel="stylesheet">
-  <link href="/static//css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
   <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
-  <script language="javascript" src="/static//js/jquery.js"></script>
-  <script src="/static//js/bootstrap.min.js"></script>
-  <script src="/static//js/jquery.dataTables.min.js"></script>
-  <script src="/static//js/dataTables.bootstrap.js"></script>
+  <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
   <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
   <style>
@@ -128,7 +128,7 @@
     <div id="div_stil_data">
       <button id="load_more_json_button1" type="button" class="btn btn-default" onclick="add_entries(100)" style="display: True">Load 100 entries</button>
       <button id="load_more_json_button2" type="button" class="btn btn-warning" onclick="add_entries(300)" style="display: True">Load 300 entries</button>
-      <img id="loading_gif_browse" src="/static//image/loading.gif" heigt="20" width="20" style="margin: 2px;"></div>
+      <img id="loading_gif_browse" src="{{url_for('static', filename='image/loading.gif') }}" heigt="20" width="20" style="margin: 2px;"></div>
       </br>
 
       <div>

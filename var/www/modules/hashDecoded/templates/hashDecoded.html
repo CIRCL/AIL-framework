@@ -90,7 +90,7 @@
 								<div class="panel panel-info" style="text-align:center;">
 									<div class="panel-heading">
 										Select a date range :
-										<form action="/hashDecoded/all_hash_search" id="hash_selector_form" method='post'>
+										<form action="{{ url_for('hashDecoded.all_hash_search') }}" id="hash_selector_form" method='post'>
 											<div class="input-group">
 												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
 												<input class="form-control" id="date-range-from" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from">
@@ -374,13 +374,13 @@ function barchart_type_stack(url, id) {
 				.selectAll("text")
 					.attr("class", "bar")
 					{% if  date_from|string == date_to|string and type is none %}
-						.on("click", function (d) { window.location.href = '/hashDecoded/?date_from={{date_from}}&date_to={{date_to}}&type='+d })
+						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type="+d })
 						.attr("transform", "rotate(-18)" )
 					{% elif  date_from|string == date_to|string and type is not none %}
-						.on("click", function (d) { window.location.href = '/hashDecoded/?date_from='+d+'&date_to='+d })
+						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from="+d+'&date_to='+d })
 						.attr("transform", "rotate(-18)" )
 					{% else %}
-						.on("click", function (d) { window.location.href = '/hashDecoded/?date_from='+d+'&date_to='+d })
+						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from="+d+'&date_to='+d })
 						.attr("transform", "rotate(-40)" )
 					{% endif %}
 					.style("text-anchor", "end");
@@ -412,11 +412,11 @@ function barchart_type_stack(url, id) {
 	      .on("mouseover", function (d) { showPopover.call(this, d); })
 				.on("mouseout", function (d) { removePopovers(); })
 				{% if  date_from|string == date_to|string and type is none %}
-					.on("click", function(d){ window.location.href = "/hashDecoded/" +'?date_from={{date_from}}&date_to={{date_to}}&type='+d.label+'&encoding='+d.name; });
+					.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?date_from={{date_from}}&date_to={{date_to}}&type='+d.label+'&encoding='+d.name; });
 				{% elif  date_from|string == date_to|string and type is not none %}
-					.on("click", function(d){ window.location.href = "/hashDecoded/" +'?type={{type}}&date_from='+d.label+'&date_to='+d.label+'&encoding='+d.name; });
+					.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type={{type}}&date_from='+d.label+'&date_to='+d.label+'&encoding='+d.name; });
 				{% else %}
-					.on("click", function(d){ window.location.href = "/hashDecoded/" +'?type='+ d.name +'&date_from='+d.label+'&date_to='+d.label; });
+					.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type='+ d.name +'&date_from='+d.label+'&date_to='+d.label; });
 				{% endif %}
 
 				data.forEach(function(d) {
@@ -424,15 +424,14 @@ function barchart_type_stack(url, id) {
 						svg.append("text")
 								.attr("class", "bar")
 								.attr("dy", "-.35em")
-								//.on("click", (window.location.href = "/hashDecoded/"+'?date_from='+d.date) )
 								.attr('x', x(d.date) + x.bandwidth()/2)
 								.attr('y', y(d.total))
 								{% if  date_from|string == date_to|string and type is none %}
-									.on("click", function () {window.location.href = "/hashDecoded/"+'?date_from={{date_from}}&date_to={{date_to}}&type='+d.date })
+									.on("click", function () {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}"+'?date_from={{date_from}}&date_to={{date_to}}&type='+d.date })
 								{% elif  date_from|string == date_to|string and type is not none %}
-									.on("click", function () {window.location.href = '/hashDecoded/?type={{type}}&date_from='+d.date+'&date_to='+d.date })
+									.on("click", function () {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?type={{type}}&date_from="+d.date+'&date_to='+d.date })
 								{% else %}
-									.on("click", function () {window.location.href = "/hashDecoded/"+'?date_from='+d.date+'&date_to='+d.date })
+									.on("click", function () {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}"+'?date_from='+d.date+'&date_to='+d.date })
 								{% endif %}
 								.style("text-anchor", "middle")
 								.text(d.total);
@@ -545,7 +544,7 @@ d3.json("{{ url_for('hashDecoded.decoder_type_json') }}?date_from={{date_from}}&
 			.attr('class', 'pie_path')
 			.on("mouseover", mouseovered_pie)
 			.on("mouseout", mouseouted_pie)
-			.on("click", function (d) {window.location.href = '/hashDecoded/?date_from={{date_from}}&date_to={{date_to}}&type={{type}}&encoding='+d.data.name })
+			.on("click", function (d) {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}&encoding="+d.data.name })
 		  .style('opacity', opacity_pie)
 		  .style('stroke', 'white');
 	});
@@ -626,7 +625,7 @@ function barchart_type(url, id) {
 						{% else %}
 						.attr("transform", "rotate(-70)" )
 						.attr("class", "bar")
-						.on("click", function (d) { window.location.href = "/hashDecoded/"+'?date_from='+d+'&date_to='+d });
+						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}"+'?date_from='+d+'&date_to='+d });
 						{% endif %}
 
         svg.append("g")
@@ -649,10 +648,10 @@ function barchart_type(url, id) {
             .attr("y", function(d) { return y(d.value); })
             .attr("height", function(d) { return height - y(d.value); })
 						{% if  type %}
-            .on("click", function(d){ window.location.href = "/hashDecoded/" +'?type={{type}}&date_from='+ d.date +'&date_to='+ d.date; });
+            .on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type={{type}}&date_from='+ d.date +'&date_to='+ d.date; });
 						{% endif  %}
 						{% if  daily_type_chart %}
-						.on("click", function(d){ window.location.href = "/hashDecoded/" +'?type='+d.date+'&date_from={{ daily_date }}&date_to={{ daily_date }}'; });
+						.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type='+d.date+'&date_from={{ daily_date }}&date_to={{ daily_date }}'; });
 						{% endif  %}
 
 

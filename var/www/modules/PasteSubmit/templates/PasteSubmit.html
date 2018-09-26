@@ -20,7 +20,7 @@
           <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
-					<script src="/static//js/bootstrap.min.js"></script>
+					<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 					<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 	</head>
@@ -34,7 +34,7 @@
 
 
 
-	<form action="/PasteSubmit/submit" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+	<form action="{{ url_for('PasteSubmit.submit') }}" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
 
 		<input type="hidden" id="tags_taxonomies" name="tags_taxonomies" value="test">
 		<input type="hidden" id="tags_galaxies" name="tags_galaxies" value="test">

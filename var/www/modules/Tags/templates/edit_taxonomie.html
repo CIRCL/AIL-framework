@@ -16,9 +16,9 @@
 	  <!-- JS -->
 	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
 	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-		<script src="/static//js/bootstrap.min.js"></script>
-	  <script src="/static//js/jquery.dataTables.min.js"></script>
-	  <script src="/static//js/dataTables.bootstrap.js"></script>
+		<script src="{{ url_for('static', filename='js/bootstrap.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/dataTables.bootstrap.js')}}"></script>
+	  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 
 		<style>
 			.tooltip-inner {
@@ -47,7 +47,7 @@
     <div id="page-wrapper">
 			<div class="row">
 				<div class="col-lg-12">
-          <a href="/Tags/taxonomies" class="btn btn-light pull-left">
+          <a href="{{ url_for('Tags.taxonomies') }}" class="btn btn-light pull-left">
             <i class="fa fa-arrow-left fa"></i> List Taxonomies
           </a>
 				</div>
@@ -83,7 +83,7 @@
         </div>
       </div>
 
-      <form action="/Tags/edit_taxonomie_tag" id="checkboxForm">
+      <form action="{{ url_for('Tags.edit_taxonomie_tag') }}" id="checkboxForm">
 				<input type="hidden" value="{{ id }}" name="taxonomie" />
 
 
