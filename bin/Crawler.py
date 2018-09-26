@@ -36,7 +36,8 @@ def crawl_onion(url, domain, date, date_month, message):
             r_onion.sadd('{}_crawler_queue'.format(type_hidden_service), message)
 
         print('--------------------------------------')
-        print('          DOCKER SPLASH DOWN')
+        print('         \033[91m DOCKER SPLASH DOWN\033[0m')
+        print('          {} DOWN'.format(splash_url))
         exit(0)
 
     if r.status_code == 200:
@@ -94,7 +95,6 @@ if __name__ == '__main__':
         print('incorrect crawler type: {}'.format(type_hidden_service))
         exit(0)
 
-    print('crawler type: {}'.format(type_hidden_service))
     print('splash url: {}'.format(splash_url))
 
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
@@ -132,13 +132,11 @@ if __name__ == '__main__':
             message = r_onion.spop('mess_onion')
 
         if message is not None:
-            print(message)
 
             splitted = message.split(';')
             if len(splitted) == 2:
                 url, paste = splitted
                 paste = paste.replace(PASTES_FOLDER+'/', '')
-                print(paste)
                 '''
                 if not '.onion' in url:
                     print('not onion')
@@ -157,9 +155,9 @@ if __name__ == '__main__':
 
                 domain_url = 'http://{}'.format(domain)
 
-                print('------------------START CRAWLER------------------')
-                print(type_hidden_service)
-                print('-------------------------------------------------')
+                print('\033[92m------------------START CRAWLER------------------\033[0m')
+                print('crawler type:     {}'.format(type_hidden_service))
+                print('\033[92m-------------------------------------------------\033[0m')
                 print('url:         {}'.format(url))
                 print('domain:      {}'.format(domain))
                 print('domain_url:  {}'.format(domain_url))
