@@ -114,7 +114,7 @@ class TorSplashCrawler():
                 # down ?
                 print('504 detected')
             elif response.status != 200:
-                #print('other: {}'.format(response.status))
+                print('other response: {}'.format(response.status))
                 #print(error_log)
                 #detect connection to proxy refused
                 error_log = (json.loads(response.body.decode()))

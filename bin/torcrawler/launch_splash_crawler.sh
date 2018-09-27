@@ -37,7 +37,7 @@ sleep 0.1
 
 for ((i=0;i<=$((${n} - 1));i++)); do
     port_number=$((${p} + $i))
-    screen -S "Docker_Splash" -X screen -t "docker_splash:$port_number" bash -c 'sudo docker run -p '$port_number':8050 --cpus=1 -v '$f':/etc/splash/proxy-profiles/ --net="bridge" scrapinghub/splash; read x'
+    screen -S "Docker_Splash" -X screen -t "docker_splash:$port_number" bash -c 'sudo docker run -p '$port_number':8050 --cpus=1 --memory=4.5G -v '$f':/etc/splash/proxy-profiles/ --net="bridge" scrapinghub/splash; read x'
     sleep 0.1
     echo "    Splash server launched on port $port_number"
 done

@@ -186,7 +186,6 @@ def showpaste(content_range, requested_path):
         crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
-        crawler_metadata['external_links'] =r_serv_metadata.scard('paste_onion_external_links:'+requested_path)
         crawler_metadata['screenshot'] = paste.get_p_rel_path()
     else:
         crawler_metadata['get_metadata'] = False
