@@ -201,23 +201,28 @@ function launching_scripts {
 }
 
 function launching_crawler {
-  CONFIG=$AIL_BIN/packages/config.cfg
-  lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_onion_port/{print $3;exit}' "${CONFIG}")
-  echo $lport
+    CONFIG=$AIL_BIN/packages/config.cfg
+    lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_onion_port/{print $3;exit}' "${CONFIG}")
 
-  IFS='-' read -ra PORTS <<< "$lport"
-  first_port=${PORTS[0]}
-  last_port=${PORTS[1]}
+    IFS='-' read -ra PORTS <<< "$lport"
+    if [ ${#PORTS[@]} -eq 1 ]
+    then
+        first_port=${PORTS[0]}
+        last_port=${PORTS[0]}
+    else
+        first_port=${PORTS[0]}
+        last_port=${PORTS[1]}
+    fi
 
-  screen -dmS "Crawler_AIL"
-  sleep 0.1
+    screen -dmS "Crawler_AIL"
+    sleep 0.1
 
-  for ((i=first_port;i<=last_port;i++)); do
-      screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c 'cd '${AIL_BIN}'; ./Crawler.py onion '$i'; read x'
-      sleep 0.1
-  done
+    for ((i=first_port;i<=last_port;i++)); do
+        screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c 'cd '${AIL_BIN}'; ./Crawler.py onion '$i'; read x'
+        sleep 0.1
+    done
 
-  echo -e $GREEN"\t* Launching Crawler_AIL scripts"$DEFAULT
+    echo -e $GREEN"\t* Launching Crawler_AIL scripts"$DEFAULT
 }
 
 function shutting_down_redis {
@@ -465,7 +470,7 @@ function launch_all {
 
 while [ "$1" != "" ]; do
     case $1 in
-        -l | --launchAuto )         launch_all "automatic"; launching_crawler
+        -l | --launchAuto )         launch_all "automatic";
                                     ;;
         -k | --killAll )            killall;
                                     ;;
