@@ -110,12 +110,16 @@ class TorSplashCrawler():
         def parse(self,response):
             #print(response.headers)
             #print(response.status)
-            print('   |   ')
             if response.status == 504:
                 # down ?
                 print('504 detected')
             elif response.status != 200:
-                print('other: {}'.format(response.status))
+                #print('other: {}'.format(response.status))
+                #print(error_log)
+                #detect connection to proxy refused
+                error_log = (json.loads(response.body.decode()))
+                if(error_log['info']['text'] == 'Connection to proxy refused'):
+                    print('Connection to proxy refused')
             else:
 
                 UUID = self.domains[0]+str(uuid.uuid4())

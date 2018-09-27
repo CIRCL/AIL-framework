@@ -102,20 +102,23 @@ Crawler
 ---------------------
 In AIL, you can crawl hidden services.
 
-two types of configutation [explaination for what]:
-	1) use local Splash dockers (use the same host for Splash servers and AIL)
-	2) use remote Splash servers
+There is two type of installation. You can install a *local* or a *remote* Splash server. If you install a local Splash server, the Splash and AIL host are the same.
 
-- (Splash host) Launch ``crawler_hidden_services_install.sh`` to install all requirement (type ``y`` if a localhost splah server is used)
-- (Splash host) Setup your tor proxy[is already installed]: 
+Install/Configure and launch all crawler scripts:
+
+- *(Splash host)* Launch ``crawler_hidden_services_install.sh`` to install all requirement (type ``y`` if a localhost splah server is used or use ``-y`` option)
+
+- *(Splash host)* Install/Setup your tor proxy: 
+	- Install the tor proxy: ``sudo apt-get install tor -y``
+	  (The tor proxy is installed by default in AIL. If you use the same host for the Splash server, you don't need to intall it)
 	- Add the following line in ``/etc/tor/torrc: SOCKSPolicy accept 172.17.0.0/16``
   	  (for a linux docker, the localhost IP is 172.17.0.1; Should be adapted for other platform)
 	- Restart the tor proxy: ``sudo service tor restart``
 
-- (Splash host) Launch all Splash servers with: ``sudo ./bin/torcrawler/launch_splash_crawler.sh [-f <config absolute_path>] [-p <port_start>] [-n <number_of_splash>]``
-  all the Splash dockers are launched inside the ``Docker_Splash`` screen. You can use ``sudo screen -r Docker_Splash`` to connect to the screen session and check all Splash servers status.
+- *(Splash host)* Launch all Splash servers with: ``sudo ./bin/torcrawler/launch_splash_crawler.sh [-f <config absolute_path>] [-p <port_start>] [-n <number_of_splash>]``
+  All Splash dockers are launched inside the ``Docker_Splash`` screen. You can use ``sudo screen -r Docker_Splash`` to connect to the screen session and check all Splash servers status.
 
-- (AIL host) Edit the ``/bin/packages/config.cfg`` file:
+- *(AIL host)* Edit the ``/bin/packages/config.cfg`` file:
 	- In the crawler section, set ``activate_crawler`` to ``True``
 	- Change the IP address of Splash servers if needed (remote only)
 	- Set ``splash_onion_port`` according to your Splash servers port numbers who are using the tor proxy. those ports numbers should be described as a single port (ex: 8050) or a port range (ex: 8050-8052 for 8050,8051,8052 ports).

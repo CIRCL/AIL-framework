@@ -18,6 +18,12 @@ from pubsublogger import publisher
 def signal_handler(sig, frame):
     sys.exit(0)
 
+def on_error_send_message_back_in_queue(type_hidden_service, domain, message):
+    # send this msg back in the queue
+    if not r_onion.sismember('{}_domain_crawler_queue'.format(type_hidden_service), domain):
+        r_onion.sadd('{}_domain_crawler_queue'.format(type_hidden_service), domain)
+        r_onion.sadd('{}_crawler_queue'.format(type_hidden_service), message)
+
 def crawl_onion(url, domain, date, date_month, message):
 
     #if not r_onion.sismember('full_onion_up', domain) and not r_onion.sismember('onion_down:'+date , domain):
@@ -30,15 +36,11 @@ def crawl_onion(url, domain, date, date_month, message):
     except Exception:
         ## FIXME: # TODO: relaunch docker or send error message
 
-        # send this msg back in the queue
-        if not r_onion.sismember('{}_domain_crawler_queue'.format(type_hidden_service), domain):
-            r_onion.sadd('{}_domain_crawler_queue'.format(type_hidden_service), domain)
-            r_onion.sadd('{}_crawler_queue'.format(type_hidden_service), message)
-
+        on_error_send_message_back_in_queue(type_hidden_service, domain, message)
         print('--------------------------------------')
         print('         \033[91m DOCKER SPLASH DOWN\033[0m')
         print('          {} DOWN'.format(splash_url))
-        exit(0)
+        exit(1)
 
     if r.status_code == 200:
         process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', splash_url, type_hidden_service, url, domain, paste, super_father],
@@ -47,15 +49,26 @@ def crawl_onion(url, domain, date, date_month, message):
             time.sleep(1)
 
         if process.returncode == 0:
-            # onion up
-            print(process.stdout.read())
-
+            output = process.stdout.read().decode()
+            print(output)
+            # error: splash:Connection to proxy refused
+            if 'Connection to proxy refused' in output:
+                on_error_send_message_back_in_queue(type_hidden_service, domain, message)
+                print('------------------------------------------------------------------------')
+                print('         \033[91m SPLASH: Connection to proxy refused')
+                print('')
+                print('            PROXY DOWN OR BAD CONFIGURATION\033[0m'.format(splash_url))
+                print('------------------------------------------------------------------------')
+                exit(-2)
         else:
             print(process.stdout.read())
-            exit(0)
+            exit(-1)
     else:
-        ## FIXME: # TODO: relaunch docker
-        exit(0)
+        on_error_send_message_back_in_queue(type_hidden_service, domain, message)
+        print('--------------------------------------')
+        print('         \033[91m DOCKER SPLASH DOWN\033[0m')
+        print('          {} DOWN'.format(splash_url))
+        exit(1)
 
 
 if __name__ == '__main__':
