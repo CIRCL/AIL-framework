@@ -24,8 +24,7 @@
       window.glob_tabvar = []; // Avoid undefined
       window.threshold_stucked_module = {{ threshold_stucked_module }}
       function update_values() {
-          $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-          $.getJSON($SCRIPT_ROOT+"/_stuff",
+          $.getJSON("{{ url_for('dashboard.stuff') }}",
               function(data) {
                   window.glob_tabvar = data;
               });
@@ -189,14 +188,16 @@
 
     </div>
     <script> var url_showSavedPath = "{{ url_for('showsavedpastes.showsavedpaste') }}"; </script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"
+      data-urlstuff="{{ url_for('dashboard.stuff') }}" data-urllog="{{ url_for('dashboard.logs') }}">
+    </script>
 
     <script>
         activePage = "page-index";
         $("#"+activePage).addClass("active");
 
         var tableBody = document.getElementById('tab_body')
-        $.getJSON('/_get_last_logs_json', function(data) {
+        $.getJSON("{{ url_for('dashboard.get_last_logs_json') }}", function(data) {
           data.forEach(function (d) {
             var tr = document.createElement('TR')
             var time = document.createElement('TD')

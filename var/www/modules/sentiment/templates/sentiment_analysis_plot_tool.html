@@ -127,7 +127,9 @@
         $("#"+activePage).addClass("active");
    });
 </script>
-<script src="{{ url_for('static', filename='js/sentiment_plot.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sentiment_plot.js') }}"
+    data-url_sentiment_analysis="{{ url_for('sentiments.sentiment_analysis_plot_tool_getdata') }}">
+</script>
 
 </body>
 </html>

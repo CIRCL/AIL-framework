@@ -12,13 +12,13 @@
 	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
 	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
-	 <link href="/static//css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+	  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
 	  <!-- JS -->
 	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
-	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-		<script src="/static//js/bootstrap.min.js"></script>
-	  <script src="/static//js/jquery.dataTables.min.js"></script>
-	  <script src="/static//js/dataTables.bootstrap.js"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+	  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
 
 		<style>
 			.tooltip-inner {
@@ -47,7 +47,7 @@
     <div id="page-wrapper">
 			<div class="row">
 				<div class="col-lg-12">
-          <a href="/Tags/galaxies" class="btn btn-light pull-left">
+          <a href="{{ url_for('Tags.galaxies') }}" class="btn btn-light pull-left">
             <i class="fa fa-arrow-left fa"></i> List Galaxies
           </a>
 				</div>
@@ -83,7 +83,7 @@
         </div>
       </div>
 
-      <form action="/Tags/edit_galaxy_tag" id="checkboxForm">
+      <form action="{{ url_for('Tags.edit_galaxy_tag') }}" id="checkboxForm">
 				<input type="hidden" value="{{ id }}" name="galaxy" />
 
 

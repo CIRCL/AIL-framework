@@ -20,7 +20,7 @@
           <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.pie.js') }}"></script>
           <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
-					<script src="/static//js/bootstrap.min.js"></script>
+					<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 					<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 	<style>
@@ -49,7 +49,7 @@
 <div class="row">
 	<!-- /.col-lg-12 -->
 
-	<form action="/PasteSubmit/submit" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+	<form action="{{ url_for('PasteSubmit.submit') }}" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
 
 		<input type="hidden" id="tags_taxonomies" name="tags_taxonomies" value="test">
 		<input type="hidden" id="tags_galaxies" name="tags_galaxies" value="test">
@@ -205,7 +205,7 @@
     var ltagsgalaxies
     $(document).ready(function(){
 
-        $.getJSON('/Tags/get_all_tags_taxonomies',
+        $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
           function(data) {
 
             ltags = $('#ltags').tagSuggest({
@@ -215,7 +215,7 @@
             });
           });
 
-        $.getJSON('/Tags/get_all_tags_galaxies',
+        $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
           function(data) {
 
             ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
@@ -242,7 +242,7 @@ function submitPaste(){
 <script>
     jQuery("#all-tags-taxonomies").click(function(e){
       //change input tags list
-      $.getJSON('/Tags/get_all_tags_taxonomies',
+      $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
         function(data) {
           ltags.setData(data)
       });
@@ -251,7 +251,7 @@ function submitPaste(){
 </script>
 <script>
     jQuery("#all-tags-galaxies").click(function(e){
-      $.getJSON('/Tags/get_all_tags_galaxies',
+      $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
         function(data) {
           ltagsgalaxies.setData(data)
       });
@@ -259,7 +259,7 @@ function submitPaste(){
 
 {% for taxo in active_taxonomies %}
     jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
-      $.getJSON('/Tags/get_tags_taxonomie?taxonomie={{ taxo }}',
+      $.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
         function(data) {
           ltags.setData(data)
   });
@@ -269,7 +269,7 @@ function submitPaste(){
 <script>
 {% for galaxy in active_galaxies %}
     jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
-      $.getJSON('/Tags/get_tags_galaxy?galaxy={{ galaxy }}',
+      $.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
         function(data) {
           ltagsgalaxies.setData(data)
   });
@@ -283,7 +283,7 @@ function submitPaste(){
 		$(".progress-bar").css("width", i + "%").text(i + " %");
 		function makeProgress(){
 
-			$.getJSON('/PasteSubmit/submit_status?UUID={{ UUID }}',
+			$.getJSON("{{ url_for('PasteSubmit.submit_status') }}?UUID={{ UUID }}",
         function(data) {
 
 					var end = data.end;

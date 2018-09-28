@@ -279,7 +279,7 @@ def showHash():
                                 first_seen=first_seen, list_hash_decoder=list_hash_decoder,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
-@app.route('/hashDecoded/downloadHash')
+@hashDecoded.route('/hashDecoded/downloadHash')
 def downloadHash():
     hash = request.args.get('hash')
     # sanitize hash

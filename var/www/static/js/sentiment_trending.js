@@ -1,5 +1,17 @@
 
 /* Functions and config */
+
+function getSyncScriptParams() {
+         var scripts = document.getElementsByTagName('script');
+         var lastScript = scripts[scripts.length-1];
+         var scriptName = lastScript;
+         return {
+             url_sentiment_analysis_getplotdata : scriptName.getAttribute('data-url_sentiment_analysis_getplotdata'),
+         };
+}
+
+var url_sentiment_analysis_getplotdata = getSyncScriptParams().url_sentiment_analysis_getplotdata;
+
 function add_new_graph_today(id) {
     return "<div id=\"panel-today\" class=\"panel panel-default pannelToday"+id+"\">" +
                 "<div class=\"panel-heading\">" +
@@ -100,7 +112,7 @@ var totNumGraph = 0;
 // When everything is terminated, plot the widgets (Gauge, canvasJS, table)
 // input: all - set to 'True' if you take all providers
 function draw_page(all) {
-    $.getJSON("/sentiment_analysis_getplotdata/?getProviders=True&all="+all,
+    $.getJSON(url_sentiment_analysis_getplotdata + "?getProviders=True&all="+all,
         function(data) {
             var promises = [];
 
@@ -137,7 +149,7 @@ function draw_page(all) {
 // input - provider: The povider name to be plotted
 // input - graphNum: The number of the graph (Use to plot on correct div)
 function query_and_plot(provider, graphNum) {
-    var query_plot = $.getJSON("/sentiment_analysis_getplotdata/?provider="+provider,
+    var query_plot = $.getJSON(url_sentiment_analysis_getplotdata + "?provider="+provider,
         function(data) {
             var plot_data = [];
             var array_provider = Object.keys(data);

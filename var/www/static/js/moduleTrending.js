@@ -1,10 +1,22 @@
 /* Already defined variable (Before the input)
-* 
+*
 * var chart_1_num_day = 5;
 * var chart_2_num_day = 15;
 *
 */
 
+function getSyncScriptParams() {
+         var scripts = document.getElementsByTagName('script');
+         var lastScript = scripts[scripts.length-1];
+         var scriptName = lastScript;
+         return {
+             url_providersChart : scriptName.getAttribute('data-url_providersChart'),
+             url_moduleCharts : scriptName.getAttribute('data-url_moduleCharts'),
+         };
+}
+
+var url_providersChart = getSyncScriptParams().url_providersChart;
+var url_moduleCharts = getSyncScriptParams().url_moduleCharts;
 
 /* VARIABLES */
     var pie_threshold = 0.05
@@ -29,7 +41,7 @@
              grid: { hoverable: true, clickable: true },
              legend: { show: false  },
          };
-    
+
     /* Linked graph - remember the data */
     var plot_data_old = []
     var plot_old = []
@@ -46,23 +58,24 @@ function labelFormatter(label, series) {
 function plot_top_graph(module_name, init){
 
     /**** Pie Chart ****/
-    
+
     // moduleCharts is used the decide the url to request data
-    var moduleCharts = "size" == module_name ? "providersChart" : ("num" == module_name ? "providersChart" : "moduleCharts");
+    var moduleCharts = "size" == module_name ? url_providersChart : ("num" == module_name ? url_providersChart : url_moduleCharts);
+    console.log(moduleCharts)
     var tot_sum = 0; // used to detect elements placed in 'Other' pie's part
     var data_other = []; // used to detect elements placed in 'Other' pie's part
 
-    var createPie = $.getJSON($SCRIPT_ROOT+"/_"+moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
+    var createPie = $.getJSON(moduleCharts+"?moduleName="+module_name+"&num_day="+chart_1_num_day,
         function(data) {
                   var temp_data_pie = [];
                   for(i=0; i<data.length; i++){
                       if (i==0 && data[0][0] == "passed_days"){ // If there is no data today, take it from the past
                          if (data[0][1] > 0 && data[0][1] < 7){ // If data is [1:6] day(s) old, put the panel in yellow
-                             $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
+                             $("#day-"+module_name).text(data[0][1] + " Day(s) ago ");
                              $("#panel-"+module_name).removeClass("panel-green");
                              $("#panel-"+module_name).addClass("panel-yellow");
                          } else if (data[0][1] > 6) { // data old of more than 7 days, put the panel in red
-                             $("#day-"+module_name).text(data[0][1] + " Day(s) ago "); 
+                             $("#day-"+module_name).text(data[0][1] + " Day(s) ago ");
                              $("#panel-"+module_name).removeClass("panel-green");
                              $("#panel-"+module_name).addClass("panel-red");
                          }
@@ -81,29 +94,29 @@ function plot_top_graph(module_name, init){
                   if (init){ //prevent multiple binding due to the refresh function
                       $("#flot-pie-chart-"+module_name).bind("plotclick", function (event, pos, item) {
                           if (item == null)
-                              return; 
+                              return;
                           var clicked_label = item.series.label;
-                          
+
                           if (module_name == "size"){ // if Provider pie chart clicked, draw the two bar charts
-                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label, 
+                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label,
                                                item.series.color, "%m/%d", false);
                               update_bar_chart(moduleCharts, "num", "#flot-bar-chart-"+"num", clicked_label,
                                                item.series.color, "%m/%d", true);
                           }
                           else if (module_name == "num"){
-                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label, 
+                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label,
                                                item.series.color, "%m/%d", false);
-                              update_bar_chart(moduleCharts, "size", "#flot-bar-chart-"+"size", clicked_label, 
+                              update_bar_chart(moduleCharts, "size", "#flot-bar-chart-"+"size", clicked_label,
                                                item.series.color, "%m/%d", true);
                           } else {
-                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label, 
+                              update_bar_chart(moduleCharts, module_name, "#flot-bar-chart-"+module_name, clicked_label,
                                                item.series.color, "%m/%d", true);
-                          }                          
+                          }
                       });
                   }
     });
-    
-        
+
+
     /**** Bar Chart ****/
 
     function update_bar_chart(chartUrl, module_name, chartID, involved_item, serie_color, timeformat, can_bind){
@@ -137,7 +150,7 @@ function plot_top_graph(module_name, init){
 
             for(i=0; i<data_other.length; i++){ // Get data for elements summed up in the part 'Other'
                 involved_item = data_other[i];
-                var request = $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
+                var request = $.getJSON(chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
                         function(data) {
                             temp_data_bar = []
                             for(i=1; i<data.length; i++){
@@ -146,7 +159,7 @@ function plot_top_graph(module_name, init){
                                 temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset, data[i][1].toFixed(2)]);
                             }
                             // Insert temp_data_bar in order so that color and alignement correspond for the provider graphs
-                            all_other_temp_data.splice(data_other.indexOf(data[0]), 0, [ data[0], temp_data_bar, data_other.indexOf(data[0])]); 
+                            all_other_temp_data.splice(data_other.indexOf(data[0]), 0, [ data[0], temp_data_bar, data_other.indexOf(data[0])]);
                         }
                 )
                 promises.push(request);
@@ -184,9 +197,9 @@ function plot_top_graph(module_name, init){
                     colors: ["#72a555", "#ab62c0", "#c57c3c", "#638ccc", "#ca5670"]
                 })
 
- 
+
                 /* rememeber the data for the two provider graph */
-                if (chartUrl == "providersChart"){
+                if (chartUrl == url_providersChart){
                     if (plot_data_old.length>1){ // avoid adding plot_data for previous clicked pie part
                         plot_data_old = [];
                         plot_old = [];
@@ -201,13 +214,13 @@ function plot_top_graph(module_name, init){
                         binder("num");
                     else if (module_name == "num")
                         binder("size");
-                }               
+                }
 
             });
 
         } else { // Normal pie's part clicked
 
-            $.getJSON($SCRIPT_ROOT+"/_"+chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
+            $.getJSON(chartUrl+"?keywordName="+involved_item+"&moduleName="+module_name+"&bar=true"+"&days="+num_day,
                 function(data) {
                     var temp_data_bar = []
                     for(i=1; i<data.length; i++){
@@ -245,7 +258,7 @@ function plot_top_graph(module_name, init){
                     }
                });
        }
-    
+
     }; // end update_bar_chart
 
 } // end plot_top_graph
@@ -261,7 +274,7 @@ function binder(module_name){
            var formated_date = date.getMonth()+'/'+date.getDate();
            var color = item.series.color;
            var color_opac = "rgba" +  color.slice(3, color.length-1)+",0.15)";
-    
+
            // display the hovered value in the chart div
            $("#tooltip_graph-"+module_name).html(item.series.label + " of " + formated_date + " = <b>" + y+"</b>")
                .css({padding: "2px", width: 'auto', 'background': color_opac , 'border': "3px solid "+color})
@@ -269,7 +282,7 @@ function binder(module_name){
 
 
            /* If provider bar chart hovered, highlight and display associated value */
-           if (module_name == "size" || module_name == "num"){ 
+           if (module_name == "size" || module_name == "num"){
                new_module_name = module_name == "size" ? "num" : "size";
 
                /* Used to get the corresponding associated value for providers charts */
