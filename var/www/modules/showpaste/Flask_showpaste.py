@@ -5,7 +5,6 @@
     Flask functions and routes for the trending modules page
 '''
 import redis
-import os
 import json
 import os
 import flask

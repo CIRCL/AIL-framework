@@ -80,10 +80,50 @@
 								</div>
 
 							</div>
-
+						</div>
 					</div>
 
 					<div class="col-md-6">
+						<div class="panel panel-info">
+      						<div class="panel-heading">
+                    <i class="fa fa-eye-slash"></i> Domains Crawled Today
+      						</div>
+
+                      <table class="table table-hover table-striped">
+                        <tbody>
+                          <tr>
+                            <td>
+															<div style="color:Green; display:inline-block">
+																<i class="fa fa-check-circle fa-2x"></i>
+																Domains UP
+															</div>
+														</td>
+                            <td>
+															<div style="color:Green; display:inline-block">
+																{{ statDomains['domains_up'] }}
+															</div>
+														</td>
+                          </tr>
+                          <tr>
+                            <td>
+															<div style="color:Red; display:inline-block">
+																<i class="fa fa-times-circle fa-2x"></i>
+																Domains DOWN
+															</div>
+														</td>
+                            <td>
+															<div style="color:Red; display:inline-block">
+																{{ statDomains['domains_down'] }}
+															</div>
+														</td>
+                          </tr>
+                          <tr>
+                            <td>Crawled Domains</td>
+                            <td>{{ statDomains['total'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                </div>
 					</div>
 
 				</div>
@@ -125,7 +165,8 @@ function create_line_chart(id, url){
 	var line = d3.line()
 							.x(function(d) {
           			return x(d.date);
-        			}).y(function(d) {
+        			})
+							.y(function(d) {
           			return y(d.value);
         			});
 	var svg_line = d3.select('#'+id).append('svg')

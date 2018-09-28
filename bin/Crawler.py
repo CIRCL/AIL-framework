@@ -14,10 +14,6 @@ sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 from pubsublogger import publisher
 
-
-def signal_handler(sig, frame):
-    sys.exit(0)
-
 def on_error_send_message_back_in_queue(type_hidden_service, domain, message):
     # send this msg back in the queue
     if not r_onion.sismember('{}_domain_crawler_queue'.format(type_hidden_service), domain):
@@ -34,9 +30,10 @@ def crawl_onion(url, domain, date, date_month, message):
     try:
         r = requests.get(splash_url , timeout=30.0)
     except Exception:
-        ## FIXME: # TODO: relaunch docker or send error message
+        # TODO: relaunch docker or send error message
 
         on_error_send_message_back_in_queue(type_hidden_service, domain, message)
+        publisher.error('{} SPASH DOWN'.format(splash_url))
         print('--------------------------------------')
         print('         \033[91m DOCKER SPLASH DOWN\033[0m')
         print('          {} DOWN'.format(splash_url))
@@ -54,6 +51,7 @@ def crawl_onion(url, domain, date, date_month, message):
             # error: splash:Connection to proxy refused
             if 'Connection to proxy refused' in output:
                 on_error_send_message_back_in_queue(type_hidden_service, domain, message)
+                publisher.error('{} SPASH, PROXY DOWN OR BAD CONFIGURATION'.format(splash_url))
                 print('------------------------------------------------------------------------')
                 print('         \033[91m SPLASH: Connection to proxy refused')
                 print('')
@@ -114,8 +112,6 @@ if __name__ == '__main__':
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
-    #signal.signal(signal.SIGINT, signal_handler)
-
     r_serv_metadata = redis.StrictRedis(
         host=p.config.get("ARDB_Metadata", "host"),
         port=p.config.getint("ARDB_Metadata", "port"),
@@ -136,13 +132,8 @@ if __name__ == '__main__':
 
     while True:
 
-        # Recovering the streamed message informations. http://eepsites.i2p
+        # Recovering the streamed message informations.
         message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
-
-        # # FIXME: remove
-        if message is None:
-            print('get ardb message')
-            message = r_onion.spop('mess_onion')
 
         if message is not None:
 
@@ -150,12 +141,6 @@ if __name__ == '__main__':
             if len(splitted) == 2:
                 url, paste = splitted
                 paste = paste.replace(PASTES_FOLDER+'/', '')
-                '''
-                if not '.onion' in url:
-                    print('not onion')
-                    continue
-                '''
-
 
                 url_list = re.findall(regex_hidden_service, url)[0]
                 if url_list[1] == '':
@@ -237,12 +222,6 @@ if __name__ == '__main__':
                         # update list, last crawled onions
                         r_onion.lpush('last_{}'.format(type_hidden_service), domain)
                         r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
-
-                        #send all crawled domain past
-                        #msg = domain
-                        #p.populate_set_out(msg, 'DomainSubject')
-
-                        #time.sleep(30)
 
             else:
                 continue

@@ -68,6 +68,13 @@ def hiddenServices_page():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
     list_onion = []
 
+    now = datetime.datetime.now()
+    date = '{}{}{}'.format(now.strftime("%Y"), now.strftime("%m"), now.strftime("%d"))
+    statDomains = {}
+    statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
+    statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
+    statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
+
     for onion in last_onions:
         metadata_onion = {}
         metadata_onion['domain'] = onion
@@ -83,7 +90,7 @@ def hiddenServices_page():
             metadata_onion['status_icon'] = 'fa-times-circle'
         list_onion.append(metadata_onion)
 
-    return render_template("hiddenServices.html", last_onions=list_onion)
+    return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains)
 
 @hiddenServices.route("/hiddenServices/onion_domain", methods=['GET'])
 def onion_domain():
