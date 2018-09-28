@@ -136,7 +136,7 @@
                 $(document).ready(function(){
                     activePage = "page-hiddenServices"
                     $("#"+activePage).addClass("active");
-										all_graph.line_chart = create_line_chart('graph_line', '/hiddenServices/domain_crawled_7days_json?type=onion');
+										all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hiddenServices.domain_crawled_7days_json') }}?type=onion");
                 });
 								$(window).on("resize", function() {
 									all_graph.onResize();

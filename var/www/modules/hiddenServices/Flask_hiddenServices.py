@@ -18,6 +18,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_onion = Flask_config.r_serv_onion
 r_serv_metadata = Flask_config.r_serv_metadata
 bootstrap_label = Flask_config.bootstrap_label
@@ -164,4 +165,4 @@ def domain_crawled_7days_json():
     return jsonify(json_domain_stats)
 
 # ========= REGISTRATION =========
-app.register_blueprint(hiddenServices)
+app.register_blueprint(hiddenServices, url_prefix=baseUrl)
