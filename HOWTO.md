@@ -84,9 +84,9 @@ You can navigate into the interface by using arrow keys. In order to perform an 
 
 To change list, you can press the <TAB> key.
 
-Also, you can quickly stop or start modules by clicking on the <K> or <S> symbol respectively. These are located in the _Action_ column.
+Also, you can quickly stop or start modules by clicking on the ``<K>`` or ``<S>`` symbol respectively. These are located in the _Action_ column.
 
-Finally, you can quit this program by pressing either <q> or <C-c>
+Finally, you can quit this program by pressing either ``<q>`` or ``<C-c>``.
 
 
 Terms frequency usage
