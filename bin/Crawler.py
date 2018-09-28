@@ -130,6 +130,16 @@ if __name__ == '__main__':
         db=p.config.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
+    # load domains blacklist
+    try:
+        with open(os.environ['AIL_BIN']+'/torcrawler/blacklist_onion.txt', 'r') as f:
+            r_onion.delete('blacklist_{}'.format(type_hidden_service))
+            lines = f.read().splitlines()
+            for line in lines:
+                r_onion.sadd('blacklist_{}'.format(type_hidden_service), line)
+    except Exception:
+        pass
+
     while True:
 
         # Recovering the streamed message informations.
@@ -160,7 +170,7 @@ if __name__ == '__main__':
                 print('domain:      {}'.format(domain))
                 print('domain_url:  {}'.format(domain_url))
 
-                if not r_onion.sismember('banned_{}'.format(type_hidden_service), domain):
+                if not r_onion.sismember('blacklist_{}'.format(type_hidden_service), domain):
 
                     date = datetime.datetime.now().strftime("%Y%m%d")
                     date_month = datetime.datetime.now().strftime("%Y%m")

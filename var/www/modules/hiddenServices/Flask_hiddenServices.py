@@ -75,6 +75,7 @@ def hiddenServices_page():
     statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
     statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
     statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
+    statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
 
     for onion in last_onions:
         metadata_onion = {}
