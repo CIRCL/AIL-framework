@@ -42,6 +42,8 @@ else:
     zmq_url = "tcp://127.0.0.1:5556"
 
 pystemonpath = cfg.get("Directories", "pystemonpath")
+pastes_directory = cfg.get("Directories", "pastes")
+pastes_directory = os.path.join(os.environ['AIL_HOME'], pastes_directory)
 base_sleeptime = 0.01
 sleep_inc = 0
 
@@ -65,7 +67,7 @@ while True:
     try:
         with open(pystemonpath+paste, 'rb') as f: #.read()
             messagedata = f.read()
-        path_to_send = pystemonpath+paste
+        path_to_send = pastes_directory+paste
 
         s = b' '.join( [ topic.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
         socket.send(s)
