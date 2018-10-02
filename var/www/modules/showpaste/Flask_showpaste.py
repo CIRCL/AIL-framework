@@ -8,7 +8,7 @@ import redis
 import json
 import os
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint, make_response, redirect, url_for, Response
+from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory, redirect, url_for
 import difflib
 import ssdeep
 
@@ -25,6 +25,7 @@ r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_statistics = Flask_config.r_serv_statistics
+r_serv_onion = Flask_config.r_serv_onion
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
@@ -33,6 +34,7 @@ misp_event_url = Flask_config.misp_event_url
 hive_case_url = Flask_config.hive_case_url
 vt_enabled = Flask_config.vt_enabled
 PASTES_FOLDER = Flask_config.PASTES_FOLDER
+SCREENSHOT_FOLDER = Flask_config.SCREENSHOT_FOLDER
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
@@ -41,6 +43,8 @@ showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templa
 def showpaste(content_range, requested_path):
     if PASTES_FOLDER not in requested_path:
         requested_path = os.path.join(PASTES_FOLDER, requested_path)
+    # remove old full path
+    #requested_path = requested_path.replace(PASTES_FOLDER, '')
     # escape directory transversal
     if os.path.commonprefix((os.path.realpath(requested_path),PASTES_FOLDER)) != PASTES_FOLDER:
         return 'path transversal detected'
@@ -175,6 +179,16 @@ def showpaste(content_range, requested_path):
 
             l_64.append( (file_icon, estimated_type, hash, saved_path, nb_in_file, b64_vt, b64_vt_link, b64_vt_report) )
 
+    crawler_metadata = {}
+    if 'infoleak:submission="crawler"' in l_tags:
+        crawler_metadata['get_metadata'] = True
+        crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
+        crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
+        crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
+        crawler_metadata['screenshot'] = paste.get_p_rel_path()
+    else:
+        crawler_metadata['get_metadata'] = False
+
     if Flask_config.pymisp is False:
         misp = False
     else:
@@ -202,6 +216,7 @@ def showpaste(content_range, requested_path):
         hive_url = hive_case_url.replace('id_here', hive_case)
 
     return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, active_galaxies=active_galaxies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list,
+                            crawler_metadata=crawler_metadata,
                             l_64=l_64, vt_enabled=vt_enabled, misp=misp, hive=hive, misp_eventid=misp_eventid, misp_url=misp_url, hive_caseid=hive_caseid, hive_url=hive_url)
 
 # ============ ROUTES ============
@@ -249,6 +264,10 @@ def showDiff():
     lines2 = p2.get_p_content().splitlines()
     the_html = htmlD.make_file(lines1, lines2)
     return the_html
+
+@showsavedpastes.route('/screenshot/<path:filename>')
+def screenshot(filename):
+    return send_from_directory(SCREENSHOT_FOLDER, filename+'.png', as_attachment=True)
 
 @showsavedpastes.route('/send_file_to_vt/', methods=['POST'])
 def send_file_to_vt():

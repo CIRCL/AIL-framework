@@ -351,7 +351,6 @@
     <div class="panel-body" id="panel-body">
 
       {% if  duplicate_list|length == 0 %}
-          <h3> No Duplicate </h3>
       {% else %}
           <h3> Duplicate list: </h3>
           <table id="tableDup" class="table table-striped table-bordered">
@@ -419,6 +418,57 @@
           </tbody>
           </table>
       {% endif %}
+
+        {% if crawler_metadata['get_metadata'] %}
+          <div class="row">
+
+            <div class="col-md-5">
+              <div class="row">
+                <div class="panel panel-info">
+      						<div class="panel-heading">
+                    <i class="fa fa-eye-slash"></i> Crawled Paste
+      						</div>
+
+                      <table class="table table-hover table-striped">
+                        <tbody>
+                          <tr>
+                            <td>Domain</td>
+                            <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ crawler_metadata['domain'] }}" id='onion_domain'>{{ crawler_metadata['domain'] }}</a></td>
+                          </tr>
+                          <tr>
+                            <td>Father</td>
+                            <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ crawler_metadata['paste_father'] }}" id='paste_father'>{{ crawler_metadata['paste_father'] }}</a></td>
+                          </tr>
+                          <tr>
+                            <td>Source link</td>
+                            <td>{{ crawler_metadata['real_link'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-7">
+              <div class="panel panel-info" style="text-align:center;">
+                <div class="panel-heading">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <input class="center" id="blocks" type="range" min="1" max="50" value="13">
+                      </div>
+                      <div class="col-md-4">
+                        <button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">
+                            <span class="glyphicon glyphicon-zoom-in"></span>
+                            <span class="label-icon">Full resolution</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <canvas id="canvas" style="width:100%;"></canvas>
+            </div>
+          </div>
+        {% endif %}
 
         <h3> Content: </h3>
         <a href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a>
@@ -535,5 +585,51 @@
 {% endfor %}
 </script>
 
+<script>
+var ctx = canvas.getContext('2d'), img = new Image();
+
+/// turn off image smoothing
+ctx.webkitImageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
+
+img.onload = pixelate;
+img.addEventListener("error", img_error);
+var draw_img = false;
+
+img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
+
+function pixelate() {
+
+  /// use slider value
+  if( blocks.value == 50 ){
+      size = 1;
+  } else {
+      var size = (blocks.value) * 0.01;
+  }
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  /// cache scaled width and height
+  w = canvas.width * size;
+  h = canvas.height * size;
+
+  /// draw original image to the scaled size
+  ctx.drawImage(img, 0, 0, w, h);
+
+  /// pixelated
+  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+}
+
+function img_error() {
+  img.onerror=null;
+  img.src="{{ url_for('static', filename='image/AIL.png') }}";
+  blocks.value = 50;
+  pixelate;
+}
+
+blocks.addEventListener('change', pixelate, false);
+</script>
 
 </html>

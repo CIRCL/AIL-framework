@@ -96,6 +96,12 @@ r_serv_statistics = redis.StrictRedis(
     db=cfg.getint("ARDB_Statistics", "db"),
     decode_responses=True)
 
+r_serv_onion = redis.StrictRedis(
+    host=cfg.get("ARDB_Onion", "host"),
+    port=cfg.getint("ARDB_Onion", "port"),
+    db=cfg.getint("ARDB_Onion", "db"),
+    decode_responses=True)
+
 
 sys.path.append('../../configs/keys')
 # MISP #
@@ -150,6 +156,7 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
 
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
 

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Hidden Service - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <!-- JS -->
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
+		<style>
+		div.tooltip {
+			position: absolute;
+			text-align: center;
+			padding: 2px;
+			font: 12px sans-serif;
+			background: #ebf4fb;
+			border: 2px solid #b7ddf2;
+			border-radius: 8px;
+			pointer-events: none;
+			color: #000000;
+		}
+		.line_graph {
+		  fill: none;
+		  stroke: steelblue;
+		  stroke-width: 2px;
+			stroke-linejoin: round;
+			stroke-linecap: round;
+			stroke-width: 1.5;
+		}
+		</style>
+
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+
+				<div class="row">
+					<div class="col-md-6">
+
+						<div class="panel panel-primary">
+						  <div class="panel-heading">ONION</div>
+						  <div class="panel-body">
+								<table class="table table-striped">
+							    <thead>
+							      <tr>
+							        <th>Domain</th>
+							        <th>First Seen</th>
+											<th>Last Check</th>
+							        <th>Status</th>
+							      </tr>
+							    </thead>
+							    <tbody>
+										{% for metadata_onion in last_onions %}
+								      <tr>
+								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_onion['domain'] }}">{{ metadata_onion['domain'] }}</a></td>
+								        <td>{{'{}/{}/{}'.format(metadata_onion['first_seen'][0:4], metadata_onion['first_seen'][4:6], metadata_onion['first_seen'][6:8])}}</td>
+												<td>{{'{}/{}/{}'.format(metadata_onion['last_check'][0:4], metadata_onion['last_check'][4:6], metadata_onion['last_check'][6:8])}}</td>
+								        <td><div style="color:{{metadata_onion['status_color']}}; display:inline-block">
+															<i class="fa {{metadata_onion['status_icon']}} fa-2x"></i>
+															{{metadata_onion['status_text']}}
+														</div>
+												</td>
+								      </tr>
+										{% endfor %}
+							    </tbody>
+							  </table>
+
+								<div id="graph_line">
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<div class="col-md-6">
+						<div class="panel panel-info">
+      						<div class="panel-heading">
+                    <i class="fa fa-eye-slash"></i> Domains Crawled Today
+      						</div>
+
+                      <table class="table table-hover table-striped">
+                        <tbody>
+                          <tr>
+                            <td>
+															<div style="color:Green; display:inline-block">
+																<i class="fa fa-check-circle fa-2x"></i>
+																Domains UP
+															</div>
+														</td>
+                            <td>
+															<div style="color:Green; display:inline-block">
+																{{ statDomains['domains_up'] }}
+															</div>
+														</td>
+                          </tr>
+                          <tr>
+                            <td>
+															<div style="color:Red; display:inline-block">
+																<i class="fa fa-times-circle fa-2x"></i>
+																Domains DOWN
+															</div>
+														</td>
+                            <td>
+															<div style="color:Red; display:inline-block">
+																{{ statDomains['domains_down'] }}
+															</div>
+														</td>
+                          </tr>
+                          <tr>
+                            <td>Crawled Domains</td>
+                            <td>{{ statDomains['total'] }}</td>
+                          </tr>
+													<tr>
+                            <td>Domains in Queue</td>
+                            <td>{{ statDomains['domains_queue'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                </div>
+					</div>
+
+				</div>
+
+            </div>
+            <!-- /#page-wrapper -->
+
+            <script>
+								var all_graph = {};
+                $(document).ready(function(){
+                    activePage = "page-hiddenServices"
+                    $("#"+activePage).addClass("active");
+										all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hiddenServices.domain_crawled_7days_json') }}?type=onion");
+                });
+								$(window).on("resize", function() {
+									all_graph.onResize();
+								});
+            </script>
+
+<script>
+
+all_graph.onResize = function () {
+	var aspect = 1000 / 500, all_graph = $("#graph_div");
+	var targetWidth = all_graph.parent().width();
+	all_graph.attr("width", targetWidth);
+	all_graph.attr("height", targetWidth / aspect);
+}
+window.all_graph = all_graph;
+
+function create_line_chart(id, url){
+	var width = 650;
+	var height = Math.round(width / 6);
+	var margin = {top: 20, right: 55, bottom: 50, left: 40};
+	var x = d3.scaleTime().range([0, width]);
+	var y = d3.scaleLinear().rangeRound([height, 0]);
+	var xAxis = d3.axisBottom(x);
+	var yAxis = d3.axisLeft(y);
+	var parseTime = d3.timeParse("%Y-%m-%d");
+	var line = d3.line()
+							.x(function(d) {
+          			return x(d.date);
+        			})
+							.y(function(d) {
+          			return y(d.value);
+        			});
+	var svg_line = d3.select('#'+id).append('svg')
+				.attr("id", "graph_div")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append('g')
+						.attr('transform', "translate("+ margin.left +","+ margin.top +")");
+	var div = d3.select('body').append('div')
+				.attr('class', 'tooltip')
+				.style('opacity', 0);
+	//add div tooltip
+d3.json(url)
+	.then(function(data){
+		data.forEach(function(d) {
+			d.date_label = d.date;
+			d.date = parseTime(d.date);
+			d.value = +d.value;
+		});
+		// fit the data
+		x.domain(d3.extent(data, function(d) { return d.date; }));
+		//x.domain(data.map(function (d) { return d.date; })); //E
+		y.domain([0, d3.max(data, function(d){ return d.value ; })]);
+		//line
+		svg_line.append("path")
+				.data([data])
+				.attr("class", "line_graph")
+				.attr("d", line);
+		// add X axis
+		svg_line.append("g")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(d3.axisBottom(x))
+				.selectAll("text")
+					.style("text-anchor", "end")
+					.attr("transform", "rotate(-45)" );
+		// Add the Y Axis
+		svg_line.append("g")
+		    .call(d3.axisLeft(y));
+		//add a dot circle
+    svg_line.selectAll('dot')
+				.data(data).enter()
+				.append('circle')
+						.attr('r', 2)
+							.attr('cx', function(d) { return x(d.date); })
+							.attr('cy', function(d) { return y(d.value); })
+            	.on('mouseover', function(d) {
+	            	div.transition().style('opacity', .9);
+	            	div.html('' + d.date_label+ '<br/>' + d.value).style('left', (d3.event.pageX) + 'px')
+								.style("left", (d3.event.pageX) + "px")
+								.style("top", (d3.event.pageY - 28) + "px");
+          		})
+            	.on('mouseout', function(d)
+          			{
+            			div.transition().style('opacity', 0);
+          			});
+	});
+}
+</script>
+        </body>
+
+</html>

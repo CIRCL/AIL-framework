@@ -11,9 +11,10 @@ ardb
 faup
 tlsh
 Blooms
-LEVEL_DB_DATA
 PASTES
+CRAWLED_SCREENSHOT
 BASE64
+HASHS
 DATA_ARDB
 indexdir/
 logs/
@@ -33,6 +34,7 @@ var/www/submitted
 bin/packages/config.cfg
 bin/packages/config.cfg.backup
 configs/keys
+files
 
 # installed files
 nltk_data/
