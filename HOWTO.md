@@ -139,9 +139,16 @@ All Splash dockers are launched inside the ``Docker_Splash`` screen. You can use
 ### TL;DR - Local setup
 #### Installation
 - ```crawler_hidden_services_install.sh -y```
-- Add the following line in ``SOCKSPolicy accept 172.17.0.0/16`` in ``/etc/tor/torrc`` 
+- Add the following line in ``SOCKSPolicy accept 172.17.0.0/16`` in ``/etc/tor/torrc``
 - ```sudo service tor restart```
 - set activate_crawler to True in ``/bin/packages/config.cfg``
 #### Start
-- ```sudo ./bin/torcrawler/launch_splash_crawler.sh -f $AIL_HOME/configs/docker/splash_onion/etc/splash/proxy-profiles/ -p 8050 -n 1";```
+- ```sudo ./bin/torcrawler/launch_splash_crawler.sh -f $AIL_HOME/configs/docker/splash_onion/etc/splash/proxy-profiles/ -p 8050 -n 1```
+
+If AIL framework is not started, it's required to start it before the crawler service:
+
+- ```./bin/LAUNCH.sh -l```
+
+Then starting the crawler service (if you follow the procedure above)
+
 - ```./bin/LAUNCH.sh -c```
