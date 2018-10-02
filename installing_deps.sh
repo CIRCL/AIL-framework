@@ -92,7 +92,7 @@ pushd var/www/
 ./update_thirdparty.sh
 popd
 
-mkdir -p $AIL_HOME/PASTES2
+mkdir -p $AIL_HOME/PASTES
 
 pip3 install -U pip
 pip3 install -U -r pip3_packages_requirement.txt
