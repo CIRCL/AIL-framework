@@ -3,7 +3,6 @@ bloomfilters = Blooms
 dicofilters = Dicos
 pastes = PASTES
 hash = HASHS
-base64 = BASE64
 crawled = crawled
 crawled_screenshot = CRAWLED_SCREENSHOT
 

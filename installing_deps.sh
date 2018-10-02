@@ -92,9 +92,7 @@ pushd var/www/
 ./update_thirdparty.sh
 popd
 
-year1=20`date +%y`
-year2=20`date --date='-1 year' +%y`
-mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
+mkdir -p $AIL_HOME/PASTES
 
 pip3 install -U pip
 pip3 install -U -r pip3_packages_requirement.txt
