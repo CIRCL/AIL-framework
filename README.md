@@ -172,7 +172,7 @@ Screenshots
 Tor hidden service crawler
 --------------------------
 
-![Tor hidden service](./doc/screenshots/ail-bitcoinmixer.png?raw=true "Tor hidden service crawler)
+![Tor hidden service](./doc/screenshots/ail-bitcoinmixer.png?raw=true "Tor hidden service crawler")
 
 Trending charts
 ---------------
