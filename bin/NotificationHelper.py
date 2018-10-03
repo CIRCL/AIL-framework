@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import argparse
 import configparser
 import os
 import smtplib
@@ -20,6 +21,7 @@ TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
 # associated notification email addresses for a specific term`
 # Keys will be e.g. TrackedNotificationEmails<TERMNAME>
 TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
+
 
 def sendEmailNotification(recipient, alert_name, content):
 
@@ -69,19 +71,24 @@ def sendEmailNotification(recipient, alert_name, content):
         else:
             smtp_server = smtplib.SMTP(sender_host, sender_port)
 
-
         mime_msg = MIMEMultipart()
         mime_msg['From'] = sender
         mime_msg['To'] = recipient
-        mime_msg['Subject'] = "AIL Framework "+ alert_name + " Alert"
+        mime_msg['Subject'] = "AIL Framework " + alert_name + " Alert"
 
         body = content
         mime_msg.attach(MIMEText(body, 'plain'))
 
         smtp_server.sendmail(sender, recipient, mime_msg.as_string())
         smtp_server.quit()
-        print('Send notification '+ alert_name + ' to '+recipient)
+        print('Send notification ' + alert_name + ' to '+recipient)
 
     except Exception as e:
         print(str(e))
         # raise e
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Test notification sender.')
+    parser.add_argument("addr", help="Test mail 'to' address")
+    args = parser.parse_args()
+    sendEmailNotification(args.addr, '_mail test_', 'Success.')
