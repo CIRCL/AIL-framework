@@ -215,7 +215,7 @@
                 </div>
                 <div class="modal-body">
 
-                  <form method="post" action="/PasteSubmit/create_misp_event"target="_blank">
+                  <form id="misp_event_form" method="post" action="/PasteSubmit/create_misp_event"target="_blank">
 
                   <div class="input select required">
                     <label for="EventDistribution">Distribution</label>
@@ -262,7 +262,7 @@
 
                 </div>
                 <div class="modal-footer center">
-                  <button class="btn btn-primary">
+                  <button class="btn btn-primary" onclick="document.getElementById('misp_event_form').submit()";>
                     <span class="glyphicon glyphicon-ok "></span> Create Event
                   </button>
 
