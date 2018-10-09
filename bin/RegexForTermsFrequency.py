@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     config_section = 'RegexForTermsFrequency'
     p = Process(config_section)
-    max_execution_time = p.config.getint("BankAccount", "max_execution_time")
+    max_execution_time = p.config.getint(config_section, "max_execution_time")
 
     # REDIS #
     server_term = redis.StrictRedis(
