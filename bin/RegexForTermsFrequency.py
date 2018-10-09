@@ -28,10 +28,8 @@ def timeout_handler(signum, frame):
 
 signal.signal(signal.SIGALRM, timeout_handler)
 
-
 # Config Variables
 DICO_REFRESH_TIME = 60  # s
-PROCESS_TIMEOUT = 60
 
 BlackListTermsSet_Name = "BlackListSetTermSet"
 TrackedTermsSet_Name = "TrackedSetTermSet"
@@ -63,6 +61,7 @@ if __name__ == "__main__":
 
     config_section = 'RegexForTermsFrequency'
     p = Process(config_section)
+    max_execution_time = p.config.getint("BankAccount", "max_execution_time")
 
     # REDIS #
     server_term = redis.StrictRedis(
@@ -97,18 +96,17 @@ if __name__ == "__main__":
             timestamp = calendar.timegm((int(temp[-4]), int(temp[-3]), int(temp[-2]), 0, 0, 0))
 
             curr_set = top_termFreq_setName_day[0] + str(timestamp)
-            content = Paste.Paste(filename).get_p_content()
+            paste = Paste.Paste(filename)
+            content = paste.get_p_content()
 
             # iterate the word with the regex
             for regex_str, compiled_regex in dico_regex.items():
 
-                signal.alarm(PROCESS_TIMEOUT)
+                signal.alarm(max_execution_time)
                 try:
                     matched = compiled_regex.search(content)
                 except TimeoutException:
-                    log_msg = "{0} processing timeout".format(filename)
-                    print (log_msg)
-                    publisher.critical(log_msg)
+                    print ("{0} processing timeout".format(paste.p_path))
                     continue
                 else:
                     signal.alarm(0)
