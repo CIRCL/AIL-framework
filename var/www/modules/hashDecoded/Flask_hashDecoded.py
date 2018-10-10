@@ -21,6 +21,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_metadata = Flask_config.r_serv_metadata
 vt_enabled = Flask_config.vt_enabled
 vt_auth = Flask_config.vt_auth
@@ -278,7 +279,7 @@ def showHash():
                                 first_seen=first_seen, list_hash_decoder=list_hash_decoder,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
-@app.route('/hashDecoded/downloadHash')
+@hashDecoded.route('/hashDecoded/downloadHash')
 def downloadHash():
     hash = request.args.get('hash')
     # sanitize hash
@@ -444,13 +445,13 @@ def range_type_json():
 
     range_type = []
 
+    list_decoder = r_serv_metadata.smembers('all_decoder')
     for date in date_range:
         if len(date_range) == 1:
             if date==date_from and date==date_to:
                 for type in all_type:
                     day_type = {}
                     day_type['date']= type
-                    list_decoder = r_serv_metadata.smembers('all_decoder')
                     for decoder in list_decoder:
                         num_day_decoder = r_serv_metadata.zscore(decoder+'_type:'+type, date)
                         if num_day_decoder is None:
@@ -463,9 +464,11 @@ def range_type_json():
             day_type = {}
             day_type['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
             for type in all_type:
-                num_day_type = r_serv_metadata.zscore('hash_type:'+type, date)
-                if num_day_type is None:
-                    num_day_type = 0
+                num_day_type = 0
+                for decoder in list_decoder:
+                    num_day_type_decoder = r_serv_metadata.zscore(decoder+'_type:'+type, date)
+                    if num_day_type_decoder is not None:
+                        num_day_type += num_day_type_decoder
                 day_type[type]= num_day_type
             range_type.append(day_type)
 
@@ -626,4 +629,4 @@ def update_vt_result():
         return jsonify()
 
 # ========= REGISTRATION =========
-app.register_blueprint(hashDecoded)
+app.register_blueprint(hashDecoded, url_prefix=baseUrl)

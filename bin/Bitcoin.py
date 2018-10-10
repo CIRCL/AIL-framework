@@ -32,6 +32,7 @@ def decode_base58(bc, length):
     for char in bc:
         n = n * 58 + digits58.index(char)
     return n.to_bytes(length, 'big')
+    
 def check_bc(bc):
     try:
         bcbytes = decode_base58(bc, 25)

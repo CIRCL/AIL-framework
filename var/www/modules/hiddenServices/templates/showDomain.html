@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Show Domain - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/dataTables.bootstrap.js')}}"></script>
+
+		<style>
+	      .test thead{
+	      	background: #d91f2d;
+		      color: #fff;
+	      }
+	  </style>
+
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+
+				<div class="row">
+
+					<div class="col-md-6">
+						<div class="row">
+							<div class="panel panel-info">
+								<div class="panel-heading">
+									{% if status %}
+										<div class="pull-right" style="color:Green;">
+											<i class="fa fa-check-circle fa-2x"></i>
+												UP
+										</div>
+									{% else %}
+										<div class="pull-right" style="color:Red;">
+											<i class="fa fa-times-circle fa-2x"></i>
+												DOWN
+										</div>
+									{% endif %}
+									<h3>{{ domain }} :</h3>
+									<ul class="list-group">
+										<li class="list-group-item">
+
+											<table class="table table-condensed">
+							          <thead>
+							            <tr>
+							              <th>First Seen</th>
+							              <th>Last Check</th>
+							            </tr>
+							          </thead>
+							          <tbody>
+							            <tr>
+								            <td class="panelText"><a href="#">{{ first_seen }}</a></td>
+								            <td class="panelText"><a href="#">{{ last_check }}</a></td>
+							            </tr>
+							          </tbody>
+							        </table>
+
+										</li>
+										<li class="list-group-item">
+											Origin Paste: <a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=origin_paste) }}" />{{ origin_paste_name }}</a>
+											<div>
+												{% for tag in origin_paste_tags %}
+												<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+													<span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
+												</a>
+												{%  endfor %}
+												<br>
+											</div>
+										</li>
+									</ul>
+
+								</div>
+							</div>
+							<div>
+								{% for tag in domain_tags %}
+								<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+									<span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }} <i>{{ domain_tags[tag] }}</i></span>
+								</a>
+								{%  endfor %}
+								<br>
+								<br>
+							</div>
+
+								<table class="test table table-striped table-bordered table-hover table-responsive " id="myTable_">
+						      <thead>
+						        <tr>
+						          <th style="max-width: 800px;">Crawled Pastes</th>
+						        </tr>
+						      </thead>
+						      <tbody>
+
+						        {% for path in l_pastes %}
+						          <tr>
+						              <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path_name[loop.index0] }}</a>
+						                <div>
+						                  {% for tag in paste_tags[loop.index0] %}
+						                  <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+						                    <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
+						                  </a>
+						                  {%  endfor %}
+						                </div>
+						              </td>
+						          </tr>
+						        {%  endfor %}
+
+						      </tbody>
+						    </table>
+
+						</div>
+					</div>
+
+					<div class="col-md-6">
+						<div class="panel panel-info" style="text-align:center;">
+							<div class="panel-heading">
+									<div class="row">
+										<div class="col-md-8">
+											<input class="center" id="blocks" type="range" min="1" max="50" value="13">
+										</div>
+										<div class="col-md-4">
+											<button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">
+													<span class="glyphicon glyphicon-zoom-in"></span>
+													<span class="label-icon">Full resolution</span>
+											</button>
+										</div>
+									</div>
+							</div>
+						</div>
+						<canvas id="canvas" style="width:100%;"></canvas>
+					</div>
+
+				</div>
+
+            </div>
+            <!-- /#page-wrapper -->
+
+            <script>
+                $(document).ready(function(){
+                    activePage = "page-hiddenServices"
+                    $("#"+activePage).addClass("active");
+										table = $('#myTable_').DataTable(
+											{
+												"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+												"iDisplayLength": 5,
+												"order": [[ 0, "desc" ]]
+											}
+										);
+                });
+            </script>
+
+						<script>
+							var ctx = canvas.getContext('2d'), img = new Image();
+
+							/// turn off image smoothing
+							ctx.webkitImageSmoothingEnabled = false;
+							ctx.imageSmoothingEnabled = false;
+
+							img.onload = pixelate;
+							img.addEventListener("error", img_error);
+							var draw_img = false;
+
+							img.src = "{{ url_for('showsavedpastes.screenshot', filename=screenshot) }}";
+
+							function pixelate() {
+
+							  /// use slider value
+							  if( blocks.value == 50 ){
+							      size = 1;
+							  } else {
+							      var size = (blocks.value) * 0.01;
+							  }
+
+							  canvas.width = img.width;
+							  canvas.height = img.height;
+
+							  /// cache scaled width and height
+							  w = canvas.width * size;
+							  h = canvas.height * size;
+
+							  /// draw original image to the scaled size
+							  ctx.drawImage(img, 0, 0, w, h);
+
+							  /// pixelated
+							  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+							}
+
+							blocks.addEventListener('change', pixelate, false);
+
+							function img_error() {
+								img.onerror=null;
+								img.src="{{ url_for('static', filename='image/AIL.png') }}";
+								blocks.value = 50;
+								pixelate;
+							}
+						</script>
+
+        </body>
+
+</html>

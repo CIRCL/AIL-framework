@@ -12,6 +12,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 
 MODULENAME = Blueprint('MODULENAME', __name__, template_folder='templates')
 
@@ -27,4 +28,4 @@ def MODULENAME_page():
 
 
 # ========= REGISTRATION =========
-app.register_blueprint(MODULENAME)
+app.register_blueprint(MODULENAME, url_prefix=baseUrl)

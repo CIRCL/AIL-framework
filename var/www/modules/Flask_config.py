@@ -96,6 +96,12 @@ r_serv_statistics = redis.StrictRedis(
     db=cfg.getint("ARDB_Statistics", "db"),
     decode_responses=True)
 
+r_serv_onion = redis.StrictRedis(
+    host=cfg.get("ARDB_Onion", "host"),
+    port=cfg.getint("ARDB_Onion", "port"),
+    db=cfg.getint("ARDB_Onion", "db"),
+    decode_responses=True)
+
 
 sys.path.append('../../configs/keys')
 # MISP #
@@ -135,6 +141,11 @@ if HiveApi != False:
         print('The Hive not connected')
 
 # VARIABLES #
+baseUrl = cfg.get("Flask", "baseurl")
+baseUrl = baseUrl.replace('/', '')
+if baseUrl != '':
+    baseUrl = '/'+baseUrl
+
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number of character to display in the modal
 
@@ -143,6 +154,9 @@ DiffMaxLineLength =  int(cfg.get("Flask", "DiffMaxLineLength"))#Use to display t
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
+
+PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
 
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
 

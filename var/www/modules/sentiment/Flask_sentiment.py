@@ -18,6 +18,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_charts = Flask_config.r_serv_charts
 r_serv_sentiment = Flask_config.r_serv_sentiment
 
@@ -142,4 +143,4 @@ def sentiment_analysis_plot_tool_getdata():
         return jsonify(to_return)
 
 # ========= REGISTRATION =========
-app.register_blueprint(sentiments)
+app.register_blueprint(sentiments, url_prefix=baseUrl)

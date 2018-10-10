@@ -27,6 +27,8 @@ islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
 isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
+iscrawler=`screen -ls | egrep '[0-9]+.Crawler_AIL' | cut -d. -f1`
+isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
 
 function helptext {
     echo -e $YELLOW"
@@ -198,6 +200,35 @@ function launching_scripts {
 
 }
 
+function launching_crawler {
+    if [[ ! $iscrawler ]]; then
+        CONFIG=$AIL_BIN/packages/config.cfg
+        lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_onion_port/{print $3;exit}' "${CONFIG}")
+
+        IFS='-' read -ra PORTS <<< "$lport"
+        if [ ${#PORTS[@]} -eq 1 ]
+        then
+            first_port=${PORTS[0]}
+            last_port=${PORTS[0]}
+        else
+            first_port=${PORTS[0]}
+            last_port=${PORTS[1]}
+        fi
+
+        screen -dmS "Crawler_AIL"
+        sleep 0.1
+
+        for ((i=first_port;i<=last_port;i++)); do
+            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c 'cd '${AIL_BIN}'; ./Crawler.py onion '$i'; read x'
+            sleep 0.1
+        done
+
+        echo -e $GREEN"\t* Launching Crawler_AIL scripts"$DEFAULT
+    else
+        echo -e $RED"\t* A screen is already launched"$DEFAULT
+    fi
+}
+
 function shutting_down_redis {
     redis_dir=${AIL_HOME}/redis/src/
     bash -c $redis_dir'redis-cli -p 6379 SHUTDOWN'
@@ -317,15 +348,28 @@ function launch_flask {
     fi
 }
 
+function launch_feeder {
+    if [[ ! $isfeeded ]]; then
+        screen -dmS "Feeder_Pystemon"
+        sleep 0.1
+        echo -e $GREEN"\t* Launching Pystemon feeder"$DEFAULT
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon_feeder" bash -c 'cd '${AIL_BIN}'; ./feeder/pystemon-feeder.py; read x'
+        sleep 0.1
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon" bash -c 'cd '${AIL_HOME}/../pystemon'; python2 pystemon.py; read x'
+    else
+        echo -e $RED"\t* A Feeder screen is already launched"$DEFAULT
+    fi
+}
+
 function killall {
-    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked ]]; then
+    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded ]]; then
         echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
         shutting_down_redis;
         sleep 0.2
         echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
         shutting_down_ardb;
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked
+        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
         echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted killed."$DEFAULT
@@ -406,6 +450,9 @@ function launch_all {
                 Flask)
                     launch_flask;
                     ;;
+                Crawler)
+                    launching_crawler;
+                    ;;
                 Killall)
                     killall;
                     ;;
@@ -431,9 +478,11 @@ while [ "$1" != "" ]; do
                                     ;;
         -k | --killAll )            killall;
                                     ;;
-        -c | --configUpdate )       checking_configuration "manual";
+        -t | --thirdpartyUpdate )   update_thirdparty;
                                     ;;
-        -t | --thirdpartyUpdate )    update_thirdparty;
+        -c | --crawler )            launching_crawler;
+                                    ;;
+        -f | --launchFeeder )       launch_feeder;
                                     ;;
         -h | --help )               helptext;
                                     exit

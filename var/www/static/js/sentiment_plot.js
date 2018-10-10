@@ -1,10 +1,20 @@
-var li_text = "<li><div class='checkbox'></div><label class='provider'><input value='" 
+var li_text = "<li><div class='checkbox'></div><label class='provider'><input value='"
 var li_text_mid = "' type='checkbox'></input> "
 var li_text_end = "</label></li>"
 
+function getSyncScriptParams() {
+         var scripts = document.getElementsByTagName('script');
+         var lastScript = scripts[scripts.length-1];
+         var scriptName = lastScript;
+         return {
+             url_sentiment_analysis : scriptName.getAttribute('data-url_sentiment_analysis'),
+         };
+}
+
+var url_sentiment_analysis = getSyncScriptParams().url_sentiment_analysis;
 
 /* Get Providers List and display them by row */
-$.getJSON('/sentiment_analysis_plot_tool_getdata/?getProviders=True', function(data){
+$.getJSON(url_sentiment_analysis + '?getProviders=True', function(data){
     for(i=0; i<data.length; i++){
         var providerList = i%2 == 0 ? '#providerList1' : '#providerList2';
         $(providerList).append(li_text + data[i] + li_text_mid + data[i] + li_text_end);
@@ -29,7 +39,7 @@ $( ".sliderRange" ).slider({
 $( "#amount" ).val( new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +
   " - " + new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString() );
 
-$('#plot_btn').click(plotData); 
+$('#plot_btn').click(plotData);
 
 /* Plot the requested data (if available) stored in slider and checkboxes */
 function plotData(){
@@ -44,9 +54,9 @@ function plotData(){
                                 bars: {show: true, barWidth: 60*60*1000},
                                 shadowSize: 0
                             },
-                            grid: { 
-                                hoverable: true, 
-                                clickable: true, 
+                            grid: {
+                                hoverable: true,
+                                clickable: true,
                                 tickColor: "#f9f9f9",
                                 borderWidth: 0
                             },
@@ -61,10 +71,10 @@ function plotData(){
                         }
     var query = $( "input:checked[value]" ).map(function () {return this.value;}).get().join(",");
     var Qdate = new Date($( ".sliderRange" ).slider( "values", 0 )).toLocaleDateString() +'-'+ new Date($( ".sliderRange" ).slider( "values", 1 )).toLocaleDateString();
-        
+
 
     // retreive the data from the server
-    $.getJSON('/sentiment_analysis_plot_tool_getdata/?getProviders=False&query='+query+'&Qdate='+Qdate, function(data){
+    $.getJSON(url_sentiment_analysis + '?getProviders=False&query='+query+'&Qdate='+Qdate, function(data){
         var to_plot = [];
         for (provider in data){
             var nltk_data = Object.keys(data[provider]).map(function (key) { return data[provider][key]; });
@@ -87,7 +97,7 @@ function plotData(){
                 }
                 XY_data.push([nltk_key[i]*1000, pos-neg]);
             }
-        to_plot.push({ data: XY_data, label: provider}); 
+        to_plot.push({ data: XY_data, label: provider});
         }
 	var plot = $.plot($("#graph"), to_plot, graph_options);
     });

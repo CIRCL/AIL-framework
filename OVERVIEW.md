@@ -23,6 +23,15 @@ Redis and ARDB overview
 
 ARDB overview
 ---------------------------
+ARDB_DB
+* DB 1 - Curve
+* DB 2 - TermFreq
+* DB 3 - Trending
+* DB 4 - Sentiment
+* DB 5 - TermCred
+* DB 6 - Tags
+* DB 7 - Metadata
+* DB 8 - Statistics
 
 * DB 7 - Metadata:
 	----------------------------------------- BASE64 ----------------------------------------
@@ -40,7 +49,7 @@ ARDB overview
 
 	SET  - 'all_decoder'		decoder*
 
-	SET  - 'hash_all_type'		hash_type * 
+	SET  - 'hash_all_type'		hash_type *
 	SET  - 'hash_base64_all_type'	hash_type *
 	SET  - 'hash_binary_all_type'	hash_type *
 
@@ -62,4 +71,3 @@ ARDB overview
 
 	GET  - 'base64_decoded:'+date	nd_decoded
 	GET  - 'binary_decoded:'+date	nd_decoded
-

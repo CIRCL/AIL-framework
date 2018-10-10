@@ -25,8 +25,12 @@ import Flask_config
 
 # CONFIG #
 cfg = Flask_config.cfg
+baseUrl = cfg.get("Flask", "baseurl")
+baseUrl = baseUrl.replace('/', '')
+if baseUrl != '':
+    baseUrl = '/'+baseUrl
 
-Flask_config.app = Flask(__name__, static_url_path='/static/')
+Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
 app = Flask_config.app
 app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 
@@ -44,6 +48,9 @@ except IOError:
     f = open('templates/ignored_modules.txt', 'w')
     f.close()
 
+activate_crawler = cfg.get("Crawler", "activate_crawler")
+if activate_crawler != 'True':
+    toIgnoreModule.add('hiddenServices')
 
 # Dynamically import routes and functions from modules
 # Also, prepare header.html

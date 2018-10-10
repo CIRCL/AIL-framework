@@ -5,7 +5,7 @@ set -x
 
 sudo apt-get update
 
-sudo apt-get install python3-pip python-virtualenv python3-dev libfreetype6-dev \
+sudo apt-get install python3-pip python-virtualenv python3-dev python3-tk libfreetype6-dev \
     screen g++ python-tk unzip libsnappy-dev cmake -y
 
 #optional tor install
@@ -92,9 +92,7 @@ pushd var/www/
 ./update_thirdparty.sh
 popd
 
-year1=20`date +%y`
-year2=20`date --date='-1 year' +%y`
-mkdir -p $AIL_HOME/{PASTES,Blooms,dumps}
+mkdir -p $AIL_HOME/PASTES
 
 pip3 install -U pip
 pip3 install -U -r pip3_packages_requirement.txt

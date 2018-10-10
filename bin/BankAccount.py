@@ -11,6 +11,8 @@ It apply IBAN regexes on paste content and warn if above a threshold.
 
 import redis
 import time
+import redis
+import datetime
 import re
 import string
 from itertools import chain
@@ -54,11 +56,13 @@ def check_all_iban(l_iban, paste, filename):
         iban = ''.join(e for e in iban if e.isalnum())
         #iban = iban.upper()
         res = iban_regex_verify.findall(iban)
+        date = datetime.datetime.now().strftime("%Y%m")
         if res:
             print('checking '+iban)
             if is_valid_iban(iban):
                 print('------')
                 nb_valid_iban = nb_valid_iban + 1
+                server_statistics.hincrby('iban_by_country:'+date, iban[0:2], 1)
 
     if(nb_valid_iban > 0):
         to_print = 'Iban;{};{};{};'.format(paste.p_source, paste.p_date, paste.p_name)
@@ -78,6 +82,13 @@ if __name__ == "__main__":
 
     p = Process(config_section)
     max_execution_time = p.config.getint("BankAccount", "max_execution_time")
+
+    # ARDB #
+    server_statistics = redis.StrictRedis(
+        host=p.config.get("ARDB_Statistics", "host"),
+        port=p.config.getint("ARDB_Statistics", "port"),
+        db=p.config.getint("ARDB_Statistics", "db"),
+        decode_responses=True)
 
     publisher.info("BankAccount started")
 

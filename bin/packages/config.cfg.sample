@@ -3,7 +3,8 @@ bloomfilters = Blooms
 dicofilters = Dicos
 pastes = PASTES
 hash = HASHS
-base64 = BASE64
+crawled = crawled
+crawled_screenshot = CRAWLED_SCREENSHOT
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile
@@ -32,6 +33,8 @@ sender_port = 1337
 
 ##### Flask #####
 [Flask]
+#Proxying requests to the app
+baseUrl = /
 #Number of logs to display in the dashboard
 max_dashboard_logs = 15
 #Maximum number of character to display in the toolip
@@ -95,6 +98,9 @@ threshold_stucked_module=600
 operation_mode = 3
 #Define the time that a paste will be considerate duplicate. in seconds (1day = 86400)
 ttl_duplicate = 86400
+
+[RegexForTermsFrequency]
+max_execution_time = 60
 
 ##### Redis #####
 [Redis_Cache]
@@ -182,6 +188,11 @@ host = localhost
 port = 6382
 db = 8
 
+[ARDB_Onion]
+host = localhost
+port = 6382
+db = 9
+
 [Url]
 cc_critical = DE
 
@@ -226,3 +237,9 @@ channel = FetchedOnion
 host = localhost
 port = 6381
 db = 0
+
+[Crawler]
+activate_crawler = False
+crawler_depth_limit = 1
+splash_url_onion = http://127.0.0.1
+splash_onion_port = 8050-8052

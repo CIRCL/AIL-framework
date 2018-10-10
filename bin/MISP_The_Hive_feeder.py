@@ -96,7 +96,7 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'misp_the_hive_feeder'
+    config_section = 'MISP_The_hive_feeder'
 
     configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
     if not os.path.exists(configfile):
@@ -122,8 +122,6 @@ if __name__ == "__main__":
     uuid_ail = r_serv_db.get('ail:uuid')
     if uuid_ail is None:
         uuid_ail = r_serv_db.set('ail:uuid', uuid.uuid4() )
-
-    config_section = 'misp_the_hive_feeder'
 
     p = Process(config_section)
     # create MISP connection

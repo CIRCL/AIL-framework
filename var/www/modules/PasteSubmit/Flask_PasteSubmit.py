@@ -39,6 +39,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_db = Flask_config.r_serv_db
@@ -295,6 +296,11 @@ def submit():
 
     submitted_tag = 'infoleak:submission="manual"'
 
+    #active taxonomies
+    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
+    #active galaxies
+    active_galaxies = r_serv_tags.smembers('active_galaxies')
+
     if ltags or ltagsgalaxies:
         if not addTagsVerification(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
@@ -342,6 +348,8 @@ def submit():
                 launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password ,True)
 
                 return render_template("submiting.html",
+                                            active_taxonomies = active_taxonomies,
+                                            active_galaxies = active_galaxies,
                                             UUID = UUID)
 
             else:
@@ -362,6 +370,8 @@ def submit():
             launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password)
 
             return render_template("submiting.html",
+                                        active_taxonomies = active_taxonomies,
+                                        active_galaxies = active_galaxies,
                                         UUID = UUID)
 
         else:
@@ -585,4 +595,4 @@ def disable_hive_auto_alert():
     return edit_tag_export()
 
 # ========= REGISTRATION =========
-app.register_blueprint(PasteSubmit)
+app.register_blueprint(PasteSubmit, url_prefix=baseUrl)

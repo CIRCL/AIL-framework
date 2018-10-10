@@ -1,10 +1,21 @@
 
 /* Already defined variable (Before the input)
-* 
+*
 * var chart_1_num_day = 5;
 * var chart_2_num_day = 15;
 *
 */
+
+function getSyncScriptParams() {
+         var scripts = document.getElementsByTagName('script');
+         var lastScript = scripts[scripts.length-1];
+         var scriptName = lastScript;
+         return {
+             url_progressionCharts : scriptName.getAttribute('data-url_progressionCharts'),
+         };
+}
+
+var url_progressionCharts = getSyncScriptParams().url_progressionCharts;
 
 function plot_top_graph(trendingName, init){
     /**** Flot Pie Chart ****/
@@ -13,8 +24,8 @@ function plot_top_graph(trendingName, init){
 
     var pie_threshold = 0.05
     var options = {
-                      series: {  
-                          pie: {  
+                      series: {
+                          pie: {
                               show: true,
                               radius: 3/5,
                                 combine: {
@@ -29,22 +40,22 @@ function plot_top_graph(trendingName, init){
                                         opacity: 0.5,
                                         color: '#000'
                                     }
-                                }  
-                          } 
+                                }
+                          }
                       },
                       grid: { hoverable: true, clickable: true },
                       legend: { show: false  }
                   };
-    
+
     function labelFormatter(label, series) {
         return "<div style='font-size:8pt; text-align:center; padding:2px; color:white;'>"
                + label + "<br/>" + Math.round(series.percent) + "%</div>";
     }
 
 
-    
+
     // Graph1
-    $.getJSON($SCRIPT_ROOT+"/_progressionCharts?trendingName="+trendingName+"&num_day="+chart_1_num_day,
+    $.getJSON(url_progressionCharts+"?trendingName="+trendingName+"&num_day="+chart_1_num_day,
         function(data) {
                   temp_data_pie = [];
                   for(i=0; i<data.length; i++){
@@ -60,10 +71,10 @@ function plot_top_graph(trendingName, init){
                   $.plot($("#flot-pie-chart1-"+trendingName), temp_data_pie, options);
 
                   if (init){ //prevent multiple binding due to the refresh function
-                      setTimeout(function() { 
+                      setTimeout(function() {
                          $("#flot-pie-chart1-"+trendingName).bind("plotclick", function (event, pos, item) {
                              if (item == null)
-                                 return; 
+                                 return;
                              var clicked_label = item.series.label;
                              update_bar_chart("#flot-bar-chart1-"+trendingName, clicked_label, item.series.color, chart_1_num_day, "%m/%d");
                              update_bar_chart("#flot-bar-chart2-"+trendingName, clicked_label, item.series.color, chart_2_num_day);
@@ -71,8 +82,8 @@ function plot_top_graph(trendingName, init){
                       }, 500);
                   }
     });
-    
-        
+
+
     // flot bar char
     function update_bar_chart(chartID, involved_item, serie_color, num_day, timeformat, can_bind){
         var barOptions = {
@@ -90,9 +101,9 @@ function plot_top_graph(trendingName, init){
             tooltip: true,
             tooltipOpts: { content: "x: %x, y: %y" }
         };
-    
+
         if (involved_item == "Other"){
-   
+
             var all_other_temp_data = []; // the data_bar of all series
             var temp_data_bar; //the data_bar associated with one serie
             var promises = []; // Use to plot when everything has been received
@@ -100,7 +111,7 @@ function plot_top_graph(trendingName, init){
 
             for(i=0; i<data_other.length; i++){ // Get data for elements summed up in the part 'Other'
                 involved_item = data_other[i];
-                var request = $.getJSON($SCRIPT_ROOT+"/_progressionCharts?attributeName="+involved_item+"&bar=true"+"&days="+num_day,
+                var request = $.getJSON(url_progressionCharts+"?attributeName="+involved_item+"&bar=true"+"&days="+num_day,
                         function(data) {
                             temp_data_bar = []
                             for(i=1; i<data.length; i++){
@@ -108,10 +119,10 @@ function plot_top_graph(trendingName, init){
                                 var offset = (data_other.length/2 - data_other.indexOf(data[0]))*10000000
                                 temp_data_bar.push([new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset, data[i][1].toFixed(2)]);
                                 //console.log(new Date(curr_date[0], curr_date[1]-1, curr_date[2]).getTime() + offset);
-                                
+
                             }
                             // Insert temp_data_bar in order so that color and alignement correspond for the provider graphs
-                            all_other_temp_data.splice(data_other.indexOf(data[0]), 0, [ data[0], temp_data_bar, data_other.indexOf(data[0])]); 
+                            all_other_temp_data.splice(data_other.indexOf(data[0]), 0, [ data[0], temp_data_bar, data_other.indexOf(data[0])]);
                         }
                 )
                 promises.push(request);
@@ -153,7 +164,7 @@ function plot_top_graph(trendingName, init){
 
         } else {
 
-            $.getJSON($SCRIPT_ROOT+"/_progressionCharts?attributeName="+involved_item+"&bar=true"+"&days="+num_day,
+            $.getJSON(url_progressionCharts+"?attributeName="+involved_item+"&bar=true"+"&days="+num_day,
             function(data) {
                 var temp_data_bar = []
                 for(i=1; i<data.length; i++){
@@ -183,7 +194,7 @@ function binder(module_name){
            var formated_date = date.getMonth()+'/'+date.getDate();
            var color = item.series.color;
            var color_opac = "rgba" +  color.slice(3, color.length-1)+",0.15)";
-    
+
            // display the hovered value in the chart div
            $("#tooltip_graph1-"+module_name).html(item.series.label + " of " + formated_date + " = <b>" + y+"</b>")
                .css({padding: "2px", width: 'auto', 'background': color_opac , 'border': "3px solid "+color})
@@ -191,7 +202,7 @@ function binder(module_name){
 
         }
     });
-    
+
     $("#flot-bar-chart2-"+module_name).bind("plothover.customHandler", function (event, pos, item) {
        if (item) { // a correct item is hovered
            var x = item.datapoint[0]
@@ -200,7 +211,7 @@ function binder(module_name){
            var formated_date = date.getMonth()+'/'+date.getDate();
            var color = item.series.color;
            var color_opac = "rgba" +  color.slice(3, color.length-1)+",0.15)";
-    
+
            // display the hovered value in the chart div
            $("#tooltip_graph2-"+module_name).html(item.series.label + " of " + formated_date + " = <b>" + y+"</b>")
                .css({padding: "2px", width: 'auto', 'background': color_opac , 'border': "3px solid "+color})

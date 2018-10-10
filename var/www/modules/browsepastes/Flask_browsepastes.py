@@ -18,6 +18,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 r_serv_metadata = Flask_config.r_serv_metadata
@@ -177,4 +178,4 @@ def getImportantPasteByModule():
 
 
 # ========= REGISTRATION =========
-app.register_blueprint(browsepastes)
+app.register_blueprint(browsepastes, url_prefix=baseUrl)

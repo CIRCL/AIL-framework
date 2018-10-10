@@ -15,6 +15,7 @@ import Flask_config
 
 app = Flask_config.app
 cfg = Flask_config.cfg
+baseUrl = Flask_config.baseUrl
 r_serv_charts = Flask_config.r_serv_charts
 
 trendings = Blueprint('trendings', __name__, template_folder='templates')
@@ -78,4 +79,4 @@ def trending():
 
 
 # ========= REGISTRATION =========
-app.register_blueprint(trendings)
+app.register_blueprint(trendings, url_prefix=baseUrl)

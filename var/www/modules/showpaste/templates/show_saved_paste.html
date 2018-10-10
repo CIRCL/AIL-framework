@@ -215,7 +215,7 @@
                 </div>
                 <div class="modal-body">
 
-                  <form id="misp_event_form" method="post" action="/PasteSubmit/create_misp_event"target="_blank">
+                  <form id="misp_event_form" method="post" action="{{ url_for('PasteSubmit.create_misp_event') }}" target="_blank">
 
                   <div class="input select required">
                     <label for="EventDistribution">Distribution</label>
@@ -293,7 +293,7 @@
 
                 <div class="modal-body">
 
-                  <form method="post" action="/PasteSubmit/create_hive_case" target="_blank">
+                  <form method="post" action="{{ url_for('PasteSubmit.create_hive_case') }}" target="_blank">
 
                   <div class="input clear required">
                     <label for="EventThreatLevelId">Threat Level</label>
@@ -351,7 +351,6 @@
     <div class="panel-body" id="panel-body">
 
       {% if  duplicate_list|length == 0 %}
-          <h3> No Duplicate </h3>
       {% else %}
           <h3> Duplicate list: </h3>
           <table id="tableDup" class="table table-striped table-bordered">
@@ -420,6 +419,57 @@
           </table>
       {% endif %}
 
+        {% if crawler_metadata['get_metadata'] %}
+          <div class="row">
+
+            <div class="col-md-5">
+              <div class="row">
+                <div class="panel panel-info">
+      						<div class="panel-heading">
+                    <i class="fa fa-eye-slash"></i> Crawled Paste
+      						</div>
+
+                      <table class="table table-hover table-striped">
+                        <tbody>
+                          <tr>
+                            <td>Domain</td>
+                            <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ crawler_metadata['domain'] }}" id='onion_domain'>{{ crawler_metadata['domain'] }}</a></td>
+                          </tr>
+                          <tr>
+                            <td>Father</td>
+                            <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ crawler_metadata['paste_father'] }}" id='paste_father'>{{ crawler_metadata['paste_father'] }}</a></td>
+                          </tr>
+                          <tr>
+                            <td>Source link</td>
+                            <td>{{ crawler_metadata['real_link'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-7">
+              <div class="panel panel-info" style="text-align:center;">
+                <div class="panel-heading">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <input class="center" id="blocks" type="range" min="1" max="50" value="13">
+                      </div>
+                      <div class="col-md-4">
+                        <button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">
+                            <span class="glyphicon glyphicon-zoom-in"></span>
+                            <span class="label-icon">Full resolution</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <canvas id="canvas" style="width:100%;"></canvas>
+            </div>
+          </div>
+        {% endif %}
+
         <h3> Content: </h3>
         <a href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a>
         <p data-initsize="{{ initsize }}"> <pre id="paste-holder">{{ content }}</pre></p>
@@ -433,7 +483,7 @@
     var ltagsgalaxies
     $(document).ready(function(){
 
-        $.getJSON('/Tags/get_all_tags_taxonomies',
+        $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
           function(data) {
 
             ltags = $('#ltags').tagSuggest({
@@ -443,7 +493,7 @@
             });
           });
 
-        $.getJSON('/Tags/get_all_tags_galaxies',
+        $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
           function(data) {
 
             ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
@@ -465,7 +515,7 @@
 <script>
   function updateVTReport(hash) {
     //updateReport
-    $.getJSON('/hashDecoded/update_vt_result?hash='+hash,
+    $.getJSON("{{ url_for('hashDecoded.update_vt_result') }}?hash="+hash,
       function(data) {
         content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt']
         $( "#report_vt_"+hash ).html(content);
@@ -474,7 +524,7 @@
 
   function sendFileToVT(hash) {
     //send file to vt
-    $.getJSON('/hashDecoded/send_file_to_vt_js?hash='+hash,
+    $.getJSON("{{ url_for('hashDecoded.send_file_to_vt_js') }}?hash="+hash,
       function(data) {
         var content = '<a id="submit_vt_'+hash+'" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
         $('#submit_vt_'+hash).remove();
@@ -487,7 +537,7 @@
 <script>
     jQuery("#all-tags-taxonomies").click(function(e){
       //change input tags list
-      $.getJSON('/Tags/get_all_tags_taxonomies',
+      $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
         function(data) {
           ltags.setData(data)
       });
@@ -496,7 +546,7 @@
 </script>
 <script>
     jQuery("#all-tags-galaxies").click(function(e){
-      $.getJSON('/Tags/get_all_tags_galaxies',
+      $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
         function(data) {
           ltagsgalaxies.setData(data)
       });
@@ -517,7 +567,7 @@
 <script>
 {% for taxo in active_taxonomies %}
     jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
-      $.getJSON('/Tags/get_tags_taxonomie?taxonomie={{ taxo }}',
+      $.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
         function(data) {
           ltags.setData(data)
   });
@@ -527,7 +577,7 @@
 <script>
 {% for galaxy in active_galaxies %}
     jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
-      $.getJSON('/Tags/get_tags_galaxy?galaxy={{ galaxy }}',
+      $.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
         function(data) {
           ltagsgalaxies.setData(data)
   });
@@ -535,5 +585,51 @@
 {% endfor %}
 </script>
 
+<script>
+var ctx = canvas.getContext('2d'), img = new Image();
+
+/// turn off image smoothing
+ctx.webkitImageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
+
+img.onload = pixelate;
+img.addEventListener("error", img_error);
+var draw_img = false;
+
+img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
+
+function pixelate() {
+
+  /// use slider value
+  if( blocks.value == 50 ){
+      size = 1;
+  } else {
+      var size = (blocks.value) * 0.01;
+  }
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  /// cache scaled width and height
+  w = canvas.width * size;
+  h = canvas.height * size;
+
+  /// draw original image to the scaled size
+  ctx.drawImage(img, 0, 0, w, h);
+
+  /// pixelated
+  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+}
+
+function img_error() {
+  img.onerror=null;
+  img.src="{{ url_for('static', filename='image/AIL.png') }}";
+  blocks.value = 50;
+  pixelate;
+}
+
+blocks.addEventListener('change', pixelate, false);
+</script>
 
 </html>

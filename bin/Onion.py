@@ -21,7 +21,6 @@ Requirements
 *Need the ZMQ_Sub_Onion_Q Module running to be able to work properly.
 
 """
-import pprint
 import time
 from packages import Paste
 from pubsublogger import publisher
@@ -30,6 +29,7 @@ import os
 import base64
 import subprocess
 import redis
+import re
 
 from Helper import Process
 
@@ -97,6 +97,12 @@ if __name__ == "__main__":
         db=p.config.getint("Redis_Cache", "db"),
         decode_responses=True)
 
+    r_onion = redis.StrictRedis(
+        host=p.config.get("ARDB_Onion", "host"),
+        port=p.config.getint("ARDB_Onion", "port"),
+        db=p.config.getint("ARDB_Onion", "db"),
+        decode_responses=True)
+
     # FUNCTIONS #
     publisher.info("Script subscribed to channel onion_categ")
 
@@ -107,9 +113,21 @@ if __name__ == "__main__":
     message = p.get_from_set()
     prec_filename = None
 
+    # send to crawler:
+    activate_crawler = p.config.get("Crawler", "activate_crawler")
+    if activate_crawler == 'True':
+        activate_crawler = True
+        print('Crawler enabled')
+    else:
+        activate_crawler = False
+        print('Crawler disabled')
+
     # Thanks to Faup project for this regex
     # https://github.com/stricaud/faup
-    url_regex = "((http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    url_regex = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    i2p_regex = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    re.compile(url_regex)
+
 
     while True:
         if message is not None:
@@ -123,12 +141,32 @@ if __name__ == "__main__":
                 PST = Paste.Paste(filename)
 
                 for x in PST.get_regex(url_regex):
+                    print(x)
                     # Extracting url with regex
                     url, s, credential, subdomain, domain, host, port, \
                         resource_path, query_string, f1, f2, f3, f4 = x
 
-                    domains_list.append(domain)
-                    urls.append(url)
+                    if '.onion' in url:
+                        print(url)
+                        domains_list.append(domain)
+                        urls.append(url)
+
+                '''
+                for x in PST.get_regex(i2p_regex):
+                    # Extracting url with regex
+                    url, s, credential, subdomain, domain, host, port, \
+                        resource_path, query_string, f1, f2, f3, f4 = x
+
+                    if '.i2p' in url:
+                        print('add i2p')
+                        print(domain)
+                        if not r_onion.sismember('i2p_domain', domain) and not r_onion.sismember('i2p_domain_crawler_queue', domain):
+                            r_onion.sadd('i2p_domain', domain)
+                            r_onion.sadd('i2p_link', url)
+                            r_onion.sadd('i2p_domain_crawler_queue', domain)
+                            msg = '{};{}'.format(url,PST.p_path)
+                            r_onion.sadd('i2p_crawler_queue', msg)
+                '''
 
                 # Saving the list of extracted onion domains.
                 PST.__setattr__(channel, domains_list)
@@ -149,12 +187,33 @@ if __name__ == "__main__":
                     to_print = 'Onion;{};{};{};'.format(PST.p_source,
                                                         PST.p_date,
                                                         PST.p_name)
-                    for url in fetch(p, r_cache, urls, domains_list, path):
-                        publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
-                        p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
 
-                        msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
-                        p.populate_set_out(msg, 'Tags')
+                    if activate_crawler:
+                        date_month = datetime.datetime.now().strftime("%Y%m")
+                        date = datetime.datetime.now().strftime("%Y%m%d")
+                        for url in urls:
+
+                            domain = re.findall(url_regex, url)
+                            if len(domain) > 0:
+                                domain = domain[0][4]
+                            else:
+                                continue
+
+                            if not r_onion.sismember('month_onion_up:{}'.format(date_month), domain) and not r_onion.sismember('onion_down:'+date , domain):
+                                if not r_onion.sismember('onion_domain_crawler_queue', domain):
+                                    print('send to onion crawler')
+                                    r_onion.sadd('onion_domain_crawler_queue', domain)
+                                    msg = '{};{}'.format(url,PST.p_path)
+                                    r_onion.sadd('onion_crawler_queue', msg)
+                                #p.populate_set_out(msg, 'Crawler')
+
+                    else:
+                        for url in fetch(p, r_cache, urls, domains_list, path):
+                            publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
+                            p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
+
+                            msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
+                            p.populate_set_out(msg, 'Tags')
                 else:
                     publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
 
