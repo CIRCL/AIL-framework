@@ -51,9 +51,9 @@ If you want to add a new webpage for a module in AIL, follow these simple steps:
 
 3. Edit the created html files under the template folder as well as the Flask_* python script so that they fit your needs.
 
-4. You can change the order of your module in the top navigation header in the file [./var/www/templates/header_base.html](./var/www/templates/header_base.html) 
+4. You can change the order of your module in the top navigation header in the file [./var/www/templates/header_base.html](./var/www/templates/header_base.html)
 
-5. You can ignore module, and so, not display them in the top navigation header by adding the module name in the file [./var/www/templates/ignored_modules.txt](./var/www/templates/ignored_modules.txt) 
+5. You can ignore module, and so, not display them in the top navigation header by adding the module name in the file [./var/www/templates/ignored_modules.txt](./var/www/templates/ignored_modules.txt)
 
 How to contribute a module
 --------------------------
@@ -100,7 +100,8 @@ In AIL, you can track terms, set of terms and even regexes without creating a de
 
 Crawler
 ---------------------
-In AIL, you can crawl hidden services.
+
+In AIL, you can crawl Tor hidden services. Don't forget to review the proxy configuration of your Tor client and especially if you enabled the SOCKS5 proxy and binding on the appropriate IP address reachable via the dockers where Splash runs.
 
 There are two types of installation. You can install a *local* or a *remote* Splash server.
 ``(Splash host) = the server running the splash service``
@@ -110,7 +111,7 @@ There are two types of installation. You can install a *local* or a *remote* Spl
 
 1. *(Splash host)* Launch ``crawler_hidden_services_install.sh`` to install all requirements (type ``y`` if a localhost splah server is used or use the ``-y`` option)
 
-2. *(Splash host)* To install and setup your tor proxy: 
+2. *(Splash host)* To install and setup your tor proxy:
     - Install the tor proxy: ``sudo apt-get install tor -y``
         (Not required if ``Splah host == AIL host`` - The tor proxy is installed by default in AIL)
     - Add the following line ``SOCKSPolicy accept 172.17.0.0/16`` in ``/etc/tor/torrc``
@@ -126,7 +127,7 @@ There are two types of installation. You can install a *local* or a *remote* Spl
 
 ### Starting the scripts
 
-- *(Splash host)* Launch all Splash servers with: 
+- *(Splash host)* Launch all Splash servers with:
 ```sudo ./bin/torcrawler/launch_splash_crawler.sh -f <config absolute_path> -p <port_start> -n <number_of_splash>```
 With ``<port_start>`` and ``<number_of_splash>`` matching those specified at ``splash_onion_port`` in the configuration file of point 3 (``/bin/packages/config.cfg``)
 
@@ -137,6 +138,7 @@ All Splash dockers are launched inside the ``Docker_Splash`` screen. You can use
 
 
 ### TL;DR - Local setup
+
 #### Installation
 - ```crawler_hidden_services_install.sh -y```
 - Add the following line in ``SOCKSPolicy accept 172.17.0.0/16`` in ``/etc/tor/torrc``
