@@ -84,7 +84,10 @@ class Paste(object):
 
         PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
         if PASTES_FOLDER not in p_path:
+            self.p_rel_path = p_path
             p_path = os.path.join(PASTES_FOLDER, p_path)
+        else:
+            self.p_rel_path = None
 
         self.p_path = p_path
         self.p_name = os.path.basename(self.p_path)
@@ -284,6 +287,8 @@ class Paste(object):
 
     def _get_p_duplicate(self):
         self.p_duplicate = self.store_metadata.smembers('dup:'+self.p_path)
+        if self.p_rel_path is not None:
+            self.p_duplicate.union( self.store_metadata.smembers('dup:'+self.p_rel_path) )
         if self.p_duplicate is not None:
             return list(self.p_duplicate)
         else:

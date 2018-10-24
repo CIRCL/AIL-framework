@@ -28,6 +28,7 @@ r_serv_statistics = Flask_config.r_serv_statistics
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
+PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 Tags = Blueprint('Tags', __name__, template_folder='templates')
 
