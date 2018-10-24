@@ -82,6 +82,10 @@ class Paste(object):
             db=cfg.getint("ARDB_Metadata", "db"),
             decode_responses=True)
 
+        PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+        if PASTES_FOLDER not in p_path:
+            p_path = os.path.join(PASTES_FOLDER, p_path)
+
         self.p_path = p_path
         self.p_name = os.path.basename(self.p_path)
         self.p_size = round(os.path.getsize(self.p_path)/1024.0, 2)
