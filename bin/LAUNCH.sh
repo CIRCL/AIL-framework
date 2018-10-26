@@ -170,6 +170,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Keys" bash -c 'cd '${AIL_BIN}'; ./Keys.py; read x'
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Keys" bash -c 'cd '${AIL_BIN}'; ./Regex.py; read x'
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Decoder" bash -c 'cd '${AIL_BIN}'; ./Decoder.py; read x'
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c 'cd '${AIL_BIN}'; ./Bitcoin.py; read x'
