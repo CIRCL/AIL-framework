@@ -102,6 +102,9 @@ ttl_duplicate = 86400
 [RegexForTermsFrequency]
 max_execution_time = 60
 
+[Regex]
+max_execution_time = 60
+
 ##### Redis #####
 [Redis_Cache]
 host = localhost
