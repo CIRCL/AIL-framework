@@ -77,8 +77,8 @@ def load_regex(force = False):
                 except:  
                     print('Ignored line {}: Syntax error in "{}"'.format(line, regexConfig))
                     continue
-                line += 1
                 lregexes.append(l)
+            line += 1
         print('DEBUG: regexes:')
         print(lregexes)
     return lregexes
