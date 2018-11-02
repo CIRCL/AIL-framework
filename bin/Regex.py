@@ -18,6 +18,7 @@ Xavier Mertens <xavier@rootshell.be>
 import time
 import os
 import re
+import signal
 from pubsublogger import publisher
 
 #from bin.packages import Paste
@@ -25,6 +26,14 @@ from pubsublogger import publisher
 
 from packages import Paste
 from Helper import Process
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 # Change the path to your preferred one
 regexConfig = 'packages/regex.cfg'
@@ -48,7 +57,7 @@ def load_regex(force = False):
             print('Loading regular expressions')
             with open(regexConfig) as f:
                 lines = f.readlines()
-            lines = [x.strip() for x in lines]
+            lines = [x.strip() for x in lines] 
             validate_regex = True
     except:
         print('Cannot read {}'.format(regexConfig))
@@ -65,7 +74,7 @@ def load_regex(force = False):
                     continue
                 try:
                     re.compile(l.split('||')[1])
-                except:
+                except:  
                     print('Ignored line {}: Syntax error in "{}"'.format(line, regexConfig))
                     continue
                 line += 1
@@ -84,14 +93,21 @@ def search_regex(paste):
     for r in regexes:
         (tag,pattern) = r.split('||')
 
-        if re.findall(pattern, content, re.MULTILINE|re.IGNORECASE):
-            publisher.warning('Regex match: {} ({})'.format(pattern, tag))
-            # Sanitize tag to make it easy to read
-            tag = tag.strip().lower().replace(' ','-')
-            print('regex {} found'.format(tag))
-            msg = 'infoleak:automatic-detection="regex-{}";{}'.format(tag, message)
-            p.populate_set_out(msg, 'Tags')
-            find = True
+        signal.alarm(max_execution_time)
+        try:
+            if re.findall(pattern, content, re.MULTILINE|re.IGNORECASE):
+                publisher.warning('Regex match: {} ({})'.format(pattern, tag))
+                # Sanitize tag to make it easy to read
+                tag = tag.strip().lower().replace(' ','-')
+                print('regex {} found'.format(tag))
+                msg = 'infoleak:automatic-detection="regex-{}";{}'.format(tag, message)
+                p.populate_set_out(msg, 'Tags')
+                find = True
+        except TimeoutException:
+            print ("{0} processing timeout".format(paste.p_path))
+            continue
+        else:
+            signal.alarm(0)
 
     if find:
         #Send to duplicate
@@ -115,6 +131,7 @@ if __name__ == '__main__':
 
     # Setup the I/O queues
     p = Process(config_section)
+    max_execution_time = p.config.getint(config_section, "max_execution_time")
 
     # Sent to the logging a description of the module
     publisher.info("Run Regex module ")
