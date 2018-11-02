@@ -180,7 +180,7 @@ if __name__ == "__main__":
             if flag_the_hive or flag_misp:
                 tag, path = message.split(';')
                 paste = Paste.Paste(path)
-                source = '/'.join(paste.p_path.split('/')[-6:])
+                source = '/'.join(paste.p_rel_path.split('/')[-6:])
 
                 full_path = os.path.join(os.environ['AIL_HOME'],
                                         p.config.get("Directories", "pastes"), path)

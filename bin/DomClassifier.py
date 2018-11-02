@@ -54,14 +54,14 @@ def main():
                 if localizeddomains:
                     print(localizeddomains)
                     publisher.warning('DomainC;{};{};{};Checked {} located in {};{}'.format(
-                        PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc_tld, PST.p_path))
+                        PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc_tld, PST.p_rel_path))
                 localizeddomains = c.localizedomain(cc=cc)
                 if localizeddomains:
                     print(localizeddomains)
                     publisher.warning('DomainC;{};{};{};Checked {} located in {};{}'.format(
-                        PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc, PST.p_path))
+                        PST.p_source, PST.p_date, PST.p_name, localizeddomains, cc, PST.p_rel_path))
         except IOError:
-            print("CRC Checksum Failed on :", PST.p_path)
+            print("CRC Checksum Failed on :", PST.p_rel_path)
             publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
                 PST.p_source, PST.p_date, PST.p_name))
 

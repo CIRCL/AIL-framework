@@ -75,10 +75,11 @@ if __name__ == '__main__':
             PST.save_attribute_redis("p_max_length_line", lines_infos[1])
 
             # FIXME Not used.
-            PST.store.sadd("Pastes_Objects", PST.p_path)
+            PST.store.sadd("Pastes_Objects", PST.p_rel_path)
+            print(PST.p_rel_path)
             if lines_infos[1] < args.max:
-                p.populate_set_out( PST.p_path , 'LinesShort')
+                p.populate_set_out( PST.p_rel_path , 'LinesShort')
             else:
-                p.populate_set_out( PST.p_path , 'LinesLong')
+                p.populate_set_out( PST.p_rel_path , 'LinesLong')
         except IOError:
-            print("CRC Checksum Error on : ", PST.p_path)
+            print("CRC Checksum Error on : ", PST.p_rel_path)

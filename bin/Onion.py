@@ -164,7 +164,7 @@ if __name__ == "__main__":
                             r_onion.sadd('i2p_domain', domain)
                             r_onion.sadd('i2p_link', url)
                             r_onion.sadd('i2p_domain_crawler_queue', domain)
-                            msg = '{};{}'.format(url,PST.p_path)
+                            msg = '{};{}'.format(url,PST.p_rel_path)
                             r_onion.sadd('i2p_crawler_queue', msg)
                 '''
 
@@ -178,7 +178,7 @@ if __name__ == "__main__":
                 if len(domains_list) > 0:
 
                     publisher.warning('{}Detected {} .onion(s);{}'.format(
-                        to_print, len(domains_list),PST.p_path))
+                        to_print, len(domains_list),PST.p_rel_path))
                     now = datetime.datetime.now()
                     path = os.path.join('onions', str(now.year).zfill(4),
                                         str(now.month).zfill(2),
@@ -203,19 +203,19 @@ if __name__ == "__main__":
                                 if not r_onion.sismember('onion_domain_crawler_queue', domain):
                                     print('send to onion crawler')
                                     r_onion.sadd('onion_domain_crawler_queue', domain)
-                                    msg = '{};{}'.format(url,PST.p_path)
+                                    msg = '{};{}'.format(url,PST.p_rel_path)
                                     r_onion.sadd('onion_crawler_queue', msg)
                                 #p.populate_set_out(msg, 'Crawler')
 
                     else:
                         for url in fetch(p, r_cache, urls, domains_list, path):
-                            publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
-                            p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
+                            publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_rel_path))
+                            p.populate_set_out('onion;{}'.format(PST.p_rel_path), 'alertHandler')
 
-                            msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
+                            msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_rel_path)
                             p.populate_set_out(msg, 'Tags')
                 else:
-                    publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
+                    publisher.info('{}Onion related;{}'.format(to_print, PST.p_rel_path))
 
             prec_filename = filename
         else:

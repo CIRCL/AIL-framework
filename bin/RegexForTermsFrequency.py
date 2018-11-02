@@ -106,7 +106,7 @@ if __name__ == "__main__":
                 try:
                     matched = compiled_regex.search(content)
                 except TimeoutException:
-                    print ("{0} processing timeout".format(paste.p_path))
+                    print ("{0} processing timeout".format(paste.p_rel_path))
                     continue
                 else:
                     signal.alarm(0)

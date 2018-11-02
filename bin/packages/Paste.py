@@ -101,7 +101,7 @@ class Paste(object):
 
         var = self.p_path.split('/')
         self.p_date = Date(var[-4], var[-3], var[-2])
-        self.p_rel_path = os.path.join(var[-4], var[-3], var[-2], self.p_name)
+        self.p_date_path = os.path.join(var[-4], var[-3], var[-2], self.p_name)
         self.p_source = var[-5]
         self.supposed_url = 'https://{}/{}'.format(self.p_source.replace('_pro', ''), var[-1].split('.gz')[0])
 
@@ -303,6 +303,9 @@ class Paste(object):
 
     def get_p_rel_path(self):
         return self.p_rel_path
+
+    def get_p_date_path(self):
+        return self.p_date_path
 
     def save_all_attributes_redis(self, key=None):
         """

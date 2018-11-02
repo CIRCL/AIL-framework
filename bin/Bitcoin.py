@@ -32,7 +32,7 @@ def decode_base58(bc, length):
     for char in bc:
         n = n * 58 + digits58.index(char)
     return n.to_bytes(length, 'big')
-    
+
 def check_bc(bc):
     try:
         bcbytes = decode_base58(bc, 25)
@@ -75,7 +75,7 @@ def search_key(content, message, paste):
                 to_print = 'Bitcoin;{};{};{};'.format(paste.p_source, paste.p_date,
                                                     paste.p_name)
                 publisher.warning('{}Detected {} Bitcoin private key;{}'.format(
-                    to_print, len(bitcoin_private_key),paste.p_path))
+                    to_print, len(bitcoin_private_key),paste.p_rel_path))
 
 if __name__ == "__main__":
     publisher.port = 6380

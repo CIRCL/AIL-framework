@@ -41,12 +41,10 @@ showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templa
 # ============ FUNCTIONS ============
 
 def showpaste(content_range, requested_path):
-    relative_path = None
-    if PASTES_FOLDER not in requested_path:
-        relative_path = requested_path
-        requested_path = os.path.join(PASTES_FOLDER, requested_path)
-    # remove old full path
-    #requested_path = requested_path.replace(PASTES_FOLDER, '')
+    if PASTES_FOLDER in requested_path:
+        # remove full path
+        requested_path = requested_path.replace(PASTES_FOLDER, '', 1)
+        #requested_path = os.path.join(PASTES_FOLDER, requested_path)
     # escape directory transversal
     if os.path.commonprefix((os.path.realpath(requested_path),PASTES_FOLDER)) != PASTES_FOLDER:
         return 'path transversal detected'
@@ -124,8 +122,12 @@ def showpaste(content_range, requested_path):
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
 
     l_tags = r_serv_metadata.smembers('tag:'+requested_path)
+    print(l_tags)
     if relative_path is not None:
-        l_tags.union( r_serv_metadata.smembers('tag:'+relative_path) )
+        print('union')
+        print(relative_path)
+        print(r_serv_metadata.smembers('tag:'+relative_path))
+        l_tags = l_tags.union( r_serv_metadata.smembers('tag:'+relative_path) )
 
     #active galaxies
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -189,7 +191,7 @@ def showpaste(content_range, requested_path):
         crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
-        crawler_metadata['screenshot'] = paste.get_p_rel_path()
+        crawler_metadata['screenshot'] = paste.get_p_date_path()
     else:
         crawler_metadata['get_metadata'] = False
 

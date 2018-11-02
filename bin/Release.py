@@ -54,7 +54,7 @@ if __name__ == "__main__":
             if len(releases) == 0:
                 continue
 
-                to_print = 'Release;{};{};{};{} releases;{}'.format(paste.p_source, paste.p_date, paste.p_name, len(releases), paste.p_path)
+                to_print = 'Release;{};{};{};{} releases;{}'.format(paste.p_source, paste.p_date, paste.p_name, len(releases), paste.p_rel_path)
                 print(to_print)
                 if len(releases) > 30:
                     publisher.warning(to_print)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
         except TimeoutException:
             p.incr_module_timeout_statistic()
-            print ("{0} processing timeout".format(paste.p_path))
+            print ("{0} processing timeout".format(paste.p_rel_path))
             continue
         else:
             signal.alarm(0)
