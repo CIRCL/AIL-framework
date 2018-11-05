@@ -33,22 +33,12 @@ def sendEmailNotification(recipient, alert_name, content):
     cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
-    sender = cfg.get("Notifications", "sender"),
-    sender_host = cfg.get("Notifications", "sender_host"),
-    sender_port = cfg.getint("Notifications", "sender_port"),
-    sender_pw = cfg.get("Notifications", "sender_pw"),
-
-    if isinstance(sender, tuple):
-        sender = sender[0]
-
-    if isinstance(sender_host, tuple):
-        sender_host = sender_host[0]
-
-    if isinstance(sender_port, tuple):
-        sender_port = sender_port[0]
-
-    if isinstance(sender_pw, tuple):
-        sender_pw = sender_pw[0]
+    sender = cfg.get("Notifications", "sender")
+    sender_host = cfg.get("Notifications", "sender_host")
+    sender_port = cfg.getint("Notifications", "sender_port")
+    sender_pw = cfg.get("Notifications", "sender_pw")
+    if sender_pw = 'None':
+        sender_pw = None
 
     # raise an exception if any of these is None
     if (sender is None or
