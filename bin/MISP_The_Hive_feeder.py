@@ -119,9 +119,17 @@ if __name__ == "__main__":
         db=cfg.getint("ARDB_Metadata", "db"),
         decode_responses=True)
 
+    # set sensor uuid
     uuid_ail = r_serv_db.get('ail:uuid')
     if uuid_ail is None:
         uuid_ail = r_serv_db.set('ail:uuid', uuid.uuid4() )
+
+    # set default
+    if r_serv_db.get('hive:auto-alerts') is None:
+        r_serv_db.set('hive:auto-alerts', 0)
+
+    if r_serv_db.get('misp:auto-events') is None:
+        r_serv_db.set('misp:auto-events', 0):
 
     p = Process(config_section)
     # create MISP connection
@@ -191,7 +199,6 @@ if __name__ == "__main__":
                         whitelist_hive = r_serv_db.scard('whitelist_hive')
                         if r_serv_db.sismember('whitelist_hive', tag):
                             create_the_hive_alert(source, path, full_path, tag)
-
                     else:
                         print('hive, auto alerts creation disable')
                 if flag_misp:
