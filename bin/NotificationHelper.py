@@ -37,7 +37,7 @@ def sendEmailNotification(recipient, alert_name, content):
     sender_host = cfg.get("Notifications", "sender_host")
     sender_port = cfg.getint("Notifications", "sender_port")
     sender_pw = cfg.get("Notifications", "sender_pw")
-    if sender_pw = 'None':
+    if sender_pw == 'None':
         sender_pw = None
 
     # raise an exception if any of these is None
