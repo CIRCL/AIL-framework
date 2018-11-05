@@ -129,7 +129,7 @@ if __name__ == "__main__":
         r_serv_db.set('hive:auto-alerts', 0)
 
     if r_serv_db.get('misp:auto-events') is None:
-        r_serv_db.set('misp:auto-events', 0):
+        r_serv_db.set('misp:auto-events', 0)
 
     p = Process(config_section)
     # create MISP connection
