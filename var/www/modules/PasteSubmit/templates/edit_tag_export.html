@@ -37,6 +37,9 @@
 				background: #d91f2d;
 				color: #fff;
 			}
+			.mouse_pointer{
+				cursor: pointer;
+			}
 		</style>
 
 	</head>
@@ -169,7 +172,14 @@
 																<input type="checkbox" value="{{ tag }}" name="tag_enabled_misp" >
 															{% endif %}
 						                </td>
-														<td>{{ tag }}</td>
+														<td>
+															{{ tag }}
+															{% if not is_infoleak_tag[loop.index0] %}
+																<div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" title="Delete this tag" onclick="delete_push_tag('{{ tag }}')">
+																	<span class="glyphicon glyphicon-trash"></span>
+																</div>
+															{% endif %}
+														</td>
 												</tr>
 											{%  endfor %}
 
@@ -277,6 +287,16 @@ $(document).ready(function(){
 			}
 		);
   }
+
+	function delete_push_tag(tag){
+		//var row_tr = $(this).closest("tr");
+		$.get("{{ url_for('PasteSubmit.delete_push_tag') }}", { tag: tag }, function(data, status){
+				if(status == "success") {
+						//row_tr.remove();
+						window.location.reload(false);
+				}
+		});
+	}
 </script>
 
 </html>

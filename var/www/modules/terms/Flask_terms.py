@@ -24,6 +24,7 @@ cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv_term = Flask_config.r_serv_term
 r_serv_cred = Flask_config.r_serv_cred
+r_serv_db = Flask_config.r_serv_db
 bootstrap_label = Flask_config.bootstrap_label
 
 terms = Blueprint('terms', __name__, template_folder='templates')
@@ -132,6 +133,9 @@ def mixUserName(supplied, extensive=False):
             filtered_usernames.append(usr)
     return filtered_usernames
 
+def save_tag_to_auto_push(list_tag):
+    for tag in set(list_tag):
+        r_serv_db.sadd('list_export_tags', tag)
 
 # ============ ROUTES ============
 
@@ -244,7 +248,6 @@ def terms_management():
         term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
         black_list.append([blacked_term, term_date])
 
-    print(notificationTagsTermMapping)
     return render_template("terms_management.html",
             black_list=black_list, track_list=track_list, trackReg_list=trackReg_list, trackSet_list=trackSet_list,
             track_list_values=track_list_values, track_list_num_of_paste=track_list_num_of_paste,
@@ -358,6 +361,7 @@ def terms_management_action():
                     # add tags list
                     for tag in list_tags:
                         r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + term, tag)
+                    save_tag_to_auto_push(list_tags)
 
                 #set
                 elif term.startswith('\\') and term.endswith('\\'):
@@ -379,6 +383,7 @@ def terms_management_action():
                     # add tags list
                     for tag in list_tags:
                         r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + set_to_add, tag)
+                    save_tag_to_auto_push(list_tags)
 
                 #simple term
                 else:
@@ -392,6 +397,7 @@ def terms_management_action():
                     # add tags list
                     for tag in list_tags:
                         r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + term.lower(), tag)
+                    save_tag_to_auto_push(list_tags)
 
             elif action == "toggleEMailNotification":
                 # get the current state
