@@ -42,6 +42,8 @@ top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
 top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day, top_termFreq_setName_week, top_termFreq_setName_month]
 
+TrackedTermsNotificationTagsPrefix_Name = "TrackedNotificationTags_"
+
 # create direct link in mail
 full_paste_url = "/showsavedpaste/?paste="
 
@@ -128,6 +130,11 @@ if __name__ == "__main__":
                             # Send to every associated email adress
                             for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + regex_str_complete):
                                 sendEmailNotification(email, 'Term', mail_body)
+
+                        # tag paste
+                        for tag in server_term.smembers(TrackedTermsNotificationTagsPrefix_Name + regex_str_complete):
+                            msg = '{};{}'.format(tag, filename)
+                            p.populate_set_out(msg, 'Tags')
 
                         set_name = 'regex_' + dico_regexname_to_redis[regex_str]
                         new_to_the_set = server_term.sadd(set_name, filename)

@@ -98,7 +98,8 @@
                             <div class="form-group input-group" style="margin-bottom: 30px;">
                                 <span class="input-group-addon"><span class="fa fa-eye"></span></span>
                                 <input id="followTermInput" class="form-control" placeholder="Term to track." type="text" style="max-width: 400px;">
-                                <input id="followTermEMailNotificationReceiversInput" class="form-control" placeholder="Notification E-Mails (comma separated)" type="text" style="max-width: 400px;">
+                                <input id="followTermEMailNotificationReceiversInput" class="form-control" placeholder="Notification E-Mails (optional, comma separated)" type="text" style="max-width: 400px;">
+                                <input id="followTermTag" class="form-control" placeholder="Tags (optional, space separated)" type="text" style="max-width: 400px;">
                                 <button id="followTermBtn" class="btn btn-success btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Add term</button>
                             </div>
 
@@ -119,7 +120,16 @@
                                 <!-- SET -->
                                 {% for set in trackSet_list %}
                                   <tr style="background-color: #cdffca;">
-                                      <td>{{ set }}</td>
+                                      <td>
+                                          <span class="term_name">{{ set }}</span>
+                                          <div>
+                                            {% for tag in notificationTagsTermMapping[set] %}
+                                            <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+                                              <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                            </a>
+                                            {%  endfor %}
+                                          </div>
+                                      </td>
                                       <td>{{ trackSet_list_values[loop.index0][3] }}</td>
                                       <td>{{ trackSet_list_values[loop.index0][0] }}</td>
                                       <td>{{ trackSet_list_values[loop.index0][1] }}</td>
@@ -136,7 +146,16 @@
                                 <!-- REGEX -->
                                 {% for regex in trackReg_list %}
                                   <tr style="background-color: #fffdca;">
-                                      <td>{{ regex }}</td>
+                                      <td>
+                                          <span class="term_name">{{ regex }}</span>
+                                          <div>
+                                            {% for tag in notificationTagsTermMapping[regex] %}
+                                            <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+                                              <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                            </a>
+                                            {%  endfor %}
+                                          </div>
+                                      </td>
                                       <td>{{ trackReg_list_values[loop.index0][3] }}</td>
                                       <td>{{ trackReg_list_values[loop.index0][0] }}</td>
                                       <td>{{ trackReg_list_values[loop.index0][1] }}</td>
@@ -153,7 +172,16 @@
                                 <!-- Normal term -->
                                 {% for term in track_list %}
                                   <tr>
-                                      <td>{{ term }}</td>
+                                      <td>
+                                          <span class="term_name">{{ term }}</span>
+                                          <div>
+                                            {% for tag in notificationTagsTermMapping[term] %}
+                                            <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+                                              <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                            </a>
+                                            {%  endfor %}
+                                          </div>
+                                      </td>
                                       <td>{{ track_list_values[loop.index0][3] }}</td>
                                       <td>{{ track_list_values[loop.index0][0] }}</td>
                                       <td>{{ track_list_values[loop.index0][1] }}</td>
@@ -351,17 +379,19 @@ function perform_binding() {
 function perform_operation(){
     var curr_section = $(this).attr('data-section');
     var curr_action = $(this).attr('data-action');
+    var row_tr = $(this).closest("tr");
     if (curr_action == "add") {
         var curr_term = $('#'+curr_section+'Input').val();
         var email_addresses = $('#followTermEMailNotificationReceiversInput').val();
+        var tags = $('#followTermTag').val();
     } else {
         var curr_term = $(this).attr('data-content');
         var email_addresses = "";
     }
-    var data_to_send = { section: curr_section, action: curr_action, term: curr_term, emailAddresses: email_addresses};
+    var data_to_send = { section: curr_section, action: curr_action, term: curr_term, emailAddresses: email_addresses, tags: tags};
 
     if (curr_term != "") {
-        console.log(data_to_send);
+        //console.log(data_to_send);
         $.get("{{ url_for('terms.terms_management_action') }}", data_to_send, function(data, status){
             if(status == "success") {
                 var json = data;
@@ -372,13 +402,8 @@ function perform_operation(){
                         $.get("{{ url_for('terms.terms_management_query') }}", { term: json.term, section: json.section }, function(data2, status){
                             reload_per_paste();
                         });
-                   } else if (json.action == "delete") {
-                       // Find indexes of row which have the term in the first column
-                       var index = table_track.rows().eq( 0 ).filter( function (rowIdx) {
-                           console.log(table_track.cell( rowIdx, 0 ).data())
-                           return table_track.cell( rowIdx, 0 ).data() === json.term;
-                       } );
-                       table_track.rows(index).remove().draw( false );
+                    } else if (json.action == "delete") {
+                      row_tr.remove()
                     }
                 } else if(json.section == "blacklistTerm"){
                     if(json.action == "add") {

@@ -26,6 +26,24 @@ ARDB overview
 ARDB_DB
 * DB 1 - Curve
 * DB 2 - TermFreq
+	----------------------------------------- TERM ----------------------------------------
+
+	SET - 'TrackedRegexSet'				term
+
+	HSET - 'TrackedRegexDate'			tracked_regex		today_timestamp
+
+	SET - 'TrackedSetSet'				set_to_add
+
+	HSET - 'TrackedSetDate'				set_to_add		today_timestamp
+
+	SET - 'TrackedSetTermSet'			term
+
+	HSET - 'TrackedTermDate'			tracked_regex		today_timestamp
+
+	SET - 'TrackedNotificationEmails_'+term/set	email
+
+	SET - 'TrackedNotifications'			term/set
+
 * DB 3 - Trending
 * DB 4 - Sentiment
 * DB 5 - TermCred
