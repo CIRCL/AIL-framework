@@ -86,11 +86,11 @@ popd
 #active virtualenv
 source ./../../AILENV/bin/activate
 #Update MISP Taxonomies and Galaxies
-python3 -m pip install git+https://github.com/MISP/PyTaxonomies
-python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies
+python3 -m pip install git+https://github.com/MISP/PyTaxonomies --upgrade
+python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies --upgrade
 
 #Update PyMISP
-python3 -m pip install git+https://github.com/MISP/PyMISP
+python3 -m pip install git+https://github.com/MISP/PyMISP --upgrade
 
 #Update the Hive
-python3 -m pip install git+https://github.com/TheHive-Project/TheHive4py
+python3 -m pip install git+https://github.com/TheHive-Project/TheHive4py --upgrade
