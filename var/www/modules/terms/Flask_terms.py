@@ -10,7 +10,7 @@ import redis
 import datetime
 import calendar
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect
 import re
 import Paste
 from pprint import pprint
@@ -439,6 +439,18 @@ def terms_management_action():
         to_return["action"] = action
         to_return["term"] = term
         return jsonify(to_return)
+
+@terms.route("/terms_management/delete_terms_tags", methods=['POST'])
+def delete_terms_tags():
+    term = request.form.get('term')
+    tags_to_delete = request.form.getlist('tags_to_delete')
+
+    if term is not None and tags_to_delete is not None:
+        for tag in tags_to_delete:
+            r_serv_term.srem(TrackedTermsNotificationTagsPrefix_Name + term, tag)
+        return redirect(url_for('terms.terms_management'))
+    else:
+        return 'None args', 400
 
 @terms.route("/terms_management/delete_terms_email", methods=['GET'])
 def delete_terms_email():

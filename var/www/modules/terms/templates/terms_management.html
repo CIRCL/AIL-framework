@@ -39,6 +39,9 @@
       .mouse_pointer{
 				cursor: pointer;
 			}
+      .lb-md {
+        font-size: 16px;
+      }
   </style>
 </head>
 <body>
@@ -77,6 +80,7 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="row">
+              {% set uniq_id = 0 %}
                 <div class="col-lg-12">
                    <label class="switch">
                        <input id="per_paste" class="switch-input" value="per_paste" type="checkbox" onclick="reload_per_paste()">
@@ -131,6 +135,47 @@
                                               <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
                                             </a>
                                             {%  endfor %}
+                                            {% if notificationTagsTermMapping[set] %}
+                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
+
+                                              <div id="edit_custom_tag_modal_{{ uniq_id }}" class="modal fade" role="dialog">
+                                      					<div class="modal-dialog">
+
+                                      						<!-- Modal content-->
+                                      						<div id="mymodalcontent" class="modal-content">
+                                      							<div class="modal-header" style="border-bottom: 4px solid #48c9b0; background-color: #48c9b0; color: #ffffff;">
+                                      								<h2 class="text-center">Remove Custom Tag</h2>
+
+                                      							</div>
+
+                                      							<div class="modal-body">
+                                                      <form action="{{ url_for('terms.delete_terms_tags') }}" id="checkboxForm" method='post'>
+                                                        {% for tag in notificationTagsTermMapping[set] %}
+                                                          <div class="form-check">
+                                                             <input type="hidden" class="form-control" name="term" value="{{ set }}">
+                                                            <input type="checkbox" class="form-check-input" name="tags_to_delete" value="{{ tag }}">
+                                                            <label class="form-check-label">
+                                                              <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} lb-md">{{ tag }}</span>
+                                                            </label>
+                                                            <br>
+                                                          </div>
+                                                        {%  endfor %}
+                                                      </form>
+                                      							</div>
+
+                                      							<div class="modal-footer">
+                                      								<button class="btn btn-danger" type="submit" form="checkboxForm" value="Submit">
+                                      										<span class="glyphicon glyphicon-trash"></span>
+                                      										<span class="label-icon">Remove Tags</span>
+                                      								</button>
+                                      								<button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+                                      							</div>
+                                      						</div>
+                                      					</div>
+                                      				</div>
+                                              {% set uniq_id = uniq_id + 1 %}
+                                            {%  endif %}
                                           </div>
                                       </td>
                                       <td>{{ trackSet_list_values[loop.index0][3] }}</td>
@@ -163,6 +208,47 @@
                                               <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
                                             </a>
                                             {%  endfor %}
+                                            {% if notificationTagsTermMapping[regex] %}
+                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
+
+                                              <div id="edit_custom_tag_modal_{{ uniq_id }}" class="modal fade" role="dialog">
+                                      					<div class="modal-dialog">
+
+                                      						<!-- Modal content-->
+                                      						<div id="mymodalcontent" class="modal-content">
+                                      							<div class="modal-header" style="border-bottom: 4px solid #48c9b0; background-color: #48c9b0; color: #ffffff;">
+                                      								<h2 class="text-center">Remove Custom Tag</h2>
+
+                                      							</div>
+
+                                      							<div class="modal-body">
+                                                      <form action="{{ url_for('terms.delete_terms_tags') }}" id="checkboxForm" method='post'>
+                                                        {% for tag in notificationTagsTermMapping[regex] %}
+                                                          <div class="form-check">
+                                                             <input type="hidden" class="form-control" name="term" value="{{ regex }}">
+                                                            <input type="checkbox" class="form-check-input" name="tags_to_delete" value="{{ tag }}">
+                                                            <label class="form-check-label">
+                                                              <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} lb-md">{{ tag }}</span>
+                                                            </label>
+                                                            <br>
+                                                          </div>
+                                                        {%  endfor %}
+                                                      </form>
+                                      							</div>
+
+                                      							<div class="modal-footer">
+                                      								<button class="btn btn-danger" type="submit" form="checkboxForm" value="Submit">
+                                      										<span class="glyphicon glyphicon-trash"></span>
+                                      										<span class="label-icon">Remove Tags</span>
+                                      								</button>
+                                      								<button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+                                      							</div>
+                                      						</div>
+                                      					</div>
+                                      				</div>
+                                              {% set uniq_id = uniq_id + 1 %}
+                                            {%  endif %}
                                           </div>
                                       </td>
                                       <td>{{ trackReg_list_values[loop.index0][3] }}</td>
@@ -195,6 +281,47 @@
                                               <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
                                             </a>
                                             {%  endfor %}
+                                            {% if notificationTagsTermMapping[term] %}
+                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
+
+                                              <div id="edit_custom_tag_modal_{{ uniq_id }}" class="modal fade" role="dialog">
+                                      					<div class="modal-dialog">
+
+                                      						<!-- Modal content-->
+                                      						<div id="mymodalcontent" class="modal-content">
+                                      							<div class="modal-header" style="border-bottom: 4px solid #48c9b0; background-color: #48c9b0; color: #ffffff;">
+                                      								<h2 class="text-center">Remove Custom Tag</h2>
+
+                                      							</div>
+
+                                      							<div class="modal-body">
+                                                      <form action="{{ url_for('terms.delete_terms_tags') }}" id="checkboxForm" method='post'>
+                                                        {% for tag in notificationTagsTermMapping[term] %}
+                                                          <div class="form-check">
+                                                             <input type="hidden" class="form-control" name="term" value="{{ term }}">
+                                                            <input type="checkbox" class="form-check-input" name="tags_to_delete" value="{{ tag }}">
+                                                            <label class="form-check-label">
+                                                              <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} lb-md">{{ tag }}</span>
+                                                            </label>
+                                                            <br>
+                                                          </div>
+                                                        {%  endfor %}
+                                                      </form>
+                                      							</div>
+
+                                      							<div class="modal-footer">
+                                      								<button class="btn btn-danger" type="submit" form="checkboxForm" value="Submit">
+                                      										<span class="glyphicon glyphicon-trash"></span>
+                                      										<span class="label-icon">Remove Tags</span>
+                                      								</button>
+                                      								<button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+                                      							</div>
+                                      						</div>
+                                      					</div>
+                                      				</div>
+                                              {% set uniq_id = uniq_id + 1 %}
+                                            {%  endif %}
                                           </div>
                                       </td>
                                       <td>{{ track_list_values[loop.index0][3] }}</td>
