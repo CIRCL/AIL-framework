@@ -602,6 +602,15 @@ def disable_hive_auto_alert():
     r_serv_db.set('hive:auto-alerts', 0)
     return edit_tag_export()
 
+@PasteSubmit.route("/PasteSubmit/add_push_tag")
+def add_push_tag():
+    tag = request.args.get('tag')
+    r_serv_db.sadd('list_export_tags', tag)
+
+    to_return = {}
+    to_return["tag"] = tag
+    return jsonify(to_return)
+
 @PasteSubmit.route("/PasteSubmit/delete_push_tag")
 def delete_push_tag():
     tag = request.args.get('tag')
@@ -609,7 +618,8 @@ def delete_push_tag():
     infoleak_tags = Taxonomies().get('infoleak').machinetags()
     if tag not in infoleak_tags and r_serv_db.sismember('list_export_tags', tag):
         r_serv_db.srem('list_export_tags', tag)
-        #print('deleted')
+        r_serv_db.srem('whitelist_misp', tag)
+        r_serv_db.srem('whitelist_hive', tag)
         to_return = {}
         to_return["tag"] = tag
         return jsonify(to_return)

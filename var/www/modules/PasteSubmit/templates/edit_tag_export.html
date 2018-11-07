@@ -219,7 +219,14 @@
 																<input type="checkbox" value="{{ tag }}" name="tag_enabled_hive" >
 															{% endif %}
 						                </td>
-														<td>{{ tag }}</td>
+														<td>
+															{{ tag }}
+															{% if not is_infoleak_tag[loop.index0] %}
+																<div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" title="Delete this tag" onclick="delete_push_tag('{{ tag }}')">
+																	<span class="glyphicon glyphicon-trash"></span>
+																</div>
+															{% endif %}
+														</td>
 												</tr>
 											{%  endfor %}
 
@@ -241,6 +248,42 @@
 	      </div>
 
       </form>
+
+			<div>
+
+				<div id="add_custom_tag_modal" class="modal fade" role="dialog">
+					<div class="modal-dialog">
+
+						<!-- Modal content-->
+						<div id="mymodalcontent" class="modal-content">
+							<div class="modal-header" style="border-bottom: 4px solid #48c9b0; background-color: #48c9b0; color: #ffffff;">
+								<h2 class="text-center">Add Custom Tag</h2>
+
+							</div>
+
+							<div class="modal-body">
+								<div class="form-group input-group" style="margin-bottom: 0px;">
+                  <span class="input-group-addon"><i class="fa fa-tag fa"></i></span>
+                  <input id="new_custom_tag" class="form-control" placeholder="Add a new custom tag to the tag export" type="text">
+                </div>
+							</div>
+
+							<div class="modal-footer">
+								<button class="btn btn-primary btn-tags" onclick="add_custom_tag()">
+										<span class="glyphicon glyphicon-plus"></span>
+										<span class="label-icon">Add Custom Tag</span>
+								</button>
+								<button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#add_custom_tag_modal" data-url="{{ url_for('Tags.taxonomies') }}">
+					<span class="glyphicon glyphicon-plus "></span> Add Custom Tag
+				</button>
+			</div>
 
       </div>
             <!-- /#page-wrapper -->
@@ -291,6 +334,15 @@ $(document).ready(function(){
 	function delete_push_tag(tag){
 		//var row_tr = $(this).closest("tr");
 		$.get("{{ url_for('PasteSubmit.delete_push_tag') }}", { tag: tag }, function(data, status){
+				if(status == "success") {
+						//row_tr.remove();
+						window.location.reload(false);
+				}
+		});
+	}
+
+	function add_custom_tag(){
+		$.get("{{ url_for('PasteSubmit.add_push_tag') }}", { tag: document.getElementById('new_custom_tag').value }, function(data, status){
 				if(status == "success") {
 						//row_tr.remove();
 						window.location.reload(false);
