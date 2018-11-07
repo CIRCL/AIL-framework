@@ -135,6 +135,9 @@ def mixUserName(supplied, extensive=False):
 
 def save_tag_to_auto_push(list_tag):
     for tag in set(list_tag):
+        #limit tag length
+        if len(tag) > 49:
+            tag = tag[0:48]
         r_serv_db.sadd('list_export_tags', tag)
 
 # ============ ROUTES ============
