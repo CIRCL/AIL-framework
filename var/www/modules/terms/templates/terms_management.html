@@ -36,6 +36,9 @@
          white-space:pre-wrap;
          word-wrap:break-word;
       }
+      .mouse_pointer{
+				cursor: pointer;
+			}
   </style>
 </head>
 <body>
@@ -98,7 +101,7 @@
                             <div class="form-group input-group" style="margin-bottom: 30px;">
                                 <span class="input-group-addon"><span class="fa fa-eye"></span></span>
                                 <input id="followTermInput" class="form-control" placeholder="Term to track." type="text" style="max-width: 400px;">
-                                <input id="followTermEMailNotificationReceiversInput" class="form-control" placeholder="Notification E-Mails (optional, comma separated)" type="text" style="max-width: 400px;">
+                                <input id="followTermEMailNotificationReceiversInput" class="form-control" placeholder="Notification E-Mails (optional, space separated)" type="text" style="max-width: 400px;">
                                 <input id="followTermTag" class="form-control" placeholder="Tags (optional, space separated)" type="text" style="max-width: 400px;">
                                 <button id="followTermBtn" class="btn btn-success btn-interaction" style="margin-left: 10px;" data-section="followTerm" data-action="add"> Add term</button>
                             </div>
@@ -140,7 +143,13 @@
                                           <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ set }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                           &nbsp; &nbsp;<input id="checkBoxEMailAlerts" type="checkbox" title="Toggle E-Mail notifications" class="btn-link btn-interaction" data-content="{{ set }}" data-section="followTerm" data-action="toggleEMailNotification" {% if notificationEnabledDict[set] %} checked {% endif %}>
                                       </p></td>
-                                      <td style="white-space:pre">{{ notificationEMailTermMapping[set] }}</td>
+                                      <td>
+                                        {% for email in notificationEMailTermMapping[set] %}
+                                          <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email"><span class="glyphicon glyphicon-trash" style="color:Red;" onclick="delete_email('{{set}}', '{{email}}')"></span></div>
+                                          {{ email }}
+                                          <br>
+                                        {%  endfor %}
+                                      </td>
                                   </tr>
                                 {% endfor %}
                                 <!-- REGEX -->
@@ -166,7 +175,13 @@
                                           <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ regex }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                           &nbsp; &nbsp;<input id="checkBoxEMailAlerts" type="checkbox" title="Toggle E-Mail notifications" class="btn-link btn-interaction" data-content="{{ regex }}" data-section="followTerm" data-action="toggleEMailNotification" {% if notificationEnabledDict[regex] %} checked {% endif %}>
                                       </p></td>
-                                      <td style="white-space:pre">{{ notificationEMailTermMapping[regex] }}</td>
+                                      <td>
+                                        {% for email in notificationEMailTermMapping[regex] %}
+                                          <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email"><span class="glyphicon glyphicon-trash" style="color:Red;" onclick="delete_email('{{regex}}', '{{email}}')"></span></div>
+                                          {{ email }}
+                                          <br>
+                                        {%  endfor %}
+                                      </td>
                                   </tr>
                                 {% endfor %}
                                 <!-- Normal term -->
@@ -192,7 +207,13 @@
                                           <button class="btn-link btn-interaction" data-toggle="tooltip" data-placement="left" title="Remove this term" data-content="{{ term }}" data-section="followTerm" data-action="delete"><span class="glyphicon glyphicon-trash"></span></button>
                                           &nbsp; &nbsp;<input id="checkBoxEMailAlerts" type="checkbox" title="Toggle E-Mail notifications" class="btn-link btn-interaction" data-content="{{ term }}" data-section="followTerm" data-action="toggleEMailNotification" {% if notificationEnabledDict[term] %} checked {% endif %}>
                                       </p></td>
-                                      <td style="white-space:pre">{{ notificationEMailTermMapping[term] }}</td>
+                                      <td>
+                                        {% for email in notificationEMailTermMapping[term] %}
+                                          <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email"><span class="glyphicon glyphicon-trash" style="color:Red;" onclick="delete_email('{{term}}', '{{email}}')"></span></div>
+                                          {{ email }}
+                                          <br>
+                                        {%  endfor %}
+                                      </td>
                                   </tr>
                                 {% endfor %}
                                 </tbody>
@@ -427,5 +448,13 @@ function perform_operation(){
             }
         });
     }
+}
+
+function delete_email(term, email){
+  $.get("{{ url_for('terms.delete_terms_email') }}", { term: term, email: email }, function(data, status){
+      if(status == "success") {
+          window.location.reload(false);
+      }
+  });
 }
 </script>

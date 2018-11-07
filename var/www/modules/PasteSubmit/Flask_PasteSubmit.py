@@ -605,15 +605,19 @@ def disable_hive_auto_alert():
 @PasteSubmit.route("/PasteSubmit/add_push_tag")
 def add_push_tag():
     tag = request.args.get('tag')
-    #limit tag length
-    if len(tag) > 49:
-        tag = tag[0:48]
+    if tag is not None:
 
-    r_serv_db.sadd('list_export_tags', tag)
+        #limit tag length
+        if len(tag) > 49:
+            tag = tag[0:48]
 
-    to_return = {}
-    to_return["tag"] = tag
-    return jsonify(to_return)
+        r_serv_db.sadd('list_export_tags', tag)
+
+        to_return = {}
+        to_return["tag"] = tag
+        return jsonify(to_return)
+    else:
+        return 'None args', 400
 
 @PasteSubmit.route("/PasteSubmit/delete_push_tag")
 def delete_push_tag():

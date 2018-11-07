@@ -169,7 +169,7 @@ def terms_management():
     trackReg_list_num_of_paste = []
     for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
 
-        notificationEMailTermMapping[tracked_regex] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)) )
+        notificationEMailTermMapping[tracked_regex] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)
         notificationTagsTermMapping[tracked_regex] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_regex)
 
         if tracked_regex not in notificationEnabledDict:
@@ -196,7 +196,7 @@ def terms_management():
     for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
         tracked_set = tracked_set
 
-        notificationEMailTermMapping[tracked_set] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)) )
+        notificationEMailTermMapping[tracked_set] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)
         notificationTagsTermMapping[tracked_set] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_set)
 
         if tracked_set not in notificationEnabledDict:
@@ -222,7 +222,7 @@ def terms_management():
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
 
-        notificationEMailTermMapping[tracked_term] = "\n".join( r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
+        notificationEMailTermMapping[tracked_term] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term)
         notificationTagsTermMapping[tracked_term] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_term)
 
         if tracked_term not in notificationEnabledDict:
@@ -334,11 +334,8 @@ def terms_management_action():
         if section == "followTerm":
             if action == "add":
 
-                # Strip all whitespace
-                notificationEmailsParam = "".join(notificationEmailsParam.split())
-
                 # Make a list of all passed email addresses
-                notificationEmails = notificationEmailsParam.split(",")
+                notificationEmails = notificationEmailsParam.split()
 
                 validNotificationEmails = []
                 # check for valid email addresses
@@ -443,6 +440,16 @@ def terms_management_action():
         to_return["term"] = term
         return jsonify(to_return)
 
+@terms.route("/terms_management/delete_terms_email", methods=['GET'])
+def delete_terms_email():
+    term =  request.args.get('term')
+    email =  request.args.get('email')
+
+    if term is not None and email is not None:
+        r_serv_term.srem(TrackedTermsNotificationEmailsPrefix_Name + term, email)
+        return 'sucess'
+    else:
+        return 'None args', 400
 
 
 @terms.route("/terms_plot_tool/")
