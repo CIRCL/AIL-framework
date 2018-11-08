@@ -459,7 +459,7 @@ def delete_terms_email():
 
     if term is not None and email is not None:
         r_serv_term.srem(TrackedTermsNotificationEmailsPrefix_Name + term, email)
-        return 'sucess'
+        return redirect(url_for('terms.terms_management'))
     else:
         return 'None args', 400
 

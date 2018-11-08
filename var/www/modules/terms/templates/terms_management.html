@@ -190,7 +190,11 @@
                                       </p></td>
                                       <td>
                                         {% for email in notificationEMailTermMapping[set] %}
-                                          <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email"><span class="glyphicon glyphicon-trash" style="color:Red;" onclick="delete_email('{{set}}', '{{email}}')"></span></div>
+                                          <a href="{{ url_for('terms.delete_terms_email') }}?email={{email}}&term={{set}}">
+                                            <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email">
+                                                <span class="glyphicon glyphicon-trash" style="color:Red;" ></span>
+                                            </div>
+                                          </a>
                                           {{ email }}
                                           <br>
                                         {%  endfor %}
@@ -263,7 +267,11 @@
                                       </p></td>
                                       <td>
                                         {% for email in notificationEMailTermMapping[regex] %}
-                                          <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email"><span class="glyphicon glyphicon-trash" style="color:Red;" onclick="delete_email('{{regex}}', '{{email}}')"></span></div>
+                                          <a href="{{ url_for('terms.delete_terms_email') }}?email={{email}}&term={{regex}}">
+                                            <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email">
+                                              <span class="glyphicon glyphicon-trash" style="color:Red;"></span>
+                                            </div>
+                                          </a>
                                           {{ email }}
                                           <br>
                                         {%  endfor %}
@@ -336,7 +344,11 @@
                                       </p></td>
                                       <td>
                                         {% for email in notificationEMailTermMapping[term] %}
-                                          <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email"><span class="glyphicon glyphicon-trash" style="color:Red;" onclick="delete_email('{{term}}', '{{email}}')"></span></div>
+                                          <a href="{{ url_for('terms.delete_terms_email') }}?email={{email}}&term={{term}}">
+                                            <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="tooltip" data-placement="left" data-original-title="Remove this email">
+                                                <span class="glyphicon glyphicon-trash" style="color:Red;"></span>
+                                            </div>
+                                          </a>
                                           {{ email }}
                                           <br>
                                         {%  endfor %}
@@ -575,13 +587,5 @@ function perform_operation(){
             }
         });
     }
-}
-
-function delete_email(term, email){
-  $.get("{{ url_for('terms.delete_terms_email') }}", { term: term, email: email }, function(data, status){
-      if(status == "success") {
-          window.location.reload(false);
-      }
-  });
 }
 </script>
