@@ -80,7 +80,7 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="row">
-              {% set uniq_id = 0 %}
+              {% set uniq_id = namespace(modal_id=0)%}
                 <div class="col-lg-12">
                    <label class="switch">
                        <input id="per_paste" class="switch-input" value="per_paste" type="checkbox" onclick="reload_per_paste()">
@@ -136,9 +136,9 @@
                                             </a>
                                             {%  endfor %}
                                             {% if notificationTagsTermMapping[set] %}
-                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
+                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id.modal_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
 
-                                              <div id="edit_custom_tag_modal_{{ uniq_id }}" class="modal fade" role="dialog">
+                                              <div id="edit_custom_tag_modal_{{ uniq_id.modal_id }}" class="modal fade" role="dialog">
                                       					<div class="modal-dialog">
 
                                       						<!-- Modal content-->
@@ -174,7 +174,7 @@
                                       						</div>
                                       					</div>
                                       				</div>
-                                              {% set uniq_id = uniq_id + 1 %}
+                                              {% set uniq_id.modal_id = uniq_id.modal_id + 1 %}
                                             {%  endif %}
                                           </div>
                                       </td>
@@ -213,9 +213,9 @@
                                             </a>
                                             {%  endfor %}
                                             {% if notificationTagsTermMapping[regex] %}
-                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
+                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id.modal_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
 
-                                              <div id="edit_custom_tag_modal_{{ uniq_id }}" class="modal fade" role="dialog">
+                                              <div id="edit_custom_tag_modal_{{ uniq_id.modal_id }}" class="modal fade" role="dialog">
                                       					<div class="modal-dialog">
 
                                       						<!-- Modal content-->
@@ -251,7 +251,7 @@
                                       						</div>
                                       					</div>
                                       				</div>
-                                              {% set uniq_id = uniq_id + 1 %}
+                                              {% set uniq_id.modal_id = uniq_id.modal_id + 1 %}
                                             {%  endif %}
                                           </div>
                                       </td>
@@ -290,9 +290,9 @@
                                             </a>
                                             {%  endfor %}
                                             {% if notificationTagsTermMapping[term] %}
-                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
+                                              <div class="btn-link btn-interaction pull-right mouse_pointer" data-toggle="modal" data-target="#edit_custom_tag_modal_{{ uniq_id.modal_id }}" data-placement="right" title="Edit Tags List"><i class="fa fa-pencil" style="color:Red;"></i></div>
 
-                                              <div id="edit_custom_tag_modal_{{ uniq_id }}" class="modal fade" role="dialog">
+                                              <div id="edit_custom_tag_modal_{{ uniq_id.modal_id }}" class="modal fade" role="dialog">
                                       					<div class="modal-dialog">
 
                                       						<!-- Modal content-->
@@ -328,7 +328,7 @@
                                       						</div>
                                       					</div>
                                       				</div>
-                                              {% set uniq_id = uniq_id + 1 %}
+                                              {% set uniq_id.modal_id = uniq_id.modal_id + 1 %}
                                             {%  endif %}
                                           </div>
                                       </td>
