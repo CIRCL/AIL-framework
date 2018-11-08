@@ -102,7 +102,6 @@ r_serv_onion = redis.StrictRedis(
     db=cfg.getint("ARDB_Onion", "db"),
     decode_responses=True)
 
-
 sys.path.append('../../configs/keys')
 # MISP #
 try:

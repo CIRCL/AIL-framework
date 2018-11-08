@@ -10,7 +10,7 @@ import redis
 import datetime
 import calendar
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect
 import re
 import Paste
 from pprint import pprint
@@ -24,6 +24,8 @@ cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv_term = Flask_config.r_serv_term
 r_serv_cred = Flask_config.r_serv_cred
+r_serv_db = Flask_config.r_serv_db
+bootstrap_label = Flask_config.bootstrap_label
 
 terms = Blueprint('terms', __name__, template_folder='templates')
 
@@ -51,6 +53,7 @@ TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
 # same value as in `bin/NotificationHelper.py`
 # Keys will be e.g. TrackedNotificationEmails_<TERMNAME>
 TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
+TrackedTermsNotificationTagsPrefix_Name = "TrackedNotificationTags_"
 
 '''CRED'''
 REGEX_CRED = '[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+'
@@ -130,6 +133,12 @@ def mixUserName(supplied, extensive=False):
             filtered_usernames.append(usr)
     return filtered_usernames
 
+def save_tag_to_auto_push(list_tag):
+    for tag in set(list_tag):
+        #limit tag length
+        if len(tag) > 49:
+            tag = tag[0:48]
+        r_serv_db.sadd('list_export_tags', tag)
 
 # ============ ROUTES ============
 
@@ -152,6 +161,7 @@ def terms_management():
 
     # Maps a specific term to the associated email addresses
     notificationEMailTermMapping = {}
+    notificationTagsTermMapping = {}
 
     #Regex
     trackReg_list = []
@@ -159,7 +169,8 @@ def terms_management():
     trackReg_list_num_of_paste = []
     for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
 
-        notificationEMailTermMapping[tracked_regex] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)) )
+        notificationEMailTermMapping[tracked_regex] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)
+        notificationTagsTermMapping[tracked_regex] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_regex)
 
         if tracked_regex not in notificationEnabledDict:
             notificationEnabledDict[tracked_regex] = False
@@ -185,8 +196,8 @@ def terms_management():
     for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
         tracked_set = tracked_set
 
-        notificationEMailTermMapping[tracked_set] = "\n".join( (r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)) )
-
+        notificationEMailTermMapping[tracked_set] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)
+        notificationTagsTermMapping[tracked_set] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_set)
 
         if tracked_set not in notificationEnabledDict:
             notificationEnabledDict[tracked_set] = False
@@ -211,7 +222,8 @@ def terms_management():
     track_list_num_of_paste = []
     for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
 
-        notificationEMailTermMapping[tracked_term] = "\n".join( r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term))
+        notificationEMailTermMapping[tracked_term] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term)
+        notificationTagsTermMapping[tracked_term] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_term)
 
         if tracked_term not in notificationEnabledDict:
             notificationEnabledDict[tracked_term] = False
@@ -244,7 +256,8 @@ def terms_management():
             track_list_values=track_list_values, track_list_num_of_paste=track_list_num_of_paste,
             trackReg_list_values=trackReg_list_values, trackReg_list_num_of_paste=trackReg_list_num_of_paste,
             trackSet_list_values=trackSet_list_values, trackSet_list_num_of_paste=trackSet_list_num_of_paste,
-            per_paste=per_paste, notificationEnabledDict=notificationEnabledDict, notificationEMailTermMapping=notificationEMailTermMapping)
+            per_paste=per_paste, notificationEnabledDict=notificationEnabledDict, bootstrap_label=bootstrap_label,
+            notificationEMailTermMapping=notificationEMailTermMapping, notificationTagsTermMapping=notificationTagsTermMapping)
 
 
 @terms.route("/terms_management_query_paste/")
@@ -313,6 +326,7 @@ def terms_management_action():
     action = request.args.get('action')
     term =  request.args.get('term')
     notificationEmailsParam = request.args.get('emailAddresses')
+    input_tags = request.args.get('tags')
 
     if action is None or term is None or notificationEmailsParam is None:
         return "None"
@@ -320,11 +334,8 @@ def terms_management_action():
         if section == "followTerm":
             if action == "add":
 
-                # Strip all whitespace
-                notificationEmailsParam = "".join(notificationEmailsParam.split())
-
                 # Make a list of all passed email addresses
-                notificationEmails = notificationEmailsParam.split(",")
+                notificationEmails = notificationEmailsParam.split()
 
                 validNotificationEmails = []
                 # check for valid email addresses
@@ -334,6 +345,8 @@ def terms_management_action():
                     if re.match(r"[^@]+@[^@]+\.[^@]+", email):
                         validNotificationEmails.append(email)
 
+                # create tags list
+                list_tags = input_tags.split()
 
                 # check if regex/set or simple term
                 #regex
@@ -345,6 +358,10 @@ def terms_management_action():
                         r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term, email)
                     # enable notifications by default
                     r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term)
+                    # add tags list
+                    for tag in list_tags:
+                        r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + term, tag)
+                    save_tag_to_auto_push(list_tags)
 
                 #set
                 elif term.startswith('\\') and term.endswith('\\'):
@@ -363,6 +380,10 @@ def terms_management_action():
                         r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + set_to_add, email)
                     # enable notifications by default
                     r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, set_to_add)
+                    # add tags list
+                    for tag in list_tags:
+                        r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + set_to_add, tag)
+                    save_tag_to_auto_push(list_tags)
 
                 #simple term
                 else:
@@ -373,6 +394,10 @@ def terms_management_action():
                         r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term.lower(), email)
                     # enable notifications by default
                     r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term.lower())
+                    # add tags list
+                    for tag in list_tags:
+                        r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + term.lower(), tag)
+                    save_tag_to_auto_push(list_tags)
 
             elif action == "toggleEMailNotification":
                 # get the current state
@@ -397,6 +422,8 @@ def terms_management_action():
 
                 # delete the associated notification emails too
                 r_serv_term.delete(TrackedTermsNotificationEmailsPrefix_Name + term)
+                # delete the associated tags set
+                r_serv_term.delete(TrackedTermsNotificationTagsPrefix_Name + term)
 
         elif section == "blacklistTerm":
             if action == "add":
@@ -413,6 +440,28 @@ def terms_management_action():
         to_return["term"] = term
         return jsonify(to_return)
 
+@terms.route("/terms_management/delete_terms_tags", methods=['POST'])
+def delete_terms_tags():
+    term = request.form.get('term')
+    tags_to_delete = request.form.getlist('tags_to_delete')
+
+    if term is not None and tags_to_delete is not None:
+        for tag in tags_to_delete:
+            r_serv_term.srem(TrackedTermsNotificationTagsPrefix_Name + term, tag)
+        return redirect(url_for('terms.terms_management'))
+    else:
+        return 'None args', 400
+
+@terms.route("/terms_management/delete_terms_email", methods=['GET'])
+def delete_terms_email():
+    term =  request.args.get('term')
+    email =  request.args.get('email')
+
+    if term is not None and email is not None:
+        r_serv_term.srem(TrackedTermsNotificationEmailsPrefix_Name + term, email)
+        return redirect(url_for('terms.terms_management'))
+    else:
+        return 'None args', 400
 
 
 @terms.route("/terms_plot_tool/")
