@@ -54,7 +54,7 @@ from thehive4py.models import Case, CaseTask, CustomFieldHelper
 
 
 
-def create_the_hive_alert(source, path, content, tag):
+def create_the_hive_alert(source, path, tag):
     tags = list(r_serv_metadata.smembers('tag:'+path))
 
     artifacts = [
@@ -63,7 +63,6 @@ def create_the_hive_alert(source, path, content, tag):
     ]
 
     l_tags = tag.split(',')
-    print(tag)
 
     # Prepare the sample Alert
     sourceRef = str(uuid.uuid4())[0:6]
@@ -175,6 +174,9 @@ if __name__ == "__main__":
             r_serv_db.set('ail:thehive', False)
             print('Not connected to The HIVE')
 
+    ## FIXME: remove it
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+
     while True:
 
         # Get one message from the input queue
@@ -187,18 +189,17 @@ if __name__ == "__main__":
 
             if flag_the_hive or flag_misp:
                 tag, path = message.split(';')
+                ## FIXME: remove it
+                if PASTES_FOLDER not in path:
+                    path = os.path.join(PASTES_FOLDER, path)
                 paste = Paste.Paste(path)
                 source = '/'.join(paste.p_path.split('/')[-6:])
-
-                full_path = os.path.join(os.environ['AIL_HOME'],
-                                        p.config.get("Directories", "pastes"), path)
-
 
                 if HiveApi != False:
                     if int(r_serv_db.get('hive:auto-alerts')) == 1:
                         whitelist_hive = r_serv_db.scard('whitelist_hive')
                         if r_serv_db.sismember('whitelist_hive', tag):
-                            create_the_hive_alert(source, path, full_path, tag)
+                            create_the_hive_alert(source, path, tag)
                     else:
                         print('hive, auto alerts creation disable')
                 if flag_misp:
