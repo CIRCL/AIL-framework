@@ -99,6 +99,7 @@ threshold_stucked_module=600
 operation_mode = 3
 #Define the time that a paste will be considerate duplicate. in seconds (1day = 86400)
 ttl_duplicate = 86400
+default_unnamed_feed_name = unnamed_feeder
 
 [RegexForTermsFrequency]
 max_execution_time = 60
