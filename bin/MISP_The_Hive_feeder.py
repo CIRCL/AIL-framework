@@ -90,6 +90,41 @@ def create_the_hive_alert(source, path, tag):
     except:
         print('hive connection error')
 
+def feeder(message, count=0):
+
+    if flag_the_hive or flag_misp:
+        tag, path = message.split(';')
+        ## FIXME: remove it
+        if PASTES_FOLDER not in path:
+            path = os.path.join(PASTES_FOLDER, path)
+        try:
+            paste = Paste.Paste(path)
+        except FileNotFoundError:
+            if count < 10:
+                r_serv_db.zincrby('mess_not_saved_export', message, 1)
+                return 0
+            else:
+                r_serv_db.zrem('mess_not_saved_export', message)
+                print('Error: {} do not exist, tag= {}'.format(path, tag))
+                return 0
+
+        source = '/'.join(paste.p_path.split('/')[-6:])
+
+        if HiveApi != False:
+            if int(r_serv_db.get('hive:auto-alerts')) == 1:
+                whitelist_hive = r_serv_db.scard('whitelist_hive')
+                if r_serv_db.sismember('whitelist_hive', tag):
+                    create_the_hive_alert(source, path, tag)
+            else:
+                print('hive, auto alerts creation disable')
+        if flag_misp:
+            if int(r_serv_db.get('misp:auto-events')) == 1:
+                if r_serv_db.sismember('whitelist_misp', tag):
+                    misp_wrapper.pushToMISP(uuid_ail, path, tag)
+            else:
+                print('misp, auto events creation disable')
+
+
 if __name__ == "__main__":
 
     publisher.port = 6380
@@ -174,37 +209,30 @@ if __name__ == "__main__":
             r_serv_db.set('ail:thehive', False)
             print('Not connected to The HIVE')
 
+    refresh_time = 3
     ## FIXME: remove it
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+    time_1 = time.time()
 
     while True:
 
         # Get one message from the input queue
         message = p.get_from_set()
         if message is None:
-            publisher.debug("{} queue is empty, waiting 1s".format(config_section))
-            time.sleep(1)
-            continue
+
+            # handle not saved pastes
+            if int(time.time() - time_1) > refresh_time:
+
+                num_queu = r_serv_db.zcard('mess_not_saved_export')
+                list_queu = r_serv_db.zrange('mess_not_saved_export', 0, -1,  withscores=True)
+
+                if num_queu and list_queu:
+                    for i in range(0, num_queu):
+                        feeder(list_queu[i][0],list_queu[i][1])
+
+                time_1 = time.time()
+            else:
+                publisher.debug("{} queue is empty, waiting 1s".format(config_section))
+                time.sleep(1)
         else:
-
-            if flag_the_hive or flag_misp:
-                tag, path = message.split(';')
-                ## FIXME: remove it
-                if PASTES_FOLDER not in path:
-                    path = os.path.join(PASTES_FOLDER, path)
-                paste = Paste.Paste(path)
-                source = '/'.join(paste.p_path.split('/')[-6:])
-
-                if HiveApi != False:
-                    if int(r_serv_db.get('hive:auto-alerts')) == 1:
-                        whitelist_hive = r_serv_db.scard('whitelist_hive')
-                        if r_serv_db.sismember('whitelist_hive', tag):
-                            create_the_hive_alert(source, path, tag)
-                    else:
-                        print('hive, auto alerts creation disable')
-                if flag_misp:
-                    if int(r_serv_db.get('misp:auto-events')) == 1:
-                        if r_serv_db.sismember('whitelist_misp', tag):
-                            misp_wrapper.pushToMISP(uuid_ail, path, tag)
-                    else:
-                        print('misp, auto events creation disable')
+            feeder(message)
