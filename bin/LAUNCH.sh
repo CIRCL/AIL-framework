@@ -64,27 +64,11 @@ function helptext {
 }
 
 function launching_redis {
-    conf_dir="${AIL_HOME}/configs/"
-
-    screen -dmS "Redis_AIL"
-    sleep 0.1
-    echo -e $GREEN"\t* Launching Redis servers"$DEFAULT
-    screen -S "Redis_AIL" -X screen -t "6379" bash -c 'redis-server '$conf_dir'6379.conf ; read x'
-    sleep 0.1
-    screen -S "Redis_AIL" -X screen -t "6380" bash -c 'redis-server '$conf_dir'6380.conf ; read x'
-    sleep 0.1
-    screen -S "Redis_AIL" -X screen -t "6381" bash -c 'redis-server '$conf_dir'6381.conf ; read x'
+    bash -c "bash ${AIL_BIN}/launch_redis.sh"
 }
 
 function launching_ardb {
-    conf_dir="${AIL_HOME}/configs/"
-
-    screen -dmS "ARDB_AIL"
-    sleep 0.1
-    echo -e $GREEN"\t* Launching ARDB servers"$DEFAULT
-
-    sleep 0.1
-    screen -S "ARDB_AIL" -X screen -t "6382" bash -c 'cd '${AIL_HOME}'; ardb-server '$conf_dir'6382.conf ; read x'
+    bash -c "bash ${AIL_BIN}/launch_ardb.sh"
 }
 
 function launching_logs {
@@ -245,36 +229,18 @@ function shutting_down_ardb {
 
 function checking_redis {
     flag_redis=0
-    redis_dir=${AIL_HOME}/redis/src/
-    bash -c $redis_dir'redis-cli -p 6379 PING | grep "PONG" &> /dev/null'
+    bash -c "bash ${AIL_BIN}/check_redis.sh"
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6379 not ready"$DEFAULT
        flag_redis=1
     fi
-    sleep 0.1
-    bash -c $redis_dir'redis-cli -p 6380 PING | grep "PONG" &> /dev/null'
-    if [ ! $? == 0 ]; then
-       echo -e $RED"\t6380 not ready"$DEFAULT
-       flag_redis=1
-    fi
-    sleep 0.1
-    bash -c $redis_dir'redis-cli -p 6381 PING | grep "PONG" &> /dev/null'
-    if [ ! $? == 0 ]; then
-       echo -e $RED"\t6381 not ready"$DEFAULT
-       flag_redis=1
-    fi
-    sleep 0.1
 
     return $flag_redis;
 }
 
 function checking_ardb {
     flag_ardb=0
-    redis_dir=${AIL_HOME}/redis/src/
-    sleep 0.2
-    bash -c $redis_dir'redis-cli -p 6382 PING | grep "PONG" &> /dev/null'
+    bash -c "bash ${AIL_BIN}/check_ardb.sh"
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6382 ARDB not ready"$DEFAULT
        flag_ardb=1
     fi
 
@@ -383,8 +349,9 @@ function shutdown {
 }
 
 function update() {
-    bash -c "./Update.py"
+    bin_dir=${AIL_HOME}/bin
 
+    bash -c "python3 $bin_dir/Update.py"
     exitStatus=$?
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Update Error"$DEFAULT
