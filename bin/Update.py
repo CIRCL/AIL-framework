@@ -32,7 +32,6 @@ def check_if_files_modified():
             print('Modified Files:')
             print('{}{}{}'.format(TERMINAL_BLUE, modified_files.decode(), TERMINAL_DEFAULT))
             return False
-            #return True
         else:
             return True
     else:
@@ -164,11 +163,6 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 
         if process.returncode == 0:
             list_all_tags = process.stdout.decode().splitlines()
-            list_all_tags.append('aaaaaaaaaaaaaaaaaaaaaaaaaaaaa\trefs/tags/v1.5')
-            list_all_tags.append('eeeeeeeeeeeeeeeeeeeeeeeeeeee\trefs/tags/v1.5^{}')
-            list_all_tags.append('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\trefs/tags/v1.6')
-            list_all_tags.append('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\trefs/tags/v1.6^{}')
-            #list_all_tags.append('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\trefs/tags/v1.7')
             last_tag = list_all_tags[-1].split('\trefs/tags/')
             last_commit = last_tag[0]
             last_tag = last_tag[1].split('^{}')[0]
@@ -197,7 +191,6 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork):
     print('{}git checkout master:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
     process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #process = subprocess.run(['git', 'status'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if process.returncode == 0:
         print(process.stdout.decode())
