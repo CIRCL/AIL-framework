@@ -382,6 +382,16 @@ function shutdown {
     bash -c "./Shutdown.py"
 }
 
+function update() {
+    bash -c "./Update.py"
+
+    exitStatus=$?
+    if [ $exitStatus -ge 1 ]; then
+        echo -e $RED"\t* Update Error"$DEFAULT
+        exit
+    fi
+}
+
 function update_thirdparty {
     echo -e "\t* Updating thirdparty..."
     bash -c "(cd ${AIL_FLASK}; ./update_thirdparty.sh)"
@@ -395,6 +405,7 @@ function update_thirdparty {
 }
 
 function launch_all {
+    update;
     launch_redis;
     launch_ardb;
     launch_logs;
@@ -408,7 +419,7 @@ function launch_all {
 
     helptext;
 
-    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update-config" "Update-thirdparty")
+    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update" "Update-config" "Update-thirdparty")
 
     menu() {
         echo "What do you want to Launch?:"
@@ -459,6 +470,9 @@ function launch_all {
                 Shutdown)
                     shutdown;
                     ;;
+                Update)
+                    update;
+                    ;;
                 Update-config)
                     checking_configuration "manual";
                     ;;
@@ -477,6 +491,8 @@ while [ "$1" != "" ]; do
         -l | --launchAuto )         launch_all "automatic";
                                     ;;
         -k | --killAll )            killall;
+                                    ;;
+        -u | --update )             update;
                                     ;;
         -t | --thirdpartyUpdate )   update_thirdparty;
                                     ;;
