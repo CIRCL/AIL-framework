@@ -57,6 +57,7 @@ function helptext {
     LAUNCH.sh
       [-l | --launchAuto]
       [-k | --killAll]
+      [-u | --update]
       [-c | --configUpdate]
       [-t | --thirdpartyUpdate]
       [-h | --help]
