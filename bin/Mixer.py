@@ -80,6 +80,7 @@ if __name__ == '__main__':
     # OTHER CONFIG #
     operation_mode = cfg.getint("Module_Mixer", "operation_mode")
     ttl_key = cfg.getint("Module_Mixer", "ttl_duplicate")
+    default_unnamed_feed_name = cfg.get("Module_Mixer", "default_unnamed_feed_name")
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
@@ -107,10 +108,11 @@ if __name__ == '__main__':
                         feeder_name = feeder_name.split('/')[1]
 
                 except ValueError as e:
-                    feeder_name = "unnamed_feeder"
+                    feeder_name = default_unnamed_feed_name
+                    paste_name = complete_paste
 
                 # remove absolute path
-                paste_name = complete_paste.replace(PASTES_FOLDER, '', 1)
+                paste_name = paste_name.replace(PASTES_FOLDER, '', 1)
 
                 # Processed paste
                 processed_paste += 1

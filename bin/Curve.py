@@ -48,6 +48,8 @@ top_termFreq_setName_week = ["TopTermFreq_set_week", 7]
 top_termFreq_setName_month = ["TopTermFreq_set_month", 31]
 top_termFreq_set_array = [top_termFreq_setName_day,top_termFreq_setName_week, top_termFreq_setName_month]
 
+TrackedTermsNotificationTagsPrefix_Name = "TrackedNotificationTags_"
+
 # create direct link in mail
 full_paste_url = "/showsavedpaste/?paste="
 
@@ -70,6 +72,11 @@ def check_if_tracked_term(term, path):
             # Send to every associated email adress
             for email in server_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + term):
                 sendEmailNotification(email, 'Term', mail_body)
+
+        # tag paste
+        for tag in server_term.smembers(TrackedTermsNotificationTagsPrefix_Name + term):
+            msg = '{};{}'.format(tag, path)
+            p.populate_set_out(msg, 'Tags')
 
 
 def getValueOverRange(word, startDate, num_day):
