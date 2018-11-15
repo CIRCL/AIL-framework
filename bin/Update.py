@@ -31,8 +31,7 @@ def check_if_files_modified():
         if modified_files:
             print('Modified Files:')
             print('{}{}{}'.format(TERMINAL_BLUE, modified_files.decode(), TERMINAL_DEFAULT))
-            #return False
-            return True
+            return False
         else:
             return True
     else:
@@ -210,6 +209,22 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
             print(output)
 
             if len(list_upper_tags_remote) == 1:
+                # additional update (between 2 commits on the same version)
+                additional_update_path = os.path.join(os.environ['AIL_HOME'], 'update', current_tag, 'additional_update.sh')
+                if os.path.isfile(additional_update_path):
+                    print()
+                    print('{}------------------------------------------------------------------'.format(TERMINAL_YELLOW))
+                    print('-                 Launching Additional Update:                   -')
+                    print('--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{}'.format(TERMINAL_DEFAULT))
+                    process = subprocess.run(['bash', additional_update_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    if process.returncode == 0:
+                        output = process.stdout.decode()
+                        print(output)
+                    else:
+                        print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
+                        aborting_update()
+                        sys.exit(1)
+
                 print()
                 print('{}****************  AIL Sucessfully Updated  *****************{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
                 print()
