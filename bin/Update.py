@@ -31,7 +31,8 @@ def check_if_files_modified():
         if modified_files:
             print('Modified Files:')
             print('{}{}{}'.format(TERMINAL_BLUE, modified_files.decode(), TERMINAL_DEFAULT))
-            return False
+            #return False
+            return True
         else:
             return True
     else:
@@ -135,8 +136,14 @@ def update_fork():
 
 
 def get_git_current_tag(current_version_path):
-    with open(current_version_path, 'r') as version_content:
-        version = version_content.read()
+    try:
+        with open(current_version_path, 'r') as version_content:
+            version = version_content.read()
+    except FileNotFoundError:
+        version = 'v1.4'
+        with open(current_version_path, 'w') as version_content:
+            version_content.write(version)
+
     version = version.replace(" ", "").splitlines()
     return version[0]
 
