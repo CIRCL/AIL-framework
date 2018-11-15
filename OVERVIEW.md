@@ -46,6 +46,16 @@ ARDB_DB
 
 * DB 3 - Trending
 * DB 4 - Sentiment
+	----------------------------------------- SENTIMENT ------------------------------------
+
+	SET - 'Provider_set'				Provider
+		
+	KEY - 'UniqID' 					INT
+
+	SET - provider_timestamp			UniqID
+
+	SET - UniqID					avg_score
+
 * DB 5 - TermCred
 * DB 6 - Tags
 * DB 7 - Metadata
