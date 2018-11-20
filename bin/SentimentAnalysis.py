@@ -45,13 +45,7 @@ cfg = configparser.ConfigParser()
 cfg.read(configfile)
 
 sentiment_lexicon_file = cfg.get("Directories", "sentiment_lexicon_file")
-time_clean_sentiment_db = 60*60
-
-def clean_db()
-    sevenDays = oneHour*24*7
-    dateStart = datetime.datetime.now()
-    dateStart = dateStart.replace(minute=0, second=0, microsecond=0)
-    dateStart_timestamp = calendar.timegm(dateStart.timetuple())
+#time_clean_sentiment_db = 60*60
 
 def Analyse(message, server):
     path = message
@@ -169,14 +163,14 @@ if __name__ == '__main__':
     while True:
         message = p.get_from_set()
         if message is None:
-            if int(time.time() - time1) > time_clean_sentiment_db:
-                clean_db()
-                time1 = time.time()
-                continue
-            else:
-                publisher.debug("{} queue is empty, waiting".format(config_section))
-                time.sleep(1)
-                continue
+            #if int(time.time() - time1) > time_clean_sentiment_db:
+            #    clean_db()
+            #    time1 = time.time()
+            #    continue
+            #else:
+            publisher.debug("{} queue is empty, waiting".format(config_section))
+            time.sleep(1)
+            continue
         signal.alarm(60)
         try:
             Analyse(message, server)
