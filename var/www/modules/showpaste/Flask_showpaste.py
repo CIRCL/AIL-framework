@@ -41,12 +41,15 @@ showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templa
 # ============ FUNCTIONS ============
 
 def showpaste(content_range, requested_path):
-    if PASTES_FOLDER in requested_path:
+    if PASTES_FOLDER not in requested_path:
         # remove full path
+        requested_path_full = os.path.join(requested_path, PASTES_FOLDER)
+    else:
+        requested_path_full = requested_path
         requested_path = requested_path.replace(PASTES_FOLDER, '', 1)
-        #requested_path = os.path.join(PASTES_FOLDER, requested_path)
+
     # escape directory transversal
-    if os.path.commonprefix((os.path.realpath(requested_path),PASTES_FOLDER)) != PASTES_FOLDER:
+    if os.path.commonprefix((requested_path_full,PASTES_FOLDER)) != PASTES_FOLDER:
         return 'path transversal detected'
 
     vt_enabled = Flask_config.vt_enabled
@@ -122,12 +125,6 @@ def showpaste(content_range, requested_path):
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
 
     l_tags = r_serv_metadata.smembers('tag:'+requested_path)
-    print(l_tags)
-    if relative_path is not None:
-        print('union')
-        print(relative_path)
-        print(r_serv_metadata.smembers('tag:'+relative_path))
-        l_tags = l_tags.union( r_serv_metadata.smembers('tag:'+relative_path) )
 
     #active galaxies
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -280,6 +277,7 @@ def send_file_to_vt():
     paste = request.form['paste']
     hash = request.form['hash']
 
+    ## TODO:  # FIXME:  path transversal
     b64_full_path = os.path.join(os.environ['AIL_HOME'], b64_path)
     b64_content = ''
     with open(b64_full_path, 'rb') as f:

@@ -99,11 +99,7 @@ class HiddenServices(object):
         if father is None:
             return []
         l_crawled_pastes = []
-        paste_parent = father.replace(self.paste_directory+'/', '')
-        paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_parent))
-        ## TODO: # FIXME: remove me
-        paste_children = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
-        paste_childrens = paste_childrens | paste_children
+        paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
         for children in paste_childrens:
             if self.domain in children:
                 l_crawled_pastes.append(children)
@@ -117,14 +113,9 @@ class HiddenServices(object):
 
         set_domain = set()
         for paste in l_paste:
-            paste_full = paste.replace(self.paste_directory+'/', '')
-            paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_full))
-            ## TODO: # FIXME: remove me
-            paste_children = self.r_serv_metadata.smembers('paste_children:{}'.format(paste))
-            paste_childrens = paste_childrens | paste_children
+            paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste))
             for children in paste_childrens:
                 if not self.domain in children:
-                    print(children)
                     set_domain.add((children.split('.onion')[0]+'.onion').split('/')[-1])
 
         return set_domain
@@ -133,11 +124,7 @@ class HiddenServices(object):
         if father is None:
             return []
         l_crawled_pastes = []
-        paste_parent = father.replace(self.paste_directory+'/', '')
-        paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(paste_parent))
-        ## TODO: # FIXME: remove me
-        paste_children = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
-        paste_childrens = paste_childrens | paste_children
+        paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
         for children in paste_childrens:
             if not self.domain in children:
                 l_crawled_pastes.append(children)

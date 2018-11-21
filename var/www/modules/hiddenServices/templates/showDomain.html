@@ -105,7 +105,7 @@
 
 						        {% for path in l_pastes %}
 						          <tr>
-						              <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path_name[loop.index0] }}</a>
+						              <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
 						                <div>
 						                  {% for tag in paste_tags[loop.index0] %}
 						                  <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">

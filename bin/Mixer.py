@@ -82,7 +82,7 @@ if __name__ == '__main__':
     ttl_key = cfg.getint("Module_Mixer", "ttl_duplicate")
     default_unnamed_feed_name = cfg.get("Module_Mixer", "default_unnamed_feed_name")
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes")) + '/'
 
     # STATS #
     processed_paste = 0

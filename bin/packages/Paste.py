@@ -82,14 +82,14 @@ class Paste(object):
             db=cfg.getint("ARDB_Metadata", "db"),
             decode_responses=True)
 
-        PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
-        if PASTES_FOLDER not in p_path:
+        self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+        if self.PASTES_FOLDER not in p_path:
             self.p_rel_path = p_path
-            p_path = os.path.join(PASTES_FOLDER, p_path)
+            self.p_path = os.path.join(self.PASTES_FOLDER, p_path)
         else:
-            self.p_rel_path = None
+            self.p_path = p_path
+            self.p_rel_path = p_path.replace(self.PASTES_FOLDER+'/', '', 1)
 
-        self.p_path = p_path
         self.p_name = os.path.basename(self.p_path)
         self.p_size = round(os.path.getsize(self.p_path)/1024.0, 2)
         self.p_mime = magic.from_buffer("test", mime=True)
@@ -286,9 +286,13 @@ class Paste(object):
             return False, var
 
     def _get_p_duplicate(self):
-        self.p_duplicate = self.store_metadata.smembers('dup:'+self.p_path)
-        if self.p_rel_path is not None:
-            self.p_duplicate.union( self.store_metadata.smembers('dup:'+self.p_rel_path) )
+        p_duplicate = self.store_metadata.smembers('dup:'+self.p_path)
+        # remove absolute path #fix-db
+        if p_duplicate:
+            for duplicate_string in p_duplicate:
+                self.store_metadata.srem('dup:'+self.p_path, duplicate_string)
+                self.store_metadata.sadd('dup:'+self.p_rel_path, duplicate_string.replace(self.PASTES_FOLDER+'/', '', 1))
+        self.p_duplicate = self.store_metadata.smembers('dup:'+self.p_rel_path)
         if self.p_duplicate is not None:
             return list(self.p_duplicate)
         else:

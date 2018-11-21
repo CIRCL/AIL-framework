@@ -52,7 +52,6 @@ if __name__ == '__main__':
     p = Process(config_section)
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
-    print(PASTES_FOLDER)
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")
@@ -82,8 +81,6 @@ if __name__ == '__main__':
             continue
         # Creating the full filepath
         filename = os.path.join(PASTES_FOLDER, paste)
-        print(filename)
-        print(paste)
 
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
