@@ -44,56 +44,59 @@ if __name__ == '__main__':
     index = 0
     start = time.time()
     for key in r_serv_metadata.scan_iter('*'):
-
-        list_data = r_serv_metadata.hscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
-        while list_data[1]:
-            for hash_key, value in list_data[1].items():
-                r_serv_metadata.hdel(key, hash_key)
-                if PASTES_FOLDER in hash_key:
-                    new_hash = hash_key.replace(PASTES_FOLDER, '', 1)
-                else:
-                    new_hash = hash_key
-                if PASTES_FOLDER in value:
-                    new_value = value.replace(PASTES_FOLDER, '', 1)
-                else:
-                    new_value = value
-                index = index +1
-                r_serv_metadata.hset(key, new_hash, new_value)
-
-            list_data = r_serv_metadata.sscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
-
-        list_data = r_serv_metadata.zscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
-        while list_data[1]:
-            for elem in list_data[1]:
-                zset_key = elem[0]
-                value =  int(elem[1])
-                r_serv_metadata.zrem(key, zset_key)
-                new_key = zset_key.replace(PASTES_FOLDER, '', 1)
-                index = index +1
-                r_serv_metadata.zincrby(key, new_key, value)
-
-            list_data = r_serv_metadata.zscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
-
         if not 'dup:' in key:
-            list_data = r_serv_metadata.sscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
-            while list_data[1]:
-                for set_value in list_data[1]:
-                    r_serv_metadata.srem(key, set_value)
-                    r_serv_metadata.sadd(key, set_value.replace(PASTES_FOLDER, '', 1))
-                    index = index + 1
-
-                list_data = r_serv_metadata.sscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
-
             if PASTES_FOLDER in key:
                 new_key = key.replace(PASTES_FOLDER, '', 1)
 
                 # a set with this key already exist
                 if r_serv_metadata.exists(new_key):
                     # save data
-                    for new_key_value in r_serv_metadata.smembers(new_key):
-                        r_serv_metadata.sadd(key, new_key_value)
-                r_serv_metadata.rename(key, new_key)
+                    for new_key_value in r_serv_metadata.smembers(key):
+                        r_serv_metadata.sadd(new_key, new_key_value)
+                r_serv_metadata.delete(key)
                 index = index + 1
+
+            type = r_serv_metadata.type(key)
+            print(type)
+            if type == 'hash':
+                list_data = r_serv_metadata.hscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
+                print(key)
+                while list_data[1]:
+                    print(list_data[1])
+                    for hash_key, value in list_data[1].items():
+                        print('-----------------------------')
+                        print(key)
+                        print(hash_key)
+                        print(value)
+                        r_serv_metadata.hdel(key, hash_key)
+                        new_hash = hash_key.replace(PASTES_FOLDER, '', 1)
+                        new_value = value.replace(PASTES_FOLDER, '', 1)
+                        index = index +1
+                        r_serv_metadata.hset(key, new_hash, new_value)
+
+                    list_data = r_serv_metadata.hscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
+            elif type == 'zset':
+                list_data = r_serv_metadata.zscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
+                while list_data[1]:
+                    for elem in list_data[1]:
+                        zset_key = elem[0]
+                        value =  int(elem[1])
+                        r_serv_metadata.zrem(key, zset_key)
+                        new_key = zset_key.replace(PASTES_FOLDER, '', 1)
+                        index = index +1
+                        r_serv_metadata.zincrby(key, new_key, value)
+
+                    list_data = r_serv_metadata.zscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
+
+            elif type == 'set':
+                list_data = r_serv_metadata.sscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
+                while list_data[1]:
+                    for set_value in list_data[1]:
+                        r_serv_metadata.srem(key, set_value)
+                        r_serv_metadata.sadd(key, set_value.replace(PASTES_FOLDER, '', 1))
+                        index = index + 1
+
+                    list_data = r_serv_metadata.sscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
 
     end = time.time()
 
@@ -132,18 +135,12 @@ if __name__ == '__main__':
             while list_data[1]:
                 for hash_key, value in list_data[1].items():
                     r_serv_onion.hdel(key, hash_key)
-                    if PASTES_FOLDER in hash_key:
-                        new_hash = hash_key.replace(PASTES_FOLDER, '', 1)
-                    else:
-                        new_hash = hash_key
-                    if PASTES_FOLDER in value:
-                        new_value = value.replace(PASTES_FOLDER, '', 1)
-                    else:
-                        new_value = value
+                    new_hash = hash_key.replace(PASTES_FOLDER, '', 1)
+                    new_value = value.replace(PASTES_FOLDER, '', 1)
                     index = index +1
                     r_serv_onion.hset(key, new_hash, new_value)
 
-                list_data = r_serv_onion.sscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
+                list_data = r_serv_onion.hscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
 
             list_data = r_serv_onion.sscan(key, 0, '*{}*'.format(PASTES_FOLDER), 1000)
             while list_data[1]:
