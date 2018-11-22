@@ -30,6 +30,7 @@ export AIL_BIN=${AIL_HOME}/bin/
 export AIL_FLASK=${AIL_HOME}/var/www/
 export AIL_REDIS=${AIL_HOME}/redis/src/
 export AIL_ARDB=${AIL_HOME}/ardb/src/
+export AIL_VENV=${AIL_HOME}/AILENV/
 
 export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
@@ -107,9 +108,9 @@ function launching_logs {
     screen -dmS "Logging_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching logging process"$DEFAULT
-    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c "cd ${AIL_BIN}; log_subscriber -p 6380 -c Queuing -l ../logs/; read x"
+    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Queuing -l ../logs/; read x"
     sleep 0.1
-    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; log_subscriber -p 6380 -c Script -l ../logs/; read x"
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Script -l ../logs/; read x"
 }
 
 function launching_queues {
