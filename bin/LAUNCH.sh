@@ -11,7 +11,7 @@ CYAN="\\033[1;36m"
 
 # Getting CWD where bash script resides
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd |sed 's/bin//' )"
-AIL_HOME="${DIR}"
+export AIL_HOME="${DIR}"
 
 cd ${AIL_HOME}
 
@@ -32,6 +32,7 @@ export AIL_REDIS=${AIL_HOME}/redis/src/
 export AIL_ARDB=${AIL_HOME}/ardb/src/
 export AIL_VENV=${AIL_HOME}/AILENV/
 
+export PATH=$AIL_VENV/bin:$PATH
 export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
 export PATH=$AIL_ARDB:$PATH
