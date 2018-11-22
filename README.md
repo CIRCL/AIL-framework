@@ -70,8 +70,6 @@ Type these command lines for a fully automated installation and start AIL framew
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
 ./installing_deps.sh
-cd var/www/
-./update_thirdparty.sh
 cd ~/AIL-framework/
 . ./AILENV/bin/activate
 cd bin/
