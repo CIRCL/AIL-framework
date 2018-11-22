@@ -23,7 +23,8 @@ else
     exit 1
 fi
 
-[ ! -f "`which redis-server`" ] && echo "'redis-server' is not installed/not on PATH. Please fix and run again." && exit 1
+# redis-server is bundled during install
+## [ ! -f "`which redis-server`" ] && echo "'redis-server' is not installed/not on PATH. Please fix and run again." && exit 1
 
 export AIL_BIN=${AIL_HOME}/bin/
 export AIL_FLASK=${AIL_HOME}/var/www/
