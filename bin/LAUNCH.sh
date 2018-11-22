@@ -107,9 +107,9 @@ function launching_logs {
     screen -dmS "Logging_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching logging process"$DEFAULT
-    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c 'cd '${AIL_BIN}'; log_subscriber -p 6380 -c Queuing -l ../logs/; read x'
+    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c "cd ${AIL_BIN}; log_subscriber -p 6380 -c Queuing -l ../logs/; read x"
     sleep 0.1
-    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c 'cd '${AIL_BIN}'; log_subscriber -p 6380 -c Script -l ../logs/; read x'
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; log_subscriber -p 6380 -c Script -l ../logs/; read x"
 }
 
 function launching_queues {
@@ -117,7 +117,7 @@ function launching_queues {
     sleep 0.1
 
     echo -e $GREEN"\t* Launching all the queues"$DEFAULT
-    screen -S "Queue_AIL" -X screen -t "Queues" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' launch_queues.py; read x'
+    screen -S "Queue_AIL" -X screen -t "Queues" bash -c "cd ${AIL_BIN}; ${ENV_PY} launch_queues.py; read x"
 }
 
 function checking_configuration {
@@ -144,75 +144,75 @@ function launching_scripts {
     sleep 0.1
     echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
 
-    screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./ModulesInformationV2.py -k 0 -c 1; read x'
+    screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModulesInformationV2.py -k 0 -c 1; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Mixer" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Mixer.py; read x'
+    screen -S "Script_AIL" -X screen -t "Mixer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Mixer.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Global" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Global.py; read x'
+    screen -S "Script_AIL" -X screen -t "Global" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Global.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Duplicates.py; read x'
+    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Duplicates.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Lines" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Lines.py; read x'
+    screen -S "Script_AIL" -X screen -t "Lines" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Lines.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./DomClassifier.py; read x'
+    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DomClassifier.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Categ" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Categ.py; read x'
+    screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Categ.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Tokenize.py; read x'
+    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tokenize.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./CreditCards.py; read x'
+    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CreditCards.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "BankAccount" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./BankAccount.py; read x'
+    screen -S "Script_AIL" -X screen -t "BankAccount" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./BankAccount.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Onion" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Onion.py; read x'
+    screen -S "Script_AIL" -X screen -t "Onion" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Onion.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Mail" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Mail.py; read x'
+    screen -S "Script_AIL" -X screen -t "Mail" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Mail.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ApiKey" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./ApiKey.py; read x'
+    screen -S "Script_AIL" -X screen -t "ApiKey" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ApiKey.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Web" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Web.py; read x'
+    screen -S "Script_AIL" -X screen -t "Web" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Web.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Credential" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Credential.py; read x'
+    screen -S "Script_AIL" -X screen -t "Credential" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Credential.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Curve" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Curve.py; read x'
+    screen -S "Script_AIL" -X screen -t "Curve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Curve.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./CurveManageTopSets.py; read x'
+    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CurveManageTopSets.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./RegexForTermsFrequency.py; read x'
+    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexForTermsFrequency.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./SetForTermsFrequency.py; read x'
+    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SetForTermsFrequency.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Indexer" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Indexer.py; read x'
+    screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Indexer.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Keys" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Keys.py; read x'
+    screen -S "Script_AIL" -X screen -t "Keys" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Keys.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Decoder" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Decoder.py; read x'
+    screen -S "Script_AIL" -X screen -t "Decoder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Decoder.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Bitcoin.py; read x'
+    screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Bitcoin.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Phone" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Phone.py; read x'
+    screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Phone.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Release" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Release.py; read x'
+    screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Cve" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Cve.py; read x'
+    screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cve.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "WebStats" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./WebStats.py; read x'
+    screen -S "Script_AIL" -X screen -t "WebStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./WebStats.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./ModuleStats.py; read x'
+    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModuleStats.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./SQLInjectionDetection.py; read x'
+    screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SQLInjectionDetection.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./LibInjection.py; read x'
+    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./LibInjection.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./alertHandler.py; read x'
+    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./alertHandler.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./MISP_The_Hive_feeder.py; read x'
+    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./MISP_The_Hive_feeder.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Tags" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Tags.py; read x'
+    screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./SentimentAnalysis.py; read x'
+    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SentimentAnalysis.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./submit_paste.py; read x'
+    screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./submit_paste.py; read x"
 
 }
 
@@ -235,7 +235,7 @@ function launching_crawler {
         sleep 0.1
 
         for ((i=first_port;i<=last_port;i++)); do
-            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./Crawler.py onion '$i'; read x'
+            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Crawler.py onion $i; read x"
             sleep 0.1
         done
 
@@ -369,9 +369,9 @@ function launch_feeder {
         screen -dmS "Feeder_Pystemon"
         sleep 0.1
         echo -e $GREEN"\t* Launching Pystemon feeder"$DEFAULT
-        screen -S "Feeder_Pystemon" -X screen -t "Pystemon_feeder" bash -c 'cd '${AIL_BIN}'; '${ENV_PY} ' ./feeder/pystemon-feeder.py; read x'
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon_feeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./feeder/pystemon-feeder.py; read x"
         sleep 0.1
-        screen -S "Feeder_Pystemon" -X screen -t "Pystemon" bash -c 'cd '${AIL_HOME}/../pystemon'; '${ENV_PY} ' ./pystemon.py; read x'
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon" bash -c "cd ${AIL_HOME}/../pystemon; ${ENV_PY} ./pystemon.py; read x"
     else
         echo -e $RED"\t* A Feeder screen is already launched"$DEFAULT
     fi
