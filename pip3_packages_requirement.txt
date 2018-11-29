@@ -2,7 +2,7 @@ pymisp
 
 thehive4py
 
-redis
+redis==2.10.6
 #filemagic conflict with magic
 crcmod
 mmh3
