@@ -70,8 +70,6 @@ Type these command lines for a fully automated installation and start AIL framew
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
 ./installing_deps.sh
-cd var/www/
-./update_thirdparty.sh
 cd ~/AIL-framework/
 . ./AILENV/bin/activate
 cd bin/
@@ -105,7 +103,7 @@ curl https://get.docker.com | /bin/bash
 
 2. Type these commands to build the Docker image:
 ```bash
-git clone https://github.com/CIRCL/ail-framework
+git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
 docker build -t ail-framework .
 ```

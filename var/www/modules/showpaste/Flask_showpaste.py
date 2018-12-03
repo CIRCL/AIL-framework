@@ -41,7 +41,9 @@ showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templa
 # ============ FUNCTIONS ============
 
 def showpaste(content_range, requested_path):
+    relative_path = None
     if PASTES_FOLDER not in requested_path:
+        relative_path = requested_path
         requested_path = os.path.join(PASTES_FOLDER, requested_path)
     # remove old full path
     #requested_path = requested_path.replace(PASTES_FOLDER, '')
@@ -122,6 +124,8 @@ def showpaste(content_range, requested_path):
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
 
     l_tags = r_serv_metadata.smembers('tag:'+requested_path)
+    if relative_path is not None:
+        l_tags.union( r_serv_metadata.smembers('tag:'+relative_path) )
 
     #active galaxies
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -224,7 +228,6 @@ def showpaste(content_range, requested_path):
 @showsavedpastes.route("/showsavedpaste/") #completely shows the paste in a new tab
 def showsavedpaste():
     requested_path = request.args.get('paste', '')
-    print(requested_path)
     return showpaste(0, requested_path)
 
 @showsavedpastes.route("/showsavedrawpaste/") #shows raw

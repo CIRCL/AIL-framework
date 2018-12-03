@@ -80,6 +80,7 @@ if __name__ == '__main__':
     # OTHER CONFIG #
     operation_mode = cfg.getint("Module_Mixer", "operation_mode")
     ttl_key = cfg.getint("Module_Mixer", "ttl_duplicate")
+    default_unnamed_feed_name = cfg.get("Module_Mixer", "default_unnamed_feed_name")
 
     # STATS #
     processed_paste = 0
@@ -106,7 +107,7 @@ if __name__ == '__main__':
                     paste_name = complete_paste
 
                 except ValueError as e:
-                    feeder_name = "unnamed_feeder"
+                    feeder_name = default_unnamed_feed_name
                     paste_name = complete_paste
 
                 # Processed paste

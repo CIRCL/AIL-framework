@@ -27,7 +27,7 @@ Feed data to AIL:
 
 4. Edit your configuration file ```bin/packages/config.cfg``` and modify the pystemonpath path accordingly
 
-5. Launch pystemon-feeder ``` ./pystemon-feeder.py ```
+5. Launch pystemon-feeder ``` ./bin/feeder/pystemon-feeder.py ```
 
 
 How to create a new module
@@ -114,6 +114,9 @@ There are two types of installation. You can install a *local* or a *remote* Spl
 2. *(Splash host)* To install and setup your tor proxy:
     - Install the tor proxy: ``sudo apt-get install tor -y``
         (Not required if ``Splah host == AIL host`` - The tor proxy is installed by default in AIL)
+    - Allow Tor to bind to any interface or to the docker interface (by default binds to 127.0.0.1 only) in ``/etc/tor/torrc``
+        ``SOCKSPort 0.0.0.0:9050`` or
+        ``SOCKSPort 172.17.0.1:9050``
     - Add the following line ``SOCKSPolicy accept 172.17.0.0/16`` in ``/etc/tor/torrc``
       (for a linux docker, the localhost IP is *172.17.0.1*; Should be adapted for other platform)
     - Restart the tor proxy: ``sudo service tor restart``

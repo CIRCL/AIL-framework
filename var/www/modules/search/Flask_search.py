@@ -16,6 +16,8 @@ from whoosh import index
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser
 
+import time
+
 # ============ VARIABLES ============
 import Flask_config
 
@@ -55,8 +57,8 @@ def get_index_list(selected_index=""):
         if os.path.isdir(os.path.join(baseindexpath, dirs)):
             value = dirs
             name = to_iso_date(dirs) + " - " + \
-                    str(get_dir_size(dirs) / (1000*1000)) + " Mb " + \
-                    "(" + str(get_item_count(dirs)) + " Items" + ")"
+                    str(get_dir_size(dirs) / (1000*1000)) + " Mb " #+ \
+                    #"(" + str(get_item_count(dirs))''' + " Items" + ")"
             flag = dirs==selected_index.split('/')[-1]
             if dirs == "old_index":
                 temp = [value, name, flag]
@@ -66,6 +68,7 @@ def get_index_list(selected_index=""):
     index_list.sort(reverse=True, key=lambda x: x[0])
     if len(temp) != 0:
         index_list.append(temp)
+
     return index_list
 
 def get_dir_size(directory):
@@ -108,6 +111,7 @@ def search():
     else:
         selected_index = os.path.join(baseindexpath, index_name)
 
+    ''' temporary disabled
     # Search filename
     for path in r_serv_pasteName.smembers(q[0]):
         r.append(path)
@@ -119,13 +123,14 @@ def search():
         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
         paste_date.append(curr_date)
         paste_size.append(paste._get_p_size())
+    '''
 
     # Search full line
     schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
 
     ix = index.open_dir(selected_index)
     with ix.searcher() as searcher:
-        query = QueryParser("content", ix.schema).parse(" ".join(q))
+        query = QueryParser("content", ix.schema).parse("".join(q))
         results = searcher.search_page(query, 1, pagelen=num_elem_to_get)
         for x in results:
             r.append(x.items()[0][1])
@@ -159,15 +164,18 @@ def search():
         results = searcher.search(query)
         num_res = len(results)
 
+    index_list = get_index_list()
+
     index_min = 1
-    index_max = len(get_index_list())
+    index_max = len(index_list)
+
     return render_template("search.html", r=r, c=c,
             query=request.form['query'], paste_date=paste_date,
             paste_size=paste_size, char_to_display=max_preview_modal,
             num_res=num_res, index_min=index_min, index_max=index_max,
             bootstrap_label=bootstrap_label,
             paste_tags=paste_tags,
-            index_list=get_index_list(selected_index)
+            index_list=index_list
            )
 
 
@@ -212,6 +220,7 @@ def get_more_search_result():
             p_tags = r_serv_metadata.smembers('tag:'+path)
             l_tags = []
             for tag in p_tags:
+                complete_tag = tag
                 tag = tag.split('=')
                 if len(tag) > 1:
                     if tag[1] != '':
@@ -223,7 +232,7 @@ def get_more_search_result():
                 else:
                     tag = tag[0]
 
-                l_tags.append(tag)
+                l_tags.append( (tag, complete_tag) )
             list_tags.append(l_tags)
 
         to_return = {}
