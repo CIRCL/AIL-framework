@@ -13,7 +13,6 @@ zmq
 langid
 
 #Essential
-redis
 pyzmq
 dnspython
 logbook
