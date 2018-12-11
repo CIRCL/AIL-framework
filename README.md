@@ -153,6 +153,11 @@ Eventually you can browse the status of the AIL framework website at the followi
 http://localhost:7000/
 ```
 
+Training
+--------
+
+CIRCL organises training on how to use or extend the AIL framework. The next training will be [Thursday, 20 Dec](https://en.xing-events.com/ZEQWMLJ.html) in Luxembourg.
+
 HOWTO
 -----
 
