@@ -91,19 +91,11 @@ if __name__ == '__main__':
         for key in r_serv_metadata.scan_iter(key_to_rename):
             temp = []
             for zset_key, value in r_serv_metadata.zscan_iter(key, '*{}*'.format(PASTES_FOLDER)):
-                #print(key)
-                #print(zset_key)
-                #print(value)
                 new_key = zset_key.replace(PASTES_FOLDER, '', 1)
                 index = index +1
                 temp.append((key, zset_key))
                 keys_to_add.append((key, new_key, value))
             if 0 < len(temp) < r_serv_metadata.zcard(key):
-                #print(key)
-                #print(len(temp))
-                #print(temp)
-                #print(r_serv_metadata.zcard(key))
-                #print('---------------')
                 zkeys_to_remove.extend(temp)
             else:
                 keys_to_remove.append(key)
@@ -182,14 +174,6 @@ if __name__ == '__main__':
 
 
     end = time.time()
-
-    ''''
-    for key in r_serv_metadata.scan_iter('*{}*'.format(PASTES_FOLDER)):
-        if not 'dup:' in key:
-            if not 'paste_i2p_external_links:' in key:
-                if not 'base64:' in key:
-                    print(key)
-    '''
 
     print('Updating ARDB_Metadata Done => {} paths: {} s'.format(index, end - start))
 

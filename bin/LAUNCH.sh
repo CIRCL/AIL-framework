@@ -16,7 +16,6 @@ export AIL_HOME="${DIR}"
 cd ${AIL_HOME}
 
 if [ -e "${DIR}/AILENV/bin/python" ]; then
-    echo "AIL-framework virtualenv seems to exist, good"
     ENV_PY="${DIR}/AILENV/bin/python"
 else
     echo "Please make sure you have a AIL-framework environment, au revoir"
@@ -348,11 +347,15 @@ function launch_feeder {
 
 function killall {
     if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded ]]; then
-        echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
-        shutting_down_redis;
-        sleep 0.2
-        echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
-        shutting_down_ardb;
+        if [[ $isredis ]]; then
+            echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
+            shutting_down_redis;
+            sleep 0.2
+        fi
+        if [[ $isardb ]]; then
+            echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
+            shutting_down_ardb;
+        fi
         echo -e $GREEN"Killing all"$DEFAULT
         kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded
         sleep 0.2
