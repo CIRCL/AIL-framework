@@ -25,7 +25,6 @@ def auto_update_enabled(cfg):
 # check if files are modify locally
 def check_if_files_modified():
     process = subprocess.run(['git', 'ls-files' ,'-m'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
     if process.returncode == 0:
         modified_files = process.stdout
         if modified_files:
@@ -197,7 +196,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork):
     print('{}git checkout master:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
     process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    #process = subprocess.run(['ls'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         print(process.stdout.decode())
         print()
@@ -260,10 +259,16 @@ def launch_update_version(version, roll_back_commit, current_version_path, is_fo
     print('{}------------------------------------------------------------------'.format(TERMINAL_YELLOW))
     print('-                 Launching Update: {}{}{}                         -'.format(TERMINAL_BLUE, version, TERMINAL_YELLOW))
     print('--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{}'.format(TERMINAL_DEFAULT))
-    process = subprocess.run(['bash', update_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(['bash', update_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while True:
+        output = process.stdout.readline().decode()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
     if process.returncode == 0:
-        output = process.stdout.decode()
-        print(output)
+        #output = process.stdout.decode()
+        #print(output)
 
         with open(current_version_path, 'w') as version_content:
             version_content.write(version)
@@ -273,8 +278,8 @@ def launch_update_version(version, roll_back_commit, current_version_path, is_fo
             print('------------------------------------------------------------------{}'.format(TERMINAL_DEFAULT))
             print()
     else:
-        print(process.stdout.decode())
-        print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
+        #print(process.stdout.read().decode())
+        print('{}{}{}'.format(TERMINAL_RED, process.stderr.read().decode(), TERMINAL_DEFAULT))
         print('------------------------------------------------------------------')
         print('                   {}Update Error: {}{}{}'.format(TERMINAL_RED, TERMINAL_BLUE, version, TERMINAL_DEFAULT))
         print('------------------------------------------------------------------')

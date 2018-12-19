@@ -31,6 +31,8 @@ while $flag_ardb; do
 done
 
 echo ""
+echo "Fixing ARDB ..."
+echo ""
 bash -c "python ${AIL_HOME}/update/v1.5/Update.py"
 
 echo "Shutting down ARDB ..."

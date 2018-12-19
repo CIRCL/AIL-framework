@@ -142,11 +142,8 @@ if __name__ == '__main__':
         for key in r_serv_metadata.scan_iter(key_to_rename):
             new_key = key.replace(PASTES_FOLDER, '', 1)
             # a hset with this key already exist
-            if r_serv_metadata.exists(new_key):
-                print(key)
-            else:
-                keys_to_rename.append((key, new_key))
-                index = index + 1
+            keys_to_rename.append((key, new_key))
+            index = index + 1
         for key, new_key in keys_to_rename:
             r_serv_metadata.rename(key, new_key)
     keys_to_rename = None
