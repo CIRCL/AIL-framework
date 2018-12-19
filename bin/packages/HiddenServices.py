@@ -81,8 +81,12 @@ class HiddenServices(object):
             return ''
         return origin_paste.replace(self.paste_directory+'/', '')
 
-    def get_domain_tags(self):
-        return self.tags
+    def get_domain_tags(self, update=False):
+        if not update:
+            return self.tags
+        else:
+            self.get_last_crawled_pastes()
+            return self.tags
 
     def update_domain_tags(self, children):
         p_tags = self.r_serv_metadata.smembers('tag:'+children)

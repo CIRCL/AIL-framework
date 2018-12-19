@@ -206,6 +206,9 @@ dns = 8.8.8.8
 [Mail]
 dns = 8.8.8.8
 
+[Web]
+dns = 149.13.33.69
+
 # Indexer configuration
 [Indexer]
 type = whoosh

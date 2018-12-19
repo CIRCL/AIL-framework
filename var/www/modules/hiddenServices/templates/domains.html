@@ -12,35 +12,23 @@
 	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
 	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
-				<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
 	  <!-- JS -->
 	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 		<style>
+		.red_table thead{
+			background: #d91f2d;
+			color: #fff;
+		}
 		.input-group .form-control {
 			position: unset;
-		}
-		div.tooltip {
-			position: absolute;
-			text-align: center;
-			padding: 2px;
-			font: 12px sans-serif;
-			background: #ebf4fb;
-			border: 2px solid #b7ddf2;
-			border-radius: 8px;
-			pointer-events: none;
-			color: #000000;
-		}
-		.line_graph {
-		  fill: none;
-		  stroke: steelblue;
-		  stroke-width: 2px;
-			stroke-linejoin: round;
-			stroke-linecap: round;
-			stroke-width: 1.5;
 		}
 		</style>
 
@@ -52,44 +40,59 @@
             <div id="page-wrapper">
 
 				<div class="row">
-					<div class="col-md-6">
+					<div class="col-md-8">
 
-						<div class="panel panel-primary">
-						  <div class="panel-heading">ONION</div>
-						  <div class="panel-body">
-								<table class="table table-striped">
-							    <thead>
-							      <tr>
-							        <th>Domain</th>
-							        <th>First Seen</th>
+						{% for date in date_range %}
+							{% if domains_by_day[date]%}
+							<div class="panel panel-info" style="text-align:center;">
+								<div class="panel-heading">
+									<h3 style="text-align:center;">{{'{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])}}</h3>
+								</div>
+							</div>
+
+								<table id="table_{{date}}" class="red_table table table-striped table-bordered">
+								  <thead>
+								    <tr>
+								      <th>Domain</th>
+								      <th>First Seen</th>
 											<th>Last Check</th>
-							        <th>Status</th>
-							      </tr>
-							    </thead>
+								      <th>Status</th>
+								    </tr>
+								  </thead>
 							    <tbody>
-										{% for metadata_onion in last_onions %}
+										{% for domain in domains_by_day[date] %}
 								      <tr>
-								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_onion['domain'] }}">{{ metadata_onion['domain'] }}</a></td>
-								        <td>{{'{}/{}/{}'.format(metadata_onion['first_seen'][0:4], metadata_onion['first_seen'][4:6], metadata_onion['first_seen'][6:8])}}</td>
-												<td>{{'{}/{}/{}'.format(metadata_onion['last_check'][0:4], metadata_onion['last_check'][4:6], metadata_onion['last_check'][6:8])}}</td>
-								        <td><div style="color:{{metadata_onion['status_color']}}; display:inline-block">
-															<i class="fa {{metadata_onion['status_icon']}} fa-2x"></i>
-															{{metadata_onion['status_text']}}
+								        <td>
+													<a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ domain }}">{{ domain }}</a>
+													<div>
+														{% for tag in domain_metadata[domain]['tags'] %}
+														<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+															<span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }} <i>{{ domain_metadata[domain]['tags'][tag] }}</i></span>
+														</a>
+														{%  endfor %}
+													</div>
+												</td>
+								        <td>{{'{}/{}/{}'.format(domain_metadata[domain]['first_seen'][0:4], domain_metadata[domain]['first_seen'][4:6], domain_metadata[domain]['first_seen'][6:8])}}</td>
+												<td>{{'{}/{}/{}'.format(domain_metadata[domain]['last_check'][0:4], domain_metadata[domain]['last_check'][4:6], domain_metadata[domain]['last_check'][6:8])}}</td>
+								        <td><div style="color:{{domain_metadata[domain]['status_color']}}; display:inline-block">
+															<i class="fa {{domain_metadata[domain]['status_icon']}} fa-2x"></i>
+															{{domain_metadata[domain]['status_text']}}
 														</div>
 												</td>
 								      </tr>
 										{% endfor %}
 							    </tbody>
 							  </table>
+								<br>
+								<br>
+								<br>
+							{% endif %}
+						{% endfor %}
 
-								<div id="graph_line">
-								</div>
 
-							</div>
-						</div>
 					</div>
 
-					<div class="col-md-6">
+					<div class="col-md-4">
 						<div class="panel panel-info" style="text-align:center;">
 							<div class="panel-heading">
 								Select domains by date range :
@@ -108,7 +111,7 @@
 											</div>
 											<div class="checkbox">
 												<label>
-													<input type="checkbox" name="domains_tags" value="True" checked>
+													<input type="checkbox" name="domains_tags" value="True" {% if domains_tags %}checked{% endif %}>
 													<div style="color:#286090; display:inline-block">
 														Domains Tags <i class="fa fa-tags"></i>
 													</div>
@@ -118,7 +121,7 @@
 										<div class="col-md-6">
 											<div class="checkbox">
 											  <label>
-											    <input type="checkbox" name="domains_up" value="True" checked>
+											    <input type="checkbox" name="domains_up" value="True" {% if domains_up %}checked{% endif %}>
 													<div style="color:Green; display:inline-block">
 														Domains UP <i class="fa fa-check-circle"></i>
 													</div>
@@ -126,13 +129,12 @@
 											</div>
 											<div class="checkbox">
 											  <label>
-											    <input type="checkbox" name="domains_down" value="True">
+											    <input type="checkbox" name="domains_down" value="True" {% if domains_down %}checked{% endif %}>
 													<div style="color:Red; display:inline-block">
 														Domains DOWN 	<i class="fa fa-times-circle"></i>
 													</div>
 											  </label>
 											</div>
-
 										</div>
 									</div>
 									<button class="btn btn-primary" style="text-align:center;">
@@ -142,51 +144,6 @@
 							</div>
 						</div>
 
-
-						<div class="panel panel-info">
-      				<div class="panel-heading">
-                <i class="fa fa-eye-slash"></i> Domains Crawled Today
-      				</div>
-
-              <table class="table table-hover table-striped">
-                <tbody>
-                  <tr>
-                    <td>
-											<div style="color:Green; display:inline-block">
-												<i class="fa fa-check-circle fa-2x"></i>
-												Domains UP
-											</div>
-										</td>
-                    <td>
-											<div style="color:Green; display:inline-block">
-												{{ statDomains['domains_up'] }}
-											</div>
-										</td>
-                  </tr>
-                  <tr>
-                    <td>
-											<div style="color:Red; display:inline-block">
-												<i class="fa fa-times-circle fa-2x"></i>
-												Domains DOWN
-											</div>
-										</td>
-                    <td>
-											<div style="color:Red; display:inline-block">
-												{{ statDomains['domains_down'] }}
-											</div>
-										</td>
-                  </tr>
-                  <tr>
-                    <td>Crawled Domains</td>
-                    <td>{{ statDomains['total'] }}</td>
-                  </tr>
-									<tr>
-                    <td>Domains in Queue</td>
-                    <td>{{ statDomains['domains_queue'] }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
 					</div>
 
 				</div>
@@ -231,15 +188,23 @@
 											}
 						  			});
 
-										all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hiddenServices.domain_crawled_7days_json') }}?type=onion");
+										{% for date in date_range %}
+											$('#table_{{date}}').DataTable({
+							  				"aLengthMenu": [[5, 15, 30, -1], [5, 15, 30, "All"]],
+							  				"iDisplayLength": 15,
+							  				"order": [[ 0, "asc" ]]
+							  			});
+										{% endfor %}
+
+										//all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hiddenServices.domain_crawled_7days_json') }}?type=onion");
                 });
-								$(window).on("resize", function() {
+								/*$(window).on("resize", function() {
 									all_graph.onResize();
-								});
+								});*/
             </script>
 
 <script>
-
+/*
 all_graph.onResize = function () {
 	var aspect = 1000 / 500, all_graph = $("#graph_div");
 	var targetWidth = all_graph.parent().width();
@@ -319,6 +284,7 @@ d3.json(url)
           			});
 	});
 }
+*/
 </script>
         </body>
 
