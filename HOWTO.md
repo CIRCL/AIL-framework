@@ -27,7 +27,7 @@ Feed data to AIL:
 
 4. Edit your configuration file ```bin/packages/config.cfg``` and modify the pystemonpath path accordingly
 
-5. Launch pystemon-feeder ``` ./pystemon-feeder.py ```
+5. Launch pystemon-feeder ``` ./bin/feeder/pystemon-feeder.py ```
 
 
 How to create a new module

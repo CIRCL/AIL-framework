@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import re
+import os
+import configparser
 import dns.resolver
 
 from pubsublogger import publisher
@@ -101,11 +103,20 @@ def checking_MX_record(r_serv, adress_set, addr_dns):
 
 
 def checking_A_record(r_serv, domains_set):
+    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+    if not os.path.exists(configfile):
+        raise Exception('Unable to find the configuration file. \
+                        Did you set environment variables? \
+                        Or activate the virtualenv.')
+    cfg = configparser.ConfigParser()
+    cfg.read(configfile)
+    dns_server = cfg.get("Web", "dns")
+
     score = 0
     num = len(domains_set)
     WalidA = set([])
     resolver = dns.resolver.Resolver()
-    resolver.nameservers = ['149.13.33.69']
+    resolver.nameservers = [dns_server]
     resolver.timeout = 5
     resolver.lifetime = 2
 

@@ -20,7 +20,7 @@ socket.connect ("tcp://crf.circl.lu:%s" % port)
 # 102 Full pastes in raw base64(gz)
 
 topicfilter = "102"
-socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
+socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
 while True:
     message = socket.recv()

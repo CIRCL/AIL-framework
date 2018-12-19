@@ -27,17 +27,27 @@ def crawl_onion(url, domain, date, date_month, message):
     if super_father is None:
         super_father=paste
 
-    try:
-        r = requests.get(splash_url , timeout=30.0)
-    except Exception:
-        # TODO: relaunch docker or send error message
+    retry = True
+    nb_retry = 0
+    while retry:
+        try:
+            r = requests.get(splash_url , timeout=30.0)
+            retry = False
+        except Exception:
+            # TODO: relaunch docker or send error message
+            nb_retry += 1
 
-        on_error_send_message_back_in_queue(type_hidden_service, domain, message)
-        publisher.error('{} SPASH DOWN'.format(splash_url))
-        print('--------------------------------------')
-        print('         \033[91m DOCKER SPLASH DOWN\033[0m')
-        print('          {} DOWN'.format(splash_url))
-        exit(1)
+            if nb_retry == 30:
+                on_error_send_message_back_in_queue(type_hidden_service, domain, message)
+                publisher.error('{} SPASH DOWN'.format(splash_url))
+                print('--------------------------------------')
+                print('         \033[91m DOCKER SPLASH DOWN\033[0m')
+                print('          {} DOWN'.format(splash_url))
+                exit(1)
+
+            print('         \033[91m DOCKER SPLASH NOT AVAILABLE\033[0m')
+            print('          Retry({}) in 10 seconds'.format(nb_retry))
+            time.sleep(10)
 
     if r.status_code == 200:
         process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', splash_url, type_hidden_service, url, domain, paste, super_father],
