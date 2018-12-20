@@ -200,8 +200,12 @@ def onion_domain():
         # # TODO: FIXME return 404
 
     last_check = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'last_check')
+    if last_check is None:
+        last_check = '********'
     last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
     first_seen = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'first_seen')
+    if first_seen is None:
+        first_seen = '********'
     first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
     origin_paste = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'paste_parent')
 
