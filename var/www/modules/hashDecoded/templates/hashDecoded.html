@@ -121,7 +121,14 @@
 													{% endif %}
 												{% endfor %}
 											</select>
-											<br>
+											<div class="checkbox">
+												<label>
+													<input type="checkbox" name="show_decoded_files" value="True" {% if show_decoded_files %}checked{% endif %}>
+													<div style="color:#286090; display:inline-block">
+														Show decoded files <i class="fa fa-file"></i>
+													</div>
+												</label>
+											</div>
 											<button class="btn btn-primary" style="text-align:center;">
 												<i class="fa fa-files-o"></i> Search
 											</button>
@@ -189,10 +196,12 @@
 								</tbody>
 								</table>
 						{% else %}
-							{% if date_from|string == date_to|string %}
-							<h3> {{ date_from }}, No Hashes</h3>
-							{% else %}
-							<h3> {{ date_from }} to {{ date_to }}, No Hashes</h3>
+							{% if show_decoded_files %}
+								{% if date_from|string == date_to|string %}
+								<h3> {{ date_from }}, No Hashes</h3>
+								{% else %}
+								<h3> {{ date_from }} to {{ date_to }}, No Hashes</h3>
+								{% endif %}
 							{% endif %}
 						{% endif %}
 					</div>

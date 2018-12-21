@@ -101,7 +101,8 @@ def all_hash_search():
     date_to = request.form.get('date_to')
     type = request.form.get('type')
     encoding = request.form.get('encoding')
-    return redirect(url_for('hashDecoded.hashDecoded_page', date_from=date_from, date_to=date_to, type=type, encoding=encoding))
+    show_decoded_files = request.form.get('show_decoded_files')
+    return redirect(url_for('hashDecoded.hashDecoded_page', date_from=date_from, date_to=date_to, type=type, encoding=encoding, show_decoded_files=show_decoded_files))
 
 @hashDecoded.route("/hashDecoded/", methods=['GET'])
 def hashDecoded_page():
@@ -109,6 +110,8 @@ def hashDecoded_page():
     date_to = request.args.get('date_to')
     type = request.args.get('type')
     encoding = request.args.get('encoding')
+    show_decoded_files = request.args.get('show_decoded_files')
+    print(show_decoded_files)
 
     if type == 'All types':
         type = None
@@ -161,14 +164,16 @@ def hashDecoded_page():
         daily_date = None
 
     l_64 = set()
-    for date in date_range:
-        if encoding is None:
-            l_hash = r_serv_metadata.zrange('hash_date:' +date, 0, -1)
-        else:
-            l_hash = r_serv_metadata.zrange(encoding+'_date:' +date, 0, -1)
-        if l_hash:
-            for hash in l_hash:
-                l_64.add(hash)
+    if show_decoded_files:
+        show_decoded_files = True
+        for date in date_range:
+            if encoding is None:
+                l_hash = r_serv_metadata.zrange('hash_date:' +date, 0, -1)
+            else:
+                l_hash = r_serv_metadata.zrange(encoding+'_date:' +date, 0, -1)
+            if l_hash:
+                for hash in l_hash:
+                    l_64.add(hash)
 
     num_day_sparkline = 6
     date_range_sparkline = get_date_range(num_day_sparkline)
@@ -214,7 +219,7 @@ def hashDecoded_page():
     l_type = r_serv_metadata.smembers('hash_all_type')
 
     return render_template("hashDecoded.html", l_64=b64_metadata, vt_enabled=vt_enabled, l_type=l_type, type=type, daily_type_chart=daily_type_chart, daily_date=daily_date,
-                                                encoding=encoding, all_encoding=all_encoding, date_from=date_from, date_to=date_to)
+                                                encoding=encoding, all_encoding=all_encoding, date_from=date_from, date_to=date_to, show_decoded_files=show_decoded_files)
 
 @hashDecoded.route('/hashDecoded/hash_by_type')
 def hash_by_type():
