@@ -111,7 +111,6 @@ def hashDecoded_page():
     type = request.args.get('type')
     encoding = request.args.get('encoding')
     show_decoded_files = request.args.get('show_decoded_files')
-    print(show_decoded_files)
 
     if type == 'All types':
         type = None
