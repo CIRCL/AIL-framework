@@ -404,6 +404,63 @@ def decoder_type_json():
         to_json.append({'name': decoder, 'value': nb_decoded[decoder]})
     return jsonify(to_json)
 
+@hashDecoded.route('/hashDecoded/top5_type_json')
+def top5_type_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    typ = request.args.get('type')
+    decoder = request.args.get('encoding')
+
+    if decoder == 'All encoding' or decoder is None:
+        all_decoder = r_serv_metadata.smembers('all_decoder')
+    else:
+        if not r_serv_metadata.sismember('all_decoder', decoder):
+            return jsonify({'Error': 'This decoder do not exist'})
+        else:
+            all_decoder = [decoder]
+
+    if typ == 'All types' or typ is None or typ=='None':
+        all_type = r_serv_metadata.smembers('hash_all_type')
+    else:
+        typ = typ.replace(' ', '+')
+        if not r_serv_metadata.sismember('hash_all_type', typ):
+            return jsonify({'Error': 'This type do not exist'})
+        else:
+            all_type = [typ]
+
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        try:
+            if len(date_from) != 8:
+                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+            date_range = substract_date(date_from, date_to)
+        except:
+            pass
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+
+    # TODO replace with ZUNIONSTORE
+    nb_types_decoded = {}
+    for date in date_range:
+        for typ in all_type:
+            for decoder in all_decoder:
+                nb_decoded = r_serv_metadata.zscore('{}_type:{}'.format(decoder, typ), date)
+                if nb_decoded is not None:
+                    if typ in nb_types_decoded:
+                        nb_types_decoded[typ] = nb_types_decoded[typ] + int(nb_decoded)
+                    else:
+                        nb_types_decoded[typ] = int(nb_decoded)
+
+    to_json = []
+    top5_types = sorted(nb_types_decoded, key=nb_types_decoded.get, reverse=True)[:5]
+    for typ in top5_types:
+        to_json.append({'name': typ, 'value': nb_types_decoded[typ]})
+    return jsonify(to_json)
+
 
 @hashDecoded.route('/hashDecoded/daily_type_json')
 def daily_type_json():

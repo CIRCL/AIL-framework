@@ -137,6 +137,8 @@
 								</div>
 								<div id="pie_chart_encoded">
 			          </div>
+								<div id="pie_chart_top5_types">
+			          </div>
 							</div>
 						</div>
 					</div>
@@ -257,8 +259,11 @@
 										{% elif  daily_type_chart %}
 										chart.stackBarChart =barchart_type_stack("{{ url_for('hashDecoded.range_type_json') }}?date_from={{daily_date}}&date_to={{daily_date}}", 'id');
 										{% else %}
-										chart.stackBarChart = barchart_type_stack("{{ url_for('hashDecoded.range_type_json') }}?date_from={{date_from}}&date_to={{date_to}}", 'id')
+										chart.stackBarChart = barchart_type_stack("{{ url_for('hashDecoded.range_type_json') }}?date_from={{date_from}}&date_to={{date_to}}", 'id');
 										{% endif %}
+
+										draw_pie_chart("pie_chart_encoded" ,"{{ url_for('hashDecoded.decoder_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}", "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}&encoding=");
+										draw_pie_chart("pie_chart_top5_types" ,"{{ url_for('hashDecoded.top5_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}", "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type=");
 
 										chart.onResize();
 										$(window).on("resize", function() {
@@ -507,79 +512,83 @@ window.chart = chart;
 </script>
 
 <script>
+function draw_pie_chart(id, url_json, pie_on_click_url) {
 
-var width_pie = 200;
-var height_pie = 200;
-var padding_pie = 10;
-var opacity_pie = .8;
+		var width_pie = 200;
+		var height_pie = 200;
+		var padding_pie = 10;
+		var opacity_pie = .8;
 
-var radius_pie = Math.min(width_pie - padding_pie, height_pie - padding_pie) / 2;
-//var color_pie = d3.scaleOrdinal(d3.schemeCategory10);
-var color_pie = d3.scaleOrdinal(d3.schemeSet3);
+		var radius_pie = Math.min(width_pie - padding_pie, height_pie - padding_pie) / 2;
+		//var color_pie = d3.scaleOrdinal(d3.schemeCategory10);
+		var color_pie = d3.scaleOrdinal(d3.schemeSet3);
 
-var div_pie = d3.select("body").append("div")
-		.attr("class", "tooltip")
-		.style("opacity", 0);
+		var div_pie = d3.select("body").append("div")
+				.attr("class", "tooltip")
+				.style("opacity", 0);
 
-var svg_pie = d3.select("#pie_chart_encoded")
-		.append('svg')
-		.attr("width", '100%')
-		.attr("height", '100%')
-		.attr('viewBox','0 0 '+Math.min(width_pie,height_pie) +' '+Math.min(width_pie,height_pie) )
-		.attr('preserveAspectRatio','xMinYMin')
+		var svg_pie = d3.select("#"+id)
+				.append('svg')
+				.attr("width", '100%')
+				.attr("height", '100%')
+				.attr('viewBox','0 0 '+Math.min(width_pie,height_pie) +' '+Math.min(width_pie,height_pie) )
+				.attr('preserveAspectRatio','xMinYMin')
 
 
-var g_pie = svg_pie.append('g')
-		.attr('transform', 'translate(' + (width_pie/2) + ',' + (height_pie/2) + ')');
+		var g_pie = svg_pie.append('g')
+				.attr('transform', 'translate(' + (width_pie/2) + ',' + (height_pie/2) + ')');
 
-var arc_pie = d3.arc()
-		.innerRadius(0)
-		.outerRadius(radius_pie);
+		var arc_pie = d3.arc()
+				.innerRadius(0)
+				.outerRadius(radius_pie);
 
-d3.json("{{ url_for('hashDecoded.decoder_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}")
-	.then(function(data){
+		d3.json(url_json)
+			.then(function(data){
 
-	var pie_pie = d3.pie()
-			.value(function(d) { return d.value; })
-			.sort(null);
+			var pie_pie = d3.pie()
+					.value(function(d) { return d.value; })
+					.sort(null);
 
-	var path_pie = g_pie.selectAll('path')
-		  .data(pie_pie(data))
-		  .enter()
-		  .append("g")
-		  .append('path')
-		  .attr('d', arc_pie)
-		  .attr('fill', (d,i) => color_pie(i))
-			.attr('class', 'pie_path')
-			.on("mouseover", mouseovered_pie)
-			.on("mouseout", mouseouted_pie)
-			.on("click", function (d) {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}&encoding="+d.data.name })
-		  .style('opacity', opacity_pie)
-		  .style('stroke', 'white');
-	});
+			var path_pie = g_pie.selectAll('path')
+				  .data(pie_pie(data))
+				  .enter()
+				  .append("g")
+				  .append('path')
+				  .attr('d', arc_pie)
+				  .attr('fill', (d,i) => color_pie(i))
+					.attr('class', 'pie_path')
+					.on("mouseover", mouseovered_pie)
+					.on("mouseout", mouseouted_pie)
+					.on("click", function (d) {window.location.href = pie_on_click_url+d.data.name })
+				  .style('opacity', opacity_pie)
+				  .style('stroke', 'white');
+			});
 
-function mouseovered_pie(d) {
 
-	// tooltip
-	var content;
+		function mouseovered_pie(d) {
 
-	content = "<b>"+d.data.name+"</b>"+"<br/>"+
-						"<br/>"+
-						"<i>Decoded</i>: "+d.data.value+"<br/>"
+			// tooltip
+			var content;
 
-	div_pie.transition()
-		.duration(200)
-		.style("opacity", .9);
-	div_pie.html(content)
-		.style("left", (d3.event.pageX) + "px")
-		.style("top", (d3.event.pageY - 28) + "px");
+			content = "<b>"+d.data.name+"</b>"+"<br/>"+
+								"<br/>"+
+								"<i>Decoded</i>: "+d.data.value+"<br/>"
+
+			div_pie.transition()
+				.duration(200)
+				.style("opacity", .9);
+			div_pie.html(content)
+				.style("left", (d3.event.pageX) + "px")
+				.style("top", (d3.event.pageY - 28) + "px");
+		}
+
+		function mouseouted_pie() {
+			div_pie.transition()
+				.duration(500)
+				.style("opacity", 0);
+		}
 }
 
-function mouseouted_pie() {
-	div_pie.transition()
-		.duration(500)
-		.style("opacity", 0);
-}
 </script>
 
 
