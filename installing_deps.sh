@@ -78,7 +78,7 @@ if [ -z "$VIRTUAL_ENV" ]; then
 
     virtualenv -p python3 AILENV
 
-    echo export AIL_HOME=$(pwd) >> ./AILENV/bin/activate
+    echo export AIL_HOME=$(pwd)/ >> ./AILENV/bin/activate
     echo export AIL_BIN=$(pwd)/bin/ >> ./AILENV/bin/activate
     echo export AIL_FLASK=$(pwd)/var/www/ >> ./AILENV/bin/activate
     echo export AIL_REDIS=$(pwd)/redis/src/ >> ./AILENV/bin/activate
