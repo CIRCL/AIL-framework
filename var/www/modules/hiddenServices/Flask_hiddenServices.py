@@ -102,7 +102,40 @@ def hiddenServices_page():
             metadata_onion['status_icon'] = 'fa-times-circle'
         list_onion.append(metadata_onion)
 
-    return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains)
+    date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
+    return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains, date_from=date_string, date_to=date_string)
+
+@hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_jon", methods=['GET'])
+def last_crawled_domains_with_stats_jon():
+    last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
+    list_onion = []
+
+    now = datetime.datetime.now()
+    date = '{}{}{}'.format(now.strftime("%Y"), now.strftime("%m"), now.strftime("%d"))
+    statDomains = {}
+    statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
+    statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
+    statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
+    statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
+
+    for onion in last_onions:
+        metadata_onion = {}
+        metadata_onion['domain'] = onion
+        metadata_onion['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'last_check')
+        metadata_onion['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'first_seen')
+        if get_onion_status(onion, metadata_onion['last_check']):
+            metadata_onion['status_text'] = 'UP'
+            metadata_onion['status_color'] = 'Green'
+            metadata_onion['status_icon'] = 'fa-check-circle'
+        else:
+            metadata_onion['status_text'] = 'DOWN'
+            metadata_onion['status_color'] = 'Red'
+            metadata_onion['status_icon'] = 'fa-times-circle'
+        list_onion.append(metadata_onion)
+
+    date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
+
+    return jsonify({'last_onions': list_onion, 'statDomains': statDomains})
 
 @hiddenServices.route("/hiddenServices/get_onions_by_daterange", methods=['POST'])
 def get_onions_by_daterange():

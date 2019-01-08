@@ -66,7 +66,7 @@
 							        <th>Status</th>
 							      </tr>
 							    </thead>
-							    <tbody>
+							    <tbody id="tbody_last_crawled">
 										{% for metadata_onion in last_onions %}
 								      <tr>
 								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_onion['domain'] }}">{{ metadata_onion['domain'] }}</a></td>
@@ -152,37 +152,53 @@
                 <tbody>
                   <tr>
                     <td>
-											<div style="color:Green; display:inline-block">
-												<i class="fa fa-check-circle fa-2x"></i>
-												Domains UP
-											</div>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True">
+												<div style="color:Green; display:inline-block">
+													<i class="fa fa-check-circle fa-2x"></i>
+													Domains UP
+												</div>
+											</a>
 										</td>
                     <td>
-											<div style="color:Green; display:inline-block">
-												{{ statDomains['domains_up'] }}
-											</div>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True">
+												<div style="color:Green; display:inline-block">
+													<div id="text_domain_up">{{ statDomains['domains_up'] }}</div>
+												</div>
+											</a>
 										</td>
                   </tr>
                   <tr>
                     <td>
-											<div style="color:Red; display:inline-block">
-												<i class="fa fa-times-circle fa-2x"></i>
-												Domains DOWN
-											</div>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_down=True">
+												<div style="color:Red; display:inline-block">
+													<i class="fa fa-times-circle fa-2x"></i>
+													Domains DOWN
+												</div>
+											</a>
 										</td>
                     <td>
-											<div style="color:Red; display:inline-block">
-												{{ statDomains['domains_down'] }}
-											</div>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_down=True">
+												<div style="color:Red; display:inline-block">
+													<div id="text_domain_down">{{ statDomains['domains_down'] }}</div>
+												</div>
+											</a>
 										</td>
                   </tr>
                   <tr>
-                    <td>Crawled Domains</td>
-                    <td>{{ statDomains['total'] }}</td>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True&domains_down=True">
+												Crawled Domains
+											</a>
+										</td>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True&domains_down=True">
+												<div id="text_total_domains">{{ statDomains['total'] }}</div>
+											</a>
+										</td>
                   </tr>
 									<tr>
                     <td>Domains in Queue</td>
-                    <td>{{ statDomains['domains_queue'] }}</td>
+                    <td><div id="text_domain_queue">{{ statDomains['domains_queue'] }}</div></td>
                   </tr>
                 </tbody>
               </table>
@@ -196,6 +212,7 @@
 
             <script>
 								var all_graph = {};
+								var to_refresh = false
                 $(document).ready(function(){
                     activePage = "page-hiddenServices"
                     $("#"+activePage).addClass("active");
@@ -232,10 +249,22 @@
 						  			});
 
 										all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hiddenServices.domain_crawled_7days_json') }}?type=onion");
-                });
-								$(window).on("resize", function() {
-									all_graph.onResize();
+
+										$( window ).focus(function() {
+											to_refresh = true
+											refresh_list_crawled();
+										});
+										$( window ).blur(function() {
+											to_refresh = false
+										});
+
+										to_refresh = true
+										refresh_list_crawled();
 								});
+									$(window).on("resize", function() {
+										all_graph.onResize();
+									});
+
             </script>
 
 <script>
@@ -319,6 +348,49 @@ d3.json(url)
           			});
 	});
 }
+</script>
+
+<script>
+
+function refresh_list_crawled(){
+
+	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_jon') }}",
+		function(data) {
+
+			var tableRef = document.getElementById('tbody_last_crawled');
+			$("#tbody_last_crawled").empty()
+
+			for (var i = 0; i < data.last_onions.length; i++) {
+					var data_domain = data.last_onions[i]
+					var newRow   = tableRef.insertRow(tableRef.rows.length);
+
+			    var newCell  = newRow.insertCell(0);
+					newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+data_domain['domain']+"\">"+data_domain['domain']+"</a></td>";
+
+					newCell  = newRow.insertCell(1);
+					newCell.innerHTML = "<td>"+data_domain['first_seen'].substr(0, 4)+"/"+data_domain['first_seen'].substr(4, 2)+"/"+data_domain['first_seen'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(2);
+					newCell.innerHTML = "<td>"+data_domain['last_check'].substr(0, 4)+"/"+data_domain['last_check'].substr(4, 2)+"/"+data_domain['last_check'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(3);
+					newCell.innerHTML = "<td><div style=\"color:"+data_domain['status_color']+"; display:inline-block\"><i class=\"fa "+data_domain['status_icon']+" fa-2x\"></i>"+data_domain['status_text']+"</div></td>"
+
+			}
+			var statDomains = data.statDomains
+			document.getElementById('text_domain_up').innerHTML = statDomains['domains_up']
+			document.getElementById('text_domain_down').innerHTML = statDomains['domains_down']
+			document.getElementById('text_domain_queue').innerHTML = statDomains['domains_queue']
+			document.getElementById('text_total_domains').innerHTML = statDomains['total']
+		}
+	);
+
+	if (to_refresh) {
+    setTimeout("refresh_list_crawled()", 10000);
+	}
+}
+
+
 </script>
         </body>
 
