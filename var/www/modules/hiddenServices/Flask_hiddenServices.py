@@ -105,8 +105,8 @@ def hiddenServices_page():
     date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
     return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains, date_from=date_string, date_to=date_string)
 
-@hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_jon", methods=['GET'])
-def last_crawled_domains_with_stats_jon():
+@hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_json", methods=['GET'])
+def last_crawled_domains_with_stats_json():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
     list_onion = []
 

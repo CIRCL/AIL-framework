@@ -354,7 +354,7 @@ d3.json(url)
 
 function refresh_list_crawled(){
 
-	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_jon') }}",
+	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_json') }}",
 		function(data) {
 
 			var tableRef = document.getElementById('tbody_last_crawled');
