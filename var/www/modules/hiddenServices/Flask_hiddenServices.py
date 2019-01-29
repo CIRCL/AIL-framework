@@ -92,7 +92,11 @@ def hiddenServices_page():
         metadata_onion = {}
         metadata_onion['domain'] = onion
         metadata_onion['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'last_check')
+        if metadata_onion['last_check'] is None:
+            metadata_onion['last_check'] = '********'
         metadata_onion['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'first_seen')
+        if metadata_onion['first_seen'] is None:
+            metadata_onion['first_seen'] = '********'
         if get_onion_status(onion, metadata_onion['last_check']):
             metadata_onion['status_text'] = 'UP'
             metadata_onion['status_color'] = 'Green'
@@ -137,7 +141,11 @@ def last_crawled_domains_with_stats_json():
         metadata_onion = {}
         metadata_onion['domain'] = onion
         metadata_onion['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'last_check')
+        if metadata_onion['last_check'] is None:
+            metadata_onion['last_check'] = '********'
         metadata_onion['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'first_seen')
+        if metadata_onion['first_seen'] is None:
+            metadata_onion['first_seen'] = '********'
         if get_onion_status(onion, metadata_onion['last_check']):
             metadata_onion['status_text'] = 'UP'
             metadata_onion['status_color'] = 'Green'
