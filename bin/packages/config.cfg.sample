@@ -68,6 +68,9 @@ minTopPassList=5
 [Curve]
 max_execution_time = 90
 
+[Onion]
+max_execution_time = 180
+
 [Base64]
 path = Base64/
 max_execution_time = 60
