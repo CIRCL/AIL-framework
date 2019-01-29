@@ -106,9 +106,9 @@ def hiddenServices_page():
     crawler_metadata=[]
     all_onion_crawler = r_cache.smembers('all_crawler:onion')
     for crawler in all_onion_crawler:
-        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
-        started_time = r_cache.hget('metadata_crawler:{}'.format(splash_port), 'started_time')
-        status_info = r_cache.hget('metadata_crawler:{}'.format(splash_port), 'status')
+        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
+        started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
+        status_info = r_cache.hget('metadata_crawler:{}'.format(crawler), 'status')
         crawler_info = '{}  - {}'.format(crawler, started_time)
         if status_info=='Waiting' or status_info=='Crawling':
             status=True
