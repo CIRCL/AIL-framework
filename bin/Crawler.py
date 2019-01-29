@@ -10,6 +10,8 @@ import time
 import subprocess
 import requests
 
+from pyfaup.faup import Faup
+
 sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 from pubsublogger import publisher
@@ -21,6 +23,9 @@ def on_error_send_message_back_in_queue(type_hidden_service, domain, message):
         r_onion.sadd('{}_crawler_queue'.format(type_hidden_service), message)
 
 def crawl_onion(url, domain, date, date_month, message):
+
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'crawling_domain', domain)
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
     #if not r_onion.sismember('full_onion_up', domain) and not r_onion.sismember('onion_down:'+date , domain):
     super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
@@ -43,13 +48,15 @@ def crawl_onion(url, domain, date, date_month, message):
                 print('--------------------------------------')
                 print('         \033[91m DOCKER SPLASH DOWN\033[0m')
                 print('          {} DOWN'.format(splash_url))
-                exit(1)
+                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'SPLASH DOWN')
+                nb_retry == 0
 
             print('         \033[91m DOCKER SPLASH NOT AVAILABLE\033[0m')
             print('          Retry({}) in 10 seconds'.format(nb_retry))
             time.sleep(10)
 
     if r.status_code == 200:
+        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
         process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', splash_url, type_hidden_service, url, domain, paste, super_father],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
@@ -67,6 +74,7 @@ def crawl_onion(url, domain, date, date_month, message):
                 print('')
                 print('            PROXY DOWN OR BAD CONFIGURATION\033[0m'.format(splash_url))
                 print('------------------------------------------------------------------------')
+                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Error')
                 exit(-2)
         else:
             print(process.stdout.read())
@@ -76,6 +84,7 @@ def crawl_onion(url, domain, date, date_month, message):
         print('--------------------------------------')
         print('         \033[91m DOCKER SPLASH DOWN\033[0m')
         print('          {} DOWN'.format(splash_url))
+        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
         exit(1)
 
 
@@ -119,6 +128,7 @@ if __name__ == '__main__':
     print('splash url: {}'.format(splash_url))
 
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
+    faup = Faup()
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
@@ -139,6 +149,10 @@ if __name__ == '__main__':
         port=p.config.getint("ARDB_Onion", "port"),
         db=p.config.getint("ARDB_Onion", "db"),
         decode_responses=True)
+
+    r_cache.sadd('all_crawler:{}'.format(type_hidden_service), splash_port)
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
     # load domains blacklist
     try:
@@ -180,7 +194,10 @@ if __name__ == '__main__':
                 print('domain:      {}'.format(domain))
                 print('domain_url:  {}'.format(domain_url))
 
-                if not r_onion.sismember('blacklist_{}'.format(type_hidden_service), domain):
+                faup.decode(domain)
+                onion_domain=faup.get()['domain'].decode()
+
+                if not r_onion.sismember('blacklist_{}'.format(type_hidden_service), domain) and not r_onion.sismember('blacklist_{}'.format(type_hidden_service), onion_domain):
 
                     date = datetime.datetime.now().strftime("%Y%m%d")
                     date_month = datetime.datetime.now().strftime("%Y%m")
@@ -242,6 +259,10 @@ if __name__ == '__main__':
                         # update list, last crawled onions
                         r_onion.lpush('last_{}'.format(type_hidden_service), domain)
                         r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
+
+                        #update crawler status
+                        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
+                        r_cache.hrem('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
 
             else:
                 continue

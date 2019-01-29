@@ -142,7 +142,6 @@
 							</div>
 						</div>
 
-
 						<div class="panel panel-info">
       				<div class="panel-heading">
                 <i class="fa fa-eye-slash"></i> Domains Crawled Today
@@ -203,6 +202,33 @@
                 </tbody>
               </table>
             </div>
+
+						{%if crawler_metadata%}
+							<div class="panel panel-info">
+	      				<div class="panel-heading">
+	                Crawlers Status
+	      				</div>
+
+	              <table class="table table-hover table-striped">
+	                <tbody>
+										{% for crawler in crawler_metadata %}
+		                  <tr>
+			                   <td>
+													<i class="fa fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle fa-2x" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['crawler_info']}}
+												</td>
+												<td>
+													{{crawler['crawling_domain']}}
+												</td>
+												<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
+													{{crawler['status_info']}}
+												</td>
+		                  </tr>
+										{% endfor %}
+	                </tbody>
+	              </table>
+	            </div>
+						{%endif%}
+
 					</div>
 
 				</div>
