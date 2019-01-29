@@ -225,7 +225,7 @@ if __name__ == "__main__":
                                     msg = '{};{}'.format(url,PST.p_path)
                                     if not r_onion.hexists('onion_metadata:{}'.format(domain), 'first_seen'):
                                         r_onion.sadd('onion_crawler_priority_queue', msg)
-                                        print('send to priority queue)
+                                        print('send to priority queue')
                                     else:
                                         r_onion.sadd('onion_crawler_queue', msg)
                                 #p.populate_set_out(msg, 'Crawler')
