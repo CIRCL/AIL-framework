@@ -114,7 +114,7 @@ def hiddenServices_page():
             status=True
         else:
             status=False
-        crawler_metadata.append({'crawler_info': crawler, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
+        crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
 
     date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
     return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains,
@@ -148,9 +148,22 @@ def last_crawled_domains_with_stats_json():
             metadata_onion['status_icon'] = 'fa-times-circle'
         list_onion.append(metadata_onion)
 
+    crawler_metadata=[]
+    all_onion_crawler = r_cache.smembers('all_crawler:onion')
+    for crawler in all_onion_crawler:
+        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
+        started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
+        status_info = r_cache.hget('metadata_crawler:{}'.format(crawler), 'status')
+        crawler_info = '{}  - {}'.format(crawler, started_time)
+        if status_info=='Waiting' or status_info=='Crawling':
+            status=True
+        else:
+            status=False
+        crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
+
     date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
 
-    return jsonify({'last_onions': list_onion, 'statDomains': statDomains})
+    return jsonify({'last_onions': list_onion, 'statDomains': statDomains, 'crawler_metadata':crawler_metadata})
 
 @hiddenServices.route("/hiddenServices/get_onions_by_daterange", methods=['POST'])
 def get_onions_by_daterange():

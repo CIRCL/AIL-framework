@@ -203,31 +203,28 @@
               </table>
             </div>
 
-						{%if crawler_metadata%}
-							<div class="panel panel-info">
-	      				<div class="panel-heading">
-	                Crawlers Status
-	      				</div>
-
+						<div class="panel panel-info" {%if not crawler_metadata%}hidden{%endif%} id="panel_crawler">
+	      			<div class="panel-heading">
+	               Crawlers Status
+	      			</div>
 	              <table class="table table-hover table-striped">
-	                <tbody>
-										{% for crawler in crawler_metadata %}
-		                  <tr>
-			                   <td>
-													<i class="fa fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle fa-2x" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['crawler_info']}}
-												</td>
-												<td>
-													{{crawler['crawling_domain']}}
-												</td>
-												<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
-													{{crawler['status_info']}}
-												</td>
-		                  </tr>
-										{% endfor %}
-	                </tbody>
-	              </table>
-	            </div>
-						{%endif%}
+                <tbody id="tbody_crawler_info">
+									{% for crawler in crawler_metadata %}
+	                  <tr>
+		                   <td>
+												<i class="fa fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle fa-2x" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['crawler_info']}}
+											</td>
+											<td>
+												{{crawler['crawling_domain']}}
+											</td>
+											<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
+												{{crawler['status_info']}}
+											</td>
+	                  </tr>
+									{% endfor %}
+                </tbody>
+              </table>
+            </div>
 
 					</div>
 
@@ -408,6 +405,37 @@ function refresh_list_crawled(){
 			document.getElementById('text_domain_down').innerHTML = statDomains['domains_down']
 			document.getElementById('text_domain_queue').innerHTML = statDomains['domains_queue']
 			document.getElementById('text_total_domains').innerHTML = statDomains['total']
+
+			if(data.crawler_metadata.length!=0){
+				$("#tbody_crawler_info").empty();
+				var tableRef = document.getElementById('tbody_crawler_info');
+				for (var i = 0; i < data.crawler_metadata.length; i++) {
+						var crawler = data.crawler_metadata[i];
+						var newRow = tableRef.insertRow(tableRef.rows.length);
+						var text_color;
+						var icon;
+						if(crawler['status']){
+							text_color = 'Green';
+							icon = 'check';
+						} else {
+							text_color = 'Red';
+							icon = 'times';
+						}
+
+				    var newCell  = newRow.insertCell(0);
+						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle fa-2x\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
+
+						newCell  = newRow.insertCell(1);
+						newCell.innerHTML = "<td>"+crawler['crawling_domain']+"</td>";
+
+						newCell  = newRow.insertCell(2);
+						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status_info']+"</div></td>";
+
+						$("#panel_crawler").show();
+				}
+			} else {
+				$("#panel_crawler").hide();
+			}
 		}
 	);
 
