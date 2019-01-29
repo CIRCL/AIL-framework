@@ -42,7 +42,7 @@ def crawl_onion(url, domain, date, date_month, message):
             # TODO: relaunch docker or send error message
             nb_retry += 1
 
-            if nb_retry == 30:
+            if nb_retry == 6:
                 on_error_send_message_back_in_queue(type_hidden_service, domain, message)
                 publisher.error('{} SPASH DOWN'.format(splash_url))
                 print('--------------------------------------')
@@ -187,6 +187,8 @@ if __name__ == '__main__':
 
                 domain_url = 'http://{}'.format(domain)
 
+                print()
+                print()
                 print('\033[92m------------------START CRAWLER------------------\033[0m')
                 print('crawler type:     {}'.format(type_hidden_service))
                 print('\033[92m-------------------------------------------------\033[0m')
@@ -262,7 +264,11 @@ if __name__ == '__main__':
 
                         #update crawler status
                         r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
-                        r_cache.hrem('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
+                        r_cache.hdel('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
+                else:
+                    print('                 Blacklisted Onion')
+                    print()
+                    print()
 
             else:
                 continue
