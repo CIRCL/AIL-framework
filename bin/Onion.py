@@ -140,6 +140,7 @@ if __name__ == "__main__":
 
 
     while True:
+        message = p.get_from_set()
         if message is not None:
             print(message)
             filename, score = message.split()
@@ -240,4 +241,3 @@ if __name__ == "__main__":
             publisher.debug("Script url is Idling 10s")
             #print('Sleeping')
             time.sleep(10)
-        message = p.get_from_set()
