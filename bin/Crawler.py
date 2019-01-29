@@ -205,6 +205,11 @@ if __name__ == '__main__':
                     date_month = datetime.datetime.now().strftime("%Y%m")
 
                     if not r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and not r_onion.sismember('{}_down:{}'.format(type_hidden_service, date), domain):
+                        # last_father
+                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'paste_parent', paste)
+
+                        # last check
+                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
 
                         crawl_onion(url, domain, date, date_month, message)
                         if url != domain_url:
@@ -225,12 +230,6 @@ if __name__ == '__main__':
                             if r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and r_serv_metadata.exists('paste_children:'+paste):
                                 msg = 'infoleak:automatic-detection="{}";{}'.format(type_hidden_service, paste)
                                 p.populate_set_out(msg, 'Tags')
-
-                        # last check
-                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
-
-                        # last_father
-                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'paste_parent', paste)
 
                         # add onion screenshot history
                             # add crawled days

@@ -42,6 +42,7 @@ class TorSplashCrawler():
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
             'HTTPERROR_ALLOW_ALL': True,
             'RETRY_TIMES': 2,
+            'CLOSESPIDER_PAGECOUNT': 1000,
             'DEPTH_LIMIT': crawler_depth_limit
             })
 

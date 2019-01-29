@@ -426,7 +426,7 @@ function refresh_list_crawled(){
 						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle fa-2x\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
 
 						newCell  = newRow.insertCell(1);
-						newCell.innerHTML = "<td>"+crawler['crawling_domain']+"</td>";
+						newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+crawler['crawling_domain']+"\">"+crawler['crawling_domain']+"</a></td>";
 
 						newCell  = newRow.insertCell(2);
 						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status_info']+"</div></td>";
