@@ -20,7 +20,7 @@ def on_error_send_message_back_in_queue(type_hidden_service, domain, message):
     # send this msg back in the queue
     if not r_onion.sismember('{}_domain_crawler_queue'.format(type_hidden_service), domain):
         r_onion.sadd('{}_domain_crawler_queue'.format(type_hidden_service), domain)
-        r_onion.sadd('{}_crawler_queue'.format(type_hidden_service), message)
+        r_onion.sadd('{}_crawler_priority_queue'.format(type_hidden_service), message)
 
 def crawl_onion(url, domain, date, date_month, message):
 
@@ -166,8 +166,12 @@ if __name__ == '__main__':
 
     while True:
 
-        # Recovering the streamed message informations.
-        message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
+        # Priority Queue - Recovering the streamed message informations.
+        message = r_onion.spop('{}_crawler_priority_queue'.format(type_hidden_service))
+
+        if message is None:
+            # Recovering the streamed message informations.
+            message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
 
         if message is not None:
 
