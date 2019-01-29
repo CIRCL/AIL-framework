@@ -215,6 +215,10 @@ if __name__ == '__main__':
                         # last check
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
 
+                        # first seen
+                        if not r_onion.exists('{}_metadata:{}'.format(type_hidden_service, domain)):
+                            r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen', date)
+
                         crawl_onion(url, domain, date, date_month, message)
                         if url != domain_url:
                             print(url)
@@ -226,9 +230,6 @@ if __name__ == '__main__':
                             r_onion.sadd('{}_down:{}'.format(type_hidden_service, date), domain)
                             #r_onion.sadd('{}_down_link:{}'.format(type_hidden_service, date), url)
                             #r_onion.hincrby('{}_link_down'.format(type_hidden_service), url, 1)
-                            if not r_onion.exists('{}_metadata:{}'.format(type_hidden_service, domain)):
-                                r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen', date)
-                            r_onion.hset('{}_metadata:{}'.format(type_hidden_service,domain), 'last_seen', date)
                         else:
                             #r_onion.hincrby('{}_link_up'.format(type_hidden_service), url, 1)
                             if r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and r_serv_metadata.exists('paste_children:'+paste):
