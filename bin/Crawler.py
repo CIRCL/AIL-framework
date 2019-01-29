@@ -209,15 +209,15 @@ if __name__ == '__main__':
                     date_month = datetime.datetime.now().strftime("%Y%m")
 
                     if not r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and not r_onion.sismember('{}_down:{}'.format(type_hidden_service, date), domain):
+                        # first seen
+                        if not r_onion.hexists('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen'):
+                            r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen', date)
+
                         # last_father
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'paste_parent', paste)
 
                         # last check
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
-
-                        # first seen
-                        if not r_onion.exists('{}_metadata:{}'.format(type_hidden_service, domain)):
-                            r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen', date)
 
                         crawl_onion(url, domain, date, date_month, message)
                         if url != domain_url:
