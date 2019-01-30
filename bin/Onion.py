@@ -29,10 +29,18 @@ import os
 import base64
 import subprocess
 import redis
+import signal
 import re
 
 from Helper import Process
 
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 def fetch(p, r_cache, urls, domains, path):
     failed = []
@@ -113,6 +121,8 @@ if __name__ == "__main__":
     message = p.get_from_set()
     prec_filename = None
 
+    max_execution_time = p.config.getint("Onion", "max_execution_time")
+
     # send to crawler:
     activate_crawler = p.config.get("Crawler", "activate_crawler")
     if activate_crawler == 'True':
@@ -130,6 +140,7 @@ if __name__ == "__main__":
 
 
     while True:
+        message = p.get_from_set()
         if message is not None:
             print(message)
             filename, score = message.split()
@@ -140,16 +151,24 @@ if __name__ == "__main__":
                 urls = []
                 PST = Paste.Paste(filename)
 
-                for x in PST.get_regex(url_regex):
-                    print(x)
-                    # Extracting url with regex
-                    url, s, credential, subdomain, domain, host, port, \
-                        resource_path, query_string, f1, f2, f3, f4 = x
+                # max execution time on regex
+                signal.alarm(max_execution_time)
+                try:
+                    for x in PST.get_regex(url_regex):
+                        print(x)
+                        # Extracting url with regex
+                        url, s, credential, subdomain, domain, host, port, \
+                            resource_path, query_string, f1, f2, f3, f4 = x
 
-                    if '.onion' in url:
-                        print(url)
-                        domains_list.append(domain)
-                        urls.append(url)
+                        if '.onion' in url:
+                            print(url)
+                            domains_list.append(domain)
+                            urls.append(url)
+                except TimeoutException:
+                    encoded_list = []
+                    p.incr_module_timeout_statistic()
+                    print ("{0} processing timeout".format(PST.p_path))
+                    continue
 
                 '''
                 for x in PST.get_regex(i2p_regex):
@@ -204,7 +223,11 @@ if __name__ == "__main__":
                                     print('send to onion crawler')
                                     r_onion.sadd('onion_domain_crawler_queue', domain)
                                     msg = '{};{}'.format(url,PST.p_path)
-                                    r_onion.sadd('onion_crawler_queue', msg)
+                                    if not r_onion.hexists('onion_metadata:{}'.format(domain), 'first_seen'):
+                                        r_onion.sadd('onion_crawler_priority_queue', msg)
+                                        print('send to priority queue')
+                                    else:
+                                        r_onion.sadd('onion_crawler_queue', msg)
                                 #p.populate_set_out(msg, 'Crawler')
 
                     else:
@@ -222,4 +245,3 @@ if __name__ == "__main__":
             publisher.debug("Script url is Idling 10s")
             #print('Sleeping')
             time.sleep(10)
-        message = p.get_from_set()

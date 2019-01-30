@@ -3,8 +3,10 @@
 
 import argparse
 import configparser
+import traceback
 import os
 import smtplib
+from pubsublogger import publisher
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -15,13 +17,15 @@ This module allows the global configuration and management of notification setti
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
 
+publisher.port = 6380
+publisher.channel = "Script"
+
 # notifications enabled/disabled
 TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
 
 # associated notification email addresses for a specific term`
 # Keys will be e.g. TrackedNotificationEmails<TERMNAME>
 TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
-
 
 def sendEmailNotification(recipient, alert_name, content):
 
@@ -33,22 +37,12 @@ def sendEmailNotification(recipient, alert_name, content):
     cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
-    sender = cfg.get("Notifications", "sender"),
-    sender_host = cfg.get("Notifications", "sender_host"),
-    sender_port = cfg.getint("Notifications", "sender_port"),
-    sender_pw = cfg.get("Notifications", "sender_pw"),
-
-    if isinstance(sender, tuple):
-        sender = sender[0]
-
-    if isinstance(sender_host, tuple):
-        sender_host = sender_host[0]
-
-    if isinstance(sender_port, tuple):
-        sender_port = sender_port[0]
-
-    if isinstance(sender_pw, tuple):
-        sender_pw = sender_pw[0]
+    sender = cfg.get("Notifications", "sender")
+    sender_host = cfg.get("Notifications", "sender_host")
+    sender_port = cfg.getint("Notifications", "sender_port")
+    sender_pw = cfg.get("Notifications", "sender_pw")
+    if sender_pw == 'None':
+        sender_pw = None
 
     # raise an exception if any of these is None
     if (sender is None or
@@ -83,9 +77,9 @@ def sendEmailNotification(recipient, alert_name, content):
         smtp_server.quit()
         print('Send notification ' + alert_name + ' to '+recipient)
 
-    except Exception as e:
-        print(str(e))
-        # raise e
+    except Exception as err:
+        traceback.print_tb(err.__traceback__)
+        publisher.warning(err)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test notification sender.')

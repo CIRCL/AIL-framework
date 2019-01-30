@@ -12,11 +12,17 @@
 	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
 	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+				<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
 	  <!-- JS -->
 	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 		<style>
+		.input-group .form-control {
+			position: unset;
+		}
 		div.tooltip {
 			position: absolute;
 			text-align: center;
@@ -60,7 +66,7 @@
 							        <th>Status</th>
 							      </tr>
 							    </thead>
-							    <tbody>
+							    <tbody id="tbody_last_crawled">
 										{% for metadata_onion in last_onions %}
 								      <tr>
 								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_onion['domain'] }}">{{ metadata_onion['domain'] }}</a></td>
@@ -84,50 +90,142 @@
 					</div>
 
 					<div class="col-md-6">
-						<div class="panel panel-info">
-      						<div class="panel-heading">
-                    <i class="fa fa-eye-slash"></i> Domains Crawled Today
-      						</div>
+						<div class="panel panel-info" style="text-align:center;">
+							<div class="panel-heading">
+								Select domains by date range :
+								<br>
+								<br>
+								<form action="{{ url_for('hiddenServices.get_onions_by_daterange') }}" id="hash_selector_form" method='post'>
+									<div class="row">
+										<div class="col-md-6">
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-from" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from">
+											</div>
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-to" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to">
+											</div>
+											<div class="checkbox">
+												<label>
+													<input type="checkbox" name="domains_tags" value="True" checked>
+													<div style="color:#286090; display:inline-block">
+														Domains Tags <i class="fa fa-tags"></i>
+													</div>
+												</label>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="checkbox">
+											  <label>
+											    <input type="checkbox" name="domains_up" value="True" checked>
+													<div style="color:Green; display:inline-block">
+														Domains UP <i class="fa fa-check-circle"></i>
+													</div>
+											  </label>
+											</div>
+											<div class="checkbox">
+											  <label>
+											    <input type="checkbox" name="domains_down" value="True">
+													<div style="color:Red; display:inline-block">
+														Domains DOWN 	<i class="fa fa-times-circle"></i>
+													</div>
+											  </label>
+											</div>
 
-                      <table class="table table-hover table-striped">
-                        <tbody>
-                          <tr>
-                            <td>
-															<div style="color:Green; display:inline-block">
-																<i class="fa fa-check-circle fa-2x"></i>
-																Domains UP
-															</div>
-														</td>
-                            <td>
-															<div style="color:Green; display:inline-block">
-																{{ statDomains['domains_up'] }}
-															</div>
-														</td>
-                          </tr>
-                          <tr>
-                            <td>
-															<div style="color:Red; display:inline-block">
-																<i class="fa fa-times-circle fa-2x"></i>
-																Domains DOWN
-															</div>
-														</td>
-                            <td>
-															<div style="color:Red; display:inline-block">
-																{{ statDomains['domains_down'] }}
-															</div>
-														</td>
-                          </tr>
-                          <tr>
-                            <td>Crawled Domains</td>
-                            <td>{{ statDomains['total'] }}</td>
-                          </tr>
-													<tr>
-                            <td>Domains in Queue</td>
-                            <td>{{ statDomains['domains_queue'] }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                </div>
+										</div>
+									</div>
+									<button class="btn btn-primary" style="text-align:center;">
+										<i class="fa fa-eye-slash"></i> Show Onions
+									</button>
+								<form>
+							</div>
+						</div>
+
+						<div class="panel panel-info">
+      				<div class="panel-heading">
+                <i class="fa fa-eye-slash"></i> Domains Crawled Today
+      				</div>
+
+              <table class="table table-hover table-striped">
+                <tbody>
+                  <tr>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True">
+												<div style="color:Green; display:inline-block">
+													<i class="fa fa-check-circle fa-2x"></i>
+													Domains UP
+												</div>
+											</a>
+										</td>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True">
+												<div style="color:Green; display:inline-block">
+													<div id="text_domain_up">{{ statDomains['domains_up'] }}</div>
+												</div>
+											</a>
+										</td>
+                  </tr>
+                  <tr>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_down=True">
+												<div style="color:Red; display:inline-block">
+													<i class="fa fa-times-circle fa-2x"></i>
+													Domains DOWN
+												</div>
+											</a>
+										</td>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_down=True">
+												<div style="color:Red; display:inline-block">
+													<div id="text_domain_down">{{ statDomains['domains_down'] }}</div>
+												</div>
+											</a>
+										</td>
+                  </tr>
+                  <tr>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True&domains_down=True">
+												Crawled Domains
+											</a>
+										</td>
+                    <td>
+											<a target="_blank" href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?date_from={{ date_from }}&domains_up=True&domains_down=True">
+												<div id="text_total_domains">{{ statDomains['total'] }}</div>
+											</a>
+										</td>
+                  </tr>
+									<tr>
+                    <td>Domains in Queue</td>
+                    <td><div id="text_domain_queue">{{ statDomains['domains_queue'] }}</div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+						<div class="panel panel-info" {%if not crawler_metadata%}hidden{%endif%} id="panel_crawler">
+	      			<div class="panel-heading">
+	               Crawlers Status
+	      			</div>
+	              <table class="table table-hover table-striped">
+                <tbody id="tbody_crawler_info">
+									{% for crawler in crawler_metadata %}
+	                  <tr>
+		                   <td>
+												<i class="fa fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle fa-2x" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['crawler_info']}}
+											</td>
+											<td>
+												{{crawler['crawling_domain']}}
+											</td>
+											<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
+												{{crawler['status_info']}}
+											</td>
+	                  </tr>
+									{% endfor %}
+                </tbody>
+              </table>
+            </div>
+
 					</div>
 
 				</div>
@@ -137,14 +235,59 @@
 
             <script>
 								var all_graph = {};
+								var to_refresh = false
                 $(document).ready(function(){
                     activePage = "page-hiddenServices"
                     $("#"+activePage).addClass("active");
+
+										$('#date-range-from').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
+										$('#date-range-to').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
+
 										all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hiddenServices.domain_crawled_7days_json') }}?type=onion");
-                });
-								$(window).on("resize", function() {
-									all_graph.onResize();
+
+										$( window ).focus(function() {
+											to_refresh = true
+											refresh_list_crawled();
+										});
+										$( window ).blur(function() {
+											to_refresh = false
+										});
+
+										to_refresh = true
+										refresh_list_crawled();
 								});
+									$(window).on("resize", function() {
+										all_graph.onResize();
+									});
+
             </script>
 
 <script>
@@ -228,6 +371,80 @@ d3.json(url)
           			});
 	});
 }
+</script>
+
+<script>
+
+function refresh_list_crawled(){
+
+	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_json') }}",
+		function(data) {
+
+			var tableRef = document.getElementById('tbody_last_crawled');
+			$("#tbody_last_crawled").empty()
+
+			for (var i = 0; i < data.last_onions.length; i++) {
+					var data_domain = data.last_onions[i]
+					var newRow   = tableRef.insertRow(tableRef.rows.length);
+
+			    var newCell  = newRow.insertCell(0);
+					newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+data_domain['domain']+"\">"+data_domain['domain']+"</a></td>";
+
+					newCell  = newRow.insertCell(1);
+					newCell.innerHTML = "<td>"+data_domain['first_seen'].substr(0, 4)+"/"+data_domain['first_seen'].substr(4, 2)+"/"+data_domain['first_seen'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(2);
+					newCell.innerHTML = "<td>"+data_domain['last_check'].substr(0, 4)+"/"+data_domain['last_check'].substr(4, 2)+"/"+data_domain['last_check'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(3);
+					newCell.innerHTML = "<td><div style=\"color:"+data_domain['status_color']+"; display:inline-block\"><i class=\"fa "+data_domain['status_icon']+" fa-2x\"></i>"+data_domain['status_text']+"</div></td>"
+
+			}
+			var statDomains = data.statDomains
+			document.getElementById('text_domain_up').innerHTML = statDomains['domains_up']
+			document.getElementById('text_domain_down').innerHTML = statDomains['domains_down']
+			document.getElementById('text_domain_queue').innerHTML = statDomains['domains_queue']
+			document.getElementById('text_total_domains').innerHTML = statDomains['total']
+
+			if(data.crawler_metadata.length!=0){
+				$("#tbody_crawler_info").empty();
+				var tableRef = document.getElementById('tbody_crawler_info');
+				for (var i = 0; i < data.crawler_metadata.length; i++) {
+						var crawler = data.crawler_metadata[i];
+						var newRow = tableRef.insertRow(tableRef.rows.length);
+						var text_color;
+						var icon;
+						if(crawler['status']){
+							text_color = 'Green';
+							icon = 'check';
+						} else {
+							text_color = 'Red';
+							icon = 'times';
+						}
+
+				    var newCell  = newRow.insertCell(0);
+						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle fa-2x\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
+
+						newCell  = newRow.insertCell(1);
+						newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+crawler['crawling_domain']+"\">"+crawler['crawling_domain']+"</a></td>";
+
+						newCell  = newRow.insertCell(2);
+						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status_info']+"</div></td>";
+
+						$("#panel_crawler").show();
+				}
+			} else {
+				$("#panel_crawler").hide();
+			}
+		}
+	);
+
+	if (to_refresh) {
+    setTimeout("refresh_list_crawled()", 10000);
+	}
+}
+
+
 </script>
         </body>
 

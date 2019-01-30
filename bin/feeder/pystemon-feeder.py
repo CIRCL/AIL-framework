@@ -61,13 +61,13 @@ topic = '102'
 while True:
     time.sleep(base_sleeptime + sleep_inc)
     paste = r.lpop("pastes")
-    print(paste)
     if paste is None:
         continue
     try:
+        print(paste)
         with open(pystemonpath+paste, 'rb') as f: #.read()
             messagedata = f.read()
-        path_to_send = pastes_directory+paste
+        path_to_send = os.path.join(pastes_directory,paste)
 
         s = b' '.join( [ topic.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
         socket.send(s)

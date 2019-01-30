@@ -10,6 +10,8 @@ import time
 import subprocess
 import requests
 
+from pyfaup.faup import Faup
+
 sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 from pubsublogger import publisher
@@ -18,28 +20,43 @@ def on_error_send_message_back_in_queue(type_hidden_service, domain, message):
     # send this msg back in the queue
     if not r_onion.sismember('{}_domain_crawler_queue'.format(type_hidden_service), domain):
         r_onion.sadd('{}_domain_crawler_queue'.format(type_hidden_service), domain)
-        r_onion.sadd('{}_crawler_queue'.format(type_hidden_service), message)
+        r_onion.sadd('{}_crawler_priority_queue'.format(type_hidden_service), message)
 
 def crawl_onion(url, domain, date, date_month, message):
+
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'crawling_domain', domain)
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
     #if not r_onion.sismember('full_onion_up', domain) and not r_onion.sismember('onion_down:'+date , domain):
     super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
     if super_father is None:
         super_father=paste
 
-    try:
-        r = requests.get(splash_url , timeout=30.0)
-    except Exception:
-        # TODO: relaunch docker or send error message
+    retry = True
+    nb_retry = 0
+    while retry:
+        try:
+            r = requests.get(splash_url , timeout=30.0)
+            retry = False
+        except Exception:
+            # TODO: relaunch docker or send error message
+            nb_retry += 1
 
-        on_error_send_message_back_in_queue(type_hidden_service, domain, message)
-        publisher.error('{} SPASH DOWN'.format(splash_url))
-        print('--------------------------------------')
-        print('         \033[91m DOCKER SPLASH DOWN\033[0m')
-        print('          {} DOWN'.format(splash_url))
-        exit(1)
+            if nb_retry == 6:
+                on_error_send_message_back_in_queue(type_hidden_service, domain, message)
+                publisher.error('{} SPASH DOWN'.format(splash_url))
+                print('--------------------------------------')
+                print('         \033[91m DOCKER SPLASH DOWN\033[0m')
+                print('          {} DOWN'.format(splash_url))
+                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'SPLASH DOWN')
+                nb_retry == 0
+
+            print('         \033[91m DOCKER SPLASH NOT AVAILABLE\033[0m')
+            print('          Retry({}) in 10 seconds'.format(nb_retry))
+            time.sleep(10)
 
     if r.status_code == 200:
+        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
         process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', splash_url, type_hidden_service, url, domain, paste, super_father],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
@@ -57,6 +74,7 @@ def crawl_onion(url, domain, date, date_month, message):
                 print('')
                 print('            PROXY DOWN OR BAD CONFIGURATION\033[0m'.format(splash_url))
                 print('------------------------------------------------------------------------')
+                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Error')
                 exit(-2)
         else:
             print(process.stdout.read())
@@ -66,6 +84,7 @@ def crawl_onion(url, domain, date, date_month, message):
         print('--------------------------------------')
         print('         \033[91m DOCKER SPLASH DOWN\033[0m')
         print('          {} DOWN'.format(splash_url))
+        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
         exit(1)
 
 
@@ -109,6 +128,7 @@ if __name__ == '__main__':
     print('splash url: {}'.format(splash_url))
 
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
+    faup = Faup()
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
@@ -130,6 +150,10 @@ if __name__ == '__main__':
         db=p.config.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
+    r_cache.sadd('all_crawler:{}'.format(type_hidden_service), splash_port)
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
+
     # load domains blacklist
     try:
         with open(os.environ['AIL_BIN']+'/torcrawler/blacklist_onion.txt', 'r') as f:
@@ -142,8 +166,12 @@ if __name__ == '__main__':
 
     while True:
 
-        # Recovering the streamed message informations.
-        message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
+        # Priority Queue - Recovering the streamed message informations.
+        message = r_onion.spop('{}_crawler_priority_queue'.format(type_hidden_service))
+
+        if message is None:
+            # Recovering the streamed message informations.
+            message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
 
         if message is not None:
 
@@ -163,6 +191,8 @@ if __name__ == '__main__':
 
                 domain_url = 'http://{}'.format(domain)
 
+                print()
+                print()
                 print('\033[92m------------------START CRAWLER------------------\033[0m')
                 print('crawler type:     {}'.format(type_hidden_service))
                 print('\033[92m-------------------------------------------------\033[0m')
@@ -170,12 +200,24 @@ if __name__ == '__main__':
                 print('domain:      {}'.format(domain))
                 print('domain_url:  {}'.format(domain_url))
 
-                if not r_onion.sismember('blacklist_{}'.format(type_hidden_service), domain):
+                faup.decode(domain)
+                onion_domain=faup.get()['domain'].decode()
+
+                if not r_onion.sismember('blacklist_{}'.format(type_hidden_service), domain) and not r_onion.sismember('blacklist_{}'.format(type_hidden_service), onion_domain):
 
                     date = datetime.datetime.now().strftime("%Y%m%d")
                     date_month = datetime.datetime.now().strftime("%Y%m")
 
                     if not r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and not r_onion.sismember('{}_down:{}'.format(type_hidden_service, date), domain):
+                        # first seen
+                        if not r_onion.hexists('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen'):
+                            r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen', date)
+
+                        # last_father
+                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'paste_parent', paste)
+
+                        # last check
+                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
 
                         crawl_onion(url, domain, date, date_month, message)
                         if url != domain_url:
@@ -188,20 +230,11 @@ if __name__ == '__main__':
                             r_onion.sadd('{}_down:{}'.format(type_hidden_service, date), domain)
                             #r_onion.sadd('{}_down_link:{}'.format(type_hidden_service, date), url)
                             #r_onion.hincrby('{}_link_down'.format(type_hidden_service), url, 1)
-                            if not r_onion.exists('{}_metadata:{}'.format(type_hidden_service, domain)):
-                                r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'first_seen', date)
-                            r_onion.hset('{}_metadata:{}'.format(type_hidden_service,domain), 'last_seen', date)
                         else:
                             #r_onion.hincrby('{}_link_up'.format(type_hidden_service), url, 1)
                             if r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and r_serv_metadata.exists('paste_children:'+paste):
                                 msg = 'infoleak:automatic-detection="{}";{}'.format(type_hidden_service, paste)
                                 p.populate_set_out(msg, 'Tags')
-
-                        # last check
-                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
-
-                        # last_father
-                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'paste_parent', paste)
 
                         # add onion screenshot history
                             # add crawled days
@@ -232,6 +265,14 @@ if __name__ == '__main__':
                         # update list, last crawled onions
                         r_onion.lpush('last_{}'.format(type_hidden_service), domain)
                         r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
+
+                        #update crawler status
+                        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
+                        r_cache.hdel('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
+                else:
+                    print('                 Blacklisted Onion')
+                    print()
+                    print()
 
             else:
                 continue

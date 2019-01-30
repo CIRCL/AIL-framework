@@ -10,10 +10,12 @@ import datetime
 import base64
 import redis
 import json
+import time
 
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError
+from twisted.web._newclient import ResponseNeverReceived
 
 from scrapy import Spider
 from scrapy.linkextractors import LinkExtractor
@@ -39,6 +41,8 @@ class TorSplashCrawler():
             'SPIDER_MIDDLEWARES': {'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,},
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
             'HTTPERROR_ALLOW_ALL': True,
+            'RETRY_TIMES': 2,
+            'CLOSESPIDER_PAGECOUNT': 50,
             'DEPTH_LIMIT': crawler_depth_limit
             })
 
@@ -97,7 +101,7 @@ class TorSplashCrawler():
             yield SplashRequest(
                 self.start_urls,
                 self.parse,
-                #errback=self.errback_catcher,
+                errback=self.errback_catcher,
                 endpoint='render.json',
                 meta={'father': self.original_paste},
                 args={  'html': 1,
@@ -174,7 +178,7 @@ class TorSplashCrawler():
                         yield SplashRequest(
                             link.url,
                             self.parse,
-                            #errback=self.errback_catcher,
+                            errback=self.errback_catcher,
                             endpoint='render.json',
                             meta={'father': relative_filename_paste},
                             args={  'html': 1,
@@ -184,17 +188,39 @@ class TorSplashCrawler():
                                     'wait': 10}
                         )
 
-        '''
         def errback_catcher(self, failure):
             # catch all errback failures,
             self.logger.error(repr(failure))
-            print('failure')
-            #print(failure)
-            print(failure.type)
-            #print(failure.request.meta['item'])
 
+            if failure.check(ResponseNeverReceived):
+                request = failure.request
+                url = request.meta['splash']['args']['url']
+                father = request.meta['father']
+
+                self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
+                time.sleep(10)
+                yield SplashRequest(
+                    url,
+                    self.parse,
+                    errback=self.errback_catcher,
+                    endpoint='render.json',
+                    meta={'father': father},
+                    args={  'html': 1,
+                            'png': 1,
+                            'render_all': 1,
+                            'har': 1,
+                            'wait': 10}
+                )
+
+            else:
+                print('failure')
+                #print(failure)
+                print(failure.type)
+                #print(failure.request.meta['item'])
+
+            '''
             #if isinstance(failure.value, HttpError):
-            if failure.check(HttpError):
+            elif failure.check(HttpError):
                 # you can get the response
                 response = failure.value.response
                 print('HttpError')
@@ -214,7 +240,7 @@ class TorSplashCrawler():
                 print('TimeoutError')
                 print(TimeoutError)
                 self.logger.error('TimeoutError on %s', request.url)
-        '''
+            '''
 
         def save_crawled_paste(self, filename, content):
 

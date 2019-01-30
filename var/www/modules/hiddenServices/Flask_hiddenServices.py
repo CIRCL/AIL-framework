@@ -8,7 +8,7 @@ import redis
 import datetime
 import sys
 import os
-from flask import Flask, render_template, jsonify, request, Blueprint
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
 from Date import Date
 from HiddenServices import HiddenServices
@@ -19,6 +19,7 @@ import Flask_config
 app = Flask_config.app
 cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
+r_cache = Flask_config.r_cache
 r_serv_onion = Flask_config.r_serv_onion
 r_serv_metadata = Flask_config.r_serv_metadata
 bootstrap_label = Flask_config.bootstrap_label
@@ -39,6 +40,16 @@ def get_date_range(num_day):
         date_list.append(date.substract_day(i))
 
     return list(reversed(date_list))
+
+def substract_date(date_from, date_to):
+    date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))
+    date_to = datetime.date(int(date_to[0:4]), int(date_to[4:6]), int(date_to[6:8]))
+    delta = date_to - date_from # timedelta
+    l_date = []
+    for i in range(delta.days + 1):
+        date = date_from + datetime.timedelta(i)
+        l_date.append( date.strftime('%Y%m%d') )
+    return l_date
 
 def unpack_paste_tags(p_tags):
     l_tags = []
@@ -81,7 +92,11 @@ def hiddenServices_page():
         metadata_onion = {}
         metadata_onion['domain'] = onion
         metadata_onion['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'last_check')
+        if metadata_onion['last_check'] is None:
+            metadata_onion['last_check'] = '********'
         metadata_onion['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'first_seen')
+        if metadata_onion['first_seen'] is None:
+            metadata_onion['first_seen'] = '********'
         if get_onion_status(onion, metadata_onion['last_check']):
             metadata_onion['status_text'] = 'UP'
             metadata_onion['status_color'] = 'Green'
@@ -92,7 +107,159 @@ def hiddenServices_page():
             metadata_onion['status_icon'] = 'fa-times-circle'
         list_onion.append(metadata_onion)
 
-    return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains)
+    crawler_metadata=[]
+    all_onion_crawler = r_cache.smembers('all_crawler:onion')
+    for crawler in all_onion_crawler:
+        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
+        started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
+        status_info = r_cache.hget('metadata_crawler:{}'.format(crawler), 'status')
+        crawler_info = '{}  - {}'.format(crawler, started_time)
+        if status_info=='Waiting' or status_info=='Crawling':
+            status=True
+        else:
+            status=False
+        crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
+
+    date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
+    return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains,
+                            crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
+
+@hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_json", methods=['GET'])
+def last_crawled_domains_with_stats_json():
+    last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
+    list_onion = []
+
+    now = datetime.datetime.now()
+    date = '{}{}{}'.format(now.strftime("%Y"), now.strftime("%m"), now.strftime("%d"))
+    statDomains = {}
+    statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
+    statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
+    statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
+    statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
+
+    for onion in last_onions:
+        metadata_onion = {}
+        metadata_onion['domain'] = onion
+        metadata_onion['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'last_check')
+        if metadata_onion['last_check'] is None:
+            metadata_onion['last_check'] = '********'
+        metadata_onion['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'first_seen')
+        if metadata_onion['first_seen'] is None:
+            metadata_onion['first_seen'] = '********'
+        if get_onion_status(onion, metadata_onion['last_check']):
+            metadata_onion['status_text'] = 'UP'
+            metadata_onion['status_color'] = 'Green'
+            metadata_onion['status_icon'] = 'fa-check-circle'
+        else:
+            metadata_onion['status_text'] = 'DOWN'
+            metadata_onion['status_color'] = 'Red'
+            metadata_onion['status_icon'] = 'fa-times-circle'
+        list_onion.append(metadata_onion)
+
+    crawler_metadata=[]
+    all_onion_crawler = r_cache.smembers('all_crawler:onion')
+    for crawler in all_onion_crawler:
+        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
+        started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
+        status_info = r_cache.hget('metadata_crawler:{}'.format(crawler), 'status')
+        crawler_info = '{}  - {}'.format(crawler, started_time)
+        if status_info=='Waiting' or status_info=='Crawling':
+            status=True
+        else:
+            status=False
+        crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
+
+    date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
+
+    return jsonify({'last_onions': list_onion, 'statDomains': statDomains, 'crawler_metadata':crawler_metadata})
+
+@hiddenServices.route("/hiddenServices/get_onions_by_daterange", methods=['POST'])
+def get_onions_by_daterange():
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    domains_up = request.form.get('domains_up')
+    domains_down = request.form.get('domains_down')
+    domains_tags = request.form.get('domains_tags')
+
+    return redirect(url_for('hiddenServices.show_domains_by_daterange', date_from=date_from, date_to=date_to, domains_up=domains_up, domains_down=domains_down, domains_tags=domains_tags))
+
+@hiddenServices.route("/hiddenServices/show_domains_by_daterange", methods=['GET'])
+def show_domains_by_daterange():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    domains_up = request.args.get('domains_up')
+    domains_down = request.args.get('domains_down')
+    domains_tags = request.args.get('domains_tags')
+
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        try:
+            if len(date_from) != 8:
+                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+            date_range = substract_date(date_from, date_to)
+        except:
+            pass
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+        date_from = date_range[0][0:4] + '-' + date_range[0][4:6] + '-' + date_range[0][6:8]
+        date_to = date_from
+
+    else:
+        date_from = date_from[0:4] + '-' + date_from[4:6] + '-' + date_from[6:8]
+        date_to = date_to[0:4] + '-' + date_to[4:6] + '-' + date_to[6:8]
+
+    domains_by_day = {}
+    domain_metadata = {}
+    for date in date_range:
+        if domains_up:
+            domains_up = True
+            domains_by_day[date] = list(r_serv_onion.smembers('onion_up:{}'.format(date)))
+            for domain in domains_by_day[date]:
+                h = HiddenServices(domain, 'onion')
+                domain_metadata[domain] = {}
+                if domains_tags:
+                    domains_tags = True
+                    domain_metadata[domain]['tags'] = h.get_domain_tags(update=True)
+
+                domain_metadata[domain]['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(domain), 'last_check')
+                if domain_metadata[domain]['last_check'] is None:
+                    domain_metadata[domain]['last_check'] = '********'
+                domain_metadata[domain]['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(domain), 'first_seen')
+                if domain_metadata[domain]['first_seen'] is None:
+                    domain_metadata[domain]['first_seen'] = '********'
+                domain_metadata[domain]['status_text'] = 'UP'
+                domain_metadata[domain]['status_color'] = 'Green'
+                domain_metadata[domain]['status_icon'] = 'fa-check-circle'
+
+        if domains_down:
+            domains_down = True
+            domains_by_day_down = list(r_serv_onion.smembers('onion_down:{}'.format(date)))
+            if domains_up:
+                domains_by_day[date].extend(domains_by_day_down)
+            else:
+                domains_by_day[date] = domains_by_day_down
+            for domain in domains_by_day_down:
+                #h = HiddenServices(onion_domain, 'onion')
+                domain_metadata[domain] = {}
+                #domain_metadata[domain]['tags'] = h.get_domain_tags()
+
+                domain_metadata[domain]['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(domain), 'last_check')
+                if domain_metadata[domain]['last_check'] is None:
+                    domain_metadata[domain]['last_check'] = '********'
+                domain_metadata[domain]['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(domain), 'first_seen')
+                if domain_metadata[domain]['first_seen'] is None:
+                    domain_metadata[domain]['first_seen'] = '********'
+
+                domain_metadata[domain]['status_text'] = 'DOWN'
+                domain_metadata[domain]['status_color'] = 'Red'
+                domain_metadata[domain]['status_icon'] = 'fa-times-circle'
+
+    return render_template("domains.html", date_range=date_range, domains_by_day=domains_by_day, domain_metadata=domain_metadata,
+                                date_from=date_from, date_to=date_to, domains_up=domains_up, domains_down=domains_down,
+                                domains_tags=domains_tags, bootstrap_label=bootstrap_label)
 
 @hiddenServices.route("/hiddenServices/onion_domain", methods=['GET'])
 def onion_domain():
@@ -102,8 +269,12 @@ def onion_domain():
         # # TODO: FIXME return 404
 
     last_check = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'last_check')
+    if last_check is None:
+        last_check = '********'
     last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
     first_seen = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'first_seen')
+    if first_seen is None:
+        first_seen = '********'
     first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
     origin_paste = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'paste_parent')
 

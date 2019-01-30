@@ -506,6 +506,8 @@ def edit_tag_export():
     status_misp = []
     status_hive = []
 
+    infoleak_tags = Taxonomies().get('infoleak').machinetags()
+    is_infoleak_tag = []
 
     for tag in list_export_tags:
         if r_serv_db.sismember('whitelist_misp', tag):
@@ -518,6 +520,11 @@ def edit_tag_export():
             status_hive.append(True)
         else:
             status_hive.append(False)
+
+        if tag in infoleak_tags:
+            is_infoleak_tag.append(True)
+        else:
+            is_infoleak_tag.append(False)
 
     if misp_auto_events is not None:
         if int(misp_auto_events) == 1:
@@ -543,6 +550,7 @@ def edit_tag_export():
                             misp_active=misp_active,
                             hive_active=hive_active,
                             list_export_tags=list_export_tags,
+                            is_infoleak_tag=is_infoleak_tag,
                             status_misp=status_misp,
                             status_hive=status_hive,
                             nb_tags_whitelist_misp=nb_tags_whitelist_misp,
@@ -593,6 +601,38 @@ def enable_hive_auto_alert():
 def disable_hive_auto_alert():
     r_serv_db.set('hive:auto-alerts', 0)
     return edit_tag_export()
+
+@PasteSubmit.route("/PasteSubmit/add_push_tag")
+def add_push_tag():
+    tag = request.args.get('tag')
+    if tag is not None:
+
+        #limit tag length
+        if len(tag) > 49:
+            tag = tag[0:48]
+
+        r_serv_db.sadd('list_export_tags', tag)
+
+        to_return = {}
+        to_return["tag"] = tag
+        return jsonify(to_return)
+    else:
+        return 'None args', 400
+
+@PasteSubmit.route("/PasteSubmit/delete_push_tag")
+def delete_push_tag():
+    tag = request.args.get('tag')
+
+    infoleak_tags = Taxonomies().get('infoleak').machinetags()
+    if tag not in infoleak_tags and r_serv_db.sismember('list_export_tags', tag):
+        r_serv_db.srem('list_export_tags', tag)
+        r_serv_db.srem('whitelist_misp', tag)
+        r_serv_db.srem('whitelist_hive', tag)
+        to_return = {}
+        to_return["tag"] = tag
+        return jsonify(to_return)
+    else:
+        return 'this tag can\'t be removed', 400
 
 # ========= REGISTRATION =========
 app.register_blueprint(PasteSubmit, url_prefix=baseUrl)

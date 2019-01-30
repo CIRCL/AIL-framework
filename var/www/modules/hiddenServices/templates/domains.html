@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	  <title>Hidden Service - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+	  <!-- Core CSS -->
+	  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+	  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
+	  <!-- JS -->
+	  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
+		<style>
+		.red_table thead{
+			background: #d91f2d;
+			color: #fff;
+		}
+		.input-group .form-control {
+			position: unset;
+		}
+		</style>
+
+	</head>
+	<body>
+
+            {% include 'navbar.html' %}
+
+            <div id="page-wrapper">
+
+				<div class="row">
+					<div class="col-md-8">
+
+						{% for date in date_range %}
+							{% if domains_by_day[date]%}
+							<div class="panel panel-info" style="text-align:center;">
+								<div class="panel-heading">
+									<h3 style="text-align:center;">{{'{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])}}</h3>
+								</div>
+							</div>
+
+								<table id="table_{{date}}" class="red_table table table-striped table-bordered">
+								  <thead>
+								    <tr>
+								      <th>Domain</th>
+								      <th>First Seen</th>
+											<th>Last Check</th>
+								      <th>Status</th>
+								    </tr>
+								  </thead>
+							    <tbody>
+										{% for domain in domains_by_day[date] %}
+								      <tr>
+								        <td>
+													<a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ domain }}">{{ domain }}</a>
+													<div>
+														{% for tag in domain_metadata[domain]['tags'] %}
+														<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+															<span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }} <i>{{ domain_metadata[domain]['tags'][tag] }}</i></span>
+														</a>
+														{%  endfor %}
+													</div>
+												</td>
+								        <td>{{'{}/{}/{}'.format(domain_metadata[domain]['first_seen'][0:4], domain_metadata[domain]['first_seen'][4:6], domain_metadata[domain]['first_seen'][6:8])}}</td>
+												<td>{{'{}/{}/{}'.format(domain_metadata[domain]['last_check'][0:4], domain_metadata[domain]['last_check'][4:6], domain_metadata[domain]['last_check'][6:8])}}</td>
+								        <td><div style="color:{{domain_metadata[domain]['status_color']}}; display:inline-block">
+															<i class="fa {{domain_metadata[domain]['status_icon']}} fa-2x"></i>
+															{{domain_metadata[domain]['status_text']}}
+														</div>
+												</td>
+								      </tr>
+										{% endfor %}
+							    </tbody>
+							  </table>
+								<br>
+								<br>
+								<br>
+							{% endif %}
+						{% endfor %}
+
+
+					</div>
+
+					<div class="col-md-4">
+						<div class="panel panel-info" style="text-align:center;">
+							<div class="panel-heading">
+								Select domains by date range :
+								<br>
+								<br>
+								<form action="{{ url_for('hiddenServices.get_onions_by_daterange') }}" id="hash_selector_form" method='post'>
+									<div class="row">
+										<div class="col-md-6">
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-from" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from">
+											</div>
+											<div class="input-group">
+												<span class="input-group-addon"><i class="fa fa-calendar  fa" aria-hidden="true"></i></span>
+												<input class="form-control" id="date-range-to" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to">
+											</div>
+											<div class="checkbox">
+												<label>
+													<input type="checkbox" name="domains_tags" value="True" {% if domains_tags %}checked{% endif %}>
+													<div style="color:#286090; display:inline-block">
+														Domains Tags <i class="fa fa-tags"></i>
+													</div>
+												</label>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="checkbox">
+											  <label>
+											    <input type="checkbox" name="domains_up" value="True" {% if domains_up %}checked{% endif %}>
+													<div style="color:Green; display:inline-block">
+														Domains UP <i class="fa fa-check-circle"></i>
+													</div>
+											  </label>
+											</div>
+											<div class="checkbox">
+											  <label>
+											    <input type="checkbox" name="domains_down" value="True" {% if domains_down %}checked{% endif %}>
+													<div style="color:Red; display:inline-block">
+														Domains DOWN 	<i class="fa fa-times-circle"></i>
+													</div>
+											  </label>
+											</div>
+										</div>
+									</div>
+									<button class="btn btn-primary" style="text-align:center;">
+										<i class="fa fa-eye-slash"></i> Show Onions
+									</button>
+								<form>
+							</div>
+						</div>
+
+					</div>
+
+				</div>
+
+            </div>
+            <!-- /#page-wrapper -->
+
+            <script>
+								var all_graph = {};
+                $(document).ready(function(){
+                    activePage = "page-hiddenServices"
+                    $("#"+activePage).addClass("active");
+
+										$('#date-range-from').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
+										$('#date-range-to').dateRangePicker({
+											separator : ' to ',
+											getValue: function()
+											{
+												if ($('#date-range-from').val() && $('#date-range-to').val() )
+													return $('#date-range-from').val() + ' to ' + $('#date-range-to').val();
+												else
+													return '';
+											},
+											setValue: function(s,s1,s2)
+											{
+												$('#date-range-from').val(s1);
+												$('#date-range-to').val(s2);
+											}
+						  			});
+
+										{% for date in date_range %}
+											$('#table_{{date}}').DataTable({
+							  				"aLengthMenu": [[5, 15, 30, -1], [5, 15, 30, "All"]],
+							  				"iDisplayLength": 15,
+							  				"order": [[ 0, "asc" ]]
+							  			});
+										{% endfor %}
+
+										//all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hiddenServices.domain_crawled_7days_json') }}?type=onion");
+                });
+								/*$(window).on("resize", function() {
+									all_graph.onResize();
+								});*/
+            </script>
+
+<script>
+/*
+all_graph.onResize = function () {
+	var aspect = 1000 / 500, all_graph = $("#graph_div");
+	var targetWidth = all_graph.parent().width();
+	all_graph.attr("width", targetWidth);
+	all_graph.attr("height", targetWidth / aspect);
+}
+window.all_graph = all_graph;
+
+function create_line_chart(id, url){
+	var width = 650;
+	var height = Math.round(width / 6);
+	var margin = {top: 20, right: 55, bottom: 50, left: 40};
+	var x = d3.scaleTime().range([0, width]);
+	var y = d3.scaleLinear().rangeRound([height, 0]);
+	var xAxis = d3.axisBottom(x);
+	var yAxis = d3.axisLeft(y);
+	var parseTime = d3.timeParse("%Y-%m-%d");
+	var line = d3.line()
+							.x(function(d) {
+          			return x(d.date);
+        			})
+							.y(function(d) {
+          			return y(d.value);
+        			});
+	var svg_line = d3.select('#'+id).append('svg')
+				.attr("id", "graph_div")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append('g')
+						.attr('transform', "translate("+ margin.left +","+ margin.top +")");
+	var div = d3.select('body').append('div')
+				.attr('class', 'tooltip')
+				.style('opacity', 0);
+	//add div tooltip
+d3.json(url)
+	.then(function(data){
+		data.forEach(function(d) {
+			d.date_label = d.date;
+			d.date = parseTime(d.date);
+			d.value = +d.value;
+		});
+		// fit the data
+		x.domain(d3.extent(data, function(d) { return d.date; }));
+		//x.domain(data.map(function (d) { return d.date; })); //E
+		y.domain([0, d3.max(data, function(d){ return d.value ; })]);
+		//line
+		svg_line.append("path")
+				.data([data])
+				.attr("class", "line_graph")
+				.attr("d", line);
+		// add X axis
+		svg_line.append("g")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(d3.axisBottom(x))
+				.selectAll("text")
+					.style("text-anchor", "end")
+					.attr("transform", "rotate(-45)" );
+		// Add the Y Axis
+		svg_line.append("g")
+		    .call(d3.axisLeft(y));
+		//add a dot circle
+    svg_line.selectAll('dot')
+				.data(data).enter()
+				.append('circle')
+						.attr('r', 2)
+							.attr('cx', function(d) { return x(d.date); })
+							.attr('cy', function(d) { return y(d.value); })
+            	.on('mouseover', function(d) {
+	            	div.transition().style('opacity', .9);
+	            	div.html('' + d.date_label+ '<br/>' + d.value).style('left', (d3.event.pageX) + 'px')
+								.style("left", (d3.event.pageX) + "px")
+								.style("top", (d3.event.pageY - 28) + "px");
+          		})
+            	.on('mouseout', function(d)
+          			{
+            			div.transition().style('opacity', 0);
+          			});
+	});
+}
+*/
+</script>
+        </body>
+
+</html>
