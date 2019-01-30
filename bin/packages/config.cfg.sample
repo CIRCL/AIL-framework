@@ -107,9 +107,6 @@ default_unnamed_feed_name = unnamed_feeder
 [RegexForTermsFrequency]
 max_execution_time = 60
 
-[Regex]
-max_execution_time = 60
-
 ##### Redis #####
 [Redis_Cache]
 host = localhost
