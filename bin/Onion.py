@@ -170,6 +170,8 @@ if __name__ == "__main__":
                     print ("{0} processing timeout".format(PST.p_path))
                     continue
 
+                signal.alarm(0)
+
                 '''
                 for x in PST.get_regex(i2p_regex):
                     # Extracting url with regex
