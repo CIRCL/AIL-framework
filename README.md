@@ -168,6 +168,22 @@ Privacy and GDPR
 
 [AIL information leaks analysis and the GDPR in the context of collection, analysis and sharing information leaks](https://www.circl.lu/assets/files/information-leaks-analysis-and-gdpr.pdf) document provides an overview how to use AIL in a lawfulness context especially in the scope of General Data Protection Regulation.
 
+Research using AIL
+------------------
+
+If you write academic paper, relying or using AIL, it can be cited with the following BibTeX:
+
+~~~~
+@inproceedings{mokaddem2018ail,
+  title={AIL-The design and implementation of an Analysis Information Leak framework},
+  author={Mokaddem, Sami and Wagener, G{\'e}rard and Dulaunoy, Alexandre},
+  booktitle={2018 IEEE International Conference on Big Data (Big Data)},
+  pages={5049--5057},
+  year={2018},
+  organization={IEEE}
+}
+~~~~
+
 Screenshots
 ===========
 
@@ -237,11 +253,11 @@ License
 
 ```
     Copyright (C) 2014 Jules Debra
-    Copyright (C) 2014-2018 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
-    Copyright (c) 2014-2018 Raphaël Vinot
-    Copyright (c) 2014-2018 Alexandre Dulaunoy
-    Copyright (c) 2016-2018 Sami Mokaddem
-    Copyright (c) 2018 Thirion Aurélien
+    Copyright (C) 2014-2019 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014-2019 Raphaël Vinot
+    Copyright (c) 2014-2019 Alexandre Dulaunoy
+    Copyright (c) 2016-2019 Sami Mokaddem
+    Copyright (c) 2018-2019 Thirion Aurélien
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
