@@ -28,10 +28,10 @@ from Helper import Process
 
 class TorSplashCrawler():
 
-    def __init__(self, splash_url, crawler_depth_limit):
+    def __init__(self, splash_url, crawler_depth_limit, user_agent, closespider_pagecount):
         self.process = CrawlerProcess({'LOG_ENABLED': False})
         self.crawler = Crawler(self.TorSplashSpider, {
-            'USER_AGENT': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0',
+            'USER_AGENT': user_agent,
             'SPLASH_URL': splash_url,
             'ROBOTSTXT_OBEY': False,
             'DOWNLOADER_MIDDLEWARES': {'scrapy_splash.SplashCookiesMiddleware': 723,
@@ -42,7 +42,7 @@ class TorSplashCrawler():
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
             'HTTPERROR_ALLOW_ALL': True,
             'RETRY_TIMES': 2,
-            'CLOSESPIDER_PAGECOUNT': 50,
+            'CLOSESPIDER_PAGECOUNT': closespider_pagecount,
             'DEPTH_LIMIT': crawler_depth_limit
             })
 

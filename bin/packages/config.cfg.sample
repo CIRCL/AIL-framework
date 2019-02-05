@@ -249,5 +249,5 @@ db = 0
 [Crawler]
 activate_crawler = False
 crawler_depth_limit = 1
-splash_url_onion = http://127.0.0.1
-splash_onion_port = 8050-8052
+splash_url = http://127.0.0.1
+splash_port = 8050-8052

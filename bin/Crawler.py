@@ -16,6 +16,24 @@ sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 from pubsublogger import publisher
 
+def decode_val(value):
+    if value is not None:
+        value = value.decode()
+    return value
+
+def load_type_blacklist(type_service):
+    # load domains blacklist
+    try:
+        with open(os.path.join(os.environ['AIL_BIN'],'/torcrawler/blacklist_{}.txt'.format(type_service)), 'r') as f:
+            # # TODO: # FIXME:  remove this
+            r_onion.delete('blacklist_{}'.format(type_service))
+            lines = f.read().splitlines()
+            for line in lines:
+                r_onion.sadd('blacklist_{}'.format(type_service), line)
+    except Exception:
+        pass
+
+
 def on_error_send_message_back_in_queue(type_hidden_service, domain, message):
     # send this msg back in the queue
     if not r_onion.sismember('{}_domain_crawler_queue'.format(type_hidden_service), domain):
@@ -91,11 +109,15 @@ def crawl_onion(url, domain, date, date_month, message):
 if __name__ == '__main__':
 
     if len(sys.argv) != 3:
-        print('usage:', 'Crawler.py', 'type_hidden_service (onion or i2p or regular)', 'splash_port')
+        #print('usage:', 'Crawler.py', 'type_hidden_service (onion or i2p or regular)', 'splash_port')
+        print('usage:', 'Crawler.py', 'mode (manual or automatic)', 'splash_port')
         exit(1)
 
-    type_hidden_service = sys.argv[1]
+    mode = sys.argv[1]
     splash_port = sys.argv[2]
+
+    if mode == 'automatic':
+        type_hidden_service = 'onion'
 
     publisher.port = 6380
     publisher.channel = "Script"
@@ -107,6 +129,16 @@ if __name__ == '__main__':
     # Setup the I/O queues
     p = Process(config_section)
 
+    accepted_services = ['onion', 'regular']
+
+    dic_regex = {}
+    dic_regex['onion'] = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    re.compile(dic_regex['onion'])
+    dic_regex['i2p'] = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+    re.compile(dic_regex['i2p'])
+    dic_regex['regular'] = dic_regex['i2p']
+
+
     url_onion = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
     re.compile(url_onion)
     url_i2p = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
@@ -114,17 +146,15 @@ if __name__ == '__main__':
 
     if type_hidden_service == 'onion':
         regex_hidden_service = url_onion
-        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     elif type_hidden_service == 'i2p':
         regex_hidden_service = url_i2p
-        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_i2p"),  splash_port)
     elif type_hidden_service == 'regular':
         regex_hidden_service = url_i2p
-        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     else:
         print('incorrect crawler type: {}'.format(type_hidden_service))
         exit(0)
 
+    splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     print('splash url: {}'.format(splash_url))
 
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
@@ -150,19 +180,13 @@ if __name__ == '__main__':
         db=p.config.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
+    # Crawler status
     r_cache.sadd('all_crawler:{}'.format(type_hidden_service), splash_port)
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
     # load domains blacklist
-    try:
-        with open(os.environ['AIL_BIN']+'/torcrawler/blacklist_onion.txt', 'r') as f:
-            r_onion.delete('blacklist_{}'.format(type_hidden_service))
-            lines = f.read().splitlines()
-            for line in lines:
-                r_onion.sadd('blacklist_{}'.format(type_hidden_service), line)
-    except Exception:
-        pass
+    load_type_blacklist(type_hidden_service)
 
     while True:
 
@@ -180,16 +204,23 @@ if __name__ == '__main__':
                 url, paste = splitted
                 paste = paste.replace(PASTES_FOLDER+'/', '')
 
-                url_list = re.findall(regex_hidden_service, url)[0]
-                if url_list[1] == '':
+                # extract data from url
+                faup.decode(url)
+                url_unpack = faup.get()
+                url = decode_val(url_unpack['url'])
+                port = decode_val(url_unpack['port'])
+                scheme = decode_val(url_unpack['scheme'])
+                domain = decode_val(url_unpack['domain'])
+                host = decode_val(url_unpack['domain'])
+
+                # Add Scheme to url
+                if scheme is None:
                     url= 'http://{}'.format(url)
-
-                link, s, credential, subdomain, domain, host, port, \
-                    resource_path, query_string, f1, f2, f3, f4 = url_list
-                domain = url_list[4]
-                r_onion.srem('{}_domain_crawler_queue'.format(type_hidden_service), domain)
-
                 domain_url = 'http://{}'.format(domain)
+
+
+                # remove url to crawl from queue
+                r_onion.srem('{}_domain_crawler_queue'.format(type_hidden_service), domain)
 
                 print()
                 print()
@@ -200,10 +231,7 @@ if __name__ == '__main__':
                 print('domain:      {}'.format(domain))
                 print('domain_url:  {}'.format(domain_url))
 
-                faup.decode(domain)
-                onion_domain=faup.get()['domain'].decode()
-
-                if not r_onion.sismember('blacklist_{}'.format(type_hidden_service), domain) and not r_onion.sismember('blacklist_{}'.format(type_hidden_service), onion_domain):
+                if not r_onion.sismember('blacklist_{}'.format(type_hidden_service), domain):
 
                     date = datetime.datetime.now().strftime("%Y%m%d")
                     date_month = datetime.datetime.now().strftime("%Y%m")
@@ -219,17 +247,24 @@ if __name__ == '__main__':
                         # last check
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
 
+                        # Launch Scrapy-Splash Crawler
                         crawl_onion(url, domain, date, date_month, message)
+                        # Crawl Domain
                         if url != domain_url:
-                            print(url)
+                            #Crawl Domain with port number
+                            if port is not None:
+                                print('{}:{}'.format(domain_url, port))
+                                crawl_onion('{}:{}'.format(domain_url, port), domain, date, date_month, message)
+                            #Crawl without port number
                             print(domain_url)
                             crawl_onion(domain_url, domain, date, date_month, message)
+
+                        # update last check
+                        r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
 
                         # save down onion
                         if not r_onion.sismember('{}_up:{}'.format(type_hidden_service, date), domain):
                             r_onion.sadd('{}_down:{}'.format(type_hidden_service, date), domain)
-                            #r_onion.sadd('{}_down_link:{}'.format(type_hidden_service, date), url)
-                            #r_onion.hincrby('{}_link_down'.format(type_hidden_service), url, 1)
                         else:
                             #r_onion.hincrby('{}_link_up'.format(type_hidden_service), url, 1)
                             if r_onion.sismember('month_{}_up:{}'.format(type_hidden_service, date_month), domain) and r_serv_metadata.exists('paste_children:'+paste):
@@ -241,28 +276,28 @@ if __name__ == '__main__':
                         if r_onion.lindex('{}_history:{}'.format(type_hidden_service, domain), 0) != date:
                             r_onion.lpush('{}_history:{}'.format(type_hidden_service, domain), date)
                             # add crawled history by date
-                        r_onion.lpush('{}_history:{}:{}'.format(type_hidden_service, domain, date), paste) #add datetime here
+                        r_onion.lpush('{}_history:{}:{}'.format(type_hidden_service, domain, date), paste)
 
+                        if mode == 'automatic':
+                            # check external onions links (full_crawl)
+                            external_domains = set()
+                            for link in r_onion.smembers('domain_{}_external_links:{}'.format(type_hidden_service, domain)):
+                                external_domain = re.findall(dic_regex[type_hidden_service], link)
+                                external_domain.extend(re.findall(url_i2p, link))
+                                if len(external_domain) > 0:
+                                    external_domain = external_domain[0][4]
+                                else:
+                                    continue
+                                if '.onion' in external_domain and external_domain != domain:
+                                    external_domains.add(external_domain)
+                                elif '.i2p' in external_domain and external_domain != domain:
+                                    external_domains.add(external_domain)
+                            if len(external_domains) >= 10:
+                                r_onion.sadd('{}_potential_source'.format(type_hidden_service), domain)
+                            r_onion.delete('domain_{}_external_links:{}'.format(type_hidden_service, domain))
+                            print(r_onion.smembers('domain_{}_external_links:{}'.format(type_hidden_service, domain)))
 
-                        # check external onions links (full_scrawl)
-                        external_domains = set()
-                        for link in r_onion.smembers('domain_{}_external_links:{}'.format(type_hidden_service, domain)):
-                            external_domain = re.findall(url_onion, link)
-                            external_domain.extend(re.findall(url_i2p, link))
-                            if len(external_domain) > 0:
-                                external_domain = external_domain[0][4]
-                            else:
-                                continue
-                            if '.onion' in external_domain and external_domain != domain:
-                                external_domains.add(external_domain)
-                            elif '.i2p' in external_domain and external_domain != domain:
-                                external_domains.add(external_domain)
-                        if len(external_domains) >= 10:
-                            r_onion.sadd('{}_potential_source'.format(type_hidden_service), domain)
-                        r_onion.delete('domain_{}_external_links:{}'.format(type_hidden_service, domain))
-                        print(r_onion.smembers('domain_{}_external_links:{}'.format(type_hidden_service, domain)))
-
-                        # update list, last crawled onions
+                        # update list, last crawled sites
                         r_onion.lpush('last_{}'.format(type_hidden_service), domain)
                         r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
 
@@ -270,7 +305,7 @@ if __name__ == '__main__':
                         r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
                         r_cache.hdel('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
                 else:
-                    print('                 Blacklisted Onion')
+                    print('                 Blacklisted Site')
                     print()
                     print()
 
