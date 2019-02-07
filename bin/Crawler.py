@@ -16,6 +16,47 @@ sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 from pubsublogger import publisher
 
+# ======== GLOBAL VARIABLES ========
+publisher.port = 6380
+publisher.channel = "Script"
+
+config_section = 'Crawler'
+
+# Setup the I/O queues
+p = Process(config_section)
+
+accepted_services = ['onion', 'regular']
+
+dic_regex = {}
+dic_regex['onion'] = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+re.compile(dic_regex['onion'])
+dic_regex['i2p'] = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+re.compile(dic_regex['i2p'])
+dic_regex['regular'] = dic_regex['i2p']
+
+faup = Faup()
+
+PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
+
+r_serv_metadata = redis.StrictRedis(
+    host=p.config.get("ARDB_Metadata", "host"),
+    port=p.config.getint("ARDB_Metadata", "port"),
+    db=p.config.getint("ARDB_Metadata", "db"),
+    decode_responses=True)
+
+r_cache = redis.StrictRedis(
+    host=p.config.get("Redis_Cache", "host"),
+    port=p.config.getint("Redis_Cache", "port"),
+    db=p.config.getint("Redis_Cache", "db"),
+    decode_responses=True)
+
+r_onion = redis.StrictRedis(
+    host=p.config.get("ARDB_Onion", "host"),
+    port=p.config.getint("ARDB_Onion", "port"),
+    db=p.config.getint("ARDB_Onion", "db"),
+    decode_responses=True)
+
+# ======== FUNCTIONS ========
 def decode_val(value):
     if value is not None:
         value = value.decode()
@@ -105,7 +146,7 @@ def crawl_onion(url, domain, date, date_month, message):
         r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
         exit(1)
 
-
+# ======== MAIN ========
 if __name__ == '__main__':
 
     if len(sys.argv) != 3:
@@ -119,83 +160,38 @@ if __name__ == '__main__':
     if mode == 'automatic':
         type_hidden_service = 'onion'
 
-    publisher.port = 6380
-    publisher.channel = "Script"
-
-    publisher.info("Script Crawler started")
-
-    config_section = 'Crawler'
-
-    # Setup the I/O queues
-    p = Process(config_section)
-
-    accepted_services = ['onion', 'regular']
-
-    dic_regex = {}
-    dic_regex['onion'] = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
-    re.compile(dic_regex['onion'])
-    dic_regex['i2p'] = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
-    re.compile(dic_regex['i2p'])
-    dic_regex['regular'] = dic_regex['i2p']
-
-
-    url_onion = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
-    re.compile(url_onion)
-    url_i2p = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
-    re.compile(url_i2p)
-
-    if type_hidden_service == 'onion':
-        regex_hidden_service = url_onion
-    elif type_hidden_service == 'i2p':
-        regex_hidden_service = url_i2p
-    elif type_hidden_service == 'regular':
-        regex_hidden_service = url_i2p
-    else:
+    # verify crawler type (type_hidden_service)
+    if type_hidden_service not in accepted_services:
         print('incorrect crawler type: {}'.format(type_hidden_service))
         exit(0)
+    else:
+        publisher.info("Script Crawler started")
+
+    # load domains blacklist
+    load_type_blacklist(type_hidden_service)
 
     splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     print('splash url: {}'.format(splash_url))
 
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
-    faup = Faup()
-
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
-
-    r_serv_metadata = redis.StrictRedis(
-        host=p.config.get("ARDB_Metadata", "host"),
-        port=p.config.getint("ARDB_Metadata", "port"),
-        db=p.config.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
-
-    r_cache = redis.StrictRedis(
-        host=p.config.get("Redis_Cache", "host"),
-        port=p.config.getint("Redis_Cache", "port"),
-        db=p.config.getint("Redis_Cache", "db"),
-        decode_responses=True)
-
-    r_onion = redis.StrictRedis(
-        host=p.config.get("ARDB_Onion", "host"),
-        port=p.config.getint("ARDB_Onion", "port"),
-        db=p.config.getint("ARDB_Onion", "db"),
-        decode_responses=True)
 
     # Crawler status
     r_cache.sadd('all_crawler:{}'.format(type_hidden_service), splash_port)
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
-    # load domains blacklist
-    load_type_blacklist(type_hidden_service)
 
     while True:
 
-        # Priority Queue - Recovering the streamed message informations.
-        message = r_onion.spop('{}_crawler_priority_queue'.format(type_hidden_service))
+        if mode == 'automatic':
+            # Priority Queue - Recovering the streamed message informations.
+            message = r_onion.spop('{}_crawler_priority_queue'.format(type_hidden_service))
 
-        if message is None:
-            # Recovering the streamed message informations.
-            message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
+            if message is None:
+                # Recovering the streamed message informations.
+                message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
+        else:
+            pass
 
         if message is not None:
 

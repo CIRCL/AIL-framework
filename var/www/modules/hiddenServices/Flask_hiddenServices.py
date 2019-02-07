@@ -75,6 +75,10 @@ def get_onion_status(domain, date):
         return False
 # ============= ROUTES ==============
 
+@hiddenServices.route("/hiddenServices/2", methods=['GET'])
+def hiddenServices_page_test():
+    return render_template("Crawler_index.html")
+
 @hiddenServices.route("/hiddenServices/", methods=['GET'])
 def hiddenServices_page():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+  <style>
+
+  </style>
+
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+
+
+
+			<nav class="col-md-2 d-none d-md-block bg-light sidebar border-right">
+          <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link active text-dark" href="#">
+                  <i class="fa fa-search"></i>
+                  Dashboard <span class="sr-only">(current)</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-secondary" href="#">
+									<i class="fa fa-search"></i>
+                	Automatic Splash Crawler
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-secondary" href="#">
+									<i class="fa fa-search"></i>
+                  Manual Splash Crawler
+                </a>
+              </li>
+            </ul>
+
+          </div>
+        </nav>
+
+
+
+
+			<div >
+				<pre>
+					--------------
+
+
+
+					--------------
+
+				</pre>
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+});
+</script>
