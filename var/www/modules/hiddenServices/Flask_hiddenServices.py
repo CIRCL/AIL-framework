@@ -79,6 +79,55 @@ def get_onion_status(domain, date):
 def hiddenServices_page_test():
     return render_template("Crawler_index.html")
 
+@hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
+def hiddenServices_page():
+    last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
+    list_onion = []
+
+    now = datetime.datetime.now()
+    date = '{}{}{}'.format(now.strftime("%Y"), now.strftime("%m"), now.strftime("%d"))
+    statDomains = {}
+    statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
+    statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
+    statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
+    statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
+
+    for onion in last_onions:
+        metadata_onion = {}
+        metadata_onion['domain'] = onion
+        metadata_onion['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'last_check')
+        if metadata_onion['last_check'] is None:
+            metadata_onion['last_check'] = '********'
+        metadata_onion['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'first_seen')
+        if metadata_onion['first_seen'] is None:
+            metadata_onion['first_seen'] = '********'
+        if get_onion_status(onion, metadata_onion['last_check']):
+            metadata_onion['status_text'] = 'UP'
+            metadata_onion['status_color'] = 'Green'
+            metadata_onion['status_icon'] = 'fa-check-circle'
+        else:
+            metadata_onion['status_text'] = 'DOWN'
+            metadata_onion['status_color'] = 'Red'
+            metadata_onion['status_icon'] = 'fa-times-circle'
+        list_onion.append(metadata_onion)
+
+    crawler_metadata=[]
+    all_onion_crawler = r_cache.smembers('all_crawler:onion')
+    for crawler in all_onion_crawler:
+        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
+        started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
+        status_info = r_cache.hget('metadata_crawler:{}'.format(crawler), 'status')
+        crawler_info = '{}  - {}'.format(crawler, started_time)
+        if status_info=='Waiting' or status_info=='Crawling':
+            status=True
+        else:
+            status=False
+        crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
+
+    date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
+    return render_template("Crawler_Splash_onion.html", last_onions=list_onion, statDomains=statDomains,
+                            crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
+
 @hiddenServices.route("/hiddenServices/", methods=['GET'])
 def hiddenServices_page():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)

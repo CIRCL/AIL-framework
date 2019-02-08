@@ -10,37 +10,39 @@
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link mr-3" href="{{ url_for('dashboard.index') }}">Home <span class="sr-only">(current)</span></a>
+        <a class="nav-link mr-3" href="{{ url_for('dashboard.index') }}">Home</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" aria-disabled="true">Submit</a>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-external-link-alt"></i> Submit</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" aria-disabled="true">Browse Pastes</a>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-tag"></i> Browse Pastes</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" aria-disabled="true">Leaks Hunter</a>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-crosshairs"></i> Leaks Hunter</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" id="page-Crawler" href="#" tabindex="-1" href="#" aria-disabled="true">Crawlers</a>
+      <li class="nav-item mr-3">
+        <a class="nav-link" id="page-Crawler" href="#" tabindex="-1" href="#" aria-disabled="true"><i class="fas fa-spider"></i> Crawlers</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" aria-disabled="true">Decoded</a>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-lock-open"></i> Decoded</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" aria-disabled="true">Statistics</a>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-chart-bar"></i> Statistics</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" aria-disabled="true">Options</a>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-cog"></i> Options</a>
       </li>
     </ul>
 
     <form class="form-inline my-2 my-lg-0 ml-auto justify-content-center">
-      <div class="form-group">
+      <div class="d-flex flex-column">
+        <div>
         <input class="form-control mr-sm-2" type="search" id="global_search" placeholder="Search" aria-label="Search" aria-describedby="advanced_search">
-        <small id="advanced_search" class="form-text text-muted">Advanced Search</small>
+        <button class="btn btn-outline-info my-2 my-sm-0" type="submit"><i class="fas fa-search"></i></button>
+        </div>
+        <small id="advanced_search" class="form-text"><a class="nav text-muted" href="#" aria-disabled="true">Advanced Search</a></small>
       </div>
-      <button class="btn btn-outline-info my-2 my-sm-0" type="submit"><i class="fa fa-search"></i></button>
     </form>
   </div>
 </nav>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
+	<style>
+	div.tooltip {
+		position: absolute;
+		text-align: center;
+		padding: 2px;
+		font: 12px sans-serif;
+		background: #ebf4fb;
+		border: 2px solid #b7ddf2;
+		border-radius: 8px;
+		pointer-events: none;
+		color: #000000;
+	}
+	.line_graph {
+		fill: none;
+		stroke: steelblue;
+		stroke-width: 2px;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		stroke-width: 1.5;
+	}
+	</style>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			<div class="col-12 col-md-2 p-0 bg-light border-right">
+
+
+				<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2">
+					<h5 class="d-flex text-muted w-100">
+						<span>Splash Crawlers </span>
+						<a class="ml-auto" href="#">
+							<i class="fas fa-plus-circle ml-auto"></i>
+						</a>
+					</h5>
+	            <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+	              <li class="nav-item">
+	                <a class="nav-link active" href="#">
+	                  <i class="fas fa-search"></i>
+	                  <span>Dashboard</span>
+	                </a>
+	              </li>
+	              <li class="nav-item">
+	                <a class="nav-link" href="#">
+										<i class="fas fa-search"></i>
+	                	Automatic Splash Crawler
+	                </a>
+	              </li>
+
+	              <li class="nav-item">
+	                <a class="nav-link" href="#">
+										<i class="fas fa-search"></i>
+	                  Manual Splash Crawler
+	                </a>
+	              </li>
+	            </ul>
+	        </nav>
+			</div>
+
+
+
+			<div >
+				<pre>
+					--------------
+
+
+
+					--------------
+
+				</pre>
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+});
+</script>
+
+<script>
+
+all_graph.onResize = function () {
+	var aspect = 1000 / 500, all_graph = $("#graph_div");
+	var targetWidth = all_graph.parent().width();
+	all_graph.attr("width", targetWidth);
+	all_graph.attr("height", targetWidth / aspect);
+}
+window.all_graph = all_graph;
+
+function create_line_chart(id, url){
+	var width = 650;
+	var height = Math.round(width / 6);
+	var margin = {top: 20, right: 55, bottom: 50, left: 40};
+	var x = d3.scaleTime().range([0, width]);
+	var y = d3.scaleLinear().rangeRound([height, 0]);
+	var xAxis = d3.axisBottom(x);
+	var yAxis = d3.axisLeft(y);
+	var parseTime = d3.timeParse("%Y-%m-%d");
+	var line = d3.line()
+							.x(function(d) {
+          			return x(d.date);
+        			})
+							.y(function(d) {
+          			return y(d.value);
+        			});
+	var svg_line = d3.select('#'+id).append('svg')
+				.attr("id", "graph_div")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append('g')
+						.attr('transform', "translate("+ margin.left +","+ margin.top +")");
+	var div = d3.select('body').append('div')
+				.attr('class', 'tooltip')
+				.style('opacity', 0);
+	//add div tooltip
+d3.json(url)
+	.then(function(data){
+		data.forEach(function(d) {
+			d.date_label = d.date;
+			d.date = parseTime(d.date);
+			d.value = +d.value;
+		});
+		// fit the data
+		x.domain(d3.extent(data, function(d) { return d.date; }));
+		//x.domain(data.map(function (d) { return d.date; })); //E
+		y.domain([0, d3.max(data, function(d){ return d.value ; })]);
+		//line
+		svg_line.append("path")
+				.data([data])
+				.attr("class", "line_graph")
+				.attr("d", line);
+		// add X axis
+		svg_line.append("g")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(d3.axisBottom(x))
+				.selectAll("text")
+					.style("text-anchor", "end")
+					.attr("transform", "rotate(-45)" );
+		// Add the Y Axis
+		svg_line.append("g")
+		    .call(d3.axisLeft(y));
+		//add a dot circle
+    svg_line.selectAll('dot')
+				.data(data).enter()
+				.append('circle')
+						.attr('r', 2)
+							.attr('cx', function(d) { return x(d.date); })
+							.attr('cy', function(d) { return y(d.value); })
+            	.on('mouseover', function(d) {
+	            	div.transition().style('opacity', .9);
+	            	div.html('' + d.date_label+ '<br/>' + d.value).style('left', (d3.event.pageX) + 'px')
+								.style("left", (d3.event.pageX) + "px")
+								.style("top", (d3.event.pageY - 28) + "px");
+          		})
+            	.on('mouseout', function(d)
+          			{
+            			div.transition().style('opacity', 0);
+          			});
+	});
+}
+</script>
+
+<script>
+function refresh_list_crawled(){
+
+	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_json') }}",
+		function(data) {
+
+			var tableRef = document.getElementById('tbody_last_crawled');
+			$("#tbody_last_crawled").empty()
+
+			for (var i = 0; i < data.last_onions.length; i++) {
+					var data_domain = data.last_onions[i]
+					var newRow   = tableRef.insertRow(tableRef.rows.length);
+
+			    var newCell  = newRow.insertCell(0);
+					newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+data_domain['domain']+"\">"+data_domain['domain']+"</a></td>";
+
+					newCell  = newRow.insertCell(1);
+					newCell.innerHTML = "<td>"+data_domain['first_seen'].substr(0, 4)+"/"+data_domain['first_seen'].substr(4, 2)+"/"+data_domain['first_seen'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(2);
+					newCell.innerHTML = "<td>"+data_domain['last_check'].substr(0, 4)+"/"+data_domain['last_check'].substr(4, 2)+"/"+data_domain['last_check'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(3);
+					newCell.innerHTML = "<td><div style=\"color:"+data_domain['status_color']+"; display:inline-block\"><i class=\"fa "+data_domain['status_icon']+" fa-2x\"></i>"+data_domain['status_text']+"</div></td>"
+
+			}
+			var statDomains = data.statDomains
+			document.getElementById('text_domain_up').innerHTML = statDomains['domains_up']
+			document.getElementById('text_domain_down').innerHTML = statDomains['domains_down']
+			document.getElementById('text_domain_queue').innerHTML = statDomains['domains_queue']
+			document.getElementById('text_total_domains').innerHTML = statDomains['total']
+
+			if(data.crawler_metadata.length!=0){
+				$("#tbody_crawler_info").empty();
+				var tableRef = document.getElementById('tbody_crawler_info');
+				for (var i = 0; i < data.crawler_metadata.length; i++) {
+						var crawler = data.crawler_metadata[i];
+						var newRow = tableRef.insertRow(tableRef.rows.length);
+						var text_color;
+						var icon;
+						if(crawler['status']){
+							text_color = 'Green';
+							icon = 'check';
+						} else {
+							text_color = 'Red';
+							icon = 'times';
+						}
+
+				    var newCell  = newRow.insertCell(0);
+						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle fa-2x\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
+
+						newCell  = newRow.insertCell(1);
+						newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+crawler['crawling_domain']+"\">"+crawler['crawling_domain']+"</a></td>";
+
+						newCell  = newRow.insertCell(2);
+						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status_info']+"</div></td>";
+
+						$("#panel_crawler").show();
+				}
+			} else {
+				$("#panel_crawler").hide();
+			}
+		}
+	);
+
+	if (to_refresh) {
+    setTimeout("refresh_list_crawled()", 10000);
+	}
+}
+</script>
