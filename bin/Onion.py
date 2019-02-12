@@ -198,8 +198,12 @@ if __name__ == "__main__":
                 print(len(domains_list))
                 if len(domains_list) > 0:
 
-                    publisher.warning('{}Detected {} .onion(s);{}'.format(
-                        to_print, len(domains_list),PST.p_path))
+                    if not activate_crawler:
+                        publisher.warning('{}Detected {} .onion(s);{}'.format(
+                            to_print, len(domains_list),PST.p_path))
+                    else:
+                        publisher.info('{}Detected {} .onion(s);{}'.format(
+                            to_print, len(domains_list),PST.p_path))
                     now = datetime.datetime.now()
                     path = os.path.join('onions', str(now.year).zfill(4),
                                         str(now.month).zfill(2),
