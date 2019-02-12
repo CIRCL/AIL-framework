@@ -127,7 +127,7 @@ class TorSplashCrawler():
             else:
 
                 #avoid filename too big
-                if len(self.domains[0]) > 225:
+                if len(self.domains[0]) > 215:
                     UUID = self.domains[0][-215:]+str(uuid.uuid4())
                 else:
                     UUID = self.domains[0]+str(uuid.uuid4())
