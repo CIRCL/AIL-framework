@@ -129,7 +129,7 @@ class TorSplashCrawler():
                 #avoid filename too big
                 if self.domains[0] > 225:
                     UUID = self.domains[0][-215:]+str(uuid.uuid4())
-                else
+                else:
                     UUID = self.domains[0]+str(uuid.uuid4())
                 filename_paste = os.path.join(self.crawled_paste_filemame, UUID)
                 relative_filename_paste = os.path.join(self.crawler_path, UUID)
