@@ -224,6 +224,10 @@ if __name__ == "__main__":
                             else:
                                 continue
 
+                            # too many subdomain
+                            if len(domain.split('.')) > 5:
+                                continue
+
                             if not r_onion.sismember('month_onion_up:{}'.format(date_month), domain) and not r_onion.sismember('onion_down:'+date , domain):
                                 if not r_onion.sismember('onion_domain_crawler_queue', domain):
                                     print('send to onion crawler')
