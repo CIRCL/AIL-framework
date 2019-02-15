@@ -13,6 +13,7 @@ rm -rf temp
 mkdir temp
 
 wget https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip -O temp/bootstrap${BOOTSTRAP_VERSION}.zip
+wget https://github.com/FezVrasta/popper.js/archive/v1.14.3.zip -O temp/popper.zip
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}.zip
 wget https://github.com/BlackrockDigital/startbootstrap-sb-admin-2/archive/v${SBADMIN_VERSION}.zip -O temp/${SBADMIN_VERSION}-2.zip
 wget https://github.com/FortAwesome/Font-Awesome/archive/v4.7.0.zip -O temp/FONT_AWESOME_4.7.0.zip
@@ -24,6 +25,7 @@ wget https://github.com/moment/moment/archive/2.22.2.zip -O temp/moment_2.22.2.z
 wget https://github.com/longbill/jquery-date-range-picker/archive/v0.18.0.zip -O temp/daterangepicker_v0.18.0.zip
 
 unzip temp/bootstrap${BOOTSTRAP_VERSION}.zip -d temp/
+unzip temp/popper.zip -d temp/
 unzip temp/${SBADMIN_VERSION}.zip -d temp/
 unzip temp/${SBADMIN_VERSION}-2.zip -d temp/
 unzip temp/FONT_AWESOME_4.7.0.zip -d temp/
@@ -34,8 +36,12 @@ unzip temp/moment_2.22.2.zip -d temp/
 unzip temp/daterangepicker_v0.18.0.zip -d temp/
 
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js ./static/js/bootstrap4.min.js
+mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js.map ./static/js/bootstrap.min.js.map
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css ./static/css/bootstrap4.min.css
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css.map ./static/css/bootstrap4.min.css.map
+
+mv temp/popper.js-1.14.3/dist/umd/popper.min.js ./static/js/
+mv temp/popper.js-1.14.3/dist/umd/popper.min.js.map ./static/js/
 
 mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin
 mv temp/startbootstrap-sb-admin-2-${SBADMIN_VERSION} temp/sb-admin-2

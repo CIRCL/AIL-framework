@@ -7,34 +7,38 @@
 	<!-- Core CSS -->
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
 
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 	<style>
-	div.tooltip {
-		position: absolute;
-		text-align: center;
-		padding: 2px;
-		font: 12px sans-serif;
-		background: #ebf4fb;
-		border: 2px solid #b7ddf2;
-		border-radius: 8px;
-		pointer-events: none;
-		color: #000000;
-	}
-	.line_graph {
-		fill: none;
-		stroke: steelblue;
-		stroke-width: 2px;
-		stroke-linejoin: round;
-		stroke-linecap: round;
-		stroke-width: 1.5;
-	}
+		.bar {
+				fill: steelblue;
+			}
+		.bar:hover{
+			fill: brown;
+			cursor: pointer;
+		}
+		.bar_stack:hover{
+			cursor: pointer;
+		}
+		div.tooltip {
+			position: absolute;
+			text-align: center;
+			padding: 2px;
+			font: 12px sans-serif;
+			background: #ebf4fb;
+			border: 2px solid #b7ddf2;
+			border-radius: 8px;
+			pointer-events: none;
+			color: #000000;
+		}
 	</style>
 
 </head>
@@ -46,7 +50,7 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			<div class="col-12 col-md-2 p-0 bg-light border-right">
+			<div class="col-12 col-lg-2 p-0 bg-light border-right">
 
 
 				<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2">
@@ -58,15 +62,15 @@
 					</h5>
 	            <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
 	              <li class="nav-item">
-	                <a class="nav-link active" href="#">
+	                <a class="nav-link" href="#">
 	                  <i class="fas fa-search"></i>
 	                  <span>Dashboard</span>
 	                </a>
 	              </li>
 	              <li class="nav-item">
-	                <a class="nav-link" href="#">
+	                <a class="nav-link active" href="#">
 										<i class="fas fa-search"></i>
-	                	Automatic Splash Crawler
+	                	Automatic Onion Crawler
 	                </a>
 	              </li>
 
@@ -80,17 +84,105 @@
 	        </nav>
 			</div>
 
+			<div class="col-12 col-lg-10">
+
+				<div class="row">
+					<div class="col-12 col-xl-6">
+
+						<div class="table-responsive mt-1 table-hover table-borderless table-striped">
+						  <table class="table">
+								<thead class="thead-dark">
+							      <tr>
+							        <th>Domain</th>
+							        <th>First Seen</th>
+											<th>Last Check</th>
+							        <th>Status</th>
+							      </tr>
+							  </thead>
+							  <tbody id="tbody_last_crawled">
+										{% for metadata_onion in last_onions %}
+								      <tr>
+								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_onion['domain'] }}">{{ metadata_onion['domain'] }}</a></td>
+								        <td>{{'{}/{}/{}'.format(metadata_onion['first_seen'][0:4], metadata_onion['first_seen'][4:6], metadata_onion['first_seen'][6:8])}}</td>
+												<td>{{'{}/{}/{}'.format(metadata_onion['last_check'][0:4], metadata_onion['last_check'][4:6], metadata_onion['last_check'][6:8])}}</td>
+								        <td><div style="color:{{metadata_onion['status_color']}}; display:inline-block">
+															<i class="fas {{metadata_onion['status_icon']}} "></i>
+															{{metadata_onion['status_text']}}
+														</div>
+												</td>
+								      </tr>
+										{% endfor %}
+							  </tbody>
+						  </table>
+						</div>
+
+					</div>
+					<div class="col-12 col-xl-6">
+
+						<div class="card text-white bg-dark mb-3 mt-1">
+						  <div class="card-header">
+								<div class="row">
+									<div class="col-6">
+										<span class="badge badge-success">{{ statDomains['domains_up'] }}</span> UP
+										<span class="badge badge-danger ml-md-3">{{ statDomains['domains_down'] }}</span> DOWN
+									</div>
+									<div class="col-6">
+										<span class="badge badge-success">{{ statDomains['total'] }}</span> Crawled
+										<span class="badge badge-warning ml-md-3">{{ statDomains['domains_queue'] }}</span> Queue
+									</div>
+								</div>
+							</div>
+						  <div class="card-body">
+						    <h5 class="card-title">Select domains by date range :</h5>
+						    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+								<form action="{{ url_for('hiddenServices.get_onions_by_daterange') }}" id="hash_selector_form" method='post'>
+									<div class="row">
+										<div class="col-6">
+											<div class="input-group" id="date-range-from">
+												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+												<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from">
+											</div>
+											<div class="input-group" id="date-range-to">
+												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+												<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to">
+											</div>
+										</div>
+										<div class="col-6">
+											<div class="custom-control custom-switch">
+											  <input class="custom-control-input" type="checkbox" name="domains_up" value="True" id="domains_up_id" checked>
+												<label class="custom-control-label" for="domains_up_id">
+													<span class="badge badge-success"><i class="fas fa-check-circle"></i> Domains UP </span>
+											  </label>
+											</div>
+											<div class="custom-control custom-switch">
+											  <input class="custom-control-input" type="checkbox" name="domains_down" value="True" id="domains_down_id">
+												<label class="custom-control-label" for="domains_down_id">
+													<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Domains DOWN</span>
+												</label>
+											</div>
+											<div class="custom-control custom-switch mt-2">
+											  <input class="custom-control-input" type="checkbox" name="domains_tags" value="True" id="domains_tags_id">
+												<label class="custom-control-label" for="domains_tags_id">
+													<span class="badge badge-dark"><i class="fas fa-tags"></i> Domains Tags</span>
+												</label>
+											</div>
+										</div>
+									</div>
+									<button class="btn btn-primary">
+										<i class="fas fa-eye"></i> Show Onions
+									</button>
+								<form>
+						  </div>
+						</div>
+
+						<div id="barchart_type">
+		        </div>
 
 
-			<div >
-				<pre>
-					--------------
 
+					</div>
+				</div>
 
-
-					--------------
-
-				</pre>
 			</div>
 
 		</div>
@@ -100,95 +192,49 @@
 </body>
 
 <script>
+var chart = {};
 $(document).ready(function(){
 	$("#page-Crawler").addClass("active");
+
+	$('#date-range-from').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+					},
+					setValue: function(s,s1,s2){
+							$('#date-range-from-input').val(s1);
+							$('#date-range-to-input').val(s2);
+					}
+	});
+	$('#date-range-to').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+			},
+			setValue: function(s,s1,s2){
+					$('#date-range-from-input').val(s1);
+					$('#date-range-to-input').val(s2);
+			}
+	});
+	chart.stackBarChart =barchart_type_stack("{{ url_for('hiddenServices.automatic_onion_crawler_json') }}", 'id');
+
+	chart.onResize();
+	$(window).on("resize", function() {
+		chart.onResize();
+	});
+
 });
 </script>
 
-<script>
 
-all_graph.onResize = function () {
-	var aspect = 1000 / 500, all_graph = $("#graph_div");
-	var targetWidth = all_graph.parent().width();
-	all_graph.attr("width", targetWidth);
-	all_graph.attr("height", targetWidth / aspect);
-}
-window.all_graph = all_graph;
 
-function create_line_chart(id, url){
-	var width = 650;
-	var height = Math.round(width / 6);
-	var margin = {top: 20, right: 55, bottom: 50, left: 40};
-	var x = d3.scaleTime().range([0, width]);
-	var y = d3.scaleLinear().rangeRound([height, 0]);
-	var xAxis = d3.axisBottom(x);
-	var yAxis = d3.axisLeft(y);
-	var parseTime = d3.timeParse("%Y-%m-%d");
-	var line = d3.line()
-							.x(function(d) {
-          			return x(d.date);
-        			})
-							.y(function(d) {
-          			return y(d.value);
-        			});
-	var svg_line = d3.select('#'+id).append('svg')
-				.attr("id", "graph_div")
-				.attr("width", width + margin.left + margin.right)
-				.attr("height", height + margin.top + margin.bottom)
-				.append('g')
-						.attr('transform', "translate("+ margin.left +","+ margin.top +")");
-	var div = d3.select('body').append('div')
-				.attr('class', 'tooltip')
-				.style('opacity', 0);
-	//add div tooltip
-d3.json(url)
-	.then(function(data){
-		data.forEach(function(d) {
-			d.date_label = d.date;
-			d.date = parseTime(d.date);
-			d.value = +d.value;
-		});
-		// fit the data
-		x.domain(d3.extent(data, function(d) { return d.date; }));
-		//x.domain(data.map(function (d) { return d.date; })); //E
-		y.domain([0, d3.max(data, function(d){ return d.value ; })]);
-		//line
-		svg_line.append("path")
-				.data([data])
-				.attr("class", "line_graph")
-				.attr("d", line);
-		// add X axis
-		svg_line.append("g")
-		    .attr("transform", "translate(0," + height + ")")
-		    .call(d3.axisBottom(x))
-				.selectAll("text")
-					.style("text-anchor", "end")
-					.attr("transform", "rotate(-45)" );
-		// Add the Y Axis
-		svg_line.append("g")
-		    .call(d3.axisLeft(y));
-		//add a dot circle
-    svg_line.selectAll('dot')
-				.data(data).enter()
-				.append('circle')
-						.attr('r', 2)
-							.attr('cx', function(d) { return x(d.date); })
-							.attr('cy', function(d) { return y(d.value); })
-            	.on('mouseover', function(d) {
-	            	div.transition().style('opacity', .9);
-	            	div.html('' + d.date_label+ '<br/>' + d.value).style('left', (d3.event.pageX) + 'px')
-								.style("left", (d3.event.pageX) + "px")
-								.style("top", (d3.event.pageY - 28) + "px");
-          		})
-            	.on('mouseout', function(d)
-          			{
-            			div.transition().style('opacity', 0);
-          			});
-	});
-}
-</script>
-
-<script>
+<script>/*
 function refresh_list_crawled(){
 
 	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_json') }}",
@@ -256,5 +302,166 @@ function refresh_list_crawled(){
 	if (to_refresh) {
     setTimeout("refresh_list_crawled()", 10000);
 	}
+}*/
+</script>
+
+<script>
+var margin = {top: 20, right: 90, bottom: 55, left: 0},
+				width = parseInt(d3.select('#barchart_type').style('width'), 10);
+				width  = 1000 - margin.left - margin.right,
+				height = 500  - margin.top  - margin.bottom;
+var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+
+var y = d3.scaleLinear().rangeRound([height, 0]);
+
+var xAxis = d3.axisBottom(x);
+
+var yAxis = d3.axisLeft(y);
+
+var color = d3.scaleOrdinal(d3.schemeSet3);
+
+var svg = d3.select("#barchart_type").append("svg")
+				.attr("id", "thesvg")
+				.attr("viewBox", "0 0 "+width+" 500")
+				.attr("width",  width  + margin.left + margin.right)
+				.attr("height", height + margin.top  + margin.bottom)
+			.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+function barchart_type_stack(url, id) {
+
+  d3.json(url)
+    .then(function(data){
+
+			var labelVar = 'date';  //A
+		  var varNames = d3.keys(data[0])
+		      .filter(function (key) { return key !== labelVar;}); //B
+
+		  data.forEach(function (d) { //D
+		    var y0 = 0;
+		    d.mapping = varNames.map(function (name) {
+		      return {
+		        name: name,
+		        label: d[labelVar],
+		        y0: y0,
+		        y1: y0 += +d[name]
+		      };
+		    });
+		    d.total = d.mapping[d.mapping.length - 1].y1;
+		  });
+
+		  x.domain(data.map(function (d) { return (d.date); })); //E
+		  y.domain([0, d3.max(data, function (d) { return d.total; })]);
+
+			svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+				.selectAll("text")
+					.attr("class", "bar")
+					.on("click", function (d) { window.location.href = "#" })
+					.attr("transform", "rotate(-18)" )
+					//.attr("transform", "rotate(-40)" )
+					.style("text-anchor", "end");
+
+    	svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      	.append("text")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 6)
+        	.attr("dy", ".71em")
+        	.style("text-anchor", "end");
+
+			var selection = svg.selectAll(".series")
+		    .data(data)
+		    .enter().append("g")
+		      .attr("class", "series")
+		      .attr("transform", function (d) { return "translate(" + x((d.date)) + ",0)"; });
+
+			selection.selectAll("rect")
+	      .data(function (d) { return d.mapping; })
+	    .enter().append("rect")
+				.attr("class", "bar_stack")
+	      .attr("width", x.bandwidth())
+	      .attr("y", function (d) { return y(d.y1); })
+	      .attr("height", function (d) { return y(d.y0) - y(d.y1); })
+	      .style("fill", function (d) { return color(d.name); })
+	      .style("stroke", "grey")
+	      .on("mouseover", function (d) { showPopover.call(this, d); })
+				.on("mouseout", function (d) { removePopovers(); })
+				.on("click", function(d){ window.location.href = "#" });
+
+
+				data.forEach(function(d) {
+					if(d.total != 0){
+						svg.append("text")
+								.attr("class", "bar")
+								.attr("dy", "-.35em")
+								.attr('x', x(d.date) + x.bandwidth()/2)
+								.attr('y', y(d.total))
+								.on("click", function () {window.location.href = "#" })
+								.style("text-anchor", "middle")
+								.text(d.total);
+					}
+				});
+
+			drawLegend(varNames);
+    });
+
 }
+
+function drawLegend (varNames) {
+    var legend = svg.selectAll(".legend")
+        .data(varNames.slice().reverse())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", 943)
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("fill", color)
+        .style("stroke", "grey");
+
+    legend.append("text")
+				.attr("class", "svgText")
+        .attr("x", 941)
+        .attr("y", 6)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function (d) { return d; });
+}
+
+function removePopovers () {
+    $('.popover').each(function() {
+      $(this).remove();
+    });
+  }
+
+function showPopover (d) {
+  $(this).popover({
+    title: d.name,
+    placement: 'top',
+    container: 'body',
+    trigger: 'manual',
+    html : true,
+    content: function() {
+      return d.label +
+            "<br/>num: " + d3.format(",")(d.value ? d.value: d.y1 - d.y0); }
+  });
+  $(this).popover('show')
+}
+
+chart.onResize = function () {
+    var aspect = width / height, chart = $("#thesvg");
+    var targetWidth = chart.parent().width();
+    chart.attr("width", targetWidth);
+    chart.attr("height", targetWidth / 2);
+}
+
+window.chart = chart;
+
 </script>

@@ -80,7 +80,7 @@ def hiddenServices_page_test():
     return render_template("Crawler_index.html")
 
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
-def hiddenServices_page():
+def hiddenServices_page_l():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
     list_onion = []
 
@@ -388,6 +388,24 @@ def domain_crawled_7days_json():
         #return jsonify()
 
     return jsonify(json_domain_stats)
+
+@hiddenServices.route('/hiddenServices/automatic_onion_crawler_json')
+def automatic_onion_crawler_json():
+    current_date = request.args.get('date')
+    type = 'onion'
+
+    num_day_type = 7
+    date_range = get_date_range(num_day_type)
+    range_decoder = []
+    for date in date_range:
+        day_crawled = {}
+        day_crawled['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+        day_crawled['UP']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
+        day_crawled['DOWN']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
+        range_decoder.append(day_crawled)
+
+    return jsonify(range_decoder)
+
 
 # ========= REGISTRATION =========
 app.register_blueprint(hiddenServices, url_prefix=baseUrl)
