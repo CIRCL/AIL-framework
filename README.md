@@ -12,7 +12,7 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 <table>
 <tr>
   <td>Latest Release</td>
-  <td><a href="https://badge.fury.io/gh/CIRCL%2FAIL-Framework"><img src="https://badge.fury.io/gh/CIRCL%2FAIL-Framework.svg" alt="GitHub version" height="18"></a></td>
+  <td><a href="https://github.com/CIRCL/AIL-framework/releases/latest"><img src="https://img.shields.io/github/release/CIRCL/AIL-framework/all.svg"></a></td>
 </tr>
 <tr>
   <td>Contributors</td>
