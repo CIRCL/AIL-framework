@@ -60,28 +60,27 @@
 							<i class="fas fa-plus-circle ml-auto"></i>
 						</a>
 					</h5>
-	            <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
-	              <li class="nav-item">
-	                <a class="nav-link" href="#">
-	                  <i class="fas fa-search"></i>
-	                  <span>Dashboard</span>
-	                </a>
-	              </li>
-	              <li class="nav-item">
-	                <a class="nav-link active" href="#">
-										<i class="fas fa-search"></i>
-	                	Automatic Onion Crawler
-	                </a>
-	              </li>
-
-	              <li class="nav-item">
-	                <a class="nav-link" href="#">
-										<i class="fas fa-search"></i>
-	                  Manual Splash Crawler
-	                </a>
-	              </li>
-	            </ul>
-	        </nav>
+	        <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+	          <li class="nav-item">
+	            <a class="nav-link" href="#">
+	              <i class="fas fa-search"></i>
+	              <span>Dashboard</span>
+	            </a>
+	          </li>
+	          <li class="nav-item">
+	            <a class="nav-link active" href="#">
+								<i class="fas fa-sync"></i>
+	             	Automatic Onion Crawler
+	            </a>
+	          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+								<i class="fas fa-clock"></i>
+                Manual Splash Crawler
+              </a>
+            </li>
+          </ul>
+	      </nav>
 			</div>
 
 			<div class="col-12 col-lg-10">
@@ -115,6 +114,10 @@
 							  </tbody>
 						  </table>
 						</div>
+
+						<a href="{{ url_for('hiddenServices.blacklisted_onion') }}">
+							<button type="button" class="btn btn-outline-danger">Show Blacklisted Onion</button>
+						</a>
 
 					</div>
 					<div class="col-12 col-xl-6">
@@ -178,8 +181,30 @@
 						<div id="barchart_type">
 		        </div>
 
-
-
+						<div class="card mt-1 mb-1">
+						  <div class="card-header text-white bg-dark">
+								Crawlers Status
+							</div>
+						  <div class="card-body px-0 py-0 ">
+								<table class="table">
+									<tbody id="tbody_crawler_info">
+										{% for crawler in crawler_metadata %}
+											<tr>
+												 <td>
+													<i class="fas fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['crawler_info']}}
+												</td>
+												<td>
+													{{crawler['crawling_domain']}}
+												</td>
+												<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
+													{{crawler['status_info']}}
+												</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+						</div>
 					</div>
 				</div>
 
@@ -283,7 +308,7 @@ function refresh_list_crawled(){
 						}
 
 				    var newCell  = newRow.insertCell(0);
-						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle fa-2x\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
+						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
 
 						newCell  = newRow.insertCell(1);
 						newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+crawler['crawling_domain']+"\">"+crawler['crawling_domain']+"</a></td>";

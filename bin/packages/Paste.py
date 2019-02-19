@@ -241,6 +241,10 @@ class Paste(object):
     def _get_p_date(self):
         return self.p_date
 
+    # used
+    def get_p_date(self):
+        return self.p_date
+
     def _get_p_size(self):
         return self.p_size
 

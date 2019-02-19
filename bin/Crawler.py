@@ -66,8 +66,6 @@ def load_type_blacklist(type_service):
     # load domains blacklist
     try:
         with open(os.path.join(os.environ['AIL_BIN'],'/torcrawler/blacklist_{}.txt'.format(type_service)), 'r') as f:
-            # # TODO: # FIXME:  remove this
-            r_onion.delete('blacklist_{}'.format(type_service))
             lines = f.read().splitlines()
             for line in lines:
                 r_onion.sadd('blacklist_{}'.format(type_service), line)
@@ -176,7 +174,9 @@ if __name__ == '__main__':
     crawler_depth_limit = p.config.getint("Crawler", "crawler_depth_limit")
 
     # Crawler status
-    r_cache.sadd('all_crawler:{}'.format(type_hidden_service), splash_port)
+    r_cache.sadd('all_crawler:{}'.format(splash_port)
+    r_cache.sadd('all_crawler:{}:{}'.format(mode, type_hidden_service), splash_port)
+    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'mode', mode)
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
@@ -293,9 +293,14 @@ if __name__ == '__main__':
                             r_onion.delete('domain_{}_external_links:{}'.format(type_hidden_service, domain))
                             print(r_onion.smembers('domain_{}_external_links:{}'.format(type_hidden_service, domain)))
 
-                        # update list, last crawled sites
-                        r_onion.lpush('last_{}'.format(type_hidden_service), domain)
-                        r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
+                            # update list, last crawled sites
+                            r_onion.lpush('last_{}'.format(type_hidden_service), domain)
+                            r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
+                        # manual
+                        else:
+                            # update list, last crawled sites
+                            r_onion.lpush('last_crawled_manual', domain)
+                            r_onion.ltrim('last_crawled_manual', 0, 15)
 
                         #update crawler status
                         r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')

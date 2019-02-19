@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			<div class="col-12 col-lg-2 p-0 bg-light border-right">
+
+
+				<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2">
+					<h5 class="d-flex text-muted w-100">
+						<span>Splash Crawlers </span>
+						<a class="ml-auto" href="#">
+							<i class="fas fa-plus-circle ml-auto"></i>
+						</a>
+					</h5>
+	        <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+	          <li class="nav-item">
+	            <a class="nav-link" href="#">
+	              <i class="fas fa-search"></i>
+	              <span>Dashboard</span>
+	            </a>
+	          </li>
+	          <li class="nav-item">
+	            <a class="nav-link" href="{{ url_for('hiddenServices.crawler_splash_onion') }}">
+								<i class="fas fa-sync"></i>
+	             	Automatic Onion Crawler
+	            </a>
+	          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+								<i class="fas fa-clock"></i>
+                Manual Splash Crawler
+              </a>
+            </li>
+          </ul>
+	      </nav>
+			</div>
+
+			<div class="col-12 col-lg-10">
+
+				<div class="card-deck justify-content-center mx-0">
+					<div class="card border-dark mt-2">
+						<div class="card-header bg-dark text-white">
+							Blacklisted Onions
+						</div>
+					  <div class="card-body text-dark">
+
+							<div class="row">
+						    <div class="col-12 col-md-6">
+									<div class="card text-center border-danger">
+										<div class="card-body text-danger">
+											<h5 class="card-title">Blacklist Onion</h5>
+												<input type="text" class="form-control {%if blacklist_onion is not none %}{%if blacklist_onion==1 %}is-valid{% else %}is-invalid{%endif%}{%endif%}" id="blacklist_onion_input" placeholder="Onion Address">
+												<div class="invalid-feedback">
+													{%if blacklist_onion==2 %}
+														This Onion is already blacklisted
+													{% else %}
+														Incorrect Onion address
+													{% endif %}
+												</div>
+												<div class="valid-feedback">
+													Onion Blacklisted
+												</div>
+												<button type="button" class="btn btn-danger mt-2" onclick="window.location.href ='{{ url_for('hiddenServices.blacklist_onion') }}?redirect=0&onion='+$('#blacklist_onion_input').val();">Blacklist Onion</button>
+										</div>
+									</div>
+								</div>
+								<div class="col-12 col-md-6 mt-4 mt-md-0">
+									<div class="card text-center border-success">
+										<div class="card-body">
+											<h5 class="card-title">Unblacklist Onion</h5>
+												<input type="text" class="form-control {%if unblacklist_onion is not none %}{%if unblacklist_onion==1 %}is-valid{% else %}is-invalid{%endif%}{%endif%}" id="unblacklist_onion_input" placeholder="Onion Address">
+												<div class="invalid-feedback">
+													{%if unblacklist_onion==2 %}
+														This Onion is not blacklisted
+													{% else %}
+														Incorrect Onion address
+													{% endif %}
+												</div>
+												<div class="valid-feedback">
+													Onion Unblacklisted
+												</div>
+												<button type="button" class="btn btn-outline-secondary mt-2" onclick="window.location.href ='{{ url_for('hiddenServices.unblacklist_onion') }}?redirect=0&onion='+$('#unblacklist_onion_input').val();">Unblacklist Onion</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="row mt-4">
+						    <div class="col-12 col-xl-6">
+									<table class="table table-striped table-bordered table-hover" id="myTable_1">
+										<thead class="thead-dark">
+											<tr>
+												<th style="max-width: 800px;">Onion</th>
+												<th style="max-width: 800px;">Unblacklist Onion</th>
+											</tr>
+										</thead>
+										<tbody>
+											{% for onion in list_blacklisted_1 %}
+											<tr>
+												<td>{{onion}}</td>
+												<td>
+													<a href="{{ url_for('hiddenServices.unblacklist_onion') }}?page={{page}}&onion={{onion}}">
+														<button type="button" class="btn btn-outline-danger">UnBlacklist Onion</button>
+													</a>
+												</td>
+											</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+								<div class="col-12 col-xl-6">
+									<table class="table table-striped table-bordered table-hover" id="myTable_2">
+										<thead class="thead-dark">
+											<tr>
+												<th style="max-width: 800px;">Onion</th>
+												<th style="max-width: 800px;">Unblacklist Onion</th>
+											</tr>
+										</thead>
+										<tbody>
+											{% for onion in list_blacklisted_2 %}
+											<tr>
+												<td>{{onion}}</td>
+												<td>
+													<a href="{{ url_for('hiddenServices.unblacklist_onion') }}?page={{page}}&onion={{onion}}">
+														<button type="button" class="btn btn-outline-danger">UnBlacklist Onion</button>
+													</a>
+												</td>
+											</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+						  </div>
+						</div>
+					</div>
+
+				</div>
+
+				<div class="d-flex justify-content-center">
+					<nav class="mt-4" aria-label="...">
+						<ul class="pagination">
+							<li class="page-item {%if page==1%}disabled{%endif%}">
+								<a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page-1}}">Previous</a>
+							</li>
+
+							{%if page>3%}
+								<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page=1">1</a></li>
+								<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+								<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page-1}}">{{page-1}}</a></li>
+								<li class="page-item active"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page}}">{{page}}</a></li>
+							{%else%}
+							{%if page>2%}<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page-2}}">{{page-2}}</a></li>{%endif%}
+							{%if page>1%}<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page-1}}">{{page-1}}</a></li>{%endif%}
+							<li class="page-item active"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page}}">{{page}}</a></li>
+							{%endif%}
+
+							{%if nb_page_max-page>3%}
+								<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page+1}}">{{page+1}}</a></li>
+								<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+								<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{nb_page_max}}">{{nb_page_max}}</a></li>
+							{%else%}
+								{%if nb_page_max-page>2%}<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{nb_page_max-2}}">{{nb_page_max-2}}</a></li>{%endif%}
+								{%if nb_page_max-page>1%}<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{nb_page_max-1}}">{{nb_page_max-1}}</a></li>{%endif%}
+								{%if nb_page_max-page>0%}<li class="page-item"><a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{nb_page_max}}">{{nb_page_max}}</a></li>{%endif%}
+							{%endif%}
+
+
+
+							<li class="page-item {%if page==nb_page_max%}disabled{%endif%}">
+								<a class="page-link" href="{{ url_for('hiddenServices.blacklisted_onion') }}?page={{page+1}}" aria-disabled="true">Next</a>
+							</li>
+						</ul>
+					</nav>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+var table
+$(document).ready(function(){
+
+		table = $('#myTable_1').DataTable(
+			{
+				/*"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+				"iDisplayLength": 10,*/
+				"order": [[ 0, "asc" ]]
+			}
+		);
+
+		table = $('#myTable_2').DataTable(
+			{
+				/*"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+				"iDisplayLength": 10,*/
+				"order": [[ 0, "asc" ]]
+			}
+		);
+
+});
+</script>
