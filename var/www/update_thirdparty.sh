@@ -47,6 +47,7 @@ mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin
 mv temp/startbootstrap-sb-admin-2-${SBADMIN_VERSION} temp/sb-admin-2
 mv temp/Font-Awesome-4.7.0 temp/font-awesome
 
+rm -rf ./static/webfonts/
 mv temp/Font-Awesome-${FONT_AWESOME_VERSION}/css/all.min.css ./static/css/font-awesome.min.css
 mv temp/Font-Awesome-${FONT_AWESOME_VERSION}/webfonts ./static/webfonts
 
@@ -76,8 +77,8 @@ wget https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js -O ./static/
 wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.css -O ./static/css/dataTables.bootstrap.css
 wget https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.js -O ./static/js/dataTables.bootstrap.js
 
-wget https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap4.min.css -O ./static/css/dataTables.bootstrap4.min.css
-wget https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js -O ./static/js/dataTables.bootstrap4.min.js
+wget https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap4.min.css -O ./static/css/dataTables.bootstrap.min.css
+wget https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js -O ./static/js/dataTables.bootstrap.min.js
 
 #Ressource for graph
 wget https://raw.githubusercontent.com/flot/flot/958e5fd43c6dff4bab3e1fd5cb6109df5c1e8003/jquery.flot.js -O ./static/js/jquery.flot.js

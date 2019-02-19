@@ -72,8 +72,6 @@ def unpack_paste_tags(p_tags):
     return l_tags
 
 def is_valid_onion_domain(onion_domain):
-    # t
-    print(onion_domain)
     faup.decode(onion_domain)
     domain_unpack = faup.get()
     if domain_unpack['tld']==b'onion' and domain_unpack['scheme'] is None and domain_unpack['port'] is None and domain_unpack['query_string'] is None:
