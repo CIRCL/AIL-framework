@@ -61,7 +61,7 @@ if __name__ == '__main__':
                 db=cfg.get("ARDB_Tags", "db"),
                 decode_responses=True)
 
-    reg_cve = re.compile(r'CVE-[1-2]\d{1,4}-\d{1,5}')
+    reg_cve = re.compile(r'CVE-[1-2]\d{1,4}-\d{1,7}')
 
     #all_past_cve = serv_tags.smembers('infoleak:automatic-detection="cve"')
     #all_past_cve_regular = serv_tags.sdiff('infoleak:automatic-detection="cve"', 'infoleak:submission="crawler"')
