@@ -142,6 +142,10 @@ def get_crawler_splash_status(mode, type):
 def hiddenServices_page_test():
     return render_template("Crawler_index.html")
 
+@hiddenServices.route("/crawlers/manual", methods=['GET'])
+def manual():
+    return render_template("Crawler_Splash_manual.html")
+
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
 def crawler_splash_onion():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)

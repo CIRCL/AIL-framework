@@ -28,10 +28,10 @@ from Helper import Process
 
 class TorSplashCrawler():
 
-    def __init__(self, splash_url, crawler_depth_limit, user_agent, closespider_pagecount):
+    def __init__(self, splash_url, crawler_options):
         self.process = CrawlerProcess({'LOG_ENABLED': False})
         self.crawler = Crawler(self.TorSplashSpider, {
-            'USER_AGENT': user_agent,
+            'USER_AGENT': crawler_options['user_agent'],
             'SPLASH_URL': splash_url,
             'ROBOTSTXT_OBEY': False,
             'DOWNLOADER_MIDDLEWARES': {'scrapy_splash.SplashCookiesMiddleware': 723,
@@ -42,18 +42,18 @@ class TorSplashCrawler():
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
             'HTTPERROR_ALLOW_ALL': True,
             'RETRY_TIMES': 2,
-            'CLOSESPIDER_PAGECOUNT': closespider_pagecount,
-            'DEPTH_LIMIT': crawler_depth_limit
+            'CLOSESPIDER_PAGECOUNT': crawler_options['closespider_pagecount'],
+            'DEPTH_LIMIT': crawler_options['depth_limit']
             })
 
-    def crawl(self, type, url, domain, original_paste, super_father):
-        self.process.crawl(self.crawler, type=type, url=url, domain=domain,original_paste=original_paste, super_father=super_father)
+    def crawl(self, type, crawler_options, url, domain, original_paste, super_father):
+        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, url=url, domain=domain,original_paste=original_paste, super_father=super_father)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, type, url, domain,original_paste, super_father, *args, **kwargs):
+        def __init__(self, type, crawler_options, url, domain,original_paste, super_father, *args, **kwargs):
             self.type = type
             self.original_paste = original_paste
             self.super_father = super_father
@@ -62,6 +62,12 @@ class TorSplashCrawler():
             date = datetime.datetime.now().strftime("%Y/%m/%d")
             self.full_date = datetime.datetime.now().strftime("%Y%m%d")
             self.date_month = datetime.datetime.now().strftime("%Y%m")
+
+            self.arg_crawler = {  'html': crawler_options['html'],
+                                  'wait': 10,
+                                  'render_all': 1,
+                                  'har': crawler_options['har'],
+                                  'png': crawler_options['png']}
 
             config_section = 'Crawler'
             self.p = Process(config_section)
@@ -104,11 +110,7 @@ class TorSplashCrawler():
                 errback=self.errback_catcher,
                 endpoint='render.json',
                 meta={'father': self.original_paste},
-                args={  'html': 1,
-                        'wait': 10,
-                        'render_all': 1,
-                        'har': 1,
-                        'png': 1}
+                args=self.arg_crawler
             )
 
         def parse(self,response):
@@ -131,6 +133,7 @@ class TorSplashCrawler():
                 relative_filename_paste = os.path.join(self.crawler_path, UUID)
                 filename_screenshot = os.path.join(self.crawled_screenshot, UUID +'.png')
 
+                # # TODO: modify me
                 # save new paste on disk
                 if self.save_crawled_paste(filename_paste, response.data['html']):
 
@@ -158,14 +161,16 @@ class TorSplashCrawler():
                     if not os.path.exists(dirname):
                         os.makedirs(dirname)
 
-                    size_screenshot = (len(response.data['png'])*3) /4
+                    if 'png' in response.data:
+                        size_screenshot = (len(response.data['png'])*3) /4
 
-                    if size_screenshot < 5000000: #bytes
-                        with open(filename_screenshot, 'wb') as f:
-                            f.write(base64.standard_b64decode(response.data['png'].encode()))
+                        if size_screenshot < 5000000: #bytes
+                            with open(filename_screenshot, 'wb') as f:
+                                f.write(base64.standard_b64decode(response.data['png'].encode()))
 
-                    with open(filename_screenshot+'har.txt', 'wb') as f:
-                        f.write(json.dumps(response.data['har']).encode())
+                    if 'har' in response.data:
+                        with open(filename_screenshot+'har.txt', 'wb') as f:
+                            f.write(json.dumps(response.data['har']).encode())
 
                     # save external links in set
                     #lext = LinkExtractor(deny_domains=self.domains, unique=True)
@@ -181,11 +186,7 @@ class TorSplashCrawler():
                             errback=self.errback_catcher,
                             endpoint='render.json',
                             meta={'father': relative_filename_paste},
-                            args={  'html': 1,
-                                    'png': 1,
-                                    'render_all': 1,
-                                    'har': 1,
-                                    'wait': 10}
+                            args=self.arg_crawler
                         )
 
         def errback_catcher(self, failure):
@@ -205,11 +206,7 @@ class TorSplashCrawler():
                     errback=self.errback_catcher,
                     endpoint='render.json',
                     meta={'father': father},
-                    args={  'html': 1,
-                            'png': 1,
-                            'render_all': 1,
-                            'har': 1,
-                            'wait': 10}
+                    args=self.arg_crawler
                 )
 
             else:

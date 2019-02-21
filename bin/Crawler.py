@@ -79,7 +79,7 @@ def on_error_send_message_back_in_queue(type_hidden_service, domain, message):
         r_onion.sadd('{}_domain_crawler_queue'.format(type_hidden_service), domain)
         r_onion.sadd('{}_crawler_priority_queue'.format(type_hidden_service), message)
 
-def crawl_onion(url, domain, date, date_month, message):
+def crawl_onion(url, domain, date, date_month, message, mode):
 
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'crawling_domain', domain)
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
@@ -166,7 +166,8 @@ if __name__ == '__main__':
         publisher.info("Script Crawler started")
 
     # load domains blacklist
-    load_type_blacklist(type_hidden_service)
+    load_type_blacklist('onions')
+    load_type_blacklist('regular')
 
     splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     print('splash url: {}'.format(splash_url))
@@ -180,16 +181,15 @@ if __name__ == '__main__':
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
-
     while True:
 
         if mode == 'automatic':
             # Priority Queue - Recovering the streamed message informations.
             message = r_onion.spop('{}_crawler_priority_queue'.format(type_hidden_service))
-
+            # Recovering the streamed message informations.
             if message is None:
-                # Recovering the streamed message informations.
                 message = r_onion.spop('{}_crawler_queue'.format(type_hidden_service))
+            
         else:
             pass
 
@@ -244,16 +244,16 @@ if __name__ == '__main__':
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
 
                         # Launch Scrapy-Splash Crawler
-                        crawl_onion(url, domain, date, date_month, message)
+                        crawl_onion(url, domain, date, date_month, message, mode)
                         # Crawl Domain
                         if url != domain_url:
                             #Crawl Domain with port number
                             if port is not None:
                                 print('{}:{}'.format(domain_url, port))
-                                crawl_onion('{}:{}'.format(domain_url, port), domain, date, date_month, message)
+                                crawl_onion('{}:{}'.format(domain_url, port), domain, date, date_month, message, mode)
                             #Crawl without port number
                             print(domain_url)
-                            crawl_onion(domain_url, domain, date, date_month, message)
+                            crawl_onion(domain_url, domain, date, date_month, message, mode)
 
                         # update last check
                         r_onion.hset('{}_metadata:{}'.format(type_hidden_service, domain), 'last_check', date)
@@ -293,14 +293,9 @@ if __name__ == '__main__':
                             r_onion.delete('domain_{}_external_links:{}'.format(type_hidden_service, domain))
                             print(r_onion.smembers('domain_{}_external_links:{}'.format(type_hidden_service, domain)))
 
-                            # update list, last crawled sites
-                            r_onion.lpush('last_{}'.format(type_hidden_service), domain)
-                            r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
-                        # manual
-                        else:
-                            # update list, last crawled sites
-                            r_onion.lpush('last_crawled_manual', domain)
-                            r_onion.ltrim('last_crawled_manual', 0, 15)
+                        # update list, last crawled sites
+                        r_onion.lpush('last_{}'.format(type_hidden_service), domain)
+                        r_onion.ltrim('last_{}'.format(type_hidden_service), 0, 15)
 
                         #update crawler status
                         r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')

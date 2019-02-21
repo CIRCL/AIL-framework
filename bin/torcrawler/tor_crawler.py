@@ -6,6 +6,9 @@ import sys
 import configparser
 from TorSplashCrawler import TorSplashCrawler
 
+tor_browser_agent = 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0'
+default_crawler_options = {'html': 1, 'har': 1, 'png': 1, 'closespider_pagecount': 50}
+
 if __name__ == '__main__':
 
     if len(sys.argv) != 7:
@@ -23,17 +26,17 @@ if __name__ == '__main__':
 
     splash_url = sys.argv[1]
     type = sys.argv[2]
-    crawler_depth_limit = cfg.getint("Crawler", "crawler_depth_limit")
 
     url = sys.argv[3]
     domain = sys.argv[4]
     paste = sys.argv[5]
     super_father = sys.argv[6]
+    
+    if crawler_options is None:
+        crawler_options = default_crawler_options
 
-    tor_browser_agent = 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0'
-    user_agent = tor_browser_agent
+    crawler_options['depth_limit'] = cfg.getint("Crawler", "crawler_depth_limit")
+    crawler_options['user_agent'] = tor_browser_agent
 
-    closespider_pagecount = 50
-
-    crawler = TorSplashCrawler(splash_url, crawler_depth_limit, user_agent, closespider_pagecount)
-    crawler.crawl(type, url, domain, paste, super_father)
+    crawler = TorSplashCrawler(splash_url, crawler_options)
+    crawler.crawl(type, crawler_options, url, domain, paste, super_father)
