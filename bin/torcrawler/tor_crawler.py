@@ -31,9 +31,26 @@ if __name__ == '__main__':
     domain = sys.argv[4]
     paste = sys.argv[5]
     super_father = sys.argv[6]
-    
+
     if crawler_options is None:
         crawler_options = default_crawler_options
+
+
+
+
+    redis_crawler.exists('crawler_option_manual:{}:{}'.format(service_type, domain)):
+crawler_config['mode_name'] = 'auto'
+        crawler_config['requested'] = True
+
+
+
+
+
+
+
+
+
+
 
     crawler_options['depth_limit'] = cfg.getint("Crawler", "crawler_depth_limit")
     crawler_options['user_agent'] = tor_browser_agent

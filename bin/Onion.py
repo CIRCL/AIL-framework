@@ -235,10 +235,11 @@ if __name__ == "__main__":
                     else:
                         for url in fetch(p, r_cache, urls, domains_list, path):
                             publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
-                            p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
+                    #p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
 
-                            msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
-                            p.populate_set_out(msg, 'Tags')
+                    # TAG Item
+                    msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
+                    p.populate_set_out(msg, 'Tags')
                 else:
                     publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
 

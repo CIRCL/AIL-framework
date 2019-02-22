@@ -57,6 +57,7 @@ class TorSplashCrawler():
             self.type = type
             self.original_paste = original_paste
             self.super_father = super_father
+            self.root_key = None
             self.start_urls = url
             self.domains = [domain]
             date = datetime.datetime.now().strftime("%Y/%m/%d")
@@ -109,7 +110,7 @@ class TorSplashCrawler():
                 self.parse,
                 errback=self.errback_catcher,
                 endpoint='render.json',
-                meta={'father': self.original_paste},
+                meta={'father': self.original_paste, 'root_key': None},
                 args=self.arg_crawler
             )
 
@@ -147,10 +148,15 @@ class TorSplashCrawler():
                     # create onion metadata
                     if not self.r_serv_onion.exists('{}_metadata:{}'.format(self.type, self.domains[0])):
                         self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'first_seen', self.full_date)
-                    self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'last_seen', self.full_date)
+
+                    # create root_key
+                    if self.root_key is None:
+                        self.root_key = relative_filename_paste
+                        # Create/Update crawler history
+                        self.r_serv_onion.zadd('crawler_history_{}:{}'.format(type_service, domain), int(date['epoch']), self.root_key)
 
                     #create paste metadata
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
+                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.root_key)
                     self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['father'])
                     self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'domain', self.domains[0])
                     self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'real_link', response.url)
@@ -185,7 +191,7 @@ class TorSplashCrawler():
                             self.parse,
                             errback=self.errback_catcher,
                             endpoint='render.json',
-                            meta={'father': relative_filename_paste},
+                            meta={'father': relative_filename_paste, 'root_key': response.meta['root_key']},
                             args=self.arg_crawler
                         )
 
@@ -205,7 +211,7 @@ class TorSplashCrawler():
                     self.parse,
                     errback=self.errback_catcher,
                     endpoint='render.json',
-                    meta={'father': father},
+                    meta={'father': father, 'root_key': response.meta['root_key']},
                     args=self.arg_crawler
                 )
 
