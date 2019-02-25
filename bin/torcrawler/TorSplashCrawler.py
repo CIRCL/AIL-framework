@@ -46,23 +46,23 @@ class TorSplashCrawler():
             'DEPTH_LIMIT': crawler_options['depth_limit']
             })
 
-    def crawl(self, type, crawler_options, url, domain, original_paste, super_father):
-        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, url=url, domain=domain,original_paste=original_paste, super_father=super_father)
+    def crawl(self, type, crawler_options, date, url, domain, original_item):
+        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, date=date, url=url, domain=domain,original_item=original_item)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, type, crawler_options, url, domain,original_paste, super_father, *args, **kwargs):
+        def __init__(self, type, crawler_options, date, url, domain, original_item, *args, **kwargs):
             self.type = type
-            self.original_paste = original_paste
-            self.super_father = super_father
+            self.original_item = original_item
             self.root_key = None
             self.start_urls = url
             self.domains = [domain]
-            date = datetime.datetime.now().strftime("%Y/%m/%d")
-            self.full_date = datetime.datetime.now().strftime("%Y%m%d")
-            self.date_month = datetime.datetime.now().strftime("%Y%m")
+            date_str = '{}/{}/{}'.format(date['date_day'][0:4], date['date_day'][4:6], date['date_day'][6:8])
+            self.full_date = date['date_day']
+            self.date_month = date['date_month']
+            self.date_epoch = int(date['epoch'])
 
             self.arg_crawler = {  'html': crawler_options['html'],
                                   'wait': 10,
@@ -97,12 +97,12 @@ class TorSplashCrawler():
                 db=self.p.config.getint("ARDB_Onion", "db"),
                 decode_responses=True)
 
-            self.crawler_path = os.path.join(self.p.config.get("Directories", "crawled"), date )
+            self.crawler_path = os.path.join(self.p.config.get("Directories", "crawled"), date_str )
 
             self.crawled_paste_filemame = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "pastes"),
-                                            self.p.config.get("Directories", "crawled"), date )
+                                            self.p.config.get("Directories", "crawled"), date_str )
 
-            self.crawled_screenshot = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date )
+            self.crawled_screenshot = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
 
         def start_requests(self):
             yield SplashRequest(
@@ -110,7 +110,7 @@ class TorSplashCrawler():
                 self.parse,
                 errback=self.errback_catcher,
                 endpoint='render.json',
-                meta={'father': self.original_paste, 'root_key': None},
+                meta={'father': self.original_item, 'root_key': None},
                 args=self.arg_crawler
             )
 
@@ -153,7 +153,7 @@ class TorSplashCrawler():
                     if self.root_key is None:
                         self.root_key = relative_filename_paste
                         # Create/Update crawler history
-                        self.r_serv_onion.zadd('crawler_history_{}:{}'.format(type_service, domain), int(date['epoch']), self.root_key)
+                        self.r_serv_onion.zadd('crawler_history_{}:{}'.format(self.type, self.domains[0]), self.date_epoch, self.root_key)
 
                     #create paste metadata
                     self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.root_key)

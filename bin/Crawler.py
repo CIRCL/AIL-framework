@@ -4,6 +4,8 @@
 import os
 import sys
 import re
+import uuid
+import json
 import redis
 import datetime
 import time
@@ -30,19 +32,39 @@ def load_blacklist(service_type):
 
 # Extract info form url (url, domain, domain url, ...)
 def unpack_url(url):
+    to_crawl = {}
     faup.decode(url)
     url_unpack = faup.get()
-    domain = url_unpack['domain'].decode()
+    to_crawl['domain'] = url_unpack['domain'].decode()
+
     if url_unpack['scheme'] is None:
-        to_crawl['scheme'] = url_unpack['scheme']
-        to_crawl['url']= 'http://{}'.format(url)
-        to_crawl['domain_url'] = 'http://{}'.format(domain)
+        to_crawl['scheme'] = 'http'
     else:
-        to_crawl['scheme'] = url_unpack['scheme']
-        to_crawl['url']= '{}://{}'.format(to_crawl['scheme'], url)
-        to_crawl['domain_url'] = '{}://{}'.format(to_crawl['scheme'], domain)
-    to_crawl['port'] = url_unpack['port']
-    to_crawl['tld'] = url_unpack['tld'].deocode()
+        scheme = url_unpack['scheme'].decode()
+        if scheme in default_proto_map:
+            to_crawl['scheme'] = scheme
+        else:
+            to_crawl['scheme'] = 'http'
+
+    if url_unpack['port'] is None:
+        to_crawl['port'] = default_proto_map[to_crawl['scheme']]
+    else:
+        port = url_unpack['port'].decode()
+        # Verify port number                        #################### make function to verify/correct port number
+        try:
+            int(port)
+        # Invalid port Number
+        except Exception as e:
+            port = default_proto_map[to_crawl['scheme']]
+        to_crawl['port'] = port
+
+    if url_unpack['query_string'] is None:
+        to_crawl['url']= '{}://{}:{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'])
+    else:
+        to_crawl['url']= '{}://{}:{}{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'], url_unpack['query_string'].decode())
+    to_crawl['domain_url'] = '{}://{}:{}'.format(to_crawl['scheme'], to_crawl['domain'], to_crawl['port'])
+
+    to_crawl['tld'] = url_unpack['tld'].decode()
     return to_crawl
 
 # get url, paste and service_type to crawl
@@ -70,20 +92,45 @@ def get_elem_to_crawl(rotation_mode):
             url, paste = splitted
             if paste:
                 paste = paste.replace(PASTES_FOLDER+'/', '')
-        else:
-            url = message
-            paste = 'requested'
 
         message = {'url': url, 'paste': paste, 'type_service': domain_service_type, 'original_message': message}
 
     return message
 
-def load_crawler_config(service_type, domain, paste):
+def get_crawler_config(redis_server, mode, service_type, domain):
+    crawler_options = {}
+    config = redis_server.get('crawler_config:{}:{}:{}'.format(mode, service_type, domain))
+    if config is None:
+        config = {}
+    else:
+        config = json.loads(config)
+    for option in default_crawler_config:
+        if option in config:
+            crawler_options[option] = config[option]
+        else:
+            crawler_options[option] = default_crawler_config[option]
+    return crawler_options
+
+def load_crawler_config(service_type, domain, paste, date):
+    crawler_config = {}
+    crawler_config['splash_url'] = splash_url
+    crawler_config['item'] = paste
+    crawler_config['service_type'] = service_type
+    crawler_config['domain'] = domain
+    crawler_config['date'] = date
+
     # Auto and Manual Crawling
-    if paste is None:
+    # Auto ################################################# create new entry, next crawling => here or when ended ?
+    if paste == 'auto':
+        crawler_config['crawler_options'] = get_crawler_config(redis_crawler, 'auto', service_type, domain)
+        crawler_config['requested'] = True
+    # Manual
+    elif paste == 'manual':
+        crawler_config['crawler_options'] = get_crawler_config(r_cache, 'manual', service_type, domain)
         crawler_config['requested'] = True
     # default crawler
     else:
+        crawler_config['crawler_options'] = get_crawler_config(redis_crawler, 'default', service_type, domain)
         crawler_config['requested'] = False
     return crawler_config
 
@@ -108,16 +155,12 @@ def on_error_send_message_back_in_queue(type_service, domain, message):
         redis_crawler.sadd('{}_domain_crawler_queue'.format(type_service), domain)
         redis_crawler.sadd('{}_crawler_priority_queue'.format(type_service), message)
 
-##########################################################################################################<
 def crawl_onion(url, domain, message, crawler_config):
+    crawler_config['url'] = url
     print('Launching Crawler: {}'.format(url))
 
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'crawling_domain', domain)
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
-
-    super_father = r_serv_metadata.hget('paste_metadata:'+paste, 'super_father')
-    if super_father is None:
-        super_father=paste
 
     retry = True
     nb_retry = 0
@@ -144,7 +187,11 @@ def crawl_onion(url, domain, message, crawler_config):
 
     if r.status_code == 200:
         r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
-        process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', splash_url, type_service, url, domain, paste, super_father],
+        # save config in cash
+        UUID = str(uuid.uuid4())
+        r_cache.set('crawler_request:{}'.format(UUID), json.dumps(crawler_config))
+
+        process = subprocess.Popen(["python", './torcrawler/tor_crawler.py', UUID],
                                    stdout=subprocess.PIPE)
         while process.poll() is None:
             time.sleep(1)
@@ -193,16 +240,15 @@ def search_potential_source_domain(type_service, domain):
 if __name__ == '__main__':
 
     if len(sys.argv) != 3:
-        print('usage:', 'Crawler.py', 'type_service (onion or i2p or regular)', 'splash_port')
+        print('usage:', 'Crawler.py', 'mode', 'splash_port')
         exit(1)
 ##################################################
-    type_service = sys.argv[1]
+    #mode = sys.argv[1]
     splash_port = sys.argv[2]
 
     rotation_mode = ['onion', 'regular']
-
-    default_port = ['http': 80, 'https': 443]
-
+    default_proto_map = {'http': 80, 'https': 443}
+######################################################## add ftp ???
 ################################################################### # TODO: port
 
     publisher.port = 6380
@@ -215,8 +261,6 @@ if __name__ == '__main__':
 
     splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
     print('splash url: {}'.format(splash_url))
-
-    faup = Faup()
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
@@ -238,6 +282,16 @@ if __name__ == '__main__':
         db=p.config.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
+    faup = Faup()
+
+    # Default crawler options
+    default_crawler_config = {'html': 1,
+                              'har': 1,
+                              'png': 1,
+                              'depth_limit': p.config.getint("Crawler", "crawler_depth_limit"),
+                              'closespider_pagecount': 50,
+                              'user_agent': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0'}
+
     # Track launched crawler
     r_cache.sadd('all_crawler', splash_port)
     r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
@@ -250,8 +304,12 @@ if __name__ == '__main__':
     while True:
 
         to_crawl = get_elem_to_crawl(rotation_mode)
-        if to_crawl_dict:
+        if to_crawl:
+            print(to_crawl)
+            print(to_crawl['url'])
             url_data = unpack_url(to_crawl['url'])
+            print('url')
+            print(url_data)
             # remove domain from queue
             redis_crawler.srem('{}_domain_crawler_queue'.format(to_crawl['type_service']), url_data['domain'])
 
@@ -265,20 +323,21 @@ if __name__ == '__main__':
             print('domain_url:  {}'.format(url_data['domain_url']))
 
             # Check blacklist
-            if not redis_crawler.sismember('blacklist_{}'.format(to_crawl['type_service']), url_data['domain'])):
-                date = {'date_day'= datetime.datetime.now().strftime("%Y%m%d"),
-                        'date_month'= datetime.datetime.now().strftime("%Y%m"),
-                        'epoch'= int(time.time())}
+            if not redis_crawler.sismember('blacklist_{}'.format(to_crawl['type_service']), url_data['domain']):
+                date = {'date_day': datetime.datetime.now().strftime("%Y%m%d"),
+                        'date_month': datetime.datetime.now().strftime("%Y%m"),
+                        'epoch': int(time.time())}
 
 
-                crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'])
+                crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'], date)
+                print(crawler_config)
                 # check if default crawler
-                if not crawler_config['requested']:
-                    # Auto crawl only if service not up this month
-                    if redis_crawler.sismember('month_{}_up:{}'.format(to_crawl['type_service'], date['date_month']), url_data['domain']):
-                        continue
+                #if not crawler_config['requested']:
+                #    # Auto crawl only if service not up this month
+                #    if redis_crawler.sismember('month_{}_up:{}'.format(to_crawl['type_service'], date['date_month']), url_data['domain']):
+                #        continue
 
-                set_crawled_domain_metadata(to_crawl['type_service'], date, url_data['domain'], to_crawl['paste'], crawler_config)
+                set_crawled_domain_metadata(to_crawl['type_service'], date, url_data['domain'], to_crawl['paste'])
 
 
                 #### CRAWLER ####
@@ -287,14 +346,14 @@ if __name__ == '__main__':
 
                 ######################################################crawler strategy
                     # CRAWL domain
-                    crawl_onion(url_data['url'], url_data['domain'], to_crawl['original_message'])
+                    crawl_onion(url_data['url'], url_data['domain'], to_crawl['original_message'], crawler_config)
 
                 # Default Crawler
                 else:
                     # CRAWL domain
-                    crawl_onion(url_data['domain_url'], url_data['domain'], to_crawl['original_message'])
-                    if url != domain_url and not is_domain_up_day(url_data['domain'], to_crawl['type_service'], date['date_day']):
-                        crawl_onion(url_data['url'], url_data['domain'], to_crawl['original_message'])
+                    crawl_onion(url_data['domain_url'], url_data['domain'], to_crawl['original_message'], crawler_config)
+                    #if url != domain_url and not is_domain_up_day(url_data['domain'], to_crawl['type_service'], date['date_day']):
+                    #    crawl_onion(url_data['url'], url_data['domain'], to_crawl['original_message'])
 
 
                         ################################################### handle port
@@ -304,34 +363,34 @@ if __name__ == '__main__':
                         ####         ####
 
 
-                    # Save last_status day (DOWN)
-                    if not is_domain_up_day(url_data['domain'], to_crawl['type_service'], date['date_day']):
-                        redis_crawler.sadd('{}_down:{}'.format(to_crawl['type_service'], date['day']), url_data['domain'])
+                # Save last_status day (DOWN)
+                if not is_domain_up_day(url_data['domain'], to_crawl['type_service'], date['date_day']):
+                    redis_crawler.sadd('{}_down:{}'.format(to_crawl['type_service'], date['date_day']), url_data['domain'])
 
-                    # if domain was UP at least one time
-                    if redis_crawler.exists('crawler_history_{}:{}'.format(to_crawl['type_service'], url_data['domain'])):
-                        # add crawler history (if domain is down)
-                        if not redis_crawler.zrangebyscore('crawler_history_{}:{}'.format(to_crawl['type_service'], url_data['domain']), date['epoch'], date['epoch']):
-                            # Domain is down
-                            redis_crawler.zadd('crawler_history_{}:{}'.format(to_crawl['type_service'], url_data['domain']), int(date['epoch']), int(date['epoch']))
+                # if domain was UP at least one time
+                if redis_crawler.exists('crawler_history_{}:{}'.format(to_crawl['type_service'], url_data['domain'])):
+                    # add crawler history (if domain is down)
+                    if not redis_crawler.zrangebyscore('crawler_history_{}:{}'.format(to_crawl['type_service'], url_data['domain']), date['epoch'], date['epoch']):
+                        # Domain is down
+                        redis_crawler.zadd('crawler_history_{}:{}'.format(to_crawl['type_service'], url_data['domain']), int(date['epoch']), int(date['epoch']))
 
                         ############################
                         # extract page content
                         ############################
 
-                    # update list, last crawled domains
-                    redis_crawler.lpush('last_{}'.format(to_crawl['type_service']), url_data['domain'])
-                    redis_crawler.ltrim('last_{}'.format(to_crawl['type_service']), 0, 15)
+                # update list, last crawled domains
+                redis_crawler.lpush('last_{}'.format(to_crawl['type_service']), url_data['domain'])
+                redis_crawler.ltrim('last_{}'.format(to_crawl['type_service']), 0, 15)
 
-                    #update crawler status
-                    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
-                    r_cache.hdel('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
-                else:
-                    print('                 Blacklisted Domain')
-                    print()
-                    print()
+                #update crawler status
+                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
+                r_cache.hdel('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
 
+                time.sleep(60)
             else:
-                continue
+                print('                 Blacklisted Domain')
+                print()
+                print()
+
         else:
             time.sleep(1)
