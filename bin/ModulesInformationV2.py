@@ -31,7 +31,7 @@ lastTimeKillCommand = {}
 current_selected_value = 0
 current_selected_queue = ""
 current_selected_action = ""
-current_selected_action = 0
+current_selected_amount = 0
 
 # Map PID to Queue name (For restart and killing)
 PID_NAME_DICO = {}
@@ -480,7 +480,10 @@ class Show_paste(Frame):
                 self.label_list[i]._text = ""
 
         except Exception as e:
-            self.label_list[0]._text = "Error while displaying the paste: " + COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
+            if current_selected_value in COMPLETE_PASTE_PATH_PER_PID:
+                self.label_list[0]._text = "Error while displaying the paste: " + COMPLETE_PASTE_PATH_PER_PID[current_selected_value]
+            else:
+                self.label_list[0]._text = "Error Generic exception caught"
             self.label_list[1]._text = str(e)
             for i in range(2,self.num_label):
                 self.label_list[i]._text = ""
