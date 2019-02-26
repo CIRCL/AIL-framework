@@ -237,7 +237,7 @@ function launching_crawler {
         sleep 0.1
 
         for ((i=first_port;i<=last_port;i++)); do
-            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Crawler.py onion $i; read x"
+            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Crawler.py $i; read x"
             sleep 0.1
         done
 

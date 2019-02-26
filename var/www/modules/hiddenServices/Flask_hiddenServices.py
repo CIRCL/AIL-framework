@@ -8,6 +8,7 @@ import redis
 import datetime
 import sys
 import os
+import json
 from pyfaup.faup import Faup
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
@@ -94,13 +95,16 @@ def get_domain_type(domain):
 
 def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
     list_crawled_metadata = []
-    for domain in list_domains_crawled:
+    for domain_epoch in list_domains_crawled:
+        domain, epoch = domain_epoch.rsplit(';', 1)
         metadata_domain = {}
         # get Domain type
         if type is None:
             type = get_domain_type(domain)
 
         metadata_domain['domain'] = domain
+        metadata_domain['epoch'] = epoch
+        print(epoch)
         metadata_domain['last_check'] = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'last_check')
         if metadata_domain['last_check'] is None:
             metadata_domain['last_check'] = '********'
@@ -118,9 +122,9 @@ def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
         list_crawled_metadata.append(metadata_domain)
     return list_crawled_metadata
 
-def get_crawler_splash_status(mode, type):
+def get_crawler_splash_status(type):
     crawler_metadata = []
-    all_crawlers = r_cache.smembers('all_crawler:{}:{}'.format(mode, type))
+    all_crawlers = r_cache.smembers('{}_crawlers'.format(type))
     for crawler in all_crawlers:
         crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
         started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
@@ -132,9 +136,20 @@ def get_crawler_splash_status(mode, type):
             status=False
         crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
 
-    crawler_metadata.append({'crawler_info': '8050 - 2019/02/18 - 16:49.54', 'crawling_domain': 'test', 'status_info': 'Crawling', 'status': True})
-    crawler_metadata.append({'crawler_info': '8051 - 2019/02/18 - 16:49.54', 'crawling_domain': 'test', 'status_info': 'Crawling', 'status': True})
     return crawler_metadata
+
+def create_crawler_config(mode, service_type, crawler_config, domain):
+    print(crawler_config)
+    if mode == 'manual':
+        r_cache.set('crawler_config:{}:{}:{}'.format(mode, service_type, domain), json.dumps(crawler_config))
+    elif mode == 'auto':
+        r_serv_onion.set('crawler_config:{}:{}:{}'.format(mode, service_type, domain), json.dumps(crawler_config))
+
+def send_url_to_crawl_in_queue(mode, service_type, url):
+    r_serv_onion.sadd('{}_crawler_priority_queue'.format(service_type), '{};{}'.format(url, mode))
+    # add auto crawled url for user UI
+    if mode == 'auto':
+        r_serv_onion.sadd('auto_crawler_url:{}'.format(service_type), url)
 
 # ============= ROUTES ==============
 
@@ -160,7 +175,7 @@ def crawler_splash_onion():
     statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
 
     list_onion = get_last_crawled_domains_metadata(last_onions, date, type='onion')
-    crawler_metadata = get_crawler_splash_status('automatic', 'onion')
+    crawler_metadata = get_crawler_splash_status('onion')
 
     date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
     return render_template("Crawler_Splash_onion.html", last_onions=list_onion, statDomains=statDomains,
@@ -266,6 +281,81 @@ def unblacklist_onion():
                 return redirect(url_for('hiddenServices.blacklisted_onion', page=page, unblacklist_onion=1))
     else:
         return redirect(url_for('hiddenServices.blacklisted_onion', page=page, unblacklist_onion=0))
+
+@hiddenServices.route("/crawlers/create_spider_splash", methods=['POST'])
+def create_spider_splash():
+    url = request.form.get('url_to_crawl')
+    automatic = request.form.get('crawler_type')
+    crawler_time = request.form.get('crawler_epoch')
+    #html = request.form.get('html_content_id')
+    screenshot = request.form.get('screenshot')
+    har = request.form.get('har')
+    depth_limit = request.form.get('depth_limit')
+    max_pages = request.form.get('max_pages')
+
+    # validate url
+    if url is None or url=='' or url=='\n':
+        return 'incorrect url'
+
+    crawler_config = {}
+
+    # verify user input
+    if automatic:
+        automatic = True
+    else:
+        automatic = False
+    if not screenshot:
+        crawler_config['png'] = 0
+    if not har:
+        crawler_config['har'] = 0
+
+    # verify user input
+    if depth_limit:
+        try:
+            depth_limit = int(depth_limit)
+            if depth_limit < 0:
+                return 'incorrect depth_limit'
+            else:
+                crawler_config['depth_limit'] = depth_limit
+        except:
+            return 'incorrect depth_limit'
+    if max_pages:
+        try:
+            max_pages = int(max_pages)
+            if max_pages < 1:
+                return 'incorrect max_pages'
+            else:
+                crawler_config['closespider_pagecount'] = max_pages
+        except:
+            return 'incorrect max_pages'
+
+    # get service_type
+    faup.decode(url)
+    unpack_url = faup.get()
+    domain = unpack_url['domain'].decode()
+    if unpack_url['tld'] == b'onion':
+        service_type = 'onion'
+    else:
+        service_type = 'regular'
+
+    if automatic:
+        mode = 'auto'
+        try:
+            crawler_time = int(crawler_time)
+            if crawler_time < 0:
+                return 'incorrect epoch'
+            else:
+                crawler_config['time'] = crawler_time
+        except:
+            return 'incorrect epoch'
+    else:
+        mode = 'manual'
+        epoch = None
+
+    create_crawler_config(mode, service_type, crawler_config, domain)
+    send_url_to_crawl_in_queue(mode, service_type, url)
+
+    return redirect(url_for('hiddenServices.manual'))
 
 @hiddenServices.route("/hiddenServices/", methods=['GET'])
 def hiddenServices_page():

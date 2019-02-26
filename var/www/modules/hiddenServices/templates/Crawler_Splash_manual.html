@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			<div class="col-12 col-lg-2 p-0 bg-light border-right">
+
+
+				<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2">
+					<h5 class="d-flex text-muted w-100">
+						<span>Splash Crawlers </span>
+						<a class="ml-auto" href="#">
+							<i class="fas fa-plus-circle ml-auto"></i>
+						</a>
+					</h5>
+	        <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+	          <li class="nav-item">
+	            <a class="nav-link" href="#">
+	              <i class="fas fa-search"></i>
+	              <span>Dashboard</span>
+	            </a>
+	          </li>
+	          <li class="nav-item">
+	            <a class="nav-link active" href="#">
+								<i class="fas fa-sync"></i>
+	             	Automatic Onion Crawler
+	            </a>
+	          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+								<i class="fas fa-clock"></i>
+                Manual Splash Crawler
+              </a>
+            </li>
+          </ul>
+	      </nav>
+			</div>
+
+			<div class="col-12 col-lg-10">
+
+
+						<div class="card text-white bg-dark mb-3 mt-1">
+						  <div class="card-header">
+								<h5 class="card-title">Crawl a Domain</h5>
+							</div>
+						  <div class="card-body">
+						    <p class="card-text">Enter a domain and choose what kind of data you want.</p>
+								<form action="{{ url_for('hiddenServices.create_spider_splash') }}" method='post'>
+									<div class="row">
+										<div class="col-12 col-lg-6">
+											<div class="input-group" id="date-range-from">
+												<input type="text" class="form-control" id="url_to_crawl" name="url_to_crawl" placeholder="Address or Domain">
+											</div>
+											<div class="d-flex mt-1">
+												<i class="fas fa-user-ninja mt-1"></i> &nbsp;Manual&nbsp;&nbsp;
+												<div class="custom-control custom-switch">
+													<input class="custom-control-input" type="checkbox" name="crawler_type" value="True" id="crawler_type">
+													<label class="custom-control-label" for="crawler_type">
+														<i class="fas fa-clock"></i> &nbsp;Automatic
+													</label>
+												</div>
+											</div>
+											<div class="input-group mt-2 mb-2" id="crawler_epoch_input">
+												<div class="input-group-prepend">
+													<span class="input-group-text bg-light"><i class="fas fa-clock"></i>&nbsp;</span>
+												</div>
+												<input class="form-control" type="number" id="crawler_epoch" value="3600" name="crawler_epoch" required>
+												<div class="input-group-append">
+													<span class="input-group-text">Time (seconds) between each crawling</span>
+												</div>
+											</div>
+										</div>
+
+
+										<div class="col-12 col-lg-6 mt-2 mt-lg-0">
+
+											<div class="row">
+												<div class="col-12 col-xl-6">
+													<div class="custom-control custom-switch">
+													  <input class="custom-control-input" type="checkbox" name="html_content" value="True" id="html_content_id" checked disabled>
+														<label class="custom-control-label" for="html_content_id">
+															<i class="fab fa-html5"></i> &nbsp;HTML
+													  </label>
+													</div>
+													<div class="custom-control custom-switch mt-1">
+													  <input class="custom-control-input" type="checkbox" name="screenshot" value="True" id="screenshot_id">
+														<label class="custom-control-label" for="screenshot_id">
+															<i class="fas fa-image"></i> Screenshot
+														</label>
+													</div>
+													<div class="custom-control custom-switch mt-1">
+													  <input class="custom-control-input" type="checkbox" name="har" value="True" id="har_id">
+														<label class="custom-control-label" for="har_id">
+															<i class="fas fa-file"></i> &nbsp;HAR
+														</label>
+													</div>
+												</div>
+												<div class="col-12 col-xl-6">
+													<div class="input-group form-group mb-0">
+														<div class="input-group-prepend">
+													    <span class="input-group-text bg-light"><i class="fas fa-water"></i></span>
+													  </div>
+													  <input class="form-control" type="number" id="depth_limit" name="depth_limit" value="0" required>
+														<div class="input-group-append">
+													    <span class="input-group-text">Depth Limit</span>
+													  </div>
+													</div>
+													<div class="input-group mt-2">
+														<div class="input-group-prepend">
+													    <span class="input-group-text bg-light"><i class="fas fa-copy"></i>&nbsp;</span>
+													  </div>
+													  <input class="form-control" type="number" id="max_pages" name="max_pages" value="1" required>
+														<div class="input-group-append">
+													    <span class="input-group-text">Max Pages</span>
+													  </div>
+													</div>
+												</div>
+
+											</div>
+										</div>
+									</div>
+									<button class="btn btn-primary mt-2">
+										<i class="fas fa-spider"></i> Send to Spider
+									</button>
+								<form>
+						  </div>
+						</div>
+
+
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	manual_crawler_input_controler();
+
+	$('#crawler_type').change(function () {
+		manual_crawler_input_controler();
+	});
+});
+
+function manual_crawler_input_controler() {
+	if($('#crawler_type').is(':checked')){
+		$("#crawler_epoch_input").show();
+	}else{
+		$("#crawler_epoch_input").hide();
+	}
+}
+
+</script>

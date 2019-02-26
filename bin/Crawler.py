@@ -30,6 +30,14 @@ def load_blacklist(service_type):
     except Exception:
         pass
 
+def update_auto_crawler():
+    current_epoch = int(time.time())
+    list_to_crawl = redis_crawler.zrangebyscore('crawler_auto_queue', '-inf', current_epoch)
+    for elem_to_crawl in list_to_crawl:
+        mess, type = elem_to_crawl.rsplit(';', 1)
+        redis_crawler.sadd('{}_crawler_priority_queue'.format(type), mess)
+        redis_crawler.zrem('crawler_auto_queue', elem_to_crawl)
+
 # Extract info form url (url, domain, domain url, ...)
 def unpack_url(url):
     to_crawl = {}
@@ -76,14 +84,14 @@ def get_elem_to_crawl(rotation_mode):
     for service_type in rotation_mode:
         message = redis_crawler.spop('{}_crawler_priority_queue'.format(service_type))
         if message is not None:
-            domain_service_type = type_service
+            domain_service_type = service_type
             break
     #load_normal_queue
     if message is None:
         for service_type in rotation_mode:
             message = redis_crawler.spop('{}_crawler_queue'.format(service_type))
             if message is not None:
-                domain_service_type = type_service
+                domain_service_type = service_type
                 break
 
     if message:
@@ -109,6 +117,10 @@ def get_crawler_config(redis_server, mode, service_type, domain):
             crawler_options[option] = config[option]
         else:
             crawler_options[option] = default_crawler_config[option]
+    if mode == 'auto':
+        crawler_options['time'] = int(config['time'])
+    elif mode == 'manual':
+        redis_server.delete('crawler_config:{}:{}:{}'.format(mode, service_type, domain))
     return crawler_options
 
 def load_crawler_config(service_type, domain, paste, date):
@@ -239,12 +251,12 @@ def search_potential_source_domain(type_service, domain):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 3:
-        print('usage:', 'Crawler.py', 'mode', 'splash_port')
+    if len(sys.argv) != 2:
+        print('usage:', 'Crawler.py', 'splash_port')
         exit(1)
 ##################################################
     #mode = sys.argv[1]
-    splash_port = sys.argv[2]
+    splash_port = sys.argv[1]
 
     rotation_mode = ['onion', 'regular']
     default_proto_map = {'http': 80, 'https': 443}
@@ -303,13 +315,11 @@ if __name__ == '__main__':
 
     while True:
 
+        update_auto_crawler()
+
         to_crawl = get_elem_to_crawl(rotation_mode)
         if to_crawl:
-            print(to_crawl)
-            print(to_crawl['url'])
             url_data = unpack_url(to_crawl['url'])
-            print('url')
-            print(url_data)
             # remove domain from queue
             redis_crawler.srem('{}_domain_crawler_queue'.format(to_crawl['type_service']), url_data['domain'])
 
@@ -328,14 +338,15 @@ if __name__ == '__main__':
                         'date_month': datetime.datetime.now().strftime("%Y%m"),
                         'epoch': int(time.time())}
 
+                # Update crawler status type
+                r_cache.sadd('{}_crawlers'.format(to_crawl['type_service']), splash_port)
 
                 crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'], date)
-                print(crawler_config)
                 # check if default crawler
-                #if not crawler_config['requested']:
-                #    # Auto crawl only if service not up this month
-                #    if redis_crawler.sismember('month_{}_up:{}'.format(to_crawl['type_service'], date['date_month']), url_data['domain']):
-                #        continue
+                if not crawler_config['requested']:
+                    # Auto crawl only if service not up this month
+                    if redis_crawler.sismember('month_{}_up:{}'.format(to_crawl['type_service'], date['date_month']), url_data['domain']):
+                        continue
 
                 set_crawled_domain_metadata(to_crawl['type_service'], date, url_data['domain'], to_crawl['paste'])
 
@@ -379,14 +390,20 @@ if __name__ == '__main__':
                         ############################
 
                 # update list, last crawled domains
-                redis_crawler.lpush('last_{}'.format(to_crawl['type_service']), url_data['domain'])
+                redis_crawler.lpush('last_{}'.format(to_crawl['type_service']), '{};{}'.format(url_data['domain'], date['epoch']))
                 redis_crawler.ltrim('last_{}'.format(to_crawl['type_service']), 0, 15)
 
                 #update crawler status
                 r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
                 r_cache.hdel('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
 
-                time.sleep(60)
+                # Update crawler status type
+                r_cache.srem('{}_crawlers'.format(to_crawl['type_service']), splash_port)
+
+                # add next auto Crawling in queue:
+                if to_crawl['paste'] == 'auto':
+                    redis_crawler.zadd('crawler_auto_queue', int(time.time()+crawler_config['crawler_options']['time']) , '{};{}'.format(to_crawl['original_message'], to_crawl['type_service']))
+
             else:
                 print('                 Blacklisted Domain')
                 print()
