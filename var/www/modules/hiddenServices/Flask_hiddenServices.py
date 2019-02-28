@@ -30,6 +30,8 @@ PASTES_FOLDER = Flask_config.PASTES_FOLDER
 hiddenServices = Blueprint('hiddenServices', __name__, template_folder='templates')
 
 faup = Faup()
+list_types=['onion', 'regular']
+dic_type_name={'onion':'Onion', 'regular':'Website'}
 
 # ============ FUNCTIONS ============
 def one():
@@ -72,10 +74,10 @@ def unpack_paste_tags(p_tags):
         l_tags.append( (tag, complete_tag) )
     return l_tags
 
-def is_valid_onion_domain(onion_domain):
-    faup.decode(onion_domain)
+def is_valid_domain(domain):
+    faup.decode(domain)
     domain_unpack = faup.get()
-    if domain_unpack['tld']==b'onion' and domain_unpack['scheme'] is None and domain_unpack['port'] is None and domain_unpack['query_string'] is None:
+    if domain_unpack['tld'] is not None and domain_unpack['scheme'] is None and domain_unpack['port'] is None and domain_unpack['query_string'] is None:
         return True
     else:
         return False
@@ -92,6 +94,18 @@ def get_domain_type(domain):
         return 'onion'
     else:
         return 'regular'
+
+def get_last_domains_crawled(type):
+    return r_serv_onion.lrange('last_{}'.format(type), 0 ,-1)
+
+def get_stats_last_crawled_domains(type, date):
+    statDomains = {}
+    statDomains['domains_up'] = r_serv_onion.scard('{}_up:{}'.format(type, date))
+    statDomains['domains_down'] = r_serv_onion.scard('{}_down:{}'.format(type, date))
+    statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
+    statDomains['domains_queue'] = r_serv_onion.scard('{}_crawler_queue'.format(type))
+    statDomains['domains_queue'] += r_serv_onion.scard('{}_crawler_priority_queue'.format(type))
+    return statDomains
 
 def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
     list_crawled_metadata = []
@@ -153,6 +167,10 @@ def send_url_to_crawl_in_queue(mode, service_type, url):
 
 # ============= ROUTES ==============
 
+@hiddenServices.route("/crawlers/", methods=['GET'])
+def dashboard():
+    return render_template("Crawler_dashboard.html")
+
 @hiddenServices.route("/hiddenServices/2", methods=['GET'])
 def hiddenServices_page_test():
     return render_template("Crawler_index.html")
@@ -163,124 +181,115 @@ def manual():
 
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
 def crawler_splash_onion():
-    last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
+    type = 'onion'
+    last_onions = get_last_domains_crawled(type)
     list_onion = []
 
     now = datetime.datetime.now()
     date = now.strftime("%Y%m%d")
-    statDomains = {}
-    statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
-    statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
-    statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
-    statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
+    statDomains = get_stats_last_crawled_domains(type, date)
 
-    list_onion = get_last_crawled_domains_metadata(last_onions, date, type='onion')
-    crawler_metadata = get_crawler_splash_status('onion')
+    list_onion = get_last_crawled_domains_metadata(last_onions, date, type=type)
+    crawler_metadata = get_crawler_splash_status(type)
 
     date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
     return render_template("Crawler_Splash_onion.html", last_onions=list_onion, statDomains=statDomains,
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
-@hiddenServices.route("/crawlers/manual_splash_crawler", methods=['GET'])
-def manual_splash_crawler():
+@hiddenServices.route("/crawlers/crawler_splash_regular", methods=['GET'])
+def crawler_splash_regular():
+    type = 'regular'
+    type_name = dic_type_name[type]
+    list_domains = []
 
     now = datetime.datetime.now()
-    date = '{}{}{}'.format(now.strftime("%Y"), now.strftime("%m"), now.strftime("%d"))
-
-    # Stats
-    # user request == CHECK
-    # preconf crawlers == ?????
-    #################################################################################
-    statDomains = {}
-    #statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
-    #statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
-    #statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
-    #statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
-    ####################################################################################
-
-    last_crawled = r_serv_onion.lrange('last_crawled_manual', 0 ,-1)
-    list_crawled = get_last_crawled_domains_metadata(last_crawled)
-
-    crawler_metadata=[]
-    all_onion_crawler = r_cache.smembers('all_crawler:onion')
-    for crawler in all_onion_crawler:
-        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
-        started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
-        status_info = r_cache.hget('metadata_crawler:{}'.format(crawler), 'status')
-        crawler_info = '{}  - {}'.format(crawler, started_time)
-        if status_info=='Waiting' or status_info=='Crawling':
-            status=True
-        else:
-            status=False
-        crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
-
+    date = now.strftime("%Y%m%d")
     date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
-    return render_template("Crawler_Splash_onion.html", last_crawled=list_crawled, statDomains=statDomains,
+
+    statDomains = get_stats_last_crawled_domains(type, date)
+
+    list_domains = get_last_crawled_domains_metadata(get_last_domains_crawled(type), date, type=type)
+    crawler_metadata = get_crawler_splash_status(type)
+
+    return render_template("Crawler_Splash_last_by_type.html", type=type, type_name=type_name,
+                            last_domains=list_domains, statDomains=statDomains,
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
-@hiddenServices.route("/crawlers/blacklisted_onion", methods=['GET'])
-def blacklisted_onion():
-    blacklist_onion = request.args.get('blacklist_onion')
-    unblacklist_onion = request.args.get('unblacklist_onion')
-    if blacklist_onion is not None:
-        blacklist_onion = int(blacklist_onion)
-    if unblacklist_onion is not None:
-        unblacklist_onion = int(unblacklist_onion)
-    try:
-        page = int(request.args.get('page'))
-    except:
-        page = 1
-    if page <= 0:
-        page = 1
-    nb_page_max = r_serv_onion.scard('blacklist_onion')/(1000)
-    if isinstance(nb_page_max, float):
-        nb_page_max = int(nb_page_max)+1
-    if page > nb_page_max:
-        page = nb_page_max
-    start = 1000*(page -1)
-    stop = 1000*page
+@hiddenServices.route("/crawlers/blacklisted_domains", methods=['GET'])
+def blacklisted_domains():
+    blacklist_domain = request.args.get('blacklist_domain')
+    unblacklist_domain = request.args.get('unblacklist_domain')
+    type = request.args.get('type')
+    if type in list_types:
+        type_name = dic_type_name[type]
+        if blacklist_domain is not None:
+            blacklist_domain = int(blacklist_domain)
+        if unblacklist_domain is not None:
+            unblacklist_domain = int(unblacklist_domain)
+        try:
+            page = int(request.args.get('page'))
+        except:
+            page = 1
+        if page <= 0:
+            page = 1
+        nb_page_max = r_serv_onion.scard('blacklist_{}'.format(type))/(1000)
+        if isinstance(nb_page_max, float):
+            nb_page_max = int(nb_page_max)+1
+        if page > nb_page_max:
+            page = nb_page_max
+        start = 1000*(page -1)
+        stop = 1000*page
 
-    list_blacklisted = list(r_serv_onion.smembers('blacklist_onion'))
-    list_blacklisted_1 = list_blacklisted[start:stop]
-    list_blacklisted_2 = list_blacklisted[stop:stop+1000]
-    return render_template("blacklisted_onion.html", list_blacklisted_1=list_blacklisted_1, list_blacklisted_2=list_blacklisted_2,
-                            page=page, nb_page_max=nb_page_max,
-                            blacklist_onion=blacklist_onion, unblacklist_onion=unblacklist_onion)
-
-@hiddenServices.route("/crawler/blacklist_onion", methods=['GET'])
-def blacklist_onion():
-    onion = request.args.get('onion')
-    try:
-        page = int(request.args.get('page'))
-    except:
-        page = 1
-    if is_valid_onion_domain(onion):
-        res = r_serv_onion.sadd('blacklist_onion', onion)
-        print(res)
-        if page:
-            if res == 0:
-                return redirect(url_for('hiddenServices.blacklisted_onion', page=page, blacklist_onion=2))
-            else:
-                return redirect(url_for('hiddenServices.blacklisted_onion', page=page, blacklist_onion=1))
+        list_blacklisted = list(r_serv_onion.smembers('blacklist_{}'.format(type)))
+        list_blacklisted_1 = list_blacklisted[start:stop]
+        list_blacklisted_2 = list_blacklisted[stop:stop+1000]
+        return render_template("blacklisted_domains.html", list_blacklisted_1=list_blacklisted_1, list_blacklisted_2=list_blacklisted_2,
+                                type=type, type_name=type_name, page=page, nb_page_max=nb_page_max,
+                                blacklist_domain=blacklist_domain, unblacklist_domain=unblacklist_domain)
     else:
-        return redirect(url_for('hiddenServices.blacklisted_onion', page=page, blacklist_onion=0))
+        return 'Incorrect Type'
 
-@hiddenServices.route("/crawler/unblacklist_onion", methods=['GET'])
-def unblacklist_onion():
-    onion = request.args.get('onion')
+@hiddenServices.route("/crawler/blacklist_domain", methods=['GET'])
+def blacklist_domain():
+    domain = request.args.get('domain')
+    type = request.args.get('type')
     try:
         page = int(request.args.get('page'))
     except:
         page = 1
-    if is_valid_onion_domain(onion):
-        res = r_serv_onion.srem('blacklist_onion', onion)
-        if page:
-            if res == 0:
-                return redirect(url_for('hiddenServices.blacklisted_onion', page=page, unblacklist_onion=2))
-            else:
-                return redirect(url_for('hiddenServices.blacklisted_onion', page=page, unblacklist_onion=1))
+    if type in list_types:
+        if is_valid_domain(domain):
+            res = r_serv_onion.sadd('blacklist_{}'.format(type), domain)
+            if page:
+                if res == 0:
+                    return redirect(url_for('hiddenServices.blacklisted_domains', page=page, type=type, blacklist_domain=2))
+                else:
+                    return redirect(url_for('hiddenServices.blacklisted_domains', page=page, type=type, blacklist_domain=1))
+        else:
+            return redirect(url_for('hiddenServices.blacklisted_domains', page=page, type=type, blacklist_domain=0))
     else:
-        return redirect(url_for('hiddenServices.blacklisted_onion', page=page, unblacklist_onion=0))
+        return 'Incorrect type'
+
+@hiddenServices.route("/crawler/unblacklist_domain", methods=['GET'])
+def unblacklist_domain():
+    domain = request.args.get('domain')
+    type = request.args.get('type')
+    try:
+        page = int(request.args.get('page'))
+    except:
+        page = 1
+    if type in list_types:
+        if is_valid_domain(domain):
+            res = r_serv_onion.srem('blacklist_{}'.format(type), domain)
+            if page:
+                if res == 0:
+                    return redirect(url_for('hiddenServices.blacklisted_domains', page=page, type=type, unblacklist_domain=2))
+                else:
+                    return redirect(url_for('hiddenServices.blacklisted_domains', page=page, type=type, unblacklist_domain=1))
+        else:
+            return redirect(url_for('hiddenServices.blacklisted_domains', page=page, type=type, unblacklist_domain=0))
+    else:
+        return 'Incorrect type'
 
 @hiddenServices.route("/crawlers/create_spider_splash", methods=['POST'])
 def create_spider_splash():
@@ -619,23 +628,26 @@ def domain_crawled_7days_json():
 
     return jsonify(json_domain_stats)
 
-@hiddenServices.route('/hiddenServices/automatic_onion_crawler_json')
-def automatic_onion_crawler_json():
+@hiddenServices.route('/hiddenServices/domain_crawled_by_type_json')
+def domain_crawled_by_type_json():
     current_date = request.args.get('date')
-    type = 'onion'
+    type = request.args.get('type')
+    if type in list_types:
 
-    num_day_type = 7
-    date_range = get_date_range(num_day_type)
-    range_decoder = []
-    for date in date_range:
-        day_crawled = {}
-        day_crawled['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
-        day_crawled['UP']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
-        day_crawled['DOWN']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
-        range_decoder.append(day_crawled)
+        num_day_type = 7
+        date_range = get_date_range(num_day_type)
+        range_decoder = []
+        for date in date_range:
+            day_crawled = {}
+            day_crawled['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+            day_crawled['UP']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
+            day_crawled['DOWN']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
+            range_decoder.append(day_crawled)
 
-    return jsonify(range_decoder)
+        return jsonify(range_decoder)
 
+    else:
+        return jsonify('Incorrect Type')
 
 # ========= REGISTRATION =========
 app.register_blueprint(hiddenServices, url_prefix=baseUrl)

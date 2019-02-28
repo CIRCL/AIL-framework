@@ -68,14 +68,14 @@
 							      </tr>
 							  </thead>
 							  <tbody id="tbody_last_crawled">
-										{% for metadata_onion in last_onions %}
+										{% for metadata_domain in last_domains %}
 								      <tr>
-								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_onion['domain'] }}">{{ metadata_onion['domain'] }}</a></td>
-								        <td>{{'{}/{}/{}'.format(metadata_onion['first_seen'][0:4], metadata_onion['first_seen'][4:6], metadata_onion['first_seen'][6:8])}}</td>
-												<td>{{'{}/{}/{}'.format(metadata_onion['last_check'][0:4], metadata_onion['last_check'][4:6], metadata_onion['last_check'][6:8])}}</td>
-								        <td><div style="color:{{metadata_onion['status_color']}}; display:inline-block">
-															<i class="fas {{metadata_onion['status_icon']}} "></i>
-															{{metadata_onion['status_text']}}
+								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_domain['domain'] }}">{{ metadata_domain['domain'] }}</a></td>
+								        <td>{{'{}/{}/{}'.format(metadata_domain['first_seen'][0:4], metadata_domain['first_seen'][4:6], metadata_domain['first_seen'][6:8])}}</td>
+												<td>{{'{}/{}/{}'.format(metadata_domain['last_check'][0:4], metadata_domain['last_check'][4:6], metadata_domain['last_check'][6:8])}}</td>
+								        <td><div style="color:{{metadata_domain['status_color']}}; display:inline-block">
+															<i class="fas {{metadata_domain['status_icon']}} "></i>
+															{{metadata_domain['status_text']}}
 														</div>
 												</td>
 								      </tr>
@@ -84,8 +84,8 @@
 						  </table>
 						</div>
 
-						<a href="{{ url_for('hiddenServices.blacklisted_onion') }}">
-							<button type="button" class="btn btn-outline-danger">Show Blacklisted Onion</button>
+						<a href="{{ url_for('hiddenServices.blacklisted_domains') }}?type={{type}}">
+							<button type="button" class="btn btn-outline-danger">Show Blacklisted {{type_name}}s</button>
 						</a>
 
 					</div>
@@ -141,7 +141,7 @@
 										</div>
 									</div>
 									<button class="btn btn-primary">
-										<i class="fas fa-eye"></i> Show Onions
+										<i class="fas fa-eye"></i> Show {{type_name}}s
 									</button>
 								<form>
 						  </div>
@@ -189,7 +189,7 @@
 var chart = {};
 $(document).ready(function(){
 	$("#page-Crawler").addClass("active");
-	$("#nav_onion_crawler").addClass("active");
+	$("#nav_{{type}}_crawler").addClass("active");
 
 	$('#date-range-from').dateRangePicker({
 			separator : ' to ',
@@ -217,7 +217,7 @@ $(document).ready(function(){
 					$('#date-range-to-input').val(s2);
 			}
 	});
-	chart.stackBarChart =barchart_type_stack("{{ url_for('hiddenServices.automatic_onion_crawler_json') }}", 'id');
+	chart.stackBarChart =barchart_type_stack("{{ url_for('hiddenServices.domain_crawled_by_type_json') }}?type={{type}}", 'id');
 
 	chart.onResize();
 	$(window).on("resize", function() {
@@ -252,8 +252,8 @@ function refresh_list_crawled(){
 			var tableRef = document.getElementById('tbody_last_crawled');
 			$("#tbody_last_crawled").empty()
 
-			for (var i = 0; i < data.last_onions.length; i++) {
-					var data_domain = data.last_onions[i]
+			for (var i = 0; i < data.last_domains.length; i++) {
+					var data_domain = data.last_domains[i]
 					var newRow   = tableRef.insertRow(tableRef.rows.length);
 
 			    var newCell  = newRow.insertCell(0);

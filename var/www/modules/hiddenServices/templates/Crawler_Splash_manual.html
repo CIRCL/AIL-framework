@@ -26,40 +26,9 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			<div class="col-12 col-lg-2 p-0 bg-light border-right">
+			{% include 'crawler/menu_sidebar.html' %}
 
-
-				<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2">
-					<h5 class="d-flex text-muted w-100">
-						<span>Splash Crawlers </span>
-						<a class="ml-auto" href="#">
-							<i class="fas fa-plus-circle ml-auto"></i>
-						</a>
-					</h5>
-	        <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
-	          <li class="nav-item">
-	            <a class="nav-link" href="#">
-	              <i class="fas fa-search"></i>
-	              <span>Dashboard</span>
-	            </a>
-	          </li>
-	          <li class="nav-item">
-	            <a class="nav-link active" href="#">
-								<i class="fas fa-sync"></i>
-	             	Automatic Onion Crawler
-	            </a>
-	          </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">
-								<i class="fas fa-clock"></i>
-                Manual Splash Crawler
-              </a>
-            </li>
-          </ul>
-	      </nav>
-			</div>
-
-			<div class="col-12 col-lg-10">
+			<div class="col-12 col-lg-10" id="core_content">
 
 
 						<div class="card text-white bg-dark mb-3 mt-1">
@@ -162,12 +131,27 @@
 var chart = {};
 $(document).ready(function(){
 	$("#page-Crawler").addClass("active");
+	$("#nav_manual_crawler").addClass("active");
 	manual_crawler_input_controler();
 
 	$('#crawler_type').change(function () {
 		manual_crawler_input_controler();
 	});
 });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
 
 function manual_crawler_input_controler() {
 	if($('#crawler_type').is(':checked')){
