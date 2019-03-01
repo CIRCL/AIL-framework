@@ -28,16 +28,8 @@
 		.bar_stack:hover{
 			cursor: pointer;
 		}
-		div.tooltip {
-			position: absolute;
-			text-align: center;
-			padding: 2px;
-			font: 12px sans-serif;
-			background: #ebf4fb;
-			border: 2px solid #b7ddf2;
-			border-radius: 8px;
-			pointer-events: none;
-			color: #000000;
+		.popover{
+    	max-width: 100%;
 		}
 	</style>
 
@@ -69,8 +61,8 @@
 							  </thead>
 							  <tbody id="tbody_last_crawled">
 										{% for metadata_domain in last_domains %}
-								      <tr>
-								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_domain['domain'] }}">{{ metadata_domain['domain'] }}</a></td>
+								      <tr data-toggle="popover" data-trigger="hover" title="<span class='badge badge-dark'>{{metadata_domain['domain']}}</span>"  data-content="{{metadata_domain['epoch']}}">
+								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_domain['domain'] }}">{{ metadata_domain['domain_name'] }}</a></td>
 								        <td>{{'{}/{}/{}'.format(metadata_domain['first_seen'][0:4], metadata_domain['first_seen'][4:6], metadata_domain['first_seen'][6:8])}}</td>
 												<td>{{'{}/{}/{}'.format(metadata_domain['last_check'][0:4], metadata_domain['last_check'][4:6], metadata_domain['last_check'][6:8])}}</td>
 								        <td><div style="color:{{metadata_domain['status_color']}}; display:inline-block">
@@ -222,6 +214,12 @@ $(document).ready(function(){
 	chart.onResize();
 	$(window).on("resize", function() {
 		chart.onResize();
+	});
+
+	$('[data-toggle="popover"]').popover({
+		placement: 'top',
+		container: 'body',
+		html : true,
 	});
 
 });

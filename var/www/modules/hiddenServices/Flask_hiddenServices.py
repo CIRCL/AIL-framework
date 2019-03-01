@@ -117,8 +117,12 @@ def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
             type = get_domain_type(domain)
 
         metadata_domain['domain'] = domain
+        if len(domain) > 45:
+            domain_name, tld_domain = domain.rsplit('.', 1)
+            metadata_domain['domain_name'] = '{}[...].{}'.format(domain_name[:40], tld_domain)
+        else:
+            metadata_domain['domain_name'] = domain
         metadata_domain['epoch'] = epoch
-        print(epoch)
         metadata_domain['last_check'] = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'last_check')
         if metadata_domain['last_check'] is None:
             metadata_domain['last_check'] = '********'
@@ -196,9 +200,12 @@ def crawler_splash_onion():
     return render_template("Crawler_Splash_onion.html", last_onions=list_onion, statDomains=statDomains,
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
-@hiddenServices.route("/crawlers/crawler_splash_regular", methods=['GET'])
-def crawler_splash_regular():
-    type = 'regular'
+@hiddenServices.route("/crawlers/Crawler_Splash_last_by_type", methods=['GET'])
+def Crawler_Splash_last_by_type():
+    type = request.args.get('type')
+    # verify user input
+    if type not in list_types:
+        type = 'onion'
     type_name = dic_type_name[type]
     list_domains = []
 
