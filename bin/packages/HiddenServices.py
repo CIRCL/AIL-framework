@@ -63,7 +63,7 @@ class HiddenServices(object):
         self.type = type
         self.tags = {}
 
-        if type == 'onion':
+        if type == 'onion' or type == 'regular':
             self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
             self.paste_crawled_directory = os.path.join(self.paste_directory, cfg.get("Directories", "crawled"))
             self.paste_crawled_directory_name = cfg.get("Directories", "crawled")
@@ -74,6 +74,10 @@ class HiddenServices(object):
         else:
             ## TODO: # FIXME: add error
             pass
+
+    def remove_absolute_path_link(self, key, value):
+        print(key)
+        print(value)
 
     def get_origin_paste_name(self):
         origin_item = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'paste_parent')
@@ -105,10 +109,35 @@ class HiddenServices(object):
         for tag in p_tags:
             self.tags[tag] = self.tags.get(tag, 0) + 1
 
+    def get_first_crawled(self):
+        res = self.r_serv_onion.zrange('crawler_history_{}:{}'.format(self.type, self.domain), 0, 0, withscores=True)
+        if res:
+            res = res[0]
+            return {'root_item':res[0], 'epoch':res[1]}
+        else:
+            return {}
+
+    def get_last_crawled(self):
+        res = self.r_serv_onion.zrevrange('crawler_history_{}:{}'.format(self.type, self.domain), 0, 0, withscores=True)
+        if res:
+            res = res[0]
+            return {'root_item':res[0], 'epoch':res[1]}
+        else:
+            return {}
+
     #todo use the right paste
-    def get_last_crawled_pastes(self):
-        paste_root = self.r_serv_onion.zrevrange('crawler_history_{}:{}'.format(self.type, self.domain), 0, 0)[0]
-        return self.get_all_pastes_domain(paste_root)
+    def get_last_crawled_pastes(self, epoch=None):
+        if epoch is None:
+            list_root = self.r_serv_onion.zrevrange('crawler_history_{}:{}'.format(self.type, self.domain), 0, 0)
+        else:
+            list_root = self.r_serv_onion.zrevrangebyscore('crawler_history_{}:{}'.format(self.type, self.domain), int(epoch), int(epoch))
+        if list_root:
+            return self.get_all_pastes_domain(list_root[0])
+        else:
+            if epoch:
+                return self.get_last_crawled_pastes()
+            else:
+                return list_root
 
     def get_all_pastes_domain(self, root_item):
         if root_item is None:
@@ -134,6 +163,27 @@ class HiddenServices(object):
                 self.update_domain_tags(children)
                 l_crawled_pastes.extend(self.get_item_crawled_children(children))
         return l_crawled_pastes
+
+    def get_item_link(self, item):
+        link = self.r_serv_metadata.hget('paste_metadata:{}'.format(item), 'real_link')
+        if link is None:
+            if self.paste_directory in item:
+                self.r_serv_metadata.hget('paste_metadata:{}'.format(item.replace(self.paste_directory+'/', '')), 'real_link')
+            else:
+                key = os.path.join(self.paste_directory, item)
+                link = self.r_serv_metadata.hget('paste_metadata:{}'.format(key), 'real_link')
+                if link:
+                    self.remove_absolute_path_link(key, link)
+
+        return link
+
+    def get_all_links(self, l_items):
+        dict_links = {}
+        for item in l_items:
+            link = self.get_item_link(item)
+            if link:
+                dict_links[item] = link
+        return dict_links
 
     # experimental
     def get_domain_son(self, l_paste):
@@ -177,11 +227,12 @@ class HiddenServices(object):
         l_screenshot_paste = []
         for paste in l_crawled_pastes:
             ## FIXME: # TODO: remove me
+            origin_paste = paste
             paste= paste.replace(self.paste_directory+'/', '')
 
             paste = paste.replace(self.paste_crawled_directory_name, '')
             if os.path.isfile( '{}{}.png'.format(self.screenshot_directory, paste) ):
-                l_screenshot_paste.append(paste[1:])
+                l_screenshot_paste.append({'screenshot': paste[1:], 'item': origin_paste})
 
         if len(l_screenshot_paste) > num_screenshot:
             l_random_screenshot = []

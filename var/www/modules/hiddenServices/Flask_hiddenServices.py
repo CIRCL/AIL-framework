@@ -8,6 +8,7 @@ import redis
 import datetime
 import sys
 import os
+import time
 import json
 from pyfaup.faup import Faup
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
@@ -94,6 +95,16 @@ def get_domain_type(domain):
         return 'onion'
     else:
         return 'regular'
+
+def get_type_domain(domain):
+    if domain is None:
+        type = 'regular'
+    else:
+        if domain.rsplit('.', 1)[1] == 'onion':
+            type = 'onion'
+        else:
+            type = 'regular'
+    return type
 
 def get_last_domains_crawled(type):
     return r_serv_onion.lrange('last_{}'.format(type), 0 ,-1)
@@ -560,25 +571,31 @@ def show_domains_by_daterange():
                                 date_from=date_from, date_to=date_to, domains_up=domains_up, domains_down=domains_down,
                                 domains_tags=domains_tags, bootstrap_label=bootstrap_label)
 
-@hiddenServices.route("/hiddenServices/onion_domain", methods=['GET'])
-def onion_domain():
-    onion_domain = request.args.get('onion_domain')
-    if onion_domain is None or not r_serv_onion.exists('onion_metadata:{}'.format(onion_domain)):
+@hiddenServices.route("/hiddenServices/show_domain", methods=['GET'])
+def show_domain():
+    domain = request.args.get('domain')
+    epoch = request.args.get('epoch')
+    type = get_type_domain(domain)
+    if domain is None or not r_serv_onion.exists('{}_metadata:{}'.format(type, domain)):
         return '404'
         # # TODO: FIXME return 404
 
-    last_check = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'last_check')
+    last_check = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'last_check')
     if last_check is None:
         last_check = '********'
     last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
-    first_seen = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'first_seen')
+    first_seen = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'first_seen')
     if first_seen is None:
         first_seen = '********'
     first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
-    origin_paste = r_serv_onion.hget('onion_metadata:{}'.format(onion_domain), 'paste_parent')
+    origin_paste = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'paste_parent')
 
-    h = HiddenServices(onion_domain, 'onion')
-    l_pastes = h.get_last_crawled_pastes()
+    h = HiddenServices(domain, type)
+    last_crawled_time = h.get_last_crawled()
+    if epoch in last_crawled_time:
+        last_check = '{} - {}'.format(last_check, time.strftime('%H:%M.%S', time.gmtime(last_crawled_time['epoch'])))
+    l_pastes = h.get_last_crawled_pastes(epoch=epoch)
+    dict_links = h.get_all_links(l_pastes)
     if l_pastes:
         status = True
     else:
@@ -600,8 +617,9 @@ def onion_domain():
         p_tags = r_serv_metadata.smembers('tag:'+path)
         paste_tags.append(unpack_paste_tags(p_tags))
 
-    return render_template("showDomain.html", domain=onion_domain, last_check=last_check, first_seen=first_seen,
+    return render_template("showDomain.html", domain=domain, last_check=last_check, first_seen=first_seen,
                             l_pastes=l_pastes, paste_tags=paste_tags, bootstrap_label=bootstrap_label,
+                            dict_links=dict_links,
                             path_name=path_name, origin_paste_tags=origin_paste_tags, status=status,
                             origin_paste=origin_paste, origin_paste_name=origin_paste_name,
                             domain_tags=domain_tags, screenshot=screenshot)
