@@ -1,6 +1,7 @@
 .tag-ctn{
     position: relative;
-    height: 30px;
+    height: 38px;
+    min-height: 38px;
     padding: 0;
     margin-bottom: 0px;
     font-size: 14px;
@@ -63,6 +64,7 @@
 }
 .tag-ctn .tag-empty-text{
     color: #DDD;
+    width: 0;
 }
 .tag-ctn input:focus{
     border: 0;

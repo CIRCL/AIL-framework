@@ -592,7 +592,7 @@ def show_domain():
 
     h = HiddenServices(domain, type)
     last_crawled_time = h.get_last_crawled()
-    if epoch in last_crawled_time:
+    if 'epoch' in last_crawled_time:
         last_check = '{} - {}'.format(last_check, time.strftime('%H:%M.%S', time.gmtime(last_crawled_time['epoch'])))
     l_pastes = h.get_last_crawled_pastes(epoch=epoch)
     dict_links = h.get_all_links(l_pastes)
