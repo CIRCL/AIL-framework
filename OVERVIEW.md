@@ -14,7 +14,6 @@ Redis and ARDB overview
 * ARDB on TCP port 6382
 
 
-
      DB 1 - Curve
      DB 2 - TermFreq
      DB 3 - Trending
@@ -24,7 +23,7 @@ Redis and ARDB overview
      DB 7 - Metadata
      DB 8 - Statistics
      DB 9 - Crawler
-     
+
 * ARDB on TCP port <year>
     - DB 0 - Lines duplicate
     - DB 1 - Hashes
@@ -36,32 +35,58 @@ Redis and ARDB overview
 ##### Hset:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| daily_tags:**<date>** | **<tag>** | **<nb tagged this day>** |
+| daily_tags:**date** | **tag** | **nb tagged this day** |
 | | |
-| tag_metadata:**<tag>** | first_seen | **<date>** |
-| tag_metadata:**<tag>** | last_seen | **<date>** |
+| tag_metadata:**tag** | first_seen | **date** |
+| tag_metadata:**tag** | last_seen | **date** |
 
 ##### Set:
 | Key | Value |
 | ------ | ------ |
-| list_tags | **<tag>** |
-| active_taxonomies | **<taxonomie>** |
-| active_galaxies | **<galaxie>** |
-| active_tag_**<taxonomie or galaxy>** | **<tag>** |
-| synonym_tag_misp-galaxy:**<galaxy>** | **<tag synonym>** |
-| list_export_tags | **<user_tag>** |
-| **<tag>**:**<date>** | **<paste>** |
+| list_tags | **tag** |
+| active_taxonomies | **taxonomie** |
+| active_galaxies | **galaxie** |
+| active_tag_**taxonomie or galaxy** | **tag** |
+| synonym_tag_misp-galaxy:**galaxy** | **tag synonym** |
+| list_export_tags | **user_tag** |
+| **tag**:**date** | **paste** |
 
 
 ##### old:
 | Key | Value |
 | ------ | ------ |
-| **<tag>** | **<paste>** |
+| *tag* | *paste* |
 
 
+## DB9 - Crawler:
 
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| **service type**:**domain** | first_seen | **date** |
+| | last_check | **date** |
+| | paste_parent | **parent last crawling (can be auto or manual)** |
 
+##### Zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| crawler_history_**service type**:**domain** | **item root (first crawled item)** | **epoch (seconds)** |
 
+##### Regular key:
+| Key | Value |
+| ------ | ------ |
+| crawler_history_**service type**:**domain** | **json config** |
+
+##### exemple json config:
+```json
+{
+  "closespider_pagecount": 1,
+  "time": 3600,
+  "depth_limit": 0,
+  "har": 0,
+  "png": 0
+}
+```
 
 ARDB overview
 ---------------------------
@@ -130,5 +155,3 @@ ARDB_DB
 
 	GET  - 'base64_decoded:'+date	nd_decoded
 	GET  - 'binary_decoded:'+date	nd_decoded
-
-

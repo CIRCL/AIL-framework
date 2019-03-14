@@ -8,7 +8,7 @@ import redis
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
 import json
-from datetime import datetime
+import datetime
 import ssdeep
 
 import Paste
@@ -71,9 +71,98 @@ def get_tags_with_synonyms(tag):
 
 # ============= ROUTES ==============
 
-@Tags.route("/Tags/", methods=['GET'])
+@Tags.route("/tags/", methods=['GET'])
 def Tags_page():
-    return render_template("Tags.html")
+    current_date = datetime.date.today().strftime("%Y-%m-%d")
+
+    tags = request.args.get('ltags')
+    if tags is None:
+        return render_template("Tags.html", date_from=current_date, date_to=current_date)
+
+    else:
+
+
+        tags = request.args.get('ltags')
+
+        list_tags = tags.split(',')
+        list_tag = []
+        for tag in list_tags:
+            list_tag.append(tag.replace('"','\"'))
+
+        # TODO verify input
+
+        if(type(list_tags) is list):
+            # no tag
+            if list_tags is False:
+                print('empty')
+            # 1 tag
+            elif len(list_tags) < 2:
+                tagged_pastes = r_serv_tags.smembers(list_tags[0])
+
+            # 2 tags or more
+            else:
+                tagged_pastes = r_serv_tags.sinter(list_tags[0], *list_tags[1:])
+
+        else :
+            return 'INCORRECT INPUT'
+
+        all_content = []
+        paste_date = []
+        paste_linenum = []
+        all_path = []
+        allPastes = list(tagged_pastes)
+        paste_tags = []
+
+        for path in allPastes[0:50]: ######################moduleName
+            all_path.append(path)
+            paste = Paste.Paste(path)
+            content = paste.get_p_content()
+            content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+            all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
+            curr_date = str(paste._get_p_date())
+            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+            paste_date.append(curr_date)
+            paste_linenum.append(paste.get_lines_info()[0])
+            p_tags = r_serv_metadata.smembers('tag:'+path)
+            complete_tags = []
+            l_tags = []
+            for tag in p_tags:
+                complete_tag = tag
+
+                tag = tag.split('=')
+                if len(tag) > 1:
+                    if tag[1] != '':
+                        tag = tag[1][1:-1]
+                    # no value
+                    else:
+                        tag = tag[0][1:-1]
+                # use for custom tags
+                else:
+                    tag = tag[0]
+
+                l_tags.append( (tag,complete_tag) )
+
+            paste_tags.append(l_tags)
+
+        if len(allPastes) > 10:
+            finished = False
+        else:
+            finished = True
+
+        return render_template("Tags.html",
+                all_path=all_path,
+                tags=tags,
+                list_tag = list_tag,
+                date_from=current_date,
+                date_to=current_date,
+                paste_tags=paste_tags,
+                bootstrap_label=bootstrap_label,
+                content=all_content,
+                paste_date=paste_date,
+                paste_linenum=paste_linenum,
+                char_to_display=max_preview_modal,
+                finished=finished)
+
 
 @Tags.route("/Tags/get_all_tags")
 def get_all_tags():
@@ -172,94 +261,6 @@ def get_tags_galaxy():
 
     else:
         return 'this galaxy is disable'
-
-
-@Tags.route("/Tags/get_tagged_paste")
-def get_tagged_paste():
-
-    tags = request.args.get('ltags')
-
-    list_tags = tags.split(',')
-    list_tag = []
-    for tag in list_tags:
-        list_tag.append(tag.replace('"','\"'))
-
-    # TODO verify input
-
-    if(type(list_tags) is list):
-        # no tag
-        if list_tags is False:
-            print('empty')
-        # 1 tag
-        elif len(list_tags) < 2:
-            tagged_pastes = r_serv_tags.smembers(list_tags[0])
-
-        # 2 tags or more
-        else:
-            tagged_pastes = r_serv_tags.sinter(list_tags[0], *list_tags[1:])
-
-    else :
-        return 'INCORRECT INPUT'
-
-    #TODO FIXME
-    currentSelectYear = int(datetime.now().year)
-
-    all_content = []
-    paste_date = []
-    paste_linenum = []
-    all_path = []
-    allPastes = list(tagged_pastes)
-    paste_tags = []
-
-    for path in allPastes[0:50]: ######################moduleName
-        all_path.append(path)
-        paste = Paste.Paste(path)
-        content = paste.get_p_content()
-        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-        all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
-        curr_date = str(paste._get_p_date())
-        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
-        paste_date.append(curr_date)
-        paste_linenum.append(paste.get_lines_info()[0])
-        p_tags = r_serv_metadata.smembers('tag:'+path)
-        complete_tags = []
-        l_tags = []
-        for tag in p_tags:
-            complete_tag = tag
-
-            tag = tag.split('=')
-            if len(tag) > 1:
-                if tag[1] != '':
-                    tag = tag[1][1:-1]
-                # no value
-                else:
-                    tag = tag[0][1:-1]
-            # use for custom tags
-            else:
-                tag = tag[0]
-
-            l_tags.append( (tag,complete_tag) )
-
-        paste_tags.append(l_tags)
-
-    if len(allPastes) > 10:
-        finished = False
-    else:
-        finished = True
-
-    return render_template("tagged.html",
-            year=currentSelectYear,
-            all_path=all_path,
-            tags=tags,
-            list_tag = list_tag,
-            paste_tags=paste_tags,
-            bootstrap_label=bootstrap_label,
-            content=all_content,
-            paste_date=paste_date,
-            paste_linenum=paste_linenum,
-            char_to_display=max_preview_modal,
-            finished=finished)
-
 
 @Tags.route("/Tags/remove_tag")
 def remove_tag():

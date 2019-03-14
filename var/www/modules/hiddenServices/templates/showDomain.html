@@ -7,6 +7,7 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
@@ -70,7 +71,7 @@
 								{%endif%}
 								<div>
 									{% for tag in origin_paste_tags %}
-									<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+									<a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag[1] }}">
 										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
 									</a>
 									{%  endfor %}
@@ -82,7 +83,7 @@
 
 						<div>
 							{% for tag in domain_tags %}
-							<a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+							<a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
 								<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }} <i>{{ domain_tags[tag] }}</i></span>
 							</a>
 							{%  endfor %}
@@ -106,7 +107,7 @@
 												</a>
 				                <div>
 				                  {% for tag in paste_tags[loop.index0] %}
-					                  <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+					                  <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag[1] }}">
 					                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
 					                  </a>
 				                  {%  endfor %}

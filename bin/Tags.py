@@ -75,12 +75,12 @@ if __name__ == '__main__':
             if res == 1:
                 print("new tags added : {}".format(tag))
             # add the path to the tag set
-            date = get_paste_date(path)
-            res = server.sadd('{}:{}'.format(tag, date), path)
+            curr_date = datetime.date.today().strftime("%Y%m%d")
+            res = server.sadd('{}:{}'.format(tag, curr_date), path)
             if res == 1:
                 print("new paste: {}".format(path))
                 print("   tagged: {}".format(tag))
-                set_tag_metadata(tag, date)
+                set_tag_metadata(tag, curr_date)
             server_metadata.sadd('tag:{}'.format(path), tag)
 
             curr_date = datetime.date.today().strftime("%Y%m%d")
