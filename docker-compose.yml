@@ -37,6 +37,7 @@ services:
     volumes:
       - ./CRAWLED_SCREENSHOT/:/opt/AIL/CRAWLED_SCREENSHOT
       - ./PASTES/:/opt/AIL/PASTES
+      - ./indexdir:/opt/AIL/indexdir
       - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
     working_dir: /opt/AIL/var/www
   log-queue:
@@ -308,6 +309,7 @@ services:
     image: ail-framework
     volumes:
       - ./PASTES/:/opt/AIL/PASTES
+      - ./indexdir:/opt/AIL/indexdir
       - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
     working_dir: /opt/AIL/bin
   script-keys:
@@ -321,7 +323,7 @@ services:
       - ./PASTES/:/opt/AIL/PASTES
       - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
     working_dir: /opt/AIL/bin
-  script-liblinjection:
+  script-libinjection:
     depends_on:
       - redis-log
     entrypoint:
