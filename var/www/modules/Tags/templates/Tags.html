@@ -27,6 +27,24 @@
 
   {% include 'nav_bar.html' %}
 
+	<!-- Modal -->
+  <div id="mymodal" class="modal fade" role="dialog">
+   <div class="modal-dialog modal-lg">
+
+     <!-- Modal content-->
+     <div id="mymodalcontent" class="modal-content">
+       <div id="mymodalbody" class="modal-body" max-width="850px">
+         <p>Loading paste information...</p>
+         <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
+       </div>
+       <div class="modal-footer">
+         <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
+         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+       </div>
+     </div>
+   </div>
+  </div>
+
 	<div class="container-fluid">
 		<div class="row">
 
@@ -90,7 +108,7 @@
 				            <td class="pb-0"><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}" class="text-secondary">
 													<div style="line-height:0.9;">{{ path }}</div>
 												</a>
-				              <div>
+				              <div class="mb-2">
 				                {% for tag in paste_tags[loop.index0] %}
 				                <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag[1] }}">
 				                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
@@ -147,7 +165,6 @@ var ltags;
 var search_table;
 var last_clicked_paste;
 var can_change_modal_content = true;
-$("#myTable_").attr('data-numElem', "{{ all_path|length }}");
 
 $(document).ready(function(){
 	$("#page-Browse-Items").addClass("active");
@@ -163,6 +180,9 @@ $(document).ready(function(){
         get_html_and_update_modal(event, $(this));
     });
   } );
+
+	search_table.draw()
+
 
 	var valueData = [
     {% for tag in list_tag %}
@@ -298,7 +318,7 @@ function toggle_sidebar(){
                var cleared_data = data.split("<body>")[1].split("</body>")[0];
                $("#mymodalbody").html(cleared_data);
 
-               var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><span class="glyphicon glyphicon-download"></span></button>');
+               var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><i class="fas fa-arrow-circle-down"></i></button>');
                button.tooltip();
                $("#mymodalbody").children(".panel-default").append(button);
 
