@@ -245,6 +245,12 @@ class Paste(object):
     def get_p_date(self):
         return self.p_date
 
+    def get_item_source(self):
+        return self.p_source
+
+    def get_item_size(self):
+        return self.p_size
+
     def _get_p_size(self):
         return self.p_size
 
@@ -297,6 +303,10 @@ class Paste(object):
             return list(self.p_duplicate)
         else:
             return '[]'
+
+    def get_nb_duplicate(self):
+        # # TODO: FIXME use relative path
+        return self.store_metadata.scard('dup:'+self.p_path) + self.store_metadata.scard('dup:'+self.p_rel_path)
 
     def _get_p_tags(self):
         self.p_tags = self.store_metadata.smembers('tag:'+path, tag)

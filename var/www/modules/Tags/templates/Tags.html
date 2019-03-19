@@ -22,6 +22,20 @@
 	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
+	<style>
+	.rotate{
+		-moz-transition: all 0.1s linear;
+		-webkit-transition: all 0.1s linear;
+		transition: all 0.1s linear;
+	}
+
+	.rotate.down{
+		-moz-transform:rotate(180deg);
+		-webkit-transform:rotate(180deg);
+		transform:rotate(180deg);
+	}
+	</style>
+
 </head>
 <body>
 
@@ -119,7 +133,7 @@
 				            <td class="pb-0">{{ paste_linenum[loop.index0] }}</td>
 				            <td class="pb-0"><p>
 											<span class="fas fa-info-circle" data-toggle="tooltip" data-placement="left" title="{{ content[loop.index0] }} "></span>
-											<button type="button" class="btn btn-light" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}">
+											<button type="button" class="btn btn-light" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsaveditem_min') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}">
 												<span class="fas fa-search-plus"></span>
 											</button></p>
 										</td>
@@ -256,94 +270,96 @@ function toggle_sidebar(){
 
 <!-- Dynamically update the modal -->
 <script>
-    // static data
-    var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
-    var complete_paste = null;
-    var char_to_display = {{ char_to_display }};
-    var start_index = 0;
+  // static data
+  var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
+  var complete_paste = null;
+  var char_to_display = {{ char_to_display }};
+  var start_index = 0;
 
-    // When the modal goes out, refresh it to normal content
-    $("#mymodal").on('hidden.bs.modal', function () {
-        can_change_modal_content = true;
-        $("#mymodalbody").html("<p>Loading paste information...</p>");
-        var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
-        $("#mymodalbody").append(loading_gif); // Show the loading GIF
-        $("#button_show_path").attr('href', '');
-        $("#button_show_path").hide();
-        complete_paste = null;
-        start_index = 0;
-    });
+  // When the modal goes out, refresh it to normal content
+  $("#mymodal").on('hidden.bs.modal', function () {
+      can_change_modal_content = true;
+      $("#mymodalbody").html("<p>Loading paste information...</p>");
+      var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
+      $("#mymodalbody").append(loading_gif); // Show the loading GIF
+      $("#button_show_path").attr('href', '');
+      $("#button_show_path").hide();
+      complete_paste = null;
+      start_index = 0;
+  });
 
-   // Update the paste preview in the modal
-   function update_preview() {
-       if (start_index + char_to_display > complete_paste.length-1){ // end of paste reached
-           var final_index = complete_paste.length-1;
-           var flag_stop = true;
-       } else {
-           var final_index = start_index + char_to_display;
-       }
+  // Update the paste preview in the modal
+  function update_preview() {
+     	if (start_index + char_to_display > complete_paste.length-1){ // end of paste reached
+         	var final_index = complete_paste.length-1;
+          var flag_stop = true;
+      } else {
+          var final_index = start_index + char_to_display;
+      }
 
-       if (final_index != start_index){ // still have data to display
-           // Append the new content using text() and not append (XSS)
-           $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text()+complete_paste.substring(start_index+1, final_index+1));
-           start_index = final_index;
-           if (flag_stop)
-               nothing_to_display();
-       } else {
+      if (final_index != start_index){ // still have data to display
+          // Append the new content using text() and not append (XSS)
+          $("#mymodalbody").find("#paste-holder").text($("#mymodalbody").find("#paste-holder").text()+complete_paste.substring(start_index+1, final_index+1));
+          start_index = final_index;
+          if (flag_stop)
+              nothing_to_display();
+      } else {
           nothing_to_display();
       }
-   }
-   // Update the modal when there is no more data
-   function nothing_to_display() {
-       var new_content = $(alert_message).hide();
-       $("#mymodalbody").find("#panel-body").append(new_content);
-       new_content.show('fast');
-       $("#load-more-button").hide();
-   }
+  }
+  // Update the modal when there is no more data
+  function nothing_to_display() {
+      var new_content = $(alert_message).hide();
+      $("#mymodalbody").find("#panel-body").append(new_content);
+      new_content.show('fast');
+      $("#load-more-button").hide();
+  }
 
-   function get_html_and_update_modal(event, truemodal) {
-       event.preventDefault();
+  function get_html_and_update_modal(event, truemodal) {
+      event.preventDefault();
 
-       var modal=truemodal;
-       var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + modal.attr('data-path') + "&num=" + modal.attr('data-num');
-       last_clicked_paste =  modal.attr('data-num');
-       $.get(url, function (data) {
+      var modal=truemodal;
+      var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + modal.attr('data-path') + "&num=" + modal.attr('data-num');
+      last_clicked_paste =  modal.attr('data-num');
+      $.get(url, function (data) {
 
-           // verify that the reveived data is really the current clicked paste. Otherwise, ignore it.
-           var received_num = parseInt(data.split("|num|")[1]);
-           if (received_num == last_clicked_paste && can_change_modal_content) {
-               can_change_modal_content = false;
+          // verify that the reveived data is really the current clicked paste. Otherwise, ignore it.
+          var received_num = parseInt(data.split("|num|")[1]);
+          if (received_num == last_clicked_paste && can_change_modal_content) {
+              can_change_modal_content = false;
 
-               // clear data by removing html, body, head tags. prevent dark modal background stack bug.
-               var cleared_data = data.split("<body>")[1].split("</body>")[0];
-               $("#mymodalbody").html(cleared_data);
+              // clear data by removing html, body, head tags. prevent dark modal background stack bug.
+              var cleared_data = data.split("<body>")[1].split("</body>")[0];
+              $("#mymodalbody").html(cleared_data);
 
-               var button = $('<button type="button" id="load-more-button" class="btn btn-info btn-xs center-block" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><i class="fas fa-arrow-circle-down"></i></button>');
-               button.tooltip();
-               $("#mymodalbody").children(".panel-default").append(button);
+              var button = $('<button type="button" id="load-more-button" class="btn btn-outline-primary rounded-circle px-1 py-0" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><i class="fas fa-arrow-circle-down mt-1"></i></button>');
+							button.tooltip(button);
+              $("#container-show-more").append(button);
 
-               $("#button_show_path").attr('href', $(modal).attr('data-url'));
-               $("#button_show_path").show('fast');
-               $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
-               if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
-                   nothing_to_display();
-               }
-               // On click, donwload all paste's content
-               $("#load-more-button").on("click", function (event) {
-                   if (complete_paste == null) { //Donwload only once
-                       $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
-                           complete_paste = data;
-                           update_preview();
-                       });
-                   } else {
-                       update_preview();
-                   }
-               });
-           } else if (can_change_modal_content) {
-               $("#mymodalbody").html("Ignoring previous not finished query of paste #" + received_num);
-           }
-       });
-   }
+							$("#button_show_path").attr('href', '{{ url_for('showsavedpastes.showsavedpaste')  }}?paste=' + $(modal).attr('data-path'));
+              $("#button_show_path").show('fast');
+              $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
+              if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
+                  nothing_to_display();
+              }
+							// collapse decoded
+							$('#collapseDecoded').collapse('hide');
+              // On click, donwload all paste's content
+              $("#load-more-button").on("click", function (event) {
+                  if (complete_paste == null) { //Donwload only once
+                      $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                          complete_paste = data;
+                          update_preview();
+                      });
+                  } else {
+                      update_preview();
+                  }
+              });
+          } else if (can_change_modal_content) {
+              $("#mymodalbody").html("Ignoring previous not finished query of paste #" + received_num);
+          }
+      });
+  }
 
 
 </script>
