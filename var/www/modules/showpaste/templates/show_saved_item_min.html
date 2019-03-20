@@ -241,6 +241,7 @@
       });
   </script>
 
+{% if crawler_metadata['get_metadata'] %}
   <script>
   var ctx = canvas.getContext('2d'), img = new Image();
 
@@ -287,6 +288,7 @@
 
   blocks.addEventListener('change', pixelate, false);
   </script>
+{% endif %}
 
   <div id="container-show-more" class="text-center">
 

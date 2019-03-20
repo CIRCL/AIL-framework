@@ -105,7 +105,7 @@
 
 				<div>
 					{%if all_path%}
-						<table class="table table-bordered table-hover " id="myTable_">
+						<table class="table table-bordered table-hover" id="myTable_">
 				      <thead class="thead-dark">
 				        <tr>
 									<th>Date</th>
@@ -142,6 +142,42 @@
 
 				      </tbody>
 				    </table>
+
+						<div class="d-flex justify-content-center border-top mt-2">
+							<nav class="mt-4" aria-label="...">
+								<ul class="pagination">
+									<li class="page-item {%if page==1%}disabled{%endif%}">
+										<a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page-1}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">Previous</a>
+									</li>
+
+									{%if page>3%}
+										<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page=1&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">1</a></li>
+										<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+										<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page-1}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{page-1}}</a></li>
+										<li class="page-item active"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{page}}</a></li>
+									{%else%}
+									{%if page>2%}<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page-2}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{page-2}}</a></li>{%endif%}
+									{%if page>1%}<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page-1}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{page-1}}</a></li>{%endif%}
+									<li class="page-item active"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{page}}</a></li>
+									{%endif%}
+
+									{%if nb_page_max-page>3%}
+										<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page+1}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{page+1}}</a></li>
+										<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+										<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{nb_page_max}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{nb_page_max}}</a></li>
+									{%else%}
+										{%if nb_page_max-page>2%}<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{nb_page_max-2}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{nb_page_max-2}}</a></li>{%endif%}
+										{%if nb_page_max-page>1%}<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{nb_page_max-1}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{nb_page_max-1}}</a></li>{%endif%}
+										{%if nb_page_max-page>0%}<li class="page-item"><a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{nb_page_max}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}">{{nb_page_max}}</a></li>{%endif%}
+									{%endif%}
+
+									<li class="page-item {%if page==nb_page_max%}disabled{%endif%}">
+										<a class="page-link" href="{{ url_for('Tags.Tags_page') }}?page={{page+1}}&date_from={{date_from}}&date_to={{date_to}}&ltags={{tags}}" aria-disabled="true">Next</a>
+									</li>
+								</ul>
+							</nav>
+						</div>
+
 					{%endif%}
 				</div>
 
@@ -247,7 +283,9 @@ $(document).ready(function(){
 <script>
 function searchTags() {
 	var data = ltags.getValue();
-	window.location.replace("{{ url_for('Tags.Tags_page') }}?ltags=" + data);
+	var date_from = $('#date-range-from-input').val();
+	var date_to =$('#date-range-to-input').val();
+	window.location.replace("{{ url_for('Tags.Tags_page') }}?date_from="+date_from+"&date_to="+date_to+"&ltags=" + data);
 }
 function emptyTags() {
 	ltags.clear();

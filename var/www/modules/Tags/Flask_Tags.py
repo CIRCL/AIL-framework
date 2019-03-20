@@ -28,6 +28,7 @@ r_serv_statistics = Flask_config.r_serv_statistics
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
+max_tags_result = Flask_config.max_tags_result
 PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 Tags = Blueprint('Tags', __name__, template_folder='templates')
@@ -68,20 +69,61 @@ def get_tags_with_synonyms(tag):
     else:
         return {'name':tag,'id':tag}
 
+def get_item_date(item_filename):
+    l_directory = item_filename.split('/')
+    return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+
+def substract_date(date_from, date_to):
+    date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))
+    date_to = datetime.date(int(date_to[0:4]), int(date_to[4:6]), int(date_to[6:8]))
+    delta = date_to - date_from # timedelta
+    l_date = []
+    for i in range(delta.days + 1):
+        date = date_from + datetime.timedelta(i)
+        l_date.append( date.strftime('%Y%m%d') )
+    return l_date
+
+def get_all_dates_range(date_from, date_to):
+    all_dates = {}
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        try:
+            if len(date_from) != 8:
+                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+            date_range = substract_date(date_from, date_to)
+        except:
+            pass
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+        date_from = date_range[0][0:4] + '-' + date_range[0][4:6] + '-' + date_range[0][6:8]
+        date_to = date_from
+
+    else:
+        date_from = date_from[0:4] + '-' + date_from[4:6] + '-' + date_from[6:8]
+        date_to = date_to[0:4] + '-' + date_to[4:6] + '-' + date_to[6:8]
+    all_dates['date_from'] = date_from
+    all_dates['date_to'] = date_to
+    all_dates['date_range'] = date_range
+    return all_dates
+
 
 # ============= ROUTES ==============
 
 @Tags.route("/tags/", methods=['GET'])
 def Tags_page():
-    current_date = datetime.date.today().strftime("%Y-%m-%d")
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    dates = get_all_dates_range(date_from, date_to)
 
     tags = request.args.get('ltags')
     if tags is None:
         return render_template("Tags.html", date_from=current_date, date_to=current_date)
 
     else:
-
-
         tags = request.args.get('ltags')
 
         list_tags = tags.split(',')
@@ -97,11 +139,23 @@ def Tags_page():
                 print('empty')
             # 1 tag
             elif len(list_tags) < 2:
-                tagged_pastes = r_serv_tags.smembers(list_tags[0])
+                tagged_pastes = []
+                for date in dates['date_range']:
+                    tagged_pastes.extend(r_serv_tags.smembers('{}:{}'.format(list_tags[0], date)))
 
             # 2 tags or more
             else:
-                tagged_pastes = r_serv_tags.sinter(list_tags[0], *list_tags[1:])
+                tagged_pastes = []
+                for date in dates['date_range']:
+                    tag_keys = []
+                    for tag in list_tags:
+                        tag_keys.append('{}:{}'.format(tag, date))
+
+                    if len(tag_keys) > 1:
+                        daily_items = r_serv_tags.sinter(tag_keys[0], *tag_keys[1:])
+                    else:
+                        daily_items = r_serv_tags.sinter(tag_keys[0])
+                    tagged_pastes.extend(daily_items)
 
         else :
             return 'INCORRECT INPUT'
@@ -113,7 +167,21 @@ def Tags_page():
         allPastes = list(tagged_pastes)
         paste_tags = []
 
-        for path in allPastes[0:50]: ######################moduleName
+        try:
+            page = int(request.args.get('page'))
+        except:
+            page = 1
+        if page <= 0:
+            page = 1
+        nb_page_max = len(tagged_pastes)/(max_tags_result)
+        if not nb_page_max.is_integer():
+            nb_page_max = int(nb_page_max)+1
+        if page > nb_page_max:
+            page = nb_page_max
+        start = max_tags_result*(page -1)
+        stop = max_tags_result*page
+
+        for path in allPastes[start:stop]: ######################moduleName
             all_path.append(path)
             paste = Paste.Paste(path)
             content = paste.get_p_content()
@@ -153,8 +221,9 @@ def Tags_page():
                 all_path=all_path,
                 tags=tags,
                 list_tag = list_tag,
-                date_from=current_date,
-                date_to=current_date,
+                date_from=dates['date_from'],
+                date_to=dates['date_to'],
+                page=page, nb_page_max=nb_page_max,
                 paste_tags=paste_tags,
                 bootstrap_label=bootstrap_label,
                 content=all_content,

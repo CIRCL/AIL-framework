@@ -154,6 +154,8 @@ if baseUrl != '':
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number of character to display in the modal
 
+max_tags_result = 50
+
 DiffMaxLineLength =  int(cfg.get("Flask", "DiffMaxLineLength"))#Use to display the estimated percentage instead of a raw value
 
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
