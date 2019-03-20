@@ -9,7 +9,6 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 
 import json
 import datetime
-import ssdeep
 
 import Paste
 
@@ -56,6 +55,16 @@ for name, tags in clusters.items(): #galaxie name + tags
 # ============ FUNCTIONS ============
 def one():
     return 1
+
+def date_substract_day(date, num_day=1):
+    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) - datetime.timedelta(num_day)
+    new_date = str(new_date).replace('-', '')
+    return new_date
+
+def date_add_day(date, num_day=1):
+    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) + datetime.timedelta(num_day)
+    new_date = str(new_date).replace('-', '')
+    return new_date
 
 def get_tags_with_synonyms(tag):
     str_synonyms = ' - synonyms: '
@@ -109,6 +118,92 @@ def get_all_dates_range(date_from, date_to):
     all_dates['date_range'] = date_range
     return all_dates
 
+def add_item_tag(tag, item_path):
+    item_date = int(get_item_date(item_path))
+
+    #add tag
+    r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
+    r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
+
+    r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
+
+    tag_first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+    if tag_first_seen is None:
+        tag_first_seen = 99999999
+    else:
+        tag_first_seen = int(tag_first_seen)
+    tag_last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+    if tag_last_seen is None:
+        tag_last_seen = 0
+    else:
+        tag_last_seen = int(tag_last_seen)
+
+    #add new tag in list of all used tags
+    r_serv_tags.sadd('list_tags', tag)
+
+    # update fisrt_seen/last_seen
+    if item_date < tag_first_seen:
+        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', item_date)
+
+    # update metadata last_seen
+    if item_date > tag_last_seen:
+        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
+
+def remove_item_tag(tag, item_path):
+    item_date = int(get_item_date(item_path))
+
+    #remove tag
+    r_serv_metadata.srem('tag:{}'.format(item_path), tag)
+    res = r_serv_tags.srem('{}:{}'.format(tag, item_date), item_path)
+
+    if res ==1:
+        # no tag for this day
+        if int(r_serv_tags.hget('daily_tags:{}'.format(item_date), tag)) == 1:
+            r_serv_tags.hdel('daily_tags:{}'.format(item_date), tag)
+        else:
+            r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, -1)
+
+        tag_first_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
+        tag_last_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
+        # update fisrt_seen/last_seen
+        if item_date == tag_first_seen:
+            update_tag_first_seen(tag, tag_first_seen, tag_last_seen)
+        if item_date == tag_last_seen:
+            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
+    else:
+        return 'Error incorrect tag'
+
+def update_tag_first_seen(tag, tag_first_seen, tag_last_seen):
+    if tag_first_seen == tag_last_seen:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_first_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', tag_first_seen)
+        # no tag in db
+        else:
+            r_serv_tags.srem('list_tags', tag)
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
+    else:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_first_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', tag_first_seen)
+        else:
+            tag_first_seen = date_add_day(tag_first_seen)
+            update_tag_first_seen(tag, tag_first_seen, tag_last_seen)
+
+def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
+    if tag_first_seen == tag_last_seen:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
+        # no tag in db
+        else:
+            r_serv_tags.srem('list_tags', tag)
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
+    else:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
+        else:
+            tag_last_seen = date_substract_day(tag_last_seen)
+            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
 
 # ============= ROUTES ==============
 
@@ -121,7 +216,7 @@ def Tags_page():
 
     tags = request.args.get('ltags')
     if tags is None:
-        return render_template("Tags.html", date_from=current_date, date_to=current_date)
+        return render_template("Tags.html", date_from=dates['date_from'], date_to=dates['date_to'])
 
     else:
         tags = request.args.get('ltags')
@@ -340,12 +435,7 @@ def remove_tag():
     path = request.args.get('paste')
     tag = request.args.get('tag')
 
-    #remove tag
-    r_serv_metadata.srem('tag:'+path, tag)
-    r_serv_tags.srem(tag, path)
-
-    if r_serv_tags.scard(tag) == 0:
-        r_serv_tags.srem('list_tags', tag)
+    remove_item_tag(tag, path)
 
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
@@ -357,17 +447,11 @@ def confirm_tag():
     tag = request.args.get('tag')
 
     if(tag[9:28] == 'automatic-detection'):
-
-        #remove automatic tag
-        r_serv_metadata.srem('tag:'+path, tag)
-        r_serv_tags.srem(tag, path)
+        remove_item_tag(tag, path)
 
         tag = tag.replace('automatic-detection','analyst-detection', 1)
         #add analyst tag
-        r_serv_metadata.sadd('tag:'+path, tag)
-        r_serv_tags.sadd(tag, path)
-        #add new tag in list of all used tags
-        r_serv_tags.sadd('list_tags', tag)
+        add_item_tag(tag, path)
 
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
@@ -417,12 +501,7 @@ def addTags():
             tax = tag.split(':')[0]
             if tax in active_taxonomies:
                 if tag in r_serv_tags.smembers('active_tag_' + tax):
-
-                    #add tag
-                    r_serv_metadata.sadd('tag:'+path, tag)
-                    r_serv_tags.sadd(tag, path)
-                    #add new tag in list of all used tags
-                    r_serv_tags.sadd('list_tags', tag)
+                    add_item_tag(tag, path)
 
                 else:
                     return 'INCORRECT INPUT1'
@@ -437,12 +516,7 @@ def addTags():
 
             if gal in active_galaxies:
                 if tag in r_serv_tags.smembers('active_tag_galaxies_' + gal):
-
-                    #add tag
-                    r_serv_metadata.sadd('tag:'+path, tag)
-                    r_serv_tags.sadd(tag, path)
-                    #add new tag in list of all used tags
-                    r_serv_tags.sadd('list_tags', tag)
+                    add_item_tag(tag, path)
 
                 else:
                     return 'INCORRECT INPUT3'

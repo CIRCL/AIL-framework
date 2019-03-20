@@ -58,7 +58,7 @@ def showpaste(content_range, requested_path):
     p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
     p_source = paste.p_source
     p_encoding = paste._get_p_encoding()
-    p_language = paste._get_p_language()
+    p_language = 'None'
     p_size = paste.p_size
     p_mime = paste.p_mime
     p_lineinfo = paste.get_lines_info()
