@@ -176,6 +176,8 @@ def Tags_page():
         nb_page_max = len(tagged_pastes)/(max_tags_result)
         if not nb_page_max.is_integer():
             nb_page_max = int(nb_page_max)+1
+        else:
+            nb_page_max = int(nb_page_max)
         if page > nb_page_max:
             page = nb_page_max
         start = max_tags_result*(page -1)
