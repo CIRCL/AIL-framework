@@ -131,7 +131,7 @@
                                           <span class="term_name">{{ set }}</span>
                                           <div>
                                             {% for tag in notificationTagsTermMapping[set] %}
-                                            <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+                                            <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
                                               <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
                                             </a>
                                             {%  endfor %}
@@ -208,7 +208,7 @@
                                           <span class="term_name">{{ regex }}</span>
                                           <div>
                                             {% for tag in notificationTagsTermMapping[regex] %}
-                                            <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+                                            <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
                                               <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
                                             </a>
                                             {%  endfor %}
@@ -285,7 +285,7 @@
                                           <span class="term_name">{{ term }}</span>
                                           <div>
                                             {% for tag in notificationTagsTermMapping[term] %}
-                                            <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag }}">
+                                            <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
                                               <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
                                             </a>
                                             {%  endfor %}
