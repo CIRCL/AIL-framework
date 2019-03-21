@@ -147,9 +147,6 @@ def set_out_paste(decoder_name, message):
     publisher.warning(decoder_name+' decoded')
     #Send to duplicate
     p.populate_set_out(message, 'Duplicate')
-    #send to Browse_warning_paste
-    msg = (decoder_name+';{}'.format(message))
-    p.populate_set_out( msg, 'alertHandler')
 
     msg = 'infoleak:automatic-detection="'+decoder_name+'";{}'.format(message)
     p.populate_set_out(msg, 'Tags')

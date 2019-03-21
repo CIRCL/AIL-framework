@@ -82,9 +82,6 @@ if __name__ == "__main__":
                         to_print, len(creditcard_set), paste.p_path))
                     #Send to duplicate
                     p.populate_set_out(filename, 'Duplicate')
-                    #send to Browse_warning_paste
-                    msg = 'creditcard;{}'.format(filename)
-                    p.populate_set_out(msg, 'alertHandler')
 
                     msg = 'infoleak:automatic-detection="credit-card";{}'.format(filename)
                     p.populate_set_out(msg, 'Tags')

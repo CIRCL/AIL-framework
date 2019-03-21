@@ -107,9 +107,6 @@ if __name__ == "__main__":
             publisher.warning(to_print)
             #Send to duplicate
             p.populate_set_out(filepath, 'Duplicate')
-            #Send to alertHandler
-            msg = 'credential;{}'.format(filepath)
-            p.populate_set_out(msg, 'alertHandler')
 
             msg = 'infoleak:automatic-detection="credential";{}'.format(filepath)
             p.populate_set_out(msg, 'Tags')

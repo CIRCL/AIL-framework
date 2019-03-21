@@ -235,7 +235,6 @@ if __name__ == "__main__":
                     else:
                         for url in fetch(p, r_cache, urls, domains_list, path):
                             publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
-                    #p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
 
                     # TAG Item
                     msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)

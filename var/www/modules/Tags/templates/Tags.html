@@ -217,7 +217,8 @@ var last_clicked_paste;
 var can_change_modal_content = true;
 
 $(document).ready(function(){
-	$("#page-Browse-Items").addClass("active");
+	$("#nav_quick_search").removeClass("text-muted");
+	$("#nav_tag_{{tag_nav}}").addClass("active");
 	search_table = $('#myTable_').DataTable({ "order": [[ 0, "asc" ]] });
 
 	// Use to bind the button with the new displayed data

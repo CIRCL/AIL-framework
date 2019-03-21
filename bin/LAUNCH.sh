@@ -206,8 +206,6 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./LibInjection.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./alertHandler.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./MISP_The_Hive_feeder.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tags.py; read x"

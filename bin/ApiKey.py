@@ -57,8 +57,6 @@ def search_api_key(message):
         msg = 'infoleak:automatic-detection="api-key";{}'.format(filename)
         p.populate_set_out(msg, 'Tags')
 
-        msg = 'apikey;{}'.format(filename)
-        p.populate_set_out(msg, 'alertHandler')
         #Send to duplicate
         p.populate_set_out(filename, 'Duplicate')
 
@@ -86,7 +84,7 @@ if __name__ == "__main__":
 
         if message is not None:
 
-            search_api_key(message)        
+            search_api_key(message)
 
         else:
             publisher.debug("Script ApiKey is Idling 10s")

@@ -31,10 +31,6 @@ def search_cve(message):
         print('{} contains CVEs'.format(paste.p_name))
         publisher.warning('{} contains CVEs'.format(paste.p_name))
 
-        #send to Browse_warning_paste
-        msg = 'cve;{}'.format(filepath)
-        p.populate_set_out(msg, 'alertHandler')
-
         msg = 'infoleak:automatic-detection="cve";{}'.format(filepath)
         p.populate_set_out(msg, 'Tags')
         #Send to duplicate

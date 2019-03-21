@@ -32,14 +32,11 @@ def search_phone(message):
     if len(results) > 4:
         print(results)
         publisher.warning('{} contains PID (phone numbers)'.format(paste.p_name))
-        #send to Browse_warning_paste
-        msg = 'phone;{}'.format(message)
-        p.populate_set_out(msg, 'alertHandler')
-        #Send to duplicate
 
         msg = 'infoleak:automatic-detection="phone-number";{}'.format(message)
         p.populate_set_out(msg, 'Tags')
 
+        #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
         stats = {}
         for phone_number in results:
