@@ -57,6 +57,15 @@ Redis and ARDB overview
 | ------ | ------ |
 | *tag* | *paste* |
 
+## DB7 - Metadata:
+
+#### Crawled Items:
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| paste_metadata:**item path** | super_father | **first url crawled** |
+| | father | **item father** |
+| | domain | **crawled domain**:**domain port** |
 
 ## DB9 - Crawler:
 
@@ -65,19 +74,20 @@ Redis and ARDB overview
 | ------ | ------ | ------ |
 | **service type**:**domain** | first_seen | **date** |
 | | last_check | **date** |
+| | ports | **port**;**port**;**port** ... |
 | | paste_parent | **parent last crawling (can be auto or manual)** |
 
 ##### Zset:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| crawler_history_**service type**:**domain** | **item root (first crawled item)** | **epoch (seconds)** |
+| crawler\_history\_**service type**:**domain** | **item root (first crawled item)** | **epoch (seconds)** |
 
-##### Regular key:
+##### Key:
 | Key | Value |
 | ------ | ------ |
-| crawler_history_**service type**:**domain** | **json config** |
+| crawler\_config:**crawler mode**:**service type**:**domain** | **json config** |
 
-##### exemple json config:
+###### exemple json config:
 ```json
 {
   "closespider_pagecount": 1,

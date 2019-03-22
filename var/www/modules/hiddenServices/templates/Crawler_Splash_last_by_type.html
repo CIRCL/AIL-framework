@@ -61,8 +61,11 @@
 							  </thead>
 							  <tbody id="tbody_last_crawled">
 										{% for metadata_domain in last_domains %}
-								      <tr data-toggle="popover" data-trigger="hover" title="<span class='badge badge-dark'>{{metadata_domain['domain']}}</span>"  data-content="{{metadata_domain['epoch']}}">
-								        <td><a target="_blank" href="{{ url_for('hiddenServices.show_domain') }}?domain={{ metadata_domain['domain'] }}&epoch={{metadata_domain['epoch']}}">{{ metadata_domain['domain_name'] }}</a></td>
+								      <tr data-toggle="popover" data-trigger="hover"
+												title="<span class='badge badge-dark'>{{metadata_domain['domain']}}</span>"
+												data-content="port: <span class='badge badge-secondary'>{{metadata_domain['port']}}</span><br>
+																			epoch: {{metadata_domain['epoch']}}">
+								        <td><a target="_blank" href="{{ url_for('hiddenServices.show_domain') }}?domain={{ metadata_domain['domain'] }}&port={{metadata_domain['port']}}&epoch={{metadata_domain['epoch']}}">{{ metadata_domain['domain_name'] }}</a></td>
 								        <td>{{'{}/{}/{}'.format(metadata_domain['first_seen'][0:4], metadata_domain['first_seen'][4:6], metadata_domain['first_seen'][6:8])}}</td>
 												<td>{{'{}/{}/{}'.format(metadata_domain['last_check'][0:4], metadata_domain['last_check'][4:6], metadata_domain['last_check'][6:8])}}</td>
 								        <td><div style="color:{{metadata_domain['status_color']}}; display:inline-block">

@@ -39,6 +39,7 @@ if __name__ == '__main__':
     service_type = crawler_json['service_type']
     url = crawler_json['url']
     domain = crawler_json['domain']
+    port = crawler_json['port']
     original_item = crawler_json['item']
     crawler_options = crawler_json['crawler_options']
     date = crawler_json['date']
@@ -46,4 +47,4 @@ if __name__ == '__main__':
     redis_cache.delete('crawler_request:{}'.format(uuid))
 
     crawler = TorSplashCrawler(splash_url, crawler_options)
-    crawler.crawl(service_type, crawler_options, date, url, domain, original_item)
+    crawler.crawl(service_type, crawler_options, date, url, domain, port, original_item)

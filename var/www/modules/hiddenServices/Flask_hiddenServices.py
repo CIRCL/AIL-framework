@@ -122,6 +122,13 @@ def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
     list_crawled_metadata = []
     for domain_epoch in list_domains_crawled:
         domain, epoch = domain_epoch.rsplit(';', 1)
+        domain = domain.split(':')
+        if len(domain) == 1:
+            port = 80
+            domain = domain[0]
+        else:
+            port = domain[1]
+            domain = domain[0]
         metadata_domain = {}
         # get Domain type
         if type is None:
@@ -133,6 +140,7 @@ def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
             metadata_domain['domain_name'] = '{}[...].{}'.format(domain_name[:40], tld_domain)
         else:
             metadata_domain['domain_name'] = domain
+        metadata_domain['port'] = port
         metadata_domain['epoch'] = epoch
         metadata_domain['last_check'] = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'last_check')
         if metadata_domain['last_check'] is None:
@@ -384,56 +392,7 @@ def create_spider_splash():
 
     return redirect(url_for('hiddenServices.manual'))
 
-@hiddenServices.route("/hiddenServices/", methods=['GET'])
-def hiddenServices_page():
-    last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
-    list_onion = []
-
-    now = datetime.datetime.now()
-    date = now.strftime("%Y%m%d")
-
-    statDomains = {}
-    statDomains['domains_up'] = r_serv_onion.scard('onion_up:{}'.format(date))
-    statDomains['domains_down'] = r_serv_onion.scard('onion_down:{}'.format(date))
-    statDomains['total'] = statDomains['domains_up'] + statDomains['domains_down']
-    statDomains['domains_queue'] = r_serv_onion.scard('onion_domain_crawler_queue')
-
-    for onion in last_onions:
-        metadata_onion = {}
-        metadata_onion['domain'] = onion
-        metadata_onion['last_check'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'last_check')
-        if metadata_onion['last_check'] is None:
-            metadata_onion['last_check'] = '********'
-        metadata_onion['first_seen'] = r_serv_onion.hget('onion_metadata:{}'.format(onion), 'first_seen')
-        if metadata_onion['first_seen'] is None:
-            metadata_onion['first_seen'] = '********'
-        if get_onion_status(onion, metadata_onion['last_check']):
-            metadata_onion['status_text'] = 'UP'
-            metadata_onion['status_color'] = 'Green'
-            metadata_onion['status_icon'] = 'fa-check-circle'
-        else:
-            metadata_onion['status_text'] = 'DOWN'
-            metadata_onion['status_color'] = 'Red'
-            metadata_onion['status_icon'] = 'fa-times-circle'
-        list_onion.append(metadata_onion)
-
-    crawler_metadata=[]
-    all_onion_crawler = r_cache.smembers('all_crawler:onion')
-    for crawler in all_onion_crawler:
-        crawling_domain = r_cache.hget('metadata_crawler:{}'.format(crawler), 'crawling_domain')
-        started_time = r_cache.hget('metadata_crawler:{}'.format(crawler), 'started_time')
-        status_info = r_cache.hget('metadata_crawler:{}'.format(crawler), 'status')
-        crawler_info = '{}  - {}'.format(crawler, started_time)
-        if status_info=='Waiting' or status_info=='Crawling':
-            status=True
-        else:
-            status=False
-        crawler_metadata.append({'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status})
-
-    date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
-    return render_template("hiddenServices.html", last_onions=list_onion, statDomains=statDomains,
-                            crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
-
+# # TODO: refractor
 @hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_json", methods=['GET'])
 def last_crawled_domains_with_stats_json():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
@@ -571,10 +530,19 @@ def show_domains_by_daterange():
                                 date_from=date_from, date_to=date_to, domains_up=domains_up, domains_down=domains_down,
                                 domains_tags=domains_tags, bootstrap_label=bootstrap_label)
 
-@hiddenServices.route("/hiddenServices/show_domain", methods=['GET'])
+@hiddenServices.route("/crawlers/show_domain", methods=['GET'])
 def show_domain():
     domain = request.args.get('domain')
     epoch = request.args.get('epoch')
+    try:
+        epoch = int(epoch)
+    except:
+        epoch = None
+    port = request.args.get('port')
+    try:
+        port = int(port)
+    except:
+        port = 80
     type = get_type_domain(domain)
     if domain is None or not r_serv_onion.exists('{}_metadata:{}'.format(type, domain)):
         return '404'
@@ -590,16 +558,16 @@ def show_domain():
     first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
     origin_paste = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'paste_parent')
 
-    h = HiddenServices(domain, type)
-    last_crawled_time = h.get_last_crawled()
-    if 'epoch' in last_crawled_time:
-        last_check = '{} - {}'.format(last_check, time.strftime('%H:%M.%S', time.gmtime(last_crawled_time['epoch'])))
-    l_pastes = h.get_last_crawled_pastes(epoch=epoch)
+    h = HiddenServices(domain, type, port=port)
+    item_core = h.get_domain_crawled_core_item(epoch=epoch)
+    epoch = item_core['epoch']
+    l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
     dict_links = h.get_all_links(l_pastes)
     if l_pastes:
         status = True
     else:
         status = False
+    last_check = '{} - {}'.format(last_check, time.strftime('%H:%M.%S', time.gmtime(epoch)))
     screenshot = h.get_domain_random_screenshot(l_pastes)
     if screenshot:
         screenshot = screenshot[0]

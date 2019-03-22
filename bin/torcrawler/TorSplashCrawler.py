@@ -46,19 +46,20 @@ class TorSplashCrawler():
             'DEPTH_LIMIT': crawler_options['depth_limit']
             })
 
-    def crawl(self, type, crawler_options, date, url, domain, original_item):
-        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, date=date, url=url, domain=domain,original_item=original_item)
+    def crawl(self, type, crawler_options, date, url, domain, port, original_item):
+        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, date=date, url=url, domain=domain, port=port, original_item=original_item)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, type, crawler_options, date, url, domain, original_item, *args, **kwargs):
+        def __init__(self, type, crawler_options, date, url, domain, port, original_item, *args, **kwargs):
             self.type = type
             self.original_item = original_item
             self.root_key = None
             self.start_urls = url
             self.domains = [domain]
+            self.port = str(port)
             date_str = '{}/{}/{}'.format(date['date_day'][0:4], date['date_day'][4:6], date['date_day'][6:8])
             self.full_date = date['date_day']
             self.date_month = date['date_month']
@@ -153,13 +154,22 @@ class TorSplashCrawler():
                     if self.root_key is None:
                         self.root_key = relative_filename_paste
                         # Create/Update crawler history
-                        self.r_serv_onion.zadd('crawler_history_{}:{}'.format(self.type, self.domains[0]), self.date_epoch, self.root_key)
+                        self.r_serv_onion.zadd('crawler_history_{}:{}:{}'.format(self.type, self.domains[0], self.port), self.date_epoch, self.root_key)
+                        # Update domain port number
+                        all_domain_ports = self.r_serv_onion.hget('{}_metadata:{}'.format(self.type, self.domains[0]), 'ports')
+                        if all_domain_ports:
+                            all_domain_ports = all_domain_ports.split(';')
+                        else:
+                            all_domain_ports = []
+                        if self.port not in all_domain_ports:
+                            all_domain_ports.append(self.port)
+                            self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'ports', ';'.join(all_domain_ports))
 
                     #create paste metadata
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.root_key)
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['father'])
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'domain', self.domains[0])
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'real_link', response.url)
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'super_father', self.root_key)
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'father', response.meta['father'])
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'domain', '{}:{}'.format(self.domains[0], self.port))
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'real_link', response.url)
 
                     self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], filename_paste)
 
@@ -206,6 +216,10 @@ class TorSplashCrawler():
 
                 self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
                 time.sleep(10)
+                if response:
+                    response_root_key = response.meta['root_key']
+                else:
+                    response_root_key = None
                 yield SplashRequest(
                     url,
                     self.parse,

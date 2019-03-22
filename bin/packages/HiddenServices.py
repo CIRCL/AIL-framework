@@ -37,7 +37,7 @@ class HiddenServices(object):
 
     """
 
-    def __init__(self, domain, type):
+    def __init__(self, domain, type, port=80):
 
         configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
         if not os.path.exists(configfile):
@@ -61,6 +61,7 @@ class HiddenServices(object):
 
         self.domain = domain
         self.type = type
+        self.port = port
         self.tags = {}
 
         if type == 'onion' or type == 'regular':
@@ -110,7 +111,7 @@ class HiddenServices(object):
             self.tags[tag] = self.tags.get(tag, 0) + 1
 
     def get_first_crawled(self):
-        res = self.r_serv_onion.zrange('crawler_history_{}:{}'.format(self.type, self.domain), 0, 0, withscores=True)
+        res = self.r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, 0, withscores=True)
         if res:
             res = res[0]
             return {'root_item':res[0], 'epoch':res[1]}
@@ -118,26 +119,31 @@ class HiddenServices(object):
             return {}
 
     def get_last_crawled(self):
-        res = self.r_serv_onion.zrevrange('crawler_history_{}:{}'.format(self.type, self.domain), 0, 0, withscores=True)
+        res = self.r_serv_onion.zrevrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, 0, withscores=True)
         if res:
-            res = res[0]
             return {'root_item':res[0], 'epoch':res[1]}
         else:
             return {}
 
     #todo use the right paste
-    def get_last_crawled_pastes(self, epoch=None):
-        if epoch is None:
-            list_root = self.r_serv_onion.zrevrange('crawler_history_{}:{}'.format(self.type, self.domain), 0, 0)
-        else:
-            list_root = self.r_serv_onion.zrevrangebyscore('crawler_history_{}:{}'.format(self.type, self.domain), int(epoch), int(epoch))
-        if list_root:
-            return self.get_all_pastes_domain(list_root[0])
-        else:
-            if epoch:
-                return self.get_last_crawled_pastes()
-            else:
-                return list_root
+    def get_domain_crawled_core_item(self, epoch=None):
+        core_item = {}
+        if epoch:
+            list_root = self.r_serv_onion.zrevrangebyscore('crawler_history_{}:{}'.format(self.type, self.domain, self.port), int(epoch), int(epoch))
+            if list_root:
+                core_item['root_item'] = list_root[0]
+                core_item['epoch'] = epoch
+                return core_item
+
+        # no history found for this epoch
+        if not core_item:
+            return self.get_last_crawled()
+
+    #todo use the right paste
+    def get_last_crawled_pastes(self, item_root=None):
+        if item_root is None:
+            item_root = self.get_domain_crawled_core_item(self)
+        return self.get_all_pastes_domain(item_root)
 
     def get_all_pastes_domain(self, root_item):
         if root_item is None:
