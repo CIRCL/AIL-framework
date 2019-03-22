@@ -114,14 +114,14 @@ class HiddenServices(object):
         res = self.r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, 0, withscores=True)
         if res:
             res = res[0]
-            return {'root_item':res[0], 'epoch':res[1]}
+            return {'root_item':res[0], 'epoch':int(res[1])}
         else:
             return {}
 
     def get_last_crawled(self):
         res = self.r_serv_onion.zrevrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, 0, withscores=True)
         if res:
-            return {'root_item':res[0], 'epoch':res[1]}
+            return {'root_item':res[0][0], 'epoch':res[0][1]}
         else:
             return {}
 
@@ -129,7 +129,7 @@ class HiddenServices(object):
     def get_domain_crawled_core_item(self, epoch=None):
         core_item = {}
         if epoch:
-            list_root = self.r_serv_onion.zrevrangebyscore('crawler_history_{}:{}'.format(self.type, self.domain, self.port), int(epoch), int(epoch))
+            list_root = self.r_serv_onion.zrevrangebyscore('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), int(epoch), int(epoch))
             if list_root:
                 core_item['root_item'] = list_root[0]
                 core_item['epoch'] = epoch
