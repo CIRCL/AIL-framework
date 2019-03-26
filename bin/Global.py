@@ -23,23 +23,17 @@ Requirements
 import base64
 import os
 import time
+import uuid
 from pubsublogger import publisher
 
 from Helper import Process
 
 import magic
-import io
-#import gzip
 
-'''
-def gunzip_bytes_obj(bytes_obj):
-    in_ = io.BytesIO()
-    in_.write(bytes_obj)
-    in_.seek(0)
-    with gzip.GzipFile(fileobj=in_, mode='rb') as fo:
-        gunzipped_bytes_obj = fo.read()
+def rreplace(s, old, new, occurrence):
+    li = s.rsplit(old, occurrence)
+    return new.join(li)
 
-    return gunzipped_bytes_obj.decode()'''
 
 if __name__ == '__main__':
     publisher.port = 6380
@@ -77,6 +71,12 @@ if __name__ == '__main__':
                 processed_paste = 0
             time.sleep(1)
             continue
+
+        file_name_paste = paste.split('/')[-1]
+        if len(file_name_paste)>255:
+            new_file_name_paste = '{}{}.gz'.format(file_name_paste[:215], str(uuid.uuid4()))
+            paste = rreplace(paste, file_name_paste, new_file_name_paste, 1)
+
         # Creating the full filepath
         filename = os.path.join(os.environ['AIL_HOME'],
                                 p.config.get("Directories", "pastes"), paste)

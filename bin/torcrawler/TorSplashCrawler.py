@@ -130,7 +130,11 @@ class TorSplashCrawler():
                     print('Connection to proxy refused')
             else:
 
-                UUID = self.domains[0]+str(uuid.uuid4())
+                #avoid filename too big
+                if len(self.domains[0]) > 215:
+                    UUID = self.domains[0][-215:]+str(uuid.uuid4())
+                else:
+                    UUID = self.domains[0]+str(uuid.uuid4())
                 filename_paste = os.path.join(self.crawled_paste_filemame, UUID)
                 relative_filename_paste = os.path.join(self.crawler_path, UUID)
                 filename_screenshot = os.path.join(self.crawled_screenshot, UUID +'.png')
