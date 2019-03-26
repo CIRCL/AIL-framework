@@ -16,7 +16,6 @@ export AIL_HOME="${DIR}"
 cd ${AIL_HOME}
 
 if [ -e "${DIR}/AILENV/bin/python" ]; then
-    echo "AIL-framework virtualenv seems to exist, good"
     ENV_PY="${DIR}/AILENV/bin/python"
 else
     echo "Please make sure you have a AIL-framework environment, au revoir"
@@ -75,6 +74,7 @@ function helptext {
     LAUNCH.sh
       [-l | --launchAuto]
       [-k | --killAll]
+      [-u | --update]
       [-c | --configUpdate]
       [-t | --thirdpartyUpdate]
       [-h | --help]
@@ -264,20 +264,20 @@ function checking_redis {
     redis_dir=${AIL_HOME}/redis/src/
     bash -c $redis_dir'redis-cli -p 6379 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6379 not ready"$DEFAULT
-       flag_redis=1
+        echo -e $RED"\t6379 not ready"$DEFAULT
+        flag_redis=1
     fi
     sleep 0.1
     bash -c $redis_dir'redis-cli -p 6380 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6380 not ready"$DEFAULT
-       flag_redis=1
+        echo -e $RED"\t6380 not ready"$DEFAULT
+        flag_redis=1
     fi
     sleep 0.1
     bash -c $redis_dir'redis-cli -p 6381 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6381 not ready"$DEFAULT
-       flag_redis=1
+        echo -e $RED"\t6381 not ready"$DEFAULT
+        flag_redis=1
     fi
     sleep 0.1
 
@@ -290,8 +290,8 @@ function checking_ardb {
     sleep 0.2
     bash -c $redis_dir'redis-cli -p 6382 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6382 ARDB not ready"$DEFAULT
-       flag_ardb=1
+        echo -e $RED"\t6382 ARDB not ready"$DEFAULT
+        flag_ardb=1
     fi
 
     return $flag_ardb;
@@ -379,11 +379,15 @@ function launch_feeder {
 
 function killall {
     if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded ]]; then
-        echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
-        shutting_down_redis;
-        sleep 0.2
-        echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
-        shutting_down_ardb;
+        if [[ $isredis ]]; then
+            echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
+            shutting_down_redis;
+            sleep 0.2
+        fi
+        if [[ $isardb ]]; then
+            echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
+            shutting_down_ardb;
+        fi
         echo -e $GREEN"Killing all"$DEFAULT
         kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded
         sleep 0.2
@@ -396,6 +400,17 @@ function killall {
 
 function shutdown {
     bash -c "./Shutdown.py"
+}
+
+function update() {
+    bin_dir=${AIL_HOME}/bin
+
+    bash -c "python3 $bin_dir/Update.py"
+    exitStatus=$?
+    if [ $exitStatus -ge 1 ]; then
+        echo -e $RED"\t* Update Error"$DEFAULT
+        exit
+    fi
 }
 
 function update_thirdparty {
@@ -411,6 +426,7 @@ function update_thirdparty {
 }
 
 function launch_all {
+    update;
     launch_redis;
     launch_ardb;
     launch_logs;
@@ -424,7 +440,7 @@ function launch_all {
 
     helptext;
 
-    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update-config" "Update-thirdparty")
+    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update" "Update-config" "Update-thirdparty")
 
     menu() {
         echo "What do you want to Launch?:"
@@ -475,6 +491,9 @@ function launch_all {
                 Shutdown)
                     shutdown;
                     ;;
+                Update)
+                    update;
+                    ;;
                 Update-config)
                     checking_configuration "manual";
                     ;;
@@ -488,11 +507,15 @@ function launch_all {
     exit
 }
 
+echo "$@"
+
 while [ "$1" != "" ]; do
     case $1 in
         -l | --launchAuto )         launch_all "automatic";
                                     ;;
         -k | --killAll )            killall;
+                                    ;;
+        -u | --update )             update;
                                     ;;
         -t | --thirdpartyUpdate )   update_thirdparty;
                                     ;;
@@ -502,6 +525,9 @@ while [ "$1" != "" ]; do
                                     ;;
         -h | --help )               helptext;
                                     exit
+                                    ;;
+        -kh | --khelp )             helptext;
+
                                     ;;
         * )                         helptext
                                     exit 1
