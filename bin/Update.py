@@ -195,8 +195,8 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 
 def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork):
     print('{}git checkout master:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
-    process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #process = subprocess.run(['ls'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.run(['ls'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         print(process.stdout.decode())
         print()
