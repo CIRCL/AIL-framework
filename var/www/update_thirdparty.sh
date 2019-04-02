@@ -83,8 +83,12 @@ pushd static/image
 wget https://www.circl.lu/assets/images/logos/AIL.png -O AIL.png
 popd
 
-#active virtualenv
-source ./../../AILENV/bin/activate
+if ! [[ -n "$AIL_HOME" ]]
+then
+    #active virtualenv
+    source ./../../AILENV/bin/activate
+fi
+
 #Update MISP Taxonomies and Galaxies
 python3 -m pip install git+https://github.com/MISP/PyTaxonomies --upgrade
 python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies --upgrade
