@@ -67,12 +67,32 @@ Redis and ARDB overview
 | | father | **item father** |
 | | domain | **crawled domain**:**domain port** |
 
+##### Set:
+| Key | Field |
+| ------ | ------ |
+| tag:**item path** | **tag** |
+| | |
+| paste_children:**item path** | **item path** |
+| | |
+| hash_paste:**item path** | **hash** |
+| base64_paste:**item path** | **hash** |
+| hexadecimal_paste:**item path** | **hash** |
+| binary_paste:**item path** | **hash** |
+
+##### Zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| nb_seen_hash:**hash** | **item** | **nb_seen** |
+| base64_hash:**hash** | **item** | **nb_seen** |
+| binary_hash:**hash** | **item** | **nb_seen** |
+| hexadecimal_hash:**hash** | **item** | **nb_seen** |
+
 ## DB9 - Crawler:
 
 ##### Hset:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| **service type**:**domain** | first_seen | **date** |
+| **service type**_metadata:**domain** | first_seen | **date** |
 | | last_check | **date** |
 | | ports | **port**;**port**;**port** ... |
 | | paste_parent | **parent last crawling (can be auto or manual)** |
