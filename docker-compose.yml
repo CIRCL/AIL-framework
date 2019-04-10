@@ -1,0 +1,523 @@
+version: '3'
+services:
+  ardb:
+    entrypoint:
+      - ardb-server
+      - /opt/AIL/configs/6382.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6382", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./configs:/opt/AIL/configs:ro
+  crawler:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Crawler.py
+      - onion
+      - "8050"
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./CRAWLED_SCREENSHOT/:/opt/AIL/CRAWLED_SCREENSHOT
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  flask:
+    build: .
+    entrypoint:
+      - /opt/AIL/var/www/Flask_server.py
+    ports:
+      - "7000:7000"
+    image: ail-framework
+    volumes:
+      - ./CRAWLED_SCREENSHOT/:/opt/AIL/CRAWLED_SCREENSHOT
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./indexdir:/opt/AIL/indexdir
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/var/www
+  log-queue:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/AILENV/bin/log_subscriber
+      - -p
+      - "6380"
+      - -c
+      - Queing
+      - -l
+      - /opt/AIL/logs/
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./configs:/opt/AIL/configs:ro
+  log-script:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/AILENV/bin/log_subscriber
+      - -p
+      - "6380"
+      - -c
+      - Script
+      - -l
+      - /opt/AIL/logs/
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./configs:/opt/AIL/configs:ro
+  pystemon:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/pystemon/pystemon.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./pystemon/archives:/opt/pystemon/archive
+      - ./pystemon/proxies.txt:/opt/pystemon/proxies.txt:ro
+      - ./pystemon/pystemon.yaml:/opt/pystemon/pystemon.yaml:ro
+    working_dir: /opt/pystemon
+  pystemon-feeder:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/feeder/pystemon-feeder.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./pystemon/archives:/opt/pystemon/archive
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  queues:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/launch_queues.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  redis-cache:
+    entrypoint:
+      - redis-server
+      - /opt/AIL/configs/6379.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    image: ail-framework
+    network_mode: service:flask
+    volumes:
+      - ./configs:/opt/AIL/configs:ro
+  redis-log:
+    entrypoint:
+      - redis-server
+      - /opt/AIL/configs/6380.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./configs:/opt/AIL/configs:ro
+  redis-mixer-cache:
+    entrypoint:
+      - redis-server
+      - /opt/AIL/configs/6381.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    image: ail-framework
+    network_mode: service:flask
+    volumes:
+      - ./configs:/opt/AIL/configs:ro
+  script-alerthandler:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/alertHandler.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-apikey:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/ApiKey.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-bankaccount:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/BankAccount.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-bitcoin:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Bitcoin.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-categ:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Categ.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-credential:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Credential.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-creditcards:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/CreditCards.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-curve:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Curve.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-curvemanagetopsets:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/CurveManageTopSets.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-cve:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Cve.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-decoder:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Decoder.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./HASHS:/opt/AIL/HASHS
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-domclassifier:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/DomClassifier.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-duplicates:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Duplicates.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-global:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Global.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-indexer:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Indexer.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./indexdir:/opt/AIL/indexdir
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-keys:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Keys.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-libinjection:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/LibInjection.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-lines:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Lines.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-mail:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Mail.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-mispthehivefeeder:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/MISP_The_Hive_feeder.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-mixer:
+    depends_on:
+      - redis-mixer-cache
+    entrypoint:
+      - /opt/AIL/bin/Mixer.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-modulestats:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/ModuleStats.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-onion:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Onion.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-phone:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Phone.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-regexfortermsfrequency:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/RegexForTermsFrequency.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-release:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Release.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-sentimentanalysis:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/SentimentAnalysis.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-setfortermsfrequency:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/SetForTermsFrequency.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-sqlinjectiondetection:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/SQLInjectionDetection.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-submitpaste:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/submit_paste.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-tags:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Tags.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-tokenize:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Tokenize.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-web:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/Web.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
+  script-webstats:
+    depends_on:
+      - redis-log
+    entrypoint:
+      - /opt/AIL/bin/WebStats.py
+    network_mode: service:flask
+    image: ail-framework
+    volumes:
+      - ./PASTES/:/opt/AIL/PASTES
+      - ./bin/packages/config.cfg:/opt/AIL/bin/packages/config.cfg:ro
+    working_dir: /opt/AIL/bin
