@@ -57,11 +57,11 @@ if __name__ == "__main__":
             try:
                 for word, score in paste._get_top_words().items():
                     if len(word) >= 4:
-                        msg = '{} {} {}'.format(paste.p_path, word, score)
+                        msg = '{} {} {}'.format(paste.p_rel_path, word, score)
                         p.populate_set_out(msg)
             except TimeoutException:
                 p.incr_module_timeout_statistic()
-                print ("{0} processing timeout".format(paste.p_path))
+                print ("{0} processing timeout".format(paste.p_rel_path))
                 continue
             else:
                 signal.alarm(0)

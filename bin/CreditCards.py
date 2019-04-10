@@ -77,16 +77,16 @@ if __name__ == "__main__":
                     paste.p_source, paste.p_date, paste.p_name)
                 if (len(creditcard_set) > 0):
                     publisher.warning('{}Checked {} valid number(s);{}'.format(
-                        to_print, len(creditcard_set), paste.p_path))
+                        to_print, len(creditcard_set), paste.p_rel_path))
                     print('{}Checked {} valid number(s);{}'.format(
-                        to_print, len(creditcard_set), paste.p_path))
+                        to_print, len(creditcard_set), paste.p_rel_path))
                     #Send to duplicate
                     p.populate_set_out(filename, 'Duplicate')
 
                     msg = 'infoleak:automatic-detection="credit-card";{}'.format(filename)
                     p.populate_set_out(msg, 'Tags')
                 else:
-                    publisher.info('{}CreditCard related;{}'.format(to_print, paste.p_path))
+                    publisher.info('{}CreditCard related;{}'.format(to_print, paste.p_rel_path))
         else:
             publisher.debug("Script creditcard is idling 1m")
             time.sleep(10)

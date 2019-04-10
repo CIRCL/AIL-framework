@@ -82,6 +82,8 @@ if __name__ == '__main__':
     ttl_key = cfg.getint("Module_Mixer", "ttl_duplicate")
     default_unnamed_feed_name = cfg.get("Module_Mixer", "default_unnamed_feed_name")
 
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes")) + '/'
+
     # STATS #
     processed_paste = 0
     processed_paste_per_feeder = {}
@@ -104,11 +106,13 @@ if __name__ == '__main__':
                     feeder_name.replace(" ","")
                     if 'import_dir' in feeder_name:
                         feeder_name = feeder_name.split('/')[1]
-                    paste_name = complete_paste
 
                 except ValueError as e:
                     feeder_name = default_unnamed_feed_name
                     paste_name = complete_paste
+
+                # remove absolute path
+                paste_name = paste_name.replace(PASTES_FOLDER, '', 1)
 
                 # Processed paste
                 processed_paste += 1
@@ -118,6 +122,7 @@ if __name__ == '__main__':
                     # new feeder
                     processed_paste_per_feeder[feeder_name] = 1
                     duplicated_paste_per_feeder[feeder_name] = 0
+
 
                 relay_message = "{0} {1}".format(paste_name, gzip64encoded)
                 #relay_message = b" ".join( [paste_name, gzip64encoded] )

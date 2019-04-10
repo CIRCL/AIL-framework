@@ -73,7 +73,7 @@ def search_key(content, message, paste):
                 to_print = 'Bitcoin;{};{};{};'.format(paste.p_source, paste.p_date,
                                                     paste.p_name)
                 publisher.warning('{}Detected {} Bitcoin private key;{}'.format(
-                    to_print, len(bitcoin_private_key),paste.p_path))
+                    to_print, len(bitcoin_private_key),paste.p_rel_path))
 
 if __name__ == "__main__":
     publisher.port = 6380

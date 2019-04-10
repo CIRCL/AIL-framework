@@ -89,16 +89,10 @@ if __name__ == "__main__":
         paste = Paste.Paste(filename)
         content = paste.get_p_content()
 
-        #print('-----------------------------------------------------')
-        #print(filename)
-        #print(content)
-        #print('-----------------------------------------------------')
-
         for categ, pattern in tmp_dict.items():
             found = set(re.findall(pattern, content))
             if len(found) >= matchingThreshold:
-                msg = '{} {}'.format(paste.p_path, len(found))
-                #msg = " ".join( [paste.p_path, bytes(len(found))] )
+                msg = '{} {}'.format(paste.p_rel_path, len(found))
 
                 print(msg, categ)
                 p.populate_set_out(msg, categ)
@@ -106,4 +100,4 @@ if __name__ == "__main__":
                 publisher.info(
                     'Categ;{};{};{};Detected {} as {};{}'.format(
                         paste.p_source, paste.p_date, paste.p_name,
-                        len(found), categ, paste.p_path))
+                        len(found), categ, paste.p_rel_path))

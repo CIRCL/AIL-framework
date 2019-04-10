@@ -142,17 +142,17 @@ if __name__ == "__main__":
                                 paste_date = paste_date
                                 paste_date = paste_date if paste_date != None else "No date available"
                                 if paste_path != None:
-                                    if paste_path != PST.p_path:
+                                    if paste_path != PST.p_rel_path:
                                         hash_dico[dico_hash] = (hash_type, paste_path, percent, paste_date)
 
-                                        print('['+hash_type+'] '+'comparing: ' + str(PST.p_path[44:]) + '  and  ' + str(paste_path[44:]) + ' percentage: ' + str(percent))
+                                        print('['+hash_type+'] '+'comparing: ' + str(PST.p_rel_path) + '  and  ' + str(paste_path) + ' percentage: ' + str(percent))
 
                         except Exception:
                             print('hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash)
 
             # Add paste in DB after checking to prevent its analysis twice
             # hash_type_i -> index_i  AND  index_i -> PST.PATH
-            r_serv1.set(index, PST.p_path)
+            r_serv1.set(index, PST.p_rel_path)
             r_serv1.set(index+'_date', PST._get_p_date())
             r_serv1.sadd("INDEX", index)
             # Adding hashes in Redis
@@ -180,7 +180,7 @@ if __name__ == "__main__":
                     PST.__setattr__("p_duplicate", dupl)
                     PST.save_attribute_duplicate(dupl)
                     PST.save_others_pastes_attribute_duplicate(dupl)
-                    publisher.info('{}Detected {};{}'.format(to_print, len(dupl), PST.p_path))
+                    publisher.info('{}Detected {};{}'.format(to_print, len(dupl), PST.p_rel_path))
                     print('{}Detected {}'.format(to_print, len(dupl)))
                     print('')
 
@@ -191,5 +191,5 @@ if __name__ == "__main__":
         except IOError:
             to_print = 'Duplicate;{};{};{};'.format(
                 PST.p_source, PST.p_date, PST.p_name)
-            print("CRC Checksum Failed on :", PST.p_path)
+            print("CRC Checksum Failed on :", PST.p_rel_path)
             publisher.error('{}CRC Checksum Failed'.format(to_print))

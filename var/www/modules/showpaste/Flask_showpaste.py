@@ -41,14 +41,15 @@ showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templa
 # ============ FUNCTIONS ============
 
 def showpaste(content_range, requested_path):
-    relative_path = None
     if PASTES_FOLDER not in requested_path:
-        relative_path = requested_path
-        requested_path = os.path.join(PASTES_FOLDER, requested_path)
-    # remove old full path
-    #requested_path = requested_path.replace(PASTES_FOLDER, '')
+        # remove full path
+        requested_path_full = os.path.join(requested_path, PASTES_FOLDER)
+    else:
+        requested_path_full = requested_path
+        requested_path = requested_path.replace(PASTES_FOLDER, '', 1)
+
     # escape directory transversal
-    if os.path.commonprefix((os.path.realpath(requested_path),PASTES_FOLDER)) != PASTES_FOLDER:
+    if os.path.commonprefix((requested_path_full,PASTES_FOLDER)) != PASTES_FOLDER:
         return 'path transversal detected'
 
     vt_enabled = Flask_config.vt_enabled
@@ -124,8 +125,6 @@ def showpaste(content_range, requested_path):
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
 
     l_tags = r_serv_metadata.smembers('tag:'+requested_path)
-    if relative_path is not None:
-        l_tags.union( r_serv_metadata.smembers('tag:'+relative_path) )
 
     #active galaxies
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -190,7 +189,7 @@ def showpaste(content_range, requested_path):
         crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
-        crawler_metadata['screenshot'] = paste.get_p_rel_path()
+        crawler_metadata['screenshot'] = paste.get_p_date_path()
     else:
         crawler_metadata['get_metadata'] = False
 
@@ -406,6 +405,7 @@ def send_file_to_vt():
     paste = request.form['paste']
     hash = request.form['hash']
 
+    ## TODO:  # FIXME:  path transversal
     b64_full_path = os.path.join(os.environ['AIL_HOME'], b64_path)
     b64_content = ''
     with open(b64_full_path, 'rb') as f:

@@ -43,8 +43,8 @@ if __name__ == "__main__":
             # FIXME why not all saving everything there.
             PST.save_all_attributes_redis()
             # FIXME Not used.
-            PST.store.sadd("Pastes_Objects", PST.p_path)
+            PST.store.sadd("Pastes_Objects", PST.p_rel_path)
         except IOError:
-            print("CRC Checksum Failed on :", PST.p_path)
+            print("CRC Checksum Failed on :", PST.p_rel_path)
             publisher.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
                 PST.p_source, PST.p_date, PST.p_name))

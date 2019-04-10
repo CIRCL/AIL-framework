@@ -26,7 +26,6 @@ r_cache = Flask_config.r_cache
 r_serv_onion = Flask_config.r_serv_onion
 r_serv_metadata = Flask_config.r_serv_metadata
 bootstrap_label = Flask_config.bootstrap_label
-PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 hiddenServices = Blueprint('hiddenServices', __name__, template_folder='templates')
 
@@ -579,16 +578,14 @@ def show_domain():
     origin_paste_name = h.get_origin_paste_name()
     origin_paste_tags = unpack_paste_tags(r_serv_metadata.smembers('tag:{}'.format(origin_paste)))
     paste_tags = []
-    path_name = []
     for path in l_pastes:
-        path_name.append(path.replace(PASTES_FOLDER+'/', ''))
         p_tags = r_serv_metadata.smembers('tag:'+path)
         paste_tags.append(unpack_paste_tags(p_tags))
 
     return render_template("showDomain.html", domain=domain, last_check=last_check, first_seen=first_seen,
                             l_pastes=l_pastes, paste_tags=paste_tags, bootstrap_label=bootstrap_label,
                             dict_links=dict_links,
-                            path_name=path_name, origin_paste_tags=origin_paste_tags, status=status,
+                            origin_paste_tags=origin_paste_tags, status=status,
                             origin_paste=origin_paste, origin_paste_name=origin_paste_name,
                             domain_tags=domain_tags, screenshot=screenshot)
 
@@ -599,7 +596,6 @@ def onion_son():
     h = HiddenServices(onion_domain, 'onion')
     l_pastes = h.get_last_crawled_pastes()
     l_son = h.get_domain_son(l_pastes)
-    print(l_son)
     return 'l_son'
 
 # ============= JSON ==============

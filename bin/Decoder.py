@@ -226,7 +226,7 @@ if __name__ == '__main__':
             except TimeoutException:
                 encoded_list = []
                 p.incr_module_timeout_statistic() # add encoder type
-                print ("{0} processing timeout".format(paste.p_path))
+                print ("{0} processing timeout".format(paste.p_rel_path))
                 continue
             else:
                 signal.alarm(0)

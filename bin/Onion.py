@@ -167,7 +167,7 @@ if __name__ == "__main__":
                 except TimeoutException:
                     encoded_list = []
                     p.incr_module_timeout_statistic()
-                    print ("{0} processing timeout".format(PST.p_path))
+                    print ("{0} processing timeout".format(PST.p_rel_path))
                     continue
 
                 signal.alarm(0)
@@ -185,7 +185,7 @@ if __name__ == "__main__":
                             r_onion.sadd('i2p_domain', domain)
                             r_onion.sadd('i2p_link', url)
                             r_onion.sadd('i2p_domain_crawler_queue', domain)
-                            msg = '{};{}'.format(url,PST.p_path)
+                            msg = '{};{}'.format(url,PST.p_rel_path)
                             r_onion.sadd('i2p_crawler_queue', msg)
                 '''
 
@@ -200,10 +200,10 @@ if __name__ == "__main__":
 
                     if not activate_crawler:
                         publisher.warning('{}Detected {} .onion(s);{}'.format(
-                            to_print, len(domains_list),PST.p_path))
+                            to_print, len(domains_list),PST.p_rel_path))
                     else:
                         publisher.info('{}Detected {} .onion(s);{}'.format(
-                            to_print, len(domains_list),PST.p_path))
+                            to_print, len(domains_list),PST.p_rel_path))
                     now = datetime.datetime.now()
                     path = os.path.join('onions', str(now.year).zfill(4),
                                         str(now.month).zfill(2),
@@ -232,7 +232,7 @@ if __name__ == "__main__":
                                 if not r_onion.sismember('onion_domain_crawler_queue', domain):
                                     print('send to onion crawler')
                                     r_onion.sadd('onion_domain_crawler_queue', domain)
-                                    msg = '{};{}'.format(url,PST.p_path)
+                                    msg = '{};{}'.format(url,PST.p_rel_path)
                                     if not r_onion.hexists('onion_metadata:{}'.format(domain), 'first_seen'):
                                         r_onion.sadd('onion_crawler_priority_queue', msg)
                                         print('send to priority queue')
@@ -242,13 +242,13 @@ if __name__ == "__main__":
 
                     else:
                         for url in fetch(p, r_cache, urls, domains_list, path):
-                            publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
+                            publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_rel_path))
 
                     # TAG Item
-                    msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
+                    msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_rel_path)
                     p.populate_set_out(msg, 'Tags')
                 else:
-                    publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
+                    publisher.info('{}Onion related;{}'.format(to_print, PST.p_rel_path))
 
             prec_filename = filename
         else:
