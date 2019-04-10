@@ -10,8 +10,10 @@ import configparser
 
 def update_hash_item(has_type):
     #get all hash items:
-    all_base64 = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\"'.format(has_type))
+    #all_base64 = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\"'.format(has_type))
+    all_hash_items = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\":20180925'.format(has_type))
     for item_path in all_hash_items:
+        item_path = '/home/aurelien/git/python3/AIL-framework/PASTES/archive/pastebin.com_pro/2018/09/25/Fu9akJaz.gz'
         if PASTES_FOLDER in item_path:
             base64_key = '{}_paste:{}'.format(has_type, item_path)
             hash_key = 'hash_paste:{}'.format(item_path)

@@ -87,8 +87,8 @@ if __name__ == '__main__':
                     for date_history in all_onion_history:
                         pass
                         #print('onion_history:{}:{}'.format(onion_domain, date_history))
-                        #r_serv_onion.delete('onion_history:{}:{}'.format(onion_domain, date_history))
-                    #r_serv_onion.delete('onion_history:{}'.format(onion_domain))
+                        r_serv_onion.delete('onion_history:{}:{}'.format(onion_domain, date_history))
+                    r_serv_onion.delete('onion_history:{}'.format(onion_domain))
 
     # clean up domain
     all_domain_up = r_serv_onion.smembers('full_onion_up')
@@ -105,19 +105,19 @@ if __name__ == '__main__':
                 item_father = item_father[0]
                 #print(item_father)
                 # delete old history
-                #r_serv_onion.delete('onion_history:{}:{}'.format(onion_domain, date_history))
+                r_serv_onion.delete('onion_history:{}:{}'.format(onion_domain, date_history))
                 # create new history
                 root_key = get_domain_root_from_paste_childrens(item_father, onion_domain)
                 if root_key:
-                    #r_serv_onion.zadd('crawler_history_onion:{}:80'.format(onion_domain), get_date_epoch(date_history), root_key)
+                    r_serv_onion.zadd('crawler_history_onion:{}:80'.format(onion_domain), get_date_epoch(date_history), root_key)
                     print('crawler_history_onion:{}:80   {}   {}'.format(onion_domain, get_date_epoch(date_history), root_key))
                     #update service metadata: paste_parent
-                    #r_serv_onion.hset('onion_metadata:{}'.format(onion_domain), 'paste_parent', root_key)
+                    r_serv_onion.hset('onion_metadata:{}'.format(onion_domain), 'paste_parent', root_key)
 
-            #r_serv_onion.delete('onion_history:{}'.format(onion_domain))
+            r_serv_onion.delete('onion_history:{}'.format(onion_domain))
 
-        #r_serv_onion.hset('onion_metadata:{}'.format(onion_domain), 'ports', '80')
-        #r_serv_onion.hdel('onion_metadata:{}'.format(onion_domain), 'last_seen')
+        r_serv_onion.hset('onion_metadata:{}'.format(onion_domain), 'ports', '80')
+        r_serv_onion.hdel('onion_metadata:{}'.format(onion_domain), 'last_seen')
 
 
     '''

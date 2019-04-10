@@ -7,6 +7,14 @@ import time
 import redis
 import configparser
 
+def tags_key_fusion(old_item_path_key, new_item_path_key):
+    print('fusion:')
+    print(old_item_path_key)
+    print(new_item_path_key)
+    for tag in r_serv_metadata.smembers(old_item_path_key):
+        r_serv_metadata.sadd(new_item_path_key, tag)
+        r_serv_metadata.srem(old_item_path_key, tag)
+
 if __name__ == '__main__':
 
     start_deb = time.time()
@@ -114,6 +122,24 @@ if __name__ == '__main__':
     #flush browse importante pastes db
     r_important_paste_2018.flushdb()
     r_important_paste_2019.flushdb()
+
+    #update item metadata tags
+    tag_not_updated = True
+    total_to_update = r_serv_tag.scard('maj:v1.5:absolute_path_to_rename')
+    nb_updated = 0
+    while tag_not_updated:
+        item_path = r_serv_tag.spop('maj:v1.5:absolute_path_to_rename')
+        old_tag_item_key = 'tag:{}'.format(item_path)
+        new_item_path = item_path.replace(PASTES_FOLDER, '', 1)
+        new_tag_item_key = 'tag:{}'.format(new_item_path)
+        res = r_serv_metadata.renamenx(old_tag_item_key, new_tag_item_key)
+        if res == 0:
+            tags_key_fusion(old_tag_item_key, new_tag_item_key)
+        nb_updated += 1
+        if r_serv_tag.scard('maj:v1.5:absolute_path_to_rename') == 0:
+            tag_not_updated = false
+        else:
+            print('{}/{}    Tags updated'.format(nb_updated, total_to_update))
 
     end = time.time()
 
