@@ -10,8 +10,7 @@ import configparser
 
 def update_hash_item(has_type):
     #get all hash items:
-    #all_base64 = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\"'.format(has_type))
-    all_hash_items = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\":20190307'.format(has_type))
+    all_base64 = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\"'.format(has_type))
     for item_path in all_hash_items:
         if PASTES_FOLDER in item_path:
             base64_key = '{}_paste:{}'.format(has_type, item_path)
@@ -76,13 +75,30 @@ if __name__ == '__main__':
     update_hash_item('hexadecimal')
 
     # Update onion metadata
-    #all_crawled_items = r_serv_tag.smembers('infoleak:submission=\"crawler\"')
-    all_crawled_items = r_serv_tag.smembers('infoleak:submission=\"crawler\":20190227')
+    all_crawled_items = r_serv_tag.smembers('infoleak:submission=\"crawler\"')
     for item_path in all_crawled_items:
+        domain = None
         if PASTES_FOLDER in item_path:
-            item_metadata = 'paste_metadata:{}'.format(item_path)
+            old_item_metadata = 'paste_metadata:{}'.format(item_path)
+            item_path = item_path.replace(PASTES_FOLDER, '', 1)
+            new_item_metadata = 'paste_metadata:{}'.format(item_path)
             ## TODO: catch error
-            r_serv_metadata.rename(item_metadata, item_metadata.replace(PASTES_FOLDER, '', 1))
+            r_serv_metadata.rename(old_item_metadata, new_item_metadata)
+        # update domain port
+        domain = r_serv_metadata.hget('paste_metadata:{}'.format(item_path), 'domain')
+        if domain:
+            r_serv_metadata.hset('paste_metadata:{}'.format(item_path), 'domain', '{}:80'.format(domain))
+        super_father = r_serv_metadata.hget('paste_metadata:{}'.format(item_path), 'super_father')
+        if super_father:
+            if PASTES_FOLDER in super_father:
+                r_serv_metadata.hset('paste_metadata:{}'.format(item_path), 'super_father', super_father.replace(PASTES_FOLDER, '', 1))
+        father = r_serv_metadata.hget('paste_metadata:{}'.format(item_path), 'father')
+        if father:
+            if PASTES_FOLDER in father:
+                r_serv_metadata.hset('paste_metadata:{}'.format(item_path), 'father', father.replace(PASTES_FOLDER, '', 1))
+
+
+
 
     ######################################################################################################################
     ######################################################################################################################

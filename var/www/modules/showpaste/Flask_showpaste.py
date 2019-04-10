@@ -154,6 +154,7 @@ def showpaste(content_range, requested_path):
     if r_serv_metadata.scard('hash_paste:'+requested_path) > 0:
         set_b64 = r_serv_metadata.smembers('hash_paste:'+requested_path)
         for hash in set_b64:
+            print(requested_path)
             nb_in_file = int(r_serv_metadata.zscore('nb_seen_hash:'+hash, requested_path))
             estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
             file_type = estimated_type.split('/')[0]

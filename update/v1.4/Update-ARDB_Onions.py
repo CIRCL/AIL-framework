@@ -121,7 +121,13 @@ if __name__ == '__main__':
 
 
     '''
+    # update crawler queue
     for elem in r_serv_onion.smembers('onion_crawler_queue'):
+        if PASTES_FOLDER in elem:
+            r_serv_onion.srem('onion_crawler_queue', elem)
+            r_serv_onion.sadd('onion_crawler_queue', elem.replace(PASTES_FOLDER, '', 1))
+            index = index +1
+    for elem in r_serv_onion.smembers('onion_crawler_priority_queue'):
         if PASTES_FOLDER in elem:
             r_serv_onion.srem('onion_crawler_queue', elem)
             r_serv_onion.sadd('onion_crawler_queue', elem.replace(PASTES_FOLDER, '', 1))

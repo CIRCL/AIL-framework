@@ -163,6 +163,7 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+PASTES_FOLDERS = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
 SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
 
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
