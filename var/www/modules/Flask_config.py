@@ -30,6 +30,12 @@ r_serv = redis.StrictRedis(
     db=cfg.getint("Redis_Queues", "db"),
     decode_responses=True)
 
+r_cache = redis.StrictRedis(
+    host=cfg.get("Redis_Cache", "host"),
+    port=cfg.getint("Redis_Cache", "port"),
+    db=cfg.getint("Redis_Cache", "db"),
+    decode_responses=True)
+
 r_serv_log = redis.StrictRedis(
     host=cfg.get("Redis_Log", "host"),
     port=cfg.getint("Redis_Log", "port"),

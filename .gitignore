@@ -36,6 +36,9 @@ bin/packages/config.cfg.backup
 configs/keys
 files
 
+# Pystemon archives
+pystemon/archives
+
 # installed files
 nltk_data/
 doc/all_modules.txt

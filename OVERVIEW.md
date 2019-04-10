@@ -101,7 +101,6 @@ ARDB_DB
 	ZADD - 'base64_hash:'+hash	paste *			nb_seen_in_paste
 	ZADD - 'binary_hash:'+hash	paste *			nb_seen_in_paste
 
-	ZADD - 'hash_type:'+type	date			nb_seen
 	ZADD - 'base64_type:'+type	date			nb_seen
 	ZADD - 'binary_type:'+type	date			nb_seen
 
