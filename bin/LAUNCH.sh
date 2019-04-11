@@ -465,7 +465,7 @@ function launch_all {
         if [[ "${choices[i]}" ]]; then
             case ${options[i]} in
                 Redis)
-                    launch_redis
+                    launch_redis;
                     ;;
                 Ardb)
                     launch_ardb;
@@ -507,11 +507,15 @@ function launch_all {
     exit
 }
 
-echo "$@"
+#echo "$@"
 
 while [ "$1" != "" ]; do
     case $1 in
         -l | --launchAuto )         launch_all "automatic";
+                                    ;;
+        -lr | --launchRedis )       launch_redis;
+                                    ;;
+        -la | --launchARDB )        launch_ardb;
                                     ;;
         -k | --killAll )            killall;
                                     ;;

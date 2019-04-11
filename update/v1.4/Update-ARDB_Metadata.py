@@ -10,27 +10,35 @@ import configparser
 
 def update_hash_item(has_type):
     #get all hash items:
-    #all_base64 = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\"'.format(has_type))
-    all_hash_items = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\":20180925'.format(has_type))
+    all_hash_items = r_serv_tag.smembers('infoleak:automatic-detection=\"{}\"'.format(has_type))
     for item_path in all_hash_items:
-        item_path = '/home/aurelien/git/python3/AIL-framework/PASTES/archive/pastebin.com_pro/2018/09/25/Fu9akJaz.gz'
         if PASTES_FOLDER in item_path:
             base64_key = '{}_paste:{}'.format(has_type, item_path)
             hash_key = 'hash_paste:{}'.format(item_path)
 
-            ## TODO: catch error
             if r_serv_metadata.exists(base64_key):
-                res = r_serv_metadata.renamenx(base64_key, base64_key.replace(PASTES_FOLDER, '', 1))
-                ## TODO: key merge
-                if not res:
+                new_base64_key = base64_key.replace(PASTES_FOLDER, '', 1)
+                res = r_serv_metadata.renamenx(base64_key, new_base64_key)
+                print(res)
+                if res == 0:
                     print('same key, double name: {}'.format(item_path))
+                    # fusion
+                    all_key = r_serv_metadata.smembers(base64_key)
+                    for elem in all_key:
+                        r_serv_metadata.sadd(new_base64_key, elem)
+                        r_serv_metadata.srem(base64_key, elem)
 
             if r_serv_metadata.exists(hash_key):
-                ## TODO: catch error
-                res = r_serv_metadata.renamenx(hash_key, hash_key.replace(PASTES_FOLDER, '', 1))
-                ## TODO: key merge
-                if not res:
+                new_hash_key = hash_key.replace(PASTES_FOLDER, '', 1)
+                res = r_serv_metadata.renamenx(hash_key, new_hash_key)
+                print(res)
+                if res == 0:
                     print('same key, double name: {}'.format(item_path))
+                    # fusion
+                    all_key = r_serv_metadata.smembers(hash_key)
+                    for elem in all_key:
+                        r_serv_metadata.sadd(new_hash_key, elem)
+                        r_serv_metadata.srem(hash_key, elem)
 
 if __name__ == '__main__':
 
@@ -45,6 +53,12 @@ if __name__ == '__main__':
     cfg.read(configfile)
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+
+    r_serv = redis.StrictRedis(
+        host=cfg.get("ARDB_DB", "host"),
+        port=cfg.getint("ARDB_DB", "port"),
+        db=cfg.getint("ARDB_DB", "db"),
+        decode_responses=True)
 
     r_serv_metadata = redis.StrictRedis(
         host=cfg.get("ARDB_Metadata", "host"),
@@ -84,8 +98,11 @@ if __name__ == '__main__':
             old_item_metadata = 'paste_metadata:{}'.format(item_path)
             item_path = item_path.replace(PASTES_FOLDER, '', 1)
             new_item_metadata = 'paste_metadata:{}'.format(item_path)
-            ## TODO: catch error
             res = r_serv_metadata.renamenx(old_item_metadata, new_item_metadata)
+            #key already exist
+            if res == 0:
+                r_serv_metadata.delete(old_item_metadata)
+
         # update domain port
         domain = r_serv_metadata.hget(new_item_metadata, 'domain')
         if domain:
@@ -244,3 +261,5 @@ if __name__ == '__main__':
 
     print('Updating ARDB_Metadata Done => {} paths: {} s'.format(index, end - start))
     print()
+
+    r_serv.set('v1.5:metadata', 1)

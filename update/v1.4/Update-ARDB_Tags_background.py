@@ -29,6 +29,12 @@ if __name__ == '__main__':
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
 
+    r_serv = redis.StrictRedis(
+        host=cfg.get("ARDB_DB", "host"),
+        port=cfg.getint("ARDB_DB", "port"),
+        db=cfg.getint("ARDB_DB", "db"),
+        decode_responses=True)
+
     r_serv_metadata = redis.StrictRedis(
         host=cfg.get("ARDB_Metadata", "host"),
         port=cfg.getint("ARDB_Metadata", "port"),
@@ -68,3 +74,5 @@ if __name__ == '__main__':
 
 
     print('Updating ARDB_Tags Done: {} s'.format(end - start))
+
+    r_serv.set('v1.5:tags_background', 1)

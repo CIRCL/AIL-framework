@@ -27,9 +27,9 @@ def get_domain_root_from_paste_childrens(item_father, domain):
     for item_path in item_children:
         # remove absolute_path
         if PASTES_FOLDER in item_path:
-            #r_serv_metadata.srem('paste_children:{}'.format(item_father), item_path)
+            r_serv_metadata.srem('paste_children:{}'.format(item_father), item_path)
             item_path = item_path.replace(PASTES_FOLDER, '', 1)
-            #r_serv_metadata.sadd('paste_children:{}'.format(item_father), item_path)
+            r_serv_metadata.sadd('paste_children:{}'.format(item_father), item_path)
         if domain in item_path:
             domain_root = item_path
     return domain_root
@@ -48,6 +48,12 @@ if __name__ == '__main__':
     cfg.read(configfile)
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+
+    r_serv = redis.StrictRedis(
+        host=cfg.get("ARDB_DB", "host"),
+        port=cfg.getint("ARDB_DB", "port"),
+        db=cfg.getint("ARDB_DB", "db"),
+        decode_responses=True)
 
     r_serv_metadata = redis.StrictRedis(
         host=cfg.get("ARDB_Metadata", "host"),
@@ -99,7 +105,6 @@ if __name__ == '__main__':
             for date_history in all_onion_history:
                 print('--------')
                 print('onion_history:{}:{}'.format(onion_domain, date_history))
-                #item_father = r_serv_onion.lpop('onion_history:{}:{}'.format(onion_domain, date_history))
                 item_father = r_serv_onion.lrange('onion_history:{}:{}'.format(onion_domain, date_history), 0, 0)
                 print('item_father: {}'.format(item_father))
                 item_father = item_father[0]
@@ -120,23 +125,9 @@ if __name__ == '__main__':
         r_serv_onion.hdel('onion_metadata:{}'.format(onion_domain), 'last_seen')
 
 
-    '''
-    # update crawler queue
-    for elem in r_serv_onion.smembers('onion_crawler_queue'):
-        if PASTES_FOLDER in elem:
-            r_serv_onion.srem('onion_crawler_queue', elem)
-            r_serv_onion.sadd('onion_crawler_queue', elem.replace(PASTES_FOLDER, '', 1))
-            index = index +1
-    for elem in r_serv_onion.smembers('onion_crawler_priority_queue'):
-        if PASTES_FOLDER in elem:
-            r_serv_onion.srem('onion_crawler_queue', elem)
-            r_serv_onion.sadd('onion_crawler_queue', elem.replace(PASTES_FOLDER, '', 1))
-            index = index +1
-
-    '''
-
-
     end = time.time()
     print('Updating ARDB_Onion Done => {} paths: {} s'.format(index, end - start))
     print()
     print('Done in {} s'.format(end - start_deb))
+
+    r_serv.set('v1.5:onions', 1)
