@@ -258,7 +258,7 @@ def show_item_min(requested_path , content_range=0):
         relative_path = requested_path
         requested_path = os.path.join(PASTES_FOLDER, requested_path)
     else:
-        relative_path = requested_path.replace(PASTES_FOLDER, '', 1)[1:]
+        relative_path = requested_path.replace(PASTES_FOLDER, '', 1)
     # remove old full path
     #requested_path = requested_path.replace(PASTES_FOLDER, '')
     # escape directory transversal
