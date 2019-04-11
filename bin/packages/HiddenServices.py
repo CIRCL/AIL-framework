@@ -59,6 +59,8 @@ class HiddenServices(object):
             db=cfg.getint("ARDB_Metadata", "db"),
             decode_responses=True)
 
+        self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+
         self.domain = domain
         self.type = type
         self.port = port
@@ -76,9 +78,16 @@ class HiddenServices(object):
             ## TODO: # FIXME: add error
             pass
 
-    def remove_absolute_path_link(self, key, value):
-        print(key)
-        print(value)
+    #def remove_absolute_path_link(self, key, value):
+    #    print(key)
+    #    print(value)
+
+    def update_item_path_children(self, key, children):
+        if self.PASTES_FOLDER in children:
+            self.r_serv_metadata.srem(key, children)
+            children = children.replace(self.PASTES_FOLDER, '', 1)
+            self.r_serv_metadata.sadd(key, children)
+        return children
 
     def get_origin_paste_name(self):
         origin_item = self.r_serv_onion.hget('onion_metadata:{}'.format(self.domain), 'paste_parent')
@@ -106,7 +115,6 @@ class HiddenServices(object):
             # need to remove it
             else:
                 p_tags = self.r_serv_metadata.smembers('tag:{}'.format(os.path.join(self.paste_directory, item)))
-        print(p_tags)
         for tag in p_tags:
             self.tags[tag] = self.tags.get(tag, 0) + 1
 
@@ -158,8 +166,10 @@ class HiddenServices(object):
         if father is None:
             return []
         l_crawled_pastes = []
-        paste_childrens = self.r_serv_metadata.smembers('paste_children:{}'.format(father))
+        key = 'paste_children:{}'.format(father)
+        paste_childrens = self.r_serv_metadata.smembers(key)
         for children in paste_childrens:
+            children = self.update_item_path_children(key, children)
             if self.domain in children:
                 l_crawled_pastes.append(children)
                 self.update_domain_tags(children)
@@ -174,8 +184,8 @@ class HiddenServices(object):
             else:
                 key = os.path.join(self.paste_directory, item)
                 link = self.r_serv_metadata.hget('paste_metadata:{}'.format(key), 'real_link')
-                if link:
-                    self.remove_absolute_path_link(key, link)
+                #if link:
+                    #self.remove_absolute_path_link(key, link)
 
         return link
 

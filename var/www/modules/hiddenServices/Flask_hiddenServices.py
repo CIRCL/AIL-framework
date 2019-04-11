@@ -175,7 +175,6 @@ def get_crawler_splash_status(type):
     return crawler_metadata
 
 def create_crawler_config(mode, service_type, crawler_config, domain):
-    print(crawler_config)
     if mode == 'manual':
         r_cache.set('crawler_config:{}:{}:{}'.format(mode, service_type, domain), json.dumps(crawler_config))
     elif mode == 'auto':
@@ -559,8 +558,10 @@ def show_domain():
 
     h = HiddenServices(domain, type, port=port)
     item_core = h.get_domain_crawled_core_item(epoch=epoch)
-    epoch = item_core['epoch']
-    l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
+    if item_core:
+        l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
+    else:
+        l_pastes = []
     dict_links = h.get_all_links(l_pastes)
     if l_pastes:
         status = True

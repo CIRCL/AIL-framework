@@ -85,19 +85,19 @@ if __name__ == '__main__':
             item_path = item_path.replace(PASTES_FOLDER, '', 1)
             new_item_metadata = 'paste_metadata:{}'.format(item_path)
             ## TODO: catch error
-            r_serv_metadata.rename(old_item_metadata, new_item_metadata)
+            res = r_serv_metadata.renamenx(old_item_metadata, new_item_metadata)
         # update domain port
-        domain = r_serv_metadata.hget('paste_metadata:{}'.format(item_path), 'domain')
+        domain = r_serv_metadata.hget(new_item_metadata, 'domain')
         if domain:
-            r_serv_metadata.hset('paste_metadata:{}'.format(item_path), 'domain', '{}:80'.format(domain))
-        super_father = r_serv_metadata.hget('paste_metadata:{}'.format(item_path), 'super_father')
+            r_serv_metadata.hset(new_item_metadata, 'domain', '{}:80'.format(domain))
+        super_father = r_serv_metadata.hget(new_item_metadata, 'super_father')
         if super_father:
             if PASTES_FOLDER in super_father:
-                r_serv_metadata.hset('paste_metadata:{}'.format(item_path), 'super_father', super_father.replace(PASTES_FOLDER, '', 1))
-        father = r_serv_metadata.hget('paste_metadata:{}'.format(item_path), 'father')
+                r_serv_metadata.hset(new_item_metadata, 'super_father', super_father.replace(PASTES_FOLDER, '', 1))
+        father = r_serv_metadata.hget(new_item_metadata, 'father')
         if father:
             if PASTES_FOLDER in father:
-                r_serv_metadata.hset('paste_metadata:{}'.format(item_path), 'father', father.replace(PASTES_FOLDER, '', 1))
+                r_serv_metadata.hset(new_item_metadata, 'father', father.replace(PASTES_FOLDER, '', 1))
 
 
 
