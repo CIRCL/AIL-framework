@@ -31,7 +31,6 @@ def update_hash_item(has_type):
             if r_serv_metadata.exists(hash_key):
                 new_hash_key = hash_key.replace(PASTES_FOLDER, '', 1)
                 res = r_serv_metadata.renamenx(hash_key, new_hash_key)
-                print(res)
                 if res == 0:
                     print('same key, double name: {}'.format(item_path))
                     # fusion
@@ -106,7 +105,7 @@ if __name__ == '__main__':
         # update domain port
         domain = r_serv_metadata.hget(new_item_metadata, 'domain')
         if domain:
-            if domain[-3:] ?= ':80':
+            if domain[-3:] != ':80':
                 r_serv_metadata.hset(new_item_metadata, 'domain', '{}:80'.format(domain))
         super_father = r_serv_metadata.hget(new_item_metadata, 'super_father')
         if super_father:

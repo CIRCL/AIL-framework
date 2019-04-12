@@ -85,7 +85,11 @@ if __name__ == '__main__':
             splitted_item_path = item_path.split('/')
             #print(tag)
             #print(item_path)
-            item_date = int( ''.join([splitted_item_path[-4], splitted_item_path[-3], splitted_item_path[-2]]) )
+            try:
+                item_date = int( ''.join([splitted_item_path[-4], splitted_item_path[-3], splitted_item_path[-2]]) )
+            except IndexError:
+                r_serv_tag.srem(tag, item_path)
+                continue
 
             # remove absolute path
             new_path = item_path.replace(PASTES_FOLDER, '', 1)

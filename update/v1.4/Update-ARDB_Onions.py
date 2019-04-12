@@ -107,7 +107,11 @@ if __name__ == '__main__':
                 print('onion_history:{}:{}'.format(onion_domain, date_history))
                 item_father = r_serv_onion.lrange('onion_history:{}:{}'.format(onion_domain, date_history), 0, 0)
                 print('item_father: {}'.format(item_father))
-                item_father = item_father[0]
+                try:
+                    item_father = item_father[0]
+                except IndexError:
+                    r_serv_onion.delete('onion_history:{}:{}'.format(onion_domain, date_history))
+                    continue
                 #print(item_father)
                 # delete old history
                 r_serv_onion.delete('onion_history:{}:{}'.format(onion_domain, date_history))
