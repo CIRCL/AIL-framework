@@ -7,14 +7,6 @@ import time
 import redis
 import configparser
 
-def tags_key_fusion(old_item_path_key, new_item_path_key):
-    print('fusion:')
-    print(old_item_path_key)
-    print(new_item_path_key)
-    for tag in r_serv_metadata.smembers(old_item_path_key):
-        r_serv_metadata.sadd(new_item_path_key, tag)
-        r_serv_metadata.srem(old_item_path_key, tag)
-
 if __name__ == '__main__':
 
     start_deb = time.time()
@@ -109,8 +101,12 @@ if __name__ == '__main__':
             # update metadata last_seen
             if item_date > tag_metadata[tag]['last_seen']:
                 tag_metadata[tag]['last_seen'] = item_date
-                r_serv_tag.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
-
+                last_seen_db = r_serv_tag.hget('tag_metadata:{}'.format(tag), 'last_seen')
+                if last_seen_db:
+                    if item_date > int(last_seen_db):
+                        r_serv_tag.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
+                    else:
+                        tag_metadata[tag]['last_seen'] = last_seen_db
 
             r_serv_tag.sadd('{}:{}'.format(tag, item_date), new_path)
             r_serv_tag.hincrby('daily_tags:{}'.format(item_date), tag, 1)

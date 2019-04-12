@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import redis
+import datetime
 import configparser
 
 if __name__ == '__main__':
@@ -56,5 +57,9 @@ if __name__ == '__main__':
 
     #Set current ail version
     r_serv.set('ail:version', 'v1.5')
+    r_serv.set('ail:update_v1.5', 1)
+
+    #Set current ail version
+    r_serv.set('ail:update_date_v1.5', datetime.datetime.now().strftime("%Y%m%d"))
 
     print('Done in {} s'.format(end - start_deb))

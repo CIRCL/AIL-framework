@@ -106,7 +106,8 @@ if __name__ == '__main__':
         # update domain port
         domain = r_serv_metadata.hget(new_item_metadata, 'domain')
         if domain:
-            r_serv_metadata.hset(new_item_metadata, 'domain', '{}:80'.format(domain))
+            if domain[-3:] ?= ':80':
+                r_serv_metadata.hset(new_item_metadata, 'domain', '{}:80'.format(domain))
         super_father = r_serv_metadata.hget(new_item_metadata, 'super_father')
         if super_father:
             if PASTES_FOLDER in super_father:
@@ -116,150 +117,18 @@ if __name__ == '__main__':
             if PASTES_FOLDER in father:
                 r_serv_metadata.hset(new_item_metadata, 'father', father.replace(PASTES_FOLDER, '', 1))
 
-
-
-
-    ######################################################################################################################
-    ######################################################################################################################
-    ######################################################################################################################
-    ######################################################################################################################
-    ######################################################################################################################
-    ######################################################################################################################
-    '''
-
-    string_keys_to_rename = ['misp_events:{}*'.format(PASTES_FOLDER), 'hive_cases:{}*'.format(PASTES_FOLDER)]
-    for key_to_rename in string_keys_to_rename:
-
-        keys_to_rename = []
-        for key in r_serv_metadata.scan_iter(key_to_rename):
-            new_key = key.replace(PASTES_FOLDER, '', 1)
-            keys_to_rename.append( (key, new_key) )
-            index = index + 1
-        for key, new_key in keys_to_rename:
-            r_serv_metadata.rename(key, new_key)
-
-    keys_to_rename = None
-
-    set_keys_to_rename = ['tag:{}*'.format(PASTES_FOLDER), 'paste_regular_external_links:{}*'.format(PASTES_FOLDER), 'paste_onion_external_links:{}*'.format(PASTES_FOLDER), 'paste_children:{}*'.format(PASTES_FOLDER)]
-    for key_to_rename in set_keys_to_rename:
-
-        keys_to_remove = []
-        keys_to_rename = []
-        for key in r_serv_metadata.scan_iter(key_to_rename):
-            new_key = key.replace(PASTES_FOLDER, '', 1)
-            # a set with this key already exist
-            if r_serv_metadata.exists(new_key):
-                # save data
-                for new_key_value in r_serv_metadata.smembers(key):
-                    r_serv_metadata.sadd(new_key, new_key_value)
-                    keys_to_remove.append(key)
-            else:
-                keys_to_rename.append( (key, new_key) )
-            index = index + 1
-        for key in keys_to_remove:
-            r_serv_metadata.delete(key)
-        for key, new_key in keys_to_rename:
-            r_serv_metadata.rename(key, new_key)
-
-    keys_to_remove = None
-    keys_to_rename = None
-
-
-    zset_keys_to_rename = ['nb_seen_hash:*', 'base64_hash:*', 'binary_hash:*']
-    for key_to_rename in zset_keys_to_rename:
-
-        keys_to_remove = []
-        zkeys_to_remove = []
-        keys_to_add = []
-        for key in r_serv_metadata.scan_iter(key_to_rename):
-            temp = []
-            for zset_key, value in r_serv_metadata.zscan_iter(key, '*{}*'.format(PASTES_FOLDER)):
-                new_key = zset_key.replace(PASTES_FOLDER, '', 1)
-                index = index +1
-                temp.append((key, zset_key))
-                keys_to_add.append((key, new_key, value))
-            if 0 < len(temp) < r_serv_metadata.zcard(key):
-                zkeys_to_remove.extend(temp)
-            else:
-                keys_to_remove.append(key)
-        for key in keys_to_remove:
-            r_serv_metadata.delete(key)
-        for key, zset_key in zkeys_to_remove:
-            r_serv_metadata.zrem(key, zset_key)
-        for key, new_key, value in keys_to_add:
-            r_serv_metadata.zincrby(key, new_key, int(value))
-    keys_to_remove = None
-    zkeys_to_remove = None
-    keys_to_add = None
-
-    set_keys_to_rename = ['paste_children:*']
-    for key_to_rename in set_keys_to_rename:
-        keys_to_remove = []
-        skeys_to_remove = []
-        keys_to_add = []
-        for key in r_serv_metadata.scan_iter(key_to_rename):
-            temp = []
-            for set_key in r_serv_metadata.sscan_iter(key, '*{}*'.format(PASTES_FOLDER)):
-                new_key = set_key.replace(PASTES_FOLDER, '', 1)
-                index = index +1
-                temp.append((key, set_key))
-                keys_to_add.append((key, new_key))
-            if 0 < len(temp) < r_serv_metadata.scard(key):
-                skeys_to_remove.extend(temp)
-            else:
-                keys_to_remove.append(key)
-        for key in keys_to_remove:
-            r_serv_metadata.delete(key)
-        for key, set_key in skeys_to_remove:
-            r_serv_metadata.srem(key, set_key)
-        for key, new_key in keys_to_add:
-            r_serv_metadata.sadd(key, new_key)
-    keys_to_remove = None
-    skeys_to_remove = None
-    keys_to_add = None
-
-    hset_keys_to_rename = ['paste_metadata:{}*'.format(PASTES_FOLDER)]
-    for key_to_rename in hset_keys_to_rename:
-
-        keys_to_rename = []
-        for key in r_serv_metadata.scan_iter(key_to_rename):
-            new_key = key.replace(PASTES_FOLDER, '', 1)
-            # a hset with this key already exist
-            if r_serv_metadata.exists(new_key):
-                pass
-            else:
-                keys_to_rename.append((key, new_key))
-                index = index + 1
-        for key, new_key in keys_to_rename:
-            r_serv_metadata.rename(key, new_key)
-    keys_to_rename = None
-
-    # to verify 120/100 try with scan
-    hset_keys_to_rename = ['paste_metadata:*']
-    for key_to_rename in hset_keys_to_rename:
-        for key in r_serv_metadata.scan_iter(key_to_rename):
-            father = r_serv_metadata.hget(key, 'father')
-            super_father = r_serv_metadata.hget(key, 'super_father')
-
-            if father:
-                if PASTES_FOLDER in father:
-                    index = index + 1
-                    r_serv_metadata.hdel(key, 'father')
-                    r_serv_metadata.hset(key, 'father', father.replace(PASTES_FOLDER, '', 1))
-
-            if super_father:
-                if PASTES_FOLDER in super_father:
-                    index = index + 1
-                    r_serv_metadata.hdel(key, 'super_father')
-                    r_serv_metadata.hset(key, 'super_father', super_father.replace(PASTES_FOLDER, '', 1))
-
-    keys_to_rename = None
-    '''
-
-
     end = time.time()
 
     print('Updating ARDB_Metadata Done => {} paths: {} s'.format(index, end - start))
     print()
 
     r_serv.set('v1.5:metadata', 1)
+
+    ##
+    #Key, Dynamic Update
+    ##
+    #paste_children
+    #nb_seen_hash, base64_hash, binary_hash
+    #paste_onion_external_links
+    #misp_events, hive_cases
+    ##

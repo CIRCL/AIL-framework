@@ -5,7 +5,7 @@
 Update AIL
 ============================
 
-Update AIL clone and fork
+Update AIL in the background
 
 """
 
@@ -31,10 +31,7 @@ if __name__ == "__main__":
         db=cfg.getint("ARDB_DB", "db"),
         decode_responses=True)
 
-    ail_version = r_serv.get('ail:version')
-    if ail_version is None:
-        sys.exit(0)
-    else:
+    if r_serv.exists('ail:update_v1.5'):
         if ail_version == 'v1.5':
             onions_update_status = r_serv.get('v1.5:onions')
             if onions_update_status is None:
