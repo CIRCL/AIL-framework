@@ -46,6 +46,7 @@ if __name__ == '__main__':
     p = Process(config_section)
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
+    PASTES_FOLDERS = PASTES_FOLDER + '/'
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")
@@ -104,6 +105,10 @@ if __name__ == '__main__':
             print(type)
             print('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
         '''
+
+        # remove PASTES_FOLDER from item path (crawled item + submited)
+        if PASTES_FOLDERS in paste:
+            paste = paste.replace(PASTES_FOLDERS, '', 1)
 
         p.populate_set_out(paste)
         processed_paste+=1
