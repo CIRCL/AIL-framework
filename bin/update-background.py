@@ -38,21 +38,20 @@ if __name__ == "__main__":
         if ail_version == 'v1.5':
             onions_update_status = r_serv.get('v1.5:onions')
             if onions_update_status is None:
-                if int(onions_update_status) != 1:
-                    update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Onions.py')
-                    process = subprocess.run(['unbuffer', 'python' ,'update_file'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Onions.py')
+                process = subprocess.run(['python' ,update_file])
+
             metadata_update_status = r_serv.get('v1.5:metadata')
             if metadata_update_status is None:
-                if int(metadata_update_status) != 1:
-                    pass
-                    #launch update
+                update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Metadata.py')
+                process = subprocess.run(['python' ,update_file])
+
             tags_update_status = r_serv.get('v1.5:tags')
             if tags_update_status is None:
-                if int(tags_update_status) != 1:
-                    pass
-                    #launch update
+                update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags.py')
+                process = subprocess.run(['python' ,update_file])
+
             tags_background_update_status = r_serv.get('v1.5:tags_background')
             if tags_background_update_status is None:
-                if int(tags_background_update_status) != 1:
-                    pass
-                    #launch update
+                update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags_background.py')
+                process = subprocess.run(['python' ,update_file])

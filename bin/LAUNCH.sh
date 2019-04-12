@@ -297,6 +297,30 @@ function checking_ardb {
     return $flag_ardb;
 }
 
+function wait_until_redis_is_ready {
+    redis_not_ready=true
+    while $redis_not_ready; do
+        if checking_redis; then
+            redis_not_ready=false;
+        else
+            sleep 1
+        fi
+    done
+    echo -e $YELLOW"\t* Redis Launched"$DEFAULT
+}
+
+function wait_until_ardb_is_ready {
+    ardb_not_ready=true;
+    while $ardb_not_ready; do
+        if checking_ardb; then
+            ardb_not_ready=false
+        else
+            sleep 3
+        fi
+    done
+    echo -e $YELLOW"\t* ARDB Launched"$DEFAULT
+}
+
 function launch_redis {
     if [[ ! $isredis ]]; then
         launching_redis;
@@ -378,7 +402,7 @@ function launch_feeder {
 }
 
 function killall {
-    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded ]]; then
+    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
         if [[ $isredis ]]; then
             echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
             shutting_down_redis;
@@ -389,10 +413,10 @@ function killall {
             shutting_down_ardb;
         fi
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded
+        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted killed."$DEFAULT
+        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler killed."$DEFAULT
     else
         echo -e $RED"\t* No screen to kill"$DEFAULT
     fi
@@ -511,30 +535,36 @@ function launch_all {
 
 while [ "$1" != "" ]; do
     case $1 in
-        -l | --launchAuto )         launch_all "automatic";
-                                    ;;
-        -lr | --launchRedis )       launch_redis;
-                                    ;;
-        -la | --launchARDB )        launch_ardb;
-                                    ;;
-        -k | --killAll )            killall;
-                                    ;;
-        -u | --update )             update;
-                                    ;;
-        -t | --thirdpartyUpdate )   update_thirdparty;
-                                    ;;
-        -c | --crawler )            launching_crawler;
-                                    ;;
-        -f | --launchFeeder )       launch_feeder;
-                                    ;;
-        -h | --help )               helptext;
-                                    exit
-                                    ;;
-        -kh | --khelp )             helptext;
+        -l | --launchAuto )           launch_all "automatic";
+                                      ;;
+        -lr | --launchRedis )         launch_redis;
+                                      ;;
+        -la | --launchARDB )          launch_ardb;
+                                      ;;
+        -lrv | --launchRedisVerify )  launch_redis;
+                                      wait_until_redis_is_ready;
+                                      ;;
+        -lav | --launchARDBVerify )   launch_ardb;
+                                      wait_until_ardb_is_ready;
+                                      ;;
+        -k | --killAll )              killall;
+                                      ;;
+        -u | --update )               update;
+                                      ;;
+        -t | --thirdpartyUpdate )     update_thirdparty;
+                                      ;;
+        -c | --crawler )              launching_crawler;
+                                      ;;
+        -f | --launchFeeder )         launch_feeder;
+                                      ;;
+        -h | --help )                 helptext;
+                                      exit
+                                      ;;
+        -kh | --khelp )               helptext;
 
-                                    ;;
-        * )                         helptext
-                                    exit 1
+                                      ;;
+        * )                           helptext
+                                      exit 1
     esac
     shift
 done
