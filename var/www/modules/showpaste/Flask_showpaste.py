@@ -157,13 +157,13 @@ def showpaste(content_range, requested_path):
             # item list not updated
             if nb_in_file is None:
                 l_pastes = r_serv_metadata.zrange('nb_seen_hash:'+hash, 0, -1)
-                for paste in l_pastes:
+                for paste_name in l_pastes:
                     # dynamic update
-                    if PASTES_FOLDER in paste:
-                        score = r_serv_metadata.zscore('nb_seen_hash:{}'.format(hash), paste)
-                        r_serv_metadata.zrem('nb_seen_hash:{}'.format(hash), paste)
-                        paste = paste.replace(PASTES_FOLDER, '', 1)
-                        r_serv_metadata.zadd('nb_seen_hash:{}'.format(hash), score, paste)
+                    if PASTES_FOLDER in paste_name:
+                        score = r_serv_metadata.zscore('nb_seen_hash:{}'.format(hash), paste_name)
+                        r_serv_metadata.zrem('nb_seen_hash:{}'.format(hash), paste_name)
+                        paste_name = paste_name.replace(PASTES_FOLDER, '', 1)
+                        r_serv_metadata.zadd('nb_seen_hash:{}'.format(hash), score, paste_name)
                 nb_in_file = r_serv_metadata.zscore('nb_seen_hash:'+hash, requested_path)
             nb_in_file = int(nb_in_file)
             estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
@@ -282,7 +282,8 @@ def show_item_min(requested_path , content_range=0):
 
     p_hashtype_list = []
 
-    l_tags = r_serv_metadata.smembers('tag:'+requested_path)
+    print(requested_path)
+    l_tags = r_serv_metadata.smembers('tag:'+relative_path)
     if relative_path is not None:
         l_tags.union( r_serv_metadata.smembers('tag:'+relative_path) )
     item_info['tags'] = l_tags
@@ -291,10 +292,22 @@ def show_item_min(requested_path , content_range=0):
 
     l_64 = []
     # load hash files
-    if r_serv_metadata.scard('hash_paste:'+requested_path) > 0:
-        set_b64 = r_serv_metadata.smembers('hash_paste:'+requested_path)
+    if r_serv_metadata.scard('hash_paste:'+relative_path) > 0:
+        set_b64 = r_serv_metadata.smembers('hash_paste:'+relative_path)
         for hash in set_b64:
-            nb_in_file = int(r_serv_metadata.zscore('nb_seen_hash:'+hash, requested_path))
+            nb_in_file = r_serv_metadata.zscore('nb_seen_hash:'+hash, relative_path)
+            # item list not updated
+            if nb_in_file is None:
+                l_pastes = r_serv_metadata.zrange('nb_seen_hash:'+hash, 0, -1)
+                for paste_name in l_pastes:
+                    # dynamic update
+                    if PASTES_FOLDER in paste_name:
+                        score = r_serv_metadata.zscore('nb_seen_hash:{}'.format(hash), paste_name)
+                        r_serv_metadata.zrem('nb_seen_hash:{}'.format(hash), paste_name)
+                        paste_name = paste_name.replace(PASTES_FOLDER, '', 1)
+                        r_serv_metadata.zadd('nb_seen_hash:{}'.format(hash), score, paste_name)
+                nb_in_file = r_serv_metadata.zscore('nb_seen_hash:{}'.format(hash), relative_path)
+            nb_in_file = int(nb_in_file)
             estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
             file_type = estimated_type.split('/')[0]
             # set file icon
@@ -326,9 +339,9 @@ def show_item_min(requested_path , content_range=0):
     crawler_metadata = {}
     if 'infoleak:submission="crawler"' in l_tags:
         crawler_metadata['get_metadata'] = True
-        crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
-        crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
-        crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
+        crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+relative_path, 'domain')
+        crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+relative_path, 'father')
+        crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+relative_path,'real_link')
         crawler_metadata['screenshot'] = paste.get_p_rel_path()
     else:
         crawler_metadata['get_metadata'] = False

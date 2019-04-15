@@ -19,7 +19,6 @@ def update_hash_item(has_type):
             if r_serv_metadata.exists(base64_key):
                 new_base64_key = base64_key.replace(PASTES_FOLDER, '', 1)
                 res = r_serv_metadata.renamenx(base64_key, new_base64_key)
-                print(res)
                 if res == 0:
                     print('same key, double name: {}'.format(item_path))
                     # fusion
