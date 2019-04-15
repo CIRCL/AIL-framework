@@ -30,7 +30,7 @@ Redis and ARDB overview
 
 # Database Map:
 
-## DB2 - TermFreq: (TODO: update/refractor DB)
+## DB2 - TermFreq:
 
 ##### Set:
 | Key | Value |

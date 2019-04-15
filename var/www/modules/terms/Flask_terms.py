@@ -281,14 +281,13 @@ def terms_management_query_paste():
         p_date = str(paste._get_p_date())
         p_date = p_date[0:4]+'/'+p_date[4:6]+'/'+p_date[6:8]
         p_source = paste.p_source
-        p_encoding = paste._get_p_encoding()
         p_size = paste.p_size
         p_mime = paste.p_mime
         p_lineinfo = paste.get_lines_info()
         p_content = paste.get_p_content()
         if p_content != 0:
             p_content = p_content[0:400]
-        paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
+        paste_info.append({"path": path, "date": p_date, "source": p_source, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
 
     return jsonify(paste_info)
 

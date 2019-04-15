@@ -7,6 +7,14 @@ import time
 import redis
 import configparser
 
+def update_tracked_terms(main_key, tracked_container_key):
+    for tracked_item in r_serv_term.smembers(main_key):
+        all_items = r_serv_term.smembers(tracked_container_key.format(tracked_item))
+        for item_path in all_items:
+            if PASTES_FOLDER in item_path:
+                new_item_path = item_path.replace(PASTES_FOLDER, '', 1)
+                r_serv_term.sadd(tracked_container_key.format(tracked_item), new_item_path)
+                r_serv_term.srem(tracked_container_key.format(tracked_item), item_path)
 
 def update_hash_item(has_type):
     #get all hash items:
@@ -70,6 +78,12 @@ if __name__ == '__main__':
         db=cfg.getint("ARDB_Tags", "db"),
         decode_responses=True)
 
+    r_serv_term = redis.StrictRedis(
+        host=cfg.get("ARDB_TermFreq", "host"),
+        port=cfg.getint("ARDB_TermFreq", "port"),
+        db=cfg.getint("ARDB_TermFreq", "db"),
+        decode_responses=True)
+
     r_serv_onion = redis.StrictRedis(
         host=cfg.get("ARDB_Onion", "host"),
         port=cfg.getint("ARDB_Onion", "port"),
@@ -116,6 +130,15 @@ if __name__ == '__main__':
                 r_serv_metadata.hset(new_item_metadata, 'father', father.replace(PASTES_FOLDER, '', 1))
 
     end = time.time()
+
+    ## update tracked term/set/regex
+    # update tracked term
+    update_tracked_terms('TrackedSetTermSet', 'tracked_{}')
+    # update tracked set
+    update_tracked_terms('TrackedSetSet', 'set_{}')
+    # update tracked regex
+    update_tracked_terms('TrackedRegexSet', 'regex_{}')
+    ##
 
     print('Updating ARDB_Metadata Done => {} paths: {} s'.format(index, end - start))
     print()
