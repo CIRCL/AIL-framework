@@ -56,7 +56,7 @@ if __name__ == '__main__':
     nb_updated = 0
     if total_to_update > 0:
         while tag_not_updated:
-            item_path = r_serv_tag.spop('maj:v1.5:absolute_path_to_rename')
+            item_path = r_serv_tag.srandmember('maj:v1.5:absolute_path_to_rename')
             old_tag_item_key = 'tag:{}'.format(item_path)
             new_item_path = item_path.replace(PASTES_FOLDER, '', 1)
             new_tag_item_key = 'tag:{}'.format(new_item_path)
@@ -69,6 +69,7 @@ if __name__ == '__main__':
             else:
                 progress = int((nb_updated * 100) /total_to_update)
                 print('{}/{}    Tags updated    {}%'.format(nb_updated, total_to_update, progress))
+            r_serv_tag.srem('maj:v1.5:absolute_path_to_rename', item_path)
 
     end = time.time()
 

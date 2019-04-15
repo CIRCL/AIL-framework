@@ -22,6 +22,7 @@ cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
+r_serv_db = Flask_config.r_serv_db
 
 max_dashboard_logs = Flask_config.max_dashboard_logs
 
@@ -164,8 +165,13 @@ def index():
     log_select.add(max_dashboard_logs)
     log_select = list(log_select)
     log_select.sort()
+    update_in_progress = False
+    if r_serv_db.exists('ail:update_v1.5'):
+        if not r_serv_db.exists('v1.5:onions') or not r_serv_db.exists('v1.5:metadata') or not r_serv_db.exists('v1.5:tags') or not r_serv_db.exists('v1.5:tags_background'):
+            update_in_progress = True
+
     return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module,
-                            log_select=log_select, selected=max_dashboard_logs)
+                            log_select=log_select, selected=max_dashboard_logs, update_in_progress=update_in_progress)
 
 # ========= REGISTRATION =========
 app.register_blueprint(dashboard, url_prefix=baseUrl)

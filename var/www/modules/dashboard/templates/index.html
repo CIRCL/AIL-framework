@@ -99,6 +99,14 @@
                 </div>
         </div>
 
+        {%if update_in_progress%}
+          <div class="alert alert-warning alert-dismissible fade in">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <strong>Warning!</strong> An Update is running on the background. Some informations like Tags, screenshot can be <strong>missing from the UI</strong>.
+            (<a href="#">Check Update Status</a>)
+          </div>
+        {%endif%}
+
             <div class="row">
                  <div class="col-lg-6">
                      <div class="panel panel-default">
@@ -187,6 +195,7 @@
         <!-- /#page-wrapper -->
 
     </div>
+
     <script> var url_showSavedPath = "{{ url_for('showsavedpastes.showsavedpaste') }}"; </script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"
       data-urlstuff="{{ url_for('dashboard.stuff') }}" data-urllog="{{ url_for('dashboard.logs') }}">
