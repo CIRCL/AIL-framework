@@ -13,25 +13,25 @@
         <a class="nav-link mr-3" href="{{ url_for('dashboard.index') }}">Home</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-external-link-alt"></i> Submit</a>
+        <a class="nav-link" href="{{ url_for('PasteSubmit.PasteSubmit_page') }}" aria-disabled="true"><i class="fas fa-external-link-alt"></i> Submit</a>
       </li>
       <li class="nav-item mr-3">
         <a class="nav-link" id="page-Browse-Items" href="{{ url_for('Tags.Tags_page') }}" aria-disabled="true"><i class="fas fa-tag"></i> Browse Items</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-crosshairs"></i> Leaks Hunter</a>
+        <a class="nav-link" href="{{ url_for('terms.terms_management') }}" aria-disabled="true"><i class="fas fa-crosshairs"></i> Leaks Hunter</a>
       </li>
       <li class="nav-item mr-3">
         <a class="nav-link" id="page-Crawler" href="{{ url_for('hiddenServices.dashboard') }}" tabindex="-1" aria-disabled="true"><i class="fas fa-spider"></i> Crawlers</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-lock-open"></i> Decoded</a>
+        <a class="nav-link" href="{{ url_for('hashDecoded.hashDecoded_page') }}" aria-disabled="true"><i class="fas fa-lock-open"></i> Decoded</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-chart-bar"></i> Statistics</a>
+        <a class="nav-link" href="{{ url_for('trendingmodules.moduletrending') }}" aria-disabled="true"><i class="fas fa-chart-bar"></i> Statistics</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" href="#" aria-disabled="true"><i class="fas fa-cog"></i> Options</a>
+        <a class="nav-link" id="page-options" href="{{ url_for('options.options_page') }}" aria-disabled="true"><i class="fas fa-cog"></i> Options</a>
       </li>
     </ul>
 
