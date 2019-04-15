@@ -30,12 +30,54 @@ Redis and ARDB overview
 
 # Database Map:
 
-## Tags:
+## DB2 - TermFreq: (TODO: update/refractor DB)
+
+##### Set:
+| Key | Value |
+| ------ | ------ |
+| TrackedSetTermSet | **tracked_term** |
+| TrackedSetSet | **tracked_set** |
+| TrackedRegexSet | **tracked_regex** |
+| | |
+| tracked_**tracked_term** | **item_path** |
+| set_**tracked_set** | **item_path** |
+| regex_**tracked_regex** | **item_path** |
+| | |
+| TrackedNotifications | **tracked_trem / set / regex** |
+| | |
+| TrackedNotificationTags_**tracked_trem / set / regex** | **tag** |
+| | |
+| TrackedNotificationEmails_**tracked_trem / set / regex** | **email** |
+
+##### Zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| per_paste_TopTermFreq_set_month | **term** | **nb_seen** |
+| per_paste_TopTermFreq_set_week | **term** | **nb_seen** |
+| per_paste_TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
+| | | |
+| TopTermFreq_set_month | **term** | **nb_seen** |
+| TopTermFreq_set_week | **term** | **nb_seen** |
+| TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
+
 
 ##### Hset:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| daily_tags:**date** | **tag** | **nb tagged this day** |
+| TrackedTermDate | **tracked_term** | **epoch** |
+| TrackedSetDate | **tracked_set** | **epoch** |
+| TrackedRegexDate | **tracked_regex** | **epoch** |
+| | | |
+| BlackListTermDate | **blacklisted_term** | **epoch** |
+| | | |
+| **epoch** | **term** | **nb_seen** |
+
+## DB6 - Tags:
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| per_paste_**epoch** | **term** | **nb_seen** |
 | | |
 | tag_metadata:**tag** | first_seen | **date** |
 | tag_metadata:**tag** | last_seen | **date** |
@@ -121,26 +163,6 @@ Redis and ARDB overview
 
 ARDB overview
 
-* DB 2 - TermFreq
-	----------------------------------------- TERM ----------------------------------------
-
-	SET - 'TrackedRegexSet'				term
-
-	HSET - 'TrackedRegexDate'			tracked_regex		today_timestamp
-
-	SET - 'TrackedSetSet'				set_to_add
-
-	HSET - 'TrackedSetDate'				set_to_add		today_timestamp
-
-	SET - 'TrackedSetTermSet'			term
-
-	HSET - 'TrackedTermDate'			tracked_regex		today_timestamp
-
-	SET - 'TrackedNotificationEmails_'+term/set	email
-
-	SET - 'TrackedNotifications'			term/set
-
-* DB 4 - Sentiment
 	----------------------------------------- SENTIMENT ------------------------------------
 
 	SET - 'Provider_set'				Provider
@@ -150,8 +172,6 @@ ARDB overview
 	SET - provider_timestamp			UniqID
 
 	SET - UniqID					avg_score
-
-  DB 5 - TermCred
 
 
 
