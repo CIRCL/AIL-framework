@@ -143,7 +143,7 @@ if __name__ == '__main__':
     print('Updating ARDB_Metadata Done => {} paths: {} s'.format(index, end - start))
     print()
 
-    r_serv.set('v1.5:metadata', 1)
+    r_serv.sadd('ail:update_v1.5', 'metadata')
 
     ##
     #Key, Dynamic Update

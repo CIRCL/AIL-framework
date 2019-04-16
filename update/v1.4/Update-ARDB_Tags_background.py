@@ -76,4 +76,4 @@ if __name__ == '__main__':
 
     print('Updating ARDB_Tags Done: {} s'.format(end - start))
 
-    r_serv.set('v1.5:tags_background', 1)
+    r_serv.sadd('ail:update_v1.5', 'tags_background')

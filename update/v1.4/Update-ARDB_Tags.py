@@ -130,4 +130,4 @@ if __name__ == '__main__':
 
         print('Updating ARDB_Tags Done => {} paths: {} s'.format(index, end - start))
 
-        r_serv.set('v1.5:tags', 1)
+        r_serv.sadd('ail:update_v1.5', 'tags')

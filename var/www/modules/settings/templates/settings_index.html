@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Server Management - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'options/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card mb-3 mt-1">
+					<div class="card-header text-white bg-dark pb-1">
+						<h5 class="card-title">AIL-framework Status :</h5>
+					</div>
+					<div class="card-body">
+
+            <div class="row">
+              <div class="col-xl-6">
+                <div class="card text-center border-secondary">
+                  <div class="card-body px-1 py-0">
+                    <table class="table table-sm">
+                      <tbody>
+                        <tr>
+                          <td>AIL Version</td>
+                          <td>{{update_metadata['current_version']}}<a target="_blank" href="https://github.com/CIRCL/AIL-framework/releases/tag/{{update_metadata['current_version']}}" class="text-info"><small> (release note)</small></a></td>
+                        </tr>
+                        <tr
+                        {%if git_metadata['current_branch'] != 'master'%}
+                          class="table-danger"
+                        {%endif%}
+                        >
+                          <td>Current Branch</td>
+                          <td>
+                            {%if git_metadata['current_branch'] != 'master'%}
+                              <i class="fas fa-times-circle text-danger" data-toggle="tooltip" data-placement="top" title="Please checkout the master branch"></i>&nbsp;
+                            {%endif%}
+                            {{git_metadata['current_branch']}}
+                          </td>
+                        </tr>
+                        {%if git_metadata['is_clone']%}
+                          {%if update_metadata['update_in_progress']%}
+                            <tr>
+                              <td>Update in progress</td>
+                              <td>{{update_metadata['update_in_progress']}}</td>
+                            </tr>
+                          {%endif%}
+                          <tr
+                          {%if git_metadata['new_git_update_available']%}
+                            class="table-warning"
+                          {%endif%}
+                          >
+                            <td>Current Commit ID</td>
+                            <td>
+                              {%if git_metadata['new_git_update_available']%}
+                                <i class="fas fa-exclamation-triangle text-secondary" data-toggle="tooltip" data-placement="top" title="A New Update Is Available"></i>&nbsp;
+                              {%endif%}
+                              {{git_metadata['current_commit']}}
+                            </td>
+                          </tr>
+                          <tr
+                          {%if git_metadata['new_git_version_available']%}
+                            class="table-danger"
+                          {%endif%}
+                          >
+                            <td>Current Tag</td>
+                            <td>
+                              {%if git_metadata['new_git_version_available']%}
+                                <i class="fas fa-exclamation-circle text-danger" data-toggle="tooltip" data-placement="top" title="A New Version Is Available"></i>&nbsp;&nbsp;
+                              {%endif%}
+                              {{git_metadata['last_local_tag']}}
+                            </td>
+                          </tr>
+                        {%else%}
+                        <tr>
+                          <td>This working directory is a fork</td>
+                        </tr>
+                        {%endif%}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-6">
+                {%if update_metadata['update_in_progress']%}
+                <div class="card text-center border-success">
+                  <div class="card-body">
+                    <h5 class="card-title">Backgroud Update: {{update_metadata['current_background_update']}}</h5>
+                    <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26">
+                  </div>
+                </div>
+                {%elif update_metadata['update_error']%}
+                  <div class="card text-center border-danger">
+                    <div class="card-body text-danger">
+                      <h5 class="card-title">Update Error: {{update_metadata['current_background_update']}}</h5>
+                      <p>{{update_metadata['update_error']}}</p>
+                    </div>
+                  </div>
+                {%endif%}
+              </div>
+
+            </div>
+
+					</div>
+				</div>
+
+        {%if git_metadata['new_git_version_available']%}
+          <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">New Version Available!</h4>
+            <hr class="my-0">
+            <p>A new version is available, new version: <strong>{{git_metadata['last_remote_tag']}}</strong></p>
+            <a target="_blank" href="https://github.com/CIRCL/AIL-framework/releases/tag/{{git_metadata['last_remote_tag']}}"> Check last release note.</a>
+          </div>
+        {%endif%}
+
+        {%if git_metadata['new_git_update_available']%}
+          <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">New Update Available!</h4>
+            <hr class="my-0">
+            <p>A new update is available, new commit ID: <strong>{{git_metadata['last_remote_commit']}}</strong></p>
+            <a target="_blank" href="https://github.com/CIRCL/AIL-framework/commit/{{git_metadata['last_remote_commit']}}"> Check last commit content.</a>
+          </div>
+        {%endif%}
+
+    	</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#page-options").addClass("active");
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</html>

@@ -134,4 +134,4 @@ if __name__ == '__main__':
     print()
     print('Done in {} s'.format(end - start_deb))
 
-    r_serv.set('v1.5:onions', 1)
+    r_serv.sadd('ail:update_v1.5', 'onions')

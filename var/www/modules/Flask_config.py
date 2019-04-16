@@ -165,6 +165,8 @@ UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
 SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
 
+REPO_ORIGIN = 'https://github.com/CIRCL/AIL-framework.git'
+
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
 
 # VT

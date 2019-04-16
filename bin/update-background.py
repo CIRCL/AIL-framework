@@ -31,23 +31,27 @@ if __name__ == "__main__":
         db=cfg.getint("ARDB_DB", "db"),
         decode_responses=True)
 
-    if r_serv.exists('ail:update_v1.5'):
-        onions_update_status = r_serv.get('v1.5:onions')
-        if onions_update_status is None:
+    if r_serv.scard('ail:update_v1.5') != 4:
+        r_serv.delete('ail:update_error')
+        r_serv.set('ail:update_in_progress', 'v1.5')
+        r_serv.set('ail:current_background_update', 'v1.5')
+        if not r_serv.sismember('ail:update_v1.5', 'onions'):
             update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Onions.py')
             process = subprocess.run(['python' ,update_file])
 
-        metadata_update_status = r_serv.get('v1.5:metadata')
-        if metadata_update_status is None:
+        if not r_serv.sismember('ail:update_v1.5', 'metadata'):
             update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Metadata.py')
             process = subprocess.run(['python' ,update_file])
 
-        tags_update_status = r_serv.get('v1.5:tags')
-        if tags_update_status is None:
+        if not r_serv.sismember('ail:update_v1.5', 'tags'):
             update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags.py')
             process = subprocess.run(['python' ,update_file])
 
-        tags_background_update_status = r_serv.get('v1.5:tags_background')
-        if tags_background_update_status is None:
+        if if not r_serv.sismember('ail:update_v1.5', 'tags_background'):
             update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags_background.py')
             process = subprocess.run(['python' ,update_file])
+        if r_serv.scard('ail:update_v1.5') != 4:
+            r_serv.set('ail:update_error', 'Update v1.5 Failed, please relaunch the bin/update-background.py script')
+        else:
+            r_serv.delete('ail:update_in_progress')
+            r_serv.delete('ail:current_background_update', 'v1.5')

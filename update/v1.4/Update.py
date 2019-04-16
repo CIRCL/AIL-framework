@@ -57,7 +57,10 @@ if __name__ == '__main__':
 
     #Set current ail version
     r_serv.set('ail:version', 'v1.5')
-    r_serv.set('ail:update_v1.5', 1)
+
+    #Set current update_in_progress
+    r_serv.set('ail:update_in_progress', 'v1.5')
+    r_serv.set('ail:current_background_update', 'v1.5')
 
     #Set current ail version
     r_serv.set('ail:update_date_v1.5', datetime.datetime.now().strftime("%Y%m%d"))
