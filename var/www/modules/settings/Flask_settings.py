@@ -106,9 +106,6 @@ def get_background_update_stats_json():
         else:
             update_stats['background_stats'] = int(update_stats['background_stats'])
 
-        ## DEBUG:
-        update_stats['background_stats'] =12
-
         update_progression = r_serv_db.scard('ail:update_{}'.format(current_update))
         update_nb_scripts = dict_update_stat[current_update]['nb_background_update']
         update_stats['update_stat'] = int(update_progression*100/update_nb_scripts)
@@ -122,7 +119,11 @@ def get_background_update_stats_json():
             else:
                 update_stats['error_message'] = 'Please relaunch the bin/update-background.py script'
         else:
-            update_stats['error'] = False
+            if update_stats['background_name'] is None:
+                update_stats['error'] = True
+                update_stats['error_message'] = 'Please launch the bin/update-background.py script'
+            else:
+                update_stats['error'] = False
 
         return jsonify(update_stats)
 

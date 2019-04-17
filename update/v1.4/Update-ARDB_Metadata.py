@@ -97,12 +97,28 @@ if __name__ == '__main__':
     index = 0
     start = time.time()
 
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 0)
+
     # Update base64
     update_hash_item('base64')
+
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 20)
     # Update binary
     update_hash_item('binary')
+
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 40)
     # Update binary
     update_hash_item('hexadecimal')
+
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 60)
+
+    total_onion = r_serv_tag.scard('infoleak:submission=\"crawler\"')
+    nb_updated = 0
+    last_progress = 0
 
     # Update onion metadata
     all_crawled_items = r_serv_tag.smembers('infoleak:submission=\"crawler\"')
@@ -131,16 +147,36 @@ if __name__ == '__main__':
             if PASTES_FOLDER in father:
                 r_serv_metadata.hset(new_item_metadata, 'father', father.replace(PASTES_FOLDER, '', 1))
 
-    end = time.time()
+        nb_updated += 1
+        progress = int((nb_updated * 30) /total_onion)
+        print('{}/{}    updated    {}%'.format(nb_updated, total_onion, progress + 60))
+        # update progress stats
+        if progress != last_progress:
+            r_serv.set('ail:current_background_script_stat', progress + 60)
+            last_progress = progress
+
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 90)
 
     ## update tracked term/set/regex
     # update tracked term
     update_tracked_terms('TrackedSetTermSet', 'tracked_{}')
+
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 93)
     # update tracked set
     update_tracked_terms('TrackedSetSet', 'set_{}')
+
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 96)
     # update tracked regex
     update_tracked_terms('TrackedRegexSet', 'regex_{}')
+
+    #update stats
+    r_serv.set('ail:current_background_script_stat', 100)
     ##
+
+    end = time.time()
 
     print('Updating ARDB_Metadata Done => {} paths: {} s'.format(index, end - start))
     print()

@@ -58,11 +58,15 @@ if __name__ == '__main__':
         decode_responses=True)
 
     r_serv.set('ail:current_background_script', 'tags')
+    r_serv.set('ail:current_background_script_stat', 0)
 
-    if r_serv.exists('v1.5:onions') and r_serv.exists('v1.5:metadata'):
+    if r_serv.sismember('ail:update_v1.5', 'onions') and r_serv.sismember('ail:update_v1.5', 'metadata'):
 
         print('Updating ARDB_Tags ...')
         index = 0
+        nb_tags_to_update = 0
+        nb_updated = 0
+        last_progress = 0
         start = time.time()
 
         tags_list = r_serv_tag.smembers('list_tags')
@@ -81,6 +85,7 @@ if __name__ == '__main__':
                 tag_metadata[tag]['last_seen'] = 0
             else:
                 tag_metadata[tag]['last_seen'] = int(tag_metadata[tag]['last_seen'])
+            nb_tags_to_update += r_serv_tag.scard(tag)
 
         for tag in tags_list:
 
@@ -122,6 +127,14 @@ if __name__ == '__main__':
                 # clean db
                 r_serv_tag.srem(tag, item_path)
                 index = index + 1
+
+            nb_updated += 1
+            progress = int((nb_updated * 100) /nb_tags_to_update)
+            print('{}/{}    updated    {}%'.format(nb_updated, nb_tags_to_update, progress))
+            # update progress stats
+            if progress != last_progress:
+                r_serv.set('ail:current_background_script_stat', progress)
+                last_progress = progress
 
         #flush browse importante pastes db
         r_important_paste_2018.flushdb()

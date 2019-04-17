@@ -58,7 +58,6 @@
                             {{git_metadata['current_branch']}}
                           </td>
                         </tr>
-                        {%if git_metadata['is_clone']%}
                           <tr
                           {%if git_metadata['new_git_update_available']%}
                             class="table-warning"
@@ -85,11 +84,6 @@
                               {{git_metadata['last_local_tag']}}
                             </td>
                           </tr>
-                        {%else%}
-                        <tr>
-                          <td>This working directory is a fork</td>
-                        </tr>
-                        {%endif%}
                       </tbody>
                     </table>
                   </div>
@@ -196,7 +190,7 @@ update_progress();
 //Interval
 var progress_interval = setInterval(function(){
 	update_progress()
-}, 10000);
+}, 4000);
 </script>
 
 </html>

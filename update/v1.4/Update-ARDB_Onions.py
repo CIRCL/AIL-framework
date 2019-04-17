@@ -74,6 +74,7 @@ if __name__ == '__main__':
         decode_responses=True)
 
     r_serv.set('ail:current_background_script', 'onions')
+    r_serv.set('ail:current_background_script_stat', 0)
 
     ## Update Onion ##
     print('Updating ARDB_Onion ...')
@@ -93,10 +94,14 @@ if __name__ == '__main__':
                 all_onion_history = r_serv_onion.lrange('onion_history:{}'.format(onion_domain), 0 ,-1)
                 if all_onion_history:
                     for date_history in all_onion_history:
-                        pass
                         #print('onion_history:{}:{}'.format(onion_domain, date_history))
                         r_serv_onion.delete('onion_history:{}:{}'.format(onion_domain, date_history))
                     r_serv_onion.delete('onion_history:{}'.format(onion_domain))
+
+    #stats
+    total_domain = r_serv_onion.scard('full_onion_up')
+    nb_updated = 0
+    last_progress = 0
 
     # clean up domain
     all_domain_up = r_serv_onion.smembers('full_onion_up')
@@ -129,6 +134,14 @@ if __name__ == '__main__':
 
         r_serv_onion.hset('onion_metadata:{}'.format(onion_domain), 'ports', '80')
         r_serv_onion.hdel('onion_metadata:{}'.format(onion_domain), 'last_seen')
+
+        nb_updated += 1
+        progress = int((nb_updated * 100) /total_domain)
+        print('{}/{}    updated    {}%'.format(nb_updated, total_domain, progress))
+        # update progress stats
+        if progress != last_progress:
+            r_serv.set('ail:current_background_script_stat', progress)
+            last_progress = progress
 
 
     end = time.time()

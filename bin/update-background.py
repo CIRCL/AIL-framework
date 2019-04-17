@@ -47,12 +47,13 @@ if __name__ == "__main__":
             update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags.py')
             process = subprocess.run(['python' ,update_file])
 
-        if if not r_serv.sismember('ail:update_v1.5', 'tags_background'):
+        if not r_serv.sismember('ail:update_v1.5', 'tags_background'):
             update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags_background.py')
             process = subprocess.run(['python' ,update_file])
         if r_serv.scard('ail:update_v1.5') != 4:
             r_serv.set('ail:update_error', 'Update v1.5 Failed, please relaunch the bin/update-background.py script')
         else:
             r_serv.delete('ail:update_in_progress')
-            r_serv_db.delete('ail:current_background_script')
-            r_serv.delete('ail:current_background_update', 'v1.5')
+            r_serv.delete('ail:current_background_script')
+            r_serv.delete('ail:current_background_script_stat')
+            r_serv.delete('ail:current_background_update')
