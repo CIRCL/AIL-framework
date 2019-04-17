@@ -54,4 +54,5 @@ if __name__ == "__main__":
             r_serv.set('ail:update_error', 'Update v1.5 Failed, please relaunch the bin/update-background.py script')
         else:
             r_serv.delete('ail:update_in_progress')
+            r_serv_db.delete('ail:current_background_script')
             r_serv.delete('ail:current_background_update', 'v1.5')

@@ -73,6 +73,8 @@ if __name__ == '__main__':
         db=cfg.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
+    r_serv.set('ail:current_background_script', 'onions')
+
     ## Update Onion ##
     print('Updating ARDB_Onion ...')
     index = 0

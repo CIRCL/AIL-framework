@@ -22,6 +22,8 @@ max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 REPO_ORIGIN = Flask_config.REPO_ORIGIN
 
+dict_update_stat = {'v1.5':{'nb_background_update': 4}}
+
 settings = Blueprint('settings', __name__, template_folder='templates')
 
 
@@ -66,7 +68,12 @@ def get_update_metadata():
     dict_update['update_in_progress'] = r_serv_db.get('ail:update_in_progress')
     dict_update['update_error'] = r_serv_db.get('ail:update_error')
 
-    dict_update['update_in_progress']='v1.5'
+    if dict_update['update_in_progress']:
+        dict_update['update_progression'] = r_serv_db.scard('ail:update_{}'.format(dict_update['update_in_progress']))
+        dict_update['update_nb'] = dict_update_stat[dict_update['update_in_progress']]['nb_background_update']
+        dict_update['update_stat'] = int(dict_update['update_progression']*100/dict_update['update_nb'])
+        dict_update['current_background_script'] = r_serv_db.get('ail:current_background_script')
+        dict_update['current_background_script_stat'] = r_serv_db.get('ail:current_background_script_stat')
 
     return dict_update
 # ============= ROUTES ==============
@@ -74,11 +81,53 @@ def get_update_metadata():
 @settings.route("/settings/", methods=['GET'])
 def settings_page():
     git_metadata = get_git_metadata()
+    current_version = r_serv_db.get('ail:version')
     update_metadata = get_update_metadata()
 
 
     return render_template("settings_index.html", git_metadata=git_metadata,
-                            update_metadata=update_metadata)
+                            current_version=current_version)
+
+
+@settings.route("/settings/get_background_update_stats_json", methods=['GET'])
+def get_background_update_stats_json():
+    # handle :end, error
+    update_stats = {}
+    current_update = r_serv_db.get('ail:current_background_update')
+    update_in_progress = r_serv_db.get('ail:update_in_progress')
+
+
+    if current_update:
+        update_stats['update_version']= current_update
+        update_stats['background_name']= r_serv_db.get('ail:current_background_script')
+        update_stats['background_stats']= r_serv_db.get('ail:current_background_script_stat')
+        if update_stats['background_stats'] is None:
+            update_stats['background_stats'] = 0
+        else:
+            update_stats['background_stats'] = int(update_stats['background_stats'])
+
+        ## DEBUG:
+        update_stats['background_stats'] =12
+
+        update_progression = r_serv_db.scard('ail:update_{}'.format(current_update))
+        update_nb_scripts = dict_update_stat[current_update]['nb_background_update']
+        update_stats['update_stat'] = int(update_progression*100/update_nb_scripts)
+        update_stats['update_stat_label'] = '{}/{}'.format(update_progression, update_nb_scripts)
+
+        if not update_in_progress:
+            update_stats['error'] = True
+            error_message = r_serv_db.get('ail:update_error')
+            if error_message:
+                update_stats['error_message'] = error_message
+            else:
+                update_stats['error_message'] = 'Please relaunch the bin/update-background.py script'
+        else:
+            update_stats['error'] = False
+
+        return jsonify(update_stats)
+
+    else:
+        return jsonify({})
 
 # ========= REGISTRATION =========
 app.register_blueprint(settings, url_prefix=baseUrl)

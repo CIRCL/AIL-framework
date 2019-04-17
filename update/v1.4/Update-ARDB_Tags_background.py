@@ -47,6 +47,8 @@ if __name__ == '__main__':
         db=cfg.getint("ARDB_Tags", "db"),
         decode_responses=True)
 
+    r_serv.set('ail:current_background_script', 'tags_background')
+
     print('Updating ARDB_Tags ...')
     start = time.time()
 

@@ -25,7 +25,7 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'options/menu_sidebar.html' %}
+			{% include 'settings/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 
@@ -43,7 +43,7 @@
                       <tbody>
                         <tr>
                           <td>AIL Version</td>
-                          <td>{{update_metadata['current_version']}}<a target="_blank" href="https://github.com/CIRCL/AIL-framework/releases/tag/{{update_metadata['current_version']}}" class="text-info"><small> (release note)</small></a></td>
+                          <td>{{current_version}}<a target="_blank" href="https://github.com/CIRCL/AIL-framework/releases/tag/{{current_version}}" class="text-info"><small> (release note)</small></a></td>
                         </tr>
                         <tr
                         {%if git_metadata['current_branch'] != 'master'%}
@@ -59,12 +59,6 @@
                           </td>
                         </tr>
                         {%if git_metadata['is_clone']%}
-                          {%if update_metadata['update_in_progress']%}
-                            <tr>
-                              <td>Update in progress</td>
-                              <td>{{update_metadata['update_in_progress']}}</td>
-                            </tr>
-                          {%endif%}
                           <tr
                           {%if git_metadata['new_git_update_available']%}
                             class="table-warning"
@@ -103,21 +97,24 @@
               </div>
 
               <div class="col-xl-6">
-                {%if update_metadata['update_in_progress']%}
-                <div class="card text-center border-success">
-                  <div class="card-body">
-                    <h5 class="card-title">Backgroud Update: {{update_metadata['current_background_update']}}</h5>
-                    <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26">
-                  </div>
-                </div>
-                {%elif update_metadata['update_error']%}
-                  <div class="card text-center border-danger">
-                    <div class="card-body text-danger">
-                      <h5 class="card-title">Update Error: {{update_metadata['current_background_update']}}</h5>
-                      <p>{{update_metadata['update_error']}}</p>
+                <div class="card text-center border-success" id="card_progress">
+                  <div class="card-body" id="card_progress_body">
+                    <h5 class="card-title">Backgroud Update: <span id="backgroud_update_version"></span></h5>
+                    <div class="progress">
+                      <div class="progress-bar bg-danger" role="progressbar" id="update_global_progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <hr class="my-1">
+                    Updating: <strong id="backgroud_update_name"></strong> ...
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-striped bg-warning progress-bar-animated" role="progressbar" id="update_background_progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="text-danger" id="update_error_div">
+                      <hr>
+                      <h5 class="card-title"><i class="fas fa-times-circle text-danger"></i> Update Error:</h5>
+                      <p id="update_error_mess"></p>
                     </div>
                   </div>
-                {%endif%}
+                </div>
               </div>
 
             </div>
@@ -167,6 +164,39 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
+
+function update_progress(){
+  $.getJSON("{{ url_for('settings.get_background_update_stats_json') }}", function(data){
+    if(! jQuery.isEmptyObject(data)){
+      $('#card_progress').show();
+      $('#backgroud_update_version').text(data['update_version']);
+      $('#backgroud_update_name').text(data['background_name']);
+
+      $('#update_global_progress').attr('aria-valuenow', data['update_stat']).width(data['update_stat']+'%').text(data['update_stat_label']);
+      $('#update_background_progress').attr('aria-valuenow', data['background_stats']).width(data['background_stats']+'%').text(data['background_stats']+'%');
+
+      if(data['error']){
+        $('#update_error_div').show();
+        $('#update_error_mess').text(data['error_message']);
+        $('#card_progress').removeClass("border-success");
+        $('#card_progress').addClass("border-danger");
+      } else {
+        $('#update_error_div').hide();
+        $('#card_progress').removeClass("border-danger");
+        $('#card_progress').add("border-success");
+      }
+    } else {
+      $('#card_progress').hide();
+      clearInterval(progress_interval);
+    }
+ });
+}
+
+update_progress();
+//Interval
+var progress_interval = setInterval(function(){
+	update_progress()
+}, 10000);
 </script>
 
 </html>

@@ -90,6 +90,8 @@ if __name__ == '__main__':
         db=cfg.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
+    r_serv.set('ail:current_background_script', 'metadata')
+
     ## Update metadata ##
     print('Updating ARDB_Metadata ...')
     index = 0

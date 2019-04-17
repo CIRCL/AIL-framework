@@ -57,6 +57,8 @@ if __name__ == '__main__':
         db=2018,
         decode_responses=True)
 
+    r_serv.set('ail:current_background_script', 'tags')
+
     if r_serv.exists('v1.5:onions') and r_serv.exists('v1.5:metadata'):
 
         print('Updating ARDB_Tags ...')
