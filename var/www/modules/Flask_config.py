@@ -160,6 +160,10 @@ DiffMaxLineLength =  int(cfg.get("Flask", "DiffMaxLineLength"))#Use to display t
 
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
+dict_update_description = {'v1.5':{'nb_background_update': 4, 'update_warning_message': 'An Update is running on the background. Some informations like Tags, screenshot can be',
+                                   'update_warning_message_notice_me': 'missing from the UI.'}
+                        }
+
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'

@@ -30,6 +30,28 @@ Redis and ARDB overview
 
 # Database Map:
 
+## DB0 - Core:
+
+##### Update keys:
+| Key | Value |
+| ------ | ------ |
+| | |
+| ail:version | **current version** |
+| | |
+| ail:update_**update_version** | **background update name** |
+| | **background update name** |
+| | **...** |
+| | |
+| ail:update_date_v1.5 | **update date** |
+| | |
+| ail:update_error | **update message error** |
+| | |
+| ail:update_in_progress | **update version in progress** |
+| ail:current_background_update | **current update version** |
+| | |
+| ail:current_background_script | **name of the background script currently executed** |
+| ail:current_background_script_stat | **progress in % of the background script** |
+
 ## DB2 - TermFreq:
 
 ##### Set:

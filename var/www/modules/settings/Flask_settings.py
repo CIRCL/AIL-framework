@@ -21,8 +21,7 @@ r_serv_db = Flask_config.r_serv_db
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 REPO_ORIGIN = Flask_config.REPO_ORIGIN
-
-dict_update_stat = {'v1.5':{'nb_background_update': 4}}
+dict_update_description = Flask_config.dict_update_description
 
 settings = Blueprint('settings', __name__, template_folder='templates')
 
@@ -70,7 +69,7 @@ def get_update_metadata():
 
     if dict_update['update_in_progress']:
         dict_update['update_progression'] = r_serv_db.scard('ail:update_{}'.format(dict_update['update_in_progress']))
-        dict_update['update_nb'] = dict_update_stat[dict_update['update_in_progress']]['nb_background_update']
+        dict_update['update_nb'] = dict_update_description[dict_update['update_in_progress']]['nb_background_update']
         dict_update['update_stat'] = int(dict_update['update_progression']*100/dict_update['update_nb'])
         dict_update['current_background_script'] = r_serv_db.get('ail:current_background_script')
         dict_update['current_background_script_stat'] = r_serv_db.get('ail:current_background_script_stat')
@@ -107,7 +106,7 @@ def get_background_update_stats_json():
             update_stats['background_stats'] = int(update_stats['background_stats'])
 
         update_progression = r_serv_db.scard('ail:update_{}'.format(current_update))
-        update_nb_scripts = dict_update_stat[current_update]['nb_background_update']
+        update_nb_scripts = dict_update_description[current_update]['nb_background_update']
         update_stats['update_stat'] = int(update_progression*100/update_nb_scripts)
         update_stats['update_stat_label'] = '{}/{}'.format(update_progression, update_nb_scripts)
 
