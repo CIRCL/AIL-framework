@@ -169,6 +169,8 @@ def index():
 
     # Check if update in progress
     update_in_progress = False
+    update_warning_message = ''
+    update_warning_message_notice_me = ''
     current_update = r_serv_db.get('ail:current_background_update')
     if current_update:
         if r_serv_db.scard('ail:update_{}'.format(current_update)) != dict_update_description[current_update]['nb_background_update']:
