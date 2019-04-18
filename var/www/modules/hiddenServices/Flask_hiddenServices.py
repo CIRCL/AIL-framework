@@ -537,6 +537,11 @@ def show_domain():
     except:
         epoch = None
     port = request.args.get('port')
+    faup.decode(domain)
+    unpack_url = faup.get()
+    domain = unpack_url['domain'].decode()
+    if not port:
+        port = unpack_url['port'].decode()
     try:
         port = int(port)
     except:
