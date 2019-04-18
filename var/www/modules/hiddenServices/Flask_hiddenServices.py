@@ -105,6 +105,12 @@ def get_type_domain(domain):
             type = 'regular'
     return type
 
+def get_domain_from_url(url):
+    faup.decode(url)
+    unpack_url = faup.get()
+    domain = unpack_url['domain'].decode()
+    return domain
+
 def get_last_domains_crawled(type):
     return r_serv_onion.lrange('last_{}'.format(type), 0 ,-1)
 
@@ -117,10 +123,14 @@ def get_stats_last_crawled_domains(type, date):
     statDomains['domains_queue'] += r_serv_onion.scard('{}_crawler_priority_queue'.format(type))
     return statDomains
 
-def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
+def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None, auto_mode=False):
     list_crawled_metadata = []
     for domain_epoch in list_domains_crawled:
-        domain, epoch = domain_epoch.rsplit(';', 1)
+        if not auto_mode:
+            domain, epoch = domain_epoch.rsplit(';', 1)
+        else:
+            url = domain_epoch
+            domain = domain_epoch
         domain = domain.split(':')
         if len(domain) == 1:
             port = 80
@@ -131,7 +141,17 @@ def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
         metadata_domain = {}
         # get Domain type
         if type is None:
-            type = get_domain_type(domain)
+            type_domain = get_type_domain(domain)
+        else:
+            type_domain = type
+        if auto_mode:
+            metadata_domain['url'] = url
+            epoch = r_serv_onion.zscore('crawler_auto_queue', '{};auto;{}'.format(domain, type_domain))
+            #domain in priority queue
+            if epoch is None:
+                epoch = 'In Queue'
+            else:
+                epoch = datetime.datetime.fromtimestamp(float(epoch)).strftime('%Y-%m-%d %H:%M:%S')
 
         metadata_domain['domain'] = domain
         if len(domain) > 45:
@@ -141,13 +161,13 @@ def get_last_crawled_domains_metadata(list_domains_crawled, date, type=None):
             metadata_domain['domain_name'] = domain
         metadata_domain['port'] = port
         metadata_domain['epoch'] = epoch
-        metadata_domain['last_check'] = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'last_check')
+        metadata_domain['last_check'] = r_serv_onion.hget('{}_metadata:{}'.format(type_domain, domain), 'last_check')
         if metadata_domain['last_check'] is None:
             metadata_domain['last_check'] = '********'
-        metadata_domain['first_seen'] = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'first_seen')
+        metadata_domain['first_seen'] = r_serv_onion.hget('{}_metadata:{}'.format(type_domain, domain), 'first_seen')
         if metadata_domain['first_seen'] is None:
             metadata_domain['first_seen'] = '********'
-        if r_serv_onion.sismember('{}_up:{}'.format(type, metadata_domain['last_check']) , domain):
+        if r_serv_onion.sismember('{}_up:{}'.format(type_domain, metadata_domain['last_check']) , domain):
             metadata_domain['status_text'] = 'UP'
             metadata_domain['status_color'] = 'Green'
             metadata_domain['status_icon'] = 'fa-check-circle'
@@ -185,6 +205,18 @@ def send_url_to_crawl_in_queue(mode, service_type, url):
     # add auto crawled url for user UI
     if mode == 'auto':
         r_serv_onion.sadd('auto_crawler_url:{}'.format(service_type), url)
+
+def delete_auto_crawler(url):
+    domain = get_domain_from_url(url)
+    type = get_type_domain(domain)
+    # remove from set
+    r_serv_onion.srem('auto_crawler_url:{}'.format(type), url)
+    # remove config
+    r_serv_onion.delete('crawler_config:auto:{}:{}'.format(type, domain))
+    # remove from queue
+    r_serv_onion.srem('{}_crawler_priority_queue'.format(type), '{};auto'.format(url))
+    # remove from crawler_auto_queue
+    r_serv_onion.zrem('crawler_auto_queue'.format(type), '{};auto;{}'.format(url, type))
 
 # ============= ROUTES ==============
 
@@ -389,6 +421,66 @@ def create_spider_splash():
     send_url_to_crawl_in_queue(mode, service_type, url)
 
     return redirect(url_for('hiddenServices.manual'))
+
+@hiddenServices.route("/crawlers/auto_crawler", methods=['GET'])
+def auto_crawler():
+    nb_element_to_display = 100
+    try:
+        page = int(request.args.get('page'))
+    except:
+        page = 1
+    if page <= 0:
+        page = 1
+
+    nb_auto_onion = r_serv_onion.scard('auto_crawler_url:onion')
+    nb_auto_regular = r_serv_onion.scard('auto_crawler_url:regular')
+
+    if nb_auto_onion > nb_auto_regular:
+        nb_max = nb_auto_onion
+    else:
+        nb_max = nb_auto_regular
+
+    nb_page_max = nb_max/(nb_element_to_display)
+    if isinstance(nb_page_max, float):
+        nb_page_max = int(nb_page_max)+1
+    if page > nb_page_max:
+        page = nb_page_max
+    start = nb_element_to_display*(page -1)
+    stop = nb_element_to_display*page
+
+    last_auto_crawled = get_last_domains_crawled('auto_crawled')
+    last_domains = get_last_crawled_domains_metadata(last_auto_crawled, '')
+
+    if start > nb_auto_onion:
+        auto_crawler_domain_onions = []
+    elif stop > nb_auto_onion:
+        auto_crawler_domain_onions = list(r_serv_onion.smembers('auto_crawler_url:onion'))[start:nb_auto_onion]
+    else:
+        auto_crawler_domain_onions = list(r_serv_onion.smembers('auto_crawler_url:onion'))[start:stop]
+
+    if start > nb_auto_regular:
+        auto_crawler_domain_regular = []
+    elif stop > nb_auto_regular:
+        auto_crawler_domain_regular = list(r_serv_onion.smembers('auto_crawler_url:regular'))[start:nb_auto_regular]
+    else:
+        auto_crawler_domain_regular = list(r_serv_onion.smembers('auto_crawler_url:regular'))[start:stop]
+
+    auto_crawler_domain_onions_metadata = get_last_crawled_domains_metadata(auto_crawler_domain_onions, '', type='onion', auto_mode=True)
+    auto_crawler_domain_regular_metadata = get_last_crawled_domains_metadata(auto_crawler_domain_regular, '', type='regular', auto_mode=True)
+
+    return render_template("Crawler_auto.html", page=page, nb_page_max=nb_page_max,
+                                last_domains=last_domains,
+                                auto_crawler_domain_onions_metadata=auto_crawler_domain_onions_metadata,
+                                auto_crawler_domain_regular_metadata=auto_crawler_domain_regular_metadata)
+
+@hiddenServices.route("/crawlers/remove_auto_crawler", methods=['GET'])
+def remove_auto_crawler():
+    url = request.args.get('url')
+    page = request.args.get('page')
+
+    if url:
+        delete_auto_crawler(url)
+    return redirect(url_for('hiddenServices.auto_crawler', page=page))
 
 # # TODO: refractor
 @hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_json", methods=['GET'])

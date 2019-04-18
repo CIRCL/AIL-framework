@@ -397,7 +397,9 @@ if __name__ == '__main__':
                 # add next auto Crawling in queue:
                 if to_crawl['paste'] == 'auto':
                     redis_crawler.zadd('crawler_auto_queue', int(time.time()+crawler_config['crawler_options']['time']) , '{};{}'.format(to_crawl['original_message'], to_crawl['type_service']))
-
+                    # update list, last auto crawled domains
+                    redis_crawler.lpush('last_auto_crawled', '{}:{};{}'.format(url_data['domain'], url_data['port'], date['epoch']))
+                    redis_crawler.ltrim('last_auto_crawled', 0, 9)
             else:
                 print('                 Blacklisted Domain')
                 print()

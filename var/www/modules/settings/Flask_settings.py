@@ -44,10 +44,6 @@ def get_git_metadata():
     dict_git['last_local_tag'] = git_status.get_last_tag_from_local()
     dict_git['last_remote_tag'] = git_status.get_last_tag_from_remote()
 
-    # # DEBUG:
-    dict_git['last_local_tag'] = 'v1.3'
-    dict_git['last_remote_commit'] = '234328439828943843839'
-
     if dict_git['current_commit'] != dict_git['last_remote_commit']:
         dict_git['new_git_update_available'] = True
     else:
