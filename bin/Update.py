@@ -39,26 +39,17 @@ def check_if_files_modified():
 
 def repo_is_fork():
     print('Check if this repository is a fork:')
-    process = subprocess.run(['git', 'ls-remote', '--tags'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.run(['git', 'remote', '-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if process.returncode == 0:
-        # remove url origin
-        local_remote = process.stdout
-        process = subprocess.run(['git', 'ls-remote' ,'--tags', AIL_REPO], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        if process.returncode == 0:
-            ail_remote = process.stdout
-            if local_remote == ail_remote:
-                print('    This repository is a {}clone of {}{}'.format(TERMINAL_BLUE, AIL_REPO, TERMINAL_DEFAULT))
-                return False
-            else:
-                print('    This repository is a {}fork{}'.format(TERMINAL_BLUE, TERMINAL_DEFAULT))
-                print()
-                return True
+        res = process.stdout.decode()
+        if 'origin	{}'.format(AIL_REPO) in res:
+            print('    This repository is a {}clone of {}{}'.format(TERMINAL_BLUE, AIL_REPO, TERMINAL_DEFAULT))
+            return False
         else:
-            print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
-            aborting_update()
-            sys.exit(0)
+            print('    This repository is a {}fork{}'.format(TERMINAL_BLUE, TERMINAL_DEFAULT))
+            print()
+            return True
     else:
         print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
         aborting_update()
@@ -195,8 +186,8 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 
 def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork):
     print('{}git checkout master:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
-    #process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    process = subprocess.run(['ls'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #process = subprocess.run(['ls'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         print(process.stdout.decode())
         print()
