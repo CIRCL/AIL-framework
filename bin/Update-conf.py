@@ -1,123 +1,90 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import configparser
-from configparser import ConfigParser as cfgP
 import os
-from collections import OrderedDict
 import sys
-import shutil
+import argparse
+import configparser
+
+def print_message(message_to_print, verbose):
+    if verbose:
+        print(message_to_print)
+
+def update_config(config_file, config_file_sample, config_file_backup=False):
+
+    verbose = True
+
+    # Check if confile file exist
+    if not os.path.isfile(config_file):
+        # create config file
+        with open(config_file, 'w') as configfile:
+            with open(config_file_sample, 'r') as config_file_sample:
+                configfile.write(config_file_sample.read())
+        print_message('Config File Created', verbose)
+    else:
+        config_server = configparser.ConfigParser()
+        config_server.read(config_file)
+        config_sections = config_server.sections()
+
+        config_sample = configparser.ConfigParser()
+        config_sample.read(config_file_sample)
+        sample_sections = config_sample.sections()
+
+        mew_content_added = False
+        for section in sample_sections:
+            new_key_added = False
+            if section not in config_sections:
+                # add new section
+                config_server.add_section(section)
+                mew_content_added = True
+            for key in config_sample[section]:
+                if key not in config_server[section]:
+                    # add new section key
+                    config_server.set(section, key, config_sample[section][key])
+                    if not new_key_added:
+                        print_message('[{}]'.format(section), verbose)
+                        new_key_added = True
+                        mew_content_added = True
+                    print_message('    {} = {}'.format(key, config_sample[section][key]), verbose)
+
+        # new keys have been added to config file
+        if mew_content_added:
+            # backup config file
+            if config_file_backup:
+                with open(config_file_backup, 'w') as configfile:
+                    with open(config_file, 'r') as configfile_origin:
+                        configfile.write(configfile_origin.read())
+                print_message('New Backup Created', verbose)
+            # create new config file
+            with open(config_file, 'w') as configfile:
+                config_server.write(configfile)
+            print_message('Config file updated', verbose)
+        else:
+            print_message('Nothing to update', verbose)
 
 
 #return true if the configuration is up-to-date
 def main():
-    if len(sys.argv) != 2:
-        print('usage:', 'Update-conf.py', 'Automatic (boolean)')
-        exit(1)
-    else:
-        automatic = sys.argv[1]
-        if automatic == 'True':
-            automatic = True
-        else:
-            automatic = False
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    configfileBackup = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg') + '.backup'
-    if not os.path.exists(configfile):
+    #------------------------------------------------------------------------------------#
+
+    config_file_default = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+    config_file_default_sample = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg.sample')
+    config_file_default_backup = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg.backup')
+
+    config_file_update = os.path.join(os.environ['AIL_HOME'], 'configs/update.cfg')
+    config_file_update_sample = os.path.join(os.environ['AIL_HOME'], 'configs/update.cfg.sample')
+
+    if not os.path.exists(config_file_default_sample):
         raise Exception('Unable to find the configuration file. \
                         Did you set environment variables? \
                         Or activate the virtualenv.')
-    configfileSample  = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg.sample')
-
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
-    cfgSample = configparser.ConfigParser()
-    cfgSample.read(configfileSample)
-
-    sections = cfgP.sections(cfg)
-    sectionsSample = cfgP.sections(cfgSample)
-
-    missingSection = []
-    dicoMissingSection = {}
-    missingItem = []
-    dicoMissingItem = {}
-
-    for sec in sectionsSample:
-        if sec not in sections:
-            missingSection += [sec]
-            dicoMissingSection[sec] = cfgP.items(cfgSample, sec)
-        else:
-            setSample = set(cfgP.options(cfgSample, sec))
-            setNormal = set(cfgP.options(cfg, sec))
-            if setSample != setNormal:
-                missing_items = list(setSample.difference(setNormal))
-                missingItem += [sec]
-                list_items = []
-                for i in missing_items:
-                    list_items.append( (i, cfgSample.get(sec, i)) )
-                dicoMissingItem[sec] = list_items
-
-    if len(missingSection) == 0 and len(missingItem) == 0:
-        #print("Configuration up-to-date")
-        return True
-    print("/!\\ Configuration not complete. Missing following configuration: /!\\")
-    print("+--------------------------------------------------------------------+")
-    for section in missingSection:
-        print("["+section+"]")
-        for item in dicoMissingSection[section]:
-            print("  - "+item[0])
-    for section in missingItem:
-        print("["+section+"]")
-        for item in dicoMissingItem[section]:
-            print("  - "+item[0])
-    print("+--------------------------------------------------------------------+")
-
-    if automatic:
-        resp = 'y'
-    else:
-        resp = input("Do you want to auto fix it? [y/n] ")
-
-    if resp != 'y':
-        return False
-    else:
-        if automatic:
-            resp2 = 'y'
-        else:
-            resp2 = input("Do you want to keep a backup of the old configuration file? [y/n] ")
-
-        if resp2 == 'y':
-            shutil.move(configfile, configfileBackup)
-
-        #Do not keep item ordering in section. New items appened
-        for section in missingItem:
-            for item, value in dicoMissingItem[section]:
-                cfg.set(section, item, value)
-
-        #Keep sections ordering while updating the config file
-        new_dico = add_items_to_correct_position(cfgSample._sections, cfg._sections, missingSection, dicoMissingSection)
-        cfg._sections = new_dico
-
-        with open(configfile, 'w') as f:
-            cfg.write(f)
-        return True
 
 
-''' Return a new dico with the section ordered as the old configuration with the updated one added '''
-def add_items_to_correct_position(sample_dico, old_dico, missingSection, dicoMissingSection):
-    new_dico = OrderedDict()
+    update_config(config_file_default, config_file_default_sample, config_file_backup=config_file_default_backup)
+    update_config(config_file_update, config_file_update_sample)
 
-    positions = {}
-    for pos_i, sec in enumerate(sample_dico):
-        if sec in missingSection:
-            positions[pos_i] = sec
-
-    for pos_i, sec in enumerate(old_dico):
-        if pos_i in positions:
-            missSection = positions[pos_i]
-            new_dico[missSection] = sample_dico[missSection]
-
-        new_dico[sec] = old_dico[sec]
-    return new_dico
+    return True
 
 
 if __name__ == "__main__":

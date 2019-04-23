@@ -34,6 +34,7 @@ var/www/submitted
 bin/packages/config.cfg
 bin/packages/config.cfg.backup
 configs/keys
+configs/update.cfg
 update/current_version
 files
 

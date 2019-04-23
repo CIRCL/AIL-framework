@@ -125,12 +125,7 @@ function launching_queues {
 function checking_configuration {
     bin_dir=${AIL_HOME}/bin
     echo -e "\t* Checking configuration"
-    if [ "$1" == "automatic" ]; then
-        bash -c "${ENV_PY} $bin_dir/Update-conf.py True"
-    else
-        bash -c "${ENV_PY} $bin_dir/Update-conf.py False"
-    fi
-
+    bash -c "${ENV_PY} $bin_dir/Update-conf.py"
     exitStatus=$?
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
@@ -140,7 +135,7 @@ function checking_configuration {
 }
 
 function launching_scripts {
-    checking_configuration $1;
+    checking_configuration;
 
     screen -dmS "Script_AIL"
     sleep 0.1
@@ -359,14 +354,14 @@ function launch_scripts {
     if [[ ! $isscripted ]]; then
       sleep 1
         if checking_ardb && checking_redis; then
-            launching_scripts $1;
+            launching_scripts;
         else
             no_script_launched=true
             while $no_script_launched; do
                 echo -e $YELLOW"\tScript not started, waiting 5 more secondes"$DEFAULT
                 sleep 5
                 if checking_redis && checking_ardb; then
-                    launching_scripts $1;
+                    launching_scripts;
                     no_script_launched=false
                 else
                     echo -e $RED"\tScript not started"$DEFAULT
@@ -457,7 +452,7 @@ function launch_all {
     launch_ardb;
     launch_logs;
     launch_queues;
-    launch_scripts $1;
+    launch_scripts;
     launch_flask;
 }
 
@@ -521,7 +516,7 @@ function launch_all {
                     update;
                     ;;
                 Update-config)
-                    checking_configuration "manual";
+                    checking_configuration;
                     ;;
                 Update-thirdparty)
                     update_thirdparty;
