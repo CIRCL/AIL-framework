@@ -105,9 +105,12 @@ def get_elem_to_crawl(rotation_mode):
 
     return message
 
-def get_crawler_config(redis_server, mode, service_type, domain):
+def get_crawler_config(redis_server, mode, service_type, domain, url=None):
     crawler_options = {}
-    config = redis_server.get('crawler_config:{}:{}:{}'.format(mode, service_type, domain))
+    if mode=='auto':
+        config = redis_server.get('crawler_config:{}:{}:{}:{}'.format(mode, service_type, domain, url))
+    else:
+        config = redis_server.get('crawler_config:{}:{}:{}'.format(mode, service_type, domain))
     if config is None:
         config = {}
     else:
@@ -123,7 +126,7 @@ def get_crawler_config(redis_server, mode, service_type, domain):
         redis_server.delete('crawler_config:{}:{}:{}'.format(mode, service_type, domain))
     return crawler_options
 
-def load_crawler_config(service_type, domain, paste, date):
+def load_crawler_config(service_type, domain, paste, url, date):
     crawler_config = {}
     crawler_config['splash_url'] = splash_url
     crawler_config['item'] = paste
@@ -134,7 +137,7 @@ def load_crawler_config(service_type, domain, paste, date):
     # Auto and Manual Crawling
     # Auto ################################################# create new entry, next crawling => here or when ended ?
     if paste == 'auto':
-        crawler_config['crawler_options'] = get_crawler_config(redis_crawler, 'auto', service_type, domain)
+        crawler_config['crawler_options'] = get_crawler_config(redis_crawler, 'auto', service_type, domain, url=url)
         crawler_config['requested'] = True
     # Manual
     elif paste == 'manual':
@@ -342,7 +345,7 @@ if __name__ == '__main__':
                 # Update crawler status type
                 r_cache.sadd('{}_crawlers'.format(to_crawl['type_service']), splash_port)
 
-                crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'], date)
+                crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'],  to_crawl['url'], date)
                 # check if default crawler
                 if not crawler_config['requested']:
                     # Auto crawl only if service not up this month

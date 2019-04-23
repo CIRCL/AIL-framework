@@ -194,11 +194,11 @@ def get_crawler_splash_status(type):
 
     return crawler_metadata
 
-def create_crawler_config(mode, service_type, crawler_config, domain):
+def create_crawler_config(mode, service_type, crawler_config, domain, url=None):
     if mode == 'manual':
         r_cache.set('crawler_config:{}:{}:{}'.format(mode, service_type, domain), json.dumps(crawler_config))
     elif mode == 'auto':
-        r_serv_onion.set('crawler_config:{}:{}:{}'.format(mode, service_type, domain), json.dumps(crawler_config))
+        r_serv_onion.set('crawler_config:{}:{}:{}:{}'.format(mode, service_type, domain, url), json.dumps(crawler_config))
 
 def send_url_to_crawl_in_queue(mode, service_type, url):
     r_serv_onion.sadd('{}_crawler_priority_queue'.format(service_type), '{};{}'.format(url, mode))
@@ -212,7 +212,7 @@ def delete_auto_crawler(url):
     # remove from set
     r_serv_onion.srem('auto_crawler_url:{}'.format(type), url)
     # remove config
-    r_serv_onion.delete('crawler_config:auto:{}:{}'.format(type, domain))
+    r_serv_onion.delete('crawler_config:auto:{}:{}:{}'.format(type, domain, url))
     # remove from queue
     r_serv_onion.srem('{}_crawler_priority_queue'.format(type), '{};auto'.format(url))
     # remove from crawler_auto_queue
@@ -417,7 +417,7 @@ def create_spider_splash():
         mode = 'manual'
         epoch = None
 
-    create_crawler_config(mode, service_type, crawler_config, domain)
+    create_crawler_config(mode, service_type, crawler_config, domain, url=url)
     send_url_to_crawl_in_queue(mode, service_type, url)
 
     return redirect(url_for('hiddenServices.manual'))

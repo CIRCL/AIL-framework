@@ -167,10 +167,15 @@ Redis and ARDB overview
 | ------ | ------ | ------ |
 | crawler\_history\_**service type**:**domain** | **item root (first crawled item)** | **epoch (seconds)** |
 
-##### Key:
+##### crawler config:
 | Key | Value |
 | ------ | ------ |
 | crawler\_config:**crawler mode**:**service type**:**domain** | **json config** |
+
+##### automatic crawler config:
+| Key | Value |
+| ------ | ------ |
+| crawler\_config:**crawler mode**:**service type**:**domain**:**url** | **json config** |
 
 ###### exemple json config:
 ```json
