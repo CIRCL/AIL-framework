@@ -658,7 +658,10 @@ def show_domain():
     unpack_url = faup.get()
     domain = unpack_url['domain'].decode()
     if not port:
-        port = unpack_url['port'].decode()
+        if unpack_url['port']:
+            port = unpack_url['port'].decode()
+        else:
+            port = 80
     try:
         port = int(port)
     except:

@@ -140,7 +140,7 @@ class TorSplashCrawler():
                     UUID = self.domains[0]+str(uuid.uuid4())
                 filename_paste_full = os.path.join(self.crawled_paste_filemame, UUID)
                 relative_filename_paste = os.path.join(self.crawler_path, UUID)
-                filename_har = os.path.join(self.crawled_har, UUID +'.png')
+                filename_har = os.path.join(self.crawled_har, UUID)
 
                 # # TODO: modify me
                 # save new paste on disk
@@ -180,17 +180,12 @@ class TorSplashCrawler():
 
                     self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], relative_filename_paste)
 
-                    dirname = os.path.dirname(filename_har)
-                    if not os.path.exists(dirname):
-                        os.makedirs(dirname)
-
                     if 'png' in response.data:
                         size_screenshot = (len(response.data['png'])*3) /4
 
                         if size_screenshot < 5000000: #bytes
                             image_content = base64.standard_b64decode(response.data['png'].encode())
                             hash = sha256(image_content).hexdigest()
-                            print(hash)
                             img_dir_path = os.path.join(hash[0:2], hash[2:4], hash[4:6], hash[6:8], hash[8:10], hash[10:12])
                             filename_img = os.path.join(self.crawled_screenshot, 'screenshot', img_dir_path, hash[12:] +'.png')
                             dirname = os.path.dirname(filename_img)
@@ -202,13 +197,13 @@ class TorSplashCrawler():
                             # add item metadata
                             self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'screenshot', hash)
                             # add sha256 metadata
-                            self.r_serv_onion.zincrby('screenshot:{}'.format(hash), relative_filename_paste, 1)
+                            self.r_serv_onion.sadd('screenshot:{}'.format(hash), relative_filename_paste)
 
                     if 'har' in response.data:
                         dirname = os.path.dirname(filename_har)
                         if not os.path.exists(dirname):
                             os.makedirs(dirname)
-                        with open(filename_har+'har.txt', 'wb') as f:
+                        with open(filename_har+'.json', 'wb') as f:
                             f.write(json.dumps(response.data['har']).encode())
 
                     # save external links in set
