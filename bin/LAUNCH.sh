@@ -207,7 +207,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SentimentAnalysis.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
+    screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./submit_paste.py; read x"
 
