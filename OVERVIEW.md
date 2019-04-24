@@ -165,7 +165,12 @@ Redis and ARDB overview
 ##### Zset:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| crawler\_history\_**service type**:**domain** | **item root (first crawled item)** | **epoch (seconds)** |
+| crawler\_history\_**service type**:**domain**:**port** | **item root (first crawled item)** | **epoch (seconds)** |
+
+##### Set:
+| Key | Value |
+| ------ | ------ | ------ |
+| screenshot:**sha256** | **item path** |
 
 ##### crawler config:
 | Key | Value |
