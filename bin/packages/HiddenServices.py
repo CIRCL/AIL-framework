@@ -233,9 +233,10 @@ class HiddenServices(object):
             origin_paste = paste
             paste= paste.replace(self.paste_directory+'/', '')
 
-            paste = paste.replace(self.paste_crawled_directory_name, '')
-            if os.path.isfile( '{}{}.png'.format(self.screenshot_directory, paste) ):
-                l_screenshot_paste.append({'screenshot': paste[1:], 'item': origin_paste})
+            screenshot = self.r_serv_metadata.hget('paste_metadata:{}'.format(paste), 'screenshot')
+            if screenshot:
+                screenshot =  os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
+                l_screenshot_paste.append({'screenshot': screenshot, 'item': origin_paste})
 
         if len(l_screenshot_paste) > num_screenshot:
             l_random_screenshot = []

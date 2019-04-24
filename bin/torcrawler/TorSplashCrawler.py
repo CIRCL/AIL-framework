@@ -12,6 +12,8 @@ import redis
 import json
 import time
 
+from hashlib import sha256
+
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError
@@ -103,7 +105,8 @@ class TorSplashCrawler():
             self.crawled_paste_filemame = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "pastes"),
                                             self.p.config.get("Directories", "crawled"), date_str )
 
-            self.crawled_screenshot = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
+            self.crawled_har = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
+            self.crawled_screenshot = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot") )
 
         def start_requests(self):
             yield SplashRequest(
@@ -135,13 +138,13 @@ class TorSplashCrawler():
                     UUID = self.domains[0][-215:]+str(uuid.uuid4())
                 else:
                     UUID = self.domains[0]+str(uuid.uuid4())
-                filename_paste = os.path.join(self.crawled_paste_filemame, UUID)
+                filename_paste_full = os.path.join(self.crawled_paste_filemame, UUID)
                 relative_filename_paste = os.path.join(self.crawler_path, UUID)
-                filename_screenshot = os.path.join(self.crawled_screenshot, UUID +'.png')
+                filename_har = os.path.join(self.crawled_har, UUID +'.png')
 
                 # # TODO: modify me
                 # save new paste on disk
-                if self.save_crawled_paste(filename_paste, response.data['html']):
+                if self.save_crawled_paste(relative_filename_paste, response.data['html']):
 
                     # add this paste to the domain crawled set # TODO: # FIXME:  put this on cache ?
                     #self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
@@ -170,14 +173,14 @@ class TorSplashCrawler():
                             self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'ports', ';'.join(all_domain_ports))
 
                     #create paste metadata
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'super_father', self.root_key)
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'father', response.meta['father'])
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'domain', '{}:{}'.format(self.domains[0], self.port))
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(filename_paste), 'real_link', response.url)
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'super_father', self.root_key)
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'father', response.meta['father'])
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'domain', '{}:{}'.format(self.domains[0], self.port))
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'real_link', response.url)
 
-                    self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], filename_paste)
+                    self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], relative_filename_paste)
 
-                    dirname = os.path.dirname(filename_screenshot)
+                    dirname = os.path.dirname(filename_har)
                     if not os.path.exists(dirname):
                         os.makedirs(dirname)
 
@@ -185,11 +188,27 @@ class TorSplashCrawler():
                         size_screenshot = (len(response.data['png'])*3) /4
 
                         if size_screenshot < 5000000: #bytes
-                            with open(filename_screenshot, 'wb') as f:
-                                f.write(base64.standard_b64decode(response.data['png'].encode()))
+                            image_content = base64.standard_b64decode(response.data['png'].encode())
+                            hash = sha256(image_content).hexdigest()
+                            print(hash)
+                            img_dir_path = os.path.join(hash[0:2], hash[2:4], hash[4:6], hash[6:8], hash[8:10], hash[10:12])
+                            filename_img = os.path.join(self.crawled_screenshot, 'screenshot', img_dir_path, hash[12:] +'.png')
+                            dirname = os.path.dirname(filename_img)
+                            if not os.path.exists(dirname):
+                                os.makedirs(dirname)
+                            if not os.path.exists(filename_img):
+                                with open(filename_img, 'wb') as f:
+                                    f.write(image_content)
+                            # add item metadata
+                            self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'screenshot', hash)
+                            # add sha256 metadata
+                            self.r_serv_onion.zincrby('screenshot:{}'.format(hash), relative_filename_paste, 1)
 
                     if 'har' in response.data:
-                        with open(filename_screenshot+'har.txt', 'wb') as f:
+                        dirname = os.path.dirname(filename_har)
+                        if not os.path.exists(dirname):
+                            os.makedirs(dirname)
+                        with open(filename_har+'har.txt', 'wb') as f:
                             f.write(json.dumps(response.data['har']).encode())
 
                     # save external links in set

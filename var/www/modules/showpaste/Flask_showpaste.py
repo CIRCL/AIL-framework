@@ -40,6 +40,12 @@ showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templa
 
 # ============ FUNCTIONS ============
 
+def get_item_screenshot_path(item):
+    screenshot = r_serv_metadata.hget('paste_metadata:{}'.format(item), 'screenshot')
+    if screenshot:
+        screenshot =  os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
+    return screenshot
+
 def showpaste(content_range, requested_path):
     if PASTES_FOLDER not in requested_path:
         # remove full path
@@ -200,7 +206,7 @@ def showpaste(content_range, requested_path):
         crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+requested_path,'real_link')
-        crawler_metadata['screenshot'] = paste.get_p_date_path()
+        crawler_metadata['screenshot'] = get_item_screenshot_path(requested_path)
     else:
         crawler_metadata['get_metadata'] = False
 
@@ -342,7 +348,7 @@ def show_item_min(requested_path , content_range=0):
         crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+relative_path, 'domain')
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+relative_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+relative_path,'real_link')
-        crawler_metadata['screenshot'] = paste.get_p_rel_path()
+        crawler_metadata['screenshot'] = get_item_screenshot_path(relative_path)
     else:
         crawler_metadata['get_metadata'] = False
 

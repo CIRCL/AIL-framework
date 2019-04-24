@@ -167,7 +167,7 @@ dict_update_description = {'v1.5':{'nb_background_update': 4, 'update_warning_me
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
-SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
+SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"), 'screenshot')
 
 REPO_ORIGIN = 'https://github.com/CIRCL/AIL-framework.git'
 
