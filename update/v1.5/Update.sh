@@ -45,7 +45,7 @@ echo ""
 echo ""
 echo -e $GREEN"Fixing ARDB ..."$DEFAULT
 echo ""
-python ${AIL_HOME}/update/v1.4/Update.py &
+python ${AIL_HOME}/update/v1.5/Update.py &
 wait
 echo ""
 echo ""
