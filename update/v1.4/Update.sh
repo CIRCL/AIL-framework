@@ -20,7 +20,7 @@ bash ${AIL_BIN}/LAUNCH.sh -k &
 wait
 
 echo ""
-#bash -c "bash ${AIL_HOME}/update/bin/Update_Redis.sh"
+bash -c "bash ${AIL_HOME}/update/bin/Update_Redis.sh"
 #bash -c "bash ${AIL_HOME}/update/bin/Update_ARDB.sh"
 
 echo ""
