@@ -60,7 +60,7 @@ def update_config(config_file, config_file_sample, config_file_backup=False):
                 config_server.write(configfile)
             print_message('Config file updated', verbose)
         else:
-            print_message('Nothing to update', verbose)
+            print_message('Config File: Nothing to update', verbose)
 
 
 #return true if the configuration is up-to-date

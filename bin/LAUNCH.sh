@@ -447,6 +447,7 @@ function update_thirdparty {
 }
 
 function launch_all {
+    checking_configuration;
     update;
     launch_redis;
     launch_ardb;
