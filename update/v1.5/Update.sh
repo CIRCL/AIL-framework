@@ -34,7 +34,7 @@ echo ""
 echo ""
 echo -e $GREEN"Update Web thirdparty"$DEFAULT
 echo ""
-bash ${AIL_FLASK}update_thirdparty.sh &
+bash -c "(cd ${AIL_FLASK}; ./update_thirdparty.sh &)"
 wait
 echo ""
 
