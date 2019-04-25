@@ -36,22 +36,22 @@ if __name__ == "__main__":
         r_serv.set('ail:update_in_progress', 'v1.5')
         r_serv.set('ail:current_background_update', 'v1.5')
         if not r_serv.sismember('ail:update_v1.5', 'onions'):
-            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Onions.py')
+            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.5', 'Update-ARDB_Onions.py')
             process = subprocess.run(['python' ,update_file])
 
         if not r_serv.sismember('ail:update_v1.5', 'metadata'):
-            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Metadata.py')
+            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.5', 'Update-ARDB_Metadata.py')
             process = subprocess.run(['python' ,update_file])
 
         if not r_serv.sismember('ail:update_v1.5', 'tags'):
-            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags.py')
+            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.5', 'Update-ARDB_Tags.py')
             process = subprocess.run(['python' ,update_file])
 
         if not r_serv.sismember('ail:update_v1.5', 'tags_background'):
-            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Tags_background.py')
+            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.5', 'Update-ARDB_Tags_background.py')
             process = subprocess.run(['python' ,update_file])
         if not r_serv.sismember('ail:update_v1.5', 'crawled_screenshot'):
-            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.4', 'Update-ARDB_Onions_screenshots.py')
+            update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v1.5', 'Update-ARDB_Onions_screenshots.py')
             process = subprocess.run(['python' ,update_file])
         if r_serv.scard('ail:update_v1.5') != 5:
             r_serv.set('ail:update_error', 'Update v1.5 Failed, please relaunch the bin/update-background.py script')

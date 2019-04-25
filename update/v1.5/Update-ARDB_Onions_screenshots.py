@@ -100,6 +100,8 @@ if __name__ == '__main__':
                         os.makedirs(dirname)
                     if not os.path.exists(filename_img):
                         os.rename(img_path, filename_img)
+                    else:
+                        os.remove(img_path)
 
                     item = os.path.join('crawled', date[0:4], date[4:6], date[6:8], file[:-4])
                     # add item metadata

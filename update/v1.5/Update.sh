@@ -12,31 +12,48 @@ export PATH=$AIL_ARDB:$PATH
 export PATH=$AIL_BIN:$PATH
 export PATH=$AIL_FLASK:$PATH
 
-echo "Killing all screens ..."
-bash -c "bash ${AIL_BIN}/LAUNCH.sh -k"
-echo ""
-echo "Starting ARDB ..."
-bash -c "bash ${AIL_BIN}/launch_ardb.sh"
+GREEN="\\033[1;32m"
+DEFAULT="\\033[0;39m"
 
-flag_ardb=true
-while $flag_ardb; do
-    sleep 1
-    bash -c "bash ${AIL_BIN}/check_ardb.sh"
-    if [ $? == 0 ]; then
-        flag_ardb=false
-    else
-        echo "ARDB not available, waiting 5s before retry"
-        sleep 5
-    fi
-done
+echo -e $GREEN"Shutting down AIL ..."$DEFAULT
+bash ${AIL_BIN}/LAUNCH.sh -k &
+wait
 
 echo ""
-echo "Fixing ARDB ..."
-echo ""
-bash -c "python ${AIL_HOME}/update/v1.5/Update.py"
+bash -c "bash ${AIL_HOME}/update/bin/Update_Redis.sh"
+#bash -c "bash ${AIL_HOME}/update/bin/Update_ARDB.sh"
 
-echo "Shutting down ARDB ..."
-bash -c "bash ${AIL_BIN}/LAUNCH.sh -k"
+echo ""
+echo -e $GREEN"Update DomainClassifier"$DEFAULT
+echo ""
+pip3 install --upgrade --force-reinstall git+https://github.com/D4-project/BGP-Ranking.git/@28013297efb039d2ebbce96ee2d89493f6ae56b0#subdirectory=client&egg=pybgpranking
+pip3 install --upgrade --force-reinstall git+https://github.com/adulau/DomainClassifier.git
+wait
+echo ""
+
+echo ""
+echo -e $GREEN"Update Web thirdparty"$DEFAULT
+echo ""
+bash ${AIL_FLASK}update_thirdparty.sh &
+wait
+echo ""
+
+bash ${AIL_BIN}LAUNCH.sh -lav &
+wait
+echo ""
+
+echo ""
+echo -e $GREEN"Fixing ARDB ..."$DEFAULT
+echo ""
+python ${AIL_HOME}/update/v1.4/Update.py &
+wait
+echo ""
+echo ""
+
+echo ""
+echo -e $GREEN"Shutting down ARDB ..."$DEFAULT
+bash ${AIL_BIN}/LAUNCH.sh -k &
+wait
 
 echo ""
 
