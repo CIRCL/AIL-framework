@@ -3,13 +3,15 @@
 
 import os
 import sys
+import json
+import redis
 import configparser
 from TorSplashCrawler import TorSplashCrawler
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 7:
-        print('usage:', 'tor_crawler.py', 'splash_url', 'type', 'url', 'domain', 'paste', 'super_father')
+    if len(sys.argv) != 2:
+        print('usage:', 'tor_crawler.py', 'uuid')
         exit(1)
 
     configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -21,14 +23,28 @@ if __name__ == '__main__':
     cfg = configparser.ConfigParser()
     cfg.read(configfile)
 
-    splash_url = sys.argv[1]
-    type = sys.argv[2]
-    crawler_depth_limit = cfg.getint("Crawler", "crawler_depth_limit")
+    redis_cache = redis.StrictRedis(
+        host=cfg.get("Redis_Cache", "host"),
+        port=cfg.getint("Redis_Cache", "port"),
+        db=cfg.getint("Redis_Cache", "db"),
+        decode_responses=True)
 
-    url = sys.argv[3]
-    domain = sys.argv[4]
-    paste = sys.argv[5]
-    super_father = sys.argv[6]
+    # get crawler config key
+    uuid = sys.argv[1]
 
-    crawler = TorSplashCrawler(splash_url, crawler_depth_limit)
-    crawler.crawl(type, url, domain, paste, super_father)
+    # get configs
+    crawler_json = json.loads(redis_cache.get('crawler_request:{}'.format(uuid)))
+
+    splash_url = crawler_json['splash_url']
+    service_type = crawler_json['service_type']
+    url = crawler_json['url']
+    domain = crawler_json['domain']
+    port = crawler_json['port']
+    original_item = crawler_json['item']
+    crawler_options = crawler_json['crawler_options']
+    date = crawler_json['date']
+
+    redis_cache.delete('crawler_request:{}'.format(uuid))
+
+    crawler = TorSplashCrawler(splash_url, crawler_options)
+    crawler.crawl(service_type, crawler_options, date, url, domain, port, original_item)

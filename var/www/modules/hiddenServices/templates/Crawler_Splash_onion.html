@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
+	<style>
+		.bar {
+				fill: steelblue;
+			}
+		.bar:hover{
+			fill: brown;
+			cursor: pointer;
+		}
+		.bar_stack:hover{
+			cursor: pointer;
+		}
+		div.tooltip {
+			position: absolute;
+			text-align: center;
+			padding: 2px;
+			font: 12px sans-serif;
+			background: #ebf4fb;
+			border: 2px solid #b7ddf2;
+			border-radius: 8px;
+			pointer-events: none;
+			color: #000000;
+		}
+	</style>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="row">
+					<div class="col-12 col-xl-6">
+
+						<div class="table-responsive mt-1 table-hover table-borderless table-striped">
+						  <table class="table">
+								<thead class="thead-dark">
+							      <tr>
+							        <th>Domain</th>
+							        <th>First Seen</th>
+											<th>Last Check</th>
+							        <th>Status</th>
+							      </tr>
+							  </thead>
+							  <tbody id="tbody_last_crawled">
+										{% for metadata_onion in last_onions %}
+								      <tr>
+								        <td><a target="_blank" href="{{ url_for('hiddenServices.onion_domain') }}?onion_domain={{ metadata_onion['domain'] }}">{{ metadata_onion['domain'] }}</a></td>
+								        <td>{{'{}/{}/{}'.format(metadata_onion['first_seen'][0:4], metadata_onion['first_seen'][4:6], metadata_onion['first_seen'][6:8])}}</td>
+												<td>{{'{}/{}/{}'.format(metadata_onion['last_check'][0:4], metadata_onion['last_check'][4:6], metadata_onion['last_check'][6:8])}}</td>
+								        <td><div style="color:{{metadata_onion['status_color']}}; display:inline-block">
+															<i class="fas {{metadata_onion['status_icon']}} "></i>
+															{{metadata_onion['status_text']}}
+														</div>
+												</td>
+								      </tr>
+										{% endfor %}
+							  </tbody>
+						  </table>
+						</div>
+
+						<a href="{{ url_for('hiddenServices.blacklisted_onion') }}">
+							<button type="button" class="btn btn-outline-danger">Show Blacklisted Onion</button>
+						</a>
+
+					</div>
+					<div class="col-12 col-xl-6">
+
+						<div class="card text-white bg-dark mb-3 mt-1">
+						  <div class="card-header">
+								<div class="row">
+									<div class="col-6">
+										<span class="badge badge-success">{{ statDomains['domains_up'] }}</span> UP
+										<span class="badge badge-danger ml-md-3">{{ statDomains['domains_down'] }}</span> DOWN
+									</div>
+									<div class="col-6">
+										<span class="badge badge-success">{{ statDomains['total'] }}</span> Crawled
+										<span class="badge badge-warning ml-md-3">{{ statDomains['domains_queue'] }}</span> Queue
+									</div>
+								</div>
+							</div>
+						  <div class="card-body">
+						    <h5 class="card-title">Select domains by date range :</h5>
+						    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+								<form action="{{ url_for('hiddenServices.get_onions_by_daterange') }}" id="hash_selector_form" method='post'>
+									<div class="row">
+										<div class="col-6">
+											<div class="input-group" id="date-range-from">
+												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+												<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from">
+											</div>
+											<div class="input-group" id="date-range-to">
+												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+												<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to">
+											</div>
+										</div>
+										<div class="col-6">
+											<div class="custom-control custom-switch">
+											  <input class="custom-control-input" type="checkbox" name="domains_up" value="True" id="domains_up_id" checked>
+												<label class="custom-control-label" for="domains_up_id">
+													<span class="badge badge-success"><i class="fas fa-check-circle"></i> Domains UP </span>
+											  </label>
+											</div>
+											<div class="custom-control custom-switch">
+											  <input class="custom-control-input" type="checkbox" name="domains_down" value="True" id="domains_down_id">
+												<label class="custom-control-label" for="domains_down_id">
+													<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Domains DOWN</span>
+												</label>
+											</div>
+											<div class="custom-control custom-switch mt-2">
+											  <input class="custom-control-input" type="checkbox" name="domains_tags" value="True" id="domains_tags_id">
+												<label class="custom-control-label" for="domains_tags_id">
+													<span class="badge badge-dark"><i class="fas fa-tags"></i> Domains Tags</span>
+												</label>
+											</div>
+										</div>
+									</div>
+									<button class="btn btn-primary">
+										<i class="fas fa-eye"></i> Show Onions
+									</button>
+								<form>
+						  </div>
+						</div>
+
+						<div id="barchart_type">
+		        </div>
+
+						<div class="card mt-1 mb-1">
+						  <div class="card-header text-white bg-dark">
+								Crawlers Status
+							</div>
+						  <div class="card-body px-0 py-0 ">
+								<table class="table">
+									<tbody id="tbody_crawler_info">
+										{% for crawler in crawler_metadata %}
+											<tr>
+												 <td>
+													<i class="fas fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['crawler_info']}}
+												</td>
+												<td>
+													{{crawler['crawling_domain']}}
+												</td>
+												<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
+													{{crawler['status_info']}}
+												</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_onion_crawler").addClass("active");
+
+	$('#date-range-from').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+					},
+					setValue: function(s,s1,s2){
+							$('#date-range-from-input').val(s1);
+							$('#date-range-to-input').val(s2);
+					}
+	});
+	$('#date-range-to').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+			},
+			setValue: function(s,s1,s2){
+					$('#date-range-from-input').val(s1);
+					$('#date-range-to-input').val(s2);
+			}
+	});
+	chart.stackBarChart =barchart_type_stack("{{ url_for('hiddenServices.automatic_onion_crawler_json') }}", 'id');
+
+	chart.onResize();
+	$(window).on("resize", function() {
+		chart.onResize();
+	});
+
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+
+
+<script>/*
+function refresh_list_crawled(){
+
+	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_json') }}",
+		function(data) {
+
+			var tableRef = document.getElementById('tbody_last_crawled');
+			$("#tbody_last_crawled").empty()
+
+			for (var i = 0; i < data.last_onions.length; i++) {
+					var data_domain = data.last_onions[i]
+					var newRow   = tableRef.insertRow(tableRef.rows.length);
+
+			    var newCell  = newRow.insertCell(0);
+					newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+data_domain['domain']+"\">"+data_domain['domain']+"</a></td>";
+
+					newCell  = newRow.insertCell(1);
+					newCell.innerHTML = "<td>"+data_domain['first_seen'].substr(0, 4)+"/"+data_domain['first_seen'].substr(4, 2)+"/"+data_domain['first_seen'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(2);
+					newCell.innerHTML = "<td>"+data_domain['last_check'].substr(0, 4)+"/"+data_domain['last_check'].substr(4, 2)+"/"+data_domain['last_check'].substr(6, 2)+"</td>"
+
+					newCell  = newRow.insertCell(3);
+					newCell.innerHTML = "<td><div style=\"color:"+data_domain['status_color']+"; display:inline-block\"><i class=\"fa "+data_domain['status_icon']+" fa-2x\"></i>"+data_domain['status_text']+"</div></td>"
+
+			}
+			var statDomains = data.statDomains
+			document.getElementById('text_domain_up').innerHTML = statDomains['domains_up']
+			document.getElementById('text_domain_down').innerHTML = statDomains['domains_down']
+			document.getElementById('text_domain_queue').innerHTML = statDomains['domains_queue']
+			document.getElementById('text_total_domains').innerHTML = statDomains['total']
+
+			if(data.crawler_metadata.length!=0){
+				$("#tbody_crawler_info").empty();
+				var tableRef = document.getElementById('tbody_crawler_info');
+				for (var i = 0; i < data.crawler_metadata.length; i++) {
+						var crawler = data.crawler_metadata[i];
+						var newRow = tableRef.insertRow(tableRef.rows.length);
+						var text_color;
+						var icon;
+						if(crawler['status']){
+							text_color = 'Green';
+							icon = 'check';
+						} else {
+							text_color = 'Red';
+							icon = 'times';
+						}
+
+				    var newCell  = newRow.insertCell(0);
+						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
+
+						newCell  = newRow.insertCell(1);
+						newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('hiddenServices.onion_domain') }}?onion_domain="+crawler['crawling_domain']+"\">"+crawler['crawling_domain']+"</a></td>";
+
+						newCell  = newRow.insertCell(2);
+						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status_info']+"</div></td>";
+
+						$("#panel_crawler").show();
+				}
+			} else {
+				$("#panel_crawler").hide();
+			}
+		}
+	);
+
+	if (to_refresh) {
+    setTimeout("refresh_list_crawled()", 10000);
+	}
+}*/
+</script>
+
+<script>
+var margin = {top: 20, right: 90, bottom: 55, left: 0},
+				width = parseInt(d3.select('#barchart_type').style('width'), 10);
+				width  = 1000 - margin.left - margin.right,
+				height = 500  - margin.top  - margin.bottom;
+var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+
+var y = d3.scaleLinear().rangeRound([height, 0]);
+
+var xAxis = d3.axisBottom(x);
+
+var yAxis = d3.axisLeft(y);
+
+var color = d3.scaleOrdinal(d3.schemeSet3);
+
+var svg = d3.select("#barchart_type").append("svg")
+				.attr("id", "thesvg")
+				.attr("viewBox", "0 0 "+width+" 500")
+				.attr("width",  width  + margin.left + margin.right)
+				.attr("height", height + margin.top  + margin.bottom)
+			.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+function barchart_type_stack(url, id) {
+
+  d3.json(url)
+    .then(function(data){
+
+			var labelVar = 'date';  //A
+		  var varNames = d3.keys(data[0])
+		      .filter(function (key) { return key !== labelVar;}); //B
+
+		  data.forEach(function (d) { //D
+		    var y0 = 0;
+		    d.mapping = varNames.map(function (name) {
+		      return {
+		        name: name,
+		        label: d[labelVar],
+		        y0: y0,
+		        y1: y0 += +d[name]
+		      };
+		    });
+		    d.total = d.mapping[d.mapping.length - 1].y1;
+		  });
+
+		  x.domain(data.map(function (d) { return (d.date); })); //E
+		  y.domain([0, d3.max(data, function (d) { return d.total; })]);
+
+			svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+				.selectAll("text")
+					.attr("class", "bar")
+					.on("click", function (d) { window.location.href = "#" })
+					.attr("transform", "rotate(-18)" )
+					//.attr("transform", "rotate(-40)" )
+					.style("text-anchor", "end");
+
+    	svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      	.append("text")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 6)
+        	.attr("dy", ".71em")
+        	.style("text-anchor", "end");
+
+			var selection = svg.selectAll(".series")
+		    .data(data)
+		    .enter().append("g")
+		      .attr("class", "series")
+		      .attr("transform", function (d) { return "translate(" + x((d.date)) + ",0)"; });
+
+			selection.selectAll("rect")
+	      .data(function (d) { return d.mapping; })
+	    .enter().append("rect")
+				.attr("class", "bar_stack")
+	      .attr("width", x.bandwidth())
+	      .attr("y", function (d) { return y(d.y1); })
+	      .attr("height", function (d) { return y(d.y0) - y(d.y1); })
+	      .style("fill", function (d) { return color(d.name); })
+	      .style("stroke", "grey")
+	      .on("mouseover", function (d) { showPopover.call(this, d); })
+				.on("mouseout", function (d) { removePopovers(); })
+				.on("click", function(d){ window.location.href = "#" });
+
+
+				data.forEach(function(d) {
+					if(d.total != 0){
+						svg.append("text")
+								.attr("class", "bar")
+								.attr("dy", "-.35em")
+								.attr('x', x(d.date) + x.bandwidth()/2)
+								.attr('y', y(d.total))
+								.on("click", function () {window.location.href = "#" })
+								.style("text-anchor", "middle")
+								.text(d.total);
+					}
+				});
+
+			drawLegend(varNames);
+    });
+
+}
+
+function drawLegend (varNames) {
+    var legend = svg.selectAll(".legend")
+        .data(varNames.slice().reverse())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", 943)
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("fill", color)
+        .style("stroke", "grey");
+
+    legend.append("text")
+				.attr("class", "svgText")
+        .attr("x", 941)
+        .attr("y", 6)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function (d) { return d; });
+}
+
+function removePopovers () {
+    $('.popover').each(function() {
+      $(this).remove();
+    });
+  }
+
+function showPopover (d) {
+  $(this).popover({
+    title: d.name,
+    placement: 'top',
+    container: 'body',
+    trigger: 'manual',
+    html : true,
+    content: function() {
+      return d.label +
+            "<br/>num: " + d3.format(",")(d.value ? d.value: d.y1 - d.y0); }
+  });
+  $(this).popover('show')
+}
+
+chart.onResize = function () {
+    var aspect = width / height, chart = $("#thesvg");
+    var targetWidth = chart.parent().width();
+    chart.attr("width", targetWidth);
+    chart.attr("height", targetWidth / 2);
+}
+
+window.chart = chart;
+
+</script>

@@ -78,12 +78,11 @@ if __name__ == "__main__":
 
                     to_print = 'Mails;{};{};{};Checked {} e-mail(s);{}'.\
                         format(PST.p_source, PST.p_date, PST.p_name,
-                               MX_values[0], PST.p_path)
+                               MX_values[0], PST.p_rel_path)
                     if MX_values[0] > is_critical:
                         publisher.warning(to_print)
                         #Send to duplicate
                         p.populate_set_out(filename, 'Duplicate')
-                        p.populate_set_out('mail;{}'.format(filename), 'alertHandler')
 
                         msg = 'infoleak:automatic-detection="mail";{}'.format(filename)
                         p.populate_set_out(msg, 'Tags')

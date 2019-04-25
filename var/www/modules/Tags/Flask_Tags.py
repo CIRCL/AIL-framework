@@ -8,8 +8,7 @@ import redis
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
 import json
-from datetime import datetime
-import ssdeep
+import datetime
 
 import Paste
 
@@ -28,6 +27,7 @@ r_serv_statistics = Flask_config.r_serv_statistics
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
+max_tags_result = Flask_config.max_tags_result
 PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 Tags = Blueprint('Tags', __name__, template_folder='templates')
@@ -56,6 +56,16 @@ for name, tags in clusters.items(): #galaxie name + tags
 def one():
     return 1
 
+def date_substract_day(date, num_day=1):
+    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) - datetime.timedelta(num_day)
+    new_date = str(new_date).replace('-', '')
+    return new_date
+
+def date_add_day(date, num_day=1):
+    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) + datetime.timedelta(num_day)
+    new_date = str(new_date).replace('-', '')
+    return new_date
+
 def get_tags_with_synonyms(tag):
     str_synonyms = ' - synonyms: '
     synonyms = r_serv_tags.smembers('synonym_tag_' + tag)
@@ -68,12 +78,277 @@ def get_tags_with_synonyms(tag):
     else:
         return {'name':tag,'id':tag}
 
+def get_item_date(item_filename):
+    l_directory = item_filename.split('/')
+    return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+
+def substract_date(date_from, date_to):
+    date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))
+    date_to = datetime.date(int(date_to[0:4]), int(date_to[4:6]), int(date_to[6:8]))
+    delta = date_to - date_from # timedelta
+    l_date = []
+    for i in range(delta.days + 1):
+        date = date_from + datetime.timedelta(i)
+        l_date.append( date.strftime('%Y%m%d') )
+    return l_date
+
+def get_all_dates_range(date_from, date_to):
+    all_dates = {}
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        try:
+            if len(date_from) != 8:
+                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+            date_range = substract_date(date_from, date_to)
+        except:
+            pass
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+        date_from = date_range[0][0:4] + '-' + date_range[0][4:6] + '-' + date_range[0][6:8]
+        date_to = date_from
+
+    else:
+        date_from = date_from[0:4] + '-' + date_from[4:6] + '-' + date_from[6:8]
+        date_to = date_to[0:4] + '-' + date_to[4:6] + '-' + date_to[6:8]
+    all_dates['date_from'] = date_from
+    all_dates['date_to'] = date_to
+    all_dates['date_range'] = date_range
+    return all_dates
+
+def get_last_seen_from_tags_list(list_tags):
+    min_last_seen = 99999999
+    for tag in list_tags:
+        tag_last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+        if tag_last_seen:
+            tag_last_seen = int(tag_last_seen)
+            if tag_last_seen < min_last_seen:
+                min_last_seen = tag_last_seen
+    return str(min_last_seen)
+
+def add_item_tag(tag, item_path):
+    item_date = int(get_item_date(item_path))
+
+    #add tag
+    r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
+    r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
+
+    r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
+
+    tag_first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+    if tag_first_seen is None:
+        tag_first_seen = 99999999
+    else:
+        tag_first_seen = int(tag_first_seen)
+    tag_last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+    if tag_last_seen is None:
+        tag_last_seen = 0
+    else:
+        tag_last_seen = int(tag_last_seen)
+
+    #add new tag in list of all used tags
+    r_serv_tags.sadd('list_tags', tag)
+
+    # update fisrt_seen/last_seen
+    if item_date < tag_first_seen:
+        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', item_date)
+
+    # update metadata last_seen
+    if item_date > tag_last_seen:
+        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
+
+def remove_item_tag(tag, item_path):
+    item_date = int(get_item_date(item_path))
+
+    #remove tag
+    r_serv_metadata.srem('tag:{}'.format(item_path), tag)
+    res = r_serv_tags.srem('{}:{}'.format(tag, item_date), item_path)
+
+    if res ==1:
+        # no tag for this day
+        if int(r_serv_tags.hget('daily_tags:{}'.format(item_date), tag)) == 1:
+            r_serv_tags.hdel('daily_tags:{}'.format(item_date), tag)
+        else:
+            r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, -1)
+
+        tag_first_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
+        tag_last_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
+        # update fisrt_seen/last_seen
+        if item_date == tag_first_seen:
+            update_tag_first_seen(tag, tag_first_seen, tag_last_seen)
+        if item_date == tag_last_seen:
+            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
+    else:
+        return 'Error incorrect tag'
+
+def update_tag_first_seen(tag, tag_first_seen, tag_last_seen):
+    if tag_first_seen == tag_last_seen:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_first_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', tag_first_seen)
+        # no tag in db
+        else:
+            r_serv_tags.srem('list_tags', tag)
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
+    else:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_first_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', tag_first_seen)
+        else:
+            tag_first_seen = date_add_day(tag_first_seen)
+            update_tag_first_seen(tag, tag_first_seen, tag_last_seen)
+
+def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
+    if tag_first_seen == tag_last_seen:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
+        # no tag in db
+        else:
+            r_serv_tags.srem('list_tags', tag)
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
+            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
+    else:
+        if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
+            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
+        else:
+            tag_last_seen = date_substract_day(tag_last_seen)
+            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
 
 # ============= ROUTES ==============
 
-@Tags.route("/Tags/", methods=['GET'])
+@Tags.route("/tags/", methods=['GET'])
 def Tags_page():
-    return render_template("Tags.html")
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    tags = request.args.get('ltags')
+
+    if tags is None:
+        dates = get_all_dates_range(date_from, date_to)
+        return render_template("Tags.html", date_from=dates['date_from'], date_to=dates['date_to'])
+
+    # unpack tags
+    list_tags = tags.split(',')
+    list_tag = []
+    for tag in list_tags:
+        list_tag.append(tag.replace('"','\"'))
+
+    #no search by date, use last_seen for  date_from/date_to
+    if date_from is None and date_to is None and tags is not None:
+        date_from = get_last_seen_from_tags_list(list_tags)
+        date_to = date_from
+
+    # TODO verify input
+
+    dates = get_all_dates_range(date_from, date_to)
+
+    if(type(list_tags) is list):
+        # no tag
+        if list_tags is False:
+            print('empty')
+        # 1 tag
+        elif len(list_tags) < 2:
+            tagged_pastes = []
+            for date in dates['date_range']:
+                tagged_pastes.extend(r_serv_tags.smembers('{}:{}'.format(list_tags[0], date)))
+
+        # 2 tags or more
+        else:
+            tagged_pastes = []
+            for date in dates['date_range']:
+                tag_keys = []
+                for tag in list_tags:
+                    tag_keys.append('{}:{}'.format(tag, date))
+
+                if len(tag_keys) > 1:
+                    daily_items = r_serv_tags.sinter(tag_keys[0], *tag_keys[1:])
+                else:
+                    daily_items = r_serv_tags.sinter(tag_keys[0])
+                tagged_pastes.extend(daily_items)
+
+    else :
+        return 'INCORRECT INPUT'
+
+    all_content = []
+    paste_date = []
+    paste_linenum = []
+    all_path = []
+    allPastes = list(tagged_pastes)
+    paste_tags = []
+
+    try:
+        page = int(request.args.get('page'))
+    except:
+        page = 1
+    if page <= 0:
+        page = 1
+    nb_page_max = len(tagged_pastes)/(max_tags_result)
+    if not nb_page_max.is_integer():
+        nb_page_max = int(nb_page_max)+1
+    else:
+        nb_page_max = int(nb_page_max)
+    if page > nb_page_max:
+        page = nb_page_max
+    start = max_tags_result*(page -1)
+    stop = max_tags_result*page
+
+    for path in allPastes[start:stop]:
+        all_path.append(path)
+        paste = Paste.Paste(path)
+        content = paste.get_p_content()
+        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+        all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
+        curr_date = str(paste._get_p_date())
+        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+        paste_date.append(curr_date)
+        paste_linenum.append(paste.get_lines_info()[0])
+        p_tags = r_serv_metadata.smembers('tag:'+path)
+        complete_tags = []
+        l_tags = []
+        for tag in p_tags:
+            complete_tag = tag
+
+            tag = tag.split('=')
+            if len(tag) > 1:
+                if tag[1] != '':
+                    tag = tag[1][1:-1]
+                # no value
+                else:
+                    tag = tag[0][1:-1]
+            # use for custom tags
+            else:
+                tag = tag[0]
+
+            l_tags.append( (tag,complete_tag) )
+
+        paste_tags.append(l_tags)
+
+    if len(allPastes) > 10:
+        finished = False
+    else:
+        finished = True
+
+    if len(list_tag) == 1:
+        tag_nav=tags.replace('"', '').replace('=', '').replace(':', '')
+    else:
+        tag_nav='empty'
+
+    return render_template("Tags.html",
+            all_path=all_path,
+            tags=tags,
+            tag_nav=tag_nav,
+            list_tag = list_tag,
+            date_from=dates['date_from'],
+            date_to=dates['date_to'],
+            page=page, nb_page_max=nb_page_max,
+            paste_tags=paste_tags,
+            bootstrap_label=bootstrap_label,
+            content=all_content,
+            paste_date=paste_date,
+            paste_linenum=paste_linenum,
+            char_to_display=max_preview_modal,
+            finished=finished)
+
 
 @Tags.route("/Tags/get_all_tags")
 def get_all_tags():
@@ -173,94 +448,6 @@ def get_tags_galaxy():
     else:
         return 'this galaxy is disable'
 
-
-@Tags.route("/Tags/get_tagged_paste")
-def get_tagged_paste():
-
-    tags = request.args.get('ltags')
-
-    list_tags = tags.split(',')
-    list_tag = []
-    for tag in list_tags:
-        list_tag.append(tag.replace('"','\"'))
-
-    # TODO verify input
-
-    if(type(list_tags) is list):
-        # no tag
-        if list_tags is False:
-            print('empty')
-        # 1 tag
-        elif len(list_tags) < 2:
-            tagged_pastes = r_serv_tags.smembers(list_tags[0])
-
-        # 2 tags or more
-        else:
-            tagged_pastes = r_serv_tags.sinter(list_tags[0], *list_tags[1:])
-
-    else :
-        return 'INCORRECT INPUT'
-
-    #TODO FIXME
-    currentSelectYear = int(datetime.now().year)
-
-    all_content = []
-    paste_date = []
-    paste_linenum = []
-    all_path = []
-    allPastes = list(tagged_pastes)
-    paste_tags = []
-
-    for path in allPastes[0:50]: ######################moduleName
-        all_path.append(path)
-        paste = Paste.Paste(path)
-        content = paste.get_p_content()
-        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-        all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
-        curr_date = str(paste._get_p_date())
-        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
-        paste_date.append(curr_date)
-        paste_linenum.append(paste.get_lines_info()[0])
-        p_tags = r_serv_metadata.smembers('tag:'+path)
-        complete_tags = []
-        l_tags = []
-        for tag in p_tags:
-            complete_tag = tag
-
-            tag = tag.split('=')
-            if len(tag) > 1:
-                if tag[1] != '':
-                    tag = tag[1][1:-1]
-                # no value
-                else:
-                    tag = tag[0][1:-1]
-            # use for custom tags
-            else:
-                tag = tag[0]
-
-            l_tags.append( (tag,complete_tag) )
-
-        paste_tags.append(l_tags)
-
-    if len(allPastes) > 10:
-        finished = False
-    else:
-        finished = True
-
-    return render_template("tagged.html",
-            year=currentSelectYear,
-            all_path=all_path,
-            tags=tags,
-            list_tag = list_tag,
-            paste_tags=paste_tags,
-            bootstrap_label=bootstrap_label,
-            content=all_content,
-            paste_date=paste_date,
-            paste_linenum=paste_linenum,
-            char_to_display=max_preview_modal,
-            finished=finished)
-
-
 @Tags.route("/Tags/remove_tag")
 def remove_tag():
 
@@ -268,12 +455,7 @@ def remove_tag():
     path = request.args.get('paste')
     tag = request.args.get('tag')
 
-    #remove tag
-    r_serv_metadata.srem('tag:'+path, tag)
-    r_serv_tags.srem(tag, path)
-
-    if r_serv_tags.scard(tag) == 0:
-        r_serv_tags.srem('list_tags', tag)
+    remove_item_tag(tag, path)
 
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
@@ -285,17 +467,11 @@ def confirm_tag():
     tag = request.args.get('tag')
 
     if(tag[9:28] == 'automatic-detection'):
-
-        #remove automatic tag
-        r_serv_metadata.srem('tag:'+path, tag)
-        r_serv_tags.srem(tag, path)
+        remove_item_tag(tag, path)
 
         tag = tag.replace('automatic-detection','analyst-detection', 1)
         #add analyst tag
-        r_serv_metadata.sadd('tag:'+path, tag)
-        r_serv_tags.sadd(tag, path)
-        #add new tag in list of all used tags
-        r_serv_tags.sadd('list_tags', tag)
+        add_item_tag(tag, path)
 
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
@@ -345,12 +521,7 @@ def addTags():
             tax = tag.split(':')[0]
             if tax in active_taxonomies:
                 if tag in r_serv_tags.smembers('active_tag_' + tax):
-
-                    #add tag
-                    r_serv_metadata.sadd('tag:'+path, tag)
-                    r_serv_tags.sadd(tag, path)
-                    #add new tag in list of all used tags
-                    r_serv_tags.sadd('list_tags', tag)
+                    add_item_tag(tag, path)
 
                 else:
                     return 'INCORRECT INPUT1'
@@ -365,12 +536,7 @@ def addTags():
 
             if gal in active_galaxies:
                 if tag in r_serv_tags.smembers('active_tag_galaxies_' + gal):
-
-                    #add tag
-                    r_serv_metadata.sadd('tag:'+path, tag)
-                    r_serv_tags.sadd(tag, path)
-                    #add new tag in list of all used tags
-                    r_serv_tags.sadd('list_tags', tag)
+                    add_item_tag(tag, path)
 
                 else:
                     return 'INCORRECT INPUT3'

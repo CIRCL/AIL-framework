@@ -154,14 +154,22 @@ if baseUrl != '':
 max_preview_char = int(cfg.get("Flask", "max_preview_char")) # Maximum number of character to display in the tooltip
 max_preview_modal = int(cfg.get("Flask", "max_preview_modal")) # Maximum number of character to display in the modal
 
+max_tags_result = 50
+
 DiffMaxLineLength =  int(cfg.get("Flask", "DiffMaxLineLength"))#Use to display the estimated percentage instead of a raw value
 
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
+dict_update_description = {'v1.5':{'nb_background_update': 5, 'update_warning_message': 'An Update is running on the background. Some informations like Tags, screenshot can be',
+                                   'update_warning_message_notice_me': 'missing from the UI.'}
+                        }
+
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
-PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
-SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
+PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"), 'screenshot')
+
+REPO_ORIGIN = 'https://github.com/CIRCL/AIL-framework.git'
 
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
 

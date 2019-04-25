@@ -97,7 +97,7 @@ if __name__ == "__main__":
         if sites_set:
             message += ' Related websites: {}'.format( (', '.join(sites_set)) )
 
-        to_print = 'Credential;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message, paste.p_path)
+        to_print = 'Credential;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message, paste.p_rel_path)
 
         print('\n '.join(creds))
 
@@ -107,9 +107,6 @@ if __name__ == "__main__":
             publisher.warning(to_print)
             #Send to duplicate
             p.populate_set_out(filepath, 'Duplicate')
-            #Send to alertHandler
-            msg = 'credential;{}'.format(filepath)
-            p.populate_set_out(msg, 'alertHandler')
 
             msg = 'infoleak:automatic-detection="credential";{}'.format(filepath)
             p.populate_set_out(msg, 'Tags')

@@ -1,0 +1,48 @@
+<nav class="navbar navbar-expand-xl navbar-dark bg-dark">
+  <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
+    <img src="{{ url_for('static', filename='image/ail-icon.png')}}" alt="AIL" style="width:80px;">
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link mr-3" href="{{ url_for('dashboard.index') }}">Home</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="{{ url_for('PasteSubmit.PasteSubmit_page') }}" aria-disabled="true"><i class="fas fa-external-link-alt"></i> Submit</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" id="page-Browse-Items" href="{{ url_for('Tags.Tags_page') }}" aria-disabled="true"><i class="fas fa-tag"></i> Browse Items</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="{{ url_for('terms.terms_management') }}" aria-disabled="true"><i class="fas fa-crosshairs"></i> Leaks Hunter</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" id="page-Crawler" href="{{ url_for('hiddenServices.dashboard') }}" tabindex="-1" aria-disabled="true"><i class="fas fa-spider"></i> Crawlers</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="{{ url_for('hashDecoded.hashDecoded_page') }}" aria-disabled="true"><i class="fas fa-lock-open"></i> Decoded</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" href="{{ url_for('trendingmodules.moduletrending') }}" aria-disabled="true"><i class="fas fa-chart-bar"></i> Statistics</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" id="page-options" href="{{ url_for('settings.settings_page') }}" aria-disabled="true"><i class="fas fa-cog"></i> Server Management</a>
+      </li>
+    </ul>
+
+    <form class="form-inline my-2 my-lg-0 ml-auto justify-content-center">
+      <div class="d-flex flex-column">
+        <div>
+        <input class="form-control mr-sm-2" type="search" id="global_search" placeholder="Search" aria-label="Search" aria-describedby="advanced_search">
+        <button class="btn btn-outline-info my-2 my-sm-0" type="submit"><i class="fas fa-search"></i></button>
+        </div>
+        <small id="advanced_search" class="form-text"><a class="nav text-muted" href="#" aria-disabled="true">Advanced Search</a></small>
+      </div>
+    </form>
+  </div>
+</nav>

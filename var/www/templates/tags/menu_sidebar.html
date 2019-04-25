@@ -1,0 +1,91 @@
+      <div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
+
+      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar()">
+          <i class="fas fa-align-left"></i>
+      	  <span>Toggle Sidebar</span>
+      	</button>
+
+      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+      		<h5 class="d-flex text-muted w-100">
+      		  <span>Tags Management </span>
+      		</h5>
+      	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{ url_for('Tags.taxonomies') }}" id="nav_taxonomies">
+      	        <i class="fas fa-wrench"></i>
+      	        Edit Taxonomies List
+      	      </a>
+      	    </li>
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{ url_for('Tags.galaxies') }}" id="nav_onion_galaxies">
+      					<i class="fas fa-rocket"></i>
+      	       	Edit Galaxies List
+      	      </a>
+      	    </li>
+          </ul>
+          <h5 class="d-flex text-muted w-100">
+      		  <span>Tags Export </span>
+      		</h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('PasteSubmit.edit_tag_export')}}" id="nav_regular_edit_tag_export">
+                <i class="fas fa-cogs"></i>
+                MISP and Hive, auto push
+              </a>
+            </li>
+          </ul>
+          <h5 class="d-flex text-muted w-100" id="nav_quick_search">
+      		  <span>Quick Search </span>
+      		</h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="credential"' id='nav_tag_infoleakautomatic-detectioncredential'>
+                <i class="fas fa-unlock-alt"></i>
+                Credentials
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="credit-card"' id='nav_tag_infoleakautomatic-detectioncredit-card'>
+                <i class="far fa-credit-card"></i>
+                Credit cards
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="mail"' id='nav_tag_infoleakautomatic-detectionmail'>
+                <i class="fas fa-envelope"></i>
+                Mails
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="cve"' id='nav_tag_infoleakautomatic-detectioncve'>
+                <i class="fas fa-bug"></i>
+                CVEs
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="onion"' id='nav_tag_infoleakautomatic-detectiononion'>
+                <i class="fas fa-user-secret"></i>
+                Onions
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="bitcoin-address"' id='nav_tag_infoleakautomatic-detectionbitcoin-address'>
+                <i class="fab fa-bitcoin"></i>
+                Bitcoin
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="base64"' id='nav_tag_infoleakautomatic-detectionbase64'>
+                <i class="fas fa-lock-open"></i>
+                Base64
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="phone-number"' id='nav_tag_infoleakautomatic-detectionphone-number'>
+                <i class="fas fa-phone"></i>
+                Phones
+              </a>
+            </li>
+          </ul>
+      	</nav>
+      </div>

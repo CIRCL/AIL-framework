@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Server Management - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card mb-3 mt-1">
+					<div class="card-header text-white bg-dark pb-1">
+						<h5 class="card-title">AIL-framework Status :</h5>
+					</div>
+					<div class="card-body">
+
+            <div class="row">
+              <div class="col-xl-6">
+                <div class="card text-center border-secondary">
+                  <div class="card-body px-1 py-0">
+                    <table class="table table-sm">
+                      <tbody>
+                        <tr>
+                          <td>AIL Version</td>
+                          <td>{{current_version}}<a target="_blank" href="https://github.com/CIRCL/AIL-framework/releases/tag/{{current_version}}" class="text-info"><small> (release note)</small></a></td>
+                        </tr>
+                        <tr
+                        {%if git_metadata['current_branch'] != 'master'%}
+                          class="table-danger"
+                        {%endif%}
+                        >
+                          <td>Current Branch</td>
+                          <td>
+                            {%if git_metadata['current_branch'] != 'master'%}
+                              <i class="fas fa-times-circle text-danger" data-toggle="tooltip" data-placement="top" title="Please checkout the master branch"></i>&nbsp;
+                            {%endif%}
+                            {{git_metadata['current_branch']}}
+                          </td>
+                        </tr>
+                          <tr
+                          {%if git_metadata['new_git_update_available']%}
+                            class="table-warning"
+                          {%endif%}
+                          >
+                            <td>Current Commit ID</td>
+                            <td>
+                              {%if git_metadata['new_git_update_available']%}
+                                <i class="fas fa-exclamation-triangle text-secondary" data-toggle="tooltip" data-placement="top" title="A New Update Is Available"></i>&nbsp;
+                              {%endif%}
+                              {{git_metadata['current_commit']}}
+                            </td>
+                          </tr>
+                          <tr
+                          {%if git_metadata['new_git_version_available']%}
+                            class="table-danger"
+                          {%endif%}
+                          >
+                            <td>Current Tag</td>
+                            <td>
+                              {%if git_metadata['new_git_version_available']%}
+                                <i class="fas fa-exclamation-circle text-danger" data-toggle="tooltip" data-placement="top" title="A New Version Is Available"></i>&nbsp;&nbsp;
+                              {%endif%}
+                              {{git_metadata['last_local_tag']}}
+                            </td>
+                          </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-6">
+                <div class="card text-center border-success" id="card_progress">
+                  <div class="card-body" id="card_progress_body">
+                    <h5 class="card-title">Backgroud Update: <span id="backgroud_update_version"></span></h5>
+                    <div class="progress">
+                      <div class="progress-bar bg-danger" role="progressbar" id="update_global_progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <hr class="my-1">
+                    Updating: <strong id="backgroud_update_name"></strong> ...
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-striped bg-warning progress-bar-animated" role="progressbar" id="update_background_progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="text-danger" id="update_error_div">
+                      <hr>
+                      <h5 class="card-title"><i class="fas fa-times-circle text-danger"></i> Update Error:</h5>
+                      <p id="update_error_mess"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+					</div>
+				</div>
+
+        {%if git_metadata['new_git_version_available']%}
+          <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">New Version Available!</h4>
+            <hr class="my-0">
+            <p>A new version is available, new version: <strong>{{git_metadata['last_remote_tag']}}</strong></p>
+            <a target="_blank" href="https://github.com/CIRCL/AIL-framework/releases/tag/{{git_metadata['last_remote_tag']}}"> Check last release note.</a>
+          </div>
+        {%endif%}
+
+        {%if git_metadata['new_git_update_available']%}
+          <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">New Update Available!</h4>
+            <hr class="my-0">
+            <p>A new update is available, new commit ID: <strong>{{git_metadata['last_remote_commit']}}</strong></p>
+            <a target="_blank" href="https://github.com/CIRCL/AIL-framework/commit/{{git_metadata['last_remote_commit']}}"> Check last commit content.</a>
+          </div>
+        {%endif%}
+
+    	</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#page-options").addClass("active");
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function update_progress(){
+  $.getJSON("{{ url_for('settings.get_background_update_stats_json') }}", function(data){
+    if(! jQuery.isEmptyObject(data)){
+      $('#card_progress').show();
+      $('#backgroud_update_version').text(data['update_version']);
+      $('#backgroud_update_name').text(data['background_name']);
+
+      $('#update_global_progress').attr('aria-valuenow', data['update_stat']).width(data['update_stat']+'%').text(data['update_stat_label']);
+      $('#update_background_progress').attr('aria-valuenow', data['background_stats']).width(data['background_stats']+'%').text(data['background_stats']+'%');
+
+      if(data['error']){
+        $('#update_error_div').show();
+        $('#update_error_mess').text(data['error_message']);
+        $('#card_progress').removeClass("border-success");
+        $('#card_progress').addClass("border-danger");
+      } else {
+        $('#update_error_div').hide();
+        $('#card_progress').removeClass("border-danger");
+        $('#card_progress').add("border-success");
+      }
+    } else {
+      $('#card_progress').hide();
+      clearInterval(progress_interval);
+    }
+ });
+}
+
+update_progress();
+//Interval
+var progress_interval = setInterval(function(){
+	update_progress()
+}, 4000);
+</script>
+
+</html>

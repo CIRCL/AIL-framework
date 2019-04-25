@@ -32,6 +32,8 @@ import redis
 import signal
 import re
 
+from pyfaup.faup import Faup
+
 from Helper import Process
 
 class TimeoutException(Exception):
@@ -132,6 +134,8 @@ if __name__ == "__main__":
         activate_crawler = False
         print('Crawler disabled')
 
+    faup = Faup()
+
     # Thanks to Faup project for this regex
     # https://github.com/stricaud/faup
     url_regex = "((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
@@ -167,7 +171,7 @@ if __name__ == "__main__":
                 except TimeoutException:
                     encoded_list = []
                     p.incr_module_timeout_statistic()
-                    print ("{0} processing timeout".format(PST.p_path))
+                    print ("{0} processing timeout".format(PST.p_rel_path))
                     continue
 
                 signal.alarm(0)
@@ -185,7 +189,7 @@ if __name__ == "__main__":
                             r_onion.sadd('i2p_domain', domain)
                             r_onion.sadd('i2p_link', url)
                             r_onion.sadd('i2p_domain_crawler_queue', domain)
-                            msg = '{};{}'.format(url,PST.p_path)
+                            msg = '{};{}'.format(url,PST.p_rel_path)
                             r_onion.sadd('i2p_crawler_queue', msg)
                 '''
 
@@ -200,10 +204,10 @@ if __name__ == "__main__":
 
                     if not activate_crawler:
                         publisher.warning('{}Detected {} .onion(s);{}'.format(
-                            to_print, len(domains_list),PST.p_path))
+                            to_print, len(domains_list),PST.p_rel_path))
                     else:
                         publisher.info('{}Detected {} .onion(s);{}'.format(
-                            to_print, len(domains_list),PST.p_path))
+                            to_print, len(domains_list),PST.p_rel_path))
                     now = datetime.datetime.now()
                     path = os.path.join('onions', str(now.year).zfill(4),
                                         str(now.month).zfill(2),
@@ -218,37 +222,50 @@ if __name__ == "__main__":
                         date = datetime.datetime.now().strftime("%Y%m%d")
                         for url in urls:
 
-                            domain = re.findall(url_regex, url)
-                            if len(domain) > 0:
-                                domain = domain[0][4]
+                            faup.decode(url)
+                            url_unpack = faup.get()
+                            domain = url_unpack['domain'].decode()
+
+                            ## TODO: blackilst by port ?
+                            # check blacklist
+                            if redis_crawler.sismember('blacklist_onion', domain):
+                                continue
+
+                            subdomain = re.findall(url_regex, url)
+                            if len(subdomain) > 0:
+                                subdomain = subdomain[0][4]
                             else:
                                 continue
 
                             # too many subdomain
-                            if len(domain.split('.')) > 5:
-                                continue
+                            if len(subdomain.split('.')) > 3:
+                                subdomain = '{}.{}.onion'.format(subdomain[-3], subdomain[-2])
 
-                            if not r_onion.sismember('month_onion_up:{}'.format(date_month), domain) and not r_onion.sismember('onion_down:'+date , domain):
-                                if not r_onion.sismember('onion_domain_crawler_queue', domain):
+                            if not r_onion.sismember('month_onion_up:{}'.format(date_month), subdomain) and not r_onion.sismember('onion_down:'+date , subdomain):
+                                if not r_onion.sismember('onion_domain_crawler_queue', subdomain):
                                     print('send to onion crawler')
-                                    r_onion.sadd('onion_domain_crawler_queue', domain)
-                                    msg = '{};{}'.format(url,PST.p_path)
-                                    if not r_onion.hexists('onion_metadata:{}'.format(domain), 'first_seen'):
+                                    r_onion.sadd('onion_domain_crawler_queue', subdomain)
+                                    msg = '{};{}'.format(url,PST.p_rel_path)
+                                    if not r_onion.hexists('onion_metadata:{}'.format(subdomain), 'first_seen'):
                                         r_onion.sadd('onion_crawler_priority_queue', msg)
                                         print('send to priority queue')
                                     else:
                                         r_onion.sadd('onion_crawler_queue', msg)
-                                #p.populate_set_out(msg, 'Crawler')
+                            # tag if domain was up
+                            if r_onion.sismember('full_onion_up', subdomain):
+                                # TAG Item
+                                msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_rel_path)
+                                p.populate_set_out(msg, 'Tags')
 
                     else:
                         for url in fetch(p, r_cache, urls, domains_list, path):
-                            publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_path))
-                            p.populate_set_out('onion;{}'.format(PST.p_path), 'alertHandler')
+                            publisher.info('{}Checked {};{}'.format(to_print, url, PST.p_rel_path))
 
-                            msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_path)
-                            p.populate_set_out(msg, 'Tags')
+                    # TAG Item
+                    msg = 'infoleak:automatic-detection="onion";{}'.format(PST.p_rel_path)
+                    p.populate_set_out(msg, 'Tags')
                 else:
-                    publisher.info('{}Onion related;{}'.format(to_print, PST.p_path))
+                    publisher.info('{}Onion related;{}'.format(to_print, PST.p_rel_path))
 
             prec_filename = filename
         else:

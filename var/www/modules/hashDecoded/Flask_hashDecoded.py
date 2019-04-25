@@ -25,6 +25,7 @@ baseUrl = Flask_config.baseUrl
 r_serv_metadata = Flask_config.r_serv_metadata
 vt_enabled = Flask_config.vt_enabled
 vt_auth = Flask_config.vt_auth
+PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 hashDecoded = Blueprint('hashDecoded', __name__, template_folder='templates')
 
@@ -589,6 +590,12 @@ def hash_graph_node_json():
         #get related paste
         l_pastes = r_serv_metadata.zrange('nb_seen_hash:'+hash, 0, -1)
         for paste in l_pastes:
+            # dynamic update
+            if PASTES_FOLDER in paste:
+                score = r_serv_metadata.zscore('nb_seen_hash:{}'.format(hash), paste)
+                r_serv_metadata.zrem('nb_seen_hash:{}'.format(hash), paste)
+                paste = paste.replace(PASTES_FOLDER, '', 1)
+                r_serv_metadata.zadd('nb_seen_hash:{}'.format(hash), score, paste)
             url = paste
             #nb_seen_in_this_paste = nb_in_file = int(r_serv_metadata.zscore('nb_seen_hash:'+hash, paste))
             nb_hash_in_paste = r_serv_metadata.scard('hash_paste:'+paste)

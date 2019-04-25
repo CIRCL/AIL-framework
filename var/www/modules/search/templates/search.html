@@ -101,7 +101,7 @@
                                   <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
                                     <div>
                                       {% for tag in paste_tags[loop.index0] %}
-                                      <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
+                                      <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag[1] }}">
                                         <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag[0] }}</span>
                                       </a>
                                       {%  endfor %}
@@ -201,7 +201,7 @@
                 var curr_preview = data.preview_array[i].replace(/\"/g, "\'");
                 var tag = ""
                 for(j=0; j<data.list_tags[i].length; j++) {
-                  tag = tag + "<a href=\"{{ url_for('Tags.get_tagged_paste') }}?ltags=" + data.list_tags[i][j][1] + ">"
+                  tag = tag + "<a href=\"{{ url_for('Tags.Tags_page') }}?ltags=" + data.list_tags[i][j][1] + ">"
                         + "<span class=\"label label-" + data.bootstrap_label[j % 5] + " pull-left\">" + data.list_tags[i][j][0]
                         + "</span>" + "</a>"
                 }

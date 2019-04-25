@@ -67,7 +67,7 @@ def check_all_iban(l_iban, paste, filename):
     if(nb_valid_iban > 0):
         to_print = 'Iban;{};{};{};'.format(paste.p_source, paste.p_date, paste.p_name)
         publisher.warning('{}Checked found {} IBAN;{}'.format(
-            to_print, nb_valid_iban, paste.p_path))
+            to_print, nb_valid_iban, paste.p_rel_path))
         msg = 'infoleak:automatic-detection="iban";{}'.format(filename)
         p.populate_set_out(msg, 'Tags')
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             try:
                 l_iban = iban_regex.findall(content)
             except TimeoutException:
-                 print ("{0} processing timeout".format(paste.p_path))
+                 print ("{0} processing timeout".format(paste.p_rel_path))
                  continue
             else:
                 signal.alarm(0)

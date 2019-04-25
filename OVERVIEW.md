@@ -12,46 +12,205 @@ Redis and ARDB overview
     - DB 0 - PubSub + Queue and Paste content LRU cache
     - DB 1 - _Mixer_ Cache
 * ARDB on TCP port 6382
-    - DB 1 - Curve
-    - DB 2 - Trending
-    - DB 3 - Terms
-    - DB 4 - Sentiments
+
+
+     DB 1 - Curve
+     DB 2 - TermFreq
+     DB 3 - Trending
+     DB 4 - Sentiments
+     DB 5 - TermCred
+     DB 6 - Tags
+     DB 7 - Metadata
+     DB 8 - Statistics
+     DB 9 - Crawler
+
 * ARDB on TCP port <year>
     - DB 0 - Lines duplicate
     - DB 1 - Hashes
 
+# Database Map:
+
+## DB0 - Core:
+
+##### Update keys:
+| Key | Value |
+| ------ | ------ |
+| | |
+| ail:version | **current version** |
+| | |
+| ail:update_**update_version** | **background update name** |
+| | **background update name** |
+| | **...** |
+| | |
+| ail:update_date_v1.5 | **update date** |
+| | |
+| ail:update_error | **update message error** |
+| | |
+| ail:update_in_progress | **update version in progress** |
+| ail:current_background_update | **current update version** |
+| | |
+| ail:current_background_script | **name of the background script currently executed** |
+| ail:current_background_script_stat | **progress in % of the background script** |
+
+## DB2 - TermFreq:
+
+##### Set:
+| Key | Value |
+| ------ | ------ |
+| TrackedSetTermSet | **tracked_term** |
+| TrackedSetSet | **tracked_set** |
+| TrackedRegexSet | **tracked_regex** |
+| | |
+| tracked_**tracked_term** | **item_path** |
+| set_**tracked_set** | **item_path** |
+| regex_**tracked_regex** | **item_path** |
+| | |
+| TrackedNotifications | **tracked_trem / set / regex** |
+| | |
+| TrackedNotificationTags_**tracked_trem / set / regex** | **tag** |
+| | |
+| TrackedNotificationEmails_**tracked_trem / set / regex** | **email** |
+
+##### Zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| per_paste_TopTermFreq_set_month | **term** | **nb_seen** |
+| per_paste_TopTermFreq_set_week | **term** | **nb_seen** |
+| per_paste_TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
+| | | |
+| TopTermFreq_set_month | **term** | **nb_seen** |
+| TopTermFreq_set_week | **term** | **nb_seen** |
+| TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
+
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| TrackedTermDate | **tracked_term** | **epoch** |
+| TrackedSetDate | **tracked_set** | **epoch** |
+| TrackedRegexDate | **tracked_regex** | **epoch** |
+| | | |
+| BlackListTermDate | **blacklisted_term** | **epoch** |
+| | | |
+| **epoch** | **term** | **nb_seen** |
+
+## DB6 - Tags:
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| per_paste_**epoch** | **term** | **nb_seen** |
+| | |
+| tag_metadata:**tag** | first_seen | **date** |
+| tag_metadata:**tag** | last_seen | **date** |
+
+##### Set:
+| Key | Value |
+| ------ | ------ |
+| list_tags | **tag** |
+| active_taxonomies | **taxonomie** |
+| active_galaxies | **galaxie** |
+| active_tag_**taxonomie or galaxy** | **tag** |
+| synonym_tag_misp-galaxy:**galaxy** | **tag synonym** |
+| list_export_tags | **user_tag** |
+| **tag**:**date** | **paste** |
+
+
+##### old:
+| Key | Value |
+| ------ | ------ |
+| *tag* | *paste* |
+
+## DB7 - Metadata:
+
+#### Crawled Items:
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| paste_metadata:**item path** | super_father | **first url crawled** |
+| | father | **item father** |
+| | domain | **crawled domain**:**domain port** |
+| | screenshot | **screenshot hash** |
+
+##### Set:
+| Key | Field |
+| ------ | ------ |
+| tag:**item path** | **tag** |
+| | |
+| paste_children:**item path** | **item path** |
+| | |
+| hash_paste:**item path** | **hash** |
+| base64_paste:**item path** | **hash** |
+| hexadecimal_paste:**item path** | **hash** |
+| binary_paste:**item path** | **hash** |
+
+##### Zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| nb_seen_hash:**hash** | **item** | **nb_seen** |
+| base64_hash:**hash** | **item** | **nb_seen** |
+| binary_hash:**hash** | **item** | **nb_seen** |
+| hexadecimal_hash:**hash** | **item** | **nb_seen** |
+
+## DB9 - Crawler:
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| **service type**_metadata:**domain** | first_seen | **date** |
+| | last_check | **date** |
+| | ports | **port**;**port**;**port** ... |
+| | paste_parent | **parent last crawling (can be auto or manual)** |
+
+##### Zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| crawler\_history\_**service type**:**domain**:**port** | **item root (first crawled item)** | **epoch (seconds)** |
+
+##### Set:
+| Key | Value |
+| ------ | ------ | ------ |
+| screenshot:**sha256** | **item path** |
+
+##### crawler config:
+| Key | Value |
+| ------ | ------ |
+| crawler\_config:**crawler mode**:**service type**:**domain** | **json config** |
+
+##### automatic crawler config:
+| Key | Value |
+| ------ | ------ |
+| crawler\_config:**crawler mode**:**service type**:**domain**:**url** | **json config** |
+
+###### exemple json config:
+```json
+{
+  "closespider_pagecount": 1,
+  "time": 3600,
+  "depth_limit": 0,
+  "har": 0,
+  "png": 0
+}
+```
 
 ARDB overview
----------------------------
-ARDB_DB
-* DB 1 - Curve
-* DB 2 - TermFreq
-	----------------------------------------- TERM ----------------------------------------
 
-	SET - 'TrackedRegexSet'				term
+	----------------------------------------- SENTIMENT ------------------------------------
 
-	HSET - 'TrackedRegexDate'			tracked_regex		today_timestamp
+	SET - 'Provider_set'				Provider
 
-	SET - 'TrackedSetSet'				set_to_add
+	KEY - 'UniqID' 					INT
 
-	HSET - 'TrackedSetDate'				set_to_add		today_timestamp
+	SET - provider_timestamp			UniqID
 
-	SET - 'TrackedSetTermSet'			term
+	SET - UniqID					avg_score
 
-	HSET - 'TrackedTermDate'			tracked_regex		today_timestamp
 
-	SET - 'TrackedNotificationEmails_'+term/set	email
-
-	SET - 'TrackedNotifications'			term/set
-
-* DB 3 - Trending
-* DB 4 - Sentiment
-* DB 5 - TermCred
-* DB 6 - Tags
-* DB 7 - Metadata
-* DB 8 - Statistics
 
 * DB 7 - Metadata:
+
+
+	----------------------------------------------------------------------------------------
 	----------------------------------------- BASE64 ----------------------------------------
 
 	HSET - 'metadata_hash:'+hash	'saved_path'		saved_path
@@ -71,17 +230,9 @@ ARDB_DB
 	SET  - 'hash_base64_all_type'	hash_type *
 	SET  - 'hash_binary_all_type'	hash_type *
 
-	SET  - 'hash_paste:'+paste	hash *
-	SET  - 'base64_paste:'+paste	hash *
-	SET  - 'binary_paste:'+paste	hash *
-
 	ZADD - 'hash_date:'+20180622	hash *			nb_seen_this_day
 	ZADD - 'base64_date:'+20180622	hash *			nb_seen_this_day
 	ZADD - 'binary_date:'+20180622	hash *			nb_seen_this_day
-
-	ZADD - 'nb_seen_hash:'+hash	paste *			nb_seen_in_paste
-	ZADD - 'base64_hash:'+hash	paste *			nb_seen_in_paste
-	ZADD - 'binary_hash:'+hash	paste *			nb_seen_in_paste
 
 	ZADD - 'base64_type:'+type	date			nb_seen
 	ZADD - 'binary_type:'+type	date			nb_seen

@@ -112,10 +112,7 @@ def search_key(paste):
 
         #Send to duplicate
         p.populate_set_out(message, 'Duplicate')
-        #send to Browse_warning_paste
-        msg = ('keys;{}'.format(message))
         print(message)
-        p.populate_set_out( msg, 'alertHandler')
 
 
 if __name__ == '__main__':

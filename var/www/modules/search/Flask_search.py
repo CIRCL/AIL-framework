@@ -29,7 +29,7 @@ r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
-
+PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 baseindexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
 indexRegister_path = os.path.join(os.environ['AIL_HOME'],
@@ -133,8 +133,8 @@ def search():
         query = QueryParser("content", ix.schema).parse("".join(q))
         results = searcher.search_page(query, 1, pagelen=num_elem_to_get)
         for x in results:
-            r.append(x.items()[0][1])
-            path = x.items()[0][1]
+            r.append(x.items()[0][1].replace(PASTES_FOLDER, '', 1))
+            path = x.items()[0][1].replace(PASTES_FOLDER, '', 1)
             paste = Paste.Paste(path)
             content = paste.get_p_content()
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
@@ -208,6 +208,7 @@ def get_more_search_result():
         results = searcher.search_page(query, page_offset, num_elem_to_get)
         for x in results:
             path = x.items()[0][1]
+            path = path.replace(PASTES_FOLDER, '', 1)
             path_array.append(path)
             paste = Paste.Paste(path)
             content = paste.get_p_content()

@@ -22,8 +22,10 @@ cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
+r_serv_db = Flask_config.r_serv_db
 
 max_dashboard_logs = Flask_config.max_dashboard_logs
+dict_update_description = Flask_config.dict_update_description
 
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
@@ -164,8 +166,22 @@ def index():
     log_select.add(max_dashboard_logs)
     log_select = list(log_select)
     log_select.sort()
+
+    # Check if update in progress
+    update_in_progress = False
+    update_warning_message = ''
+    update_warning_message_notice_me = ''
+    current_update = r_serv_db.get('ail:current_background_update')
+    if current_update:
+        if r_serv_db.scard('ail:update_{}'.format(current_update)) != dict_update_description[current_update]['nb_background_update']:
+            update_in_progress = True
+            update_warning_message = dict_update_description[current_update]['update_warning_message']
+            update_warning_message_notice_me = dict_update_description[current_update]['update_warning_message_notice_me']
+
     return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module,
-                            log_select=log_select, selected=max_dashboard_logs)
+                            log_select=log_select, selected=max_dashboard_logs,
+                            update_warning_message=update_warning_message, update_in_progress=update_in_progress,
+                            update_warning_message_notice_me=update_warning_message_notice_me)
 
 # ========= REGISTRATION =========
 app.register_blueprint(dashboard, url_prefix=baseUrl)

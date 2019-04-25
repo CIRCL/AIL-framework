@@ -12,6 +12,8 @@ import redis
 import json
 import time
 
+from hashlib import sha256
+
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError
@@ -28,10 +30,10 @@ from Helper import Process
 
 class TorSplashCrawler():
 
-    def __init__(self, splash_url, crawler_depth_limit):
+    def __init__(self, splash_url, crawler_options):
         self.process = CrawlerProcess({'LOG_ENABLED': False})
         self.crawler = Crawler(self.TorSplashSpider, {
-            'USER_AGENT': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0',
+            'USER_AGENT': crawler_options['user_agent'],
             'SPLASH_URL': splash_url,
             'ROBOTSTXT_OBEY': False,
             'DOWNLOADER_MIDDLEWARES': {'scrapy_splash.SplashCookiesMiddleware': 723,
@@ -42,26 +44,34 @@ class TorSplashCrawler():
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
             'HTTPERROR_ALLOW_ALL': True,
             'RETRY_TIMES': 2,
-            'CLOSESPIDER_PAGECOUNT': 50,
-            'DEPTH_LIMIT': crawler_depth_limit
+            'CLOSESPIDER_PAGECOUNT': crawler_options['closespider_pagecount'],
+            'DEPTH_LIMIT': crawler_options['depth_limit']
             })
 
-    def crawl(self, type, url, domain, original_paste, super_father):
-        self.process.crawl(self.crawler, type=type, url=url, domain=domain,original_paste=original_paste, super_father=super_father)
+    def crawl(self, type, crawler_options, date, url, domain, port, original_item):
+        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, date=date, url=url, domain=domain, port=port, original_item=original_item)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, type, url, domain,original_paste, super_father, *args, **kwargs):
+        def __init__(self, type, crawler_options, date, url, domain, port, original_item, *args, **kwargs):
             self.type = type
-            self.original_paste = original_paste
-            self.super_father = super_father
+            self.original_item = original_item
+            self.root_key = None
             self.start_urls = url
             self.domains = [domain]
-            date = datetime.datetime.now().strftime("%Y/%m/%d")
-            self.full_date = datetime.datetime.now().strftime("%Y%m%d")
-            self.date_month = datetime.datetime.now().strftime("%Y%m")
+            self.port = str(port)
+            date_str = '{}/{}/{}'.format(date['date_day'][0:4], date['date_day'][4:6], date['date_day'][6:8])
+            self.full_date = date['date_day']
+            self.date_month = date['date_month']
+            self.date_epoch = int(date['epoch'])
+
+            self.arg_crawler = {  'html': crawler_options['html'],
+                                  'wait': 10,
+                                  'render_all': 1,
+                                  'har': crawler_options['har'],
+                                  'png': crawler_options['png']}
 
             config_section = 'Crawler'
             self.p = Process(config_section)
@@ -90,12 +100,13 @@ class TorSplashCrawler():
                 db=self.p.config.getint("ARDB_Onion", "db"),
                 decode_responses=True)
 
-            self.crawler_path = os.path.join(self.p.config.get("Directories", "crawled"), date )
+            self.crawler_path = os.path.join(self.p.config.get("Directories", "crawled"), date_str )
 
             self.crawled_paste_filemame = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "pastes"),
-                                            self.p.config.get("Directories", "crawled"), date )
+                                            self.p.config.get("Directories", "crawled"), date_str )
 
-            self.crawled_screenshot = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date )
+            self.crawled_har = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
+            self.crawled_screenshot = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot") )
 
         def start_requests(self):
             yield SplashRequest(
@@ -103,12 +114,8 @@ class TorSplashCrawler():
                 self.parse,
                 errback=self.errback_catcher,
                 endpoint='render.json',
-                meta={'father': self.original_paste},
-                args={  'html': 1,
-                        'wait': 10,
-                        'render_all': 1,
-                        'har': 1,
-                        'png': 1}
+                meta={'father': self.original_item, 'root_key': None},
+                args=self.arg_crawler
             )
 
         def parse(self,response):
@@ -131,12 +138,13 @@ class TorSplashCrawler():
                     UUID = self.domains[0][-215:]+str(uuid.uuid4())
                 else:
                     UUID = self.domains[0]+str(uuid.uuid4())
-                filename_paste = os.path.join(self.crawled_paste_filemame, UUID)
+                filename_paste_full = os.path.join(self.crawled_paste_filemame, UUID)
                 relative_filename_paste = os.path.join(self.crawler_path, UUID)
-                filename_screenshot = os.path.join(self.crawled_screenshot, UUID +'.png')
+                filename_har = os.path.join(self.crawled_har, UUID)
 
+                # # TODO: modify me
                 # save new paste on disk
-                if self.save_crawled_paste(filename_paste, response.data['html']):
+                if self.save_crawled_paste(relative_filename_paste, response.data['html']):
 
                     # add this paste to the domain crawled set # TODO: # FIXME:  put this on cache ?
                     #self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
@@ -148,28 +156,55 @@ class TorSplashCrawler():
                     # create onion metadata
                     if not self.r_serv_onion.exists('{}_metadata:{}'.format(self.type, self.domains[0])):
                         self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'first_seen', self.full_date)
-                    self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'last_seen', self.full_date)
+
+                    # create root_key
+                    if self.root_key is None:
+                        self.root_key = relative_filename_paste
+                        # Create/Update crawler history
+                        self.r_serv_onion.zadd('crawler_history_{}:{}:{}'.format(self.type, self.domains[0], self.port), self.date_epoch, self.root_key)
+                        # Update domain port number
+                        all_domain_ports = self.r_serv_onion.hget('{}_metadata:{}'.format(self.type, self.domains[0]), 'ports')
+                        if all_domain_ports:
+                            all_domain_ports = all_domain_ports.split(';')
+                        else:
+                            all_domain_ports = []
+                        if self.port not in all_domain_ports:
+                            all_domain_ports.append(self.port)
+                            self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'ports', ';'.join(all_domain_ports))
 
                     #create paste metadata
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'super_father', self.super_father)
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'father', response.meta['father'])
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'domain', self.domains[0])
-                    self.r_serv_metadata.hset('paste_metadata:'+filename_paste, 'real_link', response.url)
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'super_father', self.root_key)
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'father', response.meta['father'])
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'domain', '{}:{}'.format(self.domains[0], self.port))
+                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'real_link', response.url)
 
-                    self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], filename_paste)
+                    self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], relative_filename_paste)
 
-                    dirname = os.path.dirname(filename_screenshot)
-                    if not os.path.exists(dirname):
-                        os.makedirs(dirname)
+                    if 'png' in response.data:
+                        size_screenshot = (len(response.data['png'])*3) /4
 
-                    size_screenshot = (len(response.data['png'])*3) /4
+                        if size_screenshot < 5000000: #bytes
+                            image_content = base64.standard_b64decode(response.data['png'].encode())
+                            hash = sha256(image_content).hexdigest()
+                            img_dir_path = os.path.join(hash[0:2], hash[2:4], hash[4:6], hash[6:8], hash[8:10], hash[10:12])
+                            filename_img = os.path.join(self.crawled_screenshot, 'screenshot', img_dir_path, hash[12:] +'.png')
+                            dirname = os.path.dirname(filename_img)
+                            if not os.path.exists(dirname):
+                                os.makedirs(dirname)
+                            if not os.path.exists(filename_img):
+                                with open(filename_img, 'wb') as f:
+                                    f.write(image_content)
+                            # add item metadata
+                            self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'screenshot', hash)
+                            # add sha256 metadata
+                            self.r_serv_onion.sadd('screenshot:{}'.format(hash), relative_filename_paste)
 
-                    if size_screenshot < 5000000: #bytes
-                        with open(filename_screenshot, 'wb') as f:
-                            f.write(base64.standard_b64decode(response.data['png'].encode()))
-
-                    with open(filename_screenshot+'har.txt', 'wb') as f:
-                        f.write(json.dumps(response.data['har']).encode())
+                    if 'har' in response.data:
+                        dirname = os.path.dirname(filename_har)
+                        if not os.path.exists(dirname):
+                            os.makedirs(dirname)
+                        with open(filename_har+'.json', 'wb') as f:
+                            f.write(json.dumps(response.data['har']).encode())
 
                     # save external links in set
                     #lext = LinkExtractor(deny_domains=self.domains, unique=True)
@@ -184,12 +219,8 @@ class TorSplashCrawler():
                             self.parse,
                             errback=self.errback_catcher,
                             endpoint='render.json',
-                            meta={'father': relative_filename_paste},
-                            args={  'html': 1,
-                                    'png': 1,
-                                    'render_all': 1,
-                                    'har': 1,
-                                    'wait': 10}
+                            meta={'father': relative_filename_paste, 'root_key': response.meta['root_key']},
+                            args=self.arg_crawler
                         )
 
         def errback_catcher(self, failure):
@@ -203,17 +234,17 @@ class TorSplashCrawler():
 
                 self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
                 time.sleep(10)
+                if response:
+                    response_root_key = response.meta['root_key']
+                else:
+                    response_root_key = None
                 yield SplashRequest(
                     url,
                     self.parse,
                     errback=self.errback_catcher,
                     endpoint='render.json',
-                    meta={'father': father},
-                    args={  'html': 1,
-                            'png': 1,
-                            'render_all': 1,
-                            'har': 1,
-                            'wait': 10}
+                    meta={'father': father, 'root_key': response.meta['root_key']},
+                    args=self.arg_crawler
                 )
 
             else:

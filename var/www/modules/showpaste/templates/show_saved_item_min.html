@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Paste information - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+
+  <style>
+    .scrollable-menu {
+      height: auto;
+      max-height: 200px;
+      overflow-x: hidden;
+      width:100%;
+    }
+
+		.red_table thead{
+			background: #d91f2d;
+			color: #fff;
+		}
+  </style>
+
+</head>
+<body>
+
+  <div class="card mb-2">
+    <div class="card-header bg-dark">
+      <h3 class="text-white text-center" >{{ item_info['name'] }}</h3>
+    </div>
+    <div class="card-body pb-1">
+      <table class="table table-condensed table-responsive">
+        <thead class="">
+          <tr>
+            <th>Date</th>
+            <th>Source</th>
+            <th>Encoding</th>
+            <th>Size (Kb)</th>
+            <th>Number of lines</th>
+            <th>Max line length</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td>{{ item_basic_info['date'] }}</td>
+          <td>{{ item_basic_info['source'] }}</td>
+          <td>{{ item_basic_info['encoding'] }}</td>
+          <td>{{ item_basic_info['size'] }}</td>
+          <td>{{ item_basic_info['nb_lines'] }}</td>
+          <td>{{ item_basic_info['max_length_line'] }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div>
+        <h5>
+          {% for tag in item_info['tags'] %}
+            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+          {%  endfor %}
+        </h5>
+      </div>
+
+    </div>
+  </div>
+
+  {% if misp_eventid %}
+    <div class="list-group" id="misp_event">
+      <li class="list-group-item active">MISP Events already Created</li>
+      <a target="_blank" href="{{ misp_url }}" class="list-group-item">{{ misp_url }}</a>
+    </div>
+  {% endif %}
+
+  {% if hive_caseid %}
+    <div class="list-group" id="misp_event">
+      <li class="list-group-item active">The Hive Case already Created</li>
+      <a target="_blank" href="{{ hive_url }}" class="list-group-item">{{ hive_url }}</a>
+    </div>
+  {% endif %}
+
+  {% if  item_info['nb_duplictates'] != 0 %}
+    <div id="accordionDuplicate" class="mb-2">
+      <div class="card">
+        <div class="card-header py-1" id="headingDuplicate">
+          <div class="my-1">
+            <i class="far fa-clone"></i> duplicates&nbsp;&nbsp;
+            <div class="badge badge-warning">{{item_info['nb_duplictates']}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+
+  {% if  l_64|length != 0 %}
+  <div id="accordionDecoded" class="mb-3">
+    <div class="card">
+      <div class="card-header py-1" id="headingDecoded">
+        <div class="row">
+          <div class="col-11">
+            <div class="mt-2">
+              <i class="fas fa-lock-open"></i> Decoded Files&nbsp;&nbsp;
+              <div class="badge badge-warning">{{l_64|length}}</div>
+            </div>
+          </div>
+          <div class="col-1">
+            <button class="btn btn-link py-2 rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="true" aria-controls="collapseDecoded">
+              <i class="fas fa-chevron-circle-down"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="collapseDecoded" class="collapse show" aria-labelledby="headingDecoded" data-parent="#accordionDecoded">
+        <div class="card-body">
+
+          <table id="tableb64" class="red_table table table-striped">
+            <thead>
+              <tr>
+                <th>estimated type</th>
+                <th>hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b64 in l_64 %}
+                <tr>
+                  <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
+                  <td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a> ({{ b64[4] }})</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if crawler_metadata['get_metadata'] %}
+  <div id="accordionCrawler" class="mb-3">
+    <div class="card">
+      <div class="card-header py-1" id="headingCrawled">
+        <div class="row">
+          <div class="col-11">
+            <div class="mt-2">
+              <i class="fas fa-spider"></i> Crawled Item
+            </div>
+          </div>
+          <div class="col-1">
+            <button class="btn btn-link py-2 rotate" data-toggle="collapse" data-target="#collapseCrawled" aria-expanded="true" aria-controls="collapseCrawled">
+              <i class="fas fa-chevron-circle-up"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="collapseCrawled" class="collapse show" aria-labelledby="headingCrawled" data-parent="#accordionCrawler">
+        <div class="card-body">
+
+          <table class="table table-hover table-striped">
+            <tbody>
+              <tr>
+                <td>Domain</td>
+                <td><a target="_blank" href="{{ url_for('hiddenServices.show_domain') }}?domain={{ crawler_metadata['domain'] }}" id='domain'>{{ crawler_metadata['domain'] }}</a></td>
+              </tr>
+              <tr>
+                <td>Father</td>
+                <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ crawler_metadata['paste_father'] }}" id='paste_father'>{{ crawler_metadata['paste_father'] }}</a></td>
+              </tr>
+              <tr>
+                <td>Url</td>
+                <td>{{ crawler_metadata['real_link'] }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="card my-2" style="background-color:#ecf0f1;">
+      			<div class="card-body py-2">
+      				<div class="row">
+      					<div class="col-md-8">
+      						<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="13">
+      					</div>
+      					<div class="col-md-4">
+      						<button class="btn btn-primary" onclick="blocks.value=50;pixelate();">
+      							<i class="fas fa-search-plu"></i>
+      						  <span class="label-icon">Full resolution</span>
+      						</button>
+      					</div>
+      				</div>
+      			</div>
+      		</div>
+      		<canvas id="canvas" style="width:100%;"></canvas>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card bg-dark text-white">
+    <div class="card-header">
+
+      <div class="row">
+        <div class="col-10">
+          <h3> Content: </h3>
+        </div>
+        <div class="col-2">
+          <div class="mt-2">
+            <small><a class="text-info" href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a></small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <p class="my-0" data-initsize="{{ initsize }}"> <pre id="paste-holder" class="border">{{ content }}</pre></p>
+
+  <script>
+      var ltags
+      var ltagsgalaxies
+      $(document).ready(function(){
+          $('#tableDup').DataTable();
+          $('#tableb64').DataTable({
+    				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+    				"iDisplayLength": 5,
+    				"order": [[ 1, "asc" ]]
+    			});
+          $(".rotate").click(function(){
+        	 $(this).toggleClass("down")  ;
+        	})
+      });
+  </script>
+
+{% if crawler_metadata['get_metadata'] %}
+  <script>
+  var ctx = canvas.getContext('2d'), img = new Image();
+
+  /// turn off image smoothing
+  ctx.webkitImageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = false;
+
+  img.onload = pixelate;
+  img.addEventListener("error", img_error);
+  var draw_img = false;
+
+  img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
+
+  function pixelate() {
+
+    /// use slider value
+    if( blocks.value == 50 ){
+        size = 1;
+    } else {
+        var size = (blocks.value) * 0.01;
+    }
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    /// cache scaled width and height
+    w = canvas.width * size;
+    h = canvas.height * size;
+
+    /// draw original image to the scaled size
+    ctx.drawImage(img, 0, 0, w, h);
+
+    /// pixelated
+    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+  }
+
+  function img_error() {
+    img.onerror=null;
+    img.src="{{ url_for('static', filename='image/AIL.png') }}";
+    blocks.value = 50;
+    pixelate;
+  }
+
+  blocks.addEventListener('change', pixelate, false);
+  </script>
+{% endif %}
+
+  <div id="container-show-more" class="text-center">
+
+  </div>
+
+  </html>
+
+</body>
+
+
+</html>

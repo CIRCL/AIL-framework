@@ -47,12 +47,11 @@ def analyse(url, path):
         paste = Paste.Paste(path)
         print("Detected (libinjection) SQL in URL: ")
         print(urllib.request.unquote(url))
-        to_print = 'LibInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL", paste.p_path)
+        to_print = 'LibInjection;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, "Detected SQL in URL", paste.p_rel_path)
         publisher.warning(to_print)
         #Send to duplicate
         p.populate_set_out(path, 'Duplicate')
-        #send to Browse_warning_paste
-        p.populate_set_out('sqlinjection;{}'.format(path), 'alertHandler')
+
         msg = 'infoleak:automatic-detection="sql-injection";{}'.format(path)
         p.populate_set_out(msg, 'Tags')
 

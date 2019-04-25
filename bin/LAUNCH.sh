@@ -16,7 +16,6 @@ export AIL_HOME="${DIR}"
 cd ${AIL_HOME}
 
 if [ -e "${DIR}/AILENV/bin/python" ]; then
-    echo "AIL-framework virtualenv seems to exist, good"
     ENV_PY="${DIR}/AILENV/bin/python"
 else
     echo "Please make sure you have a AIL-framework environment, au revoir"
@@ -75,6 +74,7 @@ function helptext {
     LAUNCH.sh
       [-l | --launchAuto]
       [-k | --killAll]
+      [-u | --update]
       [-c | --configUpdate]
       [-t | --thirdpartyUpdate]
       [-h | --help]
@@ -125,12 +125,7 @@ function launching_queues {
 function checking_configuration {
     bin_dir=${AIL_HOME}/bin
     echo -e "\t* Checking configuration"
-    if [ "$1" == "automatic" ]; then
-        bash -c "${ENV_PY} $bin_dir/Update-conf.py True"
-    else
-        bash -c "${ENV_PY} $bin_dir/Update-conf.py False"
-    fi
-
+    bash -c "${ENV_PY} $bin_dir/Update-conf.py"
     exitStatus=$?
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Configuration not up-to-date"$DEFAULT
@@ -140,7 +135,7 @@ function checking_configuration {
 }
 
 function launching_scripts {
-    checking_configuration $1;
+    checking_configuration;
 
     screen -dmS "Script_AIL"
     sleep 0.1
@@ -206,13 +201,13 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./LibInjection.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "alertHandler" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./alertHandler.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./MISP_The_Hive_feeder.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SentimentAnalysis.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./submit_paste.py; read x"
 
@@ -221,7 +216,7 @@ function launching_scripts {
 function launching_crawler {
     if [[ ! $iscrawler ]]; then
         CONFIG=$AIL_BIN/packages/config.cfg
-        lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_onion_port/{print $3;exit}' "${CONFIG}")
+        lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_port/{print $3;exit}' "${CONFIG}")
 
         IFS='-' read -ra PORTS <<< "$lport"
         if [ ${#PORTS[@]} -eq 1 ]
@@ -237,7 +232,7 @@ function launching_crawler {
         sleep 0.1
 
         for ((i=first_port;i<=last_port;i++)); do
-            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Crawler.py onion $i; read x"
+            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Crawler.py $i; read x"
             sleep 0.1
         done
 
@@ -266,20 +261,20 @@ function checking_redis {
     redis_dir=${AIL_HOME}/redis/src/
     bash -c $redis_dir'redis-cli -p 6379 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6379 not ready"$DEFAULT
-       flag_redis=1
+        echo -e $RED"\t6379 not ready"$DEFAULT
+        flag_redis=1
     fi
     sleep 0.1
     bash -c $redis_dir'redis-cli -p 6380 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6380 not ready"$DEFAULT
-       flag_redis=1
+        echo -e $RED"\t6380 not ready"$DEFAULT
+        flag_redis=1
     fi
     sleep 0.1
     bash -c $redis_dir'redis-cli -p 6381 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6381 not ready"$DEFAULT
-       flag_redis=1
+        echo -e $RED"\t6381 not ready"$DEFAULT
+        flag_redis=1
     fi
     sleep 0.1
 
@@ -292,11 +287,35 @@ function checking_ardb {
     sleep 0.2
     bash -c $redis_dir'redis-cli -p 6382 PING | grep "PONG" &> /dev/null'
     if [ ! $? == 0 ]; then
-       echo -e $RED"\t6382 ARDB not ready"$DEFAULT
-       flag_ardb=1
+        echo -e $RED"\t6382 ARDB not ready"$DEFAULT
+        flag_ardb=1
     fi
 
     return $flag_ardb;
+}
+
+function wait_until_redis_is_ready {
+    redis_not_ready=true
+    while $redis_not_ready; do
+        if checking_redis; then
+            redis_not_ready=false;
+        else
+            sleep 1
+        fi
+    done
+    echo -e $YELLOW"\t* Redis Launched"$DEFAULT
+}
+
+function wait_until_ardb_is_ready {
+    ardb_not_ready=true;
+    while $ardb_not_ready; do
+        if checking_ardb; then
+            ardb_not_ready=false
+        else
+            sleep 3
+        fi
+    done
+    echo -e $YELLOW"\t* ARDB Launched"$DEFAULT
 }
 
 function launch_redis {
@@ -335,14 +354,14 @@ function launch_scripts {
     if [[ ! $isscripted ]]; then
       sleep 1
         if checking_ardb && checking_redis; then
-            launching_scripts $1;
+            launching_scripts;
         else
             no_script_launched=true
             while $no_script_launched; do
                 echo -e $YELLOW"\tScript not started, waiting 5 more secondes"$DEFAULT
                 sleep 5
                 if checking_redis && checking_ardb; then
-                    launching_scripts $1;
+                    launching_scripts;
                     no_script_launched=false
                 else
                     echo -e $RED"\tScript not started"$DEFAULT
@@ -380,17 +399,21 @@ function launch_feeder {
 }
 
 function killall {
-    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded ]]; then
-        echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
-        shutting_down_redis;
-        sleep 0.2
-        echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
-        shutting_down_ardb;
+    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
+        if [[ $isredis ]]; then
+            echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
+            shutting_down_redis;
+            sleep 0.2
+        fi
+        if [[ $isardb ]]; then
+            echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
+            shutting_down_ardb;
+        fi
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded
+        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted killed."$DEFAULT
+        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler killed."$DEFAULT
     else
         echo -e $RED"\t* No screen to kill"$DEFAULT
     fi
@@ -398,6 +421,17 @@ function killall {
 
 function shutdown {
     bash -c "./Shutdown.py"
+}
+
+function update() {
+    bin_dir=${AIL_HOME}/bin
+
+    bash -c "python3 $bin_dir/Update.py"
+    exitStatus=$?
+    if [ $exitStatus -ge 1 ]; then
+        echo -e $RED"\t* Update Error"$DEFAULT
+        exit
+    fi
 }
 
 function update_thirdparty {
@@ -413,11 +447,12 @@ function update_thirdparty {
 }
 
 function launch_all {
+    update;
     launch_redis;
     launch_ardb;
     launch_logs;
     launch_queues;
-    launch_scripts $1;
+    launch_scripts;
     launch_flask;
 }
 
@@ -426,7 +461,7 @@ function launch_all {
 
     helptext;
 
-    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update-config" "Update-thirdparty")
+    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update" "Update-config" "Update-thirdparty")
 
     menu() {
         echo "What do you want to Launch?:"
@@ -451,7 +486,7 @@ function launch_all {
         if [[ "${choices[i]}" ]]; then
             case ${options[i]} in
                 Redis)
-                    launch_redis
+                    launch_redis;
                     ;;
                 Ardb)
                     launch_ardb;
@@ -477,8 +512,11 @@ function launch_all {
                 Shutdown)
                     shutdown;
                     ;;
+                Update)
+                    update;
+                    ;;
                 Update-config)
-                    checking_configuration "manual";
+                    checking_configuration;
                     ;;
                 Update-thirdparty)
                     update_thirdparty;
@@ -490,23 +528,40 @@ function launch_all {
     exit
 }
 
+#echo "$@"
+
 while [ "$1" != "" ]; do
     case $1 in
-        -l | --launchAuto )         launch_all "automatic";
-                                    ;;
-        -k | --killAll )            killall;
-                                    ;;
-        -t | --thirdpartyUpdate )   update_thirdparty;
-                                    ;;
-        -c | --crawler )            launching_crawler;
-                                    ;;
-        -f | --launchFeeder )       launch_feeder;
-                                    ;;
-        -h | --help )               helptext;
-                                    exit
-                                    ;;
-        * )                         helptext
-                                    exit 1
+        -l | --launchAuto )           launch_all "automatic";
+                                      ;;
+        -lr | --launchRedis )         launch_redis;
+                                      ;;
+        -la | --launchARDB )          launch_ardb;
+                                      ;;
+        -lrv | --launchRedisVerify )  launch_redis;
+                                      wait_until_redis_is_ready;
+                                      ;;
+        -lav | --launchARDBVerify )   launch_ardb;
+                                      wait_until_ardb_is_ready;
+                                      ;;
+        -k | --killAll )              killall;
+                                      ;;
+        -u | --update )               update;
+                                      ;;
+        -t | --thirdpartyUpdate )     update_thirdparty;
+                                      ;;
+        -c | --crawler )              launching_crawler;
+                                      ;;
+        -f | --launchFeeder )         launch_feeder;
+                                      ;;
+        -h | --help )                 helptext;
+                                      exit
+                                      ;;
+        -kh | --khelp )               helptext;
+
+                                      ;;
+        * )                           helptext
+                                      exit 1
     esac
     shift
 done

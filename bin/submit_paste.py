@@ -96,25 +96,48 @@ def remove_submit_uuid(uuid):
     r_serv_db.srem('submitted:uuid', uuid)
     print('{} all file submitted'.format(uuid))
 
+def add_item_tag(tag, item_path):
+    item_date = int(get_item_date(item_path))
+
+    #add tag
+    r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
+    r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
+
+    r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
+
+    tag_first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+    if tag_first_seen is None:
+        tag_first_seen = 99999999
+    else:
+        tag_first_seen = int(tag_first_seen)
+    tag_last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+    if tag_last_seen is None:
+        tag_last_seen = 0
+    else:
+        tag_last_seen = int(tag_last_seen)
+
+    #add new tag in list of all used tags
+    r_serv_tags.sadd('list_tags', tag)
+
+    # update fisrt_seen/last_seen
+    if item_date < tag_first_seen:
+        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', item_date)
+
+    # update metadata last_seen
+    if item_date > tag_last_seen:
+        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
+
 def add_tags(tags, tagsgalaxies, path):
     list_tag = tags.split(',')
     list_tag_galaxies = tagsgalaxies.split(',')
 
     if list_tag != ['']:
         for tag in list_tag:
-            #add tag
-            r_serv_metadata.sadd('tag:'+path, tag)
-            r_serv_tags.sadd(tag, path)
-            #add new tag in list of all used tags
-            r_serv_tags.sadd('list_tags', tag)
+            add_item_tag(tag, path)
 
     if list_tag_galaxies != ['']:
         for tag in list_tag_galaxies:
-            #add tag
-            r_serv_metadata.sadd('tag:'+path, tag)
-            r_serv_tags.sadd(tag, path)
-            #add new tag in list of all used tags
-            r_serv_tags.sadd('list_tags', tag)
+            add_item_tag(tag, path)
 
 def verify_extention_filename(filename):
     if not '.' in filename:
