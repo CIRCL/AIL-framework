@@ -47,12 +47,16 @@ def unpack_url(url):
 
     if url_unpack['scheme'] is None:
         to_crawl['scheme'] = 'http'
+        url= 'http://{}'.format(url_unpack['url'].decode())
     else:
         scheme = url_unpack['scheme'].decode()
         if scheme in default_proto_map:
             to_crawl['scheme'] = scheme
+            url = url_unpack['url'].decode()
         else:
+            redis_crawler.sadd('new_proto', '{} {}'.format(scheme, url_unpack['url'].decode()))
             to_crawl['scheme'] = 'http'
+            url= 'http://{}'.format(url_unpack['url'].decode().replace(scheme, '', 1))
 
     if url_unpack['port'] is None:
         to_crawl['port'] = default_proto_map[to_crawl['scheme']]
@@ -66,11 +70,20 @@ def unpack_url(url):
             port = default_proto_map[to_crawl['scheme']]
         to_crawl['port'] = port
 
-    if url_unpack['query_string'] is None:
-        to_crawl['url']= '{}://{}:{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'])
+    #if url_unpack['query_string'] is None:
+    #    if to_crawl['port'] == 80:
+    #        to_crawl['url']= '{}://{}'.format(to_crawl['scheme'], url_unpack['host'].decode())
+    #    else:
+    #        to_crawl['url']= '{}://{}:{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'])
+    #else:
+    #    to_crawl['url']= '{}://{}:{}{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'], url_unpack['query_string'].decode())
+
+    to_crawl['url'] = url
+    if to_crawl['port'] == 80:
+        to_crawl['domain_url'] = '{}://{}'.format(to_crawl['scheme'], url_unpack['host'].decode())
     else:
-        to_crawl['url']= '{}://{}:{}{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'], url_unpack['query_string'].decode())
-    to_crawl['domain_url'] = '{}://{}:{}'.format(to_crawl['scheme'], to_crawl['domain'], to_crawl['port'])
+        to_crawl['domain_url'] = '{}://{}:{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'])
+
 
     to_crawl['tld'] = url_unpack['tld'].decode()
     return to_crawl
