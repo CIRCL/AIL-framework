@@ -105,18 +105,20 @@ class HiddenServices(object):
             return self.tags
 
     def update_domain_tags(self, item):
-        if self.r_serv_metadata.exists('tag:{}'.format(item)):
-            p_tags = self.r_serv_metadata.smembers('tag:{}'.format(item))
-        # update path here
-        else:
-            # need to remove it
-            if self.paste_directory in item:
-                p_tags = self.r_serv_metadata.smembers('tag:{}'.format(item.replace(self.paste_directory+'/', '')))
-            # need to remove it
+        if item:
+
+            if self.r_serv_metadata.exists('tag:{}'.format(item)):
+                p_tags = self.r_serv_metadata.smembers('tag:{}'.format(item))
+            # update path here
             else:
-                p_tags = self.r_serv_metadata.smembers('tag:{}'.format(os.path.join(self.paste_directory, item)))
-        for tag in p_tags:
-            self.tags[tag] = self.tags.get(tag, 0) + 1
+                # need to remove it
+                if self.paste_directory in item:
+                    p_tags = self.r_serv_metadata.smembers('tag:{}'.format(item.replace(self.paste_directory+'/', '')))
+                # need to remove it
+                else:
+                    p_tags = self.r_serv_metadata.smembers('tag:{}'.format(os.path.join(self.paste_directory, item)))
+            for tag in p_tags:
+                self.tags[tag] = self.tags.get(tag, 0) + 1
 
     def get_first_crawled(self):
         res = self.r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, 0, withscores=True)
@@ -150,7 +152,9 @@ class HiddenServices(object):
     #todo use the right paste
     def get_last_crawled_pastes(self, item_root=None):
         if item_root is None:
-            item_root = self.get_domain_crawled_core_item(self)
+            item_root = self.get_domain_crawled_core_item()
+            if item_root:
+                item_root = item_root['root_item']
         return self.get_all_pastes_domain(item_root)
 
     def get_all_pastes_domain(self, root_item):

@@ -1,0 +1,56 @@
+<div class="card text-white bg-dark mb-3 mt-1">
+  <div class="card-header">
+    <div class="row">
+      <div class="col-6">
+        <a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type={{type}}&domains_up=True&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-success">{{ statDomains['domains_up'] }}</a> UP
+        <a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type={{type}}&domains_down=True&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-danger ml-md-3">{{ statDomains['domains_down'] }}</a> DOWN
+      </div>
+      <div class="col-6">
+        <a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type={{type}}&domains_up=True&domains_down=True&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-success">{{ statDomains['total'] }}</a> Crawled
+        <span class="badge badge-warning ml-md-3">{{ statDomains['domains_queue'] }}</span> Queue
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Select domains by date range :</h5>
+    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+    <form action="{{ url_for('hiddenServices.get_onions_by_daterange') }}" id="hash_selector_form" method='post'>
+      <div class="row">
+        <div class="col-6">
+          <input type="hidden" id="service_type" name="service_type" value="{{type}}">
+          <div class="input-group" id="date-range-from">
+            <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+            <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from" autocomplete="off">
+          </div>
+          <div class="input-group" id="date-range-to">
+            <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+            <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="custom-control custom-switch">
+            <input class="custom-control-input" type="checkbox" name="domains_up" value="True" id="domains_up_id" checked>
+            <label class="custom-control-label" for="domains_up_id">
+              <span class="badge badge-success"><i class="fas fa-check-circle"></i> Domains UP </span>
+            </label>
+          </div>
+          <div class="custom-control custom-switch">
+            <input class="custom-control-input" type="checkbox" name="domains_down" value="True" id="domains_down_id">
+            <label class="custom-control-label" for="domains_down_id">
+              <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Domains DOWN</span>
+            </label>
+          </div>
+          <div class="custom-control custom-switch mt-2">
+            <input class="custom-control-input" type="checkbox" name="domains_tags" value="True" id="domains_tags_id">
+            <label class="custom-control-label" for="domains_tags_id">
+              <span class="badge badge-dark"><i class="fas fa-tags"></i> Domains Tags</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary">
+        <i class="fas fa-eye"></i> Show {{type_name}}s
+      </button>
+    <form>
+  </div>
+</div>
