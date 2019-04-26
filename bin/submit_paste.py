@@ -36,15 +36,18 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
         abord_file_submission(uuid, "file error")
         return 1
 
+    # use relative path
+    rel_item_path = save_path.replace(PASTES_FOLDER, '', 1)
+
     # send paste to Global module
-    relay_message = "{0} {1}".format(save_path, gzip64encoded)
+    relay_message = "{0} {1}".format(rel_item_path, gzip64encoded)
     p.populate_set_out(relay_message, 'Mixer')
 
     # increase nb of paste by feeder name
     r_serv_log_submit.hincrby("mixer_cache:list_feeder", "submitted", 1)
 
     # add tags
-    add_tags(ltags, ltagsgalaxies, full_path)
+    add_tags(ltags, ltagsgalaxies, rel_item_path)
 
     r_serv_log_submit.incr(uuid + ':nb_end')
     r_serv_log_submit.incr(uuid + ':nb_sucess')
@@ -52,8 +55,8 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
     if r_serv_log_submit.get(uuid + ':nb_end') == r_serv_log_submit.get(uuid + ':nb_total'):
         r_serv_log_submit.set(uuid + ':end', 1)
 
-    print('    {} send to Global'.format(save_path))
-    r_serv_log_submit.sadd(uuid + ':paste_submit_link', full_path)
+    print('    {} send to Global'.format(rel_item_path))
+    r_serv_log_submit.sadd(uuid + ':paste_submit_link', rel_item_path)
 
     curr_date = datetime.date.today()
     serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'submit_paste', 1)
@@ -205,6 +208,8 @@ if __name__ == "__main__":
 
     config_section = 'submit_paste'
     p = Process(config_section)
+
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
 
     while True:
 
