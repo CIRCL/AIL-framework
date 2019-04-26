@@ -96,6 +96,10 @@ def remove_submit_uuid(uuid):
     r_serv_db.srem('submitted:uuid', uuid)
     print('{} all file submitted'.format(uuid))
 
+def get_item_date(item_filename):
+    l_directory = item_filename.split('/')
+    return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+
 def add_item_tag(tag, item_path):
     item_date = int(get_item_date(item_path))
 
