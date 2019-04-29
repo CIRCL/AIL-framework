@@ -228,7 +228,7 @@ if __name__ == "__main__":
 
                             ## TODO: blackilst by port ?
                             # check blacklist
-                            if redis_crawler.sismember('blacklist_onion', domain):
+                            if r_onion.sismember('blacklist_onion', domain):
                                 continue
 
                             subdomain = re.findall(url_regex, url)
