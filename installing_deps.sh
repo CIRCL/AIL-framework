@@ -1,40 +1,43 @@
 #!/bin/bash
 
+# halt on errors
 set -e
-set -x
+
+## bash debug mode togle below
+#set -x
 
 sudo apt-get update
 
 sudo apt-get install python3-pip virtualenv python3-dev python3-tk libfreetype6-dev \
-    screen g++ python-tk unzip libsnappy-dev cmake -y
+    screen g++ python-tk unzip libsnappy-dev cmake -qq
 
 #optional tor install
-sudo apt-get install tor -y
+sudo apt-get install tor -qq
 
 #Needed for bloom filters
-sudo apt-get install libssl-dev libfreetype6-dev python-numpy -y
+sudo apt-get install libssl-dev libfreetype6-dev python-numpy -qq
 
 #pyMISP
 #sudo apt-get -y install python3-pip
 
 # DNS deps
-sudo apt-get install libadns1 libadns1-dev -y
+sudo apt-get install libadns1 libadns1-dev -qq
 
 #Needed for redis-lvlDB
-sudo apt-get install libev-dev libgmp-dev -y
+sudo apt-get install libev-dev libgmp-dev -qq
 
 #Need for generate-data-flow graph
-sudo apt-get install graphviz -y
+sudo apt-get install graphviz -qq
 
 # install nosetests
-sudo apt-get install python3-nose
+sudo apt-get install python3-nose -qq
 
 # ssdeep
-sudo apt-get install libfuzzy-dev -y
-sudo apt-get install build-essential libffi-dev automake autoconf libtool -y
+sudo apt-get install libfuzzy-dev -qq
+sudo apt-get install build-essential libffi-dev automake autoconf libtool -qq
 
 # sflock, gz requirement
-sudo apt-get install p7zip-full -y
+sudo apt-get install p7zip-full -qq
 
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
