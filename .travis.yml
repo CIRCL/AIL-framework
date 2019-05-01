@@ -13,6 +13,8 @@ env:
       AIL_LEVELDB=$TRAVIS_BUILD_DIR/redis-leveldb/ PATH=$AIL_HOME:$AIL_REDIS:$AIL_LEVELDB:$PATH
 
 
+before_install:
+    - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
 
 install:
     - ./installing_deps.sh
