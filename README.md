@@ -1,18 +1,17 @@
 AIL
 ===
 
-![Logo](./doc/logo/logo-small.png?raw=true "AIL logo")
-
-AIL framework - Framework for Analysis of Information Leaks
-
-AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
-
-![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
-
 <table>
 <tr>
   <td>Latest Release</td>
   <td><a href="https://github.com/CIRCL/AIL-framework/releases/latest"><img src="https://img.shields.io/github/release/CIRCL/AIL-framework/all.svg"></a></td>
+</tr>
+  <td>Travis</td>
+  <td><a href="https://travis-ci.org/CIRCL/AIL-framework"><img src="https://img.shields.io/travis/CIRCL/AIL-framework.svg" /></a></td>
+</tr>
+<tr>
+  <td>Gitter</td>
+  <td><a href="https://gitter.im/SteveClement/AIL-framework?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/SteveClement/AIL-framework.svg" /></a></td>
 </tr>
 <tr>
   <td>Contributors</td>
@@ -23,6 +22,14 @@ AIL is a modular framework to analyse potential information leaks from unstructu
   <td><img src="https://img.shields.io/github/license/CIRCL/AIL-Framework.svg" /></td>
 </tr>
 </table>
+
+![Logo](./doc/logo/logo-small.png?raw=true "AIL logo")
+
+AIL framework - Framework for Analysis of Information Leaks
+
+AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
+
+![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
 
 
 Features
