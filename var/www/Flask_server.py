@@ -3,11 +3,14 @@
 
 import redis
 import configparser
+import random
 import json
 import datetime
 import time
 import calendar
-from flask import Flask, render_template, jsonify, request, Request
+from flask import Flask, render_template, jsonify, request, Request, session, redirect, url_for
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+
 import flask
 import importlib
 import os
@@ -17,6 +20,8 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 sys.path.append('./modules/')
 import Paste
 from Date import Date
+
+from User import User
 
 from pytaxonomies import Taxonomies
 
@@ -33,6 +38,18 @@ if baseUrl != '':
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
 app = Flask_config.app
 app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
+
+# ========= session ========
+app.secret_key = str(random.getrandbits(256))
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+# ========= LOGIN MANAGER ========
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
 
 # ========= HEADER GENERATION ========
 
@@ -118,6 +135,41 @@ def add_header(response):
     return response
 
 # ========== ROUTES ============
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        next_page = request.form.get('next_page')
+
+        print(username)
+        print(password)
+
+        if username is not None:
+            user = User.get(username)
+            #print(user.is_anonymous)
+            #print('auth') # TODO: overwrite
+            #print(user.is_authenticated)
+            if user and user.check_password(password):
+                login_user(user) ## TODO: use remember me ?
+                return redirect(url_for('dashboard.index'))
+            else:
+                return 'incorrect password'
+
+        return 'none'
+
+    else:
+        next_page = request.args.get('next')
+        print(next_page)
+        return render_template("login.html", next_page=next_page)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('dashboard.index'))
+
+
 @app.route('/searchbox/')
 def searchbox():
     return render_template("searchbox.html")

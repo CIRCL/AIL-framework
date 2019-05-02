@@ -5,6 +5,7 @@
     Flask functions and routes for the settings modules page
 '''
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
+from flask_login import login_required
 
 import json
 import datetime
@@ -74,6 +75,7 @@ def get_update_metadata():
 # ============= ROUTES ==============
 
 @settings.route("/settings/", methods=['GET'])
+@login_required
 def settings_page():
     git_metadata = get_git_metadata()
     current_version = r_serv_db.get('ail:version')
@@ -85,6 +87,7 @@ def settings_page():
 
 
 @settings.route("/settings/get_background_update_stats_json", methods=['GET'])
+@login_required
 def get_background_update_stats_json():
     # handle :end, error
     update_stats = {}

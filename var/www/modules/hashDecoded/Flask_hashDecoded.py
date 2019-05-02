@@ -15,6 +15,7 @@ import zipfile
 
 import requests
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, send_file
+from flask_login import login_required
 
 # ============ VARIABLES ============
 import Flask_config
@@ -97,6 +98,7 @@ def one():
 
 # ============= ROUTES ==============
 @hashDecoded.route("/hashDecoded/all_hash_search", methods=['POST'])
+@login_required
 def all_hash_search():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -107,6 +109,7 @@ def all_hash_search():
 
 
 @hashDecoded.route("/hashDecoded/", methods=['GET'])
+@login_required
 def hashDecoded_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -224,6 +227,7 @@ def hashDecoded_page():
 
 
 @hashDecoded.route('/hashDecoded/hash_by_type')
+@login_required
 def hash_by_type():
     type = request.args.get('type')
     type = 'text/plain'
@@ -231,12 +235,14 @@ def hash_by_type():
 
 
 @hashDecoded.route('/hashDecoded/hash_hash')
+@login_required
 def hash_hash():
     hash = request.args.get('hash')
     return render_template('hash_hash.html')
 
 
 @hashDecoded.route('/hashDecoded/showHash')
+@login_required
 def showHash():
     hash = request.args.get('hash')
     #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
@@ -290,6 +296,7 @@ def showHash():
 
 
 @hashDecoded.route('/hashDecoded/downloadHash')
+@login_required
 def downloadHash():
     hash = request.args.get('hash')
     # sanitize hash
@@ -326,6 +333,7 @@ def downloadHash():
 
 
 @hashDecoded.route('/hashDecoded/hash_by_type_json')
+@login_required
 def hash_by_type_json():
     type = request.args.get('type')
 
@@ -359,6 +367,7 @@ def hash_by_type_json():
 
 
 @hashDecoded.route('/hashDecoded/decoder_type_json')
+@login_required
 def decoder_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -414,6 +423,7 @@ def decoder_type_json():
 
 
 @hashDecoded.route('/hashDecoded/top5_type_json')
+@login_required
 def top5_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -472,6 +482,7 @@ def top5_type_json():
 
 
 @hashDecoded.route('/hashDecoded/daily_type_json')
+@login_required
 def daily_type_json():
     date = request.args.get('date')
 
@@ -491,6 +502,7 @@ def daily_type_json():
 
 
 @hashDecoded.route('/hashDecoded/range_type_json')
+@login_required
 def range_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -547,6 +559,7 @@ def range_type_json():
 
 
 @hashDecoded.route('/hashDecoded/hash_graph_line_json')
+@login_required
 def hash_graph_line_json():
     hash = request.args.get('hash')
     date_from = request.args.get('date_from')
@@ -576,6 +589,7 @@ def hash_graph_line_json():
 
 
 @hashDecoded.route('/hashDecoded/hash_graph_node_json')
+@login_required
 def hash_graph_node_json():
     hash = request.args.get('hash')
 
@@ -643,6 +657,7 @@ def hash_graph_node_json():
 
 
 @hashDecoded.route('/hashDecoded/hash_types')
+@login_required
 def hash_types():
     date_from = 20180701
     date_to = 20180706
@@ -650,6 +665,7 @@ def hash_types():
 
 
 @hashDecoded.route('/hashDecoded/send_file_to_vt_js')
+@login_required
 def send_file_to_vt_js():
     hash = request.args.get('hash')
 
@@ -673,6 +689,7 @@ def send_file_to_vt_js():
 
 
 @hashDecoded.route('/hashDecoded/update_vt_result')
+@login_required
 def update_vt_result():
     hash = request.args.get('hash')
 

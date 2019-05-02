@@ -9,6 +9,7 @@ import datetime
 from Date import Date
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
+from flask_login import login_required
 
 # ============ VARIABLES ============
 import Flask_config
@@ -49,6 +50,7 @@ def get_date_range(num_day):
 # ============ ROUTES ============
 
 @trendingmodules.route("/_moduleCharts", methods=['GET'])
+@login_required
 def modulesCharts():
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
@@ -75,6 +77,7 @@ def modulesCharts():
 
 
 @trendingmodules.route("/_providersChart", methods=['GET'])
+@login_required
 def providersChart():
     keyword_name = request.args.get('keywordName')
     module_name = request.args.get('moduleName')
@@ -121,6 +124,7 @@ def providersChart():
 
 
 @trendingmodules.route("/moduletrending/")
+@login_required
 def moduletrending():
     return render_template("Moduletrending.html")
 

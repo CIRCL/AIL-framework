@@ -6,6 +6,7 @@
 '''
 import redis
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect
+from flask_login import login_required
 
 import unicodedata
 import string
@@ -273,6 +274,7 @@ def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, 
 # ============= ROUTES ==============
 
 @PasteSubmit.route("/PasteSubmit/", methods=['GET'])
+@login_required
 def PasteSubmit_page():
     #active taxonomies
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
@@ -285,6 +287,7 @@ def PasteSubmit_page():
                             active_galaxies = active_galaxies)
 
 @PasteSubmit.route("/PasteSubmit/submit", methods=['POST'])
+@login_required
 def submit():
 
     #paste_name = request.form['paste_name']
@@ -385,6 +388,7 @@ def submit():
     return PasteSubmit_page()
 
 @PasteSubmit.route("/PasteSubmit/submit_status", methods=['GET'])
+@login_required
 def submit_status():
     UUID = request.args.get('UUID')
 
@@ -451,6 +455,7 @@ def submit_status():
 
 
 @PasteSubmit.route("/PasteSubmit/create_misp_event", methods=['POST'])
+@login_required
 def create_misp_event():
 
     distribution = int(request.form['misp_data[Event][distribution]'])
@@ -473,6 +478,7 @@ def create_misp_event():
     return 'error0'
 
 @PasteSubmit.route("/PasteSubmit/create_hive_case", methods=['POST'])
+@login_required
 def create_hive_case():
 
     hive_tlp = int(request.form['hive_tlp'])
@@ -495,6 +501,7 @@ def create_hive_case():
     return 'error'
 
 @PasteSubmit.route("/PasteSubmit/edit_tag_export")
+@login_required
 def edit_tag_export():
     misp_auto_events = r_serv_db.get('misp:auto-events')
     hive_auto_alerts = r_serv_db.get('hive:auto-alerts')
@@ -559,6 +566,7 @@ def edit_tag_export():
                             flag_hive=flag_hive)
 
 @PasteSubmit.route("/PasteSubmit/tag_export_edited", methods=['POST'])
+@login_required
 def tag_export_edited():
     tag_enabled_misp = request.form.getlist('tag_enabled_misp')
     tag_enabled_hive = request.form.getlist('tag_enabled_hive')
@@ -583,26 +591,31 @@ def tag_export_edited():
     return redirect(url_for('PasteSubmit.edit_tag_export'))
 
 @PasteSubmit.route("/PasteSubmit/enable_misp_auto_event")
+@login_required
 def enable_misp_auto_event():
     r_serv_db.set('misp:auto-events', 1)
     return edit_tag_export()
 
 @PasteSubmit.route("/PasteSubmit/disable_misp_auto_event")
+@login_required
 def disable_misp_auto_event():
     r_serv_db.set('misp:auto-events', 0)
     return edit_tag_export()
 
 @PasteSubmit.route("/PasteSubmit/enable_hive_auto_alert")
+@login_required
 def enable_hive_auto_alert():
     r_serv_db.set('hive:auto-alerts', 1)
     return edit_tag_export()
 
 @PasteSubmit.route("/PasteSubmit/disable_hive_auto_alert")
+@login_required
 def disable_hive_auto_alert():
     r_serv_db.set('hive:auto-alerts', 0)
     return edit_tag_export()
 
 @PasteSubmit.route("/PasteSubmit/add_push_tag")
+@login_required
 def add_push_tag():
     tag = request.args.get('tag')
     if tag is not None:
@@ -620,6 +633,7 @@ def add_push_tag():
         return 'None args', 400
 
 @PasteSubmit.route("/PasteSubmit/delete_push_tag")
+@login_required
 def delete_push_tag():
     tag = request.args.get('tag')
 

@@ -43,8 +43,10 @@ psutil
 phonenumbers
 
 ipython
-flask
 texttable
+
+flask
+flask-login
 
 #DomainClassifier
 DomainClassifier
