@@ -114,6 +114,8 @@ There are two types of installation. You can install a *local* or a *remote* Spl
 2. *(Splash host)* To install and setup your tor proxy:
     - Install the tor proxy: ``sudo apt-get install tor -y``
         (Not required if ``Splah host == AIL host`` - The tor proxy is installed by default in AIL)
+
+        (Warning: Some v3 onion address are not resolved with the tor proxy provided via apt get. Use the tor proxy provided by [The torproject](https://2019.www.torproject.org/docs/debian) to solve this issue)
     - Allow Tor to bind to any interface or to the docker interface (by default binds to 127.0.0.1 only) in ``/etc/tor/torrc``
         ``SOCKSPort 0.0.0.0:9050`` or
         ``SOCKSPort 172.17.0.1:9050``
