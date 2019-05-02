@@ -105,6 +105,7 @@ def all_hash_search():
     show_decoded_files = request.form.get('show_decoded_files')
     return redirect(url_for('hashDecoded.hashDecoded_page', date_from=date_from, date_to=date_to, type=type, encoding=encoding, show_decoded_files=show_decoded_files))
 
+
 @hashDecoded.route("/hashDecoded/", methods=['GET'])
 def hashDecoded_page():
     date_from = request.args.get('date_from')
@@ -221,16 +222,19 @@ def hashDecoded_page():
     return render_template("hashDecoded.html", l_64=b64_metadata, vt_enabled=vt_enabled, l_type=l_type, type=type, daily_type_chart=daily_type_chart, daily_date=daily_date,
                                                 encoding=encoding, all_encoding=all_encoding, date_from=date_from, date_to=date_to, show_decoded_files=show_decoded_files)
 
+
 @hashDecoded.route('/hashDecoded/hash_by_type')
 def hash_by_type():
     type = request.args.get('type')
     type = 'text/plain'
     return render_template('hash_type.html',type = type)
 
+
 @hashDecoded.route('/hashDecoded/hash_hash')
 def hash_hash():
     hash = request.args.get('hash')
     return render_template('hash_hash.html')
+
 
 @hashDecoded.route('/hashDecoded/showHash')
 def showHash():
@@ -284,6 +288,7 @@ def showHash():
                                 first_seen=first_seen, list_hash_decoder=list_hash_decoder,
                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
+
 @hashDecoded.route('/hashDecoded/downloadHash')
 def downloadHash():
     hash = request.args.get('hash')
@@ -319,6 +324,7 @@ def downloadHash():
     else:
         return 'hash: ' + hash + " don't exist"
 
+
 @hashDecoded.route('/hashDecoded/hash_by_type_json')
 def hash_by_type_json():
     type = request.args.get('type')
@@ -350,6 +356,7 @@ def hash_by_type_json():
         return jsonify(range_decoder)
     else:
         return jsonify()
+
 
 @hashDecoded.route('/hashDecoded/decoder_type_json')
 def decoder_type_json():
@@ -404,6 +411,7 @@ def decoder_type_json():
     for decoder in all_decoder:
         to_json.append({'name': decoder, 'value': nb_decoded[decoder]})
     return jsonify(to_json)
+
 
 @hashDecoded.route('/hashDecoded/top5_type_json')
 def top5_type_json():
@@ -481,6 +489,7 @@ def daily_type_json():
 
     return jsonify(type_value)
 
+
 @hashDecoded.route('/hashDecoded/range_type_json')
 def range_type_json():
     date_from = request.args.get('date_from')
@@ -536,13 +545,12 @@ def range_type_json():
 
     return jsonify(range_type)
 
+
 @hashDecoded.route('/hashDecoded/hash_graph_line_json')
 def hash_graph_line_json():
     hash = request.args.get('hash')
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
-
-    #hash = '9c748d28d78a64aef99e7ba866a433eb635c6d7a'
 
     if date_from is None or date_to is None:
         nb_days_seen_in_pastes = 30
@@ -552,7 +560,7 @@ def hash_graph_line_json():
 
     date_range_seen_in_pastes = get_date_range(nb_days_seen_in_pastes)
 
-    #verify input
+    # verify input
     if r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type') is not None:
         json_seen_in_paste = []
         for date in date_range_seen_in_pastes:
@@ -560,7 +568,7 @@ def hash_graph_line_json():
             if nb_seen_this_day is None:
                 nb_seen_this_day = 0
             date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
-            json_seen_in_paste.append({ 'date' : date, 'value' : int( nb_seen_this_day )})
+            json_seen_in_paste.append({'date': date, 'value': int(nb_seen_this_day)})
 
         return jsonify(json_seen_in_paste)
     else:
@@ -633,11 +641,13 @@ def hash_graph_node_json():
     else:
         return jsonify({})
 
+
 @hashDecoded.route('/hashDecoded/hash_types')
 def hash_types():
     date_from = 20180701
     date_to = 20180706
     return render_template('hash_types.html', date_from=date_from, date_to=date_to)
+
 
 @hashDecoded.route('/hashDecoded/send_file_to_vt_js')
 def send_file_to_vt_js():
@@ -667,7 +677,7 @@ def update_vt_result():
     hash = request.args.get('hash')
 
     params = {'apikey': vt_auth, 'resource': hash}
-    response = requests.get('https://www.virustotal.com/vtapi/v2/file/report',params=params)
+    response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params)
     if response.status_code == 200:
         json_response = response.json()
         response_code = json_response['response_code']
@@ -676,7 +686,7 @@ def update_vt_result():
             total = json_response['total']
             positive = json_response['positives']
 
-            b64_vt_report = 'Detection {}/{}'.format(positive,total)
+            b64_vt_report = 'Detection {}/{}'.format(positive, total)
         # no report found
         elif response_code == 0:
             b64_vt_report = 'No report found'
@@ -690,7 +700,7 @@ def update_vt_result():
         return jsonify(hash=hash, report_vt=b64_vt_report)
     elif response.status_code == 403:
         Flask_config.vt_enabled = False
-        print('VT is disabled')
+        print('Virustotal key is incorrect (e.g. for public API not for virustotal intelligence), authentication failed or reaching limits.')
         return jsonify()
     else:
         # TODO FIXME make json response

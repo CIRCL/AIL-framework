@@ -1,7 +1,7 @@
 language: python
 
 python:
-    - "3.5"
+    - "3.6"
 
 sudo: required
 
@@ -12,7 +12,7 @@ env:
       AIL_FLASK=$TRAVIS_BUILD_DIR/var/www/ AIL_REDIS=$TRAVIS_BUILD_DIR/redis/src/ \
       AIL_LEVELDB=$TRAVIS_BUILD_DIR/redis-leveldb/ PATH=$AIL_HOME:$AIL_REDIS:$AIL_LEVELDB:$PATH
 
-
+dist: xenial
 
 install:
     - ./installing_deps.sh
@@ -20,10 +20,7 @@ install:
 
 script:
     - pushd bin
-    - ./launch_redis.sh
-    - ./launch_lvldb.sh
-    - ./launch_logs.sh
-    - ./launch_queues.sh
+    - ./LAUNCH.sh -l
     - popd
     - cd tests
     - nosetests --with-coverage --cover-package=../bin -d

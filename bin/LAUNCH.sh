@@ -17,6 +17,11 @@ cd ${AIL_HOME}
 
 if [ -e "${DIR}/AILENV/bin/python" ]; then
     ENV_PY="${DIR}/AILENV/bin/python"
+    export AIL_VENV=${AIL_HOME}/AILENV/
+elif [ ! -z "$TRAVIS" ]; then
+    echo "Travis detected"
+    ENV_PY="~/virtualenv/python3.6/bin/python"
+    export AIL_VENV="~/virtualenv/python3.6/"
 else
     echo "Please make sure you have a AIL-framework environment, au revoir"
     exit 1
@@ -29,7 +34,6 @@ export AIL_BIN=${AIL_HOME}/bin/
 export AIL_FLASK=${AIL_HOME}/var/www/
 export AIL_REDIS=${AIL_HOME}/redis/src/
 export AIL_ARDB=${AIL_HOME}/ardb/src/
-export AIL_VENV=${AIL_HOME}/AILENV/
 
 export PATH=$AIL_VENV/bin:$PATH
 export PATH=$AIL_HOME:$PATH
