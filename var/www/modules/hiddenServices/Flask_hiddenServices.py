@@ -794,7 +794,7 @@ def domain_crawled_by_type_json():
             day_crawled = {}
             day_crawled['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
             day_crawled['UP']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
-            day_crawled['DOWN']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
+            day_crawled['DOWN']= nb_domain_up = r_serv_onion.scard('{}_down:{}'.format(type, date))
             range_decoder.append(day_crawled)
 
         return jsonify(range_decoder)
