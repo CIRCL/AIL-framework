@@ -47,6 +47,7 @@ texttable
 
 flask
 flask-login
+bcrypt
 
 #DomainClassifier
 DomainClassifier

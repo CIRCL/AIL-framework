@@ -13,6 +13,7 @@ import flask
 from Date import Date
 
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for
+from flask_login import login_required
 
 # ============ VARIABLES ============
 import Flask_config
@@ -109,10 +110,12 @@ def datetime_from_utc_to_local(utc_str):
 # ============ ROUTES ============
 
 @dashboard.route("/_logs")
+@login_required
 def logs():
     return flask.Response(event_stream(), mimetype="text/event-stream")
 
 @dashboard.route("/_get_last_logs_json")
+@login_required
 def get_last_logs_json():
     date = datetime.datetime.now().strftime("%Y%m%d")
 
@@ -154,11 +157,13 @@ def get_last_logs_json():
 
 
 @dashboard.route("/_stuff", methods=['GET'])
+@login_required
 def stuff():
     return jsonify(row1=get_queues(r_serv))
 
 
 @dashboard.route("/")
+@login_required
 def index():
     default_minute = cfg.get("Flask", "minute_processed_paste")
     threshold_stucked_module = cfg.getint("Module_ModuleInformation", "threshold_stucked_module")

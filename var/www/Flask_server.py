@@ -11,6 +11,8 @@ import calendar
 from flask import Flask, render_template, jsonify, request, Request, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 
+import bcrypt
+
 import flask
 import importlib
 import os
@@ -28,12 +30,61 @@ from pytaxonomies import Taxonomies
 # Import config
 import Flask_config
 
+def flask_init():
+    int_user_management()
+
+def int_user_management():
+    # # TODO: check for admin account
+    # check if an account exists
+    if not r_serv_db.hexists('user:all'):
+        password = 'admin@admin.test'
+        create_user_db('admin', password, default=True)
+
+def hashing_password(bytes_password):
+    hashed = bcrypt.hashpw(bytes_password, bcrypt.gensalt())
+    return hashed
+
+def verify_password(id, bytes_password):
+    hashed_password = r_serv_db.hget('user:all', id)
+    if bcrypt.checkpw(password, hashed):
+        return True
+    else:
+        return False
+
+def create_user_db(username_id , password, default=False):
+    ## TODO: validate username
+    ## TODO: validate password
+
+    if username_id == '__anonymous__':
+        ## TODO: return 500
+        return 'ERROR'
+
+    password = password.encode()
+    password_hash = hashing_password(password)
+    r_serv_db.hset('user:all', username_id, password_hash)
+    if default:
+        r_serv_db.set('user:request_password_change', username_id)
+
 # CONFIG #
 cfg = Flask_config.cfg
 baseUrl = cfg.get("Flask", "baseurl")
 baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':
     baseUrl = '/'+baseUrl
+
+# ========= REDIS =========#
+r_serv_db = redis.StrictRedis(
+    host=cfg.get("ARDB_DB", "host"),
+    port=cfg.getint("ARDB_DB", "port"),
+    db=cfg.getint("ARDB_DB", "db"),
+    decode_responses=True)
+r_serv_tags = redis.StrictRedis(
+    host=cfg.get("ARDB_Tags", "host"),
+    port=cfg.getint("ARDB_Tags", "port"),
+    db=cfg.getint("ARDB_Tags", "db"),
+    decode_responses=True)
+
+# =========       =========#
 
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
 app = Flask_config.app
@@ -152,6 +203,8 @@ def login():
             #print(user.is_authenticated)
             if user and user.check_password(password):
                 login_user(user) ## TODO: use remember me ?
+                #print(user.request_password_change())
+                print(user.is_active)
                 return redirect(url_for('dashboard.index'))
             else:
                 return 'incorrect password'
@@ -167,7 +220,27 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('dashboard.index'))
+    return redirect(url_for('login'))
+
+@app.route('/create_user')
+@login_required
+def create_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    #role = request.form.get('role') ## TODO: create role
+
+    ## TODO: validate username
+    ## TODO: validate password
+
+    username = 'admin@admin.test'
+    password = 'admin'
+
+    if r_serv_db.hexists('user:all', username):
+        return 'this id is not available'
+
+    create_user_db(username, password)
+
+    return 'True'
 
 
 @app.route('/searchbox/')
@@ -176,11 +249,6 @@ def searchbox():
 
 
 # ========== INITIAL taxonomies ============
-r_serv_tags = redis.StrictRedis(
-    host=cfg.get("ARDB_Tags", "host"),
-    port=cfg.getint("ARDB_Tags", "port"),
-    db=cfg.getint("ARDB_Tags", "db"),
-    decode_responses=True)
 # add default ail taxonomies
 r_serv_tags.sadd('active_taxonomies', 'infoleak')
 r_serv_tags.sadd('active_taxonomies', 'gdpr')
@@ -195,11 +263,6 @@ for tag in taxonomies.get('fpf').machinetags():
     r_serv_tags.sadd('active_tag_fpf', tag)
 
 # ========== INITIAL tags auto export ============
-r_serv_db = redis.StrictRedis(
-    host=cfg.get("ARDB_DB", "host"),
-    port=cfg.getint("ARDB_DB", "port"),
-    db=cfg.getint("ARDB_DB", "db"),
-    decode_responses=True)
 infoleak_tags = taxonomies.get('infoleak').machinetags()
 infoleak_automatic_tags = []
 for tag in taxonomies.get('infoleak').machinetags():

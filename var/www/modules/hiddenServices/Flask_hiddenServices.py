@@ -17,6 +17,8 @@ from flask_login import login_required
 from Date import Date
 from HiddenServices import HiddenServices
 
+from Decorator import login_required
+
 # ============ VARIABLES ============
 import Flask_config
 
@@ -35,6 +37,7 @@ list_types=['onion', 'regular']
 dic_type_name={'onion':'Onion', 'regular':'Website'}
 
 # ============ FUNCTIONS ============
+
 def one():
     return 1
 
@@ -233,6 +236,7 @@ def delete_auto_crawler(url):
 # ============= ROUTES ==============
 
 @hiddenServices.route("/crawlers/", methods=['GET'])
+#@login_required(role="ADMIN")
 @login_required
 def dashboard():
     crawler_metadata_onion = get_crawler_splash_status('onion')

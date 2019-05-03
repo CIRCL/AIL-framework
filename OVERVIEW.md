@@ -52,6 +52,18 @@ Redis and ARDB overview
 | ail:current_background_script | **name of the background script currently executed** |
 | ail:current_background_script_stat | **progress in % of the background script** |
 
+##### User Management:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| user:all | **user id** | **password hash**  |
+
+| Key | Value |
+| ------ | ------ |
+| user:request_password_change | **user id** |
+| user:admin | **user id** |
+| | |
+| user_role:**role** | **user id** |
+
 ## DB2 - TermFreq:
 
 ##### Set:
