@@ -216,6 +216,10 @@ def login():
         print(next_page)
         return render_template("login.html", next_page=next_page)
 
+@app.route('/role', methods=['POST', 'GET'])
+def role():
+    return 'ERROR role'
+
 @app.route('/logout')
 @login_required
 def logout():

@@ -5,7 +5,9 @@
     Flask functions and routes for the trending modules page
 '''
 import redis
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
+from flask import Flask, render_template, jsonify, request, Blueprint, current_app, redirect, url_for
+
+from Role_Manager import login_admin, login_analyst
 from flask_login import login_required
 
 import json
@@ -220,6 +222,7 @@ def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
 
 @Tags.route("/tags/", methods=['GET'])
 @login_required
+@login_admin
 def Tags_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -469,6 +472,7 @@ def remove_tag():
 
 @Tags.route("/Tags/confirm_tag")
 @login_required
+@login_analyst
 def confirm_tag():
 
     #TODO verify input
