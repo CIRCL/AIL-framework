@@ -44,6 +44,8 @@ def get_item_screenshot_path(item):
     screenshot = r_serv_metadata.hget('paste_metadata:{}'.format(item), 'screenshot')
     if screenshot:
         screenshot =  os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
+    else:
+        screenshot = ''
     return screenshot
 
 def showpaste(content_range, requested_path):
