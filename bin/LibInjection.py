@@ -29,8 +29,17 @@ def analyse(url, path):
     faup.decode(url)
     url_parsed = faup.get()
     pprint.pprint(url_parsed)
-    resource_path = url_parsed['resource_path']
-    query_string = url_parsed['query_string']
+    ## TODO: # FIXME: remove me
+    try:
+        resource_path = url_parsed['resource_path'].encode()
+    except:
+        resource_path = url_parsed['resource_path']
+
+    ## TODO: # FIXME: remove me
+    try:
+        query_string = url_parsed['query_string'].encode()
+    except:
+        query_string = url_parsed['query_string']
 
     result_path = {'sqli' : False}
     result_query = {'sqli' : False}
@@ -56,7 +65,11 @@ def analyse(url, path):
         p.populate_set_out(msg, 'Tags')
 
         #statistics
-        tld = url_parsed['tld']
+        ## TODO: # FIXME: remove me
+        try:
+            tld = url_parsed['tld'].decode()
+        except:
+            tld = url_parsed['tld']
         if tld is not None:
             date = datetime.datetime.now().strftime("%Y%m")
             server_statistics.hincrby('SQLInjection_by_tld:'+date, tld, 1)

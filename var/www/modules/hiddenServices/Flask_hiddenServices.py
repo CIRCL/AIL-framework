@@ -115,7 +115,12 @@ def get_type_domain(domain):
 def get_domain_from_url(url):
     faup.decode(url)
     unpack_url = faup.get()
-    domain = unpack_url['domain'].decode()
+    domain = unpack_url['domain']
+    ## TODO: FIXME remove me
+    try:
+        domain = domain.decode()
+    except:
+        pass
     return domain
 
 def get_last_domains_crawled(type):
@@ -418,8 +423,19 @@ def create_spider_splash():
     # get service_type
     faup.decode(url)
     unpack_url = faup.get()
-    domain = unpack_url['domain'].decode()
-    if unpack_url['tld'] == b'onion':
+    ## TODO: # FIXME: remove me
+    try:
+        domain = unpack_url['domain'].decode()
+    except:
+        domain = unpack_url['domain']
+
+    ## TODO: # FIXME: remove me
+    try:
+        tld = unpack_url['tld'].decode()
+    except:
+        tld = unpack_url['tld']
+
+    if tld == 'onion':
         service_type = 'onion'
     else:
         service_type = 'regular'
@@ -694,10 +710,19 @@ def show_domain():
     port = request.args.get('port')
     faup.decode(domain)
     unpack_url = faup.get()
-    domain = unpack_url['domain'].decode()
+
+    ## TODO: # FIXME: remove me
+    try:
+        domain = unpack_url['domain'].decode()
+    except:
+        domain = unpack_url['domain']
+
     if not port:
         if unpack_url['port']:
-            port = unpack_url['port'].decode()
+            try:
+                port = unpack_url['port'].decode()
+            except:
+                port = unpack_url['port']
         else:
             port = 80
     try:

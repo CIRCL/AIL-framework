@@ -94,18 +94,22 @@ if __name__ == "__main__":
                     faup.decode(url)
                     domain = faup.get_domain()
                     subdomain = faup.get_subdomain()
-                    f1 = None
 
                     publisher.debug('{} Published'.format(url))
 
-                    if f1 == "onion":
-                        print(domain)
-
                     if subdomain is not None:
-                        subdomain = subdomain.decode('utf8')
+                        ## TODO: # FIXME: remove me
+                        try:
+                            subdomain = subdomain.decode()
+                        except:
+                            pass
 
                     if domain is not None:
-                        domain = domain.decode('utf8')
+                        ## TODO: # FIXME: remove me
+                        try:
+                            domain = domain.decode()
+                        except:
+                            pass
                         domains_list.append(domain)
 
                     hostl = avoidNone(subdomain) + avoidNone(domain)

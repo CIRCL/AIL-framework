@@ -68,10 +68,20 @@ def analyse(url, path):
     result_query = 0
 
     if resource_path is not None:
-        result_path = is_sql_injection(resource_path.decode('utf8'))
+        ## TODO: # FIXME: remove me
+        try:
+            resource_path = resource_path.decode()
+        except:
+            pass
+        result_path = is_sql_injection(resource_path)
 
     if query_string is not None:
-        result_query = is_sql_injection(query_string.decode('utf8'))
+        ## TODO: # FIXME: remove me
+        try:
+            query_string = query_string.decode()
+        except:
+            pass
+        result_query = is_sql_injection(query_string)
 
     if (result_path > 0) or (result_query > 0):
         paste = Paste.Paste(path)
@@ -89,6 +99,11 @@ def analyse(url, path):
             #statistics
             tld = url_parsed['tld']
             if tld is not None:
+                ## TODO: # FIXME: remove me
+                try:
+                    tld = tld.decode()
+                except:
+                    pass
                 date = datetime.datetime.now().strftime("%Y%m")
                 server_statistics.hincrby('SQLInjection_by_tld:'+date, tld, 1)
 
