@@ -224,7 +224,11 @@ if __name__ == "__main__":
 
                             faup.decode(url)
                             url_unpack = faup.get()
-                            domain = url_unpack['domain'].decode()
+                            ## TODO: # FIXME: remove me
+                            try:
+                                domain = url_unpack['domain'].decode().lower()
+                            except Exception as e:
+                                 domain = url_unpack['domain'].lower()
 
                             ## TODO: blackilst by port ?
                             # check blacklist
@@ -233,7 +237,7 @@ if __name__ == "__main__":
 
                             subdomain = re.findall(url_regex, url)
                             if len(subdomain) > 0:
-                                subdomain = subdomain[0][4]
+                                subdomain = subdomain[0][4].lower()
                             else:
                                 continue
 
