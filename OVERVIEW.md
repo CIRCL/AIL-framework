@@ -56,6 +56,10 @@ Redis and ARDB overview
 | Key | Field | Value |
 | ------ | ------ | ------ |
 | user:all | **user id** | **password hash**  |
+| | | |
+| user:tokens | **token** | **user id** |
+| | | |
+| user_metadata:**user id** | **user token** | **token**  |
 
 | Key | Value |
 | ------ | ------ |

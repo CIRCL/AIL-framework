@@ -5,7 +5,7 @@
     Flask functions and routes for the trending modules page
 '''
 import redis
-from flask import Flask, render_template, jsonify, request, Blueprint, current_app, redirect, url_for
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
 from Role_Manager import login_admin, login_analyst
 from flask_login import login_required
