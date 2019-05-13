@@ -57,6 +57,7 @@ class TorSplashCrawler():
 
         def __init__(self, type, crawler_options, date, url, domain, port, original_item, *args, **kwargs):
             self.type = type
+            self.requested = crawler_options['requested']
             self.original_item = original_item
             self.root_key = None
             self.start_urls = url
@@ -183,7 +184,7 @@ class TorSplashCrawler():
                     if 'png' in response.data:
                         size_screenshot = (len(response.data['png'])*3) /4
 
-                        if size_screenshot < 5000000: #bytes
+                        if size_screenshot < 5000000 or self.requested: #bytes or manual/auto
                             image_content = base64.standard_b64decode(response.data['png'].encode())
                             hash = sha256(image_content).hexdigest()
                             img_dir_path = os.path.join(hash[0:2], hash[2:4], hash[4:6], hash[6:8], hash[8:10], hash[10:12])
