@@ -70,6 +70,7 @@ class Paste(object):
             host=cfg.get("Redis_Queues", "host"),
             port=cfg.getint("Redis_Queues", "port"),
             db=cfg.getint("Redis_Queues", "db"),
+            encoding_errors='replace',
             decode_responses=True)
         self.store = redis.StrictRedis(
             host=cfg.get("Redis_Data_Merging", "host"),
@@ -125,7 +126,13 @@ class Paste(object):
 
         """
 
-        paste = self.cache.get(self.p_path)
+        try:
+            paste = self.cache.get(self.p_path)
+        except Exception as e:
+            print("ERROR in: " + self.p_path)
+            print(e)
+            paste = None
+
         if paste is None:
             try:
                 with gzip.open(self.p_path, 'r') as f:
