@@ -108,6 +108,15 @@ def search_key(paste):
         p.populate_set_out(msg, 'Tags')
         find = True
 
+    if '-----BEGIN PGP PUBLIC KEY BLOCK-----' in content:
+        p.populate_set_out(message, 'PgpDump')
+
+    if '-----BEGIN PGP SIGNATURE-----' in content:
+        p.populate_set_out(message, 'PgpDump')
+
+    if '-----BEGIN PGP MESSAGE-----' in content:
+        p.populate_set_out(message, 'PgpDump')
+
     if find :
 
         #Send to duplicate

@@ -152,6 +152,56 @@ Redis and ARDB overview
 | binary_hash:**hash** | **item** | **nb_seen** |
 | hexadecimal_hash:**hash** | **item** | **nb_seen** |
 
+#### PgpDump
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| pgp_metadata_key:*key id* | first_seen | **date** |
+| | last_seen | **date** |
+| | |
+| pgp_metadata_name:*name* | first_seen | **date** |
+| | last_seen | **date** |
+| | |
+| pgp_metadata_mail:*mail* | first_seen | **date** |
+| | last_seen | **date** |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| pgp_key:*key id* | *item_path* |
+| | |
+| pgp_name:*name* | *item_path* |
+| | |
+| pgp_mail:*mail* | *item_path* |
+
+##### Hset date:
+| Key | Field | Value |
+| ------ | ------ |
+| pgp:key:*date* | *key* | *nb seen* |
+| | |
+| pgp:name:*date* | *name* | *nb seen* |
+| | |
+| pgp:mail:*date* | *mail* | *nb seen* |
+
+##### zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| pgp_all:key | *key* | *nb seen* |
+| | |
+| pgp_all:name | *name* | *nb seen* |
+| | |
+| pgp_all:mail | *mail* | *nb seen* |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| item_pgp_key:*item_path* | *key* |
+| | |
+| item_pgp_name:*item_path* | *name* |
+| | |
+| item_pgp_mail:*item_path* | *mail* |
+
 ## DB9 - Crawler:
 
 ##### Hset:
