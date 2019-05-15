@@ -12,6 +12,7 @@ import time
 import subprocess
 import requests
 
+from collections import deque
 from pyfaup.faup import Faup
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -303,7 +304,7 @@ if __name__ == '__main__':
     #mode = sys.argv[1]
     splash_port = sys.argv[1]
 
-    rotation_mode = ['onion', 'regular']
+    rotation_mode = deque(["onion", "regular"])
     default_proto_map = {'http': 80, 'https': 443}
 ######################################################## add ftp ???
 
@@ -361,6 +362,7 @@ if __name__ == '__main__':
 
         update_auto_crawler()
 
+        rotation_mode.rotate()
         to_crawl = get_elem_to_crawl(rotation_mode)
         if to_crawl:
             url_data = unpack_url(to_crawl['url'])
