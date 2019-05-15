@@ -66,13 +66,13 @@ def get_file_icon(estimated_type):
     if file_type == 'application':
         file_icon = 'fa-file '
     elif file_type == 'audio':
-        file_icon = 'fa-file-video-o '
+        file_icon = 'fa-file-audio '
     elif file_type == 'image':
-        file_icon = 'fa-file-image-o'
+        file_icon = 'fa-file-image'
     elif file_type == 'text':
-        file_icon = 'fa-file-text-o'
+        file_icon = 'fa-file-alt'
     else:
-        file_icon =  'fa-file-o'
+        file_icon =  'fa-sticky-note'
 
     return file_icon
 
@@ -88,7 +88,7 @@ def get_file_icon_text(estimated_type):
     elif file_type == 'text':
         file_icon_text = '\uf15c'
     else:
-        file_icon_text = '\uf15b'
+        file_icon_text = '\uf249'
 
     return file_icon_text
 

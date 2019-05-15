@@ -3,27 +3,20 @@
 
 	<head>
 	  <meta charset="utf-8">
-	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	  <title>Hash Information - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
 	  <!-- Core CSS -->
-		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.css') }}" rel="stylesheet" type="text/css" />
-		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
 	  <!-- JS -->
-		<script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.flot.stack.js') }}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
 		<style>
 		line.link {
 			stroke: #666;
@@ -88,178 +81,191 @@
 	</head>
 	<body>
 
-            {% include 'navbar.html' %}
+		{% include 'nav_bar.html' %}
 
-            <div id="page-wrapper">
-				<div class="row">
+		<div class="container-fluid">
+			<div class="row">
 
+				{% include 'decoded/menu_sidebar.html' %}
 
-					</div>
+				<div class="col-12 col-lg-10" id="core_content">
 
-						<!-- /#page-wrapper -->
-						<div class="panel panel-info">
-									<div class="panel-heading panelText">
-										<h3>{{ hash }} :</h3>
-										<span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
-										<span class="badge pull-right">6 / 26</span>
-							 	<ul class="list-group"><li class="list-group-item">
-
+					<div class="card my-3">
+						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+							<h4 class="text-secondary">{{ hash }} :</h4>
+							<ul class="list-group mb-2">
+								<li class="list-group-item py-0">
 									<div class="row">
 										<div class="col-md-10">
-
-											<table class="table table-condensed">
-							          <thead>
-							            <tr>
-							              <th>Estimated type</th>
-							              <th>First_seen</th>
-							              <th>Last_seen</th>
-							              <th>Size (Kb)</th>
-							              <th>Nb seen</th>
-							            </tr>
-							          </thead>
-							          <tbody>
-							            <tr>
-								            <td class="panelText"><i class="fa {{ file_icon }}"></i>&nbsp;&nbsp;{{ estimated_type }}</td>
-								            <td class="panelText">{{ first_seen }}</td>
-								            <td class="panelText">{{ last_seen }}</td>
-								            <td class="panelText">{{ size }}</td>
-								            <td class="panelText">{{ nb_seen_in_all_pastes }}</td>
-							            </tr>
-							          </tbody>
-							        </table>
+											<table class="table">
+												<thead>
+													<tr>
+														<th>Estimated type</th>
+														<th>First_seen</th>
+														<th>Last_seen</th>
+														<th>Size (Kb)</th>
+														<th>Nb seen</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr>
+														<td><i class="fas {{ file_icon }}"></i>&nbsp;&nbsp;{{ estimated_type }}</td>
+														<td>{{ first_seen }}</td>
+														<td>{{ last_seen }}</td>
+														<td>{{ size }}</td>
+														<td>{{ nb_seen_in_all_pastes }}</td>
+													</tr>
+												</tbody>
+											</table>
 										</div>
 										<div class="col-md-1">
 											<div id="sparkline"></div>
 										</div>
 									</div>
-								</li></ul>
+								</li>
+							</ul>
 
-								{% if  vt_enabled %}
-									{% if not b64_vt %}
-										<darkbutton>
-											<button id="submit_vt_b" class="btn btn-primary" onclick="sendFileToVT('{{ hash }}')">
-												<i class="fa fa-paper-plane"></i>&nbsp;Send this file to VT
-											</button>
-										</darkbutton>
-									{% else %}
-										<a class="btn btn-primary" target="_blank" href="{{ b64_vt_link }}"><i class="fa fa-link"> VT Report</i></a>
-									{% endif %}
-									<button class="btn btn-default" onclick="updateVTReport('{{ hash }}')">
-										<div id="report_vt_b"><span class="glyphicon glyphicon-refresh"></span>&nbsp;{{ b64_vt_report }}</div>
-									</button>
+							{% if  vt_enabled %}
+								{% if not b64_vt %}
+									<darkbutton>
+										<button id="submit_vt_b" class="btn btn-primary" onclick="sendFileToVT('{{ hash }}')" style="font-size: 15px">
+											<i class="fas fa-paper-plane"></i>&nbsp;Send this file to VT
+										</button>
+									</darkbutton>
 								{% else %}
-									Virus Total submission is disabled
+									<a class="btn btn-primary" target="_blank" href="{{ b64_vt_link }}" style="font-size: 15px"><i class="fas fa-link"></i> VT Report</a>
 								{% endif %}
+								<button class="btn btn-outline-secondary" onclick="updateVTReport('{{ hash }}')" style="font-size: 15px">
+									<div id="report_vt_b"><i class="fas fa-sync-alt"></i>&nbsp;{{ b64_vt_report }}</div>
+								</button>
+							{% else %}
+								Virus Total submission is disabled
+							{% endif %}
 
-								<a href="{{ url_for('hashDecoded.downloadHash') }}?hash={{hash}}" target="blank">
-									<button class='btn btn-info pull-right'><i id="flash-tld" class="glyphicon glyphicon-download-alt " flash-tld=""></i> Download Hashed file
-									</button>
-								</a>
-								</div></div>
+							<a href="{{ url_for('hashDecoded.downloadHash') }}?hash={{hash}}" target="blank" class="float-right" style="font-size: 15px">
+								<button class='btn btn-info'><i class="fas fa-download"></i> Download Decoded file
+								</button>
+							</a>
+						</div>
+					</div>
 
-								<div class="row">
-									<div class="col-md-10">
+					<div class="row">
+						<div class="col-xl-10">
 
-										<div class="panel panel-default">
-					            <div class="panel-heading">
-					              <i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
-					            </div>
-					            <div class="panel-body graph_panel">
-												<div id="graph">
-									     	</div>
-					            </div>
-					          </div>
-									</div>
-
-									<div class="col-md-2">
-
-										<div class="panel panel-info">
-											<div class="panel-heading">
-												<i class="fa fa-unlock-alt" aria-hidden="true"></i> Encoding
-											</div>
-											<div class="panel-body" style="text-align:center;">
-												{% for encoding in list_hash_decoder %}
-												<button id="" class="btn btn-default">
-													{{encoding['encoding']}} <span class="badge">{{encoding['nb_seen']}}</span>
-												</button>
-												{% endfor %}
-											</div>
-										</div>
-
-										<div class="panel panel-default">
-											<div class="panel-heading">
-												<i id="flash-tld" class="glyphicon glyphicon-flash " flash-tld=""></i> Graph
-											</div>
-											<div class="panel-body" style="text-align:center;">
-												<button class="btn btn-primary" onclick="resize_graph();">
-			                    <span class="glyphicon glyphicon-refresh"></span>&nbsp;Resize Graph</div>
-			                  </button>
-
-
-												<ul class="list-group">
-												  <li class="list-group-item list-group-item-info" style="text-align:center;"><i class="fa fa-info-circle fa-2x"></i></li>
-													<li class="list-group-item">
-														<p>Double click on a node to open Hash/Paste<br><br>
-															<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="orange"></circle></g></svg>
-															Current Hash<br>
-															<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="rgb(141, 211, 199)"></circle></g></svg>
-															Hashes<br>
-															<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="#1f77b4"></circle></g></svg>
-															Pastes
-														</p>
-													</li>
-												  <li class="list-group-item list-group-item-info">
-														Hash Types:
-													</li>
-												  <li class="list-group-item">
-														<i class="fa fa-file"></i>  Application<br>
-												  	<i class="fa fa-file-video-o"></i>  Audio<br>
-														<i class="fa fa-file-image-o"></i>  Image<br>
-														<i class="fa fa-file-text-o"></i>  Text<br>
-														<i class="fa fa-file-o"></i>  Other
-													</li>
-												</ul>
-											</div>
-										</div>
-									</div>
-
-									<div class="panel panel-default">
-										<div class="panel-heading">
-											<i id="flash-tld" class="glyphicon glyphicon-stats" flash-tld=""></i> Graph
-										</div>
-										<div class="panel-body ">
-											<div id="graph_line">
-											</div>
-										</div>
-									</div>
-
+							<div class="card mb-3">
+								<div class="card-header">
+									<i class="fas fa-project-diagram"></i> Graph
 								</div>
+								<div class="card-body graph_panel">
+									<div id="graph">
+									</div>
+								</div>
+							</div>
+						</div>
 
+						<div class="col-xl-2">
+
+							<div class="card">
+								<div class="card-header">
+									<i class="fas fa-unlock-alt" aria-hidden="true"></i> Encoding
+								</div>
+								<div class="card-body text-center">
+									{% for encoding in list_hash_decoder %}
+									<button class="btn" disabled>
+										{{encoding['encoding']}} <span class="badge">{{encoding['nb_seen']}}</span>
+									</button>
+									{% endfor %}
+								</div>
+							</div>
+
+							<div class="card my-3">
+								<div class="card-header">
+									<i class="fas fa-project-diagram"></i> Graph
+								</div>
+								<div class="card-body text-center px-0 py-0">
+									<button class="btn btn-primary my-4" onclick="resize_graph();">
+										<i class="fas fa-sync"></i>&nbsp;Resize Graph
+									</button>
+
+
+									<ul class="list-group">
+										<li class="list-group-item list-group-item-info"><i class="fas fa-info-circle fa-2x"></i></li>
+										<li class="list-group-item text-left">
+											<p>Double click on a node to open Hash/Paste<br><br>
+												<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="orange"></circle></g></svg>
+												Current Hash<br>
+												<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="rgb(141, 211, 199)"></circle></g></svg>
+												Hashes<br>
+												<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="#1f77b4"></circle></g></svg>
+												Pastes
+											</p>
+										</li>
+										<li class="list-group-item list-group-item-info">
+											Hash Types:
+										</li>
+										<li class="list-group-item text-left">
+											<i class="fas fa-file"></i>  Application<br>
+											<i class="fas fa-file-video"></i>  Audio<br>
+											<i class="fas fa-file-image"></i>  Image<br>
+											<i class="fas fa-file-alt"></i>  Text<br>
+											<i class="fas fa-sticky-note"></i>  Other
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-header">
+							<i class="fas fa-chart-bar"></i> Graph
+						</div>
+						<div class="panel-body ">
+							<div id="graph_line">
+							</div>
+						</div>
 					</div>
 
 				</div>
-				<!-- /.row -->
+			</div>
+		</div>
 
-            <script>
-							var all_graph = {};
-                $(document).ready(function(){
-									sparklines("sparkline", {{ sparkline_values }})
+<script>
+var all_graph = {};
+$(document).ready(function(){
+		$("#page-Decoded").addClass("active");
+		sparklines("sparkline", {{ sparkline_values }})
 
-									all_graph.node_graph = create_graph("{{ url_for('hashDecoded.hash_graph_node_json') }}?hash={{hash}}");
-									all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.hash_graph_line_json') }}?hash={{hash}}");
-									all_graph.onResize();
-                });
+		all_graph.node_graph = create_graph("{{ url_for('hashDecoded.hash_graph_node_json') }}?hash={{hash}}");
+		all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.hash_graph_line_json') }}?hash={{hash}}");
+		all_graph.onResize();
+});
 
-								$(window).on("resize", function() {
-									all_graph.onResize();
-								});
-            </script>
+$(window).on("resize", function() {
+		all_graph.onResize();
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
 <script>
 	function sendFileToVT(hash) {
 		//send file to vt
 		$.getJSON("{{ url_for('hashDecoded.send_file_to_vt_js') }}?hash="+hash,
 			function(data) {
-				var content = '<a id="submit_vt_b" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
+				var content = '<a id="submit_vt_b" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fas fa-link"> '+ ' VT Report' +'</i></a>';
 				$('#submit_vt_b').remove();
 				$('darkbutton').append(content);
 		});
@@ -269,7 +275,7 @@
 		//updateReport
 		$.getJSON("{{ url_for('hashDecoded.update_vt_result') }}?hash="+hash,
 			function(data) {
-				var content = '<span class="glyphicon glyphicon-refresh"></span> ' +data['report_vt'];
+				var content = '<i class="fas fa-sync-alt"></i> ' +data['report_vt'];
 				$( "#report_vt_b" ).html(content);
 		});
 	}
