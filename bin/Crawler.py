@@ -304,7 +304,7 @@ if __name__ == '__main__':
     #mode = sys.argv[1]
     splash_port = sys.argv[1]
 
-    rotation_mode = deque(["onion", "regular"])
+    rotation_mode = deque(['onion', 'regular'])
     default_proto_map = {'http': 80, 'https': 443}
 ######################################################## add ftp ???
 
