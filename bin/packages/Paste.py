@@ -125,7 +125,15 @@ class Paste(object):
 
         """
 
-        paste = self.cache.get(self.p_path)
+        try:
+            paste = self.cache.get(self.p_path)
+        except UnicodeDecodeError:
+            paste = None
+        except Exception as e:
+            print("ERROR in: " + self.p_path)
+            print(e)
+            paste = None
+
         if paste is None:
             try:
                 with gzip.open(self.p_path, 'r') as f:
