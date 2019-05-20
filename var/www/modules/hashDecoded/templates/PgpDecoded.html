@@ -143,7 +143,7 @@
 							<tbody style="font-size: 15px;">
 							{% for pgp_dump in l_pgpdump %}
 									<tr>
-										<td><i class="fas {{ er }}"></i>&nbsp;&nbsp;{{ l_pgpdump[pgp_dump]['type_id'] }}</td>
+										<td><i class="fas fa-{{ l_pgpdump[pgp_dump]['type_icon'] }}"></i>&nbsp;&nbsp;{{ l_pgpdump[pgp_dump]['type_id'] }}</td>
 										<td><a target="_blank" href="{{ url_for('hashDecoded.show_pgpdump') }}?type_id={{ l_pgpdump[pgp_dump]['type_id'] }}&key_id={{ pgp_dump }}">{{ pgp_dump }}</a></td>
 										<td>{{ l_pgpdump[pgp_dump]['first_seen'] }}</td>
 										<td>{{ l_pgpdump[pgp_dump]['last_seen'] }}</td>

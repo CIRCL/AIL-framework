@@ -102,7 +102,7 @@ def get_file_icon_text(estimated_type):
     return file_icon_text
 
 def get_pgp_id_icon_text(type_id):
-    # set file icon
+    # set type_id icon
     if type_id == 'key':
         file_icon_text = '\uf084'
     elif type_id == 'name':
@@ -112,6 +112,18 @@ def get_pgp_id_icon_text(type_id):
     else:
         file_icon_text = '\uf249'
     return file_icon_text
+
+def get_pgp_icon(type_id):
+    # set type_id icon
+    if type_id == 'key':
+        pgp_icon_text = 'key'
+    elif type_id == 'name':
+        pgp_icon_text = 'user-tag'
+    elif type_id == 'mail':
+        pgp_icon_text = 'at'
+    else:
+        pgp_icon_text = 'times'
+    return pgp_icon_text
 
 def verify_pgp_type_id(type_id):
     if type_id in ['key', 'name', 'mail']:
@@ -846,7 +858,7 @@ def pgpdump_page():
 
         if pgp_metadata[dump_id]:
             pgp_metadata[dump_id]['type_id'] = typ_id
-            #file_icon = get_file_icon(estimated_type)
+            pgp_metadata[dump_id]['type_icon'] = get_pgp_icon(typ_id)
 
             pgp_metadata[dump_id]['sparklines_data'] = list_sparkline_pgp_values(date_range_sparkline, typ_id, dump_id)
             pgp_metadata[dump_id]['sparklines_id'] = sparkline_id
