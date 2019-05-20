@@ -1014,35 +1014,44 @@ def pgp_range_type_json():
 
     return jsonify(range_type)
 
-@hashDecoded.route('/decoded/pgp_by_type_json') ####################################
+@hashDecoded.route('/decoded/pgp_by_type_json') ## TODO: REFRACTOR
 def pgp_by_type_json():
     type_id = request.args.get('type_id')
+    date_from = request.args.get('date_from')
+
+    if date_from is None:
+        date_from = datetime.date.today().strftime("%Y%m%d")
 
     #retrieve + char
     type_id = type_id.replace(' ', '+')
+    default = False
+
+    if type_id is None:
+        default = True
+        all_type = ['key', 'name', 'mail']
+    else:
+        all_type = [ type_id ]
 
     num_day_type = 30
     date_range = get_date_range(num_day_type)
 
     #verify input
-    if verify_pgp_type_id(type_id):
+    if verify_pgp_type_id(type_id) or default:
 
-        r_serv_metadata.smembers('hash_all_type'):
-            type_value = []
-            all_decoder = r_serv_metadata.smembers('all_decoder')
+        type_value = []
 
-            range_decoder = []
-            for date in date_range:
-                day_decoder = {}
-                day_decoder['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
-                for decoder in all_decoder:
-                    num_day_decoder = r_serv_metadata.zscore(decoder+'_type:'+type, date)
-                    if num_day_decoder is None:
-                        num_day_decoder = 0
-                    day_decoder[decoder]= num_day_decoder
-                range_decoder.append(day_decoder)
-
-
+        range_decoder = []
+        for date in date_range:
+            day_type_id = {}
+            day_type_id['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+            for type_pgp in all_type:
+                all_vals_key = r_serv_metadata.hvals('pgp:{}:date'.format(type_id, date))
+                num_day_type_id = 0
+                if all_vals_key is not None:
+                    for val_key in all_vals_key:
+                        num_day_type_id += int(val_key)
+                day_type_id[type_pgp]= num_day_type_id
+            range_decoder.append(day_type_id)
 
         return jsonify(range_decoder)
     else:

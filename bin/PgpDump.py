@@ -68,6 +68,9 @@ def get_pgp_packet(save_path):
 def extract_id_from_output(pgp_dump_outpout):
     all_user_id = set(re.findall(regex_user_id, pgp_dump_outpout))
     for user_id in all_user_id:
+        # avoid key injection in user_id:
+        pgp_dump_outpout.replace(user_id, '', 1)
+
         user_id = user_id.replace(user_id_str, '', 1)
         mail = None
         if ' <' in user_id:

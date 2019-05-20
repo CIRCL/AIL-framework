@@ -187,7 +187,7 @@
 						{
 								$('#date-range-from-input').val(s1);
 								$('#date-range-to-input').val(s2);
-						}
+						},
 					});
 					$('#date-range-to').dateRangePicker({
 							separator : ' to ',
@@ -202,8 +202,11 @@
 							{
 									$('#date-range-from-input').val(s1);
 									$('#date-range-to-input').val(s2);
-							}
+							},
 					});
+
+          $('#date-range-from').data('dateRangePicker').setDateRange('{{date_from}}','{{date_to}}');
+          $('#date-range-to').data('dateRangePicker').setDateRange('{{date_from}}','{{date_to}}');
 
 					$('#tableb64').DataTable({
 							"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
@@ -211,9 +214,10 @@
 							"order": [[ 3, "desc" ]]
 					});
 
-					{% if  type %}
-					//chart.stackBarChart =barchart_type_stack("{{ url_for('hashDecoded.pgp_by_type_json') }}?type_id={{type}}", 'id');
-					{% elif  daily_type_chart %}
+					{% if  type_id %}
+					//chart.stackBarChart =barchart_type_stack("{{ url_for('hashDecoded.pgp_by_type_json') }}?date_from={{daily_date}}&type_id={{type_id}}", 'id');
+          chart.stackBarChart = barchart_type_stack("{{ url_for('hashDecoded.pgp_range_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type_id={{type_id}}", 'id');
+					{% elif  type_id or daily_type_chart %}
 					chart.stackBarChart =barchart_type_stack("{{ url_for('hashDecoded.pgp_range_type_json') }}?date_from={{daily_date}}&date_to={{daily_date}}", 'id');
 					{% else %}
 					chart.stackBarChart = barchart_type_stack("{{ url_for('hashDecoded.pgp_range_type_json') }}?date_from={{date_from}}&date_to={{date_to}}", 'id');
@@ -243,7 +247,6 @@ function toggle_sidebar(){
 }
 </script>
 <script>
-//var data = [6,3,3,2,5,3,9];
 
 // a sparklines plot
 function sparklines(id, points) {
