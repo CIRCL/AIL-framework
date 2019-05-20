@@ -67,6 +67,14 @@ sudo ldconfig
 popd
 popd
 
+# pgpdump
+test ! -d pgpdump && git clone https://github.com/kazu-yamamoto/pgpdump.git
+pushd pgpdump/
+./configure
+make
+sudo make install
+popd
+
 # ARDB #
 test ! -d ardb/ && git clone https://github.com/yinqiwen/ardb.git
 pushd ardb/
