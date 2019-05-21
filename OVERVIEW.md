@@ -202,6 +202,38 @@ Redis and ARDB overview
 | | |
 | item_pgp_mail:*item_path* | *mail* |
 
+#### Cryptocurrency
+
+Supported cryptocurrency:
+- bitcoin
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| cryptocurrency_metadata_**cryptocurrency name**:**cryptocurrency address** | first_seen | **date** |
+| | last_seen | **date** |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| set_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **item_path** |
+
+##### Hset date:
+| Key | Field | Value |
+| ------ | ------ |
+| cryptocurrency_**cryptocurrency name**:**date** | **cryptocurrency address** | **nb seen** |
+
+##### zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| cryptocurrency_all:**cryptocurrency name** | **cryptocurrency address** | **nb seen** |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| item_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** |
+
+
 ## DB9 - Crawler:
 
 ##### Hset:

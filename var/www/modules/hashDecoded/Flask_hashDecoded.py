@@ -13,6 +13,8 @@ from Date import Date
 from io import BytesIO
 import zipfile
 
+from hashlib import sha256
+
 import requests
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, send_file
 
@@ -157,6 +159,38 @@ def get_all_pgp_from_item(item_path):
 
 def one():
     return 1
+
+def decode_base58(bc, length):
+    n = 0
+    for char in bc:
+        n = n * 58 + digits58.index(char)
+    return n.to_bytes(length, 'big')
+
+def check_bc(bc):
+    try:
+        bcbytes = decode_base58(bc, 25)
+        return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
+    except Exception:
+        return False
+
+def get_bitcoin_address_metadata(bitcoin_address):
+    address_metadata = {}
+    if r_serv_metadata.exists('bitcoin_metadata:{}'.format(bitcoin_address)):
+        address_metadata['first_seen'] = r_serv_metadata.hget('bitcoin_metadata:{}'.format(bitcoin_address), 'first_seen')
+        address_metadata['first_seen'] = '{}/{}/{}'.format(address_metadata['first_seen'][0:4], address_metadata['first_seen'][4:6], address_metadata['first_seen'][6:8])
+        address_metadata['last_seen'] = r_serv_metadata.hget('bitcoin_metadata:{}'.format(bitcoin_address), 'last_seen')
+        address_metadata['last_seen'] = '{}/{}/{}'.format(address_metadata['last_seen'][0:4], address_metadata['last_seen'][4:6], address_metadata['last_seen'][6:8])
+        address_metadata['nb_seen'] = r_serv_metadata.scard('bitcoin:{}'.format(bitcoin_address))
+    return address_metadata
+
+def list_sparkline_bitcoin_values(date_range_sparkline, bitcoin_address):
+    sparklines_value = []
+    for date_day in date_range_sparkline:
+        nb_seen_this_day = r_serv_metadata.hget('bitcoin:{}'.format(bitcoin_address), bitcoin_address)
+        if nb_seen_this_day is None:
+            nb_seen_this_day = 0
+        sparklines_value.append(int(nb_seen_this_day))
+    return sparklines_value
 
 # ============= ROUTES ==============
 @hashDecoded.route("/hashDecoded/all_hash_search", methods=['POST'])
@@ -777,7 +811,7 @@ def update_vt_result():
         # TODO FIXME make json response
         return jsonify()
 
-## PGPDump ##
+############################ PGPDump ############################
 
 @hashDecoded.route("/decoded/pgpdump", methods=['GET'])
 def pgpdump_page():
@@ -1068,6 +1102,30 @@ def pgp_by_type_json():
         return jsonify(range_decoder)
     else:
         return jsonify()
+
+############################ Bitcoin ############################
+'''
+@hashDecoded.route('/correlation/show_bitcoin_address')
+def show_bitcoin_address():
+    bitcoin_address = request.args.get('bitcoin_address')
+
+    # validate user input
+    if check_bc(bitcoin_address):
+        bitcoin_address_metadata = get_bitcoin_address_metadata(bitcoin_address)
+        if bitcoin_address_metadata:
+
+            num_day_sparkline = 6
+            date_range_sparkline = get_date_range(num_day_sparkline)
+
+            sparkline_values = list_sparkline_bitcoin_values(date_range_sparkline, bitcoin_address)
+            return render_template('showPgpDump.html', bitcoin_address=bitcoin_address,
+                            key_id_metadata=bitcoin_address_metadata,
+                            sparkline_values=sparkline_values)
+        else:
+            return '404'
+    else:
+        return 'error'
+'''
 
 # ========= REGISTRATION =========
 app.register_blueprint(hashDecoded, url_prefix=baseUrl)

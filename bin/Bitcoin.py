@@ -44,6 +44,7 @@ def check_bc(bc):
 def search_key(content, message, paste):
     bitcoin_address = re.findall(regex_bitcoin_public_address, content)
     bitcoin_private_key = re.findall(regex_bitcoin_private_key, content)
+    date = str(paste._get_p_date())
     validate_address = False
     key = False
     if(len(bitcoin_address) >0):
@@ -56,6 +57,8 @@ def search_key(content, message, paste):
                     for private_key in bitcoin_private_key:
                         print('Bitcoin private key found : {}'.format(private_key))
                         key = True
+                # build bitcoin correlation
+                save_bitcoin_data(date, message, address):
 
         if(validate_address):
             p.populate_set_out(message, 'Duplicate')
@@ -74,6 +77,31 @@ def search_key(content, message, paste):
                                                     paste.p_name)
                 publisher.warning('{}Detected {} Bitcoin private key;{}'.format(
                     to_print, len(bitcoin_private_key),paste.p_rel_path))
+
+def save_bitcoin_data(cryptocurrency_name, date, item_path, cryptocurrency_address):
+    # create basic medata
+    if not serv_metadata.exists('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address)):
+        serv_metadata.hset('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'first_seen', date)
+        serv_metadata.hset('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'last_seen', date)
+    else:
+        last_seen = serv_metadata.hget('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'last_seen')
+        if not last_seen:
+            serv_metadata.hset('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'last_seen', date)
+        else:
+            if int(last_seen) < int(date):
+                serv_metadata.hset('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'last_seen', date)
+
+    # global set
+    serv_metadata.sadd('set_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), item_path)
+
+    # daily
+    serv_metadata.hincrby('cryptocurrency_{}:{}'.format(cryptocurrency_name, date), cryptocurrency_address, 1)
+
+    # all type
+    serv_metadata.zincrby('cryptocurrency_all:{}'.format(cryptocurrency_name), cryptocurrency_address, 1)
+
+    # item_metadata
+    serv_metadata.sadd('item_cryptocurrency_{}:{}'.format(cryptocurrency_name, item_path), cryptocurrency_address)
 
 if __name__ == "__main__":
     publisher.port = 6380
