@@ -31,6 +31,10 @@ PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 hashDecoded = Blueprint('hashDecoded', __name__, template_folder='templates')
 
+## TODO: put me in option
+all_cryptocurrency = ['bitcoin', 'monero']
+all_pgpdump = ['key', 'name', 'mail']
+
 # ============ FUNCTIONS ============
 
 def get_date_range(num_day):
@@ -57,15 +61,6 @@ def list_sparkline_values(date_range_sparkline, hash):
     sparklines_value = []
     for date_day in date_range_sparkline:
         nb_seen_this_day = r_serv_metadata.zscore('hash_date:'+date_day, hash)
-        if nb_seen_this_day is None:
-            nb_seen_this_day = 0
-        sparklines_value.append(int(nb_seen_this_day))
-    return sparklines_value
-
-def list_sparkline_pgp_values(date_range_sparkline, type_id, key_id):
-    sparklines_value = []
-    for date_day in date_range_sparkline:
-        nb_seen_this_day = r_serv_metadata.hget('pgp:{}:{}'.format(type_id, date_day), key_id)
         if nb_seen_this_day is None:
             nb_seen_this_day = 0
         sparklines_value.append(int(nb_seen_this_day))
@@ -103,63 +98,98 @@ def get_file_icon_text(estimated_type):
 
     return file_icon_text
 
-def get_pgp_id_icon_text(type_id):
-    # set type_id icon
-    if type_id == 'key':
-        file_icon_text = '\uf084'
-    elif type_id == 'name':
-        file_icon_text = '\uf507'
-    elif type_id == 'mail':
-        file_icon_text = '\uf1fa'
-    else:
-        file_icon_text = '\uf249'
-    return file_icon_text
+def get_icon(correlation_type, type_id):
+    icon_text =  'fas fa-sticky-note'
+    if correlation_type == 'pgpdump':
+        # set type_id icon
+        if type_id == 'key':
+            icon_text = 'fas fa-key'
+        elif type_id == 'name':
+            icon_text = 'fas fa-user-tag'
+        elif type_id == 'mail':
+            icon_text = 'fas fa-at'
+        else:
+            icon_text = 'times'
+    elif correlation_type == 'cryptocurrency':
+        if type_id == 'bitcoin':
+            icon_text = 'fab fa-btc'
+        elif type_id == 'monero':
+            icon_text = 'fab fa-monero'
+        elif type_id == 'ethereum':
+            icon_text = 'fab fa-ethereum'
+        else:
+            icon_text = 'fas fa-coins'
+    return icon_text
 
-def get_pgp_icon(type_id):
-    # set type_id icon
-    if type_id == 'key':
-        pgp_icon_text = 'key'
-    elif type_id == 'name':
-        pgp_icon_text = 'user-tag'
-    elif type_id == 'mail':
-        pgp_icon_text = 'at'
-    else:
-        pgp_icon_text = 'times'
-    return pgp_icon_text
+def get_icon_text(correlation_type, type_id):
+    icon_text = '\uf249'
+    if correlation_type == 'pgpdump':
+        if type_id == 'key':
+            icon_text = '\uf084'
+        elif type_id == 'name':
+            icon_text = '\uf507'
+        elif type_id == 'mail':
+            icon_text = '\uf1fa'
+        else:
+            icon_text = 'times'
+    elif correlation_type == 'cryptocurrency':
+        if type_id == 'bitcoin':
+            icon_text = '\uf15a'
+        elif type_id == 'monero':
+            icon_text = '\uf3d0'
+        elif type_id == 'ethereum':
+            icon_text = '\uf42e'
+        else:
+            icon_text = '\uf51e'
+    return icon_text
 
-def verify_pgp_type_id(type_id):
-    if type_id in ['key', 'name', 'mail']:
+def get_all_types_id(correlation_type):
+    if correlation_type  == 'pgpdump':
+        return all_pgpdump
+    elif correlation_type == 'cryptocurrency':
+        return all_cryptocurrency
+    else:
+        return []
+
+def is_valid_type_id(correlation_type, type_id):
+    all_type_id = get_all_types_id(correlation_type)
+    if type_id in all_type_id:
         return True
     else:
         return False
 
-def get_key_id_metadata(type_id, key_id):
+def get_key_id_metadata(correlation_type, type_id, key_id):
     key_id_metadata = {}
-    if r_serv_metadata.exists('pgp_metadata_{}:{}'.format(type_id, key_id)):
-        key_id_metadata['first_seen'] = r_serv_metadata.hget('pgp_metadata_{}:{}'.format(type_id, key_id), 'first_seen')
+    if r_serv_metadata.exists('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id)):
+        key_id_metadata['first_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id), 'first_seen')
         key_id_metadata['first_seen'] = '{}/{}/{}'.format(key_id_metadata['first_seen'][0:4], key_id_metadata['first_seen'][4:6], key_id_metadata['first_seen'][6:8])
-        key_id_metadata['last_seen'] = r_serv_metadata.hget('pgp_metadata_{}:{}'.format(type_id, key_id), 'last_seen')
+        key_id_metadata['last_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id), 'last_seen')
         key_id_metadata['last_seen'] = '{}/{}/{}'.format(key_id_metadata['last_seen'][0:4], key_id_metadata['last_seen'][4:6], key_id_metadata['last_seen'][6:8])
-        key_id_metadata['nb_seen'] = r_serv_metadata.scard('pgp_{}:{}'.format(type_id, key_id))
+        key_id_metadata['nb_seen'] = r_serv_metadata.scard('set_{}_{}:{}'.format(correlation_type, type_id, key_id))
     return key_id_metadata
 
-def get_all_pgp_from_item(item_path):
-    all_pgp_dump = set()
+def list_sparkline_type_id_values(date_range_sparkline, correlation_type, type_id, key_id):
+    sparklines_value = []
+    for date_day in date_range_sparkline:
+        nb_seen_this_day = r_serv_metadata.hget('{}:{}:{}'.format(correlation_type, type_id, date_day), key_id)
+        if nb_seen_this_day is None:
+            nb_seen_this_day = 0
+        sparklines_value.append(int(nb_seen_this_day))
+    return sparklines_value
+
+def get_all_keys_id_from_item(correlation_type, item_path):
+    all_keys_id_dump = set()
     if item_path is not None:
-        res = r_serv_metadata.smembers('item_pgp_key:{}'.format(item_path))
-        for pgp_dump in res:
-            all_pgp_dump.add( (pgp_dump, 'key') )
-        res = r_serv_metadata.smembers('item_pgp_name:{}'.format(item_path))
-        for pgp_dump in res:
-            all_pgp_dump.add( (pgp_dump, 'name') )
-        res = r_serv_metadata.smembers('item_pgp_mail:{}'.format(item_path))
-        for pgp_dump in res:
-            all_pgp_dump.add( (pgp_dump, 'mail') )
-    return all_pgp_dump
+        for type_id in get_all_types_id(correlation_type):
+            res = r_serv_metadata.smembers('item_{}_{}:{}'.format(correlation_type, type_id, item_path))
+            for key_id in res:
+                all_keys_id_dump.add( (key_id, type_id) )
+    return all_keys_id_dump
 
 def one():
     return 1
 
+'''
 def decode_base58(bc, length):
     n = 0
     for char in bc:
@@ -172,25 +202,275 @@ def check_bc(bc):
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
     except Exception:
         return False
+'''
 
-def get_bitcoin_address_metadata(bitcoin_address):
-    address_metadata = {}
-    if r_serv_metadata.exists('bitcoin_metadata:{}'.format(bitcoin_address)):
-        address_metadata['first_seen'] = r_serv_metadata.hget('bitcoin_metadata:{}'.format(bitcoin_address), 'first_seen')
-        address_metadata['first_seen'] = '{}/{}/{}'.format(address_metadata['first_seen'][0:4], address_metadata['first_seen'][4:6], address_metadata['first_seen'][6:8])
-        address_metadata['last_seen'] = r_serv_metadata.hget('bitcoin_metadata:{}'.format(bitcoin_address), 'last_seen')
-        address_metadata['last_seen'] = '{}/{}/{}'.format(address_metadata['last_seen'][0:4], address_metadata['last_seen'][4:6], address_metadata['last_seen'][6:8])
-        address_metadata['nb_seen'] = r_serv_metadata.scard('bitcoin:{}'.format(bitcoin_address))
-    return address_metadata
+def get_correlation_type_search_endpoint(correlation_type):
+    if correlation_type == 'pgpdump':
+        endpoint = 'hashDecoded.all_pgpdump_search'
+    elif correlation_type == 'cryptocurrency':
+        endpoint = 'hashDecoded.all_cryptocurrency_search'
+    else:
+        endpoint = 'hashDecoded.hashDecoded_page'
+    return endpoint
 
-def list_sparkline_bitcoin_values(date_range_sparkline, bitcoin_address):
-    sparklines_value = []
-    for date_day in date_range_sparkline:
-        nb_seen_this_day = r_serv_metadata.hget('bitcoin:{}'.format(bitcoin_address), bitcoin_address)
-        if nb_seen_this_day is None:
-            nb_seen_this_day = 0
-        sparklines_value.append(int(nb_seen_this_day))
-    return sparklines_value
+def get_correlation_type_page_endpoint(correlation_type):
+    if correlation_type == 'pgpdump':
+        endpoint = 'hashDecoded.pgpdump_page'
+    elif correlation_type == 'cryptocurrency':
+        endpoint = 'hashDecoded.cryptocurrency_page'
+    else:
+        endpoint = 'hashDecoded.hashDecoded_page'
+    return endpoint
+
+def get_show_key_id_endpoint(correlation_type):
+    if correlation_type == 'pgpdump':
+        endpoint = 'hashDecoded.show_pgpdump'
+    elif correlation_type == 'cryptocurrency':
+        endpoint = 'hashDecoded.show_cryptocurrency'
+    else:
+        endpoint = 'hashDecoded.hashDecoded_page'
+    return endpoint
+
+def get_range_type_json_endpoint(correlation_type):
+    if correlation_type == 'pgpdump':
+        endpoint = 'hashDecoded.pgpdump_range_type_json'
+    elif correlation_type == 'cryptocurrency':
+        endpoint = 'hashDecoded.cryptocurrency_range_type_json'
+    else:
+        endpoint = 'hashDecoded.hashDecoded_page'
+    return endpoint
+
+def get_graph_node_json_endpoint(correlation_type):
+    if correlation_type == 'pgpdump':
+        endpoint = 'hashDecoded.pgpdump_graph_node_json'
+    elif correlation_type == 'cryptocurrency':
+        endpoint = 'hashDecoded.cryptocurrency_graph_node_json'
+    else:
+        endpoint = 'hashDecoded.hashDecoded_page'
+    return endpoint
+
+def get_graph_line_json_endpoint(correlation_type):
+    if correlation_type == 'pgpdump':
+        endpoint = 'hashDecoded.pgpdump_graph_line_json'
+    elif correlation_type == 'cryptocurrency':
+        endpoint = 'hashDecoded.cryptocurrency_graph_line_json'
+    else:
+        endpoint = 'hashDecoded.hashDecoded_page'
+    return endpoint
+
+def get_font_family(correlation_type):
+    if correlation_type == 'pgpdump':
+        font = 'fa'
+    elif correlation_type == 'cryptocurrency':
+        font = 'fab'
+    else:
+        font = 'fa'
+    return font
+
+############ CORE CORRELATION ############
+
+def main_correlation_page(correlation_type, type_id, date_from, date_to, show_decoded_files):
+
+    if type_id == 'All types':
+        type_id = None
+
+    # verify type input
+    if type_id is not None:
+        #retrieve char
+        type_id = type_id.replace(' ', '')
+        if not is_valid_type_id(correlation_type, type_id):
+            type_id = None
+
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        try:
+            if len(date_from) != 8:
+                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+            date_range = substract_date(date_from, date_to)
+        except:
+            pass
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+        date_from = date_range[0][0:4] + '-' + date_range[0][4:6] + '-' + date_range[0][6:8]
+        date_to = date_from
+
+    else:
+        date_from = date_from[0:4] + '-' + date_from[4:6] + '-' + date_from[6:8]
+        date_to = date_to[0:4] + '-' + date_to[4:6] + '-' + date_to[6:8]
+
+    # display day type bar chart
+    if len(date_range) == 1 and type is None:
+        daily_type_chart = True
+        daily_date = date_range[0]
+    else:
+        daily_type_chart = False
+        daily_date = None
+
+    if type_id is None:
+        all_type_id = get_all_types_id(correlation_type)
+    else:
+        all_type_id = type_id
+
+    l_keys_id_dump = set()
+    if show_decoded_files:
+        for date in date_range:
+            if isinstance(all_type_id, str):
+                l_dump = r_serv_metadata.hkeys('{}:{}:{}'.format(correlation_type, all_type_id, date))
+                if l_dump:
+                    for dump in l_dump:
+                        l_keys_id_dump.add( (dump, all_type_id) )
+            else:
+                for typ_id in all_type_id:
+                    l_dump = r_serv_metadata.hkeys('{}:{}:{}'.format(correlation_type, typ_id, date))
+                    if l_dump:
+                        for dump in l_dump:
+                            l_keys_id_dump.add( (dump, typ_id) )
+
+
+    num_day_sparkline = 6
+    date_range_sparkline = get_date_range(num_day_sparkline)
+
+    sparkline_id = 0
+    keys_id_metadata = {}
+    for dump_res in l_keys_id_dump:
+        new_key_id, typ_id = dump_res
+
+        keys_id_metadata[new_key_id] = get_key_id_metadata(correlation_type, typ_id, new_key_id)
+
+        if keys_id_metadata[new_key_id]:
+            keys_id_metadata[new_key_id]['type_id'] = typ_id
+            keys_id_metadata[new_key_id]['type_icon'] = get_icon(correlation_type, typ_id)
+
+            keys_id_metadata[new_key_id]['sparklines_data'] = list_sparkline_type_id_values(date_range_sparkline, correlation_type, typ_id, new_key_id)
+            keys_id_metadata[new_key_id]['sparklines_id'] = sparkline_id
+            sparkline_id += 1
+
+    l_type = get_all_types_id(correlation_type)
+
+    return render_template("DaysCorrelation.html", all_metadata=keys_id_metadata,
+                                                correlation_type=correlation_type,
+                                                correlation_type_endpoint=get_correlation_type_page_endpoint(correlation_type),
+                                                correlation_type_search_endpoint=get_correlation_type_search_endpoint(correlation_type),
+                                                show_key_id_endpoint=get_show_key_id_endpoint(correlation_type),
+                                                range_type_json_endpoint=get_range_type_json_endpoint(correlation_type),
+                                                l_type=l_type, type_id=type_id,
+                                                daily_type_chart=daily_type_chart, daily_date=daily_date,
+                                                date_from=date_from, date_to=date_to,
+                                                show_decoded_files=show_decoded_files)
+
+def show_correlation(correlation_type, type_id, key_id):
+    if is_valid_type_id(correlation_type, type_id):
+        key_id_metadata = get_key_id_metadata(correlation_type, type_id, key_id)
+        if key_id_metadata:
+
+            num_day_sparkline = 6
+            date_range_sparkline = get_date_range(num_day_sparkline)
+
+            sparkline_values = list_sparkline_type_id_values(date_range_sparkline, correlation_type, type_id, key_id)
+            return render_template('showCorrelation.html', key_id=key_id, type_id=type_id,
+                            correlation_type=correlation_type,
+                            graph_node_endpoint=get_graph_node_json_endpoint(correlation_type),
+                            graph_line_endpoint=get_graph_line_json_endpoint(correlation_type),
+                            font_family=get_font_family(correlation_type),
+                            key_id_metadata=key_id_metadata,
+                            type_icon=get_icon(correlation_type, type_id),
+                            sparkline_values=sparkline_values)
+        else:
+            return '404'
+    else:
+        return 'error'
+
+def correlation_type_range_type_json(correlation_type, date_from, date_to):
+    date_range = []
+    if date_from is not None and date_to is not None:
+        #change format
+        if len(date_from) != 8:
+            date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+            date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+        date_range = substract_date(date_from, date_to)
+
+    if not date_range:
+        date_range.append(datetime.date.today().strftime("%Y%m%d"))
+
+    range_type = []
+    all_types_id = get_all_types_id(correlation_type)
+
+    # one day
+    if len(date_range) == 1:
+        for type_id in all_types_id:
+            day_type = {}
+            # init 0
+            for typ_id in all_types_id:
+                day_type[typ_id] = 0
+            day_type['date'] = type_id
+            num_day_type_id = 0
+            all_keys = r_serv_metadata.hvals('{}:{}:{}'.format(correlation_type, type_id, date_range[0]))
+            if all_keys:
+                for val in all_keys:
+                    num_day_type_id += int(val)
+            day_type[type_id]= num_day_type_id
+
+            #if day_type[type_id] != 0:
+            range_type.append(day_type)
+
+    else:
+        # display type_id
+        for date in date_range:
+            day_type = {}
+            day_type['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+            for type_id in all_types_id:
+                num_day_type_id = 0
+                all_keys = r_serv_metadata.hvals('{}:{}:{}'.format(correlation_type, type_id, date))
+                if all_keys:
+                    for val in all_keys:
+                        num_day_type_id += int(val)
+                day_type[type_id]= num_day_type_id
+            range_type.append(day_type)
+
+    return jsonify(range_type)
+
+def correlation_graph_node_json(correlation_type, type_id, key_id):
+    if key_id is not None and is_valid_type_id(correlation_type, type_id):
+
+        nodes_set_dump = set()
+        nodes_set_paste = set()
+        links_set = set()
+
+        key_id_metadata = get_key_id_metadata(correlation_type, type_id, key_id)
+
+        nodes_set_dump.add((key_id, 1, type_id, key_id_metadata['first_seen'], key_id_metadata['last_seen'], key_id_metadata['nb_seen']))
+
+        #get related paste
+        l_pastes = r_serv_metadata.smembers('set_{}_{}:{}'.format(correlation_type, type_id, key_id))
+        for paste in l_pastes:
+            nodes_set_paste.add((paste, 2))
+            links_set.add((key_id, paste))
+
+            for key_id_with_type_id in get_all_keys_id_from_item(correlation_type, paste):
+                new_key_id, typ_id = key_id_with_type_id
+                if new_key_id != key_id:
+
+                    key_id_metadata = get_key_id_metadata(correlation_type, typ_id, new_key_id)
+
+                    nodes_set_dump.add((new_key_id, 3, typ_id, key_id_metadata['first_seen'], key_id_metadata['last_seen'], key_id_metadata['nb_seen']))
+                    links_set.add((new_key_id, paste))
+
+        nodes = []
+        for node in nodes_set_dump:
+            nodes.append({"id": node[0], "group": node[1], "first_seen": node[3], "last_seen": node[4], "nb_seen_in_paste": node[5], 'icon': get_icon_text(correlation_type, node[2]),"url": url_for(get_show_key_id_endpoint(correlation_type), hash=node[0]), 'hash': True})
+        for node in nodes_set_paste:
+            nodes.append({"id": node[0], "group": node[1],"url": url_for('showsavedpastes.showsavedpaste', paste=node[0]), 'hash': False})
+        links = []
+        for link in links_set:
+            links.append({"source": link[0], "target": link[1]})
+        json = {"nodes": nodes, "links": links}
+        return jsonify(json)
+
+    else:
+        return jsonify({})
 
 # ============= ROUTES ==============
 @hashDecoded.route("/hashDecoded/all_hash_search", methods=['POST'])
@@ -201,15 +481,6 @@ def all_hash_search():
     encoding = request.form.get('encoding')
     show_decoded_files = request.form.get('show_decoded_files')
     return redirect(url_for('hashDecoded.hashDecoded_page', date_from=date_from, date_to=date_to, type=type, encoding=encoding, show_decoded_files=show_decoded_files))
-
-@hashDecoded.route("/hashDecoded/all_pgp_dump_search", methods=['POST'])
-def all_pgp_dump_search():
-    date_from = request.form.get('date_from')
-    date_to = request.form.get('date_to')
-    type_id = request.form.get('type')
-    show_decoded_files = request.form.get('show_decoded_files')
-    return redirect(url_for('hashDecoded.pgpdump_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
-
 
 @hashDecoded.route("/hashDecoded/", methods=['GET'])
 def hashDecoded_page():
@@ -813,253 +1084,6 @@ def update_vt_result():
 
 ############################ PGPDump ############################
 
-@hashDecoded.route("/decoded/pgpdump", methods=['GET'])
-def pgpdump_page():
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    type_id = request.args.get('type_id')
-
-    show_decoded_files = request.args.get('show_decoded_files')
-
-    if type_id == 'All types':
-        type_id = None
-
-    # verify type input
-    if type_id is not None:
-        #retrieve char
-        type_id = type_id.replace(' ', '')
-        if not verify_pgp_type_id(type_id):
-            type_id = None
-
-    date_range = []
-    if date_from is not None and date_to is not None:
-        #change format
-        try:
-            if len(date_from) != 8:
-                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
-                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
-            date_range = substract_date(date_from, date_to)
-        except:
-            pass
-
-    if not date_range:
-        date_range.append(datetime.date.today().strftime("%Y%m%d"))
-        date_from = date_range[0][0:4] + '-' + date_range[0][4:6] + '-' + date_range[0][6:8]
-        date_to = date_from
-
-    else:
-        date_from = date_from[0:4] + '-' + date_from[4:6] + '-' + date_from[6:8]
-        date_to = date_to[0:4] + '-' + date_to[4:6] + '-' + date_to[6:8]
-
-    # display day type bar chart
-    if len(date_range) == 1 and type is None:
-        daily_type_chart = True
-        daily_date = date_range[0]
-    else:
-        daily_type_chart = False
-        daily_date = None
-
-    if type_id is None:
-        all_type_id = ['key', 'name', 'mail']
-    else:
-        all_type_id = type_id
-
-    l_pgp_dump = set()
-    if show_decoded_files:
-        for date in date_range:
-            if isinstance(all_type_id, str):
-                l_dump = r_serv_metadata.hkeys('pgp:{}:{}'.format(all_type_id, date))
-                if l_dump:
-                    for dump in l_dump:
-                        l_pgp_dump.add( (dump, all_type_id) )
-            else:
-                for typ_id in all_type_id:
-                    l_dump = r_serv_metadata.hkeys('pgp:{}:{}'.format(typ_id, date))
-                    if l_dump:
-                        for dump in l_dump:
-                            l_pgp_dump.add( (dump, typ_id) )
-
-
-    num_day_sparkline = 6
-    date_range_sparkline = get_date_range(num_day_sparkline)
-
-    sparkline_id = 0
-    pgp_metadata = {}
-    for dump_res in l_pgp_dump:
-        dump_id, typ_id = dump_res
-
-        pgp_metadata[dump_id] = get_key_id_metadata(typ_id, dump_id)
-
-        if pgp_metadata[dump_id]:
-            pgp_metadata[dump_id]['type_id'] = typ_id
-            pgp_metadata[dump_id]['type_icon'] = get_pgp_icon(typ_id)
-
-            pgp_metadata[dump_id]['sparklines_data'] = list_sparkline_pgp_values(date_range_sparkline, typ_id, dump_id)
-            pgp_metadata[dump_id]['sparklines_id'] = sparkline_id
-            sparkline_id += 1
-
-    l_type = ['key', 'name', 'mail']
-
-    return render_template("PgpDecoded.html", l_pgpdump=pgp_metadata,
-                                                l_type=l_type, type_id=type_id, daily_type_chart=daily_type_chart, daily_date=daily_date,
-                                                date_from=date_from, date_to=date_to, show_decoded_files=show_decoded_files)
-
-
-
-
-
-@hashDecoded.route('/decoded/show_pgpdump')
-def show_pgpdump():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-
-    if verify_pgp_type_id(type_id):
-        key_id_metadata = get_key_id_metadata(type_id, key_id)
-        if key_id_metadata:
-
-            num_day_sparkline = 6
-            date_range_sparkline = get_date_range(num_day_sparkline)
-
-            sparkline_values = list_sparkline_pgp_values(date_range_sparkline, type_id, key_id)
-            return render_template('showPgpDump.html', key_id=key_id, type_id=type_id,
-                            key_id_metadata=key_id_metadata,
-                            sparkline_values=sparkline_values)
-        else:
-            return '404'
-    else:
-        return 'error'
-
-@hashDecoded.route('/decoded/pgp_dump_graph_node_json')
-def pgp_dump_graph_node_json():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-
-    if key_id is not None and verify_pgp_type_id(type_id):
-
-        nodes_set_pgp_dump = set()
-        nodes_set_paste = set()
-        links_set = set()
-
-        pgp_id_metadata = get_key_id_metadata(type_id, key_id)
-
-        #key_id = '</b><script>alert("Hello! I am an alert box!!");</script>'
-
-        nodes_set_pgp_dump.add((key_id, 1, type_id, pgp_id_metadata['first_seen'], pgp_id_metadata['last_seen'], pgp_id_metadata['nb_seen']))
-
-        #get related paste
-        l_pastes = r_serv_metadata.smembers('pgp_{}:{}'.format(type_id, key_id))
-        for paste in l_pastes:
-            nodes_set_paste.add((paste, 2))
-            links_set.add((key_id, paste))
-
-            l_pgpdump = get_all_pgp_from_item(paste)
-            for pgp_dump_with_type in l_pgpdump:
-                pgp_dump, pgp_type_id = pgp_dump_with_type
-                if pgp_dump != key_id:
-
-                    pgp_id_metadata = get_key_id_metadata(pgp_type_id, pgp_dump)
-
-                    nodes_set_pgp_dump.add((pgp_dump, 3, pgp_type_id, pgp_id_metadata['first_seen'], pgp_id_metadata['last_seen'], pgp_id_metadata['nb_seen']))
-                    links_set.add((pgp_dump, paste))
-
-        nodes = []
-        for node in nodes_set_pgp_dump:
-            nodes.append({"id": node[0], "group": node[1], "first_seen": node[3], "last_seen": node[4], "nb_seen_in_paste": node[5], 'icon': get_pgp_id_icon_text(node[2]),"url": url_for('hashDecoded.showHash', hash=node[0]), 'hash': True})
-        for node in nodes_set_paste:
-            nodes.append({"id": node[0], "group": node[1],"url": url_for('showsavedpastes.showsavedpaste', paste=node[0]), 'hash': False})
-        links = []
-        for link in links_set:
-            links.append({"source": link[0], "target": link[1]})
-        json = {"nodes": nodes, "links": links}
-        return jsonify(json)
-
-    else:
-        return jsonify({})
-
-@hashDecoded.route('/hashDecoded/pgp_graph_line_json')
-def pgp_graph_line_json():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-
-    # verify input
-    if key_id is not None and verify_pgp_type_id(type_id) and r_serv_metadata.exists('pgp_metadata_{}:{}'.format(type_id, key_id)):
-
-        if date_from is None or date_to is None:
-            nb_days_seen_in_pastes = 30
-        else:
-            # # TODO: # FIXME:
-            nb_days_seen_in_pastes = 30
-
-        date_range_seen_in_pastes = get_date_range(nb_days_seen_in_pastes)
-
-        json_seen_in_paste = []
-        for date in date_range_seen_in_pastes:
-            nb_seen_this_day = r_serv_metadata.zscore('hash_date:'+date, hash)
-            if nb_seen_this_day is None:
-                nb_seen_this_day = 0
-            date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
-            json_seen_in_paste.append({'date': date, 'value': int(nb_seen_this_day)})
-
-        return jsonify(json_seen_in_paste)
-    else:
-        return jsonify()
-
-@hashDecoded.route('/decoded/pgp_range_type_json')
-def pgp_range_type_json():
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-
-    date_range = []
-    if date_from is not None and date_to is not None:
-        #change format
-        if len(date_from) != 8:
-            date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
-            date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
-        date_range = substract_date(date_from, date_to)
-
-    if not date_range:
-        date_range.append(datetime.date.today().strftime("%Y%m%d"))
-
-    range_type = []
-
-    list_type_id = ['key', 'name', 'mail']
-
-
-    if len(date_range) == 1:
-        for type_id in list_type_id:
-            day_type = {}
-            day_type['key'] = 0
-            day_type['name'] = 0
-            day_type['mail'] = 0
-            day_type['date'] = type_id
-            num_day_type_id = 0
-            all_keys = r_serv_metadata.hvals('pgp:{}:{}'.format(type_id, date_range[0]))
-            if all_keys:
-                for val in all_keys:
-                    num_day_type_id += int(val)
-            day_type[type_id]= num_day_type_id
-
-            #if day_type[type_id] != 0:
-            range_type.append(day_type)
-
-    else:
-        # display type_id
-        for date in date_range:
-            day_type = {}
-            day_type['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
-            for type_id in list_type_id:
-                num_day_type_id = 0
-                all_keys = r_serv_metadata.hvals('pgp:{}:{}'.format(type_id, date))
-                if all_keys:
-                    for val in all_keys:
-                        num_day_type_id += int(val)
-                day_type[type_id]= num_day_type_id
-            range_type.append(day_type)
-
-    return jsonify(range_type)
-
 @hashDecoded.route('/decoded/pgp_by_type_json') ## TODO: REFRACTOR
 def pgp_by_type_json():
     type_id = request.args.get('type_id')
@@ -1103,29 +1127,119 @@ def pgp_by_type_json():
     else:
         return jsonify()
 
-############################ Bitcoin ############################
-'''
-@hashDecoded.route('/correlation/show_bitcoin_address')
-def show_bitcoin_address():
-    bitcoin_address = request.args.get('bitcoin_address')
+############################ Correlation ############################
+@hashDecoded.route("/correlation/pgpdump", methods=['GET'])
+def pgpdump_page():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    type_id = request.args.get('type_id')
 
-    # validate user input
-    if check_bc(bitcoin_address):
-        bitcoin_address_metadata = get_bitcoin_address_metadata(bitcoin_address)
-        if bitcoin_address_metadata:
+    show_decoded_files = request.args.get('show_decoded_files')
+    res = main_correlation_page('pgpdump', type_id, date_from, date_to, show_decoded_files)
+    return res
 
-            num_day_sparkline = 6
-            date_range_sparkline = get_date_range(num_day_sparkline)
+@hashDecoded.route("/correlation/cryptocurrency", methods=['GET'])
+def cryptocurrency_page():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    type_id = request.args.get('type_id')
 
-            sparkline_values = list_sparkline_bitcoin_values(date_range_sparkline, bitcoin_address)
-            return render_template('showPgpDump.html', bitcoin_address=bitcoin_address,
-                            key_id_metadata=bitcoin_address_metadata,
-                            sparkline_values=sparkline_values)
+    show_decoded_files = request.args.get('show_decoded_files')
+    res = main_correlation_page('cryptocurrency', type_id, date_from, date_to, show_decoded_files)
+    return res
+
+@hashDecoded.route("/correlation/all_pgpdump_search", methods=['POST'])
+def all_pgpdump_search():
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    type_id = request.form.get('type')
+    show_decoded_files = request.form.get('show_decoded_files')
+    return redirect(url_for('hashDecoded.pgpdump_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
+
+@hashDecoded.route("/correlation/all_cryptocurrency_search", methods=['POST'])
+def all_cryptocurrency_search():
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    type_id = request.form.get('type')
+    show_decoded_files = request.form.get('show_decoded_files')
+    return redirect(url_for('hashDecoded.cryptocurrency_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
+
+@hashDecoded.route('/correlation/show_pgpdump')
+def show_pgpdump():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    return show_correlation('pgpdump', type_id, key_id)
+
+
+@hashDecoded.route('/correlation/show_cryptocurrency')
+def show_cryptocurrency():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    return show_correlation('cryptocurrency', type_id, key_id)
+
+@hashDecoded.route('/correlation/cryptocurrency_range_type_json')
+def cryptocurrency_range_type_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    return correlation_type_range_type_json('cryptocurrency', date_from, date_to)
+
+@hashDecoded.route('/correlation/pgpdump_range_type_json')
+def pgpdump_range_type_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    return correlation_type_range_type_json('pgpdump', date_from, date_to)
+
+@hashDecoded.route('/correlation/pgpdump_graph_node_json')
+def pgpdump_graph_node_json():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    return correlation_graph_node_json('pgpdump', type_id, key_id)
+
+@hashDecoded.route('/correlation/cryptocurrency_graph_node_json')
+def cryptocurrency_graph_node_json():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    return correlation_graph_node_json('cryptocurrency', type_id, key_id)
+
+@hashDecoded.route('/correlation/pgpdump_graph_line_json')
+def pgpdump_graph_line_json():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    return correlation_graph_line_json('pgpdump', type_id, key_id, date_from, date_to)
+
+def correlation_graph_line_json(correlation_type, type_id, key_id, date_from, date_to):
+    # verify input
+    if key_id is not None and is_valid_type_id(correlation_type, type_id) and r_serv_metadata.exists('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id)):
+
+        if date_from is None or date_to is None:
+            nb_days_seen_in_pastes = 30
         else:
-            return '404'
+            # # TODO: # FIXME:
+            nb_days_seen_in_pastes = 30
+
+        date_range_seen_in_pastes = get_date_range(nb_days_seen_in_pastes)
+
+        json_seen_in_paste = []
+        for date in date_range_seen_in_pastes:
+            nb_seen_this_day = r_serv_metadata.hget('{}:{}:{}'.format(correlation_type, type_id, date), key_id)
+            if nb_seen_this_day is None:
+                nb_seen_this_day = 0
+            date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+            json_seen_in_paste.append({'date': date, 'value': int(nb_seen_this_day)})
+
+        return jsonify(json_seen_in_paste)
     else:
-        return 'error'
-'''
+        return jsonify()
+
+@hashDecoded.route('/correlation/cryptocurrency_graph_line_json')
+def cryptocurrency_graph_line_json():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    return correlation_graph_line_json('cryptocurrency', type_id, key_id, date_from, date_to)
 
 # ========= REGISTRATION =========
 app.register_blueprint(hashDecoded, url_prefix=baseUrl)

@@ -21,6 +21,7 @@ from pubsublogger import publisher
 
 import re
 import time
+import redis
 
 from hashlib import sha256
 
@@ -58,7 +59,7 @@ def search_key(content, message, paste):
                         print('Bitcoin private key found : {}'.format(private_key))
                         key = True
                 # build bitcoin correlation
-                save_bitcoin_data(date, message, address):
+                save_cryptocurrency_data('bitcoin', date, message, address)
 
         if(validate_address):
             p.populate_set_out(message, 'Duplicate')
@@ -78,7 +79,7 @@ def search_key(content, message, paste):
                 publisher.warning('{}Detected {} Bitcoin private key;{}'.format(
                     to_print, len(bitcoin_private_key),paste.p_rel_path))
 
-def save_bitcoin_data(cryptocurrency_name, date, item_path, cryptocurrency_address):
+def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrency_address):
     # create basic medata
     if not serv_metadata.exists('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address)):
         serv_metadata.hset('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'first_seen', date)
@@ -95,7 +96,7 @@ def save_bitcoin_data(cryptocurrency_name, date, item_path, cryptocurrency_addre
     serv_metadata.sadd('set_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), item_path)
 
     # daily
-    serv_metadata.hincrby('cryptocurrency_{}:{}'.format(cryptocurrency_name, date), cryptocurrency_address, 1)
+    serv_metadata.hincrby('cryptocurrency:{}:{}'.format(cryptocurrency_name, date), cryptocurrency_address, 1)
 
     # all type
     serv_metadata.zincrby('cryptocurrency_all:{}'.format(cryptocurrency_name), cryptocurrency_address, 1)
@@ -111,6 +112,12 @@ if __name__ == "__main__":
 
     # Setup the I/O queues
     p = Process(config_section)
+
+    serv_metadata = redis.StrictRedis(
+        host=p.config.get("ARDB_Metadata", "host"),
+        port=p.config.getint("ARDB_Metadata", "port"),
+        db=p.config.getint("ARDB_Metadata", "db"),
+        decode_responses=True)
 
     # Sent to the logging a description of the module
     publisher.info("Run Keys module ")

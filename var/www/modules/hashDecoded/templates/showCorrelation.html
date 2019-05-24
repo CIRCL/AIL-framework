@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+
+	  <title>AIL - framework</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+	  <!-- Core CSS -->
+		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	  <!-- JS -->
+		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
+		<style>
+		line.link {
+			stroke: #666;
+		}
+		line.link:hover{
+			stroke: red;
+			stroke-width: 2px
+		}
+		.line_sparkline {
+			fill: none;
+			stroke: #000;
+			stroke-width: 2.0px;
+		}
+		.node {
+			pointer-events: all;
+		}
+
+		circle {
+			stroke: none;
+		}
+
+		.graph_text_node {
+			font: 8px sans-serif;
+			pointer-events: none;
+		}
+
+		.graph_node_icon {
+			pointer-events: none;
+		}
+
+		.node text {
+			font: 8px sans-serif;
+			pointer-events: auto;
+		}
+
+		div.tooltip {
+			position: absolute;
+			text-align: center;
+			padding: 2px;
+			font: 12px sans-serif;
+			background: #ebf4fb;
+			border: 2px solid #b7ddf2;
+			border-radius: 8px;
+			pointer-events: none;
+			color: #000000;
+		}
+
+		.graph_panel {
+			padding: unset;
+		}
+
+		.line_graph {
+		  fill: none;
+		  stroke: steelblue;
+		  stroke-width: 2px;
+			stroke-linejoin: round;
+			stroke-linecap: round;
+			stroke-width: 1.5;
+			/*attr('stroke', '#bcbd22').*/
+		}
+		</style>
+	</head>
+	<body>
+
+		{% include 'nav_bar.html' %}
+
+		<div class="container-fluid">
+			<div class="row">
+
+				{% include 'decoded/menu_sidebar.html' %}
+
+				<div class="col-12 col-lg-10" id="core_content">
+
+					<div class="card my-3">
+						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+							<h4 class="text-secondary">{{ key_id }} :</h4>
+							<ul class="list-group mb-2">
+								<li class="list-group-item py-0">
+									<div class="row">
+										<div class="col-md-10">
+											<table class="table">
+												<thead>
+													<tr>
+														<th>type</th>
+														<th>First_seen</th>
+														<th>Last_seen</th>
+														<th>Nb seen</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr>
+														<td><i class="{{ type_icon }}"></i>&nbsp;&nbsp;{{ type_id }}</td>
+														<td>{{ key_id_metadata['first_seen'] }}</td>
+														<td>{{ key_id_metadata['last_seen'] }}</td>
+														<td>{{ key_id_metadata['nb_seen'] }}</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<div class="col-md-1">
+											<div id="sparkline"></div>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-xl-10">
+
+							<div class="card mb-3">
+								<div class="card-header">
+									<i class="fas fa-project-diagram"></i> Graph
+								</div>
+								<div class="card-body graph_panel">
+									<div id="graph">
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-xl-2">
+
+							<div class="card my-3">
+								<div class="card-header">
+									<i class="fas fa-project-diagram"></i> Graph
+								</div>
+								<div class="card-body text-center px-0 py-0">
+									<button class="btn btn-primary my-4" onclick="resize_graph();">
+										<i class="fas fa-sync"></i>&nbsp;Resize Graph
+									</button>
+
+									{% if correlation_type=='pgpdump' %}
+										{% include 'decoded/show_helper_pgpdump.html' %}
+									{% elif correlation_type=='cryptocurrency' %}
+										{% include 'decoded/show_helper_cryptocurrency.html' %}
+									{% endif %}
+
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-header">
+							<i class="fas fa-chart-bar"></i> Graph
+						</div>
+						<div class="panel-body ">
+							<div id="graph_line">
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+<script>
+var all_graph = {};
+$(document).ready(function(){
+		$("#page-Decoded").addClass("active");
+		sparklines("sparkline", {{ sparkline_values }})
+
+		all_graph.node_graph = create_graph("{{ url_for(graph_node_endpoint) }}?type_id={{type_id}}&key_id={{key_id}}");
+		all_graph.line_chart = create_line_chart('graph_line', "{{ url_for(graph_line_endpoint) }}?type_id={{type_id}}&key_id={{key_id}}");
+		all_graph.onResize();
+});
+
+$(window).on("resize", function() {
+		all_graph.onResize();
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+<script>
+	function resize_graph() {
+		zoom.translateTo(svg_node, 200, 200);
+		zoom.scaleTo(svg_node, 2);
+	}
+
+</script>
+<script>
+//var data = [6,3,3,2,5,3,9];
+
+// a sparklines plot
+function sparklines(id, points) {
+    var width_spark = 100, height_spark = 60;
+
+    var data = []
+    for (i = 0; i < points.length; i++) {
+        data[i] = {
+            'x': i,
+            'y': +points[i]
+        }
+    }
+
+    var x = d3.scaleLinear()
+        .range([0, width_spark - 10])
+        .domain([0,5]);
+
+    var y = d3.scaleLinear()
+        .range([height_spark, 0])
+        .domain([0,10]);
+
+    var line = d3.line()
+                .x(function(d) {return x(d.x)})
+                .y(function(d) {return y(d.y)});
+
+    d3.select("#"+id).append('svg')
+            .attr('width', width_spark)
+            .attr('height', height_spark)
+         .append('path')
+            .attr('class','line_sparkline')
+            .datum(data)
+            .attr('d', line);
+
+}
+</script>
+
+<script>
+var width = 400,
+		height = 400;
+
+var link;
+
+var zoom = d3.zoom()
+	.scaleExtent([.2, 10])
+	.on("zoom", zoomed);
+
+//var transform = d3.zoomIdentity;
+
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+var div = d3.select("body").append("div")
+		.attr("class", "tooltip")
+		.style("opacity", 0);
+
+var simulation = d3.forceSimulation()
+		.force("link", d3.forceLink().id(function(d) { return d.id; }))
+		.force("charge", d3.forceManyBody())
+		.force("center", d3.forceCenter(width / 2, height / 2));
+		//.on("tick", ticked);
+
+var svg_node = d3.select("#graph").append("svg")
+		.attr("id", "graph_div")
+		.attr("width", width)
+		.attr("height", height)
+		.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed))
+		.on("dblclick.zoom", null)
+
+var container_graph = svg_node.append("g");
+		//.attr("transform", "translate(40,0)")
+		//.attr("transform", "scale(2)");
+
+function create_graph(url){
+
+d3.json(url)
+.then(function(data){
+
+	link = container_graph.append("g")
+	.selectAll("line")
+	.data(data.links)
+	.enter().append("line")
+		.attr("class", "link");
+		//.attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+
+	var node = container_graph.selectAll(".node")
+				.data(data.nodes)
+			.enter().append("g")
+			.attr("class", "nodes")
+			.on("dblclick", doubleclick)
+			.on("click", click)
+			.on("mouseover", mouseovered)
+			.on("mouseout", mouseouted)
+			.call(d3.drag()
+					.on("start", drag_start)
+					.on("drag", dragged)
+					.on("end", drag_end));
+
+
+	node.append("circle")
+			.attr("r", function(d) {
+				return (d.hash) ? 6 : 5; })
+			.attr("fill", function(d) {
+				if(!d.hash){ return color(d.group);}
+				if(d.group == 1){ return "orange";}
+				return "rgb(141, 211, 199)"; });
+
+	node.append('text')
+		  .attr('text-anchor', 'middle')
+		  .attr('dominant-baseline', 'central')
+		  .attr("class", "graph_node_icon {{font_family}}")
+    	.attr('font-size', '8px' )
+			.attr('pointer-events', 'none')
+    	.text(function(d) {
+				if(d.hash){
+					return d.icon
+				} });
+
+	zoom.translateTo(svg_node, 200, 200);
+	zoom.scaleTo(svg_node, 2);
+
+/*	node.append("text")
+		      .attr("dy", 3)
+					.attr("dx", 7)
+					.attr("class", "graph_text_node")
+		      //.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+		      .text(function(d) { return d.id; });*/
+
+	simulation
+			.nodes(data.nodes)
+			.on("tick", ticked);
+
+	simulation.force("link")
+			.links(data.links);
+
+	function ticked() {
+		link
+				.attr("x1", function(d) { return d.source.x; })
+				.attr("y1", function(d) { return d.source.y; })
+				.attr("x2", function(d) { return d.target.x; })
+				.attr("y2", function(d) { return d.target.y; });
+
+		/*node
+				.attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });*/
+		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+	}
+
+});
+}
+
+function zoomed() {
+	container_graph.attr("transform", d3.event.transform);
+}
+
+function doubleclick (d) {
+window.open(d.url, '_blank');
+}
+
+function click (d) {
+console.log('clicked')
+}
+
+function drag_start(d) {
+if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+d.fx = d.x;
+d.fy = d.y;
+}
+
+function dragged(d) {
+d.fx = d3.event.x;
+d.fy = d3.event.y;
+}
+
+function drag_end(d) {
+if (!d3.event.active) simulation.alphaTarget(0);
+d.fx = d.x;
+d.fy = d.y;
+}
+
+function mouseovered(d) {
+
+// tooltip
+var content;
+
+if(d.hash == true){
+	content = "<b><span id='tooltip-id-name'></span></b><br/>"+
+						"<br/>"+
+						"<i>First seen</i>: <span id='tooltip-id-first_seen'></span><br/>"+
+						"<i>Last seen</i>: <span id='tooltip-id-last_seen'></span><br/>"+
+						"<i>nb_seen</i>: <span id='tooltip-id-nb_seen'></span>";
+
+	div.transition()
+		 .duration(200)
+				.style("opacity", .9);
+	div.html(content)
+		 .style("left", (d3.event.pageX) + "px")
+		 .style("top", (d3.event.pageY - 28) + "px");
+
+	$("#tooltip-id-name").text(d.id);
+	$("#tooltip-id-first_seen").text(d.first_seen);
+	$("#tooltip-id-last_seen").text(d.last_seen);
+	$("#tooltip-id-nb_seen").text(d.nb_seen_in_paste);
+
+} else {
+	content = "<b><span id='tooltip-id-name'></span></b><br/>";
+
+	div.transition()
+		 .duration(200)
+				.style("opacity", .9);
+	div.html(content)
+		 .style("left", (d3.event.pageX) + "px")
+		 .style("top", (d3.event.pageY - 28) + "px");
+
+	$("#tooltip-id-name").text(d.id);
+
+}
+
+	//links
+	/*link.style("stroke-opacity", function(o) {
+			return o.source === d || o.target === d ? 1 : opacity;
+	});*/
+	link.style("stroke", function(o){
+			return o.source === d || o.target === d ? "#666" : "#ddd";
+	});
+}
+
+function mouseouted() {
+	div.transition()
+		.duration(500)
+		.style("opacity", 0);
+
+	link.style("stroke", "#666");
+}
+
+all_graph.onResize = function () {
+	var aspect = 1000 / 500, all_graph = $("#graph_div");
+	var targetWidth = all_graph.parent().width();
+	all_graph.attr("width", targetWidth);
+	all_graph.attr("height", targetWidth / aspect);
+}
+
+window.all_graph = all_graph;
+</script>
+
+<script>
+function create_line_chart(id, url){
+
+	var width = 900;
+	var height = Math.round(width / 4);
+
+	var margin = {top: 20, right: 55, bottom: 50, left: 40};
+
+	var x = d3.scaleTime().range([0, width]);
+	var y = d3.scaleLinear().rangeRound([height, 0]);
+
+	var xAxis = d3.axisBottom(x);
+	var yAxis = d3.axisLeft(y);
+
+	var parseTime = d3.timeParse("%Y-%m-%d");
+
+	var line = d3.line()
+							.x(function(d) {
+          			return x(d.date);
+        			}).y(function(d) {
+          			return y(d.value);
+        			});
+
+	var svg_line = d3.select('#'+id).append('svg')
+				.attr("id", "graph_div")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append('g')
+						.attr('transform', "translate("+ margin.left +","+ margin.top +")");
+
+	var div = d3.select('body').append('div')
+				.attr('class', 'tooltip')
+				.style('opacity', 0);
+
+	//add div tooltip
+
+d3.json(url)
+	.then(function(data){
+
+		data.forEach(function(d) {
+			d.date_label = d.date;
+			d.date = parseTime(d.date);
+			d.value = +d.value;
+		});
+
+		// fit the data
+		x.domain(d3.extent(data, function(d) { return d.date; }));
+		//x.domain(data.map(function (d) { return d.date; })); //E
+		y.domain([0, d3.max(data, function(d){ return d.value ; })]);
+
+		//line
+		svg_line.append("path")
+				.data([data])
+				.attr("class", "line_graph")
+				.attr("d", line);
+
+		// add X axis
+		svg_line.append("g")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(d3.axisBottom(x))
+				.selectAll("text")
+					.style("text-anchor", "end")
+					.attr("transform", "rotate(-45)" );
+
+		// Add the Y Axis
+		svg_line.append("g")
+		    .call(d3.axisLeft(y));
+
+		//add a dot circle
+    svg_line.selectAll('dot')
+				.data(data).enter()
+				.append('circle')
+						.attr('r', 2)
+							.attr('cx', function(d) { return x(d.date); })
+							.attr('cy', function(d) { return y(d.value); })
+
+            	.on('mouseover', function(d) {
+	            	div.transition().style('opacity', .9);
+	            	div.html('' + d.date_label+ '<br/>' + d.value).style('left', (d3.event.pageX) + 'px')
+								.style("left", (d3.event.pageX) + "px")
+								.style("top", (d3.event.pageY - 28) + "px");
+          		})
+            	.on('mouseout', function(d)
+          			{
+            			div.transition().style('opacity', 0);
+          			});
+
+	});
+}
+</script>
+
+        </body>
+
+</html>

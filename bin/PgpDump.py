@@ -90,28 +90,28 @@ def extract_id_from_output(pgp_dump_outpout):
 
 def save_pgp_data(type_pgp, date, item_path, data):
     # create basic medata
-    if not serv_metadata.exists('pgp_{}:{}'.format(type_pgp, data)):
-        serv_metadata.hset('pgp_metadata_{}:{}'.format(type_pgp, data), 'first_seen', date)
-        serv_metadata.hset('pgp_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
+    if not serv_metadata.exists('pgpdump_metadata_{}:{}'.format(type_pgp, data)):
+        serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'first_seen', date)
+        serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
     else:
-        last_seen = serv_metadata.hget('pgp_metadata_{}:{}'.format(type_pgp, data), 'last_seen')
+        last_seen = serv_metadata.hget('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen')
         if not last_seen:
-            serv_metadata.hset('pgp_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
+            serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
         else:
             if int(last_seen) < int(date):
-                serv_metadata.hset('pgp_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
+                serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
 
     # global set
-    serv_metadata.sadd('pgp_{}:{}'.format(type_pgp, data), item_path)
+    serv_metadata.sadd('set_pgpdump_{}:{}'.format(type_pgp, data), item_path)
 
     # daily
-    serv_metadata.hincrby('pgp:{}:{}'.format(type_pgp, date), data, 1)
+    serv_metadata.hincrby('pgpdump:{}:{}'.format(type_pgp, date), data, 1)
 
     # all type
-    serv_metadata.zincrby('pgp_all:{}'.format(type_pgp), data, 1)
+    serv_metadata.zincrby('pgpdump_all:{}'.format(type_pgp), data, 1)
 
     # item_metadata
-    serv_metadata.sadd('item_pgp_{}:{}'.format(type_pgp, item_path), data)
+    serv_metadata.sadd('item_pgpdump_{}:{}'.format(type_pgp, item_path), data)
 
 
 if __name__ == '__main__':
