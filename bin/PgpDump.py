@@ -59,6 +59,9 @@ def extract_all_id(item_content, regex):
 
 def get_pgp_packet(save_path):
     save_path = '{}'.format(save_path)
+    print (len(save_path))
+    if len(save_path) > 131072:
+        save_path = save_path[:131071]
     process1 = subprocess.Popen([ 'echo', '-e', save_path], stdout=subprocess.PIPE)
     process2 = subprocess.Popen([ 'pgpdump'], stdin=process1.stdout, stdout=subprocess.PIPE)
     process1.stdout.close()
