@@ -50,5 +50,11 @@ bash ${AIL_BIN}/LAUNCH.sh -k &
 wait
 
 echo ""
+echo -e $GREEN"Update thirdparty ..."$DEFAULT
+bash ${AIL_BIN}/LAUNCH.sh -t &
+wait
+
+
+echo ""
 
 exit 0
