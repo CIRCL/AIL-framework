@@ -62,11 +62,12 @@ Features
 * Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
 * Automatic paste export at detection on [MISP](https://github.com/MISP/MISP) (events) and [The Hive](https://github.com/TheHive-Project/TheHive) (alerts) on selected tags
 * Extracted and decoded files can be searched by date range, type of file (mime-type) and encoding discovered
-* Graph relationships between decoded file (hashes)
+* Graph relationships between decoded file (hashes), similar PGP UIDs and addresses of cryptocurrencies
 * Tor hidden services crawler to crawl and parse output
 * Tor onion availability is monitored to detect up and down of hidden services
 * Browser hidden services are screenshot and integrated in the analysed output including a blurring screenshot interface (to avoid "burning the eyes" of the security analysis with specific content)
 * Tor hidden services is part of the standard framework, all the AIL modules are available to the crawled hidden services
+* Generic web crawler to trigger crawling on demand or at regular interval URL or Tor hidden services
 
 
 Installation
