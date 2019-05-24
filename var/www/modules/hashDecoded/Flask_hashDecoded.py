@@ -460,7 +460,7 @@ def correlation_graph_node_json(correlation_type, type_id, key_id):
 
         nodes = []
         for node in nodes_set_dump:
-            nodes.append({"id": node[0], "group": node[1], "first_seen": node[3], "last_seen": node[4], "nb_seen_in_paste": node[5], 'icon': get_icon_text(correlation_type, node[2]),"url": url_for(get_show_key_id_endpoint(correlation_type), hash=node[0]), 'hash': True})
+            nodes.append({"id": node[0], "group": node[1], "first_seen": node[3], "last_seen": node[4], "nb_seen_in_paste": node[5], 'icon': get_icon_text(correlation_type, node[2]),"url": url_for(get_show_key_id_endpoint(correlation_type), type_id=node[2], key_id=node[0]), 'hash': True})
         for node in nodes_set_paste:
             nodes.append({"id": node[0], "group": node[1],"url": url_for('showsavedpastes.showsavedpaste', paste=node[0]), 'hash': False})
         links = []
