@@ -32,6 +32,11 @@ sudo make install
 wait
 echo ""
 
+echo ""
+echo -e $GREEN"Update requirement"$DEFAULT
+echo ""
+pip3 install beautifulsoup4
+
 bash ${AIL_BIN}LAUNCH.sh -lav &
 wait
 echo ""
