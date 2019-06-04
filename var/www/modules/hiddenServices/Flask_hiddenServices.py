@@ -25,6 +25,7 @@ baseUrl = Flask_config.baseUrl
 r_cache = Flask_config.r_cache
 r_serv_onion = Flask_config.r_serv_onion
 r_serv_metadata = Flask_config.r_serv_metadata
+crawler_enabled = Flask_config.crawler_enabled
 bootstrap_label = Flask_config.bootstrap_label
 
 hiddenServices = Blueprint('hiddenServices', __name__, template_folder='templates')
@@ -247,6 +248,7 @@ def dashboard():
     statDomains_regular = get_stats_last_crawled_domains('regular', date)
 
     return render_template("Crawler_dashboard.html", crawler_metadata_onion = crawler_metadata_onion,
+                                crawler_enabled=crawler_enabled,
                                 crawler_metadata_regular=crawler_metadata_regular,
                                 statDomains_onion=statDomains_onion, statDomains_regular=statDomains_regular)
 
@@ -256,7 +258,7 @@ def hiddenServices_page_test():
 
 @hiddenServices.route("/crawlers/manual", methods=['GET'])
 def manual():
-    return render_template("Crawler_Splash_manual.html")
+    return render_template("Crawler_Splash_manual.html", crawler_enabled=crawler_enabled)
 
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
 def crawler_splash_onion():
@@ -294,6 +296,7 @@ def Crawler_Splash_last_by_type():
     crawler_metadata = get_crawler_splash_status(type)
 
     return render_template("Crawler_Splash_last_by_type.html", type=type, type_name=type_name,
+                            crawler_enabled=crawler_enabled,
                             last_domains=list_domains, statDomains=statDomains,
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
@@ -507,6 +510,7 @@ def auto_crawler():
 
     return render_template("Crawler_auto.html", page=page, nb_page_max=nb_page_max,
                                 last_domains=last_domains,
+                                crawler_enabled=crawler_enabled,
                                 auto_crawler_domain_onions_metadata=auto_crawler_domain_onions_metadata,
                                 auto_crawler_domain_regular_metadata=auto_crawler_domain_regular_metadata)
 

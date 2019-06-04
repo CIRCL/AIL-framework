@@ -173,6 +173,8 @@ REPO_ORIGIN = 'https://github.com/CIRCL/AIL-framework.git'
 
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
 
+crawler_enabled = cfg.getboolean("Crawler", "activate_crawler")
+
 # VT
 try:
     from virusTotalKEYS import vt_key
