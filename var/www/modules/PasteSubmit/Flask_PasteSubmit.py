@@ -295,10 +295,11 @@ def submit():
     paste_content = request.form['paste_content']
 
     is_file = False
-    file = request.files['file']
-    if file:
-        if file.filename:
-            is_file = True
+    if 'file' in request.files:
+        file = request.files['file']
+        if file:
+            if file.filename:
+                is_file = True
 
     submitted_tag = 'infoleak:submission="manual"'
 
