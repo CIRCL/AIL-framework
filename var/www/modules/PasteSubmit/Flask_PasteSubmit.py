@@ -294,6 +294,12 @@ def submit():
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
 
+    is_file = False
+    file = request.files['file']
+    if file:
+        if file.filename:
+            is_file = True
+
     submitted_tag = 'infoleak:submission="manual"'
 
     #active taxonomies
@@ -312,9 +318,7 @@ def submit():
     else:
         ltags = submitted_tag
 
-    if 'file' in request.files:
-
-        file = request.files['file']
+    if is_file:
         if file:
 
             if file and allowed_file(file.filename):
