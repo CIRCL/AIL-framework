@@ -310,6 +310,7 @@ def submit():
     if ltags or ltagsgalaxies:
         if not addTagsVerification(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
+            print(content)
             return content, 400
 
     # add submitted tags
@@ -358,6 +359,7 @@ def submit():
 
             else:
                 content = 'wrong file type, allowed_extensions: sh, pdf, zip, gz, tar.gz or remove the extension'
+                print(content)
                 return content, 400
 
 
@@ -380,9 +382,11 @@ def submit():
 
         else:
             content = 'size error'
+            print(content)
             return content, 400
 
         content = 'submit aborded'
+        print(content)
         return content, 400
 
 
