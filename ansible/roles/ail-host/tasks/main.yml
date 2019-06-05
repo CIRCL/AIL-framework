@@ -145,15 +145,9 @@
     extra_args: --upgrade
     virtualenv: /opt/AIL-framework/AILENV
 
-- name: Install pip requirements
-  pip:
-    requirements: /opt/AIL-framework/pip_packages_requirement.txt
-    extra_args: --upgrade
-    virtualenv: /opt/AIL-framework/AILENV
-
 - name: Install pip3 requirements
   pip:
-    requirements: /opt/AIL-framework/pip3_packages_requirement.txt
+    requirements: /opt/AIL-framework/requirements.txt
     executable: pip3
     extra_args: --upgrade
 

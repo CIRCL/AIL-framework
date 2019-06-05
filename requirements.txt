@@ -54,6 +54,8 @@ DomainClassifier
 #Indexer requirements
 whoosh
 
+beautifulsoup4
+
 ipaddress
 pycountry
 

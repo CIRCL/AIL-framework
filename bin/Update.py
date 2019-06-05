@@ -145,10 +145,14 @@ def get_git_upper_tags_remote(current_tag, is_fork):
             list_upper_tags = []
             if list_all_tags[-1][1:] == current_tag:
                 list_upper_tags.append( (list_all_tags[-1], None) )
+                # force update order
+                list_upper_tags.sort()
                 return list_upper_tags
             for tag in list_all_tags:
                 if float(tag[1:]) >= float(current_tag):
                     list_upper_tags.append( (tag, None) )
+            # force update order
+            list_upper_tags.sort()
             return list_upper_tags
         else:
             print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
@@ -165,6 +169,8 @@ def get_git_upper_tags_remote(current_tag, is_fork):
             list_upper_tags = []
             if last_tag[1:] == current_tag:
                 list_upper_tags.append( (last_tag, last_commit) )
+                # force update order
+                list_upper_tags.sort()
                 return list_upper_tags
             else:
                 for mess_tag in list_all_tags:
@@ -177,6 +183,8 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                 # add last commit
                 if last_tag not in list_upper_tags[-1][0]:
                     list_upper_tags.append( (last_tag, last_commit) )
+                # force update order
+                list_upper_tags.sort()
                 return list_upper_tags
 
         else:

@@ -168,6 +168,88 @@ Redis and ARDB overview
 | binary_hash:**hash** | **item** | **nb_seen** |
 | hexadecimal_hash:**hash** | **item** | **nb_seen** |
 
+#### PgpDump
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| pgpdump_metadata_key:*key id* | first_seen | **date** |
+| | last_seen | **date** |
+| | |
+| pgpdump_metadata_name:*name* | first_seen | **date** |
+| | last_seen | **date** |
+| | |
+| pgpdump_metadata_mail:*mail* | first_seen | **date** |
+| | last_seen | **date** |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| set_pgpdump_key:*key id* | *item_path* |
+| | |
+| set_pgpdump_name:*name* | *item_path* |
+| | |
+| set_pgpdump_mail:*mail* | *item_path* |
+
+##### Hset date:
+| Key | Field | Value |
+| ------ | ------ |
+| pgpdump:key:*date* | *key* | *nb seen* |
+| | |
+| pgpdump:name:*date* | *name* | *nb seen* |
+| | |
+| pgpdump:mail:*date* | *mail* | *nb seen* |
+
+##### zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| pgpdump_all:key | *key* | *nb seen* |
+| | |
+| pgpdump_all:name | *name* | *nb seen* |
+| | |
+| pgpdump_all:mail | *mail* | *nb seen* |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| item_pgpdump_key:*item_path* | *key* |
+| | |
+| item_pgpdump_name:*item_path* | *name* |
+| | |
+| item_pgpdump_mail:*item_path* | *mail* |
+
+#### Cryptocurrency
+
+Supported cryptocurrency:
+- bitcoin
+
+##### Hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| cryptocurrency_metadata_**cryptocurrency name**:**cryptocurrency address** | first_seen | **date** |
+| | last_seen | **date** |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| set_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **item_path** |
+
+##### Hset date:
+| Key | Field | Value |
+| ------ | ------ |
+| cryptocurrency:**cryptocurrency name**:**date** | **cryptocurrency address** | **nb seen** |
+
+##### zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| cryptocurrency_all:**cryptocurrency name** | **cryptocurrency address** | **nb seen** |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| item_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** |
+
+
 ## DB9 - Crawler:
 
 ##### Hset:

@@ -67,6 +67,14 @@ sudo ldconfig
 popd
 popd
 
+# pgpdump
+test ! -d pgpdump && git clone https://github.com/kazu-yamamoto/pgpdump.git
+pushd pgpdump/
+./configure
+make
+sudo make install
+popd
+
 # ARDB #
 test ! -d ardb/ && git clone https://github.com/yinqiwen/ardb.git
 pushd ardb/
@@ -99,7 +107,7 @@ mkdir -p $AIL_HOME/PASTES
 
 pip3 install -U pip
 pip3 install 'git+https://github.com/D4-project/BGP-Ranking.git/@7e698f87366e6f99b4d0d11852737db28e3ddc62#egg=pybgpranking&subdirectory=client'
-pip3 install -U -r pip3_packages_requirement.txt
+pip3 install -U -r requirements.txt
 
 # Pyfaup
 pushd faup/src/lib/bindings/python/

@@ -12,6 +12,7 @@ import time
 import subprocess
 import requests
 
+from collections import deque
 from pyfaup.faup import Faup
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -43,25 +44,49 @@ def unpack_url(url):
     to_crawl = {}
     faup.decode(url)
     url_unpack = faup.get()
-    to_crawl['domain'] = url_unpack['domain'].decode()
+    # # FIXME: # TODO: remove me
+    try:
+        to_crawl['domain'] = url_unpack['domain'].decode()
+    except:
+        to_crawl['domain'] = url_unpack['domain']
+    to_crawl['domain'] = to_crawl['domain'].lower()
+
+
+    # force lower case domain/subdomain (rfc4343)
+    # # FIXME: # TODO: remove me
+    try:
+        url_host = url_unpack['host'].decode()
+    except:
+        url_host = url_unpack['host']
+
+    new_url_host = url_host.lower()
+    url_lower_case = url.replace(url_host, new_url_host, 1)
 
     if url_unpack['scheme'] is None:
         to_crawl['scheme'] = 'http'
-        url= 'http://{}'.format(url_unpack['url'].decode())
+        url= 'http://{}'.format(url_lower_case)
     else:
-        scheme = url_unpack['scheme'].decode()
+        # # FIXME: # TODO: remove me
+        try:
+            scheme = url_unpack['scheme'].decode()
+        except Exception as e:
+            scheme = url_unpack['scheme']
         if scheme in default_proto_map:
             to_crawl['scheme'] = scheme
-            url = url_unpack['url'].decode()
+            url = url_lower_case
         else:
-            redis_crawler.sadd('new_proto', '{} {}'.format(scheme, url_unpack['url'].decode()))
+            redis_crawler.sadd('new_proto', '{} {}'.format(scheme, url_lower_case))
             to_crawl['scheme'] = 'http'
-            url= 'http://{}'.format(url_unpack['url'].decode().replace(scheme, '', 1))
+            url= 'http://{}'.format(url_lower_case.replace(scheme, '', 1))
 
     if url_unpack['port'] is None:
         to_crawl['port'] = default_proto_map[to_crawl['scheme']]
     else:
-        port = url_unpack['port'].decode()
+        # # FIXME: # TODO: remove me
+        try:
+            port = url_unpack['port'].decode()
+        except:
+            port = url_unpack['port']
         # Verify port number                        #################### make function to verify/correct port number
         try:
             int(port)
@@ -80,12 +105,16 @@ def unpack_url(url):
 
     to_crawl['url'] = url
     if to_crawl['port'] == 80:
-        to_crawl['domain_url'] = '{}://{}'.format(to_crawl['scheme'], url_unpack['host'].decode())
+        to_crawl['domain_url'] = '{}://{}'.format(to_crawl['scheme'], new_url_host)
     else:
-        to_crawl['domain_url'] = '{}://{}:{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'])
+        to_crawl['domain_url'] = '{}://{}:{}'.format(to_crawl['scheme'], new_url_host, to_crawl['port'])
 
+    # # FIXME: # TODO: remove me
+    try:
+        to_crawl['tld'] = url_unpack['tld'].decode()
+    except:
+        to_crawl['tld'] = url_unpack['tld']
 
-    to_crawl['tld'] = url_unpack['tld'].decode()
     return to_crawl
 
 # get url, paste and service_type to crawl
@@ -275,7 +304,7 @@ if __name__ == '__main__':
     #mode = sys.argv[1]
     splash_port = sys.argv[1]
 
-    rotation_mode = ['onion', 'regular']
+    rotation_mode = deque(['onion', 'regular'])
     default_proto_map = {'http': 80, 'https': 443}
 ######################################################## add ftp ???
 
@@ -333,6 +362,7 @@ if __name__ == '__main__':
 
         update_auto_crawler()
 
+        rotation_mode.rotate()
         to_crawl = get_elem_to_crawl(rotation_mode)
         if to_crawl:
             url_data = unpack_url(to_crawl['url'])

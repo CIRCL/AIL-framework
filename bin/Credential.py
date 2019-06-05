@@ -124,6 +124,11 @@ if __name__ == "__main__":
             for url in sites:
                 faup.decode(url)
                 domain = faup.get()['domain']
+                ## TODO: # FIXME: remove me
+                try:
+                    domain = domain.decode()
+                except:
+                    pass
                 if domain in creds_sites.keys():
                     creds_sites[domain] += 1
                 else:
@@ -143,6 +148,11 @@ if __name__ == "__main__":
                 maildomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
                 faup.decode(maildomains)
                 tld = faup.get()['tld']
+                ## TODO: # FIXME: remove me
+                try:
+                    tld = tld.decode()
+                except:
+                    pass
                 server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
         else:
             publisher.info(to_print)

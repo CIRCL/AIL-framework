@@ -25,12 +25,25 @@ from Helper import Process
 def search_key(paste):
     content = paste.get_p_content()
     find = False
+    get_pgp_content = False
     if '-----BEGIN PGP MESSAGE-----' in content:
         publisher.warning('{} has a PGP enc message'.format(paste.p_name))
 
         msg = 'infoleak:automatic-detection="pgp-message";{}'.format(message)
         p.populate_set_out(msg, 'Tags')
+        get_pgp_content = True
         find = True
+
+    if '-----BEGIN PGP PUBLIC KEY BLOCK-----' in content:
+        msg = 'infoleak:automatic-detection="pgp-public-key-block";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
+        get_pgp_content = True
+
+    if '-----BEGIN PGP SIGNATURE-----' in content:
+        msg = 'infoleak:automatic-detection="pgp-signature";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
+        get_pgp_content = True
+
 
     if '-----BEGIN CERTIFICATE-----' in content:
         publisher.warning('{} has a certificate message'.format(paste.p_name))
@@ -107,6 +120,10 @@ def search_key(paste):
         msg = 'infoleak:automatic-detection="pgp-private-key";{}'.format(message)
         p.populate_set_out(msg, 'Tags')
         find = True
+
+    # pgp content
+    if get_pgp_content:
+        p.populate_set_out(message, 'PgpDump')
 
     if find :
 

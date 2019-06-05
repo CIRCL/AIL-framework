@@ -95,6 +95,10 @@ if __name__ == "__main__":
 
                             faup.decode(mail)
                             tld = faup.get()['tld']
+                            try:
+                                tld = tld.decode()
+                            except:
+                                pass
                             server_statistics.hincrby('mail_by_tld:'+date, tld, MX_values[1][mail])
 
                     else:

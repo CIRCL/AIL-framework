@@ -81,7 +81,7 @@
 						<div class="card mb-3 mt-2" style="background-color:#d9edf7;">
 						  <div class="card-body text-center py-2">
 						    <h6 class="card-title" style="color:#286090;">Select a date range :</h5>
-								<form action="{{ url_for('hashDecoded.all_hash_search') }}" id="hash_selector_form" method='post'>
+								<form action="{{ url_for(correlation_type_search_endpoint) }}" id="hash_selector_form" method='post'>
 									<div class="input-group" id="date-range-from">
 										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
 										<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from" autocomplete="off">
@@ -90,22 +90,11 @@
 										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
 										<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to" autocomplete="off">
 									</div>
-									<div class="mt-1" style="font-size: 14px;color:#286090;">Encoding :</div>
-									<select class="custom-select" name="encoding">
-										<option>All encoding</option>
-										{% for encod in all_encoding %}
-											{% if encoding|string() == encod|string() %}
-											<option selected>{{ encod }}</option>
-											{% else %}
-											<option>{{ encod }}</option>
-											{% endif %}
-										{% endfor %}
-									</select>
-									<div class="mt-1" style="font-size: 14px;color:#286090;">File Type :</div>
+									<div class="mt-1" style="font-size: 14px;color:#286090;">Type ID :</div>
 									<select class="custom-select" name="type">
 										<option>All types</option>
 										{% for typ in l_type %}
-											{% if type|string() == typ|string() %}
+											{% if type_id|string() == typ|string() %}
 											<option selected>{{ typ }}</option>
 											{% else %}
 											<option>{{ typ }}</option>
@@ -116,7 +105,7 @@
 										<input class="form-check-input" type="checkbox" id="checkbox-input-show" name="show_decoded_files" value="True" {% if show_decoded_files %}checked{% endif %}>
 										<label class="form-check-label" for="checkbox-input-show">
 											<div style="color:#286090; font-size: 14px;">
-												Show decoded files <i class="fas fa-file"></i>
+												Show {{correlation_type}} <i class="fas fa-key"></i>
 											</div>
 										</label>
 									</div>
@@ -134,54 +123,32 @@
 					</div>
 				</div>
 
-				{% if  l_64|length != 0 %}
+				{% if  all_metadata|length != 0 %}
 						{% if date_from|string == date_to|string %}
-							<h3> {{ date_from }} Decoded files: </h3>
+							<h3> {{ date_from }} {{correlation_type}}: </h3>
 						{% else %}
-							<h3> {{ date_from }} to {{ date_to }} Decoded files: </h3>
+							<h3> {{ date_from }} to {{ date_to }} {{correlation_type}}: </h3>
 						{% endif %}
 						<table id="tableb64" class="table table-striped table-bordered">
 							<thead class="bg-dark text-white">
 								<tr>
-										<th>estimated type</th>
-										<th>hash</th>
+										<th>type id</th>
+										<th>key id</th>
 										<th>first seen</th>
 										<th>last seen</th>
 										<th>nb item</th>
-										<th>size</th>
-										<th>Virus Total</th>
 										<th>Sparkline</th>
 								</tr>
 							</thead>
 							<tbody style="font-size: 15px;">
-							{% for b64 in l_64 %}
+							{% for key_id in all_metadata %}
 									<tr>
-										<td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-										<td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a></td>
-										<td>{{ b64[5] }}</td>
-										<td>{{ b64[6] }}</td>
-										<td>{{ b64[3] }}</td>
-										<td>{{ b64[4] }}</td>
-										<td>
-											{% if  vt_enabled %}
-												{% if not b64[7] %}
-													<darkbutton_{{ b64[2] }}>
-														<button id="submit_vt_{{ b64[2] }}" class="btn btn-secondary" style="font-size: 14px;" onclick="sendFileToVT('{{ b64[2] }}')">
-															<i class="fas fa-paper-plane"></i>&nbsp;Send this file to VT
-														</button>
-													</darkbutton_{{ b64[2] }}>
-												{% else %}
-													<a class="btn btn-secondary" target="_blank" href="{{ b64[8] }}" style="font-size: 14px;"><i class="fas fa-link"></i>&nbsp;VT Report</a>
-												{% endif %}
-												<button class="btn btn-outline-dark" onclick="updateVTReport('{{ b64[2] }}')" style="font-size: 14px;">
-													<div id="report_vt_{{ b64[2] }}"><i class="fas fa-sync-alt"></i>&nbsp;{{ b64[9] }}</div>
-												</button>
-												{% else %}
-													Virus Total submission is disabled
-												{% endif %}
-
-										</td>
-										<td id="sparklines_{{ b64[2] }}" style="text-align:center;"></td>
+										<td><i class="{{ all_metadata[key_id]['type_icon'] }}"></i>&nbsp;&nbsp;{{ all_metadata[key_id]['type_id'] }}</td>
+										<td><a target="_blank" href="{{ url_for(show_key_id_endpoint) }}?type_id={{ all_metadata[key_id]['type_id'] }}&key_id={{ key_id }}">{{ key_id }}</a></td>
+										<td>{{ all_metadata[key_id]['first_seen'] }}</td>
+										<td>{{ all_metadata[key_id]['last_seen'] }}</td>
+										<td>{{ all_metadata[key_id]['nb_seen'] }}</td>
+										<td id="sparklines_{{ all_metadata[key_id]['sparklines_id'] }}" style="text-align:center;"></td>
 									</tr>
 							{% endfor %}
 							</tbody>
@@ -189,9 +156,9 @@
 					{% else %}
 						{% if show_decoded_files %}
 							{% if date_from|string == date_to|string %}
-							<h3> {{ date_from }}, No Hashes</h3>
+							<h3> {{ date_from }}, No Dumped Keys</h3>
 							{% else %}
-							<h3> {{ date_from }} to {{ date_to }}, No Hashes</h3>
+							<h3> {{ date_from }} to {{ date_to }}, No {{correlation_type}}</h3>
 							{% endif %}
 						{% endif %}
 					{% endif %}
@@ -205,7 +172,7 @@
 		var chart = {};
     $(document).ready(function(){
 				$("#page-Decoded").addClass("active");
-        $("#nav_dashboard").addClass("active");
+        $("#nav_dashboard_{{correlation_type}}").addClass("active");
 
 				$('#date-range-from').dateRangePicker({
 						separator : ' to ',
@@ -220,7 +187,7 @@
 						{
 								$('#date-range-from-input').val(s1);
 								$('#date-range-to-input').val(s2);
-						}
+						},
 					});
 					$('#date-range-to').dateRangePicker({
 							separator : ' to ',
@@ -235,8 +202,11 @@
 							{
 									$('#date-range-from-input').val(s1);
 									$('#date-range-to-input').val(s2);
-							}
+							},
 					});
+
+          $('#date-range-from').data('dateRangePicker').setDateRange('{{date_from}}','{{date_to}}');
+          $('#date-range-to').data('dateRangePicker').setDateRange('{{date_from}}','{{date_to}}');
 
 					$('#tableb64').DataTable({
 							"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
@@ -244,16 +214,17 @@
 							"order": [[ 3, "desc" ]]
 					});
 
-					{% if  type %}
-					chart.stackBarChart =barchart_type_stack("{{ url_for('hashDecoded.hash_by_type_json') }}?type={{type}}", 'id');
-					{% elif  daily_type_chart %}
-					chart.stackBarChart =barchart_type_stack("{{ url_for('hashDecoded.range_type_json') }}?date_from={{daily_date}}&date_to={{daily_date}}", 'id');
+					{% if  type_id %}
+					//chart.stackBarChart =barchart_type_stack("{{ url_for(range_type_json_endpoint) }}?date_from={{daily_date}}&type_id={{type_id}}", 'id');
+          chart.stackBarChart = barchart_type_stack("{{ url_for(range_type_json_endpoint) }}?date_from={{date_from}}&date_to={{date_to}}&type_id={{type_id}}", 'id');
+					{% elif  type_id or daily_type_chart %}
+					chart.stackBarChart =barchart_type_stack("{{ url_for(range_type_json_endpoint) }}?date_from={{daily_date}}&date_to={{daily_date}}", 'id');
 					{% else %}
-					chart.stackBarChart = barchart_type_stack("{{ url_for('hashDecoded.range_type_json') }}?date_from={{date_from}}&date_to={{date_to}}", 'id');
+					chart.stackBarChart = barchart_type_stack("{{ url_for(range_type_json_endpoint) }}?date_from={{date_from}}&date_to={{date_to}}", 'id');
 					{% endif %}
 
-					draw_pie_chart("pie_chart_encoded" ,"{{ url_for('hashDecoded.decoder_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}", "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}&encoding=");
-					draw_pie_chart("pie_chart_top5_types" ,"{{ url_for('hashDecoded.top5_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}", "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type=");
+					//draw_pie_chart("pie_chart_encoded" ,"{{ url_for('hashDecoded.decoder_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}", "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}&encoding=");
+					//draw_pie_chart("pie_chart_top5_types" ,"{{ url_for('hashDecoded.top5_type_json') }}?date_from={{date_from}}&date_to={{date_to}}&type={{type}}", "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type=");
 
 					chart.onResize();
 					$(window).on("resize", function() {
@@ -275,29 +246,7 @@ function toggle_sidebar(){
 	}
 }
 </script>
-
 <script>
-	function updateVTReport(hash) {
-		//updateReport
-		$.getJSON("{{ url_for('hashDecoded.update_vt_result') }}?hash="+hash,
-			function(data) {
-				content = '<i class="fas fa-sync-alt"></i> ' +data['report_vt']
-				$( "#report_vt_"+hash ).html(content);
-		});
-	}
-
-	function sendFileToVT(hash) {
-		//send file to vt
-		$.getJSON("{{ url_for('hashDecoded.send_file_to_vt_js') }}?hash="+hash,
-			function(data) {
-				var content = '<a id="submit_vt_'+hash+'" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fa fa-link"> '+ ' VT Report' +'</i></a>';
-				$('#submit_vt_'+hash).remove();
-				$('darkbutton_'+hash).append(content);
-		});
-	}
-</script>
-<script>
-//var data = [6,3,3,2,5,3,9];
 
 // a sparklines plot
 function sparklines(id, points) {
@@ -334,8 +283,8 @@ function sparklines(id, points) {
 }
 </script>
 <script>
-	{% for b64 in l_64 %}
-		sparklines("sparklines_{{ b64[2] }}", {{ b64[10] }})
+	{% for key_id in all_metadata %}
+		sparklines("sparklines_{{ all_metadata[key_id]['sparklines_id'] }}", {{ all_metadata[key_id]['sparklines_data'] }})
 	{% endfor %}
 </script>
 
@@ -393,13 +342,13 @@ function barchart_type_stack(url, id) {
 				.selectAll("text")
 					.attr("class", "bar")
 					{% if  date_from|string == date_to|string and type is none %}
-						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from={{date_from}}&date_to={{date_to}}&type="+d })
+						.on("click", function (d) { window.location.href = "{{ url_for(correlation_type_endpoint) }}?date_from={{date_from}}&date_to={{date_to}}&type_id="+d })
 						.attr("transform", "rotate(-18)" )
 					{% elif  date_from|string == date_to|string and type is not none %}
-						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from="+d+'&date_to='+d })
+						.on("click", function (d) { window.location.href = "{{ url_for(correlation_type_endpoint) }}?date_from="+d+'&date_to='+d })
 						.attr("transform", "rotate(-18)" )
 					{% else %}
-						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?date_from="+d+'&date_to='+d })
+						.on("click", function (d) { window.location.href = "{{ url_for(correlation_type_endpoint) }}?date_from="+d+'&date_to='+d })
 						.attr("transform", "rotate(-40)" )
 					{% endif %}
 					.style("text-anchor", "end");
@@ -431,11 +380,11 @@ function barchart_type_stack(url, id) {
 	      .on("mouseover", function (d) { showPopover.call(this, d); })
 				.on("mouseout", function (d) { removePopovers(); })
 				{% if  date_from|string == date_to|string and type is none %}
-					.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?date_from={{date_from}}&date_to={{date_to}}&type='+d.label+'&encoding='+d.name; });
+					.on("click", function(d){ window.location.href = "{{ url_for(correlation_type_endpoint) }}" +'?date_from={{date_from}}&date_to={{date_to}}&type_id='+d.label+'&encoding='+d.name; });
 				{% elif  date_from|string == date_to|string and type is not none %}
-					.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type={{type}}&date_from='+d.label+'&date_to='+d.label+'&encoding='+d.name; });
+					.on("click", function(d){ window.location.href = "{{ url_for(correlation_type_endpoint) }}" +'?type_id={{type_id}}&date_from='+d.label+'&date_to='+d.label+'&encoding='+d.name; });
 				{% else %}
-					.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type='+ d.name +'&date_from='+d.label+'&date_to='+d.label; });
+					.on("click", function(d){ window.location.href = "{{ url_for(correlation_type_endpoint) }}" +'?type_id='+ d.name +'&date_from='+d.label+'&date_to='+d.label; });
 				{% endif %}
 
 				data.forEach(function(d) {
@@ -446,11 +395,11 @@ function barchart_type_stack(url, id) {
 								.attr('x', x(d.date) + x.bandwidth()/2)
 								.attr('y', y(d.total))
 								{% if  date_from|string == date_to|string and type is none %}
-									.on("click", function () {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}"+'?date_from={{date_from}}&date_to={{date_to}}&type='+d.date })
+									.on("click", function () {window.location.href = "{{ url_for(correlation_type_endpoint) }}"+'?date_from={{date_from}}&date_to={{date_to}}&type_id='+d.date })
 								{% elif  date_from|string == date_to|string and type is not none %}
-									.on("click", function () {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}?type={{type}}&date_from="+d.date+'&date_to='+d.date })
+									.on("click", function () {window.location.href = "{{ url_for(correlation_type_endpoint) }}?type_id={{type_id}}&date_from="+d.date+'&date_to='+d.date })
 								{% else %}
-									.on("click", function () {window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}"+'?date_from='+d.date+'&date_to='+d.date })
+									.on("click", function () {window.location.href = "{{ url_for(correlation_type_endpoint) }}"+'?date_from='+d.date+'&date_to='+d.date })
 								{% endif %}
 								.style("text-anchor", "middle")
 								.text(d.total);

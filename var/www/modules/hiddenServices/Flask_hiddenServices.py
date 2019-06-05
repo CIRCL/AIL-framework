@@ -26,6 +26,7 @@ baseUrl = Flask_config.baseUrl
 r_cache = Flask_config.r_cache
 r_serv_onion = Flask_config.r_serv_onion
 r_serv_metadata = Flask_config.r_serv_metadata
+crawler_enabled = Flask_config.crawler_enabled
 bootstrap_label = Flask_config.bootstrap_label
 
 hiddenServices = Blueprint('hiddenServices', __name__, template_folder='templates')
@@ -117,7 +118,12 @@ def get_type_domain(domain):
 def get_domain_from_url(url):
     faup.decode(url)
     unpack_url = faup.get()
-    domain = unpack_url['domain'].decode()
+    domain = unpack_url['domain']
+    ## TODO: FIXME remove me
+    try:
+        domain = domain.decode()
+    except:
+        pass
     return domain
 
 def get_last_domains_crawled(type):
@@ -245,6 +251,7 @@ def dashboard():
     statDomains_regular = get_stats_last_crawled_domains('regular', date)
 
     return render_template("Crawler_dashboard.html", crawler_metadata_onion = crawler_metadata_onion,
+                                crawler_enabled=crawler_enabled,
                                 crawler_metadata_regular=crawler_metadata_regular,
                                 statDomains_onion=statDomains_onion, statDomains_regular=statDomains_regular)
 
@@ -256,7 +263,7 @@ def hiddenServices_page_test():
 @hiddenServices.route("/crawlers/manual", methods=['GET'])
 @login_required
 def manual():
-    return render_template("Crawler_Splash_manual.html")
+    return render_template("Crawler_Splash_manual.html", crawler_enabled=crawler_enabled)
 
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
 @login_required
@@ -296,6 +303,7 @@ def Crawler_Splash_last_by_type():
     crawler_metadata = get_crawler_splash_status(type)
 
     return render_template("Crawler_Splash_last_by_type.html", type=type, type_name=type_name,
+                            crawler_enabled=crawler_enabled,
                             last_domains=list_domains, statDomains=statDomains,
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
@@ -429,8 +437,19 @@ def create_spider_splash():
     # get service_type
     faup.decode(url)
     unpack_url = faup.get()
-    domain = unpack_url['domain'].decode()
-    if unpack_url['tld'] == b'onion':
+    ## TODO: # FIXME: remove me
+    try:
+        domain = unpack_url['domain'].decode()
+    except:
+        domain = unpack_url['domain']
+
+    ## TODO: # FIXME: remove me
+    try:
+        tld = unpack_url['tld'].decode()
+    except:
+        tld = unpack_url['tld']
+
+    if tld == 'onion':
         service_type = 'onion'
     else:
         service_type = 'regular'
@@ -503,6 +522,7 @@ def auto_crawler():
 
     return render_template("Crawler_auto.html", page=page, nb_page_max=nb_page_max,
                                 last_domains=last_domains,
+                                crawler_enabled=crawler_enabled,
                                 auto_crawler_domain_onions_metadata=auto_crawler_domain_onions_metadata,
                                 auto_crawler_domain_regular_metadata=auto_crawler_domain_regular_metadata)
 
@@ -712,10 +732,19 @@ def show_domain():
     port = request.args.get('port')
     faup.decode(domain)
     unpack_url = faup.get()
-    domain = unpack_url['domain'].decode()
+
+    ## TODO: # FIXME: remove me
+    try:
+        domain = unpack_url['domain'].decode()
+    except:
+        domain = unpack_url['domain']
+
     if not port:
         if unpack_url['port']:
-            port = unpack_url['port'].decode()
+            try:
+                port = unpack_url['port'].decode()
+            except:
+                port = unpack_url['port']
         else:
             port = 80
     try:
@@ -815,7 +844,7 @@ def domain_crawled_by_type_json():
             day_crawled = {}
             day_crawled['date']= date[0:4] + '-' + date[4:6] + '-' + date[6:8]
             day_crawled['UP']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
-            day_crawled['DOWN']= nb_domain_up = r_serv_onion.scard('{}_up:{}'.format(type, date))
+            day_crawled['DOWN']= nb_domain_up = r_serv_onion.scard('{}_down:{}'.format(type, date))
             range_decoder.append(day_crawled)
 
         return jsonify(range_decoder)

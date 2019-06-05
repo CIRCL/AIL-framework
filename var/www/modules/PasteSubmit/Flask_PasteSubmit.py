@@ -297,6 +297,13 @@ def submit():
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
 
+    is_file = False
+    if 'file' in request.files:
+        file = request.files['file']
+        if file:
+            if file.filename:
+                is_file = True
+
     submitted_tag = 'infoleak:submission="manual"'
 
     #active taxonomies
@@ -307,6 +314,7 @@ def submit():
     if ltags or ltagsgalaxies:
         if not addTagsVerification(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
+            print(content)
             return content, 400
 
     # add submitted tags
@@ -315,9 +323,7 @@ def submit():
     else:
         ltags = submitted_tag
 
-    if 'file' in request.files:
-
-        file = request.files['file']
+    if is_file:
         if file:
 
             if file and allowed_file(file.filename):
@@ -357,6 +363,7 @@ def submit():
 
             else:
                 content = 'wrong file type, allowed_extensions: sh, pdf, zip, gz, tar.gz or remove the extension'
+                print(content)
                 return content, 400
 
 
@@ -379,9 +386,11 @@ def submit():
 
         else:
             content = 'size error'
+            print(content)
             return content, 400
 
         content = 'submit aborded'
+        print(content)
         return content, 400
 
 

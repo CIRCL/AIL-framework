@@ -4,7 +4,7 @@
 	<head>
 	  <meta charset="utf-8">
 
-	  <title>Hash Information - AIL</title>
+	  <title>AIL - framework</title>
 		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
 	  <!-- Core CSS -->
@@ -92,7 +92,7 @@
 
 					<div class="card my-3">
 						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-							<h4 class="text-secondary">{{ hash }} :</h4>
+							<h4 class="text-secondary">{{ key_id }} :</h4>
 							<ul class="list-group mb-2">
 								<li class="list-group-item py-0">
 									<div class="row">
@@ -100,20 +100,18 @@
 											<table class="table">
 												<thead>
 													<tr>
-														<th>Estimated type</th>
+														<th>type</th>
 														<th>First_seen</th>
 														<th>Last_seen</th>
-														<th>Size (Kb)</th>
 														<th>Nb seen</th>
 													</tr>
 												</thead>
 												<tbody>
 													<tr>
-														<td><i class="fas {{ file_icon }}"></i>&nbsp;&nbsp;{{ estimated_type }}</td>
-														<td>{{ first_seen }}</td>
-														<td>{{ last_seen }}</td>
-														<td>{{ size }}</td>
-														<td>{{ nb_seen_in_all_pastes }}</td>
+														<td><i class="{{ type_icon }}"></i>&nbsp;&nbsp;{{ type_id }}</td>
+														<td>{{ key_id_metadata['first_seen'] }}</td>
+														<td>{{ key_id_metadata['last_seen'] }}</td>
+														<td>{{ key_id_metadata['nb_seen'] }}</td>
 													</tr>
 												</tbody>
 											</table>
@@ -124,28 +122,6 @@
 									</div>
 								</li>
 							</ul>
-
-							{% if  vt_enabled %}
-								{% if not b64_vt %}
-									<darkbutton>
-										<button id="submit_vt_b" class="btn btn-primary" onclick="sendFileToVT('{{ hash }}')" style="font-size: 15px">
-											<i class="fas fa-paper-plane"></i>&nbsp;Send this file to VT
-										</button>
-									</darkbutton>
-								{% else %}
-									<a class="btn btn-primary" target="_blank" href="{{ b64_vt_link }}" style="font-size: 15px"><i class="fas fa-link"></i> VT Report</a>
-								{% endif %}
-								<button class="btn btn-outline-secondary" onclick="updateVTReport('{{ hash }}')" style="font-size: 15px">
-									<div id="report_vt_b"><i class="fas fa-sync-alt"></i>&nbsp;{{ b64_vt_report }}</div>
-								</button>
-							{% else %}
-								Virus Total submission is disabled
-							{% endif %}
-
-							<a href="{{ url_for('hashDecoded.downloadHash') }}?hash={{hash}}" target="blank" class="float-right" style="font-size: 15px">
-								<button class='btn btn-info'><i class="fas fa-download"></i> Download Decoded file
-								</button>
-							</a>
 						</div>
 					</div>
 
@@ -165,19 +141,6 @@
 
 						<div class="col-xl-2">
 
-							<div class="card">
-								<div class="card-header">
-									<i class="fas fa-unlock-alt" aria-hidden="true"></i> Encoding
-								</div>
-								<div class="card-body text-center">
-									{% for encoding in list_hash_decoder %}
-									<button class="btn btn-outline-dark" disabled>
-										{{encoding['encoding']}} <span class="badge badge-dark">{{encoding['nb_seen']}}</span>
-									</button>
-									{% endfor %}
-								</div>
-							</div>
-
 							<div class="card my-3">
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
@@ -187,30 +150,12 @@
 										<i class="fas fa-sync"></i>&nbsp;Resize Graph
 									</button>
 
+									{% if correlation_type=='pgpdump' %}
+										{% include 'decoded/show_helper_pgpdump.html' %}
+									{% elif correlation_type=='cryptocurrency' %}
+										{% include 'decoded/show_helper_cryptocurrency.html' %}
+									{% endif %}
 
-									<ul class="list-group">
-										<li class="list-group-item list-group-item-info"><i class="fas fa-info-circle fa-2x"></i></li>
-										<li class="list-group-item text-left">
-											<p>Double click on a node to open Hash/Paste<br><br>
-												<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="orange"></circle></g></svg>
-												Current Hash<br>
-												<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="rgb(141, 211, 199)"></circle></g></svg>
-												Hashes<br>
-												<svg height="12" width="12"><g class="nodes"><circle cx="6" cy="6" r="6" fill="#1f77b4"></circle></g></svg>
-												Pastes
-											</p>
-										</li>
-										<li class="list-group-item list-group-item-info">
-											Hash Types:
-										</li>
-										<li class="list-group-item text-left">
-											<i class="fas fa-file"></i>  Application<br>
-											<i class="fas fa-file-video"></i>  Audio<br>
-											<i class="fas fa-file-image"></i>  Image<br>
-											<i class="fas fa-file-alt"></i>  Text<br>
-											<i class="fas fa-sticky-note"></i>  Other
-										</li>
-									</ul>
 								</div>
 							</div>
 						</div>
@@ -236,8 +181,8 @@ $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
 		sparklines("sparkline", {{ sparkline_values }})
 
-		all_graph.node_graph = create_graph("{{ url_for('hashDecoded.hash_graph_node_json') }}?hash={{hash}}");
-		all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.hash_graph_line_json') }}?hash={{hash}}");
+		all_graph.node_graph = create_graph("{{ url_for(graph_node_endpoint) }}?type_id={{type_id}}&key_id={{key_id}}");
+		all_graph.line_chart = create_line_chart('graph_line', "{{ url_for(graph_line_endpoint) }}?type_id={{type_id}}&key_id={{key_id}}");
 		all_graph.onResize();
 });
 
@@ -260,27 +205,6 @@ function toggle_sidebar(){
 }
 </script>
 
-<script>
-	function sendFileToVT(hash) {
-		//send file to vt
-		$.getJSON("{{ url_for('hashDecoded.send_file_to_vt_js') }}?hash="+hash,
-			function(data) {
-				var content = '<a id="submit_vt_b" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fas fa-link"> '+ ' VT Report' +'</i></a>';
-				$('#submit_vt_b').remove();
-				$('darkbutton').append(content);
-		});
-	}
-
-	function updateVTReport(hash) {
-		//updateReport
-		$.getJSON("{{ url_for('hashDecoded.update_vt_result') }}?hash="+hash,
-			function(data) {
-				var content = '<i class="fas fa-sync-alt"></i> ' +data['report_vt'];
-				$( "#report_vt_b" ).html(content);
-		});
-	}
-
-</script>
 <script>
 	function resize_graph() {
 		zoom.translateTo(svg_node, 200, 200);
@@ -398,7 +322,7 @@ d3.json(url)
 	node.append('text')
 		  .attr('text-anchor', 'middle')
 		  .attr('dominant-baseline', 'central')
-		  .attr("class", "graph_node_icon fa")
+		  .attr("class", "graph_node_icon {{font_family}}")
     	.attr('font-size', '8px' )
 			.attr('pointer-events', 'none')
     	.text(function(d) {
@@ -503,6 +427,7 @@ if(d.hash == true){
 		 .style("top", (d3.event.pageY - 28) + "px");
 
 	$("#tooltip-id-name").text(d.id);
+
 }
 
 	//links
