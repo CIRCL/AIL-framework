@@ -16,6 +16,7 @@ import bcrypt
 import flask
 import importlib
 import os
+import re
 from os.path import join
 import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
@@ -31,14 +32,14 @@ from pytaxonomies import Taxonomies
 import Flask_config
 
 def flask_init():
-    int_user_management()
-
-def int_user_management():
-    # # TODO: check for admin account
     # check if an account exists
-    if not r_serv_db.hexists('user:all'):
-        password = 'admin@admin.test'
-        create_user_db('admin', password, default=True)
+    if not r_serv_db.exists('user:all'):
+        password = secrets.token_urlsafe()
+        create_user_db('admin@admin.test', password, role='admin',default=True)
+    # add default roles
+    if not r_serv_db.exists('ail:all_role'):
+        r_serv_db.zadd('ail:all_role', 1, 'admin')
+        r_serv_db.zadd('ail:all_role', 2, 'analyst')
 
 def hashing_password(bytes_password):
     hashed = bcrypt.hashpw(bytes_password, bcrypt.gensalt())
@@ -51,19 +52,31 @@ def verify_password(id, bytes_password):
     else:
         return False
 
-def create_user_db(username_id , password, default=False):
-    ## TODO: validate username
-    ## TODO: validate password
+def check_password_strength(password):
+    result = regex_password.match(password)
+    if result:
+        return True
+    else:
+        return False
 
-    if username_id == '__anonymous__':
-        ## TODO: return 500
-        return 'ERROR'
 
+def create_user_db(username_id , password, default=False, role=None, update=False):
     password = password.encode()
     password_hash = hashing_password(password)
     r_serv_db.hset('user:all', username_id, password_hash)
-    if default:
-        r_serv_db.set('user:request_password_change', username_id)
+    if update:
+        r_serv_db.hdel('user_metadata:{}'.format(username_id), 'change_passwd')
+        if username_id=='admin@admin.test':
+            os.remove(default_passwd_file)
+    else:
+        if default:
+            r_serv_db.hset('user_metadata:{}'.format(username_id), 'change_passwd', True)
+        if role:
+            if role in get_all_role():
+                r_serv_db.sadd('user_role:{}'.format(role), username_id)
+
+def get_all_role():
+    return r_serv_db.zrange('ail:all_role', 0 , -1)
 
 # CONFIG #
 cfg = Flask_config.cfg
@@ -71,6 +84,11 @@ baseUrl = cfg.get("Flask", "baseurl")
 baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':
     baseUrl = '/'+baseUrl
+
+default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
+
+regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,}$'
+regex_password = re.compile(regex_password)
 
 # ========= REDIS =========#
 r_serv_db = redis.StrictRedis(
@@ -163,6 +181,8 @@ modified_header = modified_header.replace('<!--insert here-->', '\n'.join(to_add
 with open('templates/header.html', 'w') as f:
     f.write(modified_header)
 
+flask_init()
+
 
 # ========= JINJA2 FUNCTIONS ========
 def list_len(s):
@@ -187,30 +207,43 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        next_page = request.form.get('next_page')
-
-        print(username)
-        print(password)
+        #next_page = request.form.get('next_page')
 
         if username is not None:
             user = User.get(username)
-            #print(user.is_anonymous)
-            #print('auth') # TODO: overwrite
-            #print(user.is_authenticated)
             if user and user.check_password(password):
                 login_user(user) ## TODO: use remember me ?
-                #print(user.request_password_change())
                 print(user.is_active)
-                return redirect(url_for('dashboard.index'))
+                if user.request_password_change():
+                    return redirect(url_for('change_password'))
+                else:
+                    return redirect(url_for('dashboard.index'))
             else:
                 return 'incorrect password'
 
         return 'none'
 
     else:
-        next_page = request.args.get('next')
-        print(next_page)
-        return render_template("login.html", next_page=next_page)
+        #next_page = request.args.get('next')
+        return render_template("login.html")
+
+@app.route('/change_password', methods=['POST', 'GET'])
+@login_required
+def change_password():
+    password1 = request.form.get('password1')
+    password2 = request.form.get('password2')
+
+    # # TODO: display errors message
+
+    if current_user.is_authenticated and password1!=None and password1==password2:
+        if check_password_strength(password1):
+            user_id = current_user.get_id()
+            create_user_db(user_id , password1, update=True)
+            return redirect(url_for('dashboard.index'))
+        else:
+            return render_template("change_password.html")
+    else:
+        return render_template("change_password.html")
 
 @app.route('/role', methods=['POST', 'GET'])
 def role():

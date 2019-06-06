@@ -53,7 +53,7 @@ class User(UserMixin):
             return False
 
     def request_password_change(self):
-        if self.r_serv_db.sismember('user:request_password_change', self.id):
+        if self.r_serv_db.hget('user_metadata:{}'.format(self.id), 'change_passwd') == 'True':
             return True
         else:
             return False

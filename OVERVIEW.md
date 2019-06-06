@@ -53,20 +53,26 @@ Redis and ARDB overview
 | ail:current_background_script_stat | **progress in % of the background script** |
 
 ##### User Management:
-| Key | Field | Value |
+| Hset Key | Field | Value |
 | ------ | ------ | ------ |
 | user:all | **user id** | **password hash**  |
 | | | |
 | user:tokens | **token** | **user id** |
 | | | |
 | user_metadata:**user id** | **user token** | **token**  |
+|                           | change_passwd  | **boolean** |
 
-| Key | Value |
+| Set Key | Value |
 | ------ | ------ |
 | user:request_password_change | **user id** |
 | user:admin | **user id** |
 | | |
 | user_role:**role** | **user id** |
+
+
+| Zrank Key | Field | Value |
+| ------ | ------ | ------ |
+| ail:all_role | **role** | **int, role priority (1=admin)** |
 
 ## DB2 - TermFreq:
 
