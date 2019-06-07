@@ -5,9 +5,10 @@
     Flask functions and routes for the settings modules page
 '''
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 import json
+import secrets
 import datetime
 
 import git_status
@@ -34,6 +35,14 @@ def one():
 
 #def get_v1.5_update_tags_backgroud_status():
 #    return '38%'
+
+def generate_new_token(user_id):
+    # create user token
+    current_token = r_serv_db.hget('user_metadata:{}'.format(user_id), 'token')
+    r_serv_db.hdel('user:tokens', current_token)
+    token = secrets.token_urlsafe(41)
+    r_serv_db.hset('user:tokens', token, user_id)
+    r_serv_db.hset('user_metadata:{}'.format(user_id), 'token', token)
 
 def get_git_metadata():
     dict_git = {}
@@ -72,6 +81,14 @@ def get_update_metadata():
         dict_update['current_background_script_stat'] = r_serv_db.get('ail:current_background_script_stat')
 
     return dict_update
+
+def get_user_metadata(user_id):
+    user_metadata = {}
+    user_metadata['email'] = user_id
+    user_metadata['role'] = r_serv_db.hget('user_metadata:{}'.format(user_id), 'role')
+    user_metadata['api_key'] = r_serv_db.hget('user_metadata:{}'.format(user_id), 'token')
+    return user_metadata
+
 # ============= ROUTES ==============
 
 @settings.route("/settings/", methods=['GET'])
@@ -81,9 +98,20 @@ def settings_page():
     current_version = r_serv_db.get('ail:version')
     update_metadata = get_update_metadata()
 
-
     return render_template("settings_index.html", git_metadata=git_metadata,
                             current_version=current_version)
+
+@settings.route("/settings/edit_profile", methods=['GET'])
+@login_required
+def edit_profile():
+    user_metadata = get_user_metadata(current_user.get_id())
+    return render_template("edit_profile.html", user_metadata=user_metadata)
+
+@settings.route("/settings/new_token", methods=['GET'])
+@login_required
+def new_token():
+    generate_new_token(current_user.get_id())
+    return redirect(url_for('settings.edit_profile'))
 
 
 @settings.route("/settings/get_background_update_stats_json", methods=['GET'])

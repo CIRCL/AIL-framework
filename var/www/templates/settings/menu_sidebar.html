@@ -5,9 +5,55 @@
       	  <span>Toggle Sidebar</span>
       	</button>
 
-      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
-      		<h5 class="d-flex text-muted w-100">
+      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2">
+      		<h5 class="d-flex text-muted w-100" id="nav_server">
       		  <span>Diagnostic</span>
       		</h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hashDecoded.hashDecoded_page')}}" id="nav_server_status">
+      	        <i class="fas fa-tools"></i>
+      	        <span>Server Status</span>
+      	      </a>
+      	    </li>
+          </ul>
+      	</nav>
+        <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_profile">
+          <h5 class="d-flex text-muted w-100" id="nav_my_profile">
+            <span>My Profile</span>
+          </h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('settings.edit_profile')}}" id="nav_edit_profile">
+      	        <i class="fas fa-user-edit"></i>
+      	        <span>My Profile</span>
+      	      </a>
+      	    </li>
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('change_password')}}" id="nav_dashboard">
+      	        <i class="fas fa-key"></i>
+      	        <span>Change Password</span>
+      	      </a>
+      	    </li>
+          </ul>
+        </nav>
+        <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_users">
+      		<h5 class="d-flex text-muted w-100">
+      		  <span>User Management</span>
+      		</h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hashDecoded.hashDecoded_page')}}" id="nav_dashboard">
+      	        <i class="fas fa-user-plus"></i>
+      	        <span>Create User</span>
+      	      </a>
+      	    </li>
+            <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hashDecoded.hashDecoded_page')}}" id="nav_dashboard">
+      	        <i class="fas fa-users"></i>
+      	        <span>Users List</span>
+      	      </a>
+      	    </li>
+          </ul>
       	</nav>
       </div>

@@ -59,7 +59,7 @@ Redis and ARDB overview
 | | | |
 | user:tokens | **token** | **user id** |
 | | | |
-| user_metadata:**user id** | **user token** | **token**  |
+| user_metadata:**user id** | token | **token**  |
 |                           | change_passwd  | **boolean** |
 
 | Set Key | Value |
