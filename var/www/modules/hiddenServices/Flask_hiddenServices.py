@@ -829,8 +829,9 @@ def download_domain():
     #dict_links = h.get_all_links(l_pastes)
 
     zip_file = h.create_domain_basic_archive(l_pastes)
+    filename = domain + '.zip'
 
-    return send_file(zip_file, attachment_filename='test.zip', as_attachment=True)
+    return send_file(zip_file, attachment_filename=filename, as_attachment=True)
 
 
 @hiddenServices.route("/hiddenServices/onion_son", methods=['GET'])
