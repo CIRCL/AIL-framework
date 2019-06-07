@@ -11,7 +11,7 @@ import os
 import time
 import json
 from pyfaup.faup import Faup
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
+from flask import Flask, render_template, jsonify, request, send_file, Blueprint, redirect, url_for
 
 from Date import Date
 from HiddenServices import HiddenServices
@@ -35,6 +35,7 @@ list_types=['onion', 'regular']
 dic_type_name={'onion':'Onion', 'regular':'Website'}
 
 # ============ FUNCTIONS ============
+
 def one():
     return 1
 
@@ -781,6 +782,56 @@ def show_domain():
                             origin_paste_tags=origin_paste_tags, status=status,
                             origin_paste=origin_paste, origin_paste_name=origin_paste_name,
                             domain_tags=domain_tags, screenshot=screenshot)
+
+@hiddenServices.route("/crawlers/download_domain", methods=['GET'])
+def download_domain():
+    domain = request.args.get('domain')
+    epoch = request.args.get('epoch')
+    try:
+        epoch = int(epoch)
+    except:
+        epoch = None
+    port = request.args.get('port')
+    faup.decode(domain)
+    unpack_url = faup.get()
+
+    ## TODO: # FIXME: remove me
+    try:
+        domain = unpack_url['domain'].decode()
+    except:
+        domain = unpack_url['domain']
+
+    if not port:
+        if unpack_url['port']:
+            try:
+                port = unpack_url['port'].decode()
+            except:
+                port = unpack_url['port']
+        else:
+            port = 80
+    try:
+        port = int(port)
+    except:
+        port = 80
+    type = get_type_domain(domain)
+    if domain is None or not r_serv_onion.exists('{}_metadata:{}'.format(type, domain)):
+        return '404'
+        # # TODO: FIXME return 404
+
+    origin_paste = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'paste_parent')
+
+    h = HiddenServices(domain, type, port=port)
+    item_core = h.get_domain_crawled_core_item(epoch=epoch)
+    if item_core:
+        l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
+    else:
+        l_pastes = []
+    #dict_links = h.get_all_links(l_pastes)
+
+    zip_file = h.create_domain_basic_archive(l_pastes)
+
+    return send_file(zip_file, attachment_filename='test.zip', as_attachment=True)
+
 
 @hiddenServices.route("/hiddenServices/onion_son", methods=['GET'])
 def onion_son():
