@@ -7,6 +7,8 @@
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 from flask_login import login_required, current_user
 
+from Role_Manager import login_admin, login_analyst, create_user_db, edit_user_db, delete_user_db
+
 import json
 import secrets
 import datetime
@@ -24,6 +26,7 @@ max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 REPO_ORIGIN = Flask_config.REPO_ORIGIN
 dict_update_description = Flask_config.dict_update_description
+regex_password = Flask_config.regex_password
 
 settings = Blueprint('settings', __name__, template_folder='templates')
 
@@ -33,8 +36,12 @@ settings = Blueprint('settings', __name__, template_folder='templates')
 def one():
     return 1
 
-#def get_v1.5_update_tags_backgroud_status():
-#    return '38%'
+def check_password_strength(password):
+    result = regex_password.match(password)
+    if result:
+        return True
+    else:
+        return False
 
 def generate_new_token(user_id):
     # create user token
@@ -89,6 +96,18 @@ def get_user_metadata(user_id):
     user_metadata['api_key'] = r_serv_db.hget('user_metadata:{}'.format(user_id), 'token')
     return user_metadata
 
+def get_users_metadata(list_users):
+    users = []
+    for user in list_users:
+        users.append(get_user_metadata(user))
+    return users
+
+def get_all_users():
+    return r_serv_db.hkeys('user:all')
+
+def get_all_roles():
+    return r_serv_db.zrange('ail:all_role', 0, -1)
+
 # ============= ROUTES ==============
 
 @settings.route("/settings/", methods=['GET'])
@@ -112,6 +131,96 @@ def edit_profile():
 def new_token():
     generate_new_token(current_user.get_id())
     return redirect(url_for('settings.edit_profile'))
+
+@settings.route("/settings/new_token_user", methods=['GET'])
+@login_required
+def new_token_user():
+    user_id = request.args.get('user_id')
+    if r_serv_db.exists('user_metadata:{}'.format(user_id)):
+        generate_new_token(user_id)
+    return redirect(url_for('settings.users_list'))
+
+@settings.route("/settings/create_user", methods=['GET'])
+@login_required
+def create_user():
+    user_id = request.args.get('user_id')
+    role = None
+    if r_serv_db.exists('user_metadata:{}'.format(user_id)):
+        role = r_serv_db.hget('user_metadata:{}'.format(user_id), 'role')
+    else:
+        user_id = None
+    all_roles = get_all_roles()
+    return render_template("create_user.html", all_roles=all_roles, user_id=user_id, user_role=role)
+
+@settings.route("/settings/create_user_post", methods=['POST'])
+@login_required
+def create_user_post():
+    email = request.form.get('username')
+    role = request.form.get('user_role')
+    password1 = request.form.get('password1')
+    password2 = request.form.get('password2')
+
+    all_roles = get_all_roles()
+
+    if email and role:
+        if role in all_roles:
+            # password set
+            if password1 and password2:
+                if password1==password2:
+                    if check_password_strength(password1):
+                        password = password1
+                    else:
+                        return render_template("create_user.html", all_roles=all_roles)
+                else:
+                    return render_template("create_user.html", all_roles=all_roles)
+            # generate password
+            else:
+                password = secrets.token_urlsafe()
+
+            if current_user.is_in_role('admin'):
+                # edit user
+                if r_serv_db.exists('user_metadata:{}'.format(email)):
+                    if password1 and password2:
+                        edit_user_db(email, password=password, role=role)
+                        return redirect(url_for('settings.users_list', new_user=email, new_user_password=password, new_user_edited=True))
+                    else:
+                        edit_user_db(email, role=role)
+                        return redirect(url_for('settings.users_list', new_user=email, new_user_password='Password not changed', new_user_edited=True))
+                # create user
+                else:
+                    create_user_db(email, password, default=True, role=role)
+                    return redirect(url_for('settings.users_list', new_user=email, new_user_password=password, new_user_edited=False))
+
+        else:
+            return render_template("create_user.html", all_roles=all_roles)
+    else:
+        return render_template("create_user.html", all_roles=all_roles)
+
+@settings.route("/settings/users_list", methods=['GET'])
+@login_required
+def users_list():
+    all_users = get_users_metadata(get_all_users())
+    new_user = request.args.get('new_user')
+    new_user_dict = {}
+    if new_user:
+        new_user_dict['email'] = new_user
+        new_user_dict['edited'] = request.args.get('new_user_edited')
+        new_user_dict['password'] = request.args.get('new_user_password')
+    print(new_user)
+    return render_template("users_list.html", all_users=all_users, new_user=new_user_dict)
+
+@settings.route("/settings/edit_user", methods=['GET'])
+@login_required
+def edit_user():
+    user_id = request.args.get('user_id')
+    return redirect(url_for('settings.create_user', user_id=user_id))
+
+@settings.route("/settings/delete_user", methods=['GET'])
+@login_required
+def delete_user():
+    user_id = request.args.get('user_id')
+    delete_user_db(user_id)
+    return redirect(url_for('settings.users_list'))
 
 
 @settings.route("/settings/get_background_update_stats_json", methods=['GET'])

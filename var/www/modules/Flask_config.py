@@ -7,6 +7,7 @@
 import configparser
 import redis
 import os
+import re
 import sys
 
 # FLASK #
@@ -174,6 +175,9 @@ REPO_ORIGIN = 'https://github.com/CIRCL/AIL-framework.git'
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
 
 crawler_enabled = cfg.getboolean("Crawler", "activate_crawler")
+
+regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,}$'
+regex_password = re.compile(regex_password)
 
 # VT
 try:
