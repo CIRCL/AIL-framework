@@ -119,6 +119,14 @@
 						  </table>
 						{%endif%}
 
+
+            <div class="text-center my-3">
+              <a href="{{ url_for('hiddenServices.download_domain') }}?domain={{domain}}&port={{port}}{% if epoch %}&epoch={{epoch}}{% endif %}" target="blank" style="font-size: 15px">
+  								<button class="btn btn-info"><i class="fas fa-download"></i> Download Domain Content
+  								</button>
+  						</a>
+            </div>
+
 					</div>
 
 					<div class="col-12 col-xl-6">

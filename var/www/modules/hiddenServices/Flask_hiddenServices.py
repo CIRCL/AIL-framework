@@ -778,7 +778,7 @@ def show_domain():
 
     return render_template("showDomain.html", domain=domain, last_check=last_check, first_seen=first_seen,
                             l_pastes=l_pastes, paste_tags=paste_tags, bootstrap_label=bootstrap_label,
-                            dict_links=dict_links,
+                            dict_links=dict_links, port=port, epoch=epoch,
                             origin_paste_tags=origin_paste_tags, status=status,
                             origin_paste=origin_paste, origin_paste_name=origin_paste_name,
                             domain_tags=domain_tags, screenshot=screenshot)
