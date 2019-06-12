@@ -82,7 +82,12 @@ def get_pgp_packet(message, save_path):
         process1 = subprocess.Popen([ 'echo', '-e', save_path], stdout=subprocess.PIPE)
         process2 = subprocess.Popen([ 'pgpdump'], stdin=process1.stdout, stdout=subprocess.PIPE)
         process1.stdout.close()
-        output = process2.communicate()[0].decode()
+        output = process2.communicate()[0]
+        try:
+            output = output.decode()
+        except UnicodeDecodeError:
+            publisher.error('Error PgpDump UnicodeDecodeError: {}'.format(message))
+            output = ''
         return output
 
 def get_pgp_packet_file(file):
