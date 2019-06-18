@@ -747,6 +747,7 @@ def show_domain():
     if first_seen is None:
         first_seen = '********'
     first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
+    ports = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'ports')
     origin_paste = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'paste_parent')
 
     h = HiddenServices(domain, type, port=port)
@@ -776,9 +777,12 @@ def show_domain():
         p_tags = r_serv_metadata.smembers('tag:'+path)
         paste_tags.append(unpack_paste_tags(p_tags))
 
+    domain_history = h.extract_epoch_from_history(h.get_domain_crawled_history())
+
     return render_template("showDomain.html", domain=domain, last_check=last_check, first_seen=first_seen,
                             l_pastes=l_pastes, paste_tags=paste_tags, bootstrap_label=bootstrap_label,
                             dict_links=dict_links, port=port, epoch=epoch,
+                            ports=ports, domain_history=domain_history,
                             origin_paste_tags=origin_paste_tags, status=status,
                             origin_paste=origin_paste, origin_paste_name=origin_paste_name,
                             domain_tags=domain_tags, screenshot=screenshot)

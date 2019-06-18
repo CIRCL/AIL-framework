@@ -17,6 +17,7 @@ Conditions to fulfill to be able to use this class correctly:
 """
 
 import os
+import time
 import gzip
 import redis
 import random
@@ -123,6 +124,22 @@ class HiddenServices(object):
                     p_tags = self.r_serv_metadata.smembers('tag:{}'.format(os.path.join(self.paste_directory, item)))
             for tag in p_tags:
                 self.tags[tag] = self.tags.get(tag, 0) + 1
+
+    def extract_epoch_from_history(self, crawled_history):
+        epoch_list = []
+        for res, epoch_val in crawled_history:
+            # domain down
+            if res == epoch_val:
+                status = False
+            # domain up
+            else:
+                status = True
+            epoch_val = int(epoch_val) # force int
+            epoch_list.append((epoch_val, time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(epoch_val)), status))
+        return epoch_list
+
+    def get_domain_crawled_history(self):
+        return self.r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, -1, withscores=True)
 
     def get_first_crawled(self):
         res = self.r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, 0, withscores=True)

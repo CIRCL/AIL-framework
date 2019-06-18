@@ -53,12 +53,14 @@
 										<tr>
 											<th>First Seen</th>
 											<th>Last Check</th>
+                      <th>Ports</th>
 										</tr>
 									</thead>
 									<tbody>
 										<tr>
 											<td class="panelText">{{ first_seen }}</td>
 											<td class="panelText">{{ last_check }}</td>
+                      <td class="panelText">{{ ports }}</td>
 										</tr>
 									</tbody>
 								</table>
@@ -126,6 +128,34 @@
   								</button>
   						</a>
             </div>
+
+            {% if domain_history %}
+							<table class="table table-hover mt-2" id="myTable_2">
+						    <thead>
+						      <tr>
+						        <th><i class="fas fa-history"></i> Domain History</th>
+						      </tr>
+						    </thead>
+						    <tbody>
+					        {% for epoch_item in domain_history %}
+					          <tr>
+				              <td class="{% if epoch_item[0]==epoch %}text-dark table-info{% endif %}">
+												<a target="_blank" href="{{ url_for('hiddenServices.show_domain') }}?domain={{domain}}&port={{port}}&epoch={{epoch_item[0]}}" class="text-secondary">
+													<div class="d-flex justify-content-around" style="line-height:0.9;">
+                            <div>{{domain}}</div>
+                            {% if epoch_item[2] %}
+                              <div style="color:Green;"><i class="fas fa-check-circle"></i> UP</div>
+                            {% else %}
+                              <div style="color:Red;"><i class="fas fa-times-circle"></i>	DOWN</div>
+                            {% endif %}
+                            <div>{{ epoch_item[1] }}</div>
+                          </div>
+												</a>
+						        </tr>
+						      {%  endfor %}
+						    </tbody>
+						  </table>
+						{%endif%}
 
 					</div>
 
