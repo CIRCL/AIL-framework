@@ -128,11 +128,15 @@ class HiddenServices(object):
     def extract_epoch_from_history(self, crawled_history):
         epoch_list = []
         for res, epoch_val in crawled_history:
-            # domain down
-            if res == epoch_val:
-                status = False
-            # domain up
-            else:
+            epoch_val = int(epoch_val) # force int
+            try:
+                # domain down
+                if int(res) == epoch_val:
+                    status = False
+                # domain up
+                else:
+                    status = True
+            except ValueError:
                 status = True
             epoch_val = int(epoch_val) # force int
             epoch_list.append((epoch_val, time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(epoch_val)), status))
