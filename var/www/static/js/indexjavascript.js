@@ -201,92 +201,94 @@ function create_log_table(obj_json) {
         return;
     }
 
-    if( chansplit[1] == "INFO" ){
-        tr.className = "info";
-    }
-    else if ( chansplit[1] == "WARNING" ){
-        tr.className = "warning";
-    }
-    else if ( chansplit[1] == "CRITICAL"){
-        tr.className = "danger"
-    }
+    if( parsedmess.length>2 ){
+      if( chansplit[1] == "INFO" ){
+          tr.className = "table-disabled";
+      }
+      else if ( chansplit[1] == "WARNING" ){
+          tr.className = "table-log-warning";
+      }
+      else if ( chansplit[1] == "CRITICAL"){
+          tr.className = "table-danger"
+      }
 
-    source_link = document.createElement("A");
-    if (parsedmess[1] == "slexy.org"){
-        source_url = "http://"+parsedmess[1]+"/view/"+parsedmess[3].split(".")[0];
-    }
-    else{
-        source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
-    }
-    source_link.setAttribute("HREF",source_url);
-    source_link.setAttribute("TARGET", "_blank");
-    source_link.appendChild(document.createTextNode(parsedmess[1]));
+      source_link = document.createElement("A");
+      if (parsedmess[1] == "slexy.org"){
+          source_url = "http://"+parsedmess[1]+"/view/"+parsedmess[3].split(".")[0];
+      }
+      else{
+          source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
+      }
+      source_link.setAttribute("HREF",source_url);
+      source_link.setAttribute("TARGET", "_blank");
+      source_link.appendChild(document.createTextNode(parsedmess[1]));
 
-    src.appendChild(source_link);
+      src.appendChild(source_link);
 
-    var now = new Date();
-    var timepaste = pad_2(now.getHours()) + ":" + pad_2(now.getMinutes()) + ":" + pad_2(now.getSeconds());
+      var now = new Date();
+      var timepaste = pad_2(now.getHours()) + ":" + pad_2(now.getMinutes()) + ":" + pad_2(now.getSeconds());
 
-    time.appendChild(document.createTextNode(timepaste));
-    chan.appendChild(document.createTextNode(chansplit[0]));
-    level.appendChild(document.createTextNode(chansplit[1]));
+      time.appendChild(document.createTextNode(timepaste));
+      chan.appendChild(document.createTextNode(chansplit[0]));
+      level.appendChild(document.createTextNode(chansplit[1]));
 
-    scrpt.appendChild(document.createTextNode(parsedmess[0]));
-    pdate.appendChild(document.createTextNode(parsedmess[2]));
-    nam.appendChild(document.createTextNode(parsedmess[3]));
+      scrpt.appendChild(document.createTextNode(parsedmess[0]));
+      pdate.appendChild(document.createTextNode(parsedmess[2]));
+      nam.appendChild(document.createTextNode(parsedmess[3]));
 
-    var iconspan = document.createElement('SPAN');
-    if (parsedmess[4].split(" ")[0] == "Detected"){
-        iconspan.className = "glyphicon glyphicon-eye-open";
-    }
-    else if (parsedmess[4].split(" ")[0] == "Checked"){
-        iconspan.className = "glyphicon glyphicon-thumbs-up";
-    }
-    iconspan.innerHTML = "&nbsp;";
-    msage.appendChild(iconspan);
-    var message = parsedmess[4].split(" ");
-    message.shift();
+      var iconspan = document.createElement('SPAN');
+      if (parsedmess[4].split(" ")[0] == "Detected"){
+          iconspan.className = "fas fa-eye";
+      }
+      else if (parsedmess[4].split(" ")[0] == "Checked"){
+          iconspan.className = "far fa-thumbs-up";
+      }
+      iconspan.innerHTML = "&nbsp;";
+      msage.appendChild(iconspan);
+      var message = parsedmess[4].split(" ");
+      message.shift();
 
-    msage.appendChild(document.createTextNode(message.join(" ")));
+      msage.appendChild(document.createTextNode(message.join(" ")));
 
-    var paste_path = parsedmess[5];
-    var url_to_saved_paste = url_showSavedPath+"?paste="+paste_path+"&num="+parsedmess[0];
+      var paste_path = parsedmess[5];
+      var url_to_saved_paste = url_showSavedPath+"?paste="+paste_path+"&num="+parsedmess[0];
 
-    var action_icon_a = document.createElement("A");
-    action_icon_a.setAttribute("TARGET", "_blank");
-    action_icon_a.setAttribute("HREF", url_to_saved_paste);
-    var action_icon_span = document.createElement('SPAN');
-    action_icon_span.className = "fa fa-search-plus";
-    action_icon_a.appendChild(action_icon_span);
+      var action_icon_a = document.createElement("A");
+      action_icon_a.setAttribute("TARGET", "_blank");
+      action_icon_a.setAttribute("HREF", url_to_saved_paste);
+      var action_icon_span = document.createElement('SPAN');
+      action_icon_span.className = "fas fa-search-plus";
+      action_icon_a.appendChild(action_icon_span);
 
-    inspect.appendChild(action_icon_a);
-    inspect.setAttribute("style", "text-align:center;");
+      inspect.appendChild(action_icon_a);
+      inspect.setAttribute("style", "text-align:center;");
 
-    tr.appendChild(time)
-    tr.appendChild(chan);
-    tr.appendChild(level);
-    tr.appendChild(scrpt);
-    tr.appendChild(src);
-    tr.appendChild(pdate);
-    tr.appendChild(nam);
-    tr.appendChild(msage);
-    tr.appendChild(inspect);
+      tr.appendChild(time)
+      tr.appendChild(chan);
+      tr.appendChild(level);
+      tr.appendChild(scrpt);
+      tr.appendChild(src);
+      tr.appendChild(pdate);
+      tr.appendChild(nam);
+      tr.appendChild(msage);
+      tr.appendChild(inspect);
 
-    if (tr.className == document.getElementById("checkbox_log_info").value && document.getElementById("checkbox_log_info").checked  == true) {
-           tableBody.appendChild(tr);
-       }
-    if (tr.className == document.getElementById("checkbox_log_warning").value && document.getElementById("checkbox_log_warning").checked == true) {
-        tableBody.appendChild(tr);
-    }
-    if (tr.className == document.getElementById("checkbox_log_critical").value && document.getElementById("checkbox_log_critical").checked == true) {
-        tableBody.appendChild(tr);
-    };
+      if (chansplit[1] == document.getElementById("checkbox_log_info").value && document.getElementById("checkbox_log_info").checked  == true) {
+             tableBody.appendChild(tr);
+         }
+      if (chansplit[1] == document.getElementById("checkbox_log_warning").value && document.getElementById("checkbox_log_warning").checked == true) {
+          tableBody.appendChild(tr);
+      }
+      if (chansplit[1] == document.getElementById("checkbox_log_critical").value && document.getElementById("checkbox_log_critical").checked == true) {
+          tableBody.appendChild(tr);
+      };
 
-    var sel = document.getElementById("log_select")
-    if (tableBody.rows.length > sel.options[sel.options.selectedIndex].value) {
-        while (tableBody.rows.length != sel.options[sel.options.selectedIndex].value){
-            tableBody.deleteRow(0);
-        }
+      var sel = document.getElementById("log_select")
+      if (tableBody.rows.length > sel.options[sel.options.selectedIndex].value) {
+          while (tableBody.rows.length != sel.options[sel.options.selectedIndex].value){
+              tableBody.deleteRow(0);
+          }
+      }
     }
 }
 
@@ -294,7 +296,7 @@ function create_queue_table() {
     document.getElementById("queueing").innerHTML = "";
     var Tablediv = document.getElementById("queueing")
     var table = document.createElement('TABLE')
-    table.className = "table table-bordered table-hover table-striped tableQueue";
+    table.className = "table table-bordered table-hover tableQueue";
     var tableHead = document.createElement('THEAD')
     var tableBody = document.createElement('TBODY')
 
@@ -323,8 +325,8 @@ function create_queue_table() {
         var td2 = document.createElement('TD');
         td.appendChild(document.createTextNode("No running queues"));
         td2.appendChild(document.createTextNode("Or no feed"));
-        td.className += " danger";
-        td2.className += " danger";
+        td.className += " table-danger";
+        td2.className += " table-danger";
         tr.appendChild(td);
         tr.appendChild(td2);
         tableBody.appendChild(tr);
@@ -345,11 +347,11 @@ function create_queue_table() {
             // - j=2: LastProcessedPasteTime
             // - j=3: Number of the module belonging in the same category
             if (parseInt(glob_tabvar.row1[i][2]) > window.threshold_stucked_module && parseInt(glob_tabvar.row1[i][1]) > 2)
-                tr.className += " danger";
+                tr.className += " table-danger";
             else if (parseInt(glob_tabvar.row1[i][1]) == 0)
-                tr.className += " warning";
+                tr.className += " table-disabled";
             else
-                tr.className += " success";
+                tr.className += " table-success";
             tableBody.appendChild(tr);
         }
     }
@@ -474,29 +476,12 @@ function load_queues() {
                     g.updateOptions( { 'file': data } );
                     g2.updateOptions( { 'file': data2 } );
 
-
-                   // TagCanvas.Reload('myCanvas');
-
                 }, interval);
             }
         });
     };
 
     refresh();
-
-    try {
-      var options = {
-      weight:true,
-      weightMode:"both",
-      noMouse:true,
-      textColour: '#2E9AFE'
-      }
-      TagCanvas.Start('myCanvas','',options);
-      TagCanvas.SetSpeed('myCanvas', [0.05, -0.15]);
-    } catch(e) {
-      // something went wrong, hide the canvas container
-      document.getElementById('myCanvasContainer').style.display = 'none';
-    }
 }
 
 function manage_undefined() {

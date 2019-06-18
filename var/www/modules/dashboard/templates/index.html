@@ -2,23 +2,40 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Analysis Information Leak framework Dashboard</title>
   <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
-  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dygraph_gallery.css') }}" rel="stylesheet" type="text/css" />
-  <link href="{{ url_for('static', filename='css/switch_checkbox.css') }}" rel="stylesheet" type="text/css" />
+
   <!-- JS -->
   <script type="text/javascript" src="{{ url_for('static', filename='js/dygraph-combined.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+  <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"
+      data-urlstuff="{{ url_for('dashboard.stuff') }}" data-urllog="{{ url_for('dashboard.logs') }}">
+  </script>
+
+  <style>
+			.tableQueue tbody tr td,
+      .tableQueue tbody tr th,
+      .tableQueue thead tr td,
+      .tableQueue thead tr th{
+				padding: 1px;
+			}
+      tr.table-disabled {
+        background-color: #f2f2f2;
+      }
+      tr.table-log-warning {
+        background-color: #ccfae3;
+      }
+	</style>
+
   <script>
       window.default_minute = {{ default_minute }};
       window.glob_tabvar = []; // Avoid undefined
@@ -31,184 +48,127 @@
       };
       update_values();
   </script>
-  <style>
-			.tableQueue tbody tr td,
-      .tableQueue tbody tr th,
-      .tableQueue thead tr td,
-      .tableQueue thead tr th{
-				padding: 1px;
-			}
-	</style>
 
 </head>
 <body>
 
-    <div id="wrapper">
-      <nav class="navbar navbar-inverse navbar-static-top nav">
-          {% include 'header.html' %}
-          <!-- /.navbar-top-links -->
-          <div class="navbar-default sidebar" role="navigation">
-              <div class="sidebar-collapse">
-                  <ul class="nav" id="side-menu">
-                      <li class="sidebar-search">
-                          <a href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
-                          {% include 'searchbox.html' %}
-                          <!-- /input-group -->
-                      </li>
-                 </ul>
-                  <!-- /#side-menu -->
-              </div>
-              <!-- /.sidebar-collapse -->
-              <div class="panel panel-default">
-                  <div class="panel-heading">
-                      <i class="fa fa-dashboard  fa-fw"></i> Total pastes since {{ default_minute }} min
-                  </div>
-                  <div class="panel-body">
-                       <div id="global" style="height: 90px; padding: 0px; position: relative;"></div>
-                  </div>
-              </div>
-                  <!-- <div id="Graph_paste_num" style="height:90px; width:100%;"></div> -->
-              <div class='pull_right'>
-                  <label class="switch">
-                      <input id="button-toggle-queues" class="switch-input" type="checkbox" checked>
-                      <span class="switch-label" data-on="On" data-off="Off"></span>
-                      <span class="switch-handle"></span>
-                  </label>
-                  <strong style="top: 3px; position: relative;">Display queues</strong>
-              <div>
-              <div>
-                  <table id="queue-color-legend" class="table">
-                  <thead>
-                  </thead>
-                  <tbody>
-                      <tr><td class="legendColorBox" style="vertical-align: ; "><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #d0e9c6;overflow:hidden"></div></div></td><td> Working queues</td></tr>
-                      <tr><td class="legendColorBox" style="vertical-align: ;"><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #faf2cc;overflow:hidden"></div></div></td><td> Idling queues</td></tr>
-                      <tr><td class="legendColorBox" style="vertical-align: ;"><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #ebcccc;overflow:hidden"></div></div></td><td> Stuck queues</td></tr>
-                  </tbody>
-                  </table>
-              </div>
-              <div class="table-responsive", id="queueing" style="margin-top:10px; font-size: small;"></div>
-             <a  href="{{ url_for('dashboard.index') }}"><img src="{{ url_for('static', filename='image/AIL.png') }}" /></a>
-          </div>
-          <!-- /.navbar-static-side -->
-      </nav>
-        <div id="page-wrapper">
-        <div class="row">
-                <div class="col-lg-12">
-		</br>
-                </div>
-        </div>
+
+{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'dashboard/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
 
         {%if update_in_progress%}
-          <div class="alert alert-warning alert-dismissible fade in">
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+          <div class="alert alert-warning alert-dismissible fade show my-2" role="alert">
             <strong>Warning!</strong> {{update_warning_message}} <strong>{{update_warning_message_notice_me}}</strong>
             (<a href="{{ url_for('settings.settings_page') }}">Check Update Status</a>)
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
         {%endif%}
 
-        <div class="alert alert-info alert-dismissible fade in">
-          <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-          <strong>Bootstrap 4 migration!</strong> Some pages are still in bootstrap 3. You can check the migration progress <strong><a href="https://github.com/CIRCL/AIL-framework/issues/330" target="_blank">Here</a></strong>.
+        <div class="alert alert-info alert-dismissible fade show mt-1" role="alert">
+            <strong>Bootstrap 4 migration!</strong> Some pages are still in bootstrap 3. You can check the migration progress <strong><a href="https://github.com/CIRCL/AIL-framework/issues/330" target="_blank">Here</a></strong>.
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
 
-            <div class="row">
-                 <div class="col-lg-6">
-                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                           <i class="fa fa-bar-chart-o fa-fw"></i> Feeder(s) Monitor:
-                        </div>
-                        <div id="panelbody" class="panel-body" style="height:420px;">
+        <div class="row my-2">
 
-                       <strong>Processed pastes</strong>
-                       <div id="Proc_feeder" style="height: 230px; padding: 0px; position: relative;"></div>
-                       <hr style="border-top: 2px solid #eee; margin-top: 7px; margin-bottom: 7px;">
-                       <strong>Filtered duplicates</strong>
-                       <div id="Dup_feeder" style="height: 100px; padding: 0px; position: relative;"></div>
-
-                        </div>
-                     <!-- /.panel-body -->
-                     </div>
-                      <!-- /.panel -->
-                 </div>
-                 <!-- /.col-lg-6 -->
-                 <div class="col-lg-6">
-                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                           <i class="fa fa-bar-chart-o fa-fw"></i> Queues Monitor
-                        </div>
-                        <div class="panel-body">
-                           <div class="row">
-                               <div class="col-lg-6" id="Graph" style="height:195px; width:88%;"></div>
-                               <div style="height:10px;"></div>
-                               <div class="col-lg-6" id="Graph2" style="height:195px; width:88%;"></div>
-                           </div>
-                        <!-- /.row -->
-                        </div>
-                     <!-- /.panel-body -->
-                     </div>
-                      <!-- /.panel -->
-                 </div>
-                 <!-- /.col-lg-6 -->
-        <div class="col-lg-12">
-        <div class="panel panel-default">
-        <div class="panel-heading">
-            <i class="fa fa-tasks fa-fw"></i> Logs
-            <div class="pull-right">
-                <label style="padding-bottom:2px;">
-		<select class="form-control input-sm" id="log_select">
-      {% for log_selection in log_select %}
-        {% if log_selection == selected %}
-          <option value="{{ log_selection }}" selected>{{ log_selection }}</option>
-        {% else %}
-    		  <option value="{{ log_selection }}">{{ log_selection }}</option>
-        {% endif %}
-      {% endfor %}
-		</select>
-                </label>
-		<input id="checkbox_log_info" type="checkbox" value="info"> INFO
-		<input id="checkbox_log_warning" type="checkbox" value="warning" checked="true"> WARNING
-		<input id="checkbox_log_critical" type="checkbox" value="critical" checked="true"> CRITICAL
-
+          <div class="col-xl-6">
+            <div class="card">
+              <div class="card-header">
+                <i class="far fa-chart-bar"></i> Feeder(s) Monitor:
+              </div>
+              <div class="card-body" id="panelbody" style="height:420px;">
+                <strong>Processed pastes</strong>
+                <div id="Proc_feeder" style="height: 230px; padding: 0px; position: relative;"></div>
+                <hr style="border-top: 2px solid #eee; margin-top: 7px; margin-bottom: 7px;">
+                <strong>Filtered duplicates</strong>
+                <div id="Dup_feeder" style="height: 100px; padding: 0px; position: relative;"></div>
+              </div>
             </div>
+          </div>
+
+          <div class="col-xl-6">
+            <div class="card">
+              <div class="card-header">
+                <i class="far fa-chart-bar"></i> Queues Monitor
+              </div>
+              <div class="card-body">
+                <div class="" id="Graph" style="height:195px; width:88%;"></div>
+                <div style="height:10px;"></div>
+                <div class="" id="Graph2" style="height:195px; width:88%;"></div>
+              </div>
+
+              </div>
+            </div>
+          </div>
+
+
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-clipboard-list"></i> Logs
+              <div class="float-right">
+                <label style="padding-bottom:2px;">
+              		<select class="form-control input-sm" id="log_select">
+                    {% for log_selection in log_select %}
+                      {% if log_selection == selected %}
+                        <option value="{{ log_selection }}" selected>{{ log_selection }}</option>
+                      {% else %}
+                  		  <option value="{{ log_selection }}">{{ log_selection }}</option>
+                      {% endif %}
+                    {% endfor %}
+              		</select>
+                </label>
+              	<input id="checkbox_log_info" type="checkbox" value="INFO"> INFO
+              	<input id="checkbox_log_warning" type="checkbox" value="WARNING" checked="true"> WARNING
+              	<input id="checkbox_log_critical" type="checkbox" value="CRITICAL" checked="true"> CRITICAL
+
+              </div>
+            </div>
+
+            <div class="card-body">
+        		  <table class="table table-hover table-sm" id="table_log">
+            		<thead>
+            			<tr>
+              		  <th>Time</th>
+              			<th>Channel</th>
+              			<th>Level</th>
+              			<th>Script Name</th>
+              			<th>Source</th>
+              			<th>Date</th>
+              			<th>Paste name</th>
+              			<th>Message</th>
+              			<th>Actions</th>
+            			</tr>
+            		</thead>
+            		<tbody id="tab_body">
+            		</tbody>
+              </table>
+            </div>
+          </div>
+
+
         </div>
-        <div class="panel-body">
-                    <div class="row">
-			    <div class="col-lg-12">
-				    <table class="table table-bordered table-hover table-striped" id="table_log">
-					<thead>
-						<tr>
-						<th>Time</th>
-						<th>Channel</th>
-						<th>Level</th>
-						<th>Script Name</th>
-						<th>Source</th>
-						<th>Date</th>
-						<th>Paste name</th>
-						<th>Message</th>
-						<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody id="tab_body">
-					</tbody>
-			            </table>
-			    </div>
-                   </div>
-        </div>
-            <!-- /.row -->
-        </div>
-        <!-- /#page-wrapper -->
+
+
 
     </div>
+  </div>
 
-    <script> var url_showSavedPath = "{{ url_for('showsavedpastes.showsavedpaste') }}"; </script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"
-      data-urlstuff="{{ url_for('dashboard.stuff') }}" data-urllog="{{ url_for('dashboard.logs') }}">
-    </script>
+</body>
+
+<script> var url_showSavedPath = "{{ url_for('showsavedpastes.showsavedpaste') }}"; </script>
 
     <script>
-        activePage = "page-index";
-        $("#"+activePage).addClass("active");
+        $("#page-Dashboard").addClass("active");
 
         var tableBody = document.getElementById('tab_body')
         $.getJSON("{{ url_for('dashboard.get_last_logs_json') }}", function(data) {
@@ -224,7 +184,7 @@
             var msage = document.createElement('TD')
             var inspect = document.createElement('TD')
 
-            tr.className = "warning";
+            tr.className = "table-log-warning";
             time.appendChild(document.createTextNode(d.time))
             chan.appendChild(document.createTextNode('Script'))
             level.appendChild(document.createTextNode('WARNING'))
@@ -236,10 +196,10 @@
             var iconspan = document.createElement('SPAN');
             var message = d.message.split(" ")
             if (message[0] == "Detected"){
-                iconspan.className = "glyphicon glyphicon-eye-open";
+                iconspan.className = "fas fa-eye";
             }
             else if (message[0] == "Checked"){
-                iconspan.className = "glyphicon glyphicon-thumbs-up";
+                iconspan.className = "far fa-thumbs-up";
             }
             iconspan.innerHTML = "&nbsp;";
             msage.appendChild(iconspan);
@@ -249,7 +209,7 @@
             action_icon_a.setAttribute("TARGET", "_blank");
             action_icon_a.setAttribute("HREF", d.path);
             var action_icon_span = document.createElement('SPAN');
-            action_icon_span.className = "fa fa-search-plus";
+            action_icon_span.className = "fas fa-search-plus";
             action_icon_a.appendChild(action_icon_span);
             inspect.appendChild(action_icon_a)
             inspect.setAttribute("style", "text-align:center;");
@@ -269,14 +229,22 @@
 
 		      });
         });
-    </script>
 
-    <script type="text/javascript">
-        initfunc( "{{ url_for('static', filename='csv/wordstrendingdata.csv') }}", {{ request.script_root|tojson|safe }} );
-    </script>
-
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-
-</body>
+function toggle_sidebar(){
+  if($('#nav_menu').is(':visible')){
+    $('#nav_menu').hide();
+    $('#side-bard-dashboard-content').hide();
+    $('#side_menu').removeClass('border-right')
+    $('#side_menu').removeClass('col-lg-2')
+    $('#core_content').removeClass('col-lg-10')
+  }else{
+    $('#nav_menu').show();
+    $('#side-bard-dashboard-content').show();
+    $('#side_menu').addClass('border-right')
+    $('#side_menu').addClass('col-lg-2')
+    $('#core_content').addClass('col-lg-10')
+  }
+}
+</script>
 
 </html>
