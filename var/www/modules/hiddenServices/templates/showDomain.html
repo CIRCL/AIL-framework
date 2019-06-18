@@ -140,7 +140,7 @@
 					        {% for epoch_item in domain_history %}
 					          <tr>
 				              <td class="{% if epoch_item[0]==epoch %}text-dark table-info{% endif %}">
-												<a target="_blank" href="{{ url_for('hiddenServices.show_domain') }}?domain={{domain}}&port={{port}}&epoch={{epoch_item[0]}}" class="text-secondary">
+												<a href="{{ url_for('hiddenServices.show_domain') }}?domain={{domain}}&port={{port}}&epoch={{epoch_item[0]}}" class="text-secondary">
 													<div class="d-flex justify-content-around" style="line-height:0.9;">
                             <div>{{domain}}</div>
                             {% if epoch_item[2] %}
