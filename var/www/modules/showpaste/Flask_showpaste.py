@@ -9,6 +9,8 @@ import json
 import os
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory, redirect, url_for
+
+from Role_Manager import login_admin, login_analyst
 from flask_login import login_required
 
 import difflib
@@ -383,18 +385,21 @@ def show_item_min(requested_path , content_range=0):
 
 @showsavedpastes.route("/showsavedpaste/") #completely shows the paste in a new tab
 @login_required
+@login_analyst
 def showsavedpaste():
     requested_path = request.args.get('paste', '')
     return showpaste(0, requested_path)
 
 @showsavedpastes.route("/showsaveditem_min/") #completely shows the paste in a new tab
 @login_required
+@login_analyst
 def showsaveditem_min():
     requested_path = request.args.get('paste', '')
     return show_item_min(requested_path)
 
 @showsavedpastes.route("/showsavedrawpaste/") #shows raw
 @login_required
+@login_analyst
 def showsavedrawpaste():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
@@ -403,6 +408,7 @@ def showsavedrawpaste():
 
 @showsavedpastes.route("/showpreviewpaste/")
 @login_required
+@login_analyst
 def showpreviewpaste():
     num = request.args.get('num', '')
     requested_path = request.args.get('paste', '')
@@ -411,6 +417,7 @@ def showpreviewpaste():
 
 @showsavedpastes.route("/getmoredata/")
 @login_required
+@login_analyst
 def getmoredata():
     requested_path = request.args.get('paste', '')
     paste = Paste.Paste(requested_path)
@@ -420,6 +427,7 @@ def getmoredata():
 
 @showsavedpastes.route("/showDiff/")
 @login_required
+@login_analyst
 def showDiff():
     s1 = request.args.get('s1', '')
     s2 = request.args.get('s2', '')
@@ -437,11 +445,13 @@ def showDiff():
 
 @showsavedpastes.route('/screenshot/<path:filename>')
 @login_required
+@login_analyst
 def screenshot(filename):
     return send_from_directory(SCREENSHOT_FOLDER, filename+'.png', as_attachment=True)
 
 @showsavedpastes.route('/send_file_to_vt/', methods=['POST'])
 @login_required
+@login_analyst
 def send_file_to_vt():
     b64_path = request.form['b64_path']
     paste = request.form['paste']

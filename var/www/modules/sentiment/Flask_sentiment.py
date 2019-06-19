@@ -10,6 +10,8 @@ import calendar
 from Date import Date
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
+
+from Role_Manager import login_admin, login_analyst
 from flask_login import login_required
 
 import Paste
@@ -41,12 +43,14 @@ def get_date_range(num_day):
 
 @sentiments.route("/sentiment_analysis_trending/")
 @login_required
+@login_analyst
 def sentiment_analysis_trending():
     return render_template("sentiment_analysis_trending.html")
 
 
 @sentiments.route("/sentiment_analysis_getplotdata/", methods=['GET'])
 @login_required
+@login_analyst
 def sentiment_analysis_getplotdata():
     # Get the top providers based on number of pastes
     oneHour = 60*60
@@ -98,6 +102,7 @@ def sentiment_analysis_getplotdata():
 
 @sentiments.route("/sentiment_analysis_plot_tool/")
 @login_required
+@login_analyst
 def sentiment_analysis_plot_tool():
     return render_template("sentiment_analysis_plot_tool.html")
 
@@ -105,6 +110,7 @@ def sentiment_analysis_plot_tool():
 
 @sentiments.route("/sentiment_analysis_plot_tool_getdata/", methods=['GET'])
 @login_required
+@login_analyst
 def sentiment_analysis_plot_tool_getdata():
     getProviders = request.args.get('getProviders')
 

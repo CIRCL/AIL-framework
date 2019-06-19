@@ -222,7 +222,7 @@ def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
 
 @Tags.route("/tags/", methods=['GET'])
 @login_required
-@login_admin
+@login_analyst
 def Tags_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -357,6 +357,7 @@ def Tags_page():
 
 @Tags.route("/Tags/get_all_tags")
 @login_required
+@login_analyst
 def get_all_tags():
 
     all_tags = r_serv_tags.smembers('list_tags')
@@ -380,6 +381,7 @@ def get_all_tags():
 
 @Tags.route("/Tags/get_all_tags_taxonomies")
 @login_required
+@login_analyst
 def get_all_tags_taxonomies():
 
     taxonomies = Taxonomies()
@@ -398,6 +400,7 @@ def get_all_tags_taxonomies():
 
 @Tags.route("/Tags/get_all_tags_galaxies")
 @login_required
+@login_analyst
 def get_all_tags_galaxy():
 
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -412,6 +415,7 @@ def get_all_tags_galaxy():
 
 @Tags.route("/Tags/get_tags_taxonomie")
 @login_required
+@login_analyst
 def get_tags_taxonomie():
 
     taxonomie = request.args.get('taxonomie')
@@ -439,6 +443,7 @@ def get_tags_taxonomie():
 
 @Tags.route("/Tags/get_tags_galaxy")
 @login_required
+@login_analyst
 def get_tags_galaxy():
 
     galaxy = request.args.get('galaxy')
@@ -460,6 +465,7 @@ def get_tags_galaxy():
 
 @Tags.route("/Tags/remove_tag")
 @login_required
+@login_analyst
 def remove_tag():
 
     #TODO verify input
@@ -492,6 +498,7 @@ def confirm_tag():
 
 @Tags.route("/Tags/tag_validation")
 @login_required
+@login_analyst
 def tag_validation():
 
     path = request.args.get('paste')
@@ -513,6 +520,7 @@ def tag_validation():
 
 @Tags.route("/Tags/addTags")
 @login_required
+@login_analyst
 def addTags():
 
     tags = request.args.get('tags')
@@ -563,6 +571,7 @@ def addTags():
 
 @Tags.route("/Tags/taxonomies")
 @login_required
+@login_analyst
 def taxonomies():
 
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
@@ -600,6 +609,7 @@ def taxonomies():
 
 @Tags.route("/Tags/edit_taxonomie")
 @login_required
+@login_analyst
 def edit_taxonomie():
 
     taxonomies = Taxonomies()
@@ -649,6 +659,7 @@ def edit_taxonomie():
 
 @Tags.route("/Tags/disable_taxonomie")
 @login_required
+@login_analyst
 def disable_taxonomie():
 
     taxonomies = Taxonomies()
@@ -670,6 +681,7 @@ def disable_taxonomie():
 
 @Tags.route("/Tags/active_taxonomie")
 @login_required
+@login_analyst
 def active_taxonomie():
 
     taxonomies = Taxonomies()
@@ -690,6 +702,7 @@ def active_taxonomie():
 
 @Tags.route("/Tags/edit_taxonomie_tag")
 @login_required
+@login_analyst
 def edit_taxonomie_tag():
 
     taxonomies = Taxonomies()
@@ -733,6 +746,7 @@ def edit_taxonomie_tag():
 
 @Tags.route("/Tags/galaxies")
 @login_required
+@login_analyst
 def galaxies():
 
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -780,6 +794,7 @@ def galaxies():
 
 @Tags.route("/Tags/edit_galaxy")
 @login_required
+@login_analyst
 def edit_galaxy():
 
     id = request.args.get('galaxy')
@@ -848,6 +863,7 @@ def edit_galaxy():
 
 @Tags.route("/Tags/active_galaxy")
 @login_required
+@login_analyst
 def active_galaxy():
 
     id = request.args.get('galaxy')
@@ -893,6 +909,7 @@ def active_galaxy():
 
 @Tags.route("/Tags/disable_galaxy")
 @login_required
+@login_analyst
 def disable_galaxy():
 
     id = request.args.get('galaxy')
@@ -914,6 +931,7 @@ def disable_galaxy():
 
 @Tags.route("/Tags/edit_galaxy_tag")
 @login_required
+@login_analyst
 def edit_galaxy_tag():
 
     arg1 = request.args.getlist('tag_enabled')
@@ -987,6 +1005,7 @@ def edit_galaxy_tag():
 
 @Tags.route("/Tags/tag_galaxy_info")
 @login_required
+@login_analyst
 def tag_galaxy_info():
 
     galaxy = request.args.get('galaxy')

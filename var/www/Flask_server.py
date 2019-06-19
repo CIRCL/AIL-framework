@@ -34,6 +34,7 @@ import Flask_config
 
 # Import Role_Manager
 from Role_Manager import create_user_db, check_password_strength
+from Role_Manager import login_admin, login_analyst
 
 def flask_init():
     # # TODO: move this to update
@@ -211,7 +212,15 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# role error template
+@app.route('/role', methods=['POST', 'GET'])
+@login_required
+def role():
+    return render_template("error/403.html"), 403
+
 @app.route('/searchbox/')
+@login_required
+@login_analyst
 def searchbox():
     return render_template("searchbox.html")
 

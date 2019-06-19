@@ -7,7 +7,8 @@
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 from flask_login import login_required, current_user
 
-from Role_Manager import login_admin, login_analyst, create_user_db, edit_user_db, delete_user_db, check_password_strength
+from Role_Manager import login_admin, login_analyst
+from Role_Manager import create_user_db, edit_user_db, delete_user_db, check_password_strength
 
 import json
 import secrets
@@ -104,6 +105,7 @@ def get_all_roles():
 
 @settings.route("/settings/", methods=['GET'])
 @login_required
+@login_analyst
 def settings_page():
     git_metadata = get_git_metadata()
     current_version = r_serv_db.get('ail:version')
@@ -114,18 +116,21 @@ def settings_page():
 
 @settings.route("/settings/edit_profile", methods=['GET'])
 @login_required
+@login_analyst
 def edit_profile():
     user_metadata = get_user_metadata(current_user.get_id())
     return render_template("edit_profile.html", user_metadata=user_metadata)
 
 @settings.route("/settings/new_token", methods=['GET'])
 @login_required
+@login_analyst
 def new_token():
     generate_new_token(current_user.get_id())
     return redirect(url_for('settings.edit_profile'))
 
 @settings.route("/settings/new_token_user", methods=['GET'])
 @login_required
+@login_admin
 def new_token_user():
     user_id = request.args.get('user_id')
     if r_serv_db.exists('user_metadata:{}'.format(user_id)):
@@ -134,6 +139,7 @@ def new_token_user():
 
 @settings.route("/settings/create_user", methods=['GET'])
 @login_required
+@login_admin
 def create_user():
     user_id = request.args.get('user_id')
     role = None
@@ -146,6 +152,7 @@ def create_user():
 
 @settings.route("/settings/create_user_post", methods=['POST'])
 @login_required
+@login_admin
 def create_user_post():
     email = request.form.get('username')
     role = request.form.get('user_role')
@@ -190,6 +197,7 @@ def create_user_post():
 
 @settings.route("/settings/users_list", methods=['GET'])
 @login_required
+@login_admin
 def users_list():
     all_users = get_users_metadata(get_all_users())
     new_user = request.args.get('new_user')
@@ -202,12 +210,14 @@ def users_list():
 
 @settings.route("/settings/edit_user", methods=['GET'])
 @login_required
+@login_admin
 def edit_user():
     user_id = request.args.get('user_id')
     return redirect(url_for('settings.create_user', user_id=user_id))
 
 @settings.route("/settings/delete_user", methods=['GET'])
 @login_required
+@login_admin
 def delete_user():
     user_id = request.args.get('user_id')
     delete_user_db(user_id)
@@ -216,6 +226,7 @@ def delete_user():
 
 @settings.route("/settings/get_background_update_stats_json", methods=['GET'])
 @login_required
+@login_analyst
 def get_background_update_stats_json():
     # handle :end, error
     update_stats = {}
