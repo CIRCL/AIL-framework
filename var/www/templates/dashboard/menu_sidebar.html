@@ -1,0 +1,41 @@
+      <div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
+
+      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar()">
+          <i class="fas fa-align-left"></i>
+      	  <span>Toggle Sidebar</span>
+      	</button>
+
+      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+          
+      	</nav>
+
+        <span id="side-bard-dashboard-content">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-tachometer-alt"></i> Total pastes since {{ default_minute }} min
+            </div>
+            <div class="card-body">
+              <div id="global" style="height: 90px; padding: 0px; position: relative;"></div>
+            </div>
+          </div>
+
+          <div class="custom-control custom-switch ml-5 mt-2">
+            <input class="custom-control-input" id="button-toggle-queues" type="checkbox" checked>
+            <label class="custom-control-label" for="button-toggle-queues"><strong style="top: 3px; position: relative;">Display queues</strong></label>
+          </div>
+          <hr>
+
+          <div>
+            <div>
+              <table id="queue-color-legend" class="table table-borderless table-sm">
+                <tbody>
+                  <tr><td class="legendColorBox" style="vertical-align: ;"><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #e8e8e8;overflow:hidden"></div></div></td><td> Idling queues</td></tr>
+                  <tr><td class="legendColorBox" style="vertical-align: ; "><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #d0e9c6;overflow:hidden"></div></div></td><td> Working queues</td></tr>
+                  <tr><td class="legendColorBox" style="vertical-align: ;"><div style="border:1px solid #ccc;padding:1px"><div style="width:100%;height:0;border:5px solid #ebcccc;overflow:hidden"></div></div></td><td> Stuck queues</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-responsive", id="queueing" style="margin-top:10px; font-size: small;"></div>
+          </div>
+        </span>
+      </div>

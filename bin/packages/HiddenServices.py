@@ -17,9 +17,13 @@ Conditions to fulfill to be able to use this class correctly:
 """
 
 import os
+import time
 import gzip
 import redis
 import random
+
+from io import BytesIO
+import zipfile
 
 import configparser
 import sys
@@ -71,6 +75,7 @@ class HiddenServices(object):
             self.paste_crawled_directory = os.path.join(self.paste_directory, cfg.get("Directories", "crawled"))
             self.paste_crawled_directory_name = cfg.get("Directories", "crawled")
             self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
+            self.screenshot_directory_screenshot = os.path.join(self.screenshot_directory, 'screenshot')
         elif type == 'i2p':
             self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
             self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
@@ -119,6 +124,26 @@ class HiddenServices(object):
                     p_tags = self.r_serv_metadata.smembers('tag:{}'.format(os.path.join(self.paste_directory, item)))
             for tag in p_tags:
                 self.tags[tag] = self.tags.get(tag, 0) + 1
+
+    def extract_epoch_from_history(self, crawled_history):
+        epoch_list = []
+        for res, epoch_val in crawled_history:
+            epoch_val = int(epoch_val) # force int
+            try:
+                # domain down
+                if int(res) == epoch_val:
+                    status = False
+                # domain up
+                else:
+                    status = True
+            except ValueError:
+                status = True
+            epoch_val = int(epoch_val) # force int
+            epoch_list.append((epoch_val, time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(epoch_val)), status))
+        return epoch_list
+
+    def get_domain_crawled_history(self):
+        return self.r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, -1, withscores=True)
 
     def get_first_crawled(self):
         res = self.r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(self.type, self.domain, self.port), 0, 0, withscores=True)
@@ -230,6 +255,13 @@ class HiddenServices(object):
         return l_crawled_pastes
     '''
 
+    def get_item_screenshot(self, item):
+        screenshot = self.r_serv_metadata.hget('paste_metadata:{}'.format(item), 'screenshot')
+        if screenshot:
+            screenshot =  os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
+            return screenshot
+        return ''
+
     def get_domain_random_screenshot(self, l_crawled_pastes, num_screenshot = 1):
         l_screenshot_paste = []
         for paste in l_crawled_pastes:
@@ -237,9 +269,8 @@ class HiddenServices(object):
             origin_paste = paste
             paste= paste.replace(self.paste_directory+'/', '')
 
-            screenshot = self.r_serv_metadata.hget('paste_metadata:{}'.format(paste), 'screenshot')
+            screenshot = self.get_item_screenshot(paste)
             if screenshot:
-                screenshot =  os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
                 l_screenshot_paste.append({'screenshot': screenshot, 'item': origin_paste})
 
         if len(l_screenshot_paste) > num_screenshot:
@@ -250,6 +281,35 @@ class HiddenServices(object):
         else:
             return l_screenshot_paste
 
+    def get_all_domain_screenshot(self, l_crawled_pastes, filename=False):
+        l_screenshot_paste = []
+        for paste in l_crawled_pastes:
+            ## FIXME: # TODO: remove me
+            origin_paste = paste
+            paste= paste.replace(self.paste_directory+'/', '')
+
+            screenshot = self.get_item_screenshot(paste)
+            if screenshot:
+                screenshot = screenshot + '.png'
+                screenshot_full_path = os.path.join(self.screenshot_directory_screenshot, screenshot)
+                if filename:
+                    screen_file_name = os.path.basename(paste) + '.png'
+                    l_screenshot_paste.append( (screenshot_full_path, screen_file_name) )
+                else:
+                    l_screenshot_paste.append(screenshot_full_path)
+        return l_screenshot_paste
+
+    def get_all_item_full_path(self, l_items, filename=False):
+        l_full_items = []
+        for item in l_items:
+            item = os.path.join(self.PASTES_FOLDER, item)
+            if filename:
+                file_name = os.path.basename(item) + '.gz'
+                l_full_items.append( (item, file_name) )
+            else:
+                l_full_items.append(item)
+        return l_full_items
+
     def get_crawled_pastes_by_date(self, date):
 
         pastes_path = os.path.join(self.paste_crawled_directory, date[0:4], date[4:6], date[6:8])
@@ -257,6 +317,63 @@ class HiddenServices(object):
 
         l_crawled_pastes = []
         return l_crawled_pastes
+
+    def get_all_har(self, l_pastes, filename=False):
+        all_har = []
+        for item in l_pastes:
+            if filename:
+                all_har.append( (self.get_item_har(item), os.path.basename(item) + '.json') )
+            else:
+                all_har.append(self.get_item_har(item))
+        return all_har
+
+
+    def get_item_har(self, item_path):
+        item_path = item_path.replace('{}/'.format(self.paste_crawled_directory_name), '', 1)
+        har_path = os.path.join(self.screenshot_directory, item_path) + '.json'
+        return har_path
+
+    def create_domain_basic_archive(self, l_pastes):
+        all_har = self.get_all_har(l_pastes, filename=True)
+        all_screenshot = self.get_all_domain_screenshot(l_pastes, filename=True)
+        all_items = self.get_all_item_full_path(l_pastes, filename=True)
+
+        # try:
+
+        # zip buffer
+        zip_buffer = BytesIO()
+
+        with zipfile.ZipFile(zip_buffer, "a") as zf:
+
+            #print(all_har)
+            self.write_in_zip_buffer(zf, all_har)
+            self.write_in_zip_buffer(zf, all_screenshot)
+            self.write_in_zip_buffer(zf, all_items)
+
+            # write map url
+            map_file_content = self.get_metadata_file(l_pastes).encode()
+            zf.writestr( '_URL_MAP_', BytesIO(map_file_content).getvalue())
+
+        zip_buffer.seek(0)
+        return zip_buffer
+
+        # except Exception as e:
+        #     print(e)
+        #     return 'Server Error'
+
+    def write_in_zip_buffer(self, zf, list_file):
+        for file_path, file_name in list_file:
+            with open(file_path, "rb") as f:
+                har_content = f.read()
+                zf.writestr( file_name, BytesIO(har_content).getvalue())
+
+    def get_metadata_file(self, list_items):
+        file_content = ''
+        dict_url = self.get_all_links(list_items)
+        for key in dict_url:
+            file_content = '{}\n{}    :    {}'.format(file_content, os.path.basename(key), dict_url[key])
+        return file_content
+
 
     '''
     def get_last_crawled_pastes_fileSearch(self):

@@ -10,7 +10,7 @@
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link mr-3" href="{{ url_for('dashboard.index') }}">Home</a>
+        <a class="nav-link mr-3" id="page-Dashboard" href="{{ url_for('dashboard.index') }}">Home</a>
       </li>
       <li class="nav-item mr-3">
         <a class="nav-link" href="{{ url_for('PasteSubmit.PasteSubmit_page') }}" aria-disabled="true"><i class="fas fa-external-link-alt"></i> Submit</a>
@@ -38,10 +38,11 @@
       </li>
     </ul>
 
-    <form class="form-inline my-2 my-lg-0 ml-auto justify-content-center">
+    <form class="form-inline my-2 my-lg-0 ml-auto justify-content-center" action="{{ url_for('searches.search') }}" method=POST>
       <div class="d-flex flex-column">
         <div>
-        <input class="form-control mr-sm-2" type="search" id="global_search" placeholder="Search" aria-label="Search" aria-describedby="advanced_search">
+        <input class="form-control mr-sm-2" type="search" id="global_search" name="query" placeholder="Search" aria-label="Search" aria-describedby="advanced_search">
+        <input type="hidden" name="index_name" class="form-control" value="0" placeholder="Index Name">
         <button class="btn btn-outline-info my-2 my-sm-0" type="submit"><i class="fas fa-search"></i></button>
         </div>
         <small id="advanced_search" class="form-text"><a class="nav text-muted" href="#" aria-disabled="true">Advanced Search</a></small>
