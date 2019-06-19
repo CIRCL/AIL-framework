@@ -55,21 +55,22 @@ from thehive4py.models import Case, CaseTask, CustomFieldHelper
 
 
 def create_the_hive_alert(source, path, tag):
-    tags = list(r_serv_metadata.smembers('tag:'+path))
+    # # TODO: check items status (processed by all modules)
+    # # TODO: add item metadata: decoded content, link to auto crawled content, pgp correlation, cryptocurrency correlation...
+    # # # TODO: description, add AIL link:show items ?
+    tags = list( r_serv_metadata.smembers('tag:{}'.format(path)) )
 
     artifacts = [
         AlertArtifact( dataType='uuid-ail', data=r_serv_db.get('ail:uuid') ),
         AlertArtifact( dataType='file', data=path, tags=tags )
     ]
 
-    l_tags = tag.split(',')
-
     # Prepare the sample Alert
     sourceRef = str(uuid.uuid4())[0:6]
     alert = Alert(title='AIL Leak',
                   tlp=3,
-                  tags=l_tags,
-                  description='infoleak',
+                  tags=tags,
+                  description='AIL Leak, triggered by {}'.format(tag),
                   type='ail',
                   source=source,
                   sourceRef=sourceRef,
