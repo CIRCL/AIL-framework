@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import redis
 import bcrypt
 import secrets
@@ -31,6 +32,15 @@ r_serv_db = redis.StrictRedis(
     db=cfg.getint("ARDB_DB", "db"),
     decode_responses=True)
 
+default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
+
+regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,100}$'
+regex_password = re.compile(regex_password)
+
+###############################################################
+###############       CHECK ROLE ACCESS      ##################
+###############################################################
+
 def login_admin(func):
     @wraps(func)
     def decorated_view(*args, **kwargs):
@@ -57,7 +67,11 @@ def login_analyst(func):
 ###############################################################
 ###############################################################
 
-
+def get_default_admin_token():
+    if r_serv_db.exists('user_metadata:admin@admin.test'):
+        return r_serv_db.hget('user_metadata:admin@admin.test', 'token')
+    else:
+        return ''
 
 def create_user_db(username_id , password, default=False, role=None, update=False):
     password = password.encode()
@@ -70,6 +84,9 @@ def create_user_db(username_id , password, default=False, role=None, update=Fals
 
     if update:
         r_serv_db.hdel('user_metadata:{}'.format(username_id), 'change_passwd')
+        # remove default user password file
+        if username_id=='admin@admin.test':
+            os.remove(default_passwd_file)
     else:
         if default:
             r_serv_db.hset('user_metadata:{}'.format(username_id), 'change_passwd', True)
@@ -93,22 +110,17 @@ def edit_user_db(user_id, role, password=None):
 
         if current_role < request_level:
             role_to_remove = get_user_role_by_range(current_role -1, request_level - 2)
-            print('to remove')
-            print(role_to_remove)
             for role_id in role_to_remove:
                 r_serv_db.srem('user_role:{}'.format(role_id), user_id)
             r_serv_db.hset('user_metadata:{}'.format(user_id), 'role', role)
         else:
             role_to_add = get_user_role_by_range(request_level -1, current_role)
-            print('to add')
-            print(role_to_add)
             for role_id in role_to_add:
                 r_serv_db.sadd('user_role:{}'.format(role_id), user_id)
             r_serv_db.hset('user_metadata:{}'.format(user_id), 'role', role)
 
 def delete_user_db(user_id):
     if r_serv_db.exists('user_metadata:{}'.format(user_id)):
-        print('r')
         role_to_remove =get_all_role()
         for role_id in role_to_remove:
             r_serv_db.srem('user_role:{}'.format(role_id), user_id)
@@ -121,6 +133,13 @@ def hashing_password(bytes_password):
     hashed = bcrypt.hashpw(bytes_password, bcrypt.gensalt())
     return hashed
 
+def check_password_strength(password):
+    result = regex_password.match(password)
+    if result:
+        return True
+    else:
+        return False
+
 def get_all_role():
     return r_serv_db.zrange('ail:all_role', 0, -1)
 
@@ -132,6 +151,4 @@ def get_all_user_role(user_role):
     return r_serv_db.zrange('ail:all_role', current_role_val -1, -1)
 
 def get_user_role_by_range(inf, sup):
-    print(inf)
-    print(sup)
     return r_serv_db.zrange('ail:all_role', inf, sup)

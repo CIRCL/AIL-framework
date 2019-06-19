@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import os
+import re
+import sys
+
 import redis
 import configparser
 import random
@@ -15,10 +19,7 @@ import bcrypt
 
 import flask
 import importlib
-import os
-import re
 from os.path import join
-import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 sys.path.append('./modules/')
 import Paste
@@ -31,52 +32,20 @@ from pytaxonomies import Taxonomies
 # Import config
 import Flask_config
 
+# Import Role_Manager
+from Role_Manager import create_user_db, check_password_strength
+
 def flask_init():
-    # check if an account exists
-    if not r_serv_db.exists('user:all'):
-        password = secrets.token_urlsafe()
-        create_user_db('admin@admin.test', password, role='admin',default=True)
-    # add default roles
+    # # TODO: move this to update
+    # role init
     if not r_serv_db.exists('ail:all_role'):
         r_serv_db.zadd('ail:all_role', 1, 'admin')
         r_serv_db.zadd('ail:all_role', 2, 'analyst')
 
-def hashing_password(bytes_password):
-    hashed = bcrypt.hashpw(bytes_password, bcrypt.gensalt())
-    return hashed
-
-def verify_password(id, bytes_password):
-    hashed_password = r_serv_db.hget('user:all', id)
-    if bcrypt.checkpw(password, hashed):
-        return True
-    else:
-        return False
-
-def check_password_strength(password):
-    result = regex_password.match(password)
-    if result:
-        return True
-    else:
-        return False
-
-
-def create_user_db(username_id , password, default=False, role=None, update=False):
-    password = password.encode()
-    password_hash = hashing_password(password)
-    r_serv_db.hset('user:all', username_id, password_hash)
-    if update:
-        r_serv_db.hdel('user_metadata:{}'.format(username_id), 'change_passwd')
-        if username_id=='admin@admin.test':
-            os.remove(default_passwd_file)
-    else:
-        if default:
-            r_serv_db.hset('user_metadata:{}'.format(username_id), 'change_passwd', True)
-        if role:
-            if role in get_all_role():
-                r_serv_db.sadd('user_role:{}'.format(role), username_id)
-
-def get_all_role():
-    return r_serv_db.zrange('ail:all_role', 0 , -1)
+    # check if an account exists
+    if not r_serv_db.exists('user:all'):
+        password = secrets.token_urlsafe()
+        create_user_db('admin@admin.test', password, role='admin',default=True)
 
 # CONFIG #
 cfg = Flask_config.cfg
@@ -84,11 +53,6 @@ baseUrl = cfg.get("Flask", "baseurl")
 baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':
     baseUrl = '/'+baseUrl
-
-default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
-
-regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,}$'
-regex_password = re.compile(regex_password)
 
 # ========= REDIS =========#
 r_serv_db = redis.StrictRedis(
@@ -181,9 +145,6 @@ modified_header = modified_header.replace('<!--insert here-->', '\n'.join(to_add
 with open('templates/header.html', 'w') as f:
     f.write(modified_header)
 
-flask_init()
-
-
 # ========= JINJA2 FUNCTIONS ========
 def list_len(s):
     return len(s)
@@ -213,7 +174,6 @@ def login():
             user = User.get(username)
             if user and user.check_password(password):
                 login_user(user) ## TODO: use remember me ?
-                print(user.is_active)
                 if user.request_password_change():
                     return redirect(url_for('change_password'))
                 else:
@@ -245,36 +205,11 @@ def change_password():
     else:
         return render_template("change_password.html")
 
-@app.route('/role', methods=['POST', 'GET'])
-def role():
-    return 'ERROR role'
-
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-@app.route('/create_user')
-@login_required
-def create_user():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    #role = request.form.get('role') ## TODO: create role
-
-    ## TODO: validate username
-    ## TODO: validate password
-
-    username = 'admin@admin.test'
-    password = 'admin'
-
-    if r_serv_db.hexists('user:all', username):
-        return 'this id is not available'
-
-    create_user_db(username, password)
-
-    return 'True'
-
 
 @app.route('/searchbox/')
 def searchbox():

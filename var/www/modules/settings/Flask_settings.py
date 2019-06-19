@@ -7,7 +7,7 @@
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 from flask_login import login_required, current_user
 
-from Role_Manager import login_admin, login_analyst, create_user_db, edit_user_db, delete_user_db
+from Role_Manager import login_admin, login_analyst, create_user_db, edit_user_db, delete_user_db, check_password_strength
 
 import json
 import secrets
@@ -26,7 +26,6 @@ max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 REPO_ORIGIN = Flask_config.REPO_ORIGIN
 dict_update_description = Flask_config.dict_update_description
-regex_password = Flask_config.regex_password
 
 settings = Blueprint('settings', __name__, template_folder='templates')
 
@@ -35,13 +34,6 @@ settings = Blueprint('settings', __name__, template_folder='templates')
 # ============ FUNCTIONS ============
 def one():
     return 1
-
-def check_password_strength(password):
-    result = regex_password.match(password)
-    if result:
-        return True
-    else:
-        return False
 
 def generate_new_token(user_id):
     # create user token
@@ -162,7 +154,7 @@ def create_user_post():
 
     all_roles = get_all_roles()
 
-    if email and role:
+    if email and len(email)< 300 and role:
         if role in all_roles:
             # password set
             if password1 and password2:
@@ -206,7 +198,6 @@ def users_list():
         new_user_dict['email'] = new_user
         new_user_dict['edited'] = request.args.get('new_user_edited')
         new_user_dict['password'] = request.args.get('new_user_password')
-    print(new_user)
     return render_template("users_list.html", all_users=all_users, new_user=new_user_dict)
 
 @settings.route("/settings/edit_user", methods=['GET'])

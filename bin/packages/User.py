@@ -44,10 +44,8 @@ class User(UserMixin):
 
     def check_password(self, password):
         password = password.encode()
-        print(self.id)
         hashed_password = self.r_serv_db.hget('user:all', self.id).encode()
         if bcrypt.checkpw(password, hashed_password):
-            print('password correct')
             return True
         else:
             return False
