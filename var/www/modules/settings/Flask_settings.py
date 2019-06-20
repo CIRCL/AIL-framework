@@ -8,7 +8,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required, current_user
 
 from Role_Manager import login_admin, login_analyst
-from Role_Manager import create_user_db, edit_user_db, delete_user_db, check_password_strength
+from Role_Manager import create_user_db, edit_user_db, delete_user_db, check_password_strength, generate_new_token
 
 import json
 import secrets
@@ -43,14 +43,6 @@ def check_email(email):
         return True
     else:
         return False
-
-def generate_new_token(user_id):
-    # create user token
-    current_token = r_serv_db.hget('user_metadata:{}'.format(user_id), 'token')
-    r_serv_db.hdel('user:tokens', current_token)
-    token = secrets.token_urlsafe(41)
-    r_serv_db.hset('user:tokens', token, user_id)
-    r_serv_db.hset('user_metadata:{}'.format(user_id), 'token', token)
 
 def get_git_metadata():
     dict_git = {}

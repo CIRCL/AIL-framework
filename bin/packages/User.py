@@ -42,7 +42,16 @@ class User(UserMixin):
     def get(self_class, id):
         return self_class(id)
 
+    def user_is_anonymous(self):
+        if self.id == "__anonymous__":
+            return True
+        else:
+            return False
+
     def check_password(self, password):
+        if self.user_is_anonymous():
+            return False
+
         password = password.encode()
         hashed_password = self.r_serv_db.hget('user:all', self.id).encode()
         if bcrypt.checkpw(password, hashed_password):

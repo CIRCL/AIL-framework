@@ -67,6 +67,14 @@ def login_analyst(func):
 ###############################################################
 ###############################################################
 
+def generate_new_token(user_id):
+    # create user token
+    current_token = r_serv_db.hget('user_metadata:{}'.format(user_id), 'token')
+    r_serv_db.hdel('user:tokens', current_token)
+    token = secrets.token_urlsafe(41)
+    r_serv_db.hset('user:tokens', token, user_id)
+    r_serv_db.hset('user_metadata:{}'.format(user_id), 'token', token)
+
 def get_default_admin_token():
     if r_serv_db.exists('user_metadata:admin@admin.test'):
         return r_serv_db.hget('user_metadata:admin@admin.test', 'token')
@@ -78,9 +86,7 @@ def create_user_db(username_id , password, default=False, role=None, update=Fals
     password_hash = hashing_password(password)
 
     # create user token
-    token = secrets.token_urlsafe(41)
-    r_serv_db.hset('user:tokens', token, username_id)
-    r_serv_db.hset('user_metadata:{}'.format(username_id), 'token', token)
+    generate_new_token(username_id)
 
     if update:
         r_serv_db.hdel('user_metadata:{}'.format(username_id), 'change_passwd')
@@ -150,5 +156,29 @@ def get_all_user_role(user_role):
     current_role_val = get_role_level(user_role)
     return r_serv_db.zrange('ail:all_role', current_role_val -1, -1)
 
+def get_all_user_upper_role(user_role):
+    current_role_val = get_role_level(user_role)
+    # remove one rank
+    if current_role_val > 1:
+        return r_serv_db.zrange('ail:all_role', 0, current_role_val -2)
+    else:
+        return []
+
 def get_user_role_by_range(inf, sup):
     return r_serv_db.zrange('ail:all_role', inf, sup)
+
+def get_user_role(user_id):
+    return r_serv_db.hget('user_metadata:{}'.format(user_id), 'role')
+
+def check_user_role_integrity(user_id):
+    user_role = get_user_role(user_id)
+    all_user_role = get_all_user_role(user_role)
+    res = True
+    for role in all_user_role:
+        if not r_serv_db.sismember('user_role:{}'.format(role), user_id):
+            res = False
+    upper_role = get_all_user_upper_role(user_role)
+    for role in upper_role:
+        if r_serv_db.sismember('user_role:{}'.format(role), user_id):
+            res = False
+    return res

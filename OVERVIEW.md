@@ -63,12 +63,10 @@ Redis and ARDB overview
 | | | |
 | user_metadata:**user id** | token | **token**  |
 |                           | change_passwd  | **boolean** |
+|                           | role  | **role** |
 
 | Set Key | Value |
 | ------ | ------ |
-| user:request_password_change | **user id** |
-| user:admin | **user id** |
-| | |
 | user_role:**role** | **user id** |
 
 

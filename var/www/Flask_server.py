@@ -33,7 +33,7 @@ from pytaxonomies import Taxonomies
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import create_user_db, check_password_strength
+from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
 from Role_Manager import login_admin, login_analyst
 
 # CONFIG #
@@ -162,19 +162,24 @@ def login():
         if username is not None:
             user = User.get(username)
             if user and user.check_password(password):
+                if not check_user_role_integrity(user.get_id()):
+                    error = 'Incorrect User ACL, Please contact your administrator'
+                    return render_template("login.html", error=error)
                 login_user(user) ## TODO: use remember me ?
                 if user.request_password_change():
                     return redirect(url_for('change_password'))
                 else:
                     return redirect(url_for('dashboard.index'))
             else:
-                return 'incorrect password'
+                error = 'Password Incorrect'
+                return render_template("login.html", error=error)
 
-        return 'none'
+        return 'please provide a valid username'
 
     else:
         #next_page = request.args.get('next')
-        return render_template("login.html")
+        error = request.args.get('error')
+        return render_template("login.html" , error=error)
 
 @app.route('/change_password', methods=['POST', 'GET'])
 @login_required
