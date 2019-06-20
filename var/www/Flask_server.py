@@ -224,6 +224,13 @@ def role():
 def searchbox():
     return render_template("searchbox.html")
 
+# ========== ERROR HANDLER ============
+
+@app.errorhandler(404)
+@login_required
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('error/404.html'), 404
 
 # ========== INITIAL taxonomies ============
 # add default ail taxonomies
