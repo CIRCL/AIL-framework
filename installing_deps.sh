@@ -101,6 +101,7 @@ fi
 
 pushd var/www/
 ./update_thirdparty.sh
+python3 create_default_user.py
 popd
 
 mkdir -p $AIL_HOME/PASTES

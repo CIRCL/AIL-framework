@@ -36,18 +36,6 @@ import Flask_config
 from Role_Manager import create_user_db, check_password_strength
 from Role_Manager import login_admin, login_analyst
 
-def flask_init():
-    # # TODO: move this to update
-    # role init
-    if not r_serv_db.exists('ail:all_role'):
-        r_serv_db.zadd('ail:all_role', 1, 'admin')
-        r_serv_db.zadd('ail:all_role', 2, 'analyst')
-
-    # check if an account exists
-    if not r_serv_db.exists('user:all'):
-        password = secrets.token_urlsafe()
-        create_user_db('admin@admin.test', password, role='admin',default=True)
-
 # CONFIG #
 cfg = Flask_config.cfg
 baseUrl = cfg.get("Flask", "baseurl")

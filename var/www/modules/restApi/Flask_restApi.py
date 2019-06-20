@@ -93,10 +93,10 @@ def one():
 
 # ============= ROUTES ==============
 
-@restApi.route("/api", methods=['GET'])
-@login_required
-def api():
-    return 'api doc'
+# @restApi.route("/api", methods=['GET'])
+# @login_required
+# def api():
+#     return 'api doc'
 
 @restApi.route("api/items", methods=['POST'])
 @token_required

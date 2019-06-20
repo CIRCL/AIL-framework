@@ -20,6 +20,8 @@ indexdir/
 logs/
 old/
 
+DEFAULT_PASSWORD
+
 # Webstuff
 var/www/static/
 !var/www/static/css/dygraph_gallery.css

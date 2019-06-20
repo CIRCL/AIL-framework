@@ -42,8 +42,6 @@ Redis and ARDB overview
 | | **background update name** |
 | | **...** |
 | | |
-| ail:update_date_v1.5 | **update date** |
-| | |
 | ail:update_error | **update message error** |
 | | |
 | ail:update_in_progress | **update version in progress** |
@@ -51,6 +49,10 @@ Redis and ARDB overview
 | | |
 | ail:current_background_script | **name of the background script currently executed** |
 | ail:current_background_script_stat | **progress in % of the background script** |
+
+| Hset Key | Field | Value |
+| ------ | ------ | ------ |
+| ail:update_date | **update tag** | **update date**  |
 
 ##### User Management:
 | Hset Key | Field | Value |
