@@ -7,6 +7,7 @@
 import configparser
 import redis
 import os
+import re
 import sys
 
 # FLASK #
@@ -174,6 +175,9 @@ REPO_ORIGIN = 'https://github.com/CIRCL/AIL-framework.git'
 max_dashboard_logs = int(cfg.get("Flask", "max_dashboard_logs"))
 
 crawler_enabled = cfg.getboolean("Crawler", "activate_crawler")
+
+email_regex = r'[^@]+@[^@]+\.[^@]+'
+email_regex = re.compile(email_regex)
 
 # VT
 try:

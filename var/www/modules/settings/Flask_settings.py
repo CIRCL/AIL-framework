@@ -27,6 +27,7 @@ max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 REPO_ORIGIN = Flask_config.REPO_ORIGIN
 dict_update_description = Flask_config.dict_update_description
+email_regex = Flask_config.email_regex
 
 settings = Blueprint('settings', __name__, template_folder='templates')
 
@@ -35,6 +36,13 @@ settings = Blueprint('settings', __name__, template_folder='templates')
 # ============ FUNCTIONS ============
 def one():
     return 1
+
+def check_email(email):
+    result = email_regex.match(email)
+    if result:
+        return True
+    else:
+        return False
 
 def generate_new_token(user_id):
     # create user token
@@ -142,13 +150,15 @@ def new_token_user():
 @login_admin
 def create_user():
     user_id = request.args.get('user_id')
+    error = request.args.get('error')
+    error_mail = request.args.get('error_mail')
     role = None
     if r_serv_db.exists('user_metadata:{}'.format(user_id)):
         role = r_serv_db.hget('user_metadata:{}'.format(user_id), 'role')
     else:
         user_id = None
     all_roles = get_all_roles()
-    return render_template("create_user.html", all_roles=all_roles, user_id=user_id, user_role=role)
+    return render_template("create_user.html", all_roles=all_roles, user_id=user_id, user_role=role, error=error, error_mail=error_mail)
 
 @settings.route("/settings/create_user_post", methods=['POST'])
 @login_required
@@ -161,7 +171,7 @@ def create_user_post():
 
     all_roles = get_all_roles()
 
-    if email and len(email)< 300 and role:
+    if email and len(email)< 300 and check_email(email) and role:
         if role in all_roles:
             # password set
             if password1 and password2:
@@ -169,9 +179,9 @@ def create_user_post():
                     if check_password_strength(password1):
                         password = password1
                     else:
-                        return render_template("create_user.html", all_roles=all_roles)
+                        return render_template("create_user.html", all_roles=all_roles, error="Incorrect Password")
                 else:
-                    return render_template("create_user.html", all_roles=all_roles)
+                    return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match")
             # generate password
             else:
                 password = secrets.token_urlsafe()
@@ -193,7 +203,7 @@ def create_user_post():
         else:
             return render_template("create_user.html", all_roles=all_roles)
     else:
-        return render_template("create_user.html", all_roles=all_roles)
+        return render_template("create_user.html", all_roles=all_roles, error_mail=True)
 
 @settings.route("/settings/users_list", methods=['GET'])
 @login_required

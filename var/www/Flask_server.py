@@ -193,18 +193,26 @@ def login():
 def change_password():
     password1 = request.form.get('password1')
     password2 = request.form.get('password2')
+    error = request.args.get('error')
 
-    # # TODO: display errors message
+    if error:
+        return render_template("change_password.html", error=error)
 
-    if current_user.is_authenticated and password1!=None and password1==password2:
-        if check_password_strength(password1):
-            user_id = current_user.get_id()
-            create_user_db(user_id , password1, update=True)
-            return redirect(url_for('dashboard.index'))
+    if current_user.is_authenticated and password1!=None:
+        if password1==password2:
+            if check_password_strength(password1):
+                user_id = current_user.get_id()
+                create_user_db(user_id , password1, update=True)
+                return redirect(url_for('dashboard.index'))
+            else:
+                error = 'Incorrect password'
+                return render_template("change_password.html", error=error)
         else:
-            return render_template("change_password.html")
+            error = "Passwords don't match"
+            return render_template("change_password.html", error=error)
     else:
-        return render_template("change_password.html")
+        error = 'Please choose a new password'
+        return render_template("change_password.html", error=error)
 
 @app.route('/logout')
 @login_required
@@ -229,7 +237,7 @@ def searchbox():
 @app.errorhandler(404)
 @login_required
 def page_not_found(e):
-    # note that we set the 404 status explicitly
+    # avoid endpoint enumeration
     return render_template('error/404.html'), 404
 
 # ========== INITIAL taxonomies ============
