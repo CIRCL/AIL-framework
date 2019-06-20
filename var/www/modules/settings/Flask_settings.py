@@ -119,7 +119,10 @@ def settings_page():
     current_version = r_serv_db.get('ail:version')
     update_metadata = get_update_metadata()
 
+    admin_level = current_user.is_in_role('admin')
+
     return render_template("settings_index.html", git_metadata=git_metadata,
+                            admin_level=admin_level,
                             current_version=current_version)
 
 @settings.route("/settings/edit_profile", methods=['GET'])
@@ -127,7 +130,9 @@ def settings_page():
 @login_analyst
 def edit_profile():
     user_metadata = get_user_metadata(current_user.get_id())
-    return render_template("edit_profile.html", user_metadata=user_metadata)
+    admin_level = current_user.is_in_role('admin')
+    return render_template("edit_profile.html", user_metadata=user_metadata,
+                            admin_level=admin_level)
 
 @settings.route("/settings/new_token", methods=['GET'])
 @login_required
@@ -158,7 +163,9 @@ def create_user():
     else:
         user_id = None
     all_roles = get_all_roles()
-    return render_template("create_user.html", all_roles=all_roles, user_id=user_id, user_role=role, error=error, error_mail=error_mail)
+    return render_template("create_user.html", all_roles=all_roles, user_id=user_id, user_role=role,
+                                        error=error, error_mail=error_mail,
+                                        admin_level=True)
 
 @settings.route("/settings/create_user_post", methods=['POST'])
 @login_required
@@ -179,9 +186,9 @@ def create_user_post():
                     if check_password_strength(password1):
                         password = password1
                     else:
-                        return render_template("create_user.html", all_roles=all_roles, error="Incorrect Password")
+                        return render_template("create_user.html", all_roles=all_roles, error="Incorrect Password", admin_level=True)
                 else:
-                    return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match")
+                    return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match", admin_level=True)
             # generate password
             else:
                 password = secrets.token_urlsafe()
@@ -201,9 +208,9 @@ def create_user_post():
                     return redirect(url_for('settings.users_list', new_user=email, new_user_password=password, new_user_edited=False))
 
         else:
-            return render_template("create_user.html", all_roles=all_roles)
+            return render_template("create_user.html", all_roles=all_roles, admin_level=True)
     else:
-        return render_template("create_user.html", all_roles=all_roles, error_mail=True)
+        return render_template("create_user.html", all_roles=all_roles, error_mail=True, admin_level=True)
 
 @settings.route("/settings/users_list", methods=['GET'])
 @login_required
@@ -216,7 +223,7 @@ def users_list():
         new_user_dict['email'] = new_user
         new_user_dict['edited'] = request.args.get('new_user_edited')
         new_user_dict['password'] = request.args.get('new_user_password')
-    return render_template("users_list.html", all_users=all_users, new_user=new_user_dict)
+    return render_template("users_list.html", all_users=all_users, new_user=new_user_dict, admin_level=True)
 
 @settings.route("/settings/edit_user", methods=['GET'])
 @login_required

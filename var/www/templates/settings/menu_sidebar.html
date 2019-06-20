@@ -37,23 +37,25 @@
       	    </li>
           </ul>
         </nav>
-        <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_users">
-      		<h5 class="d-flex text-muted w-100" id="nav_user_management">
-      		  <span>User Management</span>
-      		</h5>
-          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
-      	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('settings.create_user')}}" id="nav_create_user">
-      	        <i class="fas fa-user-plus"></i>
-      	        <span>Create User</span>
-      	      </a>
-      	    </li>
-            <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('settings.users_list')}}" id="nav_users_list">
-      	        <i class="fas fa-users"></i>
-      	        <span>Users List</span>
-      	      </a>
-      	    </li>
-          </ul>
-      	</nav>
+        {% if admin_level %}
+          <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_users">
+        		<h5 class="d-flex text-muted w-100" id="nav_user_management">
+        		  <span>User Management</span>
+        		</h5>
+            <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+        	    <li class="nav-item">
+        	      <a class="nav-link" href="{{url_for('settings.create_user')}}" id="nav_create_user">
+        	        <i class="fas fa-user-plus"></i>
+        	        <span>Create User</span>
+        	      </a>
+        	    </li>
+              <li class="nav-item">
+        	      <a class="nav-link" href="{{url_for('settings.users_list')}}" id="nav_users_list">
+        	        <i class="fas fa-users"></i>
+        	        <span>Users List</span>
+        	      </a>
+        	    </li>
+            </ul>
+        	</nav>
+        {% endif %}
       </div>
