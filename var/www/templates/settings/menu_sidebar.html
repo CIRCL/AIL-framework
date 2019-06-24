@@ -1,11 +1,11 @@
       <div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
 
-      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar()">
+      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar();">
           <i class="fas fa-align-left"></i>
       	  <span>Toggle Sidebar</span>
       	</button>
 
-      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2">
+      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
       		<h5 class="d-flex text-muted w-100" id="nav_server">
       		  <span>Diagnostic</span>
       		</h5>
@@ -17,9 +17,7 @@
       	      </a>
       	    </li>
           </ul>
-      	</nav>
-        <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_profile">
-          <h5 class="d-flex text-muted w-100" id="nav_my_profile">
+          <h5 class="d-flex text-muted w-100 py-2" id="nav_my_profile">
             <span>My Profile</span>
           </h5>
           <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
@@ -36,10 +34,8 @@
       	      </a>
       	    </li>
           </ul>
-        </nav>
         {% if admin_level %}
-          <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_users">
-        		<h5 class="d-flex text-muted w-100" id="nav_user_management">
+        		<h5 class="d-flex text-muted w-100 py-2" id="nav_user_management">
         		  <span>User Management</span>
         		</h5>
             <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
@@ -56,6 +52,7 @@
         	      </a>
         	    </li>
             </ul>
-        	</nav>
         {% endif %}
+
+        </nav>
       </div>

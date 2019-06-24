@@ -27,7 +27,7 @@
 
 			{% include 'settings/menu_sidebar.html' %}
 
-      <div class="col-12 col-xl-10" id="core_content">
+      <div class="col-12 col-lg-10" id="core_content">
 
         <form class="form-signin" action="{{ url_for('settings.create_user_post')}}" autocomplete="off" method="post">
 
@@ -119,6 +119,20 @@ $(document).ready(function(){
     toggle_password_fields();
   {% endif %}
 } );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
 
 function toggle_password_fields() {
   var password_div = $("#password-section");

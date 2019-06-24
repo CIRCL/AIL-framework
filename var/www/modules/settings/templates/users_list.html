@@ -38,7 +38,7 @@
 
 			{% include 'settings/menu_sidebar.html' %}
 
-			<div class="col-12 col-xl-10" id="core_content">
+			<div class="col-12 col-lg-10" id="core_content">
 
         {% if new_user %}
         <div class="text-center my-3 ">
@@ -103,6 +103,20 @@ $(document).ready(function(){
   $("#nav_users_list").addClass("active");
 	$("#nav_user_management").removeClass("text-muted");
 } );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
 </script>
 
 </html>
