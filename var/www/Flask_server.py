@@ -4,14 +4,13 @@
 import os
 import re
 import sys
+import ssl
+import time
 
 import redis
-import configparser
 import random
-import json
-import datetime
-import time
-import calendar
+import configparser
+
 from flask import Flask, render_template, jsonify, request, Request, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 
@@ -55,6 +54,12 @@ r_serv_tags = redis.StrictRedis(
     db=cfg.getint("ARDB_Tags", "db"),
     decode_responses=True)
 
+# =========       =========#
+
+# =========  TLS  =========#
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+ssl_context.load_cert_chain(certfile='server.crt', keyfile='server.key')
+#print(ssl_context.get_ciphers())
 # =========       =========#
 
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
@@ -258,4 +263,4 @@ r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=7000, threaded=True)
+    app.run(host='0.0.0.0', port=7000, threaded=True, ssl_context=ssl_context)

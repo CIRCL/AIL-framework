@@ -20,6 +20,19 @@ bash ${AIL_BIN}/LAUNCH.sh -k
 wait
 
 echo ""
+echo -e $GREEN"Create Self-Signed Certificate"$DEFAULT
+echo ""
+pushd ${AIL_BIN}/helper/gen_cert
+bash gen_root.sh
+wait
+bash gen_cert.sh
+wait
+popd
+
+cp ${AIL_BIN}/helper/gen_cert/server.crt ${AIL_FLASK}/server.crt
+cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}/server.key
+
+echo ""
 echo -e $GREEN"Update requirement"$DEFAULT
 echo ""
 pip3 install flask-login
@@ -30,7 +43,7 @@ wait
 echo ""
 echo ""
 
-bash ${AIL_BIN}LAUNCH.sh -lav &
+bash ${AIL_BIN}/LAUNCH.sh -lav &
 wait
 echo ""
 
