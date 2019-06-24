@@ -102,6 +102,7 @@ rm -rf temp
 mkdir -p ./static/image
 pushd static/image
 wget -q https://www.circl.lu/assets/images/logos/AIL.png -O AIL.png
+wget -q https://www.circl.lu/assets/images/logos/AIL-logo.png -O AIL-logo.png
 popd
 
 if ! [[ -n "$AIL_HOME" ]]
