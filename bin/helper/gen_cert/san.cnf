@@ -1,0 +1,11 @@
+[req]
+default_bits = 4096
+prompt = no
+default_md = sha256
+distinguished_name = dn
+
+[dn]
+C=LU
+L=Luxembourg
+O=AIL-Default
+CN = localhost
