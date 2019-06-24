@@ -13,7 +13,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AIL default update')
     parser.add_argument('-t', help='version tag' , type=str, dest='tag', required=True)
     args = parser.parse_args()
-    print(args)
 
     if not args.tag:
         parser.print_help()

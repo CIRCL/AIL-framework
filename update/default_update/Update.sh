@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo "First argument value : $1"
 if [ -z "$1" ]
   then
     echo "No tags version supplied"
