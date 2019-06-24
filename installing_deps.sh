@@ -99,9 +99,18 @@ if [ -z "$VIRTUAL_ENV" ]; then
 
 fi
 
+pushd ${AIL_BIN}/helper/gen_cert
+./gen_root.sh
+wait
+./gen_cert.sh
+wait
+popd
+
+cp ${AIL_BIN}/helper/gen_cert/server.crt ${AIL_FLASK}/server.crt
+cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}/server.key
+
 pushd var/www/
 ./update_thirdparty.sh
-python3 create_default_user.py
 popd
 
 mkdir -p $AIL_HOME/PASTES
@@ -124,6 +133,23 @@ python3 setup.py install
 HOME=$(pwd) python3 -m textblob.download_corpora
 python3 -m nltk.downloader vader_lexicon
 python3 -m nltk.downloader punkt
+popd
 
 #Create the file all_module and update the graph in doc
 $AIL_HOME/doc/generate_modules_data_flow_graph.sh
+
+#### DB SETUP ####
+
+# LAUNCH ARDB
+bash ${AIL_BIN}/LAUNCH.sh -lav &
+wait
+echo ""
+
+# create default user
+pushd ${AIL_FLASK}
+python3 create_default_user.py
+popd
+
+bash ${AIL_BIN}/LAUNCH.sh -k &
+wait
+echo ""
