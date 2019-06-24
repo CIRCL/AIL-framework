@@ -258,7 +258,11 @@ def launch_update_version(version, roll_back_commit, current_version_path, is_fo
     print('{}------------------------------------------------------------------'.format(TERMINAL_YELLOW))
     print('-                 Launching Update: {}{}{}                         -'.format(TERMINAL_BLUE, version, TERMINAL_YELLOW))
     print('--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{}'.format(TERMINAL_DEFAULT))
-    process = subprocess.Popen(['bash', update_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if not os.path.isfile(update_path):
+        update_path = os.path.join(os.environ['AIL_HOME'], 'update', 'default_update', 'Update.sh')
+        process = subprocess.Popen(['bash', update_path, version], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else:
+        process = subprocess.Popen(['bash', update_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     while True:
         output = process.stdout.readline().decode()
         if output == '' and process.poll() is not None:
