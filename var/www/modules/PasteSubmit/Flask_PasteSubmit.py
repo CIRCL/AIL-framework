@@ -280,7 +280,7 @@ def PasteSubmit_page():
     #active galaxies
     active_galaxies = r_serv_tags.smembers('active_galaxies')
 
-    return render_template("PasteSubmit.html",
+    return render_template("submiting.html",
                             active_taxonomies = active_taxonomies,
                             active_galaxies = active_galaxies)
 
@@ -353,7 +353,7 @@ def submit():
 
                 launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password ,True)
 
-                return render_template("submiting.html",
+                return render_template("submit_items.html",
                                             active_taxonomies = active_taxonomies,
                                             active_galaxies = active_galaxies,
                                             UUID = UUID)
@@ -376,7 +376,7 @@ def submit():
 
             launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password)
 
-            return render_template("submiting.html",
+            return render_template("submit_items.html",
                                         active_taxonomies = active_taxonomies,
                                         active_galaxies = active_galaxies,
                                         UUID = UUID)
