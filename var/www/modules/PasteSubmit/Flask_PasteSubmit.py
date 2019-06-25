@@ -211,7 +211,7 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pub
         leak_obj.add_attribute('duplicate_number', value=p_duplicate_number, type='counter')
 
     try:
-        templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == obj_name][0]
+        templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list()['response'] if x['ObjectTemplate']['name'] == obj_name][0]
     except IndexError:
         valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
         print ("Template for type {} not found! Valid types are: {%s}".format(obj_name, valid_types))
