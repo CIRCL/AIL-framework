@@ -280,7 +280,7 @@ def PasteSubmit_page():
     #active galaxies
     active_galaxies = r_serv_tags.smembers('active_galaxies')
 
-    return render_template("submiting.html",
+    return render_template("submit_items.html",
                             active_taxonomies = active_taxonomies,
                             active_galaxies = active_galaxies)
 

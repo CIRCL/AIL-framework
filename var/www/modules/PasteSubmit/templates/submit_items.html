@@ -169,7 +169,7 @@
 					</div>
 
 					<div class="form-group">
-						<button class="btn btn-primary " name="submit" type="submit">Submit this item</button>
+						<button class="btn btn-primary " name="submit" type="submit">Submit Item</button>
 					</div>
 
 				</form>
@@ -187,6 +187,7 @@ var ltags
 var ltagsgalaxies
 
 $(document).ready(function(){
+		$("#page-items-submit").addClass("active");
 
     $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
     function(data) {
@@ -198,20 +199,17 @@ $(document).ready(function(){
       });
     });
 
-        $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
-          function(data) {
+    $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+      function(data) {
 
-            ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
-              data: data,
-              maxDropHeight: 200,
-              name: 'ltagsgalaxies'
-            });
-          });
+        ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
+          data: data,
+          maxDropHeight: 200,
+          name: 'ltagsgalaxies'
+        });
+      });
 
-				activePage = "page-PasteSubmit"
-				$("#"+activePage).addClass("active");
-
-				$('#modalsubmit').modal({backdrop: 'static'})
+		$('#modalsubmit').modal({backdrop: 'static'})
     });
 
 function toggle_sidebar(){
