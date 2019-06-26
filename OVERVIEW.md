@@ -30,6 +30,14 @@ Redis and ARDB overview
 
 # Database Map:
 
+### Redis cache
+
+##### Brute force protection:
+| Set Key | Value |
+| ------ | ------ |
+| failed_login_ip:**ip**           | **nb login failed** | TTL
+| failed_login_user_id:**user_id** | **nb login failed** | TTL
+
 ## DB0 - Core:
 
 ##### Update keys:
