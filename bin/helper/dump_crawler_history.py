@@ -42,6 +42,8 @@ date_range = substract_date(date_from, date_to)
 
 dir_path = os.path.join(os.environ['AIL_HOME'], 'temp')
 
+domain_skipped = []
+
 for date in date_range:
     domains_up = list(r_serv_onion.smembers('{}_up:{}'.format(service_type, date)))
     if domains_up:
@@ -56,8 +58,19 @@ for date in date_range:
         item_core = h.get_domain_crawled_core_item()
         if 'root_item' in item_core:
             l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
-            res = h.create_domain_basic_archive(l_pastes)
-            filename = os.path.join(save_path, '{}'.format(domain))
-            with open(filename, 'wb') as f:
-                shutil.copyfileobj(res, f)
-                print('done')
+            try:
+                res = h.create_domain_basic_archive(l_pastes)
+                filename = os.path.join(save_path, '{}'.format(domain))
+                with open(filename, 'wb') as f:
+                    shutil.copyfileobj(res, f)
+                    print('done')
+            except Exception as e:
+                print('skipped')
+                domain_skipped.append(domain)
+                pass
+
+print()
+print()
+print('DOMAINS SKIPPED: ')
+for domain in domain_skipped:
+    print(domain)
