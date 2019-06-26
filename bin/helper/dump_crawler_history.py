@@ -54,9 +54,10 @@ for date in date_range:
         print(domain)
         h = HiddenServices(domain, 'onion')
         item_core = h.get_domain_crawled_core_item()
-        l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
-        res = h.create_domain_basic_archive(l_pastes)
-        filename = os.path.join(save_path, '{}'.format(domain))
-        with open(filename, 'wb') as f:
-            shutil.copyfileobj(res, f)
-            print('done')
+        if 'root_item' in item_core:
+            l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
+            res = h.create_domain_basic_archive(l_pastes)
+            filename = os.path.join(save_path, '{}'.format(domain))
+            with open(filename, 'wb') as f:
+                shutil.copyfileobj(res, f)
+                print('done')
