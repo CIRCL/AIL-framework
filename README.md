@@ -101,6 +101,13 @@ To upgrade from an existing AIL installation, you have to launch [python3_upgrad
 Docker Quick Start (Ubuntu 16.04 LTS)
 ------------
 
+:warning:
+Not maintained at the moment.
+If you are interested to get this running, please:
+
+Fork -> Branch -> PR
+
+
 1. Install Docker
 ```bash
 sudo su
