@@ -130,32 +130,36 @@
 										<input id="ltags" type="text" class="form-control" autocomplete="off">
 									</div>
 
-									<button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-									   Taxonomie Selected
-									</button>
-									<div class="dropdown-menu dropdown-menu-right"> <!-- TODO: make dropdown-scrollable -->
-										<h6 class="dropdown-header">Taxonomie Tags</h6>
-									  <button class="dropdown-item" type="button" id="all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
-										<div class="dropdown-divider"></div>
-										{% for taxo in active_taxonomies %}
-												<button class="dropdown-item" type="button" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
-										{% endfor %}
+									<div class="dropdown">
+										<button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-taxonomie">
+										   Taxonomie Selected
+										</button>
+										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie"> <!-- TODO: make dropdown-scrollable -->
+											<h6 class="dropdown-header">Taxonomie Tags</h6>
+										  <button class="dropdown-item" type="button" id="all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
+											<div class="dropdown-divider"></div>
+											{% for taxo in active_taxonomies %}
+													<button class="dropdown-item" type="button" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
+											{% endfor %}
+										</div>
 									</div>
 
 									<div class="input-group">
 										<input id="ltagsgalaxies" type="text" class="form-control" autocomplete="off">
 									</div>
 
-									<button type="button" class="btn btn-info dropdown-toggle mt-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-									   Galaxy Selected
-									</button>
-									<div class="dropdown-menu dropdown-menu-right"> <!-- TODO: make dropdown-scrollable -->
-										<h6 class="dropdown-header">Galaxy Tags</h6>
-									  <button class="dropdown-item" type="button" id="all-tags-galaxies">All Tags <i class="fas fa-tags"></i></button>
-										<div class="dropdown-divider"></div>
-										{% for galaxy in active_galaxies %}
-												<button class="dropdown-item" type="button" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
-										{% endfor %}
+									<div class="dropdown">
+										<button type="button" class="btn btn-info dropdown-toggle mt-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-galaxy">
+										   Galaxy Selected
+										</button>
+										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-galaxy"> <!-- TODO: make dropdown-scrollable -->
+											<h6 class="dropdown-header">Galaxy Tags</h6>
+										  <button class="dropdown-item" type="button" id="all-tags-galaxies">All Tags <i class="fas fa-tags"></i></button>
+											<div class="dropdown-divider"></div>
+											{% for galaxy in active_galaxies %}
+													<button class="dropdown-item" type="button" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
+											{% endfor %}
+										</div>
 									</div>
 
 								</div>
