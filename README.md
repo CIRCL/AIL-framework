@@ -93,55 +93,6 @@ Installation Notes
 
 In order to use AIL combined with **ZFS** or **unprivileged LXC** it's necessary to disable Direct I/O in `$AIL_HOME/configs/6382.conf` by changing the value of the directive `use_direct_io_for_flush_and_compaction` to `false`.
 
-Python 3 Upgrade
-------------
-
-To upgrade from an existing AIL installation, you have to launch [python3_upgrade.sh](./python3_upgrade.sh), this script will delete and create a new virtual environment. The script **will upgrade the packages but won't keep your previous data** (neverthless the data is copied into a directory called `old`). If you install from scratch, you don't require to launch the [python3_upgrade.sh](./python3_upgrade.sh).
-
-Docker Quick Start (Ubuntu 16.04 LTS)
-------------
-
-:warning:
-Not maintained at the moment.
-If you are interested to get this running, please:
-
-Fork -> Branch -> PR
-
-
-1. Install Docker
-```bash
-sudo su
-apt-get install -y curl
-curl https://get.docker.com | /bin/bash
-```
-
-2. Type these commands to build the Docker image:
-```bash
-git clone https://github.com/CIRCL/AIL-framework.git
-cd AIL-framework
-docker build -t ail-framework .
-```
-3. To start AIL on port 7000, type the following command below:
-```
-docker run -p 7000:7000 ail-framework
-```
-
-4. To debug the running container, type the following command and note the container name or identifier:
-```bash
-docker ps
-```
-
-After getting the name or identifier type the following commands:
-```bash
-docker exec -it CONTAINER_NAME_OR_IDENTIFIER bash
-cd /opt/ail
-```
-
-Install using Ansible
----------------------
-
-Please check the [Ansible readme](ansible/README.md).
-
 Starting AIL
 --------------------------
 
@@ -161,7 +112,7 @@ The default credentials for the web interface are located in ``DEFAULT_PASSWORD`
 Training
 --------
 
-CIRCL organises training on how to use or extend the AIL framework. The next training will be [Thursday, 20 Dec](https://en.xing-events.com/ZEQWMLJ.html) in Luxembourg.
+CIRCL organises training on how to use or extend the AIL framework. AIL training materials are available at [https://www.circl.lu/services/ail-training-materials/](https://www.circl.lu/services/ail-training-materials/).
 
 HOWTO
 -----
