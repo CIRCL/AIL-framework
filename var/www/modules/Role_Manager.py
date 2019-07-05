@@ -66,7 +66,7 @@ def login_analyst(func):
 ###############################################################
 ###############################################################
 
-def gen_password(length=30, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()"):
+def gen_password(length=30, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_!@#$%^&*()"):
     random_bytes = os.urandom(length)
     len_charset = len(charset)
     indices = [int(len_charset * (byte / 256.0)) for byte in random_bytes]
