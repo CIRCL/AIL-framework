@@ -8,10 +8,9 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required, current_user
 
 from Role_Manager import login_admin, login_analyst
-from Role_Manager import create_user_db, edit_user_db, delete_user_db, check_password_strength, generate_new_token
+from Role_Manager import create_user_db, edit_user_db, delete_user_db, check_password_strength, generate_new_token, gen_password
 
 import json
-import secrets
 import datetime
 
 import git_status
@@ -183,7 +182,7 @@ def create_user_post():
                     return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match", admin_level=True)
             # generate password
             else:
-                password = secrets.token_urlsafe()
+                password = gen_password()
 
             if current_user.is_in_role('admin'):
                 # edit user

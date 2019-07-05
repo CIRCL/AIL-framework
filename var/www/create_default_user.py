@@ -4,12 +4,11 @@
 import os
 import sys
 import redis
-import secrets
 import configparser
 
 sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
 
-from Role_Manager import create_user_db, edit_user_db, get_default_admin_token
+from Role_Manager import create_user_db, edit_user_db, get_default_admin_token, gen_password
 
 
 
@@ -36,7 +35,7 @@ if __name__ == "__main__":
         r_serv.zadd('ail:all_role', 2, 'analyst')
 
     username = 'admin@admin.test'
-    password = secrets.token_urlsafe()
+    password = gen_password()
     if r_serv.exists('user_metadata:admin@admin.test'):
         edit_user_db(username, password=password, role='admin')
     else:
@@ -51,3 +50,4 @@ if __name__ == "__main__":
 
     print('new user created: {}'.format(username))
     print('password: {}'.format(password))
+    print('token: {}'.format(token))

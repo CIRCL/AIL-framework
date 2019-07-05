@@ -5,7 +5,6 @@ import os
 import re
 import redis
 import bcrypt
-import secrets
 import configparser
 
 from functools import wraps
@@ -67,11 +66,23 @@ def login_analyst(func):
 ###############################################################
 ###############################################################
 
+def gen_password(length=30, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()"):
+    random_bytes = os.urandom(length)
+    len_charset = len(charset)
+    indices = [int(len_charset * (byte / 256.0)) for byte in random_bytes]
+    return "".join([charset[index] for index in indices])
+
+def gen_token(length=41, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"):
+    random_bytes = os.urandom(length)
+    len_charset = len(charset)
+    indices = [int(len_charset * (byte / 256.0)) for byte in random_bytes]
+    return "".join([charset[index] for index in indices])
+
 def generate_new_token(user_id):
     # create user token
     current_token = r_serv_db.hget('user_metadata:{}'.format(user_id), 'token')
     r_serv_db.hdel('user:tokens', current_token)
-    token = secrets.token_urlsafe(41)
+    token = gen_token(41)
     r_serv_db.hset('user:tokens', token, user_id)
     r_serv_db.hset('user_metadata:{}'.format(user_id), 'token', token)
 
