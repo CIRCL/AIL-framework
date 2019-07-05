@@ -78,14 +78,13 @@ Type these command lines for a fully automated installation and start AIL framew
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
 ./installing_deps.sh
+
 cd ~/AIL-framework/
-. ./AILENV/bin/activate
 cd bin/
-./LAUNCH.sh
+./LAUNCH.sh -l
 ```
 
-The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distributions. For Arch
-linux based distributions, you can replace it with [installing_deps_archlinux.sh](./installing_deps_archlinux.sh).
+The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distributions.
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
@@ -143,23 +142,12 @@ Install using Ansible
 
 Please check the [Ansible readme](ansible/README.md).
 
-Starting AIL web interface
+Starting AIL
 --------------------------
 
-To start the web interface, you first need to fetch the required JavaScript/CSS files:
-
 ```bash
-cd $AILENV
-cd var/www/
-bash update_thirdparty.sh
-```
-
-and then you can start the web interface python script:
-
-```bash
-cd $AILENV
-cd var/www/
-./Flask_server.py
+cd bin/
+./LAUNCH -l
 ```
 
 Eventually you can browse the status of the AIL framework website at the following URL:
@@ -167,6 +155,8 @@ Eventually you can browse the status of the AIL framework website at the followi
 ```
 http://localhost:7000/
 ```
+
+The default credentials for the web interface are located in ``DEFAULT_PASSWORD``. This file is removed when you change your password.
 
 Training
 --------

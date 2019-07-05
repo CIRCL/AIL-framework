@@ -11,6 +11,9 @@ import datetime
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
 
+from Role_Manager import login_admin, login_analyst
+from flask_login import login_required
+
 import Paste
 from whoosh import index
 from whoosh.fields import Schema, TEXT, ID
@@ -93,6 +96,8 @@ def to_iso_date(timestamp):
 # ============ ROUTES ============
 
 @searches.route("/search", methods=['POST'])
+@login_required
+@login_analyst
 def search():
     query = request.form['query']
     q = []
@@ -180,6 +185,8 @@ def search():
 
 
 @searches.route("/get_more_search_result", methods=['POST'])
+@login_required
+@login_analyst
 def get_more_search_result():
     query = request.form['query']
     q = []

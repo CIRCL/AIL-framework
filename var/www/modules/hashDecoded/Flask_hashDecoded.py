@@ -17,6 +17,8 @@ from hashlib import sha256
 
 import requests
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, send_file
+from Role_Manager import login_admin, login_analyst
+from flask_login import login_required
 
 # ============ VARIABLES ============
 import Flask_config
@@ -474,6 +476,8 @@ def correlation_graph_node_json(correlation_type, type_id, key_id):
 
 # ============= ROUTES ==============
 @hashDecoded.route("/hashDecoded/all_hash_search", methods=['POST'])
+@login_required
+@login_analyst
 def all_hash_search():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -483,6 +487,8 @@ def all_hash_search():
     return redirect(url_for('hashDecoded.hashDecoded_page', date_from=date_from, date_to=date_to, type=type, encoding=encoding, show_decoded_files=show_decoded_files))
 
 @hashDecoded.route("/hashDecoded/", methods=['GET'])
+@login_required
+@login_analyst
 def hashDecoded_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -600,6 +606,8 @@ def hashDecoded_page():
 
 
 @hashDecoded.route('/hashDecoded/hash_by_type')
+@login_required
+@login_analyst
 def hash_by_type():
     type = request.args.get('type')
     type = 'text/plain'
@@ -607,12 +615,16 @@ def hash_by_type():
 
 
 @hashDecoded.route('/hashDecoded/hash_hash')
+@login_required
+@login_analyst
 def hash_hash():
     hash = request.args.get('hash')
     return render_template('hash_hash.html')
 
 
 @hashDecoded.route('/hashDecoded/showHash')
+@login_required
+@login_analyst
 def showHash():
     hash = request.args.get('hash')
     #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
@@ -666,6 +678,8 @@ def showHash():
 
 
 @hashDecoded.route('/hashDecoded/downloadHash')
+@login_required
+@login_analyst
 def downloadHash():
     hash = request.args.get('hash')
     # sanitize hash
@@ -702,6 +716,8 @@ def downloadHash():
 
 
 @hashDecoded.route('/hashDecoded/hash_by_type_json')
+@login_required
+@login_analyst
 def hash_by_type_json():
     type = request.args.get('type')
 
@@ -735,6 +751,8 @@ def hash_by_type_json():
 
 
 @hashDecoded.route('/hashDecoded/decoder_type_json')
+@login_required
+@login_analyst
 def decoder_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -790,6 +808,8 @@ def decoder_type_json():
 
 
 @hashDecoded.route('/hashDecoded/top5_type_json')
+@login_required
+@login_analyst
 def top5_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -848,6 +868,8 @@ def top5_type_json():
 
 
 @hashDecoded.route('/hashDecoded/daily_type_json')
+@login_required
+@login_analyst
 def daily_type_json():
     date = request.args.get('date')
 
@@ -867,6 +889,8 @@ def daily_type_json():
 
 
 @hashDecoded.route('/hashDecoded/range_type_json')
+@login_required
+@login_analyst
 def range_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -923,6 +947,8 @@ def range_type_json():
 
 
 @hashDecoded.route('/hashDecoded/hash_graph_line_json')
+@login_required
+@login_analyst
 def hash_graph_line_json():
     hash = request.args.get('hash')
     date_from = request.args.get('date_from')
@@ -952,6 +978,8 @@ def hash_graph_line_json():
 
 
 @hashDecoded.route('/hashDecoded/hash_graph_node_json')
+@login_required
+@login_analyst
 def hash_graph_node_json():
     hash = request.args.get('hash')
 
@@ -1019,6 +1047,8 @@ def hash_graph_node_json():
 
 
 @hashDecoded.route('/hashDecoded/hash_types')
+@login_required
+@login_analyst
 def hash_types():
     date_from = 20180701
     date_to = 20180706
@@ -1026,6 +1056,8 @@ def hash_types():
 
 
 @hashDecoded.route('/hashDecoded/send_file_to_vt_js')
+@login_required
+@login_analyst
 def send_file_to_vt_js():
     hash = request.args.get('hash')
 
@@ -1049,6 +1081,8 @@ def send_file_to_vt_js():
 
 
 @hashDecoded.route('/hashDecoded/update_vt_result')
+@login_required
+@login_analyst
 def update_vt_result():
     hash = request.args.get('hash')
 
@@ -1085,6 +1119,8 @@ def update_vt_result():
 ############################ PGPDump ############################
 
 @hashDecoded.route('/decoded/pgp_by_type_json') ## TODO: REFRACTOR
+@login_required
+@login_analyst
 def pgp_by_type_json():
     type_id = request.args.get('type_id')
     date_from = request.args.get('date_from')
@@ -1129,6 +1165,8 @@ def pgp_by_type_json():
 
 ############################ Correlation ############################
 @hashDecoded.route("/correlation/pgpdump", methods=['GET'])
+@login_required
+@login_analyst
 def pgpdump_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -1139,6 +1177,8 @@ def pgpdump_page():
     return res
 
 @hashDecoded.route("/correlation/cryptocurrency", methods=['GET'])
+@login_required
+@login_analyst
 def cryptocurrency_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -1149,6 +1189,8 @@ def cryptocurrency_page():
     return res
 
 @hashDecoded.route("/correlation/all_pgpdump_search", methods=['POST'])
+@login_required
+@login_analyst
 def all_pgpdump_search():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -1157,6 +1199,8 @@ def all_pgpdump_search():
     return redirect(url_for('hashDecoded.pgpdump_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
 
 @hashDecoded.route("/correlation/all_cryptocurrency_search", methods=['POST'])
+@login_required
+@login_analyst
 def all_cryptocurrency_search():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -1165,6 +1209,8 @@ def all_cryptocurrency_search():
     return redirect(url_for('hashDecoded.cryptocurrency_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
 
 @hashDecoded.route('/correlation/show_pgpdump')
+@login_required
+@login_analyst
 def show_pgpdump():
     type_id = request.args.get('type_id')
     key_id = request.args.get('key_id')
@@ -1172,36 +1218,48 @@ def show_pgpdump():
 
 
 @hashDecoded.route('/correlation/show_cryptocurrency')
+@login_required
+@login_analyst
 def show_cryptocurrency():
     type_id = request.args.get('type_id')
     key_id = request.args.get('key_id')
     return show_correlation('cryptocurrency', type_id, key_id)
 
 @hashDecoded.route('/correlation/cryptocurrency_range_type_json')
+@login_required
+@login_analyst
 def cryptocurrency_range_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     return correlation_type_range_type_json('cryptocurrency', date_from, date_to)
 
 @hashDecoded.route('/correlation/pgpdump_range_type_json')
+@login_required
+@login_analyst
 def pgpdump_range_type_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     return correlation_type_range_type_json('pgpdump', date_from, date_to)
 
 @hashDecoded.route('/correlation/pgpdump_graph_node_json')
+@login_required
+@login_analyst
 def pgpdump_graph_node_json():
     type_id = request.args.get('type_id')
     key_id = request.args.get('key_id')
     return correlation_graph_node_json('pgpdump', type_id, key_id)
 
 @hashDecoded.route('/correlation/cryptocurrency_graph_node_json')
+@login_required
+@login_analyst
 def cryptocurrency_graph_node_json():
     type_id = request.args.get('type_id')
     key_id = request.args.get('key_id')
     return correlation_graph_node_json('cryptocurrency', type_id, key_id)
 
 @hashDecoded.route('/correlation/pgpdump_graph_line_json')
+@login_required
+@login_analyst
 def pgpdump_graph_line_json():
     type_id = request.args.get('type_id')
     key_id = request.args.get('key_id')
@@ -1234,6 +1292,8 @@ def correlation_graph_line_json(correlation_type, type_id, key_id, date_from, da
         return jsonify()
 
 @hashDecoded.route('/correlation/cryptocurrency_graph_line_json')
+@login_required
+@login_analyst
 def cryptocurrency_graph_line_json():
     type_id = request.args.get('type_id')
     key_id = request.args.get('key_id')

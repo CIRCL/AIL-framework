@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Server Management - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card mb-3 mt-1">
+					<div class="card-header text-white bg-dark pb-1">
+						<h5 class="card-title">My Profile :</h5>
+					</div>
+					<div class="card-body">
+
+            <div class="row">
+              <div class="col-xl-6">
+                <div class="card text-center border-secondary">
+                  <div class="card-body px-1 py-0">
+                    <table class="table table-sm">
+                      <tbody>
+                        <tr>
+                          <td>Email</td>
+                          <td>{{user_metadata['email']}}</td>
+                        </tr>
+                        <tr>
+                          <td>Role</td>
+                          <td>{{user_metadata['role']}}</td>
+                        </tr>
+                        <tr>
+                          <td>API Key</td>
+                          <td>
+                            {{user_metadata['api_key']}}
+                            <a class="ml-3" href="{{url_for('settings.new_token')}}"><i class="fa fa-random"></i></a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+					</div>
+				</div>
+
+    	</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+  $("#nav_edit_profile").addClass("active");
+	$("#nav_my_profile").removeClass("text-muted");
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</html>

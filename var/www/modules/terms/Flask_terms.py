@@ -11,6 +11,10 @@ import datetime
 import calendar
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect
+
+from Role_Manager import login_admin, login_analyst
+from flask_login import login_required
+
 import re
 import Paste
 from pprint import pprint
@@ -143,6 +147,8 @@ def save_tag_to_auto_push(list_tag):
 # ============ ROUTES ============
 
 @terms.route("/terms_management/")
+@login_required
+@login_analyst
 def terms_management():
     per_paste = request.args.get('per_paste')
     if per_paste == "1" or per_paste is None:
@@ -261,6 +267,8 @@ def terms_management():
 
 
 @terms.route("/terms_management_query_paste/")
+@login_required
+@login_analyst
 def terms_management_query_paste():
     term =  request.args.get('term')
     paste_info = []
@@ -293,6 +301,8 @@ def terms_management_query_paste():
 
 
 @terms.route("/terms_management_query/")
+@login_required
+@login_analyst
 def terms_management_query():
     TrackedTermsDate_Name = "TrackedTermDate"
     BlackListTermsDate_Name = "BlackListTermDate"
@@ -315,6 +325,8 @@ def terms_management_query():
 
 
 @terms.route("/terms_management_action/", methods=['GET'])
+@login_required
+@login_analyst
 def terms_management_action():
     today = datetime.datetime.now()
     today = today.replace(microsecond=0)
@@ -440,6 +452,8 @@ def terms_management_action():
         return jsonify(to_return)
 
 @terms.route("/terms_management/delete_terms_tags", methods=['POST'])
+@login_required
+@login_analyst
 def delete_terms_tags():
     term = request.form.get('term')
     tags_to_delete = request.form.getlist('tags_to_delete')
@@ -452,6 +466,8 @@ def delete_terms_tags():
         return 'None args', 400
 
 @terms.route("/terms_management/delete_terms_email", methods=['GET'])
+@login_required
+@login_analyst
 def delete_terms_email():
     term =  request.args.get('term')
     email =  request.args.get('email')
@@ -464,6 +480,8 @@ def delete_terms_email():
 
 
 @terms.route("/terms_plot_tool/")
+@login_required
+@login_analyst
 def terms_plot_tool():
     term =  request.args.get('term')
     if term is not None:
@@ -473,6 +491,8 @@ def terms_plot_tool():
 
 
 @terms.route("/terms_plot_tool_data/")
+@login_required
+@login_analyst
 def terms_plot_tool_data():
     oneDay = 60*60*24
     range_start =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_start')))) if request.args.get('range_start') is not None else 0;
@@ -503,6 +523,8 @@ def terms_plot_tool_data():
 
 
 @terms.route("/terms_plot_top/")
+@login_required
+@login_analyst
 def terms_plot_top():
     per_paste = request.args.get('per_paste')
     per_paste = per_paste if per_paste is not None else 1
@@ -510,6 +532,8 @@ def terms_plot_top():
 
 
 @terms.route("/terms_plot_top_data/")
+@login_required
+@login_analyst
 def terms_plot_top_data():
     oneDay = 60*60*24
     today = datetime.datetime.now()
@@ -556,10 +580,14 @@ def terms_plot_top_data():
 
 
 @terms.route("/credentials_tracker/")
+@login_required
+@login_analyst
 def credentials_tracker():
     return render_template("credentials_tracker.html")
 
 @terms.route("/credentials_management_query_paste/", methods=['GET', 'POST'])
+@login_required
+@login_analyst
 def credentials_management_query_paste():
     cred =  request.args.get('cred')
     allPath = request.json['allPath']
@@ -583,6 +611,8 @@ def credentials_management_query_paste():
     return jsonify(paste_info)
 
 @terms.route("/credentials_management_action/", methods=['GET'])
+@login_required
+@login_analyst
 def cred_management_action():
 
     supplied =  request.args.get('term')

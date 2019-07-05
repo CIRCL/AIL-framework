@@ -10,6 +10,9 @@ from Date import Date
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
 
+from Role_Manager import login_admin, login_analyst
+from flask_login import login_required
+
 # ============ VARIABLES ============
 import Flask_config
 
@@ -36,6 +39,8 @@ def get_date_range(num_day):
 # ============ ROUTES ============
 
 @trendings.route("/_progressionCharts", methods=['GET'])
+@login_required
+@login_analyst
 def progressionCharts():
     attribute_name = request.args.get('attributeName')
     trending_name = request.args.get('trendingName')
@@ -61,18 +66,24 @@ def progressionCharts():
         return jsonify(keyw_value)
 
 @trendings.route("/wordstrending/")
+@login_required
+@login_analyst
 def wordstrending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Wordstrending.html", default_display = default_display)
 
 
 @trendings.route("/protocolstrending/")
+@login_required
+@login_analyst
 def protocolstrending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Protocolstrending.html", default_display = default_display)
 
 
 @trendings.route("/trending/")
+@login_required
+@login_analyst
 def trending():
     default_display = cfg.get("Flask", "default_display")
     return render_template("Trending.html", default_display = default_display)

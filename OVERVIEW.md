@@ -30,6 +30,14 @@ Redis and ARDB overview
 
 # Database Map:
 
+### Redis cache
+
+##### Brute force protection:
+| Set Key | Value |
+| ------ | ------ |
+| failed_login_ip:**ip**           | **nb login failed** | TTL
+| failed_login_user_id:**user_id** | **nb login failed** | TTL
+
 ## DB0 - Core:
 
 ##### Update keys:
@@ -42,8 +50,6 @@ Redis and ARDB overview
 | | **background update name** |
 | | **...** |
 | | |
-| ail:update_date_v1.5 | **update date** |
-| | |
 | ail:update_error | **update message error** |
 | | |
 | ail:update_in_progress | **update version in progress** |
@@ -51,6 +57,30 @@ Redis and ARDB overview
 | | |
 | ail:current_background_script | **name of the background script currently executed** |
 | ail:current_background_script_stat | **progress in % of the background script** |
+
+| Hset Key | Field | Value |
+| ------ | ------ | ------ |
+| ail:update_date | **update tag** | **update date**  |
+
+##### User Management:
+| Hset Key | Field | Value |
+| ------ | ------ | ------ |
+| user:all | **user id** | **password hash**  |
+| | | |
+| user:tokens | **token** | **user id** |
+| | | |
+| user_metadata:**user id** | token | **token**  |
+|                           | change_passwd  | **boolean** |
+|                           | role  | **role** |
+
+| Set Key | Value |
+| ------ | ------ |
+| user_role:**role** | **user id** |
+
+
+| Zrank Key | Field | Value |
+| ------ | ------ | ------ |
+| ail:all_role | **role** | **int, role priority (1=admin)** |
 
 ## DB2 - TermFreq:
 

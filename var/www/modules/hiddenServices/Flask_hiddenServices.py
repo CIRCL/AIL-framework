@@ -13,6 +13,9 @@ import json
 from pyfaup.faup import Faup
 from flask import Flask, render_template, jsonify, request, send_file, Blueprint, redirect, url_for
 
+from Role_Manager import login_admin, login_analyst
+from flask_login import login_required
+
 from Date import Date
 from HiddenServices import HiddenServices
 
@@ -239,6 +242,8 @@ def delete_auto_crawler(url):
 # ============= ROUTES ==============
 
 @hiddenServices.route("/crawlers/", methods=['GET'])
+@login_required
+@login_analyst
 def dashboard():
     crawler_metadata_onion = get_crawler_splash_status('onion')
     crawler_metadata_regular = get_crawler_splash_status('regular')
@@ -253,15 +258,15 @@ def dashboard():
                                 crawler_metadata_regular=crawler_metadata_regular,
                                 statDomains_onion=statDomains_onion, statDomains_regular=statDomains_regular)
 
-@hiddenServices.route("/hiddenServices/2", methods=['GET'])
-def hiddenServices_page_test():
-    return render_template("Crawler_index.html")
-
 @hiddenServices.route("/crawlers/manual", methods=['GET'])
+@login_required
+@login_analyst
 def manual():
     return render_template("Crawler_Splash_manual.html", crawler_enabled=crawler_enabled)
 
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
+@login_required
+@login_analyst
 def crawler_splash_onion():
     type = 'onion'
     last_onions = get_last_domains_crawled(type)
@@ -279,6 +284,8 @@ def crawler_splash_onion():
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
 @hiddenServices.route("/crawlers/Crawler_Splash_last_by_type", methods=['GET'])
+@login_required
+@login_analyst
 def Crawler_Splash_last_by_type():
     type = request.args.get('type')
     # verify user input
@@ -302,6 +309,8 @@ def Crawler_Splash_last_by_type():
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
 @hiddenServices.route("/crawlers/blacklisted_domains", methods=['GET'])
+@login_required
+@login_analyst
 def blacklisted_domains():
     blacklist_domain = request.args.get('blacklist_domain')
     unblacklist_domain = request.args.get('unblacklist_domain')
@@ -336,6 +345,8 @@ def blacklisted_domains():
         return 'Incorrect Type'
 
 @hiddenServices.route("/crawler/blacklist_domain", methods=['GET'])
+@login_required
+@login_analyst
 def blacklist_domain():
     domain = request.args.get('domain')
     type = request.args.get('type')
@@ -357,6 +368,8 @@ def blacklist_domain():
         return 'Incorrect type'
 
 @hiddenServices.route("/crawler/unblacklist_domain", methods=['GET'])
+@login_required
+@login_analyst
 def unblacklist_domain():
     domain = request.args.get('domain')
     type = request.args.get('type')
@@ -378,6 +391,8 @@ def unblacklist_domain():
         return 'Incorrect type'
 
 @hiddenServices.route("/crawlers/create_spider_splash", methods=['POST'])
+@login_required
+@login_analyst
 def create_spider_splash():
     url = request.form.get('url_to_crawl')
     automatic = request.form.get('crawler_type')
@@ -464,6 +479,8 @@ def create_spider_splash():
     return redirect(url_for('hiddenServices.manual'))
 
 @hiddenServices.route("/crawlers/auto_crawler", methods=['GET'])
+@login_required
+@login_analyst
 def auto_crawler():
     nb_element_to_display = 100
     try:
@@ -516,6 +533,8 @@ def auto_crawler():
                                 auto_crawler_domain_regular_metadata=auto_crawler_domain_regular_metadata)
 
 @hiddenServices.route("/crawlers/remove_auto_crawler", methods=['GET'])
+@login_required
+@login_analyst
 def remove_auto_crawler():
     url = request.args.get('url')
     page = request.args.get('page')
@@ -525,6 +544,8 @@ def remove_auto_crawler():
     return redirect(url_for('hiddenServices.auto_crawler', page=page))
 
 @hiddenServices.route("/crawlers/crawler_dashboard_json", methods=['GET'])
+@login_required
+@login_analyst
 def crawler_dashboard_json():
 
     crawler_metadata_onion = get_crawler_splash_status('onion')
@@ -541,6 +562,8 @@ def crawler_dashboard_json():
 
 # # TODO: refractor
 @hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_json", methods=['GET'])
+@login_required
+@login_analyst
 def last_crawled_domains_with_stats_json():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
     list_onion = []
@@ -590,6 +613,8 @@ def last_crawled_domains_with_stats_json():
     return jsonify({'last_onions': list_onion, 'statDomains': statDomains, 'crawler_metadata':crawler_metadata})
 
 @hiddenServices.route("/hiddenServices/get_onions_by_daterange", methods=['POST'])
+@login_required
+@login_analyst
 def get_onions_by_daterange():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -601,6 +626,8 @@ def get_onions_by_daterange():
     return redirect(url_for('hiddenServices.show_domains_by_daterange', date_from=date_from, date_to=date_to, service_type=service_type, domains_up=domains_up, domains_down=domains_down, domains_tags=domains_tags))
 
 @hiddenServices.route("/hiddenServices/show_domains_by_daterange", methods=['GET'])
+@login_required
+@login_analyst
 def show_domains_by_daterange():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -705,6 +732,8 @@ def show_domains_by_daterange():
                                 domains_tags=domains_tags, type=service_type, bootstrap_label=bootstrap_label)
 
 @hiddenServices.route("/crawlers/show_domain", methods=['GET'])
+@login_required
+@login_analyst
 def show_domain():
     domain = request.args.get('domain')
     epoch = request.args.get('epoch')
@@ -788,6 +817,8 @@ def show_domain():
                             domain_tags=domain_tags, screenshot=screenshot)
 
 @hiddenServices.route("/crawlers/download_domain", methods=['GET'])
+@login_required
+@login_analyst
 def download_domain():
     domain = request.args.get('domain')
     epoch = request.args.get('epoch')
@@ -839,6 +870,8 @@ def download_domain():
 
 
 @hiddenServices.route("/hiddenServices/onion_son", methods=['GET'])
+@login_required
+@login_analyst
 def onion_son():
     onion_domain = request.args.get('onion_domain')
 
@@ -849,6 +882,8 @@ def onion_son():
 
 # ============= JSON ==============
 @hiddenServices.route("/hiddenServices/domain_crawled_7days_json", methods=['GET'])
+@login_required
+@login_analyst
 def domain_crawled_7days_json():
     type = 'onion'
         ## TODO: # FIXME: 404 error
@@ -867,6 +902,8 @@ def domain_crawled_7days_json():
     return jsonify(json_domain_stats)
 
 @hiddenServices.route('/hiddenServices/domain_crawled_by_type_json')
+@login_required
+@login_analyst
 def domain_crawled_by_type_json():
     current_date = request.args.get('date')
     type = request.args.get('type')
