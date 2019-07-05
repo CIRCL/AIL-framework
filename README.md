@@ -153,7 +153,7 @@ cd bin/
 Eventually you can browse the status of the AIL framework website at the following URL:
 
 ```
-http://localhost:7000/
+https://localhost:7000/
 ```
 
 The default credentials for the web interface are located in ``DEFAULT_PASSWORD``. This file is removed when you change your password.
