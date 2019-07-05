@@ -159,3 +159,11 @@ If AIL framework is not started, it's required to start it before the crawler se
 Then starting the crawler service (if you follow the procedure above)
 
 - ```./bin/LAUNCH.sh -c```
+
+
+#### Old updates
+
+##### Python 3 Upgrade
+
+To upgrade from an existing AIL installation, you have to launch [python3_upgrade.sh](./python3_upgrade.sh), this script will delete and create a new virtual environment. The script **will upgrade the packages but won't keep your previous data** (neverthless the data is copied into a directory called `old`). If you install from scratch, you don't require to launch the [python3_upgrade.sh](./python3_upgrade.sh).
+
