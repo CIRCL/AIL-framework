@@ -316,7 +316,7 @@ if __name__ == '__main__':
     # Setup the I/O queues
     p = Process(config_section)
 
-    splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url_onion"),  splash_port)
+    splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url"),  splash_port)
     print('splash url: {}'.format(splash_url))
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
