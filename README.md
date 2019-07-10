@@ -90,6 +90,9 @@ The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu 
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
+Requirement: 
+- Python 3.5+
+
 Installation Notes
 ------------
 
