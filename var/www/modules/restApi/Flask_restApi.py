@@ -36,7 +36,7 @@ def check_token_format(strg, search=re.compile(r'[^a-zA-Z0-9_-]').search):
     return not bool(search(strg))
 
 def verify_token(token):
-    if len(token) != 55:
+    if len(token) != 41:
         return False
 
     if not check_token_format(token):
@@ -47,23 +47,41 @@ def verify_token(token):
     else:
         return False
 
+def verify_user_role(role, token):
+    user_id = r_serv_db.hget('user:tokens', token)
+    if user_id:
+        if is_in_role(user_id, role):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+def is_in_role(user_id, role):
+    if r_serv_db.sismember('user_role:{}'.format(role), user_id):
+        return True
+    else:
+        return False
+
 # ============ DECORATOR ============
 
-def token_required(funct):
-    @wraps(funct)
-    def api_token(*args, **kwargs):
-        data = authErrors()
-        if data:
-            return Response(json.dumps(data[0], indent=2, sort_keys=True), mimetype='application/json'), data[1]
-        else:
-            return funct(*args, **kwargs)
-    return api_token
+def token_required(user_role):
+    def actual_decorator(funct):
+        @wraps(funct)
+        def api_token(*args, **kwargs):
+            data = authErrors(user_role)
+            if data:
+                return Response(json.dumps(data[0], indent=2, sort_keys=True), mimetype='application/json'), data[1]
+            else:
+                return funct(*args, **kwargs)
+        return api_token
+    return actual_decorator
 
 def get_auth_from_header():
     token = request.headers.get('Authorization').replace(' ', '') # remove space
     return token
 
-def authErrors():
+def authErrors(user_role):
     # Check auth
     if not request.headers.get('Authorization'):
         return ({'status': 'error', 'reason': 'Authentication needed'}, 401)
@@ -75,6 +93,10 @@ def authErrors():
         authenticated = False
         if verify_token(token):
             authenticated = True
+
+            # check user role
+            if not verify_user_role(user_role, token):
+                data = ({'status': 'error', 'reason': 'Access Forbidden'}, 403)
 
         if not authenticated:
             data = ({'status': 'error', 'reason': 'Authentication failed'}, 401)
@@ -98,8 +120,8 @@ def one():
 # def api():
 #     return 'api doc'
 
-@restApi.route("api/items", methods=['POST'])
-@token_required
+@restApi.route("api/items", methods=['GET', 'POST'])
+@token_required('admin')
 def items():
     item = request.args.get('id')
 
