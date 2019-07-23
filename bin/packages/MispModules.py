@@ -31,10 +31,16 @@ def init_module_config(module_json, config, config_path=default_config_path):
             print(module_json['name'])
     return config
 
-def misp_module_enrichement(misp_module_url, misp_module_port, request_content):
+def build_enrichment_request_json(module_name, var_name, var_value):
+    request_dict = {'module': module_name, var_name: var_value}
+    # # TODO: add error handler
+    return json.dumps(request_dict)
+
+def misp_module_enrichement_request(misp_module_url, misp_module_port, request_content):
     endpoint_url = '{}:{}/query'.format(misp_module_url, misp_module_port)
     req = requests.post(endpoint_url, headers={'Content-Type': 'application/json'}, data=request_content)
-    print(req.json())
+    if req.status_code == 200:
+        print(req.json())
 
 if __name__ == "__main__":
     req = requests.get('{}/modules'.format(misp_module_url))
@@ -60,8 +66,8 @@ if __name__ == "__main__":
 
         misp_module_url = 'http://localhost'
         misp_module_port = 6666
-        test_content = json.dumps({'module': 'btc_steroids', 'btc': '1hmZdUYHyqH3DmWyduRRW3HT8Vm6PHsD1'})
-        misp_module_enrichement(misp_module_url, misp_module_port, test_content)
+        test_content = build_enrichment_request_json('btc_steroids', 'btc', 'btc address')
+        misp_module_enrichement_request(misp_module_url, misp_module_port, test_content)
 
 
     else:
