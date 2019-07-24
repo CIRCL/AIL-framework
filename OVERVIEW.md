@@ -82,6 +82,16 @@ Redis and ARDB overview
 | ------ | ------ | ------ |
 | ail:all_role | **role** | **int, role priority (1=admin)** |
 
+##### MISP Modules:
+
+| Set Key | Value |
+| ------ | ------ |
+| enabled_misp_modules | **module name** |
+
+| Key | Value |
+| ------ | ------ |
+| misp_module:**module name** | **module dict** |
+
 ## DB2 - TermFreq:
 
 ##### Set:
