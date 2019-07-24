@@ -341,13 +341,27 @@ if __name__ == '__main__':
 
     faup = Faup()
 
+    # get HAR files
+    default_crawler_har = p.config.getboolean("Crawler", "default_crawler_har")
+    if default_crawler_har:
+        default_crawler_har = 1
+    else:
+        default_crawler_har = 0
+
+    # get PNG files
+    default_crawler_png = p.config.getboolean("Crawler", "default_crawler_png")
+    if default_crawler_png:
+        default_crawler_png = 1
+    else:
+        default_crawler_png = 0
+
     # Default crawler options
     default_crawler_config = {'html': 1,
-                              'har': 1,
-                              'png': 1,
+                              'har': default_crawler_har,
+                              'png': default_crawler_png,
                               'depth_limit': p.config.getint("Crawler", "crawler_depth_limit"),
-                              'closespider_pagecount': 50,
-                              'user_agent': 'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0'}
+                              'closespider_pagecount': p.config.getint("Crawler", "default_crawler_closespider_pagecount"),
+                              'user_agent': p.config.get("Crawler", "default_crawler_user_agent")}
 
     # Track launched crawler
     r_cache.sadd('all_crawler', splash_port)

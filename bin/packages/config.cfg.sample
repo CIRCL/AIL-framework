@@ -252,5 +252,9 @@ db = 0
 [Crawler]
 activate_crawler = False
 crawler_depth_limit = 1
+default_crawler_har = True
+default_crawler_png = True
+default_crawler_closespider_pagecount = 50
+default_crawler_user_agent = Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0
 splash_url = http://127.0.0.1
 splash_port = 8050-8052
