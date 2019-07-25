@@ -92,7 +92,6 @@ def remove_submit_uuid(uuid):
     r_serv_log_submit.expire(uuid + ':nb_sucess', expire_time)
     r_serv_log_submit.expire(uuid + ':nb_end', expire_time)
     r_serv_log_submit.expire(uuid + ':error', expire_time)
-    r_serv_log_submit.srem(uuid + ':paste_submit_link', '')
     r_serv_log_submit.expire(uuid + ':paste_submit_link', expire_time)
 
     # delete uuid
@@ -230,8 +229,6 @@ if __name__ == "__main__":
             r_serv_log_submit.set(uuid + ':nb_total', -1)
             r_serv_log_submit.set(uuid + ':nb_end', 0)
             r_serv_log_submit.set(uuid + ':nb_sucess', 0)
-            r_serv_log_submit.set(uuid + ':error', 'error:')
-            r_serv_log_submit.sadd(uuid + ':paste_submit_link', '')
 
 
             r_serv_log_submit.set(uuid + ':processing', 1)

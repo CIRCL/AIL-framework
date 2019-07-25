@@ -8,9 +8,12 @@
 import os
 import re
 import sys
+import uuid
 import json
 import redis
 import datetime
+
+import Import_helper
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required
@@ -19,6 +22,7 @@ from functools import wraps
 
 # ============ VARIABLES ============
 import Flask_config
+
 
 app = Flask_config.app
 cfg = Flask_config.cfg
@@ -108,7 +112,19 @@ def authErrors(user_role):
     else:
         return None
 
+# ============ API CORE =============
+
+
+
 # ============ FUNCTIONS ============
+
+def is_valid_uuid_v4(header_uuid):
+    try:
+        header_uuid=header_uuid.replace('-', '')
+        uuid_test = uuid.UUID(hex=header_uuid, version=4)
+        return uuid_test.hex == header_uuid
+    except:
+        return False
 
 def one():
     return 1
@@ -126,6 +142,58 @@ def items():
     item = request.args.get('id')
 
     return Response(json.dumps({'test': 2}), mimetype='application/json')
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# POST JSON FORMAT
+#
+# {
+#   "type": "text",         (default value)
+#   "tags": [],             (default value)
+#   "default_ags": True,    (default value)
+#   "galaxy" [],            (default value)
+#   "text": "",             mandatory if type = text
+# }
+#
+# response: {"uuid": "uuid"}
+#
+# # # #
+# GET
+#
+# {
+#   "uuid": "uuid",      mandatory
+# }
+#
+# response: {"uuid": "uuid"}
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+@restApi.route("api/import/item", methods=['POST'])
+@token_required('admin')
+def import_item():
+    data = request.get_json()
+    if not data:
+        return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+
+    # TODO: add submitted tag
+
+    UUID = 'uuuuuuu'
+
+    return Response(json.dumps({'uuid': UUID}, indent=2, sort_keys=True), mimetype='application/json')
+
+@restApi.route("api/import/item/<UUID>", methods=['GET'])
+@token_required('admin')
+def import_item_uuid(UUID):
+
+    # Verify uuid
+    if not is_valid_uuid_v4(UUID):
+        Response(json.dumps({'status': 'error', 'reason': 'Invalid uuid'}), mimetype='application/json'), 400
+
+
+
+
+    return Response(json.dumps({'item_id': 4}), mimetype='application/json')
 
 # ========= REGISTRATION =========
 app.register_blueprint(restApi, url_prefix=baseUrl)

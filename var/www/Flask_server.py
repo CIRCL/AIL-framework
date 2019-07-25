@@ -67,15 +67,15 @@ log_dir = os.path.join(os.environ['AIL_HOME'], 'logs')
 if not os.path.isdir(log_dir):
     os.makedirs(logs_dir)
 
-log_filename = os.path.join(log_dir, 'flask_server.logs')
-logger = logging.getLogger()
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler_log = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", interval=1)
-handler_log.suffix = '%Y-%m-%d.log'
-handler_log.setFormatter(formatter)
-handler_log.setLevel(30)
-logger.addHandler(handler_log)
-logger.setLevel(30)
+# log_filename = os.path.join(log_dir, 'flask_server.logs')
+# logger = logging.getLogger()
+# formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+# handler_log = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", interval=1)
+# handler_log.suffix = '%Y-%m-%d.log'
+# handler_log.setFormatter(formatter)
+# handler_log.setLevel(30)
+# logger.addHandler(handler_log)
+# logger.setLevel(30)
 
 # =========       =========#
 
@@ -226,7 +226,7 @@ def login():
             # login failed
             else:
                 # set brute force protection
-                logger.warning("Login failed, ip={}, username={}".format(current_ip, username))
+                #logger.warning("Login failed, ip={}, username={}".format(current_ip, username))
                 r_cache.incr('failed_login_ip:{}'.format(current_ip))
                 r_cache.expire('failed_login_ip:{}'.format(current_ip), 300)
                 r_cache.incr('failed_login_user_id:{}'.format(username))

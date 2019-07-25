@@ -12,7 +12,6 @@ import sys
 
 # FLASK #
 app = None
-#secret_key = 'ail-super-secret_key01C'
 
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -146,7 +145,7 @@ if HiveApi != False:
         HiveApi = False
         print('The Hive not connected')
 
-# VARIABLES #
+#### VARIABLES ####
 baseUrl = cfg.get("Flask", "baseurl")
 baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':

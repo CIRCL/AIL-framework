@@ -23,6 +23,9 @@ import json
 
 import Paste
 
+import Import_helper
+import Tags
+
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 
@@ -107,44 +110,6 @@ def launch_submit(ltags, ltagsgalaxies, paste_content, UUID,  password, isfile =
 
     # save UUID on disk
     r_serv_db.sadd('submitted:uuid', UUID)
-
-
-def addTagsVerification(tags, tagsgalaxies):
-
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    taxonomies = Taxonomies()
-    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
-
-    active_galaxies = r_serv_tags.smembers('active_galaxies')
-
-    if list_tag != ['']:
-        for tag in list_tag:
-            # verify input
-            tax = tag.split(':')[0]
-            if tax in active_taxonomies:
-                if tag in r_serv_tags.smembers('active_tag_' + tax):
-                    pass
-                else:
-                    return False
-            else:
-                return False
-
-    if list_tag_galaxies != ['']:
-        for tag in list_tag_galaxies:
-            # verify input
-            gal = tag.split(':')[1]
-            gal = gal.split('=')[0]
-
-            if gal in active_galaxies:
-                if tag in r_serv_tags.smembers('active_tag_galaxies_' + gal):
-                    pass
-                else:
-                    return False
-            else:
-                return False
-    return True
 
 def date_to_str(date):
     return "{0}-{1}-{2}".format(date.year, date.month, date.day)
@@ -279,11 +244,9 @@ def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, 
 @login_required
 @login_analyst
 def PasteSubmit_page():
-    #active taxonomies
-    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
-
-    #active galaxies
-    active_galaxies = r_serv_tags.smembers('active_galaxies')
+    # Get all active tags/galaxy
+    active_taxonomies = Tags.get_active_taxonomies()
+    active_galaxies = Tags.get_active_galaxies()
 
     return render_template("submit_items.html",
                             active_taxonomies = active_taxonomies,
@@ -301,6 +264,9 @@ def submit():
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
 
+    print(ltags)
+    print(ltagsgalaxies)
+
     is_file = False
     if 'file' in request.files:
         file = request.files['file']
@@ -311,12 +277,16 @@ def submit():
     submitted_tag = 'infoleak:submission="manual"'
 
     #active taxonomies
-    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
+    active_taxonomies = Tags.get_active_taxonomies()
     #active galaxies
-    active_galaxies = r_serv_tags.smembers('active_galaxies')
+    active_galaxies = Tags.get_active_galaxies()
 
     if ltags or ltagsgalaxies:
-        if not addTagsVerification(ltags, ltagsgalaxies):
+
+        list_tag = tags.split(',')
+        list_tag_galaxies = tagsgalaxies.split(',')
+
+        if not Tags.is_valid_tags_taxonomies_galaxy(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
             print(content)
             return content, 400
@@ -358,7 +328,7 @@ def submit():
 
                 paste_content = full_path
 
-                launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password ,True)
+                Import_helper.create_import_queue(ltags, ltagsgalaxies, paste_content, UUID, password ,True)
 
                 return render_template("submit_items.html",
                                             active_taxonomies = active_taxonomies,
@@ -381,7 +351,7 @@ def submit():
                 # clean file name
                 #id = clean_filename(paste_name)
 
-            launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password)
+            Import_helper.create_import_queue(ltags, ltagsgalaxies, paste_content, UUID, password)
 
             return render_template("submit_items.html",
                                         active_taxonomies = active_taxonomies,
@@ -433,10 +403,10 @@ def submit_status():
             else:
                 prog = 0
 
-            if error == 'error:':
-                isError = False
-            else:
+            if error:
                 isError = True
+            else:
+                isError = False
 
             if end == '0':
                 end = False
