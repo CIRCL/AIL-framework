@@ -14,6 +14,8 @@ import redis
 import datetime
 
 import Import_helper
+import Item
+import Paste
 import Tags
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
@@ -144,6 +146,81 @@ def items():
 
     return Response(json.dumps({'test': 2}), mimetype='application/json')
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# GET
+#
+# {
+#   "id": item_id,      mandatory
+# }
+#
+# response: {
+#               "id": "item_id",
+#               "date": "date",
+#               "tags": [],
+#               "content": "item content"
+#           }
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/get/item/info/<path:item_id>", methods=['GET'])
+@token_required('admin')
+def get_item_id(item_id):
+    try:
+        item_object = Paste.Paste(item_id)
+    except FileNotFoundError:
+        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+
+    data = item_object.get_item_dict()
+    return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json')
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# GET
+#
+# {
+#   "id": item_id,      mandatory
+# }
+#
+# response: {
+#               "id": "item_id",
+#               "tags": [],
+#           }
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/get/item/tag/<path:item_id>", methods=['GET'])
+@token_required('admin')
+def get_item_tag(item_id):
+    if not Item.exist_item(item_id):
+        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+    tags = Tags.get_item_tags(item_id)
+    dict_tags = {}
+    dict_tags['id'] = item_id
+    dict_tags['tags'] = tags
+    return Response(json.dumps(dict_tags, indent=2, sort_keys=True), mimetype='application/json')
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# GET
+#
+# {
+#   "id": item_id,      mandatory
+# }
+#
+# response: {
+#               "id": "item_id",
+#               "content": "item content"
+#           }
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/get/item/content/<path:item_id>", methods=['GET'])
+@token_required('admin')
+def get_item_content(item_id):
+    try:
+        item_object = Paste.Paste(item_id)
+    except FileNotFoundError:
+        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+    item_object = Paste.Paste(item_id)
+    dict_content = {}
+    dict_content['id'] = item_id
+    dict_content['content'] = item_object.get_p_content()
+    return Response(json.dumps(dict_content, indent=2, sort_keys=True), mimetype='application/json')
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #

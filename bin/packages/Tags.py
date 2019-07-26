@@ -10,6 +10,7 @@ from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 
 r_serv_tags = Flask_config.r_serv_tags
+r_serv_metadata = Flask_config.r_serv_metadata
 
 def get_taxonomie_from_tag(tag):
     return tag.split(':')[0]
@@ -61,3 +62,10 @@ def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
             if not is_galaxy_tag_enabled(galaxy, tag):
                 return False
     return True
+
+def get_item_tags(item_id):
+    tags = r_serv_metadata.smembers('tag:'+item_id)
+    if tags:
+        return list(tags)
+    else:
+        return '[]'
