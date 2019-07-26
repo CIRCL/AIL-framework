@@ -178,6 +178,8 @@ crawler_enabled = cfg.getboolean("Crawler", "activate_crawler")
 email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
 email_regex = re.compile(email_regex)
 
+IMPORT_MAX_TEXT_SIZE = 900000 # size in bytes
+
 # VT
 try:
     from virusTotalKEYS import vt_key

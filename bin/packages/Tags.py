@@ -31,7 +31,7 @@ def is_taxonomie_tag_enabled(taxonomie, tag):
     else:
         return False
 
-def is_galaxy_tag_enabled(taxonomie, galaxy):
+def is_galaxy_tag_enabled(galaxy, tag):
     if tag in r_serv_tags.smembers('active_tag_galaxies_' + galaxy):
         return True
     else:
@@ -39,8 +39,10 @@ def is_galaxy_tag_enabled(taxonomie, galaxy):
 
 # Check if tags are enabled in AIL
 def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
+    print(list_tags)
+    print(list_tags_galaxy)
     if list_tags:
-        active_taxonomies = Tags.get_active_taxonomies()
+        active_taxonomies = get_active_taxonomies()
 
         for tag in list_tags:
             taxonomie = get_taxonomie_from_tag(tag)
@@ -50,7 +52,7 @@ def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
                 return False
 
     if list_tags_galaxy:
-        active_galaxies = Tags.get_active_galaxies()
+        active_galaxies = get_active_galaxies()
 
         for tag in list_tags_galaxy:
             galaxy = get_galaxy_from_tag(tag)

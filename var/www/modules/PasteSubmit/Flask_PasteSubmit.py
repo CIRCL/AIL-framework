@@ -90,27 +90,6 @@ def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
     # keep only whitelisted chars
     return ''.join(c for c in cleaned_filename if c in whitelist)
 
-def launch_submit(ltags, ltagsgalaxies, paste_content, UUID,  password, isfile = False):
-
-    # save temp value on disk
-    r_serv_db.set(UUID + ':ltags', ltags)
-    r_serv_db.set(UUID + ':ltagsgalaxies', ltagsgalaxies)
-    r_serv_db.set(UUID + ':paste_content', paste_content)
-    r_serv_db.set(UUID + ':password', password)
-    r_serv_db.set(UUID + ':isfile', isfile)
-
-    r_serv_log_submit.set(UUID + ':end', 0)
-    r_serv_log_submit.set(UUID + ':processing', 0)
-    r_serv_log_submit.set(UUID + ':nb_total', -1)
-    r_serv_log_submit.set(UUID + ':nb_end', 0)
-    r_serv_log_submit.set(UUID + ':nb_sucess', 0)
-    r_serv_log_submit.set(UUID + ':error', 'error:')
-    r_serv_log_submit.sadd(UUID + ':paste_submit_link', '')
-
-
-    # save UUID on disk
-    r_serv_db.sadd('submitted:uuid', UUID)
-
 def date_to_str(date):
     return "{0}-{1}-{2}".format(date.year, date.month, date.day)
 
@@ -264,9 +243,6 @@ def submit():
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
 
-    print(ltags)
-    print(ltagsgalaxies)
-
     is_file = False
     if 'file' in request.files:
         file = request.files['file']
@@ -283,8 +259,11 @@ def submit():
 
     if ltags or ltagsgalaxies:
 
-        list_tag = tags.split(',')
-        list_tag_galaxies = tagsgalaxies.split(',')
+        ltags = ltags.split(',')
+        ltagsgalaxies = ltagsgalaxies.split(',')
+
+        print(ltags)
+        print(ltagsgalaxies)
 
         if not Tags.is_valid_tags_taxonomies_galaxy(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
@@ -292,10 +271,9 @@ def submit():
             return content, 400
 
     # add submitted tags
-    if(ltags != ''):
-        ltags = ltags + ',' + submitted_tag
-    else:
-        ltags = submitted_tag
+    if not ltags:
+        ltags = []
+    ltags.append(submitted_tag)
 
     if is_file:
         if file:
@@ -346,11 +324,6 @@ def submit():
 
             # get id
             UUID = str(uuid.uuid4())
-
-            #if paste_name:
-                # clean file name
-                #id = clean_filename(paste_name)
-
             Import_helper.create_import_queue(ltags, ltagsgalaxies, paste_content, UUID, password)
 
             return render_template("submit_items.html",
@@ -385,7 +358,7 @@ def submit_status():
         nb_sucess = r_serv_log_submit.get(UUID + ':nb_sucess')
         paste_submit_link = list(r_serv_log_submit.smembers(UUID + ':paste_submit_link'))
 
-        if (end != None) and (nb_total != None) and (nb_end != None) and (error != None) and (processing != None) and (paste_submit_link != None):
+        if (end != None) and (nb_total != None) and (nb_end != None) and (processing != None):
 
             link = ''
             if paste_submit_link:

@@ -97,6 +97,18 @@ Redis and ARDB overview
 | ------ | ------ | ------ |
 | ail:all_role | **role** | **int, role priority (1=admin)** |
 
+##### Item Import:
+| Key | Value |
+| ------ | ------ |
+| **uuid**:isfile   | **boolean** |
+| **uuid**:paste_content | **item_content** |
+
+| Set Key | Value |
+| ------ | ------ |
+| submitted:uuid | **uuid** |
+| **uuid**:ltags | **tag** |
+| **uuid**:ltagsgalaxies | **tag** |
+
 ## DB2 - TermFreq:
 
 ##### Set:

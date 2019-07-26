@@ -14,6 +14,7 @@ import redis
 import datetime
 
 import Import_helper
+import Tags
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required
@@ -151,24 +152,14 @@ def items():
 # {
 #   "type": "text",         (default value)
 #   "tags": [],             (default value)
-#   "default_ags": True,    (default value)
+#   "default_tags": True,    (default value)
 #   "galaxy" [],            (default value)
 #   "text": "",             mandatory if type = text
 # }
 #
 # response: {"uuid": "uuid"}
 #
-# # # #
-# GET
-#
-# {
-#   "uuid": "uuid",      mandatory
-# }
-#
-# response: {"uuid": "uuid"}
-#
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 @restApi.route("api/import/item", methods=['POST'])
 @token_required('admin')
 def import_item():
@@ -176,24 +167,59 @@ def import_item():
     if not data:
         return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
 
-    # TODO: add submitted tag
+    # unpack json
+    text_to_import = data.get('text', None)
+    if not text_to_import:
+        return Response(json.dumps({'status': 'error', 'reason': 'No text supplied'}, indent=2, sort_keys=True), mimetype='application/json'), 400
 
-    UUID = 'uuuuuuu'
+    tags = data.get('tags', [])
+    if not type(tags) is list:
+        tags = []
+    galaxy = data.get('galaxy', [])
+    if not type(galaxy) is list:
+        galaxy = []
+
+    if not Tags.is_valid_tags_taxonomies_galaxy(tags, galaxy):
+        return Response(json.dumps({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+
+    default_tags = data.get('default_tags', True)
+    if default_tags:
+        tags.append('infoleak:submission="manual"')
+
+    if sys.getsizeof(text_to_import) > 900000:
+        return Response(json.dumps({'status': 'error', 'reason': 'Size exceeds default'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+
+    UUID = str(uuid.uuid4())
+    Import_helper.create_import_queue(tags, galaxy, text_to_import, UUID)
 
     return Response(json.dumps({'uuid': UUID}, indent=2, sort_keys=True), mimetype='application/json')
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# GET
+#
+# {
+#   "uuid": "uuid",      mandatory
+# }
+#
+# response: {
+#               "status": "in queue"/"in progress"/"imported",
+#               "items": [all item id]
+#           }
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/import/item/<UUID>", methods=['GET'])
 @token_required('admin')
 def import_item_uuid(UUID):
 
     # Verify uuid
     if not is_valid_uuid_v4(UUID):
-        Response(json.dumps({'status': 'error', 'reason': 'Invalid uuid'}), mimetype='application/json'), 400
+        return Response(json.dumps({'status': 'error', 'reason': 'Invalid uuid'}), mimetype='application/json'), 400
 
+    data = Import_helper.check_import_status(UUID)
+    if data:
+        return Response(json.dumps(data[0]), mimetype='application/json'), data[1]
 
-
-
-    return Response(json.dumps({'item_id': 4}), mimetype='application/json')
+    return Response(json.dumps({'status': 'error', 'reason': 'Invalid response'}), mimetype='application/json'), 400
 
 # ========= REGISTRATION =========
 app.register_blueprint(restApi, url_prefix=baseUrl)
