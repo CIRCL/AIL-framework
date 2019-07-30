@@ -4,12 +4,12 @@
 
 ### Automation key
 
-The authentication of the automation is performed via a secure key available in the AIL UI interface. Make sure you keep that key secret as it gives access to the entire database! The API key is available in the ``Server Management`` menu under ``My Profile``.
+The authentication of the automation is performed via a secure key available in the AIL UI interface. Make sure you keep that key secret. It gives access to the entire database! The API key is available in the ``Server Management`` menu under ``My Profile``.
 
 The authorization is performed by using the following header:
 
 ~~~~
-Authorization: YOUR API KEY
+Authorization: YOUR_API_KEY
 ~~~~
 ### Accept and Content-Type headers
 
@@ -22,7 +22,7 @@ Content-Type: application/json
 Example:
 
 ~~~~
-curl --header "Authorization: YOUR API KEY" --header "Content-Type: application/json" https://<AIL URL>/
+curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/json" https://AIL_URL/
 ~~~~
 
 ## Item management
