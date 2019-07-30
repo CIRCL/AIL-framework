@@ -460,5 +460,5 @@ curl -k https://127.0.0.1:7000/api/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763
 
 ```
   {'status': 'error', 'reason': 'Invalid uuid'}
-  {'status': 'error', 'reason': 'Unknow uuid'}
+  {'status': 'error', 'reason': 'Unknown uuid'}
 ```
