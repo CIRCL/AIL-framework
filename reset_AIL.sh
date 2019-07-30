@@ -6,7 +6,7 @@ GREEN="\\033[1;32m"
 
 [ -z "$AIL_HOME" ] && echo "Needs the env var AIL_HOME. Run the script from the virtual environment." && exit 1;
 
-function soft_reset {
+function reset_dir {
   # Access dirs and delete
   cd $AIL_HOME
 
@@ -98,6 +98,11 @@ function flush_DB_keep_user {
   bash ${AIL_BIN}LAUNCH.sh -k
 }
 
+function flush_DB_keep_user {
+  reset_dir;
+  flush_DB_keep_user;
+}
+
 #If no params,
 [[ $@ ]] || {
     # Make sure the reseting is intentional
@@ -118,7 +123,7 @@ function flush_DB_keep_user {
     echo -e $RED"If yes you want to delete the DB , enter the following number: "$DEFAULT $num
     read userInput
 
-    soft_reset;
+    reset_dir;
 
     if [ $userInput -eq $num ]
     then
@@ -137,8 +142,7 @@ function flush_DB_keep_user {
 
 while [ "$1" != "" ]; do
     case $1 in
-        --softReset )           soft_reset;
-                                flush_DB_keep_user;
+        --softReset )           flush_DB_keep_user;
                                 ;;
         * )                     exit 1
     esac
