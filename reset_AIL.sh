@@ -13,8 +13,6 @@ function soft_reset {
   # Kill all screens
   screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs kill
 
-  set -e
-
   # Access dirs and delete
   cd $AIL_HOME
 
@@ -101,8 +99,6 @@ function soft_reset {
     num=$(( ( RANDOM % 100 )  + 1 ))
     echo -e $RED"If yes you want to delete the DB , enter the following number: "$DEFAULT $num
     read userInput
-
-    set -e
 
     soft_reset;
 
