@@ -14,3 +14,7 @@ def exist_item(item_id):
         return True
     else:
         return False
+
+def get_item_date(item_id):
+    l_directory = item_id.split('/')
+    return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])

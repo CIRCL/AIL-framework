@@ -40,3 +40,13 @@ class Date(object):
         comp_month = str(computed_date.month).zfill(2)
         comp_day = str(computed_date.day).zfill(2)
         return comp_year + comp_month + comp_day
+
+def date_add_day(date, num_day=1):
+    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) + datetime.timedelta(num_day)
+    new_date = str(new_date).replace('-', '')
+    return new_date
+
+def date_substract_day(date, num_day=1):
+    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) - datetime.timedelta(num_day)
+    new_date = str(new_date).replace('-', '')
+    return new_date

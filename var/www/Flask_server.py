@@ -37,6 +37,8 @@ import Flask_config
 from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
 from Role_Manager import login_admin, login_analyst
 
+Flask_dir = os.environ['AIL_FLASK']
+
 # CONFIG #
 cfg = Flask_config.cfg
 baseUrl = cfg.get("Flask", "baseurl")
@@ -81,7 +83,7 @@ if not os.path.isdir(log_dir):
 
 # =========  TLS  =========#
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-ssl_context.load_cert_chain(certfile='server.crt', keyfile='server.key')
+ssl_context.load_cert_chain(certfile=os.path.join(Flask_dir, 'server.crt'), keyfile=os.path.join(Flask_dir, 'server.key'))
 #print(ssl_context.get_ciphers())
 # =========       =========#
 
@@ -112,13 +114,13 @@ try:
             toIgnoreModule.add(line)
 
 except IOError:
-    f = open('templates/ignored_modules.txt', 'w')
+    f = open(os.path.join(Flask_dir, 'templates', 'ignored_modules.txt'), 'w')
     f.close()
 
 # Dynamically import routes and functions from modules
 # Also, prepare header.html
 to_add_to_header_dico = {}
-for root, dirs, files in os.walk('modules/'):
+for root, dirs, files in os.walk(os.path.join(Flask_dir, 'modules')):
     sys.path.append(join(root))
 
     # Ignore the module
@@ -140,7 +142,7 @@ for root, dirs, files in os.walk('modules/'):
 
 #create header.html
 complete_header = ""
-with open('templates/header_base.html', 'r') as f:
+with open(os.path.join(Flask_dir, 'templates', 'header_base.html'), 'r') as f:
     complete_header = f.read()
 modified_header = complete_header
 
@@ -159,7 +161,7 @@ for module_name, txt in to_add_to_header_dico.items():
 modified_header = modified_header.replace('<!--insert here-->', '\n'.join(to_add_to_header))
 
 #Write the header.html file
-with open('templates/header.html', 'w') as f:
+with open(os.path.join(Flask_dir, 'templates', 'header.html'), 'w') as f:
     f.write(modified_header)
 
 # ========= JINJA2 FUNCTIONS ========
