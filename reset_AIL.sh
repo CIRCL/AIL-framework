@@ -81,6 +81,9 @@ function soft_reset {
 }
 
 function flush_DB_keep_user {
+  bash ${AIL_BIN}LAUNCH.sh -lav &
+  wait
+  echo ""
   pushd redis/src
     ./redis-cli -p 6382 -n 1 FLUSHDB;
     ./redis-cli -p 6382 -n 2 FLUSHDB;
@@ -92,6 +95,7 @@ function flush_DB_keep_user {
     ./redis-cli -p 6382 -n 8 FLUSHDB;
     ./redis-cli -p 6382 -n 9 FLUSHDB;
   popd
+  bash ${AIL_BIN}LAUNCH.sh -k
 }
 
 #If no params,
