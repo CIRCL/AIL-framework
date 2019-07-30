@@ -80,6 +80,20 @@ function soft_reset {
   exit
 }
 
+function flush_DB_keep_user {
+  pushd redis/src
+    ./redis-cli -p 6382 -n 1 FLUSHDB;
+    ./redis-cli -p 6382 -n 2 FLUSHDB;
+    ./redis-cli -p 6382 -n 3 FLUSHDB;
+    ./redis-cli -p 6382 -n 4 FLUSHDB;
+    ./redis-cli -p 6382 -n 5 FLUSHDB;
+    ./redis-cli -p 6382 -n 6 FLUSHDB;
+    ./redis-cli -p 6382 -n 7 FLUSHDB;
+    ./redis-cli -p 6382 -n 8 FLUSHDB;
+    ./redis-cli -p 6382 -n 9 FLUSHDB;
+  popd
+}
+
 #If no params,
 [[ $@ ]] || {
     # Make sure the reseting is intentional
@@ -120,7 +134,8 @@ function soft_reset {
 while [ "$1" != "" ]; do
     case $1 in
         --softReset )           soft_reset;
-                                      ;;
+                                flush_DB_keep_user;
+                                ;;
         * )                     exit 1
     esac
     shift
