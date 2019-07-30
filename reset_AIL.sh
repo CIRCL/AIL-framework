@@ -76,8 +76,6 @@ function reset_dir {
   fi
 
   echo -e $GREEN"* AIL has been reset *"$DEFAULT
-
-  exit
 }
 
 function flush_DB_keep_user {
@@ -94,6 +92,7 @@ function flush_DB_keep_user {
     ./redis-cli -p 6382 -n 7 FLUSHDB;
     ./redis-cli -p 6382 -n 8 FLUSHDB;
     ./redis-cli -p 6382 -n 9 FLUSHDB;
+    echo "ARDB FLUSHED"
   popd
   bash ${AIL_BIN}LAUNCH.sh -k
 }
