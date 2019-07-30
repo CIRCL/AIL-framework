@@ -98,7 +98,7 @@ function flush_DB_keep_user {
   bash ${AIL_BIN}LAUNCH.sh -k
 }
 
-function flush_DB_keep_user {
+function soft_reset {
   reset_dir;
   flush_DB_keep_user;
 }
@@ -142,7 +142,7 @@ function flush_DB_keep_user {
 
 while [ "$1" != "" ]; do
     case $1 in
-        --softReset )           flush_DB_keep_user;
+        --softReset )           soft_reset;
                                 ;;
         * )                     exit 1
     esac
