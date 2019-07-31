@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import ssl
+import json
 import time
 
 import redis
@@ -13,7 +14,7 @@ import logging
 import logging.handlers
 import configparser
 
-from flask import Flask, render_template, jsonify, request, Request, session, redirect, url_for
+from flask import Flask, render_template, jsonify, request, Request, Response, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 
 import bcrypt
@@ -291,7 +292,21 @@ def searchbox():
 
 # ========== ERROR HANDLER ============
 
+@app.errorhandler(405)
+def _handle_client_error(e):
+    if request.path.startswith('/api/'):
+        return Response(json.dumps({"status": "error", "reason": "Method Not Allowed: The method is not allowed for the requested URL"}, indent=2, sort_keys=True), mimetype='application/json'), 405
+    else:
+        return e
+
 @app.errorhandler(404)
+def error_page_not_found(e):
+    if request.path.startswith('/api/'):
+        return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
+    else:
+        # avoid endpoint enumeration
+        return page_not_found(e)
+
 @login_required
 def page_not_found(e):
     # avoid endpoint enumeration

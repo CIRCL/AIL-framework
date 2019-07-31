@@ -627,7 +627,7 @@ def import_item_uuid(UUID):
             HTTP Status Code: 400
 
             {'status': 'error', 'reason': 'Invalid uuid'}
-            {'status': 'error', 'reason': 'Unknow uuid'}
+            {'status': 'error', 'reason': 'Unknown uuid'}
 
     """
 

@@ -49,7 +49,7 @@ def check_import_status(UUID):
 
     processing = r_serv_log_submit.get(UUID + ':processing')
     if not processing:
-        return ({'status': 'error', 'reason': 'Unknow uuid'}, 400)
+        return ({'status': 'error', 'reason': 'Unknown uuid'}, 400)
 
     # nb_total = r_serv_log_submit.get(UUID + ':nb_total')
     # nb_sucess = r_serv_log_submit.get(UUID + ':nb_sucess')
