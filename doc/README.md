@@ -82,8 +82,8 @@ curl https://127.0.0.1:7000/api/get/item/info/submitted/2019/07/26/3efb8a79-08e9
 
 **HTTP Status Code** : `400`
 
-```
-  {'status': 'error', 'reason': 'Item not found'}
+```json
+  {"status": "error", "reason": "Item not found"}
 ```
 
 
@@ -129,8 +129,8 @@ curl https://127.0.0.1:7000/api/get/item/content/submitted/2019/07/26/3efb8a79-0
 
 **HTTP Status Code** : `400`
 
-```
-  {'status': 'error', 'reason': 'Item not found'}
+```json
+  {"status": "error", "reason": "Item not found"}
 ```
 
 
@@ -182,8 +182,8 @@ curl https://127.0.0.1:7000/api/get/item/tag/submitted/2019/07/26/3efb8a79-08e9-
 
 **HTTP Status Code** : `400`
 
-```
-  {'status': 'error', 'reason': 'Item not found'}
+```json
+  {"status": "error", "reason": "Item not found"}
 ```
 
 
@@ -253,10 +253,10 @@ curl https://127.0.0.1:7000/api/import/item --header "Authorization: iHc1_ChZxj1
 #### Expected Fail Response
 **HTTP Status Code** : `400`
 
-```
-  {'status': 'error', 'reason': 'Item id not found'}
-  {'status': 'error', 'reason': 'Tags or Galaxy not specified'}
-  {'status': 'error', 'reason': 'Tags or Galaxy not enabled'}
+```json
+  {"status": "error", "reason": "Item id not found"}
+  {"status": "error", "reason": "Tags or Galaxy not specified"}
+  {"status": "error", "reason": "Tags or Galaxy not enabled"}
 ```
 
 
@@ -321,9 +321,9 @@ curl https://127.0.0.1:7000/api/delete/item/tag --header "Authorization: iHc1_Ch
 #### Expected Fail Response
 **HTTP Status Code** : `400`
 
-```
-  {'status': 'error', 'reason': 'Item id not found'}
-  {'status': 'error', 'reason': 'No Tag(s) specified'}
+```json
+  {"status": "error", "reason": "Item id not found"}
+  {"status": "error", "reason": "No Tag(s) specified"}
 ```
 
 
@@ -398,11 +398,11 @@ curl https://127.0.0.1:7000/api/import/item --header "Authorization: iHc1_ChZxj1
 #### Expected Fail Response
 **HTTP Status Code** : `400`
 
-```
-  {'status': 'error', 'reason': 'Malformed JSON'}
-  {'status': 'error', 'reason': 'No text supplied'}
-  {'status': 'error', 'reason': 'Tags or Galaxy not enabled'}
-  {'status': 'error', 'reason': 'Size exceeds default'}
+```json
+  {"status": "error", "reason": "Malformed JSON"}
+  {"status": "error", "reason": "No text supplied"}
+  {"status": "error", "reason": "Tags or Galaxy not enabled"}
+  {"status": "error", "reason": "Size exceeds default"}
 ```
 
 
@@ -458,7 +458,7 @@ curl -k https://127.0.0.1:7000/api/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763
 
 **HTTP Status Code** : `400`
 
-```
-  {'status': 'error', 'reason': 'Invalid uuid'}
-  {'status': 'error', 'reason': 'Unknow uuid'}
+```json
+  {"status": "error", "reason": "Invalid uuid"}
+  {"status": "error", "reason": "Unknow uuid"}
 ```

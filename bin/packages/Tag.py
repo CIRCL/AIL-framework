@@ -141,14 +141,14 @@ def remove_item_tags(tags=[], item_id=None):
         return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
 
     dict_res = {}
-    dict_res[tags] = []
+    dict_res['tags'] = []
     for tag in tags:
         res = remove_item_tag(tag, item_id)
         if res[1] != 200:
             return res
         else:
             dict_res[tags].append(tag)
-    dict_res[id] = item_id
+    dict_res['id'] = item_id
     return (dict_res, 200)
 
 # TEMPLATE + API QUERY
