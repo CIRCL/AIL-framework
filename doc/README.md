@@ -277,7 +277,7 @@ curl https://127.0.0.1:7000/api/get/item --header "Authorization: iHc1_ChZxj1aXm
 **HTTP Status Code** : `200`
 ```json
   {
-    "content": "b'dsvcdsvcdsc vvvv'",
+    "content": "dsvcdsvcdsc vvvv",
     "date": "20190726",
     "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
     "lines": {

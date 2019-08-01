@@ -85,6 +85,7 @@ def get_item(request_dict):
 
     content = request_dict.get('content', False)
     if content:
+        # UTF-8 outpout, # TODO: use base64
         dict_item['content'] = get_item_content(item_id)
 
     lines_info = request_dict.get('lines', False)

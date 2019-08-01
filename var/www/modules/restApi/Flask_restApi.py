@@ -182,7 +182,7 @@ def get_item_id_basic(item_id):
 
         - Example::
 
-            curl -k https://127.0.0.1:7000/api/get/item/default --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json --data @input.json -X POST"
+            curl -k https://127.0.0.1:7000/api/get/item/default/<item_id> --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json --data @input.json -X POST"
 
         - Expected Success Response::
 
