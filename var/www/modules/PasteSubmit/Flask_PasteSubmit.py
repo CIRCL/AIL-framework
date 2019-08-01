@@ -24,7 +24,7 @@ import json
 import Paste
 
 import Import_helper
-import Tags
+import Tag
 
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
@@ -224,8 +224,8 @@ def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, 
 @login_analyst
 def PasteSubmit_page():
     # Get all active tags/galaxy
-    active_taxonomies = Tags.get_active_taxonomies()
-    active_galaxies = Tags.get_active_galaxies()
+    active_taxonomies = Tag.get_active_taxonomies()
+    active_galaxies = Tag.get_active_galaxies()
 
     return render_template("submit_items.html",
                             active_taxonomies = active_taxonomies,
@@ -253,9 +253,9 @@ def submit():
     submitted_tag = 'infoleak:submission="manual"'
 
     #active taxonomies
-    active_taxonomies = Tags.get_active_taxonomies()
+    active_taxonomies = Tag.get_active_taxonomies()
     #active galaxies
-    active_galaxies = Tags.get_active_galaxies()
+    active_galaxies = Tag.get_active_galaxies()
 
     if ltags or ltagsgalaxies:
 

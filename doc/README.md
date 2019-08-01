@@ -27,10 +27,10 @@ curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/
 
 ## Item management
 
-### Get item: `api/get/item/basic/<path:item_id>`
+### Get item: `api/get/item/default/<path:item_id>`
 
 #### Description
-Get anitem basic information.
+Get item default info.
 
 **Method** : `GET`
 
@@ -56,7 +56,7 @@ Get anitem basic information.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/get/item/info/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/get/item/default/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
 ```
 
 #### Expected Success Response
@@ -81,7 +81,10 @@ curl https://127.0.0.1:7000/api/get/item/info/submitted/2019/07/26/3efb8a79-08e9
 #### Expected Fail Response
 
 **HTTP Status Code** : `400`
-
+```json
+  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
+```
+**HTTP Status Code** : `404`
 ```json
   {"status": "error", "reason": "Item not found"}
 ```
@@ -128,7 +131,10 @@ curl https://127.0.0.1:7000/api/get/item/content/submitted/2019/07/26/3efb8a79-0
 #### Expected Fail Response
 
 **HTTP Status Code** : `400`
-
+```json
+  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
+```
+**HTTP Status Code** : `404`
 ```json
   {"status": "error", "reason": "Item not found"}
 ```
@@ -181,10 +187,122 @@ curl https://127.0.0.1:7000/api/get/item/tag/submitted/2019/07/26/3efb8a79-08e9-
 #### Expected Fail Response
 
 **HTTP Status Code** : `400`
-
+```json
+  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
+```
+**HTTP Status Code** : `404`
 ```json
   {"status": "error", "reason": "Item not found"}
 ```
+
+
+
+### Advanced Get item: `api/get/item`
+
+#### Description
+Get item. Filter requested field.
+
+**Method** : `POST`
+
+#### Parameters
+- `id`
+  - item id
+  - *str - relative item path*
+  - mandatory
+- `date`
+  - get item date
+  - *boolean*
+  - default: `true`
+- `tags`
+  - get item tags
+  - *boolean*
+  - default: `true`
+- `content`
+  - get item content
+  - *boolean*
+  - default: `false`
+- `size`
+  - get item size
+  - *boolean*
+  - default: `false`
+- `lines`
+  - get item lines info
+  - *boolean*
+  - default: `false`
+
+#### JSON response
+- `content`
+  - item content
+  - *str*
+- `id`
+  - item id
+  - *str*
+- `date`
+  - item date
+  - *str - YYMMDD*
+- `tags`
+  - item tags list
+  - *list*
+- `size`
+  - item size (Kb)
+  - *int*
+- `lines`
+  - item lines info
+  - *{}*
+      - `max_length`
+        -  line max length line
+        - *int*
+      - `nb`
+        - nb lines item
+        - *int*
+
+
+#### Example
+```
+curl https://127.0.0.1:7000/api/get/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+{
+  "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
+  "content": true,
+  "lines_info": true,
+  "tags": true,
+  "size": true
+}
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+```json
+  {
+    "content": "b'dsvcdsvcdsc vvvv'",
+    "date": "20190726",
+    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
+    "lines": {
+      "max_length": 19,
+      "nb": 1
+    },
+    "size": 0.03,
+    "tags": [
+      "misp-galaxy:stealer=\"Vidar\"",
+      "infoleak:submission=\"manual\""
+    ]
+  }
+```
+
+#### Expected Fail Response
+**HTTP Status Code** : `400`
+```json
+  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
+```
+**HTTP Status Code** : `404`
+```json
+  {"status": "error", "reason": "Item not found"}
+```
+
+
 
 
 

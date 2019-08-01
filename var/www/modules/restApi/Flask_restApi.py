@@ -139,11 +139,38 @@ def one():
 # def api():
 #     return 'api doc'
 
-@restApi.route("api/get/item/basic/<path:item_id>", methods=['GET'])
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# POST
+#
+# {
+#   "id": item_id,      mandatory
+#   "content": true,
+#   "tags": true,
+#
+#
+# }
+#
+# response: {
+#               "id": "item_id",
+#               "tags": [],
+#           }
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/get/item", methods=['GET', 'POST'])
 @token_required('admin')
-def get_item_id(item_id):
+def get_item_id():
+    if request.method == 'POST':
+        data = request.get_json()
+        res = Item.get_item(data)
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    else:
+        return 'description API endpoint'
+
+@restApi.route("api/get/item/default/<path:item_id>", methods=['GET'])
+@token_required('admin')
+def get_item_id_basic(item_id):
     """
-        **GET api/get/item/info/<item id>**
+        **POST api/get/item/default/<item_id>**
 
         **Get item**
 
@@ -155,7 +182,7 @@ def get_item_id(item_id):
 
         - Example::
 
-            curl -k https://127.0.0.1:7000/api/get/item/info/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+            curl -k https://127.0.0.1:7000/api/get/item/default --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json --data @input.json -X POST"
 
         - Expected Success Response::
 
@@ -182,13 +209,10 @@ def get_item_id(item_id):
             {'status': 'error', 'reason': 'Item not found'}
 
     """
-    try:
-        item_object = Paste.Paste(item_id)
-    except FileNotFoundError:
-        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
 
-    data = item_object.get_item_dict()
-    return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json')
+    data = {'id': item_id, 'date': True, 'content': True, 'tags': True}
+    res = Item.get_item(data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # GET
@@ -244,13 +268,9 @@ def get_item_tag(item_id):
             {'status': 'error', 'reason': 'Item not found'}
 
     """
-    if not Item.exist_item(item_id):
-        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
-    tags = Tag.get_item_tags(item_id)
-    dict_tags = {}
-    dict_tags['id'] = item_id
-    dict_tags['tags'] = tags
-    return Response(json.dumps(dict_tags, indent=2, sort_keys=True), mimetype='application/json')
+    data = {'id': item_id, 'date': False, 'tags': True}
+    res = Item.get_item(data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # POST
@@ -461,15 +481,9 @@ def get_item_content(item_id):
             {'status': 'error', 'reason': 'Item not found'}
 
     """
-    try:
-        item_object = Paste.Paste(item_id)
-    except FileNotFoundError:
-        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
-    item_object = Paste.Paste(item_id)
-    dict_content = {}
-    dict_content['id'] = item_id
-    dict_content['content'] = item_object.get_p_content()
-    return Response(json.dumps(dict_content, indent=2, sort_keys=True), mimetype='application/json')
+    data = {'id': item_id, 'date': False, 'content': True, 'tags': False}
+    res = Item.get_item(data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
