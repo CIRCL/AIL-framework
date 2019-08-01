@@ -27,10 +27,10 @@ curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/
 
 ## Item management
 
-### Get item: `api/get/item/info/<path:item_id>`
+### Get item: `api/get/item/basic/<path:item_id>`
 
 #### Description
-Get a specific item information.
+Get anitem basic information.
 
 **Method** : `GET`
 
@@ -462,3 +462,90 @@ curl -k https://127.0.0.1:7000/api/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763
   {"status": "error", "reason": "Invalid uuid"}
   {"status": "error", "reason": "Unknown uuid"}
 ```
+
+
+
+
+
+
+
+
+# FUTURE endpoints
+
+### Text search by daterange
+##### ``api/search/textIndexer/item`` POST
+
+### Get all tags list
+##### ``api/get/tag/all``
+
+### Get tagged items by daterange
+##### ``api/search/tag/item`` POST
+
+### Submit a domain to crawl
+##### ``api/add/crawler/domain`` POST
+
+### Create a term/set/regex tracker
+##### ``api/add/termTracker/`` POST
+
+### Get tracker items list
+##### ``api/get/termTracker/item`` POST
+
+-----
+
+### Check if a tor/regular domain have been crawled
+##### ``api/get/crawler/domain/`` POST
+
+### Check if a tor/regular domain have been crawled
+##### ``api/get/crawler/domain/metadata/ <domain><port>`` GET
+
+### Get domain tags
+##### ``api/get/crawler/domain/tag/ <domain><port>`` GET
+
+### Get domain history
+##### ``api/get/crawler/domain/history/ <domain><port>`` GET
+
+### Get domain list of items
+##### ``api/get/crawler/domain/item/ <domain><port>`` GET
+
+-----
+
+### Create auto-crawlers
+##### ``api/add/crawler/autoCrawler/`` POST
+
+-----
+
+### get item by mime type/ decoded type
+##### ``api/get/decoded`` POST
+
+### Check if a decoded item exists (via sha1)
+##### ``api/get/decoded/exist/<sha1>`` GET
+
+### Get decoded item metadata
+### Check if a decoded item exists (via sha1)
+##### ``api/get/decoded/metadata/<sha1>`` GET
+
+### Get decoded item correlation (1 depth)
+##### ``api/get/decoded/metadata/<sha1>`` GET
+
+-----
+
+
+-----
+##### ``api/get/cryptocurrency`` POST
+
+### Check if a cryptocurrency address (bitcoin, ..) exists
+##### ``api/get/cryptocurrency/exist/<bitcoin_address>`` GET
+
+### Get cryptocurrency address metadata
+##### ``api/get/cryptocurrency/metadata/<bitcoin_address>`` GET
+
+-----
+
+### Item correlation (1 depth)
+##### ``api/get/item/correlation/`` POST
+
+### Create MISP event from item
+##### ``api/export/item/misp`` POST
+
+### Create TheHive case from item
+##### ``api/export/item/thehive`` POST

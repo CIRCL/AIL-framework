@@ -139,14 +139,7 @@ def one():
 # def api():
 #     return 'api doc'
 
-@restApi.route("api/items", methods=['GET', 'POST'])
-@token_required('admin')
-def items():
-    item = request.args.get('id')
-
-    return Response(json.dumps({'test': 2}), mimetype='application/json')
-
-@restApi.route("api/get/item/info/<path:item_id>", methods=['GET'])
+@restApi.route("api/get/item/basic/<path:item_id>", methods=['GET'])
 @token_required('admin')
 def get_item_id(item_id):
     """
@@ -192,7 +185,7 @@ def get_item_id(item_id):
     try:
         item_object = Paste.Paste(item_id)
     except FileNotFoundError:
-        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
 
     data = item_object.get_item_dict()
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json')
@@ -252,7 +245,7 @@ def get_item_tag(item_id):
 
     """
     if not Item.exist_item(item_id):
-        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
     tags = Tag.get_item_tags(item_id)
     dict_tags = {}
     dict_tags['id'] = item_id
@@ -471,7 +464,7 @@ def get_item_content(item_id):
     try:
         item_object = Paste.Paste(item_id)
     except FileNotFoundError:
-        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+        return Response(json.dumps({'status': 'error', 'reason': 'Item not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
     item_object = Paste.Paste(item_id)
     dict_content = {}
     dict_content['id'] = item_id
@@ -572,7 +565,7 @@ def import_item():
         tags.append('infoleak:submission="manual"')
 
     if sys.getsizeof(text_to_import) > 900000:
-        return Response(json.dumps({'status': 'error', 'reason': 'Size exceeds default'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+        return Response(json.dumps({'status': 'error', 'reason': 'Size exceeds default'}, indent=2, sort_keys=True), mimetype='application/json'), 413
 
     UUID = str(uuid.uuid4())
     Import_helper.create_import_queue(tags, galaxy, text_to_import, UUID)

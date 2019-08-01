@@ -76,7 +76,7 @@ def get_item_tags(item_id):
 def add_items_tag(tags=[], galaxy_tags=[], item_id=None):
     res_dict = {}
     if item_id == None:
-        return ({'status': 'error', 'reason': 'Item id not found'}, 400)
+        return ({'status': 'error', 'reason': 'Item id not found'}, 404)
     if not tags and not galaxy_tags:
         return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
 
@@ -136,7 +136,7 @@ def add_item_tag(tag, item_path):
 # API QUERY
 def remove_item_tags(tags=[], item_id=None):
     if item_id == None:
-        return ({'status': 'error', 'reason': 'Item id not found'}, 400)
+        return ({'status': 'error', 'reason': 'Item id not found'}, 404)
     if not tags:
         return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
 
