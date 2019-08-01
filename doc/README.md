@@ -449,6 +449,111 @@ curl https://127.0.0.1:7000/api/delete/item/tag --header "Authorization: iHc1_Ch
 
 
 
+## Tag management
+
+
+### Get all AIL tags: `api/get/tag/all`
+
+#### Description
+Get all tags used in AIL.
+
+**Method** : `GET`
+
+#### JSON response
+- `tags`
+  - list of tag
+  - *list*
+#### Example
+```
+curl https://127.0.0.1:7000/api/get/tag/all --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+```json
+  {
+    "tags": [
+      "misp-galaxy:backdoor=\"Rosenbridge\"",
+      "infoleak:automatic-detection=\"pgp-private-key\"",
+      "infoleak:automatic-detection=\"pgp-signature\"",
+      "infoleak:automatic-detection=\"base64\"",
+      "infoleak:automatic-detection=\"encrypted-private-key\"",
+      "infoleak:submission=\"crawler\"",
+      "infoleak:automatic-detection=\"binary\"",
+      "infoleak:automatic-detection=\"pgp-public-key-block\"",
+      "infoleak:automatic-detection=\"hexadecimal\"",
+      "infoleak:analyst-detection=\"private-key\"",
+      "infoleak:submission=\"manual\"",
+      "infoleak:automatic-detection=\"private-ssh-key\"",
+      "infoleak:automatic-detection=\"iban\"",
+      "infoleak:automatic-detection=\"pgp-message\"",
+      "infoleak:automatic-detection=\"certificate\"",
+      "infoleak:automatic-detection=\"credential\"",
+      "infoleak:automatic-detection=\"cve\"",
+      "infoleak:automatic-detection=\"google-api-key\"",
+      "infoleak:automatic-detection=\"phone-number\"",
+      "infoleak:automatic-detection=\"rsa-private-key\"",
+      "misp-galaxy:backdoor=\"SLUB\"",
+      "infoleak:automatic-detection=\"credit-card\"",
+      "misp-galaxy:stealer=\"Vidar\"",
+      "infoleak:automatic-detection=\"private-key\"",
+      "infoleak:automatic-detection=\"api-key\"",
+      "infoleak:automatic-detection=\"mail\""
+    ]
+  }
+```
+
+
+
+
+### Get tag metadata: `api/get/tag/metadata/<tag>`
+
+#### Description
+Get tag metadata.
+
+**Method** : `GET`
+
+#### Parameters
+- `tag`
+  - tag name
+  - *str*
+  - mandatory
+
+#### JSON response
+- `tag`
+  - tag name
+  - *str*
+- `first_seen`
+  - date: first seen
+  - *str - YYMMDD*
+- `last_seen`
+  - date: first seen
+  - *str - YYMMDD*
+#### Example
+```
+curl https://127.0.0.1:7000/api/get/tag/metadata/infoleak:submission=\"manual\" --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+```json
+  {
+    "first_seen": "20190605",
+    "last_seen": "20190726",
+    "tag": "infoleak:submission=\"manual\""
+  }
+```
+
+#### Expected Fail Response
+**HTTP Status Code** : `404`
+```json
+  {"status": "error", "reason": "Tag not found"}
+```
+
+
+
+
+
 
 ## Import management
 
@@ -592,9 +697,6 @@ curl -k https://127.0.0.1:7000/api/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763
 
 ### Text search by daterange
 ##### ``api/search/textIndexer/item`` POST
-
-### Get all tags list
-##### ``api/get/tag/all``
 
 ### Get tagged items by daterange
 ##### ``api/search/tag/item`` POST

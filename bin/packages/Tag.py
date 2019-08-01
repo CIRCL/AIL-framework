@@ -65,6 +65,20 @@ def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
                 return False
     return True
 
+def get_tag_metadata(tag):
+    first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'first_seen')
+    last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
+    return {'tag': tag, 'first_seen': first_seen, 'last_seen': last_seen}
+
+def is_tag_in_all_tag(tag):
+    if r_serv_tags.sismember('list_tags', tag):
+        return True
+    else:
+        return False
+
+def get_all_tags():
+    return list(r_serv_tags.smembers('list_tags'))
+
 def get_item_tags(item_id):
     tags = r_serv_metadata.smembers('tag:'+item_id)
     if tags:

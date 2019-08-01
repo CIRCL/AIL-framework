@@ -486,6 +486,31 @@ def get_item_content(item_id):
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+@restApi.route("api/get/tag/metadata/<tag>", methods=['GET'])
+@token_required('admin')
+def get_tag_metadata(tag):
+    if not Tag.is_tag_in_all_tag(tag):
+        return Response(json.dumps({'status': 'error', 'reason':'Tag not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
+    metadata = Tag.get_tag_metadata(tag)
+    return Response(json.dumps(metadata, indent=2, sort_keys=True), mimetype='application/json'), 200
+
+@restApi.route("api/get/tag/all", methods=['GET'])
+@token_required('admin')
+def get_all_tags():
+    res = {'tags': Tag.get_all_tags()}
+    return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # POST JSON FORMAT
 #
