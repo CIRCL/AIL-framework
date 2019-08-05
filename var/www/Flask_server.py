@@ -115,8 +115,7 @@ try:
             toIgnoreModule.add(line)
 
 except IOError:
-    f = open(os.path.join(Flask_dir, 'templates', 'ignored_modules.txt'), 'w')
-    f.close()
+    pass
 
 # Dynamically import routes and functions from modules
 # Also, prepare header.html

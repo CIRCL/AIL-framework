@@ -23,21 +23,25 @@ def parse_response(obj, ail_response):
     return res_json
 
 def get_api_key():
-    with open(os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD'). 'r') as f:
+    with open(os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD'), 'r') as f:
         content = f.read()
-        content = content.splitline()
+        content = content.splitlines()
         apikey = content[-1]
         apikey = apikey.replace('API_Key=', '', 1)
+        return apikey
+
+APIKEY = get_api_key()
 
 class TestApiV1(unittest.TestCase):
     import_uuid = None
     item_id = None
 
+
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True
         self.client = self.app.test_client()
-        self.apikey = get_api_key()
+        self.apikey = APIKEY
         self.item_content = "text to import"
         self.item_tags = ["infoleak:analyst-detection=\"private-key\""]
         self.expected_tags = ["infoleak:analyst-detection=\"private-key\"", 'infoleak:submission="manual"']

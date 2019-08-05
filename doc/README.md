@@ -660,7 +660,7 @@ curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZ
 
 
 
-### GET Import item info: `api/v1/import/item/<uuid4>`
+### GET Import item info: `api/v1/get/import/item/`
 
 #### Description
 
@@ -751,16 +751,16 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 ##### ``api/get/crawler/domain/`` POST
 
 ### Check if a tor/regular domain have been crawled
-##### ``api/get/crawler/domain/metadata/ <domain><port>`` GET
+##### ``api/get/crawler/domain/metadata/ <domain><port>`` POST
 
 ### Get domain tags
-##### ``api/get/crawler/domain/tag/ <domain><port>`` GET
+##### ``api/get/crawler/domain/tag/ <domain><port>`` POST
 
 ### Get domain history
-##### ``api/get/crawler/domain/history/ <domain><port>`` GET
+##### ``api/get/crawler/domain/history/ <domain><port>`` POST
 
 ### Get domain list of items
-##### ``api/get/crawler/domain/item/ <domain><port>`` GET
+##### ``api/get/crawler/domain/item/ <domain><port>`` POST
 
 -----
 
@@ -773,14 +773,14 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 ##### ``api/get/decoded`` POST
 
 ### Check if a decoded item exists (via sha1)
-##### ``api/get/decoded/exist/<sha1>`` GET
+##### ``api/get/decoded/exist/<sha1>`` POST
 
 ### Get decoded item metadata
 ### Check if a decoded item exists (via sha1)
-##### ``api/get/decoded/metadata/<sha1>`` GET
+##### ``api/get/decoded/metadata/<sha1>`` POST
 
 ### Get decoded item correlation (1 depth)
-##### ``api/get/decoded/metadata/<sha1>`` GET
+##### ``api/get/decoded/metadata/<sha1>`` POST
 
 -----
 
@@ -789,10 +789,10 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 ##### ``api/get/cryptocurrency`` POST
 
 ### Check if a cryptocurrency address (bitcoin, ..) exists
-##### ``api/get/cryptocurrency/exist/<bitcoin_address>`` GET
+##### ``api/get/cryptocurrency/exist/<bitcoin_address>`` POST
 
 ### Get cryptocurrency address metadata
-##### ``api/get/cryptocurrency/metadata/<bitcoin_address>`` GET
+##### ``api/get/cryptocurrency/metadata/<bitcoin_address>`` POST
 
 -----
 
