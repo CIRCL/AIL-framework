@@ -42,8 +42,6 @@ def is_galaxy_tag_enabled(galaxy, tag):
 
 # Check if tags are enabled in AIL
 def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
-    print(list_tags)
-    print(list_tags_galaxy)
     if list_tags:
         active_taxonomies = get_active_taxonomies()
 
@@ -161,7 +159,7 @@ def remove_item_tags(tags=[], item_id=None):
         if res[1] != 200:
             return res
         else:
-            dict_res[tags].append(tag)
+            dict_res['tags'].append(tag)
     dict_res['id'] = item_id
     return (dict_res, 200)
 

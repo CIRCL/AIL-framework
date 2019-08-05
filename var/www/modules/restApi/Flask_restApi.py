@@ -166,53 +166,16 @@ def get_item_id():
     else:
         return 'description API endpoint'
 
-@restApi.route("api/v1/get/item/default/<path:item_id>", methods=['GET'])
+@restApi.route("api/v1/get/item/default", methods=['POST'])
 @token_required('admin')
-def get_item_id_basic(item_id):
-    """
-        **POST api/get/item/default/<item_id>**
+def get_item_id_basic():
 
-        **Get item**
-
-        This function allows user to get a specific item information through their item_id.
-
-        :param id: id of the item
-        :type id: item id
-        :return: item's information in json and http status code
-
-        - Example::
-
-            curl -k https://127.0.0.1:7000/api/get/item/default/<item_id> --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json --data @input.json -X POST"
-
-        - Expected Success Response::
-
-            HTTP Status Code: 200
-
-            {
-              "content": "item content test",
-              "date": "20190726",
-              "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-              "tags":
-                [
-                  "misp-galaxy:backdoor=\"Rosenbridge\"",
-                  "infoleak:automatic-detection=\"pgp-message\"",
-                  "infoleak:automatic-detection=\"encrypted-private-key\"",
-                  "infoleak:submission=\"manual\"",
-                  "misp-galaxy:backdoor=\"SLUB\""
-                ]
-            }
-
-        - Expected Fail Response::
-
-            HTTP Status Code: 400
-
-            {'status': 'error', 'reason': 'Item not found'}
-
-    """
-
-    data = {'id': item_id, 'date': True, 'content': True, 'tags': True}
-    res = Item.get_item(data)
-    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    if request.method == 'POST':
+        data = request.get_json()
+        item_id = data.get('id', None)
+        req_data = {'id': item_id, 'date': True, 'content': True, 'tags': True}
+        res = Item.get_item(req_data)
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # GET
@@ -227,49 +190,14 @@ def get_item_id_basic(item_id):
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/get/item/tag/<path:item_id>", methods=['GET'])
+@restApi.route("api/v1/get/item/tag", methods=['POST'])
 @token_required('admin')
-def get_item_tag(item_id):
-    """
-        **GET api/get/item/tag/<item id>**
+def get_item_tag():
 
-        **Get item tags**
-
-        This function allows user to get all items tags form a specified item id.
-
-        :param id: id of the item
-        :type id: item id
-        :return: item's tags list in json and http status code
-
-        - Example::
-
-            curl -k https://127.0.0.1:7000/api/get/item/tag/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
-
-        - Expected Success Response::
-
-            HTTP Status Code: 200
-
-            {
-              "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-              "tags":
-                [
-                  "misp-galaxy:backdoor=\"Rosenbridge\"",
-                  "infoleak:automatic-detection=\"pgp-message\"",
-                  "infoleak:automatic-detection=\"encrypted-private-key\"",
-                  "infoleak:submission=\"manual\"",
-                  "misp-galaxy:backdoor=\"SLUB\""
-                ]
-            }
-
-        - Expected Fail Response::
-
-            HTTP Status Code: 400
-
-            {'status': 'error', 'reason': 'Item not found'}
-
-    """
-    data = {'id': item_id, 'date': False, 'tags': True}
-    res = Item.get_item(data)
+    data = request.get_json()
+    item_id = data.get('id', None)
+    req_data = {'id': item_id, 'date': False, 'tags': True}
+    res = Item.get_item(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -290,61 +218,7 @@ def get_item_tag(item_id):
 @restApi.route("api/v1/add/item/tag", methods=['POST'])
 @token_required('admin')
 def add_item_tags():
-    """
-        **POST api/add/item/tag**
 
-        **add tags to an item**
-
-        This function allows user to add tags and galaxy to an item.
-
-        :param id: id of the item
-        :type id: item id
-        :param tags: list of tags (default=[])
-        :type tags: list
-        :param galaxy: list of galaxy (default=[])
-        :type galaxy: list
-
-        :return: item id and tags added in json and http status code
-
-        - Example::
-
-            curl -k https://127.0.0.1:7000/api/add/item/tag --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-
-        - input.json Example::
-
-            {
-              "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-              "tags": [
-                        "infoleak:analyst-detection=\"private-key\"",
-                        "infoleak:analyst-detection=\"api-key\""
-                      ],
-              "galaxy": [
-                          "misp-galaxy:stealer=\"Vidar\""
-                        ]
-            }
-
-        - Expected Success Response::
-
-            HTTP Status Code: 200
-
-            {
-              "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-              "tags": [
-                "infoleak:analyst-detection=\"private-key\"",
-                "infoleak:analyst-detection=\"api-key\"",
-                "misp-galaxy:stealer=\"Vidar\""
-              ]
-            }
-
-        - Expected Fail Response::
-
-            HTTP Status Code: 400
-
-            {'status': 'error', 'reason': 'Item id not found'}
-            {'status': 'error', 'reason': 'Tags or Galaxy not specified'}
-            {'status': 'error', 'reason': 'Tags or Galaxy not enabled'}
-
-    """
     data = request.get_json()
     if not data:
         return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
@@ -373,57 +247,7 @@ def add_item_tags():
 @restApi.route("api/v1/delete/item/tag", methods=['DELETE'])
 @token_required('admin')
 def delete_item_tags():
-    """
-        **DELET E api/delete/item/tag**
 
-        **delete tags from an item**
-
-        This function allows user to delete tags and galaxy from an item.
-
-        :param id: id of the item
-        :type id: item id
-        :param tags: list of tags (default=[])
-        :type tags: list
-
-        :return: item id and tags deleted in json and http status code
-
-        - Example::
-
-            curl -k https://127.0.0.1:7000/api/delete/item/tag --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X DELET E
-
-        - input.json Example::
-
-            {
-              "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-              "tags": [
-                        "infoleak:analyst-detection=\"private-key\"",
-                        "infoleak:analyst-detection=\"api-key\"",
-                        "misp-galaxy:stealer=\"Vidar\""
-                      ]
-            }
-
-        - Expected Success Response::
-
-            HTTP Status Code: 200
-
-            {
-              "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-              "tags": [
-                "infoleak:analyst-detection=\"private-key\"",
-                "infoleak:analyst-detection=\"api-key\"",
-                 "misp-galaxy:stealer=\"Vidar\""
-              ]
-            }
-
-        - Expected Fail Response::
-
-            HTTP Status Code: 400
-
-            {'status': 'error', 'reason': 'Item id not found'}
-            {'status': 'error', 'reason': 'No Tag(s) specified}
-            {'status': 'error', 'reason': 'Malformed JSON'}
-
-    """
     data = request.get_json()
     if not data:
         return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
@@ -447,57 +271,31 @@ def delete_item_tags():
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/get/item/content/<path:item_id>", methods=['GET'])
+@restApi.route("api/v1/get/item/content", methods=['POST'])
 @token_required('admin')
-def get_item_content(item_id):
-    """
-        **GET api/get/item/content/<item id>**
+def get_item_content():
 
-        **Get item content**
-
-        This function allows user to get a specific item content.
-
-        :param id: id of the item
-        :type id: item id
-        :return: item's content in json and http status code
-
-        - Example::
-
-            curl -k https://127.0.0.1:7000/api/get/item/content/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
-
-        - Expected Success Response::
-
-            HTTP Status Code: 200
-
-            {
-              "content": "item content test",
-              "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
-            }
-
-        - Expected Fail Response::
-
-            HTTP Status Code: 400
-
-            {'status': 'error', 'reason': 'Item not found'}
-
-    """
-    data = {'id': item_id, 'date': False, 'content': True, 'tags': False}
-    res = Item.get_item(data)
+    data = request.get_json()
+    item_id = data.get('id', None)
+    req_data = {'id': item_id, 'date': False, 'content': True, 'tags': False}
+    res = Item.get_item(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-@restApi.route("api/v1/get/tag/metadata/<tag>", methods=['GET'])
+@restApi.route("api/v1/get/tag/metadata", methods=['POST'])
 @token_required('admin')
-def get_tag_metadata(tag):
+def get_tag_metadata():
+    data = request.get_json()
+    tag = data.get('tag', None)
     if not Tag.is_tag_in_all_tag(tag):
         return Response(json.dumps({'status': 'error', 'reason':'Tag not found'}, indent=2, sort_keys=True), mimetype='application/json'), 404
     metadata = Tag.get_tag_metadata(tag)
     return Response(json.dumps(metadata, indent=2, sort_keys=True), mimetype='application/json'), 200
 
-@restApi.route("api/get/tag/all", methods=['GET'])
+@restApi.route("api/v1/get/tag/all", methods=['GET'])
 @token_required('admin')
 def get_all_tags():
     res = {'tags': Tag.get_all_tags()}
@@ -528,58 +326,7 @@ def get_all_tags():
 @restApi.route("api/v1/import/item", methods=['POST'])
 @token_required('admin')
 def import_item():
-    """
-        **POST api/import/item**
 
-        **Import new item**
-
-        This function allows user to import new items. asynchronous function.
-
-        :param text: text to import
-        :type text: str
-        :param type: import type (default='text')
-        :type type: "text"
-        :param tags: list of tags (default=[])
-        :type tags: list
-        :param galaxy: list of galaxy (default=[])
-        :type galaxy: list
-        :param default_tags: add default tag (default=True)
-        :type default_tags: boolean
-
-        :return: imported uuid in json and http status code
-
-        - Example::
-
-            curl -k https://127.0.0.1:7000/api/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-
-        - input.json Example::
-
-            {
-              "type": "text",
-              "tags": [
-                        "infoleak:analyst-detection=\"private-key\""
-                      ],
-              "text": "text to import"
-            }
-
-        - Expected Success Response::
-
-            HTTP Status Code: 200
-
-            {
-              "uuid": "0c3d7b34-936e-4f01-9cdf-2070184b6016"
-            }
-
-        - Expected Fail Response::
-
-            HTTP Status Code: 400
-
-            {'status': 'error', 'reason': 'Malformed JSON'}
-            {'status': 'error', 'reason': 'No text supplied'}
-            {'status': 'error', 'reason': 'Tags or Galaxy not enabled'}
-            {'status': 'error', 'reason': 'Size exceeds default'}
-
-    """
     data = request.get_json()
     if not data:
         return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
@@ -624,44 +371,11 @@ def import_item():
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/import/item/<UUID>", methods=['GET'])
+@restApi.route("api/v1/get/import/item", methods=['POST'])
 @token_required('admin')
-def import_item_uuid(UUID):
-    """
-        **GET api/import/item/<uuid4>**
-
-        **Get import status and all items imported by uuid**
-
-        This return the import status and a list of imported items.
-        The full list of imported items is not complete until 'status'='imported'.
-
-        :param uuid: import uuid
-        :type uuid: uuid4
-        :return: json: import status + imported items list
-
-        - Example::
-
-            curl -k https://127.0.0.1:7000/api/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763b50 --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
-
-        - Expected Success Response::
-
-            HTTP Status Code: 200
-
-            {
-              "items": [
-                         "submitted/2019/07/26/b20a69f1-99ad-4cb3-b212-7ce24b763b50.gz"
-                       ],
-              "status": "in queue"/"in progress"/"imported"
-            }
-
-        - Expected Fail Response::
-
-            HTTP Status Code: 400
-
-            {'status': 'error', 'reason': 'Invalid uuid'}
-            {'status': 'error', 'reason': 'Unknown uuid'}
-
-    """
+def import_item_uuid():
+    data = request.get_json()
+    UUID = data.get('uuid', None)
 
     # Verify uuid
     if not is_valid_uuid_v4(UUID):

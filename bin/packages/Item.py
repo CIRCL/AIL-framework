@@ -46,13 +46,11 @@ def get_item_content(item_id):
     except UnicodeDecodeError:
         item_content = None
     except Exception as e:
-        print("ERROR in: " + item_id)
-        print(e)
         item_content = None
     if item_content is None:
         try:
             with gzip.open(item_full_path, 'r') as f:
-                item_content = f.read()
+                item_content = f.read().decode()
                 r_cache.set(item_full_path, item_content)
                 r_cache.expire(item_full_path, 300)
         except:

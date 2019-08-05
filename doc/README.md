@@ -27,12 +27,12 @@ curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/
 
 ## Item management
 
-### Get item: `api/v1/get/item/default/<path:item_id>`
+### Get item: `api/v1/get/item/default`
 
 #### Description
 Get item default info.
 
-**Method** : `GET`
+**Method** : `POST`
 
 #### Parameters
 - `id`
@@ -56,7 +56,14 @@ Get item default info.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/get/item/default/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/v1/get/item/default --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
+  }
 ```
 
 #### Expected Success Response
@@ -92,12 +99,12 @@ curl https://127.0.0.1:7000/api/get/item/default/submitted/2019/07/26/3efb8a79-0
 
 
 
-### Get item content: `api/v1/get/item/content/<path:item_id>`
+### Get item content: `api/v1/get/item/content`
 
 #### Description
 Get a specific item content.
 
-**Method** : `GET`
+**Method** : `POST`
 
 #### Parameters
 - `id`
@@ -115,7 +122,14 @@ Get a specific item content.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/get/item/content/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/v1/get/item/content --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
+  }
 ```
 
 #### Expected Success Response
@@ -141,12 +155,12 @@ curl https://127.0.0.1:7000/api/get/item/content/submitted/2019/07/26/3efb8a79-0
 
 
 
-### Get item content: `api/v1/get/item/tag/<path:item_id>`
+### Get item content: `api/v1/get/item/tag`
 
 #### Description
 Get all tags from an item.
 
-**Method** : `GET`
+**Method** : `POST`
 
 #### Parameters
 - `id`
@@ -164,7 +178,14 @@ Get all tags from an item.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/v1/get/item/tag/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/v1/get/item/tag --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
+  }
 ```
 
 #### Expected Success Response
@@ -506,12 +527,12 @@ curl https://127.0.0.1:7000/api/v1/get/tag/all --header "Authorization: iHc1_ChZ
 
 
 
-### Get tag metadata: `api/v1/get/tag/metadata/<tag>`
+### Get tag metadata: `api/v1/get/tag/metadata`
 
 #### Description
 Get tag metadata.
 
-**Method** : `GET`
+**Method** : `POST`
 
 #### Parameters
 - `tag`
@@ -531,7 +552,14 @@ Get tag metadata.
   - *str - YYMMDD*
 #### Example
 ```
-curl https://127.0.0.1:7000/api/v1/get/tag/metadata/infoleak:submission=\"manual\" --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/v1/get/tag/metadata --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "tag": "infoleak:submission=\"manual\""
+  }
 ```
 
 #### Expected Success Response
@@ -638,7 +666,7 @@ curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZ
 
 Get import status and all items imported by uuid
 
-**Method** : `GET`
+**Method** : `POST`
 
 #### Parameters
 
@@ -661,7 +689,14 @@ Get import status and all items imported by uuid
 #### Example
 
 ```
-curl -k https://127.0.0.1:7000/api/v1/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763b50 --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "uuid": "0c3d7b34-936e-4f01-9cdf-2070184b6016"
+  }
 ```
 
 #### Expected Success Response
