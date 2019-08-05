@@ -156,7 +156,7 @@ def one():
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/get/item", methods=['GET', 'POST'])
+@restApi.route("api/v1/get/item", methods=['GET', 'POST'])
 @token_required('admin')
 def get_item_id():
     if request.method == 'POST':
@@ -166,7 +166,7 @@ def get_item_id():
     else:
         return 'description API endpoint'
 
-@restApi.route("api/get/item/default/<path:item_id>", methods=['GET'])
+@restApi.route("api/v1/get/item/default/<path:item_id>", methods=['GET'])
 @token_required('admin')
 def get_item_id_basic(item_id):
     """
@@ -227,7 +227,7 @@ def get_item_id_basic(item_id):
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/get/item/tag/<path:item_id>", methods=['GET'])
+@restApi.route("api/v1/get/item/tag/<path:item_id>", methods=['GET'])
 @token_required('admin')
 def get_item_tag(item_id):
     """
@@ -287,7 +287,7 @@ def get_item_tag(item_id):
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/add/item/tag", methods=['POST'])
+@restApi.route("api/v1/add/item/tag", methods=['POST'])
 @token_required('admin')
 def add_item_tags():
     """
@@ -370,7 +370,7 @@ def add_item_tags():
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/delete/item/tag", methods=['DELETE'])
+@restApi.route("api/v1/delete/item/tag", methods=['DELETE'])
 @token_required('admin')
 def delete_item_tags():
     """
@@ -447,7 +447,7 @@ def delete_item_tags():
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/get/item/content/<path:item_id>", methods=['GET'])
+@restApi.route("api/v1/get/item/content/<path:item_id>", methods=['GET'])
 @token_required('admin')
 def get_item_content(item_id):
     """
@@ -489,7 +489,7 @@ def get_item_content(item_id):
 # # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-@restApi.route("api/get/tag/metadata/<tag>", methods=['GET'])
+@restApi.route("api/v1/get/tag/metadata/<tag>", methods=['GET'])
 @token_required('admin')
 def get_tag_metadata(tag):
     if not Tag.is_tag_in_all_tag(tag):
@@ -525,7 +525,7 @@ def get_all_tags():
 # response: {"uuid": "uuid"}
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/import/item", methods=['POST'])
+@restApi.route("api/v1/import/item", methods=['POST'])
 @token_required('admin')
 def import_item():
     """
@@ -624,7 +624,7 @@ def import_item():
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/import/item/<UUID>", methods=['GET'])
+@restApi.route("api/v1/import/item/<UUID>", methods=['GET'])
 @token_required('admin')
 def import_item_uuid(UUID):
     """

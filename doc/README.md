@@ -27,7 +27,7 @@ curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/
 
 ## Item management
 
-### Get item: `api/get/item/default/<path:item_id>`
+### Get item: `api/v1/get/item/default/<path:item_id>`
 
 #### Description
 Get item default info.
@@ -92,7 +92,7 @@ curl https://127.0.0.1:7000/api/get/item/default/submitted/2019/07/26/3efb8a79-0
 
 
 
-### Get item content: `api/get/item/content/<path:item_id>`
+### Get item content: `api/v1/get/item/content/<path:item_id>`
 
 #### Description
 Get a specific item content.
@@ -141,7 +141,7 @@ curl https://127.0.0.1:7000/api/get/item/content/submitted/2019/07/26/3efb8a79-0
 
 
 
-### Get item content: `api/get/item/tag/<path:item_id>`
+### Get item content: `api/v1/get/item/tag/<path:item_id>`
 
 #### Description
 Get all tags from an item.
@@ -164,7 +164,7 @@ Get all tags from an item.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/get/item/tag/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/v1/get/item/tag/submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
 ```
 
 #### Expected Success Response
@@ -197,7 +197,7 @@ curl https://127.0.0.1:7000/api/get/item/tag/submitted/2019/07/26/3efb8a79-08e9-
 
 
 
-### Advanced Get item: `api/get/item`
+### Advanced Get item: `api/v1/get/item`
 
 #### Description
 Get item. Filter requested field.
@@ -259,7 +259,7 @@ Get item. Filter requested field.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/get/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/get/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example
@@ -306,7 +306,7 @@ curl https://127.0.0.1:7000/api/get/item --header "Authorization: iHc1_ChZxj1aXm
 
 
 
-### add item tags: `api/add/item/tag`
+### add item tags: `api/v1/add/item/tag`
 
 #### Description
 Add tags to an item.
@@ -337,7 +337,7 @@ Add tags to an item.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example
@@ -380,7 +380,7 @@ curl https://127.0.0.1:7000/api/import/item --header "Authorization: iHc1_ChZxj1
 
 
 
-### Delete item tags: `api/delete/item/tag`
+### Delete item tags: `api/v1/delete/item/tag`
 
 #### Description
 Delete tags from an item.
@@ -407,7 +407,7 @@ Delete tags from an item.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/delete/item/tag --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X DELETE
+curl https://127.0.0.1:7000/api/v1/delete/item/tag --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X DELETE
 ```
 
 #### input.json Example
@@ -452,7 +452,7 @@ curl https://127.0.0.1:7000/api/delete/item/tag --header "Authorization: iHc1_Ch
 ## Tag management
 
 
-### Get all AIL tags: `api/get/tag/all`
+### Get all AIL tags: `api/v1/get/tag/all`
 
 #### Description
 Get all tags used in AIL.
@@ -465,7 +465,7 @@ Get all tags used in AIL.
   - *list*
 #### Example
 ```
-curl https://127.0.0.1:7000/api/get/tag/all --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/v1/get/tag/all --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
 ```
 
 #### Expected Success Response
@@ -506,7 +506,7 @@ curl https://127.0.0.1:7000/api/get/tag/all --header "Authorization: iHc1_ChZxj1
 
 
 
-### Get tag metadata: `api/get/tag/metadata/<tag>`
+### Get tag metadata: `api/v1/get/tag/metadata/<tag>`
 
 #### Description
 Get tag metadata.
@@ -531,7 +531,7 @@ Get tag metadata.
   - *str - YYMMDD*
 #### Example
 ```
-curl https://127.0.0.1:7000/api/get/tag/metadata/infoleak:submission=\"manual\" --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl https://127.0.0.1:7000/api/v1/get/tag/metadata/infoleak:submission=\"manual\" --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
 ```
 
 #### Expected Success Response
@@ -559,7 +559,7 @@ curl https://127.0.0.1:7000/api/get/tag/metadata/infoleak:submission=\"manual\" 
 
 
 
-### Import item (currently: text only): `api/import/item`
+### Import item (currently: text only): `api/v1/import/item`
 
 #### Description
 Allows users to import new items. asynchronous function.
@@ -595,7 +595,7 @@ Allows users to import new items. asynchronous function.
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example
@@ -632,7 +632,7 @@ curl https://127.0.0.1:7000/api/import/item --header "Authorization: iHc1_ChZxj1
 
 
 
-### GET Import item info: `api/import/item/<uuid4>`
+### GET Import item info: `api/v1/import/item/<uuid4>`
 
 #### Description
 
@@ -661,7 +661,7 @@ Get import status and all items imported by uuid
 #### Example
 
 ```
-curl -k https://127.0.0.1:7000/api/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763b50 --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
+curl -k https://127.0.0.1:7000/api/v1/import/item/b20a69f1-99ad-4cb3-b212-7ce24b763b50 --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
 ```
 
 #### Expected Success Response
