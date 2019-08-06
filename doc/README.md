@@ -25,9 +25,11 @@ Example:
 curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/json" https://AIL_URL/
 ~~~~
 
+Take me to [get_item_content](#get_item_content)
+
 ## Item management
 
-### Get item: `api/v1/get/item/default`
+### <a name="get_item_default"></a> Get item: `api/v1/get/item/default`
 
 #### Description
 Get item default info.
@@ -99,7 +101,7 @@ curl https://127.0.0.1:7000/api/v1/get/item/default --header "Authorization: iHc
 
 
 
-### Get item content: `api/v1/get/item/content`
+### <a name="get_item_content"></a> Get item content: `api/v1/get/item/content`
 
 #### Description
 Get a specific item content.
