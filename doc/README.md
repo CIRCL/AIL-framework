@@ -583,6 +583,94 @@ curl https://127.0.0.1:7000/api/v1/get/tag/metadata --header "Authorization: iHc
 
 
 
+
+
+## Tracker
+
+
+
+### Add term tracker: `api/v1/add/tracker/term`<a name="add_term_tracker"></a>
+
+#### Description
+Add term tracker
+
+**Method** : `POST`
+
+#### Parameters
+- `term`
+  - term to add
+  - *str - word(s)*
+  - default: `text`
+- `nb_words`
+  - number of words in set
+  - *int*
+  - default: `1`
+- `type`
+  - term type
+  - *str*
+  - mandatory: `word`, `set`, `regex`
+- `tags`
+  - list of tags
+  - *list*
+  - default: `[]`
+- `mails`
+  - list of mails to notify
+  - *list*
+  - default: `[]`
+- `level`
+  - tracker visibility
+  - *int - 0: user only, 1: all users*
+  - default: `1`
+
+#### JSON response
+- `uuid`
+  - import uuid
+  - *uuid4*
+
+#### Example
+```
+curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "type": "text",
+    "tags": [
+      "infoleak:analyst-detection=\"private-key\""
+    ],
+    "text": "text to import"
+  }
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+
+```json
+  {
+    "uuid": "0c3d7b34-936e-4f01-9cdf-2070184b6016"
+  }
+```
+
+#### Expected Fail Response
+**HTTP Status Code** : `400`
+
+```json
+  {"status": "error", "reason": "Malformed JSON"}
+  {"status": "error", "reason": "No text supplied"}
+  {"status": "error", "reason": "Tags or Galaxy not enabled"}
+  {"status": "error", "reason": "Size exceeds default"}
+```
+
+
+
+
+
+
+
+
+
+
 ## Import management
 
 

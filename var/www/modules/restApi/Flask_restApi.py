@@ -308,6 +308,15 @@ def get_all_tags():
     return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/add/tracker/term", methods=['POST'])
+#@token_required('analyst')
+def add_tracker_term():
+    data = request.get_json()
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 

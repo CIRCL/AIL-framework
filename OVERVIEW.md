@@ -109,7 +109,55 @@ Redis and ARDB overview
 | **uuid**:ltags | **tag** |
 | **uuid**:ltagsgalaxies | **tag** |
 
+## DB2 - New TermFreq:
+
+##### Term Tracker metadata:
+| Hset - Key | Field | Value |
+| ------ | ------ | ------ |
+| tracked_term:**uuid** | tracked   | **tacked word/set/regex**          |
+|                       | type      | **term/set/regex**                 |
+|                       | date      | **date added**                     |
+|                       | user_id   | **created by user_id**             |
+|                       | dashboard | **0/1 Display alert on dashboard** |
+|                       | level     | **0/1 Tracker visibility**         |
+
+##### Term Tracked by user_id (visibility level: user only):
+| Set - Key | Value |
+| ------ | ------ |
+| user:tracked_term:**user_id** | **uuid - tracked term uuid** |
+
+##### Global Term Tracked (visibility level: all users):
+| Set - Key | Value |
+| ------ | ------ |
+| gobal:tracked_term | **uuid - tracked term uuid** |
+
+##### All Term Tracked by type:
+| Set - Key | Value |
+| ------ | ------ |
+| all:tracked_term:**word/set/regex - term type** | **tracked term** |
+
+| Set - Key | Value |
+| ------ | ------ |
+| all:tracked_term_uuid:**tracked term** | **uuid - tracked term uuid** |
+
+##### All Term Tracked items:
+| Set - Key | Value |
+| ------ | ------ |
+| tracked_term:item:**uuid** | **item_id** |
+
+##### All Term Tracked tags:
+| Set - Key | Value |
+| ------ | ------ |
+| tracked_term:tags:**uuid** | **tag** |
+
+##### All Term Tracked tags:
+| Set - Key | Value |
+| ------ | ------ |
+| tracked_term:mail:**uuid** | **mail** |
+
 ## DB2 - TermFreq:
+
+##### Set:
 
 ##### Set:
 | Key | Value |
@@ -117,6 +165,17 @@ Redis and ARDB overview
 | TrackedSetTermSet | **tracked_term** |
 | TrackedSetSet | **tracked_set** |
 | TrackedRegexSet | **tracked_regex** |
+| | |
+| | |
+| global:TrackedSetTermSet | **tracked_term** |
+| global:TrackedSetSet | **tracked_set** |
+| global:TrackedRegexSet | **tracked_regex** |
+| | |
+| | |
+| user:**user_id**:TrackedSetTermSet | **tracked_term** |
+| user:**user_id**:TrackedSetSet | **tracked_set** |
+| user:**user_id**:TrackedRegexSet | **tracked_regex** |
+| | |
 | | |
 | tracked_**tracked_term** | **item_path** |
 | set_**tracked_set** | **item_path** |
