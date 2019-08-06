@@ -96,6 +96,15 @@ def authErrors(user_role):
     data = None
     # verify token format
 
+    # brute force protection
+    current_ip = request.remote_addr
+    login_failed_ip = r_cache.get('failed_login_ip_api:{}'.format(current_ip))
+    # brute force by ip
+    if login_failed_ip:
+        login_failed_ip = int(login_failed_ip)
+        if login_failed_ip >= 5:
+            return ({'status': 'error', 'reason': 'Max Connection Attempts reached, Please wait {}s'.format(r_cache.ttl('failed_login_ip_api:{}'.format(current_ip)))}, 401)
+
     try:
         authenticated = False
         if verify_token(token):
@@ -106,6 +115,8 @@ def authErrors(user_role):
                 data = ({'status': 'error', 'reason': 'Access Forbidden'}, 403)
 
         if not authenticated:
+            r_cache.incr('failed_login_ip_api:{}'.format(current_ip))
+            r_cache.expire('failed_login_ip_api:{}'.format(current_ip), 300)
             data = ({'status': 'error', 'reason': 'Authentication failed'}, 401)
     except Exception as e:
         print(e)
