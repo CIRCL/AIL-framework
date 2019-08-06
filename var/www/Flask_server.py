@@ -294,7 +294,12 @@ def searchbox():
 @app.errorhandler(405)
 def _handle_client_error(e):
     if request.path.startswith('/api/'):
-        return Response(json.dumps({"status": "error", "reason": "Method Not Allowed: The method is not allowed for the requested URL"}, indent=2, sort_keys=True), mimetype='application/json'), 405
+        res_dict = {"status": "error", "reason": "Method Not Allowed: The method is not allowed for the requested URL"}
+        anchor_id = request.path[8:]
+        anchor_id = anchor_id.replace('/', '_')
+        api_doc_url = 'https://github.com/CIRCL/AIL-framework/tree/master/doc#{}'.format(anchor_id)
+        res_dict['documentation'] = api_doc_url
+        return Response(json.dumps(res_dict, indent=2, sort_keys=True), mimetype='application/json'), 405
     else:
         return e
 

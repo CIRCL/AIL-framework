@@ -35,6 +35,7 @@ r_serv_db = Flask_config.r_serv_db
 r_serv_onion = Flask_config.r_serv_onion
 r_serv_metadata = Flask_config.r_serv_metadata
 
+
 restApi = Blueprint('restApi', __name__, template_folder='templates')
 
 # ============ AUTH FUNCTIONS ============
@@ -128,8 +129,6 @@ def authErrors(user_role):
 
 # ============ API CORE =============
 
-
-
 # ============ FUNCTIONS ============
 
 def is_valid_uuid_v4(header_uuid):
@@ -167,26 +166,22 @@ def one():
 #           }
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/get/item", methods=['GET', 'POST'])
+@restApi.route("api/v1/get/item", methods=['POST'])
 @token_required('analyst')
 def get_item_id():
-    if request.method == 'POST':
-        data = request.get_json()
-        res = Item.get_item(data)
-        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
-    else:
-        return 'description API endpoint'
+    data = request.get_json()
+    res = Item.get_item(data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/item/default", methods=['POST'])
 @token_required('analyst')
 def get_item_id_basic():
 
-    if request.method == 'POST':
-        data = request.get_json()
-        item_id = data.get('id', None)
-        req_data = {'id': item_id, 'date': True, 'content': True, 'tags': True}
-        res = Item.get_item(req_data)
-        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    data = request.get_json()
+    item_id = data.get('id', None)
+    req_data = {'id': item_id, 'date': True, 'content': True, 'tags': True}
+    res = Item.get_item(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # GET

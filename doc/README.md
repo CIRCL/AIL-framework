@@ -18,7 +18,6 @@ When submitting data in a POST, PUT or DELETE operation you need to specify in w
 ~~~~
 Content-Type: application/json
 ~~~~
-Take me to [delete_item_tag](#delete_item_tag)
 
 Example:
 
