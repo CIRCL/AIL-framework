@@ -31,6 +31,8 @@ var/www/static/
 !var/www/static/js/trendingchart.js
 var/www/templates/header.html
 var/www/submitted
+var/www/server.crt
+var/www/server.key
 
 # Local config
 bin/packages/config.cfg
@@ -39,6 +41,11 @@ configs/keys
 configs/update.cfg
 update/current_version
 files
+
+# Helper
+bin/helper/gen_cert/rootCA.*
+bin/helper/gen_cert/server.*
+
 
 # Pystemon archives
 pystemon/archives

@@ -327,7 +327,7 @@ curl https://127.0.0.1:7000/api/v1/get/item --header "Authorization: iHc1_ChZxj1
 
 
 
-### add item tags: `api/v1/add/item/tag`<a name="add_item_tag"></a>
+### Add item tags: `api/v1/add/item/tag`<a name="add_item_tag"></a>
 
 #### Description
 Add tags to an item.
