@@ -18,6 +18,7 @@ When submitting data in a POST, PUT or DELETE operation you need to specify in w
 ~~~~
 Content-Type: application/json
 ~~~~
+Take me to [delete_item_tag](#delete_item_tag)
 
 Example:
 
@@ -25,11 +26,9 @@ Example:
 curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/json" https://AIL_URL/
 ~~~~
 
-Take me to [get_item_content](#get_item_content)
-
 ## Item management
 
-### <a name="get_item_default"></a> Get item: `api/v1/get/item/default`
+### Get item: `api/v1/get/item/default`<a name="get_item_default"></a>
 
 #### Description
 Get item default info.
@@ -101,7 +100,7 @@ curl https://127.0.0.1:7000/api/v1/get/item/default --header "Authorization: iHc
 
 
 
-### <a name="get_item_content"></a> Get item content: `api/v1/get/item/content`
+### Get item content: `api/v1/get/item/content`<a name="get_item_content"></a>
 
 #### Description
 Get a specific item content.
@@ -157,7 +156,7 @@ curl https://127.0.0.1:7000/api/v1/get/item/content --header "Authorization: iHc
 
 
 
-### Get item content: `api/v1/get/item/tag`
+### Get item content: `api/v1/get/item/tag`<a name="get_item_tag"></a>
 
 #### Description
 Get all tags from an item.
@@ -220,7 +219,7 @@ curl https://127.0.0.1:7000/api/v1/get/item/tag --header "Authorization: iHc1_Ch
 
 
 
-### Advanced Get item: `api/v1/get/item`
+### Advanced Get item: `api/v1/get/item`<a name="get_item"></a>
 
 #### Description
 Get item. Filter requested field.
@@ -329,7 +328,7 @@ curl https://127.0.0.1:7000/api/v1/get/item --header "Authorization: iHc1_ChZxj1
 
 
 
-### add item tags: `api/v1/add/item/tag`
+### add item tags: `api/v1/add/item/tag`<a name="add_item_tag"></a>
 
 #### Description
 Add tags to an item.
@@ -403,7 +402,7 @@ curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZ
 
 
 
-### Delete item tags: `api/v1/delete/item/tag`
+### Delete item tags: `api/v1/delete/item/tag`<a name="delete_item_tag"></a>
 
 #### Description
 Delete tags from an item.
@@ -475,7 +474,7 @@ curl https://127.0.0.1:7000/api/v1/delete/item/tag --header "Authorization: iHc1
 ## Tag management
 
 
-### Get all AIL tags: `api/v1/get/tag/all`
+### Get all AIL tags: `api/v1/get/tag/all`<a name="get_tag_all"></a>
 
 #### Description
 Get all tags used in AIL.
@@ -529,7 +528,7 @@ curl https://127.0.0.1:7000/api/v1/get/tag/all --header "Authorization: iHc1_ChZ
 
 
 
-### Get tag metadata: `api/v1/get/tag/metadata`
+### Get tag metadata: `api/v1/get/tag/metadata`<a name="get_tag_metadata"></a>
 
 #### Description
 Get tag metadata.
@@ -589,7 +588,7 @@ curl https://127.0.0.1:7000/api/v1/get/tag/metadata --header "Authorization: iHc
 
 
 
-### Import item (currently: text only): `api/v1/import/item`
+### Import item (currently: text only): `api/v1/import/item`<a name="import_item"></a>
 
 #### Description
 Allows users to import new items. asynchronous function.
@@ -662,7 +661,7 @@ curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZ
 
 
 
-### GET Import item info: `api/v1/get/import/item/`
+### GET Import item info: `api/v1/get/import/item/`<a name="get_import_item"></a>
 
 #### Description
 
