@@ -168,7 +168,7 @@ def one():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/item", methods=['GET', 'POST'])
-@token_required('admin')
+@token_required('analyst')
 def get_item_id():
     if request.method == 'POST':
         data = request.get_json()
@@ -178,7 +178,7 @@ def get_item_id():
         return 'description API endpoint'
 
 @restApi.route("api/v1/get/item/default", methods=['POST'])
-@token_required('admin')
+@token_required('analyst')
 def get_item_id_basic():
 
     if request.method == 'POST':
@@ -202,7 +202,7 @@ def get_item_id_basic():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/item/tag", methods=['POST'])
-@token_required('admin')
+@token_required('analyst')
 def get_item_tag():
 
     data = request.get_json()
@@ -227,7 +227,7 @@ def get_item_tag():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/add/item/tag", methods=['POST'])
-@token_required('admin')
+@token_required('analyst')
 def add_item_tags():
 
     data = request.get_json()
@@ -256,7 +256,7 @@ def add_item_tags():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/delete/item/tag", methods=['DELETE'])
-@token_required('admin')
+@token_required('analyst')
 def delete_item_tags():
 
     data = request.get_json()
@@ -283,7 +283,7 @@ def delete_item_tags():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/item/content", methods=['POST'])
-@token_required('admin')
+@token_required('analyst')
 def get_item_content():
 
     data = request.get_json()
@@ -297,7 +297,7 @@ def get_item_content():
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 @restApi.route("api/v1/get/tag/metadata", methods=['POST'])
-@token_required('admin')
+@token_required('analyst')
 def get_tag_metadata():
     data = request.get_json()
     tag = data.get('tag', None)
@@ -307,7 +307,7 @@ def get_tag_metadata():
     return Response(json.dumps(metadata, indent=2, sort_keys=True), mimetype='application/json'), 200
 
 @restApi.route("api/v1/get/tag/all", methods=['GET'])
-@token_required('admin')
+@token_required('analyst')
 def get_all_tags():
     res = {'tags': Tag.get_all_tags()}
     return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
@@ -335,7 +335,7 @@ def get_all_tags():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/import/item", methods=['POST'])
-@token_required('admin')
+@token_required('analyst')
 def import_item():
 
     data = request.get_json()
@@ -383,7 +383,7 @@ def import_item():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/import/item", methods=['POST'])
-@token_required('admin')
+@token_required('analyst')
 def import_item_uuid():
     data = request.get_json()
     UUID = data.get('uuid', None)
