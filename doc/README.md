@@ -600,7 +600,7 @@ Add term tracker
 - `term`
   - term to add
   - *str - word(s)*
-  - default: `text`
+  - mandatory
 - `nb_words`
   - number of words in set
   - *int*

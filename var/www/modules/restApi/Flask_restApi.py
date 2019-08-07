@@ -17,6 +17,7 @@ import Import_helper
 import Item
 import Paste
 import Tag
+import Term
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required
@@ -55,8 +56,11 @@ def verify_token(token):
     else:
         return False
 
+def get_user_from_token(token):
+    return r_serv_db.hget('user:tokens', token)
+
 def verify_user_role(role, token):
-    user_id = r_serv_db.hget('user:tokens', token)
+    user_id = get_user_from_token(token)
     if user_id:
         if is_in_role(user_id, role):
             return True
@@ -308,13 +312,17 @@ def get_all_tags():
     return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # #        TRACKER       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/add/tracker/term", methods=['POST'])
-#@token_required('analyst')
+@restApi.route("api/v1/add/tracker/term", methods=['GET'])
+@token_required('analyst')
 def add_tracker_term():
-    data = request.get_json()
-
+    #data = request.get_json()
+    data = {"term": "pi", 'type' : "word"}
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
+    res = Term.parse_json_term_to_add(data, user_id)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #

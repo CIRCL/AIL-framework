@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import sys
 import uuid
 import redis
@@ -16,6 +17,7 @@ sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
 import Flask_config
 
 r_serv_term = Flask_config.r_serv_term
+email_regex = Flask_config.email_regex
 
 special_characters = set('[<>~!?@#$%^&*|()_-+={}":;,.\'\n\r\t]/\\')
 special_characters.add('\\s')
@@ -23,6 +25,26 @@ special_characters.add('\\s')
 # NLTK tokenizer
 tokenizer = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
                                     gaps=True, discard_empty=True)
+
+def is_valid_mail(email):
+    result = email_regex.match(email)
+    if result:
+        return True
+    else:
+        return False
+
+def verify_mail_list(mail_list):
+    for mail in mail_list:
+        if not is_valid_mail(mail):
+            return ({'status': 'error', 'reason': 'Invalid email', 'value': mail}, 400)
+    return None
+
+def is_valid_regex(term_regex):
+    try:
+        re.compile(term_regex)
+        return True
+    except:
+        return False
 
 def get_text_word_frequency(item_content, filtering=True):
     item_content = item_content.lower()
@@ -34,7 +56,6 @@ def get_text_word_frequency(item_content, filtering=True):
         blob = TextBlob(item_content)
     for word in blob.tokens:
         words_dict[word] += 1
-    print(words_dict)
     return words_dict
 
 # # TODO: create all tracked words
@@ -45,28 +66,40 @@ def get_set_tracked_words_list():
     set_list = r_serv_term.smembers('all:tracked_term:set')
     all_set_list = []
     for elem in set_list:
-        elem = elem.split(';')
-        num_words = int(elem[1])
-        ter_set = elem[0].split(',')
-        all_set_list.append((ter_set, num_words))
+        res = elem.split(';')
+        num_words = int(res[1])
+        ter_set = res[0].split(',')
+        all_set_list.append((ter_set, num_words, elem))
+    return all_set_list
 
-def parse_json_term_to_add(dict_input):
+def is_term_tracked_in_global_level(term):
+    res = r_serv_term.smembers('all:tracked_term_uuid:{}'.format(term))
+    if res:
+        for elem_uuid in res:
+            if r_serv_term.hget('tracked_term:{}'.format(elem_uuid), 'level')=='1':
+                return True
+    return False
+
+def parse_json_term_to_add(dict_input, user_id):
     term = dict_input.get('term', None)
     if not term:
         return ({"status": "error", "reason": "Term not provided"}, 400)
-    term_type = dict_input.get('term', None)
+    term_type = dict_input.get('type', None)
     if not term_type:
         return ({"status": "error", "reason": "Term type not provided"}, 400)
     nb_words = dict_input.get('nb_words', 1)
 
     res = parse_tracked_term_to_add(term , term_type, nb_words=nb_words)
-    if res['status']=='error':
+    if res[1]!=200:
         return res
+    term = res[0]['term']
+    term_type = res[0]['type']
 
-    # get user_id
     tags = dict_input.get('tags', [])
     mails = dict_input.get('mails', [])
-    ## TODO: verify mail integrity
+    res = verify_mail_list(mails)
+    if res:
+        return res
 
     ## TODO: add dashboard key
     level = dict_input.get('level', 1)
@@ -77,17 +110,20 @@ def parse_json_term_to_add(dict_input):
     except:
         level = 1
 
+    # check if term already tracked in global
+    if level==1:
+        if is_term_tracked_in_global_level(term):
+            return ({"status": "error", "reason": "Term already tracked"}, 409)
+
     term_uuid = add_tracked_term(term , term_type, user_id, level, tags, mails)
 
-    return ({'term': term, 'uuid': term_uuid}, 200)
+    return ({'term': term, 'type': term_type, 'uuid': term_uuid}, 200)
 
 
 def parse_tracked_term_to_add(term , term_type, nb_words=1):
-
-    # todo verify regex format
     if term_type=='regex':
-        # TODO: verify regex integrity
-        pass
+        if not is_valid_regex(term):
+            return ({"status": "error", "reason": "Invalid regex"}, 400)
     elif term_type=='word' or term_type=='set':
         # force lowercase
         term = term.lower()
@@ -97,7 +133,7 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
             return ({"status": "error", "reason": "special character not allowed", "message": "Please use a regex or remove all special characters"}, 400)
         words = term.split()
         # not a word
-        if term_type=='word' and words:
+        if term_type=='word' and len(words)>1:
             term_type = 'set'
 
         # ouput format: term1,term2,term3;2
@@ -106,19 +142,21 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
                 nb_words = int(nb_words)
             except:
                 nb_words = 1
+            if nb_words==0:
+                nb_words = 1
 
             words_set = set(words)
             words_set = sorted(words_set)
+
             term = ",".join(words_set)
             term = "{};{}".format(term, nb_words)
 
-        print(term)
-        print(term_type)
-
-        return ({"status": "success", "term": term, "type": term_type}, 200)
+            if nb_words > len(words_set):
+                nb_words = len(words_set)
 
     else:
         return ({"status": "error", "reason": "Incorrect type"}, 400)
+    return ({"status": "success", "term": term, "type": term_type}, 200)
 
 def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0):
 
@@ -154,8 +192,43 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0)
 
     return term_uuid
 
+def delete_term(term_uuid):
+    term = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'tracked')
+    term_type = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'type')
+    term_level = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'level')
+    r_serv_term.srem('all:tracked_term_uuid:{}'.format(term), term_uuid)
+    r_serv_term.srem('all:tracked_term:{}'.format(term_type), term_uuid)
+
+
+    if level == 0: # user only
+        user_id = term_type = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'user_id')
+        r_serv_term.srem('user:tracked_term:{}'.format(user_id), term_uuid)
+    elif level == 1: # global
+        r_serv_term.srem('gobal:tracked_term', term_uuid)
+
+    # delete metatadata
+    r_serv_term.delete('tracked_term:{}'.format(term_uuid))
+
+    # remove tags
+    r_serv_term.delete('tracked_term:tags:{}'.format(term_uuid))
+
+    # remove mails
+    r_serv_term.delete('tracked_term:mail:{}'.format(term_uuid))
+
+    # remove item set
+    r_serv_term.delete('tracked_term:item:{}'.format(term_uuid))
+
 def get_term_uuid_list(term):
     return list(r_serv_term.smembers('all:tracked_term_uuid:{}'.format(term)))
+
+def get_term_tags(term_uuid):
+    return list(r_serv_term.smembers('tracked_term:tags:{}'.format(term_uuid)))
+
+def get_term_mails(term_uuid):
+    return list(r_serv_term.smembers('tracked_term:mail:{}'.format(term_uuid)))
+
+def add_tracked_item(term_uuid, item_id):
+    r_serv_term.sadd('tracked_term:item:{}'.format(term_uuid), item_id)
 
 
 
