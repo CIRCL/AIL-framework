@@ -53,7 +53,7 @@ if __name__ == "__main__":
     publisher.info("Script TermTrackerMod started")
 
     #config_section = 'TermTrackerMod'
-    config_section = 'Curve'
+    config_section = 'TermTrackerMod'
     p = Process(config_section)
 
     full_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
