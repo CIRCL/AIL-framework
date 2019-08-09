@@ -2,10 +2,13 @@
 # -*-coding:UTF-8 -*
 
 import os
+import sys
 import gzip
 import redis
 
+sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
 import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
 

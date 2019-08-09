@@ -4,6 +4,7 @@
 import os
 import re
 import sys
+import time
 import uuid
 import redis
 import datetime
@@ -72,12 +73,28 @@ def get_set_tracked_words_list():
         all_set_list.append((ter_set, num_words, elem))
     return all_set_list
 
-def is_term_tracked_in_global_level(term):
-    res = r_serv_term.smembers('all:tracked_term_uuid:{}'.format(term))
+def get_regex_tracked_words_dict():
+    regex_list = r_serv_term.smembers('all:tracked_term:regex')
+    dict_tracked_regex = {}
+    for regex in regex_list:
+        dict_tracked_regex[regex] = re.compile(regex)
+    return dict_tracked_regex
+
+def is_term_tracked_in_global_level(term, term_type):
+    res = r_serv_term.smembers('all:tracked_term_uuid:{}:{}'.format(term_type, term))
     if res:
         for elem_uuid in res:
             if r_serv_term.hget('tracked_term:{}'.format(elem_uuid), 'level')=='1':
                 return True
+    return False
+
+def is_term_tracked_in_user_level(term, term_type, user_id):
+    res = r_serv_term.smembers('user:tracked_term:{}'.format(user_id))
+    if res:
+        for elem_uuid in res:
+            if r_serv_term.hget('tracked_term:{}'.format(elem_uuid), 'tracked')== term:
+                if r_serv_term.hget('tracked_term:{}'.format(elem_uuid), 'type')== term_type:
+                    return True
     return False
 
 def parse_json_term_to_add(dict_input, user_id):
@@ -112,7 +129,10 @@ def parse_json_term_to_add(dict_input, user_id):
 
     # check if term already tracked in global
     if level==1:
-        if is_term_tracked_in_global_level(term):
+        if is_term_tracked_in_global_level(term, term_type):
+            return ({"status": "error", "reason": "Term already tracked"}, 409)
+    else:
+        if is_term_tracked_in_user_level(term, term_type, user_id):
             return ({"status": "error", "reason": "Term already tracked"}, 409)
 
     term_uuid = add_tracked_term(term , term_type, user_id, level, tags, mails)
@@ -174,7 +194,7 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0)
     r_serv_term.sadd('all:tracked_term:{}'.format(term_type), term)
 
     # create term - uuid map
-    r_serv_term.sadd('all:tracked_term_uuid:{}'.format(term), term_uuid)
+    r_serv_term.sadd('all:tracked_term_uuid:{}:{}'.format(term_type, term), term_uuid)
 
     # add display level set
     if level == 0: # user only
@@ -190,15 +210,22 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0)
     for mail in mails:
         r_serv_term.sadd('tracked_term:mail:{}'.format(term_uuid), mail)
 
+    # toggle refresh module tracker list/set
+    r_serv_term.set('tracked_term:refresh:{}'.format(term_type), time.time())
+
     return term_uuid
 
 def delete_term(term_uuid):
     term = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'tracked')
     term_type = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'type')
     term_level = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'level')
-    r_serv_term.srem('all:tracked_term_uuid:{}'.format(term), term_uuid)
-    r_serv_term.srem('all:tracked_term:{}'.format(term_type), term_uuid)
+    r_serv_term.srem('all:tracked_term_uuid:{}:{}'.format(term_type, term), term_uuid)
+    # Term not tracked by other users
+    if not r_serv_term.exists('all:tracked_term_uuid:{}:{}'.format(term_type, term)):
+        r_serv_term.srem('all:tracked_term:{}'.format(term_type), term)
 
+        # toggle refresh module tracker list/set
+        r_serv_term.set('tracked_term:refresh:{}'.format(term_type), time.time())
 
     if level == 0: # user only
         user_id = term_type = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'user_id')
@@ -218,8 +245,8 @@ def delete_term(term_uuid):
     # remove item set
     r_serv_term.delete('tracked_term:item:{}'.format(term_uuid))
 
-def get_term_uuid_list(term):
-    return list(r_serv_term.smembers('all:tracked_term_uuid:{}'.format(term)))
+def get_term_uuid_list(term, term_type):
+    return list(r_serv_term.smembers('all:tracked_term_uuid:{}:{}'.format(term_type, term)))
 
 def get_term_tags(term_uuid):
     return list(r_serv_term.smembers('tracked_term:tags:{}'.format(term_uuid)))
@@ -227,10 +254,30 @@ def get_term_tags(term_uuid):
 def get_term_mails(term_uuid):
     return list(r_serv_term.smembers('tracked_term:mail:{}'.format(term_uuid)))
 
-def add_tracked_item(term_uuid, item_id):
-    r_serv_term.sadd('tracked_term:item:{}'.format(term_uuid), item_id)
+def add_tracked_item(term_uuid, item_id, item_date):
+    # track item
+    r_serv_term.sadd('tracked_term:item:{}:{}'.format(term_uuid, item_date), item_id)
+    # track nb item by date
+    r_serv_term.zincrby('tracked_term:stat:{}'.format(term_uuid), item_date, 1)
 
+def create_token_statistics(item_date, word, nb):
+    r_serv_term.zincrby('stat_token_per_item_by_day:{}'.format(item_date), word, 1)
+    r_serv_term.zincrby('stat_token_total_by_day:{}'.format(item_date), word, nb)
+    r_serv_term.sadd('stat_token_history', item_date)
 
+def delete_token_statistics_by_date(item_date):
+    r_serv_term.delete('stat_token_per_item_by_day:{}'.format(item_date))
+    r_serv_term.delete('stat_token_total_by_day:{}'.format(item_date))
+    r_serv_term.srem('stat_token_history', item_date)
+
+def get_all_token_stat_history():
+    return r_serv_term.smembers('stat_token_history')
+
+def get_tracked_term_last_updated_by_type(term_type):
+    epoch_update = r_serv_term.get('tracked_term:refresh:{}'.format(term_type))
+    if not epoch_update:
+        epoch_update = 0
+    return float(epoch_update)
 
 
 

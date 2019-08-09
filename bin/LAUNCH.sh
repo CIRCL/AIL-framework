@@ -153,13 +153,9 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Duplicates" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Duplicates.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Lines" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Lines.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DomClassifier.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Categ.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tokenize.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "CreditCards" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CreditCards.py; read x"
     sleep 0.1
@@ -175,13 +171,9 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Credential" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Credential.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Curve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Curve.py; read x"
+    screen -S "Script_AIL" -X screen -t "TermTrackerMod" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./TermTrackerMod.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CurveManageTopSets.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexForTermsFrequency.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SetForTermsFrequency.py; read x"
+    screen -S "Script_AIL" -X screen -t "RegexTracker" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexTracker.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Indexer.py; read x"
     sleep 0.1
@@ -212,6 +204,8 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SentimentAnalysis.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "DbCleaner" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DbCleaner.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
     sleep 0.1

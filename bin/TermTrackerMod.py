@@ -8,13 +8,14 @@ The TermTracker Module
 import os
 import sys
 import time
+import signal
 
 from Helper import Process
 from pubsublogger import publisher
 
 import NotificationHelper
 
-from packages import Paste
+from packages import Item
 from packages import Term
 
 sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
@@ -26,13 +27,22 @@ mail_body_template = "AIL Framework,\nNew occurrence for term tracked term: {}\n
 
 # loads tracked words
 list_tracked_words = Term.get_tracked_words_list()
+last_refresh_word = time.time()
 set_tracked_words_list = Term.get_set_tracked_words_list()
+last_refresh_set = time.time()
 
-def new_term_found(term, term_type, item_id):
-    uuid_list = Term.get_term_uuid_list(term)
+class TimeoutException(Exception):
+    pass
+def timeout_handler(signum, frame):
+    raise TimeoutException
+signal.signal(signal.SIGALRM, timeout_handler)
+
+def new_term_found(term, term_type, item_id, item_date):
+    uuid_list = Term.get_term_uuid_list(term, term_type)
+    print('new tracked term found: {} in {}'.format(term, item_id))
 
     for term_uuid in uuid_list:
-        Term.add_tracked_item(term_uuid, item_id)
+        Term.add_tracked_item(term_uuid, item_id, item_date)
 
         tags_to_add = Term.get_term_tags(term_uuid)
         for tag in tags_to_add:
@@ -52,28 +62,38 @@ if __name__ == "__main__":
     publisher.channel = "Script"
     publisher.info("Script TermTrackerMod started")
 
-    #config_section = 'TermTrackerMod'
     config_section = 'TermTrackerMod'
     p = Process(config_section)
+    max_execution_time = p.config.getint(config_section, "max_execution_time")
 
     full_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
 
     while True:
 
         item_id = p.get_from_set()
-        item_id = 'submitted/2019/08/02/cc1900ed-6051-473a-ba7a-850a17d0cc02.gz'
-        #item_id = 'submitted/2019/08/02/0a52d82d-a89d-4004-9535-8a0bc9c1ce49.gz'
 
-        if message is not None:
+        if item_id is not None:
 
-            paste = Paste.Paste(item_id)
+            item_date = Item.get_item_date(item_id)
+            item_content = Item.get_item_content(item_id)
 
-            dict_words_freq = Term.get_text_word_frequency(paste.get_p_content())
+            signal.alarm(max_execution_time)
+            try:
+                dict_words_freq = Term.get_text_word_frequency(item_content)
+            except TimeoutException:
+                print ("{0} processing timeout".format(paste.p_rel_path))
+                continue
+            else:
+                signal.alarm(0)
+
+            # create token statistics
+            for word in dict_words_freq:
+                Term.create_token_statistics(item_date, word, dict_words_freq[word])
 
             # check solo words
             for word in list_tracked_words:
                 if word in dict_words_freq:
-                    new_term_found(word, 'word', item_id)
+                    new_term_found(word, 'word', item_id, item_date)
 
             # check words set
             for elem in set_tracked_words_list:
@@ -86,7 +106,19 @@ if __name__ == "__main__":
                     if word in dict_words_freq:
                         nb_uniq_word += 1
                 if nb_uniq_word >= nb_words_threshold:
-                    new_term_found(word_set, 'set', item_id)
+                    new_term_found(word_set, 'set', item_id, item_date)
 
         else:
             time.sleep(5)
+
+
+        # refresh Tracked term
+        if last_refresh_word < Term.get_tracked_term_last_updated_by_type('word'):
+            list_tracked_words = Term.get_tracked_words_list()
+            last_refresh_word = time.time()
+            print('Tracked word refreshed')
+
+        if last_refresh_set < Term.get_tracked_term_last_updated_by_type('set'):
+            set_tracked_words_list = Term.get_set_tracked_words_list()
+            last_refresh_set = time.time()
+            print('Tracked set refreshed')

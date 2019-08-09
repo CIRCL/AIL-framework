@@ -107,7 +107,10 @@ operation_mode = 3
 ttl_duplicate = 86400
 default_unnamed_feed_name = unnamed_feeder
 
-[RegexForTermsFrequency]
+[TermTrackerMod]
+max_execution_time = 120
+
+[RegexTracker]
 max_execution_time = 60
 
 ##### Redis #####

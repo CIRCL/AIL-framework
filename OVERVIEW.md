@@ -138,12 +138,12 @@ Redis and ARDB overview
 
 | Set - Key | Value |
 | ------ | ------ |
-| all:tracked_term_uuid:**tracked term** | **uuid - tracked term uuid** |
+| all:tracked_term_uuid:**term type**:**tracked term** | **uuid - tracked term uuid** |
 
 ##### All Term Tracked items:
 | Set - Key | Value |
 | ------ | ------ |
-| tracked_term:item:**uuid** | **item_id** |
+| tracked_term:item:**uuid**:**date** | **item_id** |
 
 ##### All Term Tracked tags:
 | Set - Key | Value |
@@ -155,6 +155,29 @@ Redis and ARDB overview
 | ------ | ------ |
 | tracked_term:mail:**uuid** | **mail** |
 
+##### Refresh Tracked term:
+| Key | Value |
+| ------ | ------ |
+| tracked_term:refresh:word | **last refreshed epoch** |
+| tracked_term:refresh:set | - |
+| tracked_term:refresh:regex | - |
+
+##### Zset Stat Tracked term:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| tracked_term:stat:**uuid** | **date** | **nb_seen** |
+
+##### Stat token:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| stat_token_total_by_day:**date** | **word** | **nb_seen** |
+| | | |
+| stat_token_per_item_by_day:**date** | **word** | **nb_seen** |
+
+| Set - Key | Value |
+| ------ | ------ |
+| stat_token_history | **date** |
+
 ## DB2 - TermFreq:
 
 ##### Set:
@@ -165,16 +188,6 @@ Redis and ARDB overview
 | TrackedSetTermSet | **tracked_term** |
 | TrackedSetSet | **tracked_set** |
 | TrackedRegexSet | **tracked_regex** |
-| | |
-| | |
-| global:TrackedSetTermSet | **tracked_term** |
-| global:TrackedSetSet | **tracked_set** |
-| global:TrackedRegexSet | **tracked_regex** |
-| | |
-| | |
-| user:**user_id**:TrackedSetTermSet | **tracked_term** |
-| user:**user_id**:TrackedSetSet | **tracked_set** |
-| user:**user_id**:TrackedRegexSet | **tracked_regex** |
 | | |
 | | |
 | tracked_**tracked_term** | **item_path** |

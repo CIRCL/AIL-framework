@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import datetime
+
 class Date(object):
     """docstring for Date"""
     def __init__(self, *args):
@@ -34,7 +36,6 @@ class Date(object):
         self.day = day
 
     def substract_day(self, numDay):
-        import datetime
         computed_date = datetime.date(int(self.year), int(self.month), int(self.day)) - datetime.timedelta(numDay)
         comp_year = str(computed_date.year)
         comp_month = str(computed_date.month).zfill(2)
@@ -50,3 +51,12 @@ def date_substract_day(date, num_day=1):
     new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) - datetime.timedelta(num_day)
     new_date = str(new_date).replace('-', '')
     return new_date
+
+def get_date_range(num_day):
+    curr_date = datetime.date.today()
+    date = Date(str(curr_date.year)+str(curr_date.month).zfill(2)+str(curr_date.day).zfill(2))
+    date_list = []
+
+    for i in range(0, num_day+1):
+        date_list.append(date.substract_day(i))
+    return list(reversed(date_list))
