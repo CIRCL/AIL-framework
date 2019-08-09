@@ -708,6 +708,73 @@ curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc
 
 
 
+### Delete term tracker: `api/v1/add/tracker/term/item`<a name="delete_term_tracker"></a>
+
+#### Description
+Delete term tracker
+
+**Method** : `POST`
+
+#### Parameters
+- `uuid`
+  - tracked term uuid
+  - *uuid4*
+  - mandatory
+- `date_from`
+  - date from
+  - *str - YYMMDD*
+  - default: last tracked items date
+- `date_to`
+  - date to
+  - *str - YYMMDD*
+  - default: `None`
+
+#### JSON response
+- `uuid`
+  - term uuid
+  - *uuid4*
+- `date_from`
+  - date from
+  - *str - YYMMDD*
+- `date_to`
+  - date to
+  - *str - YYMMDD*
+- `items`
+  - list of item id
+  - *list*
+
+#### Example
+```
+curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+
+  }
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+
+```json
+  {
+
+  }
+```
+
+#### Expected Fail Response
+**HTTP Status Code** : `400`
+
+```json
+
+```
+
+
+
+
+
 
 
 

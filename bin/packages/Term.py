@@ -42,6 +42,19 @@ def is_in_role(user_id, role):
     else:
         return False
 
+def check_term_uuid_valid_access(term_uuid, user_id):
+    if not is_valid_uuid_v4(term_uuid):
+        return ({"status": "error", "reason": "Invalid uuid"}, 400)
+    level = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'level')
+    if not level:
+        return ({"status": "error", "reason": "Unknown uuid"}, 404)
+    if level == 0:
+        if r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'user_id') != user_id:
+            if not is_in_role(user_id, 'admin'):
+                return ({"status": "error", "reason": "Unknown uuid"}, 404)
+    return None
+
+
 def is_valid_mail(email):
     result = email_regex.match(email)
     if result:
@@ -94,6 +107,13 @@ def get_regex_tracked_words_dict():
     for regex in regex_list:
         dict_tracked_regex[regex] = re.compile(regex)
     return dict_tracked_regex
+
+def get_tracked_term_list_item(term_uuid, date_from, date_to):
+    all_item_id = []
+    if date_from and date_to:
+        for date in r_serv_term.zrangebyscore('tracked_term:stat:{}'.format(term_uuid), int(date_from), int(date_to)):
+            all_item_id = all_item_id + list(r_serv_term.smembers('tracked_term:item:{}:{}'.format(term_uuid, date)))
+    return all_item_id
 
 def is_term_tracked_in_global_level(term, term_type):
     res = r_serv_term.smembers('all:tracked_term_uuid:{}:{}'.format(term_type, term))
@@ -231,16 +251,9 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0)
     return term_uuid
 
 def parse_tracked_term_to_delete(dict_input, user_id):
-    term_uuid = dict_input.get('uuid', None)
-    if not is_valid_uuid_v4(term_uuid):
-        return ({"status": "error", "reason": "Invalid uuid"}, 400)
-    level = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'level')
-    if not level:
-        return ({"status": "error", "reason": "Unknown uuid"}, 404)
-    if level == 0:
-        if r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'user_id') != user_id:
-            if not is_in_role(user_id, 'admin'):
-                return ({"status": "error", "reason": "Unknown uuid"}, 404)
+    res = check_term_uuid_valid_access(term_uuid, user_id)
+    if res:
+        return res
 
     delete_term(term_uuid)
     return ({"uuid": term_uuid}, 200)
@@ -291,7 +304,7 @@ def add_tracked_item(term_uuid, item_id, item_date):
     # track item
     r_serv_term.sadd('tracked_term:item:{}:{}'.format(term_uuid, item_date), item_id)
     # track nb item by date
-    r_serv_term.zincrby('tracked_term:stat:{}'.format(term_uuid), item_date, 1)
+    r_serv_term.zadd('tracked_term:stat:{}'.format(term_uuid), item_date, int(item_date))
 
 def create_token_statistics(item_date, word, nb):
     r_serv_term.zincrby('stat_token_per_item_by_day:{}'.format(item_date), word, 1)
@@ -312,8 +325,35 @@ def get_tracked_term_last_updated_by_type(term_type):
         epoch_update = 0
     return float(epoch_update)
 
+def parse_get_tracker_term_item(dict_input, user_id):
+    term_uuid = dict_input.get('uuid', None)
+    res = check_term_uuid_valid_access(term_uuid, user_id)
+    if res:
+        return res
 
 
+    date_from = dict_input.get('date_from', None)
+    date_to = dict_input.get('date_to', None)
+
+    if date_from is None:
+        date_from = r_serv_term.zrevrange('tracked_term:stat:{}'.format(term_uuid), 0, 0)
+        if date_from:
+            date_from = date_from[0]
+
+    if date_to is None:
+        date_to = date_from
+
+    if date_from > date_to:
+        date_from = date_to
+
+    all_item_id = get_tracked_term_list_item(term_uuid, date_from, date_to)
+
+    res_dict = {}
+    res_dict['uuid'] = term_uuid
+    res_dict['date_from'] = date_from
+    res_dict['date_to'] = date_to
+    res_dict['items'] = all_item_id
+    return (res_dict, 200)
 
 
 

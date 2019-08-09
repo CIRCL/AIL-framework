@@ -332,6 +332,14 @@ def delete_tracker_term():
     res = Term.parse_tracked_term_to_delete(data, user_id)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
+@restApi.route("api/v1/get/tracker/term/item", methods=['POST'])
+@token_required('analyst')
+def get_tracker_term_item():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
+    res = Term.parse_get_tracker_term_item(data, user_id)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
