@@ -314,15 +314,24 @@ def get_all_tags():
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        TRACKER       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/add/tracker/term", methods=['GET'])
+@restApi.route("api/v1/add/tracker/term", methods=['POST'])
 @token_required('analyst')
 def add_tracker_term():
-    #data = request.get_json()
-    data = {"term": "pi", 'type' : "word"}
+    data = request.get_json()
     user_token = get_auth_from_header()
     user_id = get_user_from_token(user_token)
     res = Term.parse_json_term_to_add(data, user_id)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/delete/tracker/term", methods=['DELETE'])
+@token_required('analyst')
+def delete_tracker_term():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
+    res = Term.parse_tracked_term_to_delete(data, user_id)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #

@@ -27,6 +27,21 @@ special_characters.add('\\s')
 tokenizer = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
                                     gaps=True, discard_empty=True)
 
+def is_valid_uuid_v4(UUID):
+    UUID = UUID.replace('-', '')
+    try:
+        uuid_test = uuid.UUID(hex=UUID, version=4)
+        return uuid_test.hex == UUID
+    except:
+        return False
+
+# # TODO: use new package => duplicate fct
+def is_in_role(user_id, role):
+    if r_serv_db.sismember('user_role:{}'.format(role), user_id):
+        return True
+    else:
+        return False
+
 def is_valid_mail(email):
     result = email_regex.match(email)
     if result:
@@ -215,10 +230,25 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0)
 
     return term_uuid
 
+def parse_tracked_term_to_delete(dict_input, user_id):
+    term_uuid = dict_input.get('uuid', None)
+    if not is_valid_uuid_v4(term_uuid):
+        return ({"status": "error", "reason": "Invalid uuid"}, 400)
+    level = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'level')
+    if not level:
+        return ({"status": "error", "reason": "Unknown uuid"}, 404)
+    if level == 0:
+        if r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'user_id') != user_id:
+            if not is_in_role(user_id, 'admin'):
+                return ({"status": "error", "reason": "Unknown uuid"}, 404)
+
+    delete_term(term_uuid)
+    return ({"uuid": term_uuid}, 200)
+
 def delete_term(term_uuid):
     term = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'tracked')
     term_type = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'type')
-    term_level = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'level')
+    level = r_serv_term.hget('tracked_term:{}'.format(term_uuid), 'level')
     r_serv_term.srem('all:tracked_term_uuid:{}:{}'.format(term_type, term), term_uuid)
     # Term not tracked by other users
     if not r_serv_term.exists('all:tracked_term_uuid:{}:{}'.format(term_type, term)):
@@ -243,7 +273,10 @@ def delete_term(term_uuid):
     r_serv_term.delete('tracked_term:mail:{}'.format(term_uuid))
 
     # remove item set
-    r_serv_term.delete('tracked_term:item:{}'.format(term_uuid))
+    all_item_date = r_serv_term.zrange('tracked_term:stat:{}'.format(term_uuid), 0, -1)
+    for date in all_item_date:
+        r_serv_term.delete('tracked_term:item:{}:{}'.format(term_uuid, date))
+    r_serv_term.delete('tracked_term:stat:{}'.format(term_uuid))
 
 def get_term_uuid_list(term, term_type):
     return list(r_serv_term.smembers('all:tracked_term_uuid:{}:{}'.format(term_type, term)))

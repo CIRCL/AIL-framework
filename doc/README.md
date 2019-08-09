@@ -629,17 +629,13 @@ Add term tracker
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example
 ```json
   {
-    "type": "text",
-    "tags": [
-      "infoleak:analyst-detection=\"private-key\""
-    ],
-    "text": "text to import"
+
   }
 ```
 
@@ -648,7 +644,7 @@ curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZ
 
 ```json
   {
-    "uuid": "0c3d7b34-936e-4f01-9cdf-2070184b6016"
+
   }
 ```
 
@@ -656,10 +652,56 @@ curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZ
 **HTTP Status Code** : `400`
 
 ```json
-  {"status": "error", "reason": "Malformed JSON"}
-  {"status": "error", "reason": "No text supplied"}
-  {"status": "error", "reason": "Tags or Galaxy not enabled"}
-  {"status": "error", "reason": "Size exceeds default"}
+
+```
+
+
+
+
+### Delete term tracker: `api/v1/delete/tracker/term`<a name="delete_term_tracker"></a>
+
+#### Description
+Delete term tracker
+
+**Method** : `DELETE`
+
+#### Parameters
+- `uuid`
+  - tracked term uuid
+  - *uuid4*
+  - mandatory
+
+#### JSON response
+- `uuid`
+  - deleted uuid
+  - *uuid4*
+
+#### Example
+```
+curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+
+  }
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+
+```json
+  {
+
+  }
+```
+
+#### Expected Fail Response
+**HTTP Status Code** : `400`
+
+```json
+
 ```
 
 
