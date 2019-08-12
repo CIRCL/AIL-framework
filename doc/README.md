@@ -546,10 +546,10 @@ Get tag metadata.
   - *str*
 - `first_seen`
   - date: first seen
-  - *str - YYMMDD*
+  - *str - YYYYMMDD*
 - `last_seen`
-  - date: first seen
-  - *str - YYMMDD*
+  - date: lasr seen
+  - *str - YYYYMMDD*
 #### Example
 ```
 curl https://127.0.0.1:7000/api/v1/get/tag/metadata --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
