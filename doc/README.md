@@ -548,7 +548,7 @@ Get tag metadata.
   - date: first seen
   - *str - YYYYMMDD*
 - `last_seen`
-  - date: lasr seen
+  - date: last seen
   - *str - YYYYMMDD*
 #### Example
 ```
