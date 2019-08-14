@@ -38,6 +38,21 @@ Redis and ARDB overview
 | failed_login_ip:**ip**           | **nb login failed** | TTL
 | failed_login_user_id:**user_id** | **nb login failed** | TTL
 
+##### Item Import:
+
+| Key | Value |
+| ------ | ------ |
+| **uuid**:nb_total   | **nb total**      | TTL *(if imported)*
+| **uuid**:nb_end     | **nb**            | TTL *(if imported)*
+| **uuid**:nb_sucess  | **nb success**    | TTL *(if imported)*
+| **uuid**:end        | **0 (in progress) or (item imported)** | TTL *(if imported)*
+| **uuid**:processing | **process status: 0 or 1**             | TTL *(if imported)*
+| **uuid**:error      | **error message** | TTL *(if imported)*
+
+| Set Key | Value |
+| ------ | ------ |
+| **uuid**:paste_submit_link | **item_path** | TTL *(if imported)*
+
 ## DB0 - Core:
 
 ##### Update keys:
@@ -81,6 +96,18 @@ Redis and ARDB overview
 | Zrank Key | Field | Value |
 | ------ | ------ | ------ |
 | ail:all_role | **role** | **int, role priority (1=admin)** |
+
+##### Item Import:
+| Key | Value |
+| ------ | ------ |
+| **uuid**:isfile   | **boolean** |
+| **uuid**:paste_content | **item_content** |
+
+| Set Key | Value |
+| ------ | ------ |
+| submitted:uuid | **uuid** |
+| **uuid**:ltags | **tag** |
+| **uuid**:ltagsgalaxies | **tag** |
 
 ## DB2 - TermFreq:
 

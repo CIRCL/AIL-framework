@@ -20,6 +20,7 @@ from pymispgalaxies import Galaxies, Clusters
 
 # ============ VARIABLES ============
 import Flask_config
+import Tag
 
 app = Flask_config.app
 cfg = Flask_config.cfg
@@ -58,16 +59,6 @@ for name, tags in clusters.items(): #galaxie name + tags
 # ============ FUNCTIONS ============
 def one():
     return 1
-
-def date_substract_day(date, num_day=1):
-    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) - datetime.timedelta(num_day)
-    new_date = str(new_date).replace('-', '')
-    return new_date
-
-def date_add_day(date, num_day=1):
-    new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) + datetime.timedelta(num_day)
-    new_date = str(new_date).replace('-', '')
-    return new_date
 
 def get_tags_with_synonyms(tag):
     str_synonyms = ' - synonyms: '
@@ -130,93 +121,6 @@ def get_last_seen_from_tags_list(list_tags):
             if tag_last_seen < min_last_seen:
                 min_last_seen = tag_last_seen
     return str(min_last_seen)
-
-def add_item_tag(tag, item_path):
-    item_date = int(get_item_date(item_path))
-
-    #add tag
-    r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
-    r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
-
-    r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
-
-    tag_first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
-    if tag_first_seen is None:
-        tag_first_seen = 99999999
-    else:
-        tag_first_seen = int(tag_first_seen)
-    tag_last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
-    if tag_last_seen is None:
-        tag_last_seen = 0
-    else:
-        tag_last_seen = int(tag_last_seen)
-
-    #add new tag in list of all used tags
-    r_serv_tags.sadd('list_tags', tag)
-
-    # update fisrt_seen/last_seen
-    if item_date < tag_first_seen:
-        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', item_date)
-
-    # update metadata last_seen
-    if item_date > tag_last_seen:
-        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
-
-def remove_item_tag(tag, item_path):
-    item_date = int(get_item_date(item_path))
-
-    #remove tag
-    r_serv_metadata.srem('tag:{}'.format(item_path), tag)
-    res = r_serv_tags.srem('{}:{}'.format(tag, item_date), item_path)
-
-    if res ==1:
-        # no tag for this day
-        if int(r_serv_tags.hget('daily_tags:{}'.format(item_date), tag)) == 1:
-            r_serv_tags.hdel('daily_tags:{}'.format(item_date), tag)
-        else:
-            r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, -1)
-
-        tag_first_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
-        tag_last_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
-        # update fisrt_seen/last_seen
-        if item_date == tag_first_seen:
-            update_tag_first_seen(tag, tag_first_seen, tag_last_seen)
-        if item_date == tag_last_seen:
-            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
-    else:
-        return 'Error incorrect tag'
-
-def update_tag_first_seen(tag, tag_first_seen, tag_last_seen):
-    if tag_first_seen == tag_last_seen:
-        if r_serv_tags.scard('{}:{}'.format(tag, tag_first_seen)) > 0:
-            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', tag_first_seen)
-        # no tag in db
-        else:
-            r_serv_tags.srem('list_tags', tag)
-            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
-            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
-    else:
-        if r_serv_tags.scard('{}:{}'.format(tag, tag_first_seen)) > 0:
-            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', tag_first_seen)
-        else:
-            tag_first_seen = date_add_day(tag_first_seen)
-            update_tag_first_seen(tag, tag_first_seen, tag_last_seen)
-
-def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
-    if tag_first_seen == tag_last_seen:
-        if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
-            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
-        # no tag in db
-        else:
-            r_serv_tags.srem('list_tags', tag)
-            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
-            r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
-    else:
-        if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
-            r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
-        else:
-            tag_last_seen = date_substract_day(tag_last_seen)
-            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
 
 # ============= ROUTES ==============
 
@@ -472,8 +376,9 @@ def remove_tag():
     path = request.args.get('paste')
     tag = request.args.get('tag')
 
-    remove_item_tag(tag, path)
-
+    res = Tag.remove_item_tag(tag, path)
+    if res[1] != 200:
+        str(res[0])
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
 @Tags.route("/Tags/confirm_tag")
@@ -486,11 +391,11 @@ def confirm_tag():
     tag = request.args.get('tag')
 
     if(tag[9:28] == 'automatic-detection'):
-        remove_item_tag(tag, path)
+        Tag.remove_item_tag(tag, path)
 
         tag = tag.replace('automatic-detection','analyst-detection', 1)
         #add analyst tag
-        add_item_tag(tag, path)
+        Tag.add_item_tag(tag, path)
 
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
@@ -530,42 +435,12 @@ def addTags():
     list_tag = tags.split(',')
     list_tag_galaxies = tagsgalaxies.split(',')
 
-    taxonomies = Taxonomies()
-    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
-
-    active_galaxies = r_serv_tags.smembers('active_galaxies')
-
-    if not path:
-        return 'INCORRECT INPUT0'
-
-    if list_tag != ['']:
-        for tag in list_tag:
-            # verify input
-            tax = tag.split(':')[0]
-            if tax in active_taxonomies:
-                if tag in r_serv_tags.smembers('active_tag_' + tax):
-                    add_item_tag(tag, path)
-
-                else:
-                    return 'INCORRECT INPUT1'
-            else:
-                return 'INCORRECT INPUT2'
-
-    if list_tag_galaxies != ['']:
-        for tag in list_tag_galaxies:
-            # verify input
-            gal = tag.split(':')[1]
-            gal = gal.split('=')[0]
-
-            if gal in active_galaxies:
-                if tag in r_serv_tags.smembers('active_tag_galaxies_' + gal):
-                    add_item_tag(tag, path)
-
-                else:
-                    return 'INCORRECT INPUT3'
-            else:
-                return 'INCORRECT INPUT4'
-
+    res = Tag.add_items_tag(list_tag, list_tag_galaxies, path)
+    print(res)
+    # error
+    if res[1] != 200:
+        return str(res[0])
+    # success
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
 

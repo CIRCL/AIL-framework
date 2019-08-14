@@ -66,8 +66,8 @@ function helptext {
     "$DEFAULT"
     This script launch:
     "$CYAN"
-    - All the ZMQ queuing modules.
-    - All the ZMQ processing modules.
+    - All the queuing modules.
+    - All the processing modules.
     - All Redis in memory servers.
     - All ARDB on disk servers.
     "$DEFAULT"
@@ -143,7 +143,7 @@ function launching_scripts {
 
     screen -dmS "Script_AIL"
     sleep 0.1
-    echo -e $GREEN"\t* Launching ZMQ scripts"$DEFAULT
+    echo -e $GREEN"\t* Launching scripts"$DEFAULT
 
     screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModulesInformationV2.py -k 0 -c 1; read x"
     sleep 0.1

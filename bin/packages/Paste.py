@@ -115,6 +115,17 @@ class Paste(object):
         self.p_duplicate = None
         self.p_tags = None
 
+    def get_item_dict(self):
+        dict_item = {}
+        dict_item['id'] = self.p_rel_path
+        dict_item['date'] = str(self.p_date)
+        dict_item['content'] = self.get_p_content()
+        tags = self._get_p_tags()
+        if tags:
+            dict_item['tags'] = tags
+        return dict_item
+
+
     def get_p_content(self):
         """
         Returning the content of the Paste
@@ -321,8 +332,8 @@ class Paste(object):
         return self.store_metadata.scard('dup:'+self.p_path) + self.store_metadata.scard('dup:'+self.p_rel_path)
 
     def _get_p_tags(self):
-        self.p_tags = self.store_metadata.smembers('tag:'+path, tag)
-        if self.self.p_tags is not None:
+        self.p_tags = self.store_metadata.smembers('tag:'+self.p_rel_path)
+        if self.p_tags is not None:
             return list(self.p_tags)
         else:
             return '[]'

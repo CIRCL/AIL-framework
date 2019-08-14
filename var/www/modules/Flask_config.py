@@ -12,7 +12,6 @@ import sys
 
 # FLASK #
 app = None
-#secret_key = 'ail-super-secret_key01C'
 
 # CONFIG #
 configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
@@ -146,7 +145,7 @@ if HiveApi != False:
         HiveApi = False
         print('The Hive not connected')
 
-# VARIABLES #
+#### VARIABLES ####
 baseUrl = cfg.get("Flask", "baseurl")
 baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':
@@ -178,6 +177,8 @@ crawler_enabled = cfg.getboolean("Crawler", "activate_crawler")
 
 email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
 email_regex = re.compile(email_regex)
+
+IMPORT_MAX_TEXT_SIZE = 900000 # size in bytes
 
 # VT
 try:

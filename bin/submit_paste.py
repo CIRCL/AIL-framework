@@ -47,7 +47,11 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
     r_serv_log_submit.hincrby("mixer_cache:list_feeder", "submitted", 1)
 
     # add tags
-    add_tags(ltags, ltagsgalaxies, rel_item_path)
+    for tag in ltags:
+        add_item_tag(tag, rel_item_path)
+
+    for tag in ltagsgalaxies:
+        add_item_tag(tag, rel_item_path)
 
     r_serv_log_submit.incr(uuid + ':nb_end')
     r_serv_log_submit.incr(uuid + ':nb_sucess')
@@ -92,7 +96,6 @@ def remove_submit_uuid(uuid):
     r_serv_log_submit.expire(uuid + ':nb_sucess', expire_time)
     r_serv_log_submit.expire(uuid + ':nb_end', expire_time)
     r_serv_log_submit.expire(uuid + ':error', expire_time)
-    r_serv_log_submit.srem(uuid + ':paste_submit_link', '')
     r_serv_log_submit.expire(uuid + ':paste_submit_link', expire_time)
 
     # delete uuid
@@ -133,18 +136,6 @@ def add_item_tag(tag, item_path):
     # update metadata last_seen
     if item_date > tag_last_seen:
         r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
-
-def add_tags(tags, tagsgalaxies, path):
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    if list_tag != ['']:
-        for tag in list_tag:
-            add_item_tag(tag, path)
-
-    if list_tag_galaxies != ['']:
-        for tag in list_tag_galaxies:
-            add_item_tag(tag, path)
 
 def verify_extention_filename(filename):
     if not '.' in filename:
@@ -218,8 +209,8 @@ if __name__ == "__main__":
             uuid = r_serv_db.srandmember('submitted:uuid')
 
             # get temp value save on disk
-            ltags = r_serv_db.get(uuid + ':ltags')
-            ltagsgalaxies = r_serv_db.get(uuid + ':ltagsgalaxies')
+            ltags = r_serv_db.smembers(uuid + ':ltags')
+            ltagsgalaxies = r_serv_db.smembers(uuid + ':ltagsgalaxies')
             paste_content = r_serv_db.get(uuid + ':paste_content')
             isfile = r_serv_db.get(uuid + ':isfile')
             password = r_serv_db.get(uuid + ':password')
@@ -230,8 +221,6 @@ if __name__ == "__main__":
             r_serv_log_submit.set(uuid + ':nb_total', -1)
             r_serv_log_submit.set(uuid + ':nb_end', 0)
             r_serv_log_submit.set(uuid + ':nb_sucess', 0)
-            r_serv_log_submit.set(uuid + ':error', 'error:')
-            r_serv_log_submit.sadd(uuid + ':paste_submit_link', '')
 
 
             r_serv_log_submit.set(uuid + ':processing', 1)
@@ -275,7 +264,7 @@ if __name__ == "__main__":
                         else:
                             #decompress file
                             try:
-                                if password == '':
+                                if password == None:
                                     files = unpack(file_full_path.encode())
                                     #print(files.children)
                                 else:
