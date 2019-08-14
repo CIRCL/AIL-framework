@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Terms Management</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+  <style>
+
+      .btn-link {
+          color: #000000
+      }
+      .mouse_pointer{
+				cursor: pointer;
+			}
+      .lb-md {
+        font-size: 16px;
+      }
+  </style>
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+  <div class="container-fluid">
+		<div class="row">
+
+			{% include 'tracker/menu_sidebar.html' %}
+
+      <div class="col-12 col-lg-10" id="core_content">
+
+        <div class="card my-3">
+          <div class="card-header">
+            <h5 class="card-title">Your Tracked Terms</h5>
+          </div>
+          <div class="card-body">
+            <table id="table_user_terms" class="table table-striped table-bordered">
+							<thead class="bg-dark text-white">
+								<tr>
+										<th>Type</th>
+										<th>Tracked Term</th>
+										<th>First seen</th>
+                    <th>Last seen</th>
+                    <th>Email notification</th>
+								</tr>
+							</thead>
+							<tbody style="font-size: 15px;">
+							{% for dict_uuid in user_term %}
+									<tr>
+                    <td>{{dict_uuid['type']}}</td>
+										<td>
+                      <span><a target="_blank" href="{{ url_for('terms.show_term_tracker') }}?uuid={{ dict_uuid['uuid'] }}">{{dict_uuid['term']}}</a></span>
+                      <div>
+                        {% for tag in dict_uuid['tags'] %}
+                        <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+                          <span class="label label-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                        </a>
+                        {%  endfor %}
+                      </div>
+                    </td>
+                    <td>
+                      {% if dict_uuid['first_seen'] %}
+                        {{dict_uuid['first_seen'][0:4]}}/{{dict_uuid['first_seen'][4:6]}}/{{dict_uuid['first_seen'][6:8]}}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if dict_uuid['last_seen'] %}
+                        {{dict_uuid['last_seen'][0:4]}}/{{dict_uuid['last_seen'][4:6]}}/{{dict_uuid['last_seen'][6:8]}}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% for mail in dict_uuid['mails'] %}
+                        {{ mail }}<br>
+                      {%  endfor %}
+                    </td>
+									</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+          </div>
+        </div>
+
+        <div class="card my-3">
+          <div class="card-header">
+            <h5 class="card-title">Global Tracked Terms</h5>
+          </div>
+          <div class="card-body">
+            <table id="table_global_terms" class="table table-striped table-bordered">
+							<thead class="bg-dark text-white">
+								<tr>
+                  <th>Type</th>
+                  <th>Tracked Term</th>
+                  <th>First seen</th>
+                  <th>Last seen</th>
+                  <th>Email notification</th>
+								</tr>
+							</thead>
+							<tbody style="font-size: 15px;">
+							{% for dict_uuid in global_term %}
+									<tr>
+                    <td>{{dict_uuid['type']}}</td>
+										<td>
+                      <span><a target="_blank" href="{{ url_for('terms.show_term_tracker') }}?uuid={{ dict_uuid['uuid'] }}">{{dict_uuid['term']}}</a></span>
+                      <div>
+                        {% for tag in dict_uuid['tags'] %}
+                        <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+                          <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                        </a>
+                        {%  endfor %}
+                      </div>
+                    </td>
+                    <td>
+                      {% if dict_uuid['first_seen'] %}
+                        {{dict_uuid['first_seen'][0:4]}}/{{dict_uuid['first_seen'][4:6]}}/{{dict_uuid['first_seen'][6:8]}}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if dict_uuid['last_seen'] %}
+                        {{dict_uuid['last_seen'][0:4]}}/{{dict_uuid['last_seen'][4:6]}}/{{dict_uuid['last_seen'][6:8]}}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% for mail in dict_uuid['mails'] %}
+                        {{ mail }}<br>
+                      {%  endfor %}
+                    </td>
+									</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+          </div>
+        </div>
+
+      </div>
+		</div>
+	</div>
+
+<script>
+$(document).ready(function(){
+  $('#table_user_terms').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "desc" ]]
+  });
+  $('#table_global_terms').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "desc" ]]
+  });
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</body>
+</html>

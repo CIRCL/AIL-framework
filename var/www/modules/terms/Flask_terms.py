@@ -6,19 +6,24 @@
 
     note: The matching of credential against supplied credential is done using Levenshtein distance
 '''
+import json
 import redis
 import datetime
 import calendar
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, Response
 
 from Role_Manager import login_admin, login_analyst
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 import re
-import Paste
 from pprint import pprint
 import Levenshtein
+
+# ---------------------------------------------------------------
+
+import Paste
+import Term
 
 # ============ VARIABLES ============
 import Flask_config
@@ -146,337 +151,110 @@ def save_tag_to_auto_push(list_tag):
 
 # ============ ROUTES ============
 
-@terms.route("/terms_management/")
+@terms.route("/tracker_term")
+def tracked_term_menu():
+    user_id = current_user.get_id()
+    user_term = Term.get_all_user_tracked_terms(user_id)
+    global_term = Term.get_all_global_tracked_terms()
+    return render_template("tracker_term_management.html", user_term=user_term, global_term=global_term, bootstrap_label=bootstrap_label)
+
+
+@terms.route("/tracker/add", methods=['GET', 'POST'])
 @login_required
 @login_analyst
-def terms_management():
-    per_paste = request.args.get('per_paste')
-    if per_paste == "1" or per_paste is None:
-        per_paste_text = "per_paste_"
-        per_paste = 1
-    else:
-        per_paste_text = ""
-        per_paste = 0
+def add_tracked_term_menu():
+    if request.method == 'POST':
+        term = request.form.get("term")
+        term_type  = request.form.get("tracker_type")
+        nb_words = request.form.get("nb_word", 1)
+        level = request.form.get("level", 1)
+        tags = request.form.get("tags", [])
+        mails = request.form.get("mails", [])
 
-    today = datetime.datetime.now()
-    today = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_timestamp = calendar.timegm(today.timetuple())
-
-    # Map tracking if notifications are enabled for a specific term
-    notificationEnabledDict = {}
-
-    # Maps a specific term to the associated email addresses
-    notificationEMailTermMapping = {}
-    notificationTagsTermMapping = {}
-
-    #Regex
-    trackReg_list = []
-    trackReg_list_values = []
-    trackReg_list_num_of_paste = []
-    for tracked_regex in r_serv_term.smembers(TrackedRegexSet_Name):
-
-        notificationEMailTermMapping[tracked_regex] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_regex)
-        notificationTagsTermMapping[tracked_regex] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_regex)
-
-        if tracked_regex not in notificationEnabledDict:
-            notificationEnabledDict[tracked_regex] = False
-
-        trackReg_list.append(tracked_regex)
-        value_range = Term_getValueOverRange(tracked_regex, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
-
-        term_date = r_serv_term.hget(TrackedRegexDate_Name, tracked_regex)
-
-        set_paste_name = "regex_" + tracked_regex
-        trackReg_list_num_of_paste.append(r_serv_term.scard(set_paste_name))
-        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-        value_range.append(term_date)
-        trackReg_list_values.append(value_range)
-
-        if tracked_regex in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
-            notificationEnabledDict[tracked_regex] = True
-
-    #Set
-    trackSet_list = []
-    trackSet_list_values = []
-    trackSet_list_num_of_paste = []
-    for tracked_set in r_serv_term.smembers(TrackedSetSet_Name):
-        tracked_set = tracked_set
-
-        notificationEMailTermMapping[tracked_set] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_set)
-        notificationTagsTermMapping[tracked_set] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_set)
-
-        if tracked_set not in notificationEnabledDict:
-            notificationEnabledDict[tracked_set] = False
-
-        trackSet_list.append(tracked_set)
-        value_range = Term_getValueOverRange(tracked_set, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
-
-        term_date = r_serv_term.hget(TrackedSetDate_Name, tracked_set)
-
-        set_paste_name = "set_" + tracked_set
-        trackSet_list_num_of_paste.append(r_serv_term.scard(set_paste_name))
-        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-        value_range.append(term_date)
-        trackSet_list_values.append(value_range)
-
-        if tracked_set in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
-            notificationEnabledDict[tracked_set] = True
-
-    #Tracked terms
-    track_list = []
-    track_list_values = []
-    track_list_num_of_paste = []
-    for tracked_term in r_serv_term.smembers(TrackedTermsSet_Name):
-
-        notificationEMailTermMapping[tracked_term] = r_serv_term.smembers(TrackedTermsNotificationEmailsPrefix_Name + tracked_term)
-        notificationTagsTermMapping[tracked_term] = r_serv_term.smembers(TrackedTermsNotificationTagsPrefix_Name + tracked_term)
-
-        if tracked_term not in notificationEnabledDict:
-            notificationEnabledDict[tracked_term] = False
-
-        track_list.append(tracked_term)
-        value_range = Term_getValueOverRange(tracked_term, today_timestamp, [1, 7, 31], per_paste=per_paste_text)
-
-        term_date = r_serv_term.hget(TrackedTermsDate_Name, tracked_term)
-
-        set_paste_name = "tracked_" + tracked_term
-
-        track_list_num_of_paste.append( r_serv_term.scard(set_paste_name) )
-
-        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-        value_range.append(term_date)
-        track_list_values.append(value_range)
-
-        if tracked_term in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
-            notificationEnabledDict[tracked_term] = True
-
-    #blacklist terms
-    black_list = []
-    for blacked_term in r_serv_term.smembers(BlackListTermsSet_Name):
-        term_date = r_serv_term.hget(BlackListTermsDate_Name, blacked_term)
-        term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-        black_list.append([blacked_term, term_date])
-
-    return render_template("terms_management.html",
-            black_list=black_list, track_list=track_list, trackReg_list=trackReg_list, trackSet_list=trackSet_list,
-            track_list_values=track_list_values, track_list_num_of_paste=track_list_num_of_paste,
-            trackReg_list_values=trackReg_list_values, trackReg_list_num_of_paste=trackReg_list_num_of_paste,
-            trackSet_list_values=trackSet_list_values, trackSet_list_num_of_paste=trackSet_list_num_of_paste,
-            per_paste=per_paste, notificationEnabledDict=notificationEnabledDict, bootstrap_label=bootstrap_label,
-            notificationEMailTermMapping=notificationEMailTermMapping, notificationTagsTermMapping=notificationTagsTermMapping)
-
-
-@terms.route("/terms_management_query_paste/")
-@login_required
-@login_analyst
-def terms_management_query_paste():
-    term =  request.args.get('term')
-    paste_info = []
-
-    # check if regex or not
-    if term.startswith('/') and term.endswith('/'):
-        set_paste_name = "regex_" + term
-        track_list_path = r_serv_term.smembers(set_paste_name)
-    elif term.startswith('\\') and term.endswith('\\'):
-        set_paste_name = "set_" + term
-        track_list_path = r_serv_term.smembers(set_paste_name)
-    else:
-        set_paste_name = "tracked_" + term
-        track_list_path = r_serv_term.smembers(set_paste_name)
-
-    for path in track_list_path:
-        paste = Paste.Paste(path)
-        p_date = str(paste._get_p_date())
-        p_date = p_date[0:4]+'/'+p_date[4:6]+'/'+p_date[6:8]
-        p_source = paste.p_source
-        p_size = paste.p_size
-        p_mime = paste.p_mime
-        p_lineinfo = paste.get_lines_info()
-        p_content = paste.get_p_content()
-        if p_content != 0:
-            p_content = p_content[0:400]
-        paste_info.append({"path": path, "date": p_date, "source": p_source, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})
-
-    return jsonify(paste_info)
-
-
-@terms.route("/terms_management_query/")
-@login_required
-@login_analyst
-def terms_management_query():
-    TrackedTermsDate_Name = "TrackedTermDate"
-    BlackListTermsDate_Name = "BlackListTermDate"
-    term =  request.args.get('term')
-    section = request.args.get('section')
-
-    today = datetime.datetime.now()
-    today = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_timestamp = calendar.timegm(today.timetuple())
-    value_range = Term_getValueOverRange(term, today_timestamp, [1, 7, 31])
-
-    if section == "followTerm":
-        term_date = r_serv_term.hget(TrackedTermsDate_Name, term)
-    elif section == "blacklistTerm":
-        term_date = r_serv_term.hget(BlackListTermsDate_Name, term)
-
-    term_date = datetime.datetime.utcfromtimestamp(int(term_date)) if term_date is not None else "No date recorded"
-    value_range.append(str(term_date))
-    return jsonify(value_range)
-
-
-@terms.route("/terms_management_action/", methods=['GET'])
-@login_required
-@login_analyst
-def terms_management_action():
-    today = datetime.datetime.now()
-    today = today.replace(microsecond=0)
-    today_timestamp = calendar.timegm(today.timetuple())
-
-
-    section = request.args.get('section')
-    action = request.args.get('action')
-    term =  request.args.get('term')
-    notificationEmailsParam = request.args.get('emailAddresses')
-    input_tags = request.args.get('tags')
-
-    if action is None or term is None or notificationEmailsParam is None:
-        return "None"
-    else:
-        if section == "followTerm":
-            if action == "add":
-
-                # Make a list of all passed email addresses
-                notificationEmails = notificationEmailsParam.split()
-
-                validNotificationEmails = []
-                # check for valid email addresses
-                for email in notificationEmails:
-                    # Really basic validation:
-                    # has exactly one @ sign, and at least one . in the part after the @
-                    if re.match(r"[^@]+@[^@]+\.[^@]+", email):
-                        validNotificationEmails.append(email)
-
-                # create tags list
-                list_tags = input_tags.split()
-
-                # check if regex/set or simple term
-                #regex
-                if term.startswith('/') and term.endswith('/'):
-                    r_serv_term.sadd(TrackedRegexSet_Name, term)
-                    r_serv_term.hset(TrackedRegexDate_Name, term, today_timestamp)
-                    # add all valid emails to the set
-                    for email in validNotificationEmails:
-                        r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term, email)
-                    # enable notifications by default
-                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term)
-                    # add tags list
-                    for tag in list_tags:
-                        r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + term, tag)
-                    save_tag_to_auto_push(list_tags)
-
-                #set
-                elif term.startswith('\\') and term.endswith('\\'):
-                    tab_term = term[1:-1]
-                    perc_finder = re.compile("\[[0-9]{1,3}\]").search(tab_term)
-                    if perc_finder is not None:
-                        match_percent = perc_finder.group(0)[1:-1]
-                        set_to_add = term
-                    else:
-                        match_percent = DEFAULT_MATCH_PERCENT
-                        set_to_add = "\\" + tab_term[:-1] + ", [{}]]\\".format(match_percent)
-                    r_serv_term.sadd(TrackedSetSet_Name, set_to_add)
-                    r_serv_term.hset(TrackedSetDate_Name, set_to_add, today_timestamp)
-                    # add all valid emails to the set
-                    for email in validNotificationEmails:
-                        r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + set_to_add, email)
-                    # enable notifications by default
-                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, set_to_add)
-                    # add tags list
-                    for tag in list_tags:
-                        r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + set_to_add, tag)
-                    save_tag_to_auto_push(list_tags)
-
-                #simple term
-                else:
-                    r_serv_term.sadd(TrackedTermsSet_Name, term.lower())
-                    r_serv_term.hset(TrackedTermsDate_Name, term.lower(), today_timestamp)
-                    # add all valid emails to the set
-                    for email in validNotificationEmails:
-                        r_serv_term.sadd(TrackedTermsNotificationEmailsPrefix_Name + term.lower(), email)
-                    # enable notifications by default
-                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term.lower())
-                    # add tags list
-                    for tag in list_tags:
-                        r_serv_term.sadd(TrackedTermsNotificationTagsPrefix_Name + term.lower(), tag)
-                    save_tag_to_auto_push(list_tags)
-
-            elif action == "toggleEMailNotification":
-                # get the current state
-                if term in r_serv_term.smembers(TrackedTermsNotificationEnabled_Name):
-                    # remove it
-                    r_serv_term.srem(TrackedTermsNotificationEnabled_Name, term.lower())
-                else:
-                    # add it
-                    r_serv_term.sadd(TrackedTermsNotificationEnabled_Name, term.lower())
-
-            #del action
-            else:
-                if term.startswith('/') and term.endswith('/'):
-                    r_serv_term.srem(TrackedRegexSet_Name, term)
-                    r_serv_term.hdel(TrackedRegexDate_Name, term)
-                elif term.startswith('\\') and term.endswith('\\'):
-                    r_serv_term.srem(TrackedSetSet_Name, term)
-                    r_serv_term.hdel(TrackedSetDate_Name, term)
-                else:
-                    r_serv_term.srem(TrackedTermsSet_Name, term.lower())
-                    r_serv_term.hdel(TrackedTermsDate_Name, term.lower())
-
-                # delete the associated notification emails too
-                r_serv_term.delete(TrackedTermsNotificationEmailsPrefix_Name + term)
-                # delete the associated tags set
-                r_serv_term.delete(TrackedTermsNotificationTagsPrefix_Name + term)
-
-        elif section == "blacklistTerm":
-            if action == "add":
-                r_serv_term.sadd(BlackListTermsSet_Name, term.lower())
-                r_serv_term.hset(BlackListTermsDate_Name, term, today_timestamp)
-            else:
-                r_serv_term.srem(BlackListTermsSet_Name, term.lower())
+        if mails:
+            mails = mails.split()
+        if tags:
+            tags = tags.split()
+        input_dict = {"term": term, "type": term_type, "nb_words": nb_words, "tags": tags, "mails": mails}
+        user_id = current_user.get_id()
+        res = Term.parse_json_term_to_add(input_dict, user_id)
+        if res[1] == 200:
+            return redirect(url_for('terms.tracked_term_menu'))
         else:
-            return "None"
+            ## TODO: use modal
+            return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    else:
+        return render_template("Add_tracker.html")
 
-        to_return = {}
-        to_return["section"] = section
-        to_return["action"] = action
-        to_return["term"] = term
-        return jsonify(to_return)
-
-@terms.route("/terms_management/delete_terms_tags", methods=['POST'])
+@terms.route("/tracker/show_term_tracker")
 @login_required
 @login_analyst
-def delete_terms_tags():
-    term = request.form.get('term')
-    tags_to_delete = request.form.getlist('tags_to_delete')
+def show_term_tracker():
+    user_id = current_user.get_id()
+    term_uuid = request.args.get('uuid', None)
+    res = Term.check_term_uuid_valid_access(term_uuid, user_id)
+    if res: # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
-    if term is not None and tags_to_delete is not None:
-        for tag in tags_to_delete:
-            r_serv_term.srem(TrackedTermsNotificationTagsPrefix_Name + term, tag)
-        return redirect(url_for('terms.terms_management'))
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    if date_from:
+        date_from = date_from.replace('-', '')
+    if date_to:
+        date_to = date_to.replace('-', '')
+
+    term_metadata = Term.get_term_metedata(term_uuid, user_id=True, level=True, tags=True, mails=True, sparkline=True)
+
+    if date_from:
+        res = Term.parse_get_tracker_term_item({'uuid': term_uuid, 'date_from': date_from, 'date_to': date_to}, user_id)
+        if res[1] !=200:
+            return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+        term_metadata['items'] = res[0]['items']
+        term_metadata['date_from'] = res[0]['date_from']
+        term_metadata['date_to'] = res[0]['date_to']
     else:
-        return 'None args', 400
+        term_metadata['items'] = []
+        term_metadata['date_from'] = ''
+        term_metadata['date_to'] = ''
 
-@terms.route("/terms_management/delete_terms_email", methods=['GET'])
+    return render_template("showTrackerTerm.html", term_metadata=term_metadata, bootstrap_label=bootstrap_label)
+
+@terms.route("/tracker/update_tracker_tags", methods=['POST'])
 @login_required
 @login_analyst
-def delete_terms_email():
-    term =  request.args.get('term')
-    email =  request.args.get('email')
-
-    if term is not None and email is not None:
-        r_serv_term.srem(TrackedTermsNotificationEmailsPrefix_Name + term, email)
-        return redirect(url_for('terms.terms_management'))
+def update_tracker_tags():
+    user_id = current_user.get_id()
+    term_uuid = request.form.get('uuid')
+    res = Term.check_term_uuid_valid_access(term_uuid, user_id)
+    if res: # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    tags = request.form.get('tags')
+    if tags:
+        tags = tags.split()
     else:
-        return 'None args', 400
+        tags = []
+    Term.replace_tracked_term_tags(term_uuid, tags)
+    return redirect(url_for('terms.show_term_tracker', uuid=term_uuid))
+
+@terms.route("/tracker/update_tracker_mails", methods=['POST'])
+@login_required
+@login_analyst
+def update_tracker_mails():
+    user_id = current_user.get_id()
+    term_uuid = request.form.get('uuid')
+    res = Term.check_term_uuid_valid_access(term_uuid, user_id)
+    if res: # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    mails = request.form.get('mails')
+    if mails:
+        mails = mails.split()
+    else:
+        mails = []
+    res = Term.replace_tracked_term_mails(term_uuid, mails)
+    if res: # invalid mail
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    return redirect(url_for('terms.show_term_tracker', uuid=term_uuid))
 
 
 @terms.route("/terms_plot_tool/")

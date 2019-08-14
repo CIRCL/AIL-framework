@@ -1,0 +1,24 @@
+      <div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
+
+      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar()">
+          <i class="fas fa-align-left"></i>
+      	  <span>Toggle Sidebar</span>
+      	</button>
+
+      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+      		<h5 class="d-flex text-muted w-100">
+      		  <span>Terms Tracker </span>
+      			<a class="ml-auto" href="{{url_for('terms.add_tracked_term_menu')}}">
+      				<i class="fas fa-plus-circle ml-auto"></i>
+      			</a>
+      		</h5>
+      	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('terms.tracked_term_menu')}}" id="nav_dashboard">
+      	        <i class="fas fa-search"></i>
+      	        <span>Tracked Terms</span>
+      	      </a>
+      	    </li>
+          </ul>
+      	</nav>
+      </div>

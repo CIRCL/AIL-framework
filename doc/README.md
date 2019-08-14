@@ -708,7 +708,7 @@ curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc
 
 
 
-### Delete term tracker: `api/v1/add/tracker/term/item`<a name="delete_term_tracker"></a>
+### Delete term tracker: `api/v1/delete/tracker/term/item`<a name="delete_term_tracker"></a>
 
 #### Description
 Delete term tracker
