@@ -11,6 +11,7 @@ import Tag
 
 PASTES_FOLDER = Flask_config.PASTES_FOLDER
 r_cache = Flask_config.r_cache
+r_serv_metadata = Flask_config.r_serv_metadata
 
 def exist_item(item_id):
     if os.path.isfile(os.path.join(PASTES_FOLDER, item_id)):
@@ -90,4 +91,43 @@ def get_item(request_dict):
     if lines_info:
         dict_item['lines'] = get_lines_info(item_id, dict_item.get('content', 'None'))
 
+    if request_dict.get('pgp'):
+        dict_item['pgp'] = {}
+        if request_dict['pgp'].get('key'):
+            dict_item['pgp']['key'] = get_item_pgp_key(item_id)
+        if request_dict['pgp'].get('mail'):
+            dict_item['pgp']['mail'] = get_item_pgp_mail(item_id)
+        if request_dict['pgp'].get('name'):
+            dict_item['pgp']['name'] = get_item_pgp_name(item_id)
+
+    if request_dict.get('cryptocurrency'):
+        dict_item['cryptocurrency'] = {}
+        if request_dict['cryptocurrency'].get('bitcoin'):
+            dict_item['cryptocurrency']['bitcoin'] = get_item_bitcoin(item_id)
+
     return (dict_item, 200)
+
+
+###
+### correlation
+###
+
+def _get_item_correlation(correlation_name, correlation_type, item_id):
+    print('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
+    res = r_serv_metadata.smembers('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
+    if res:
+        return list(res)
+    else:
+        return []
+
+def get_item_bitcoin(item_id):
+    return _get_item_correlation('cryptocurrency', 'bitcoin', item_id)
+
+def get_item_pgp_key(item_id):
+    return _get_item_correlation('pgpdump', 'key', item_id)
+
+def get_item_pgp_name(item_id):
+    return _get_item_correlation('pgpdump', 'name', item_id)
+
+def get_item_pgp_mail(item_id):
+    return _get_item_correlation('pgpdump', 'mail', item_id)
