@@ -78,6 +78,11 @@ popd
 # ARDB #
 test ! -d ardb/ && git clone https://github.com/yinqiwen/ardb.git
 pushd ardb/
+# force gcc to be gcc-7. See issue https://github.com/CIRCL/AIL-framework/issues/279
+sudo apt-get install gcc-7
+sudo apt-get install g++-7
+sed -i 's/CXX=g++/CXX=g++-7/' src/Makefile
+sed -i 's/CC=gcc/CC=gcc-7/' src/Makefile
 make
 popd
 
