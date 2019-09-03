@@ -23,12 +23,17 @@ def parse_response(obj, ail_response):
     return res_json
 
 def get_api_key():
-    with open(os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD'), 'r') as f:
-        content = f.read()
-        content = content.splitlines()
-        apikey = content[-1]
-        apikey = apikey.replace('API_Key=', '', 1)
-        return apikey
+    api_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
+    if os.path.isfile(api_file):
+        with open(os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD'), 'r') as f:
+            content = f.read()
+            content = content.splitlines()
+            apikey = content[-1]
+            apikey = apikey.replace('API_Key=', '', 1)
+    # manual tests
+    else:
+        apikey = sys.argv[1]
+    return apikey
 
 APIKEY = get_api_key()
 
@@ -162,4 +167,4 @@ class TestApiV1(unittest.TestCase):
         self.assertTrue(req_json['tags'])
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(argv=['first-arg-is-ignored'], exit=False)
