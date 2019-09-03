@@ -13,7 +13,7 @@ import json
 from pyfaup.faup import Faup
 from flask import Flask, render_template, jsonify, request, send_file, Blueprint, redirect, url_for
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, no_cache
 from flask_login import login_required
 
 from Date import Date
@@ -819,6 +819,7 @@ def show_domain():
 @hiddenServices.route("/crawlers/download_domain", methods=['GET'])
 @login_required
 @login_analyst
+@no_cache
 def download_domain():
     domain = request.args.get('domain')
     epoch = request.args.get('epoch')
