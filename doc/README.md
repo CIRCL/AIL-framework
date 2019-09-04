@@ -250,6 +250,25 @@ Get item. Filter requested field.
   - get item lines info
   - *boolean*
   - default: `false`
+- `cryptocurrency`
+  - `bitcoin`
+    - get item bitcoin adress
+    - *boolean*
+    - default: `false`
+- `pgp`
+  - `key`
+    - get item pgp key
+    - *boolean*
+    - default: `false`
+  - `mail`
+    - get item pgp mail
+    - *boolean*
+    - default: `false`
+  - `name`
+    - get item pgp name
+    - *boolean*
+    - default: `false`
+
 
 #### JSON response
 - `content`
@@ -276,6 +295,20 @@ Get item. Filter requested field.
       - `nb`
         - nb lines item
         - *int*
+- `cryptocurrency`
+  - `bitcoin`
+    - item bitcoin adress
+    - *list*
+- `pgp`
+  - `key`
+    - item pgp keys
+    - *list*
+  - `mail`
+    - item pgp mails
+    - *list*
+  - `name`
+    - item pgp name
+    - *list*
 
 
 #### Example
@@ -299,11 +332,27 @@ curl https://127.0.0.1:7000/api/v1/get/item --header "Authorization: iHc1_ChZxj1
 ```json
   {
     "content": "dsvcdsvcdsc vvvv",
+    "cryptocurrency": {
+      "bitcoin": [
+        "132M1aGTGodHkQNh1augLeMjEXH51wgoCc"
+      ]
+    },
     "date": "20190726",
     "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
     "lines": {
       "max_length": 19,
       "nb": 1
+    },
+    "pgp": {
+      "key": [
+        "0x5180D21F4C20F975"
+      ],
+      "mail": [
+        "mail@test.test"
+      ],
+      "name": [
+        "user_test"
+      ]
     },
     "size": 0.03,
     "tags": [
@@ -580,6 +629,117 @@ curl https://127.0.0.1:7000/api/v1/get/tag/metadata --header "Authorization: iHc
 
 
 
+
+
+
+
+## Cryptocurrency
+
+
+
+### Get bitcoin metadata: `api/v1/get/cryptocurrency/bitcoin/metadata`<a name="get_cryptocurrency_bitcoin_metadata"></a>
+
+#### Description
+Get all metdata from a bitcoin address.
+
+**Method** : `POST`
+
+#### Parameters
+- `bitcoin`
+  - bitcoin address
+  - *str*
+  - mandatory
+
+#### JSON response
+- `bitcoin`
+  - bitcoin address
+  - *str*
+- `first_seen`
+  - date: first seen
+  - *str - YYYYMMDD*
+- `last_seen`
+  - date: last seen
+  - *str - YYYYMMDD*
+#### Example
+```
+curl https://127.0.0.1:7000/api/v1/get/cryptocurrency/bitcoin/metadata --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y"
+  }
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+```json
+  {
+    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y",
+    "first_seen": "20190605",
+    "last_seen": "20190726"
+  }
+```
+
+#### Expected Fail Response
+**HTTP Status Code** : `404`
+```json
+  {"status": "error", "reason": "Item not found"}
+```
+
+
+
+### Get bitcoin metadata: `api/v1/get/cryptocurrency/bitcoin/item`<a name="get_cryptocurrency_bitcoin_item"></a>
+
+#### Description
+Get all items related to a bitcoin address.
+
+**Method** : `POST`
+
+#### Parameters
+- `bitcoin`
+  - bitcoin address
+  - *str*
+  - mandatory
+
+#### JSON response
+- `bitcoin`
+  - bitcoin address
+  - *str*
+- `items`
+  - list of item id
+  - *list*
+#### Example
+```
+curl https://127.0.0.1:7000/api/v1/get/cryptocurrency/bitcoin/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y"
+  }
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+```json
+  {
+    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y",
+    "items": [
+      "archive/2019/08/26/test_bitcoin001",
+      "archive/2019/08/26/test_bitcoin002",
+      "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
+    ]
+  }
+```
+
+#### Expected Fail Response
+**HTTP Status Code** : `404`
+```json
+  {"status": "error", "reason": "Item not found"}
+```
 
 
 

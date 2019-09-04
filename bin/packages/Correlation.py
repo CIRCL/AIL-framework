@@ -23,7 +23,7 @@ class Correlation(object):
         if res:
             return list(res)
         else:
-            return {}
+            return []
 
 
     def _get_metadata(self, correlation_type, field_name):
