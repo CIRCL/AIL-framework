@@ -57,7 +57,7 @@ whoosh
 beautifulsoup4
 
 ipaddress
-pycountry
+pycountry==18.12.8
 
 # To fetch Onion urls
 PySocks

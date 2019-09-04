@@ -178,7 +178,8 @@ def add_header(response):
     and also to cache the rendered page for 10 minutes.
     """
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
-    response.headers['Cache-Control'] = 'public, max-age=0'
+    if 'Cache-Control' not in response.headers:
+        response.headers['Cache-Control'] = 'private, max-age=0'
     return response
 
 # @app.route('/test', methods=['GET'])

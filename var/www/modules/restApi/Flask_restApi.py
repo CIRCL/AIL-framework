@@ -14,6 +14,8 @@ import redis
 import datetime
 
 import Import_helper
+import Cryptocurrency
+import Pgp
 import Item
 import Paste
 import Tag
@@ -291,6 +293,7 @@ def get_item_content():
     res = Item.get_item(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -340,6 +343,117 @@ def get_tracker_term_item():
     user_id = get_user_from_token(user_token)
     res = Term.parse_get_tracker_term_item(data, user_id)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # #        CRYPTOCURRENCY       # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/get/cryptocurrency/bitcoin/metadata", methods=['POST'])
+@token_required('analyst')
+def get_cryptocurrency_bitcoin_metadata():
+    data = request.get_json()
+    crypto_address = data.get('bitcoin', None)
+    req_data = {'bitcoin': crypto_address, 'metadata': True}
+    res = Cryptocurrency.get_cryptocurrency(req_data, 'bitcoin')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/cryptocurrency/bitcoin/item", methods=['POST'])
+@token_required('analyst')
+def get_cryptocurrency_bitcoin_item():
+    data = request.get_json()
+    bitcoin_address = data.get('bitcoin', None)
+    req_data = {'bitcoin': bitcoin_address, 'items': True}
+    res = Cryptocurrency.get_cryptocurrency(req_data, 'bitcoin')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # #       PGP       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/get/pgp/key/metadata", methods=['POST'])
+@token_required('analyst')
+def get_pgp_key_metadata():
+    data = request.get_json()
+    pgp_field = data.get('key', None)
+    req_data = {'key': pgp_field, 'metadata': True}
+    res = Pgp.get_pgp(req_data, 'key')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/pgp/mail/metadata", methods=['POST'])
+@token_required('analyst')
+def get_pgp_mail_metadata():
+    data = request.get_json()
+    pgp_field = data.get('mail', None)
+    req_data = {'mail': pgp_field, 'metadata': True}
+    res = Pgp.get_pgp(req_data, 'mail')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/pgp/name/metadata", methods=['POST'])
+@token_required('analyst')
+def get_pgp_name_metadata():
+    data = request.get_json()
+    pgp_field = data.get('name', None)
+    req_data = {'name': pgp_field, 'metadata': True}
+    res = Pgp.get_pgp(req_data, 'name')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/pgp/key/item", methods=['POST'])
+@token_required('analyst')
+def get_pgp_key_item():
+    data = request.get_json()
+    pgp_field = data.get('key', None)
+    req_data = {'key': pgp_field, 'items': True}
+    res = Pgp.get_pgp(req_data, 'key')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/pgp/mail/item", methods=['POST'])
+@token_required('analyst')
+def get_pgp_mail_item():
+    data = request.get_json()
+    pgp_mail = data.get('mail', None)
+    req_data = {'mail': pgp_mail, 'items': True}
+    res = Pgp.get_pgp(req_data, 'mail')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/pgp/name/item", methods=['POST'])
+@token_required('analyst')
+def get_pgp_name_item():
+    data = request.get_json()
+    pgp_name = data.get('name', None)
+    req_data = {'name': pgp_name, 'items': True}
+    res = Pgp.get_pgp(req_data, 'name')
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+'''
+
+
+
+@restApi.route("api/v1/get/item/cryptocurrency/key", methods=['POST'])
+@token_required('analyst')
+def get_item_cryptocurrency_bitcoin():
+    data = request.get_json()
+    item_id = data.get('id', None)
+    req_data = {'id': item_id, 'date': False, 'tags': False, 'pgp': {'key': True}}
+    res = Item.get_item(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/item/pgp/mail", methods=['POST'])
+@token_required('analyst')
+def get_item_cryptocurrency_bitcoin():
+    data = request.get_json()
+    item_id = data.get('id', None)
+    req_data = {'id': item_id, 'date': False, 'tags': False, 'pgp': {'mail': True}}
+    res = Item.get_item(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/item/pgp/name", methods=['POST'])
+@token_required('analyst')
+def get_item_cryptocurrency_bitcoin():
+    data = request.get_json()
+    item_id = data.get('id', None)
+    req_data = {'id': item_id, 'date': False, 'tags': False, 'pgp': {'name': True}}
+    res = Item.get_item(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+'''
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
