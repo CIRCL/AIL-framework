@@ -119,6 +119,12 @@ Training
 
 CIRCL organises training on how to use or extend the AIL framework. AIL training materials are available at [https://www.circl.lu/services/ail-training-materials/](https://www.circl.lu/services/ail-training-materials/).
 
+
+API
+-----
+
+The API documentation is available in [doc/README.md](doc/README.md)
+
 HOWTO
 -----
 
