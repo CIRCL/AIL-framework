@@ -134,3 +134,13 @@ def get_item_pgp_name(item_id):
 
 def get_item_pgp_mail(item_id):
     return _get_item_correlation('pgpdump', 'mail', item_id)
+
+
+###
+### GET Internal Module DESC
+###
+def get_item_list_desc(list_item_id):
+    desc_list = []
+    for item_id in list_item_id:
+        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_item_tags(item_id)} )
+    return desc_list

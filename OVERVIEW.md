@@ -109,63 +109,65 @@ Redis and ARDB overview
 | **uuid**:ltags | **tag** |
 | **uuid**:ltagsgalaxies | **tag** |
 
-## DB2 - New TermFreq:
+## DB2 - Leak Hunter:
 
-##### Term Tracker metadata:
+##### Tracker metadata:
 | Hset - Key | Field | Value |
 | ------ | ------ | ------ |
-| tracked_term:**uuid** | tracked   | **tacked word/set/regex**          |
-|                       | type      | **term/set/regex**                 |
+| tracker:**uuid** | tracked   | **tacked word/set/regex**          |
+|                       | type      | **word/set/regex**                 |
 |                       | date      | **date added**                     |
 |                       | user_id   | **created by user_id**             |
 |                       | dashboard | **0/1 Display alert on dashboard** |
 |                       | level     | **0/1 Tracker visibility**         |
 
-##### Term Tracked by user_id (visibility level: user only):
+##### Tracker by user_id (visibility level: user only):
 | Set - Key | Value |
 | ------ | ------ |
-| user:tracked_term:**user_id** | **uuid - tracked term uuid** |
+| user:tracker:**user_id** | **uuid - tracker uuid** |
+| user:tracker:**user_id**:**word/set/regex - tracker type** | **uuid - tracker uuid** |
 
-##### Global Term Tracked (visibility level: all users):
+##### Global Tracker (visibility level: all users):
 | Set - Key | Value |
 | ------ | ------ |
-| gobal:tracked_term | **uuid - tracked term uuid** |
+| gobal:tracker | **uuid - tracker uuid** |
+| gobal:tracker:**word/set/regex - tracker type** | **uuid - tracker uuid** |
 
-##### All Term Tracked by type:
+##### All Tracker by type:
 | Set - Key | Value |
 | ------ | ------ |
-| all:tracked_term:**word/set/regex - term type** | **tracked term** |
+| all:tracker:**word/set/regex - tracker type** | **tracked item** |
 
 | Set - Key | Value |
 | ------ | ------ |
-| all:tracked_term_uuid:**term type**:**tracked term** | **uuid - tracked term uuid** |
+| all:tracker_uuid:**tracker type**:**tracked item** | **uuid - tracker uuid** |
 
-##### All Term Tracked items:
+##### All Tracked items:
 | Set - Key | Value |
 | ------ | ------ |
-| tracked_term:item:**uuid**:**date** | **item_id** |
+| tracker:item:**uuid**:**date** | **item_id** |
 
-##### All Term Tracked tags:
+##### All Tracked tags:
 | Set - Key | Value |
 | ------ | ------ |
-| tracked_term:tags:**uuid** | **tag** |
+| tracker:tags:**uuid** | **tag** |
 
-##### All Term Tracked tags:
+##### All Tracked mail:
 | Set - Key | Value |
 | ------ | ------ |
-| tracked_term:mail:**uuid** | **mail** |
+| tracker:mail:**uuid** | **mail** |
 
-##### Refresh Tracked term:
+##### Refresh Tracker:
 | Key | Value |
 | ------ | ------ |
-| tracked_term:refresh:word | **last refreshed epoch** |
-| tracked_term:refresh:set | - |
-| tracked_term:refresh:regex | - |
+| tracker:refresh:word | **last refreshed epoch** |
+| tracker:refresh:set | - |
+| tracker:refresh:regex | - |
 
-##### Zset Stat Tracked term:
+##### Zset Stat Tracker:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| tracked_term:stat:**uuid** | **date** | **nb_seen** |
+| tracker:stat:**uuid** | **date** | **nb_seen** |
 
 ##### Stat token:
 | Key | Field | Value |

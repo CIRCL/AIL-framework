@@ -23,7 +23,7 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'crawler/menu_sidebar.html' %}
+			{% include 'hunter/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 
@@ -34,7 +34,7 @@
 						  <div class="card-body">
 						    <p class="card-text">Enter a domain and choose what kind of data you want.</p>
 
-								<form action="{{ url_for('terms.add_tracked_term_menu') }}" method='post'>
+								<form action="{{ url_for('hunter.add_tracked_menu') }}" method='post'>
 
 									<div class="row">
 										<div class="col-12 col-xl-9">

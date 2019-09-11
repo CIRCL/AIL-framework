@@ -60,3 +60,13 @@ def get_date_range(num_day):
     for i in range(0, num_day+1):
         date_list.append(date.substract_day(i))
     return list(reversed(date_list))
+
+def substract_date(date_from, date_to):
+    date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))
+    date_to = datetime.date(int(date_to[0:4]), int(date_to[4:6]), int(date_to[6:8]))
+    delta = date_to - date_from # timedelta
+    l_date = []
+    for i in range(delta.days + 1):
+        date = date_from + datetime.timedelta(i)
+        l_date.append( date.strftime('%Y%m%d') )
+    return l_date

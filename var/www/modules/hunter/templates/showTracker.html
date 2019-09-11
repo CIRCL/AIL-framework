@@ -11,21 +11,21 @@
 		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
 
 	  <!-- JS -->
 		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/plugins/d3/sparklines.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/plugins/d3/graphlinesgroup.js')}}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
 		<style>
-			.line_sparkline {
-				fill: none;
-				stroke: #000;
-				stroke-width: 2.0px;
-			}
 	    .btn-link {
 	      color: #000000
 	    }
@@ -42,13 +42,13 @@
 		<div class="container-fluid">
 			<div class="row">
 
-				{% include 'tracker/menu_sidebar.html' %}
+				{% include 'hunter/menu_sidebar.html' %}
 
 				<div class="col-12 col-lg-10" id="core_content">
 
 					<div class="card my-3">
 						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-							<h4 class="text-secondary">{{ term_metadata['uuid'] }} </h4>
+							<h4 class="text-secondary">{{ tracker_metadata['uuid'] }} </h4>
 							<ul class="list-group mb-2">
 								<li class="list-group-item py-0">
 									<div class="row">
@@ -57,7 +57,7 @@
 												<thead>
 													<tr>
 														<th>Type</th>
-														<th>Tracked</th>
+														<th>Tracker</th>
 														<th>Date added</th>
 														<th>Level</th>
 														<th>Created by</th>
@@ -69,23 +69,23 @@
 												</thead>
 												<tbody>
 													<tr>
-														<td>{{ term_metadata['type'] }}</td>
-														<td>{{ term_metadata['term'] }}</td>
-														<td>{{ term_metadata['date'][0:4] }}/{{ term_metadata['date'][4:6] }}/{{ term_metadata['date'][6:8] }}</td>
-														<td>{{ term_metadata['level'] }}</td>
-														<td>{{ term_metadata['user_id'] }}</td>
+														<td>{{ tracker_metadata['type'] }}</td>
+														<td>{{ tracker_metadata['term'] }}</td>
+														<td>{{ tracker_metadata['date'][0:4] }}/{{ tracker_metadata['date'][4:6] }}/{{ tracker_metadata['date'][6:8] }}</td>
+														<td>{{ tracker_metadata['level'] }}</td>
+														<td>{{ tracker_metadata['user_id'] }}</td>
 														<td>
-															{% if term_metadata['first_seen'] %}
-																{{ term_metadata['first_seen'][0:4] }}/{{ term_metadata['first_seen'][4:6] }}/{{ term_metadata['first_seen'][6:8] }}
+															{% if tracker_metadata['first_seen'] %}
+																{{ tracker_metadata['first_seen'][0:4] }}/{{ tracker_metadata['first_seen'][4:6] }}/{{ tracker_metadata['first_seen'][6:8] }}
 															{% endif %}
 														</td>
 														<td>
-															{% if term_metadata['last_seen'] %}
-																{{ term_metadata['last_seen'][0:4] }}/{{ term_metadata['last_seen'][4:6] }}/{{ term_metadata['last_seen'][6:8] }}
+															{% if tracker_metadata['last_seen'] %}
+																{{ tracker_metadata['last_seen'][0:4] }}/{{ tracker_metadata['last_seen'][4:6] }}/{{ tracker_metadata['last_seen'][6:8] }}
 															{% endif %}
 														</td>
 														<td>
-															{% for tag in term_metadata['tags'] %}
+															{% for tag in tracker_metadata['tags'] %}
 				                        <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
 				                          <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
 				                        </a>
@@ -93,7 +93,7 @@
 
 														</td>
 														<td>
-															{% for mail in term_metadata['mails'] %}
+															{% for mail in tracker_metadata['mails'] %}
 				                        {{ mail }}<br>
 				                      {%  endfor %}
 														</td>
@@ -109,15 +109,15 @@
 							</ul>
 
 							<div id="div_edit_tags">
-								<form action="{{ url_for('terms.update_tracker_tags') }}" method='post'>
-									<input name="uuid" type="text" value="{{term_metadata['uuid']}}" hidden>
+								<form action="{{ url_for('hunter.update_tracker_tags') }}" method='post'>
+									<input name="uuid" type="text" value="{{tracker_metadata['uuid']}}" hidden>
 									<div>All Tags added for this tracker, space separated: </div>
 									<div class="input-group mb-2 mr-sm-2">
 										<div class="input-group-prepend">
 											<div class="input-group-text"><i class="fas fa-tag"></i></div>
 										</div>
 										<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text"
-										value="{% for tag in term_metadata['tags'] %}{{tag}} {%  endfor %}">
+										value="{% for tag in tracker_metadata['tags'] %}{{tag}} {%  endfor %}">
 									</div>
 
 									<button class="btn btn-info">
@@ -128,15 +128,15 @@
 							</div>
 
 							<div id="div_edit_mails">
-								<form action="{{ url_for('terms.update_tracker_mails') }}" method='post'>
-									<input name="uuid" type="text" value="{{term_metadata['uuid']}}" hidden>
+								<form action="{{ url_for('hunter.update_tracker_mails') }}" method='post'>
+									<input name="uuid" type="text" value="{{tracker_metadata['uuid']}}" hidden>
 									<div>All E-Mails to Notify for this tracker, space separated: </div>
 									<div class="input-group mb-2 mr-sm-2">
 										<div class="input-group-prepend">
 											<div class="input-group-text"><i class="fas fa-at"></i></div>
 										</div>
 										<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text"
-										value="{% for mail in term_metadata['mails'] %}{{mail}} {%  endfor %}">
+										value="{% for mail in tracker_metadata['mails'] %}{{mail}} {%  endfor %}">
 									</div>
 
 									<button class="btn btn-info">
@@ -146,28 +146,29 @@
 
 							</div>
 
-							<a href="{{ url_for('hashDecoded.downloadHash') }}?hash={{hash}}" target="blank" class="float-right" style="font-size: 15px">
+							<a href="{{ url_for('hunter.delete_tracker') }}?uuid={{tracker_metadata['uuid']}}" class="float-right" style="font-size: 15px">
 								<button class='btn btn-danger'><i class="fas fa-trash-alt"></i>
 								</button>
 							</a>
 						</div>
 					</div>
 
+					<div id="graphline" class="text-center"></div>
 
-					<div class="card mb-3 mt-1">
+					<div class="card mb-5 mt-1">
 						<div class="card-body">
 
 							<div class="row mb-3">
 								<div class="col-md-6">
 									<div class="input-group" id="date-range-from">
 										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-										<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ term_metadata['date_from'] }}" name="date_from" autocomplete="off">
+										<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ tracker_metadata['date_from'] }}" name="date_from" autocomplete="off">
 									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="input-group" id="date-range-to">
 										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-										<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ term_metadata['date_to'] }}" name="date_to" autocomplete="off">
+										<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ tracker_metadata['date_to'] }}" name="date_to" autocomplete="off">
 									</div>
 								</div>
 							</div>
@@ -179,27 +180,40 @@
 						</div>
 					</div>
 
-					{%if term_metadata['items']%}
-						<table class="table table-bordered table-hover" id="myTable_">
-							<thead class="thead-dark">
-								<tr>
-									<th>Item</th>
-								</tr>
-							</thead>
-							<tbody>
-
-								{% for item in term_metadata['items'] %}
+					{%if tracker_metadata['items']%}
+						<div class="mt-4">
+							<table class="table table-bordered table-hover" id="myTable_">
+								<thead class="thead-dark">
 									<tr>
-										<td>
-											<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item}}">
-												<div style="line-height:0.9;">{{ item }}</div>
-											</a>
-										</td>
+										<th>Date</th>
+										<th>Item Id</th>
 									</tr>
-								{%  endfor %}
+								</thead>
+								<tbody>
 
-							</tbody>
-						</table>
+									{% for item in tracker_metadata['items'] %}
+										<tr>
+											<td>
+												{{item['date'][0:4]}}/{{item['date'][4:6]}}/{{item['date'][6:8]}}
+											</td>
+											<td>
+												<a class="text-secondary" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item['id']}}">
+													<div style="line-height:0.9;">{{ item['id'] }}</div>
+												</a>
+												<div class="mb-2">
+					                {% for tag in item['tags'] %}
+						                <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+						                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+						                </a>
+					                {%  endfor %}
+					              </div>
+											</td>
+										</tr>
+									{%  endfor %}
+
+								</tbody>
+							</table>
+						</div>
 					{% endif %}
 
 				</div>
@@ -239,7 +253,18 @@ $(document).ready(function(){
 				}
 		});
 
-		sparklines("sparkline", {{ term_metadata['sparkline'] }});
+		$('#myTable_').DataTable({
+	        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+	        "iDisplayLength": 10,
+	        "order": [[ 0, "desc" ]]
+	  });
+
+		sparkline("sparkline", {{ tracker_metadata['sparkline'] }}, {});
+		let div_width = $("#graphline").width();
+		$.getJSON( "{{ url_for('hunter.get_json_tracker_stats') }}?uuid={{ tracker_metadata['uuid'] }}{%if tracker_metadata['date_from']%}&date_from={{ tracker_metadata['date_from'] }}{%endif%}{%if tracker_metadata['date_to']%}&date_to={{ tracker_metadata['date_to'] }}{%endif%}",
+			function( data ) {multilines_group("graphline", data, {"width": div_width});}
+		);
+
 });
 
 function toggle_sidebar(){
@@ -269,49 +294,10 @@ function edit_mails(){
 function getItems() {
 	var date_from = $('#date-range-from-input').val();
 	var date_to =$('#date-range-to-input').val();
-	window.location.replace("{{ url_for('terms.show_term_tracker') }}?uuid={{ term_metadata['uuid'] }}&date_from="+date_from+"&date_to="+date_to);
+	window.location.replace("{{ url_for('hunter.show_tracker') }}?uuid={{ tracker_metadata['uuid'] }}&date_from="+date_from+"&date_to="+date_to);
 }
 
 </script>
-<script>
-//var data = [6,3,3,2,5,3,9];
-
-// a sparklines plot
-function sparklines(id, points) {
-    var width_spark = 100, height_spark = 60;
-
-    var data = []
-    for (i = 0; i < points.length; i++) {
-        data[i] = {
-            'x': i,
-            'y': +points[i]
-        }
-    }
-
-    var x = d3.scaleLinear()
-        .range([0, width_spark - 10])
-        .domain([0,5]);
-
-    var y = d3.scaleLinear()
-        .range([height_spark, 0])
-        .domain([0,10]);
-
-    var line = d3.line()
-                .x(function(d) {return x(d.x)})
-                .y(function(d) {return y(d.y)});
-
-    d3.select("#"+id).append('svg')
-            .attr('width', width_spark)
-            .attr('height', height_spark)
-         .append('path')
-            .attr('class','line_sparkline')
-            .datum(data)
-            .attr('d', line);
-
-}
-</script>
-
-
 
 
 </body>

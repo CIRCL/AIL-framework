@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
-The TermTracker Module
+The DbCleaner Module
 ===================
 
 """
@@ -35,8 +35,6 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
     publisher.info("DbCleaner started")
-
-    config_section = 'TermTrackerMod'
 
     # low priority
     time.sleep(180)

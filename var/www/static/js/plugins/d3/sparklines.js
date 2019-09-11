@@ -20,7 +20,7 @@ const sparkline = (container_id, data, options) => {
 	let maxY = d3.max(data, function(d) { return d } );
 
 	let x = d3.scaleLinear()
-						.range([0, width_spark - 10])
+						.range([0, width_spark])
 						.domain([0,maxX]);
 
 	let y = d3.scaleLinear()
