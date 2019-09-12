@@ -20,8 +20,8 @@ export PATH=$AIL_FLASK:$PATH
 GREEN="\\033[1;32m"
 DEFAULT="\\033[0;39m"
 
-echo -e $GREEN"Shutting down AIL ..."$DEFAULT
-bash ${AIL_BIN}/LAUNCH.sh -k
+echo -e $GREEN"Shutting down AIL Script ..."$DEFAULT
+bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
 echo ""
@@ -37,8 +37,8 @@ echo ""
 echo ""
 
 echo ""
-echo -e $GREEN"Shutting down ARDB ..."$DEFAULT
-bash ${AIL_BIN}/LAUNCH.sh -k
+echo -e $GREEN"Killing Script ..."$DEFAULT
+bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
 echo ""

@@ -20,13 +20,6 @@ configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
 publisher.port = 6380
 publisher.channel = "Script"
 
-# notifications enabled/disabled
-TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
-
-# associated notification email addresses for a specific term`
-# Keys will be e.g. TrackedNotificationEmails<TERMNAME>
-TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
-
 def sendEmailNotification(recipient, alert_name, content):
 
     if not os.path.exists(configfile):

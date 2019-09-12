@@ -16,6 +16,7 @@
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/plugins/d3/sparklines.js')}}"></script>
 
 		<style>
 		line.link {
@@ -24,11 +25,6 @@
 		line.link:hover{
 			stroke: red;
 			stroke-width: 2px
-		}
-		.line_sparkline {
-			fill: none;
-			stroke: #000;
-			stroke-width: 2.0px;
 		}
 		.node {
 			pointer-events: all;
@@ -179,7 +175,7 @@
 var all_graph = {};
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
-		sparklines("sparkline", {{ sparkline_values }})
+		sparkline("sparkline", {{ sparkline_values }}, {});
 
 		all_graph.node_graph = create_graph("{{ url_for(graph_node_endpoint) }}?type_id={{type_id}}&key_id={{key_id}}");
 		all_graph.line_chart = create_line_chart('graph_line', "{{ url_for(graph_line_endpoint) }}?type_id={{type_id}}&key_id={{key_id}}");
@@ -211,43 +207,6 @@ function toggle_sidebar(){
 		zoom.scaleTo(svg_node, 2);
 	}
 
-</script>
-<script>
-//var data = [6,3,3,2,5,3,9];
-
-// a sparklines plot
-function sparklines(id, points) {
-    var width_spark = 100, height_spark = 60;
-
-    var data = []
-    for (i = 0; i < points.length; i++) {
-        data[i] = {
-            'x': i,
-            'y': +points[i]
-        }
-    }
-
-    var x = d3.scaleLinear()
-        .range([0, width_spark - 10])
-        .domain([0,5]);
-
-    var y = d3.scaleLinear()
-        .range([height_spark, 0])
-        .domain([0,10]);
-
-    var line = d3.line()
-                .x(function(d) {return x(d.x)})
-                .y(function(d) {return y(d.y)});
-
-    d3.select("#"+id).append('svg')
-            .attr('width', width_spark)
-            .attr('height', height_spark)
-         .append('path')
-            .attr('class','line_sparkline')
-            .datum(data)
-            .attr('d', line);
-
-}
 </script>
 
 <script>

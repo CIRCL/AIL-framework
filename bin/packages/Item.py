@@ -2,10 +2,13 @@
 # -*-coding:UTF-8 -*
 
 import os
+import sys
 import gzip
 import redis
 
+sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
 import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
 
@@ -18,6 +21,9 @@ def exist_item(item_id):
         return True
     else:
         return False
+
+def get_item_id(full_path):
+    return full_path.replace(PASTES_FOLDER, '', 1)
 
 def get_item_date(item_id):
     l_directory = item_id.split('/')
@@ -131,3 +137,13 @@ def get_item_pgp_name(item_id):
 
 def get_item_pgp_mail(item_id):
     return _get_item_correlation('pgpdump', 'mail', item_id)
+
+
+###
+### GET Internal Module DESC
+###
+def get_item_list_desc(list_item_id):
+    desc_list = []
+    for item_id in list_item_id:
+        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_item_tags(item_id)} )
+    return desc_list

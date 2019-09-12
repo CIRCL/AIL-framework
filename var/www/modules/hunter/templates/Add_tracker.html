@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'hunter/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+						<div class="card mb-3 mt-1">
+						  <div class="card-header">
+								<h5 class="card-title">Create a new tracker</h5>
+							</div>
+						  <div class="card-body">
+						    <p class="card-text">Enter a domain and choose what kind of data you want.</p>
+
+								<form action="{{ url_for('hunter.add_tracked_menu') }}" method='post'>
+
+									<div class="row">
+										<div class="col-12 col-xl-9">
+										  <div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text"><i class="fas fa-tag"></i></div>
+										    </div>
+												<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text">
+										  </div>
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text"><i class="fas fa-at"></i></div>
+										    </div>
+												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text">
+										  </div>
+										</div>
+										<div class="col-12 col-xl-3">
+											<div class="custom-control custom-switch mt-1">
+												<input class="custom-control-input" type="checkbox" name="level" id="id_level" checked>
+												<label class="custom-control-label" for="id_level">
+													<i class="fas fa-users"></i>&nbsp;Show tracker to all Users
+												</label>
+											</div>
+										</div>
+									</div>
+
+									<hr>
+
+									<select id="tracker_type" name="tracker_type" class="custom-select w-25 mb-3">
+										<option disabled selected value> -- Select a tracker type -- </option>
+										<option value="word">Word</option>
+										<option value="set">Set</option>
+										<option value="regex">Regex</option>
+									</select>
+
+									<p id="tracker_desc">Terms to track (space separated)</p>
+
+									<div class="row">
+										<div class="col-12 col-lg-10">
+											<input id="term" name="term" class="form-control" placeholder="Terms to track (space separated)" type="text">
+										</div>
+										<div class="col-12 col-lg-2">
+											<input type="number" id="nb_word" name="nb_word" name="quantity" min="1" placeholder="Nb of keywords">
+										</div>
+									</div>
+
+
+									<br>
+									<button class="btn btn-success mt-2">
+										<i class="fas fa-plus"></i> Add Tracker
+									</button>
+
+								</form>
+
+
+
+
+
+						  </div>
+						</div>
+
+
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_manual_crawler").addClass("active");
+	$("#tracker_desc").hide();
+	$("#term").hide();
+	$("#nb_word").hide();
+
+	$('#tracker_type').on('change', function() {
+		var tracker_type = this.value;
+		if (tracker_type=="word") {
+			$("#tracker_desc").text("Term to track:");
+			$("#tracker_desc").show();
+			$("#term").show();
+			$("#nb_word").hide();
+		} else if (tracker_type=="set") {
+			$("#tracker_desc").text("Terms to track (space separated). Select the numbers of different tokens to trigger this tracker");
+			$("#tracker_desc").show();
+			$("#term").show();
+			$("#nb_word").show();
+		} else {
+			$("#tracker_desc").text("Enter a valid Python regex");
+			$("#tracker_desc").show();
+			$("#term").show();
+			$("#nb_word").hide();
+		}
+	});
+
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>

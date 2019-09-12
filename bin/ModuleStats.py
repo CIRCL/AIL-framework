@@ -9,7 +9,6 @@ import time
 import datetime
 import redis
 import os
-from packages import lib_words
 from packages.Date import Date
 from pubsublogger import publisher
 from Helper import Process

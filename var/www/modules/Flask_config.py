@@ -61,9 +61,9 @@ r_serv_sentiment = redis.StrictRedis(
         decode_responses=True)
 
 r_serv_term = redis.StrictRedis(
-        host=cfg.get("ARDB_TermFreq", "host"),
-        port=cfg.getint("ARDB_TermFreq", "port"),
-        db=cfg.getint("ARDB_TermFreq", "db"),
+        host=cfg.get("ARDB_Tracker", "host"),
+        port=cfg.getint("ARDB_Tracker", "port"),
+        db=cfg.getint("ARDB_Tracker", "db"),
         decode_responses=True)
 
 r_serv_cred = redis.StrictRedis(

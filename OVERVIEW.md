@@ -109,7 +109,80 @@ Redis and ARDB overview
 | **uuid**:ltags | **tag** |
 | **uuid**:ltagsgalaxies | **tag** |
 
+## DB2 - Leak Hunter:
+
+##### Tracker metadata:
+| Hset - Key | Field | Value |
+| ------ | ------ | ------ |
+| tracker:**uuid** | tracked   | **tacked word/set/regex**          |
+|                       | type      | **word/set/regex**                 |
+|                       | date      | **date added**                     |
+|                       | user_id   | **created by user_id**             |
+|                       | dashboard | **0/1 Display alert on dashboard** |
+|                       | level     | **0/1 Tracker visibility**         |
+
+##### Tracker by user_id (visibility level: user only):
+| Set - Key | Value |
+| ------ | ------ |
+| user:tracker:**user_id** | **uuid - tracker uuid** |
+| user:tracker:**user_id**:**word/set/regex - tracker type** | **uuid - tracker uuid** |
+
+##### Global Tracker (visibility level: all users):
+| Set - Key | Value |
+| ------ | ------ |
+| gobal:tracker | **uuid - tracker uuid** |
+| gobal:tracker:**word/set/regex - tracker type** | **uuid - tracker uuid** |
+
+##### All Tracker by type:
+| Set - Key | Value |
+| ------ | ------ |
+| all:tracker:**word/set/regex - tracker type** | **tracked item** |
+
+| Set - Key | Value |
+| ------ | ------ |
+| all:tracker_uuid:**tracker type**:**tracked item** | **uuid - tracker uuid** |
+
+##### All Tracked items:
+| Set - Key | Value |
+| ------ | ------ |
+| tracker:item:**uuid**:**date** | **item_id** |
+
+##### All Tracked tags:
+| Set - Key | Value |
+| ------ | ------ |
+| tracker:tags:**uuid** | **tag** |
+
+##### All Tracked mail:
+| Set - Key | Value |
+| ------ | ------ |
+| tracker:mail:**uuid** | **mail** |
+
+##### Refresh Tracker:
+| Key | Value |
+| ------ | ------ |
+| tracker:refresh:word | **last refreshed epoch** |
+| tracker:refresh:set | - |
+| tracker:refresh:regex | - |
+
+##### Zset Stat Tracker:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| tracker:stat:**uuid** | **date** | **nb_seen** |
+
+##### Stat token:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| stat_token_total_by_day:**date** | **word** | **nb_seen** |
+| | | |
+| stat_token_per_item_by_day:**date** | **word** | **nb_seen** |
+
+| Set - Key | Value |
+| ------ | ------ |
+| stat_token_history | **date** |
+
 ## DB2 - TermFreq:
+
+##### Set:
 
 ##### Set:
 | Key | Value |
@@ -117,6 +190,7 @@ Redis and ARDB overview
 | TrackedSetTermSet | **tracked_term** |
 | TrackedSetSet | **tracked_set** |
 | TrackedRegexSet | **tracked_regex** |
+| | |
 | | |
 | tracked_**tracked_term** | **item_path** |
 | set_**tracked_set** | **item_path** |

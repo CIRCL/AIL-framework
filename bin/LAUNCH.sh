@@ -76,12 +76,15 @@ function helptext {
     Usage:
     -----
     LAUNCH.sh
-      [-l | --launchAuto]
-      [-k | --killAll]
-      [-u | --update]
-      [-c | --configUpdate]
-      [-t | --thirdpartyUpdate]
-      [-h | --help]
+      [-l  | --launchAuto]         LAUNCH DB + Scripts
+      [-k  | --killAll]            Kill DB + Scripts
+      [-ks | --killscript]         Scripts
+      [-u  | --update]             Update AIL
+      [-c  | --crawler]            LAUNCH Crawlers
+      [-f  | --launchFeeder]       LAUNCH Pystemon feeder
+      [-t  | --thirdpartyUpdate]   Update Web
+      [-m  | --menu]               Display Advanced Menu
+      [-h  | --help]               Help
     "
 }
 
@@ -153,13 +156,9 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Duplicates" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Duplicates.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Lines" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Lines.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DomClassifier.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Categ.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Tokenize" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tokenize.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "CreditCards" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CreditCards.py; read x"
     sleep 0.1
@@ -175,13 +174,9 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Credential" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Credential.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Curve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Curve.py; read x"
+    screen -S "Script_AIL" -X screen -t "TermTrackerMod" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./TermTrackerMod.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CurveManageTopSets" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CurveManageTopSets.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "RegexForTermsFrequency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexForTermsFrequency.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SetForTermsFrequency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SetForTermsFrequency.py; read x"
+    screen -S "Script_AIL" -X screen -t "RegexTracker" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexTracker.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Indexer.py; read x"
     sleep 0.1
@@ -212,6 +207,8 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SentimentAnalysis.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "DbCleaner" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DbCleaner.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
     sleep 0.1
@@ -404,6 +401,18 @@ function launch_feeder {
     fi
 }
 
+function killscript {
+    if [[ $islogged || $isqueued || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
+        echo -e $GREEN"Killing Script"$DEFAULT
+        kill $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler
+        sleep 0.2
+        echo -e $ROSE`screen -ls`$DEFAULT
+        echo -e $GREEN"\t* $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler killed."$DEFAULT
+    else
+        echo -e $RED"\t* No script to kill"$DEFAULT
+    fi
+}
+
 function killall {
     if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
         if [[ $isredis ]]; then
@@ -463,76 +472,82 @@ function launch_all {
     launch_flask;
 }
 
-#If no params, display the menu
+function menu_display {
+
+  options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update" "Update-config" "Update-thirdparty")
+
+  menu() {
+      echo "What do you want to Launch?:"
+      for i in ${!options[@]}; do
+          printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+      done
+      [[ "$msg" ]] && echo "$msg"; :
+  }
+
+  prompt="Check an option (again to uncheck, ENTER when done): "
+
+  while menu && read -rp "$prompt" numinput && [[ "$numinput" ]]; do
+      for num in $numinput; do
+          [[ "$num" != *[![:digit:]]* ]] && (( num > 0 && num <= ${#options[@]} )) || {
+              msg="Invalid option: $num"; break
+          }
+          ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+          [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
+      done
+  done
+
+  for i in ${!options[@]}; do
+      if [[ "${choices[i]}" ]]; then
+          case ${options[i]} in
+              Redis)
+                  launch_redis;
+                  ;;
+              Ardb)
+                  launch_ardb;
+                  ;;
+              Logs)
+                  launch_logs;
+                  ;;
+              Queues)
+                  launch_queues;
+                  ;;
+              Scripts)
+                  launch_scripts;
+                  ;;
+              Flask)
+                  launch_flask;
+                  ;;
+              Crawler)
+                  launching_crawler;
+                  ;;
+              Killall)
+                  killall;
+                  ;;
+              Shutdown)
+                  shutdown;
+                  ;;
+              Update)
+                  update;
+                  ;;
+              Update-config)
+                  checking_configuration;
+                  ;;
+              Update-thirdparty)
+                  update_thirdparty;
+                  ;;
+          esac
+      fi
+  done
+
+  exit
+
+}
+
+
+#If no params, display the help
 [[ $@ ]] || {
 
     helptext;
-
-    options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update" "Update-config" "Update-thirdparty")
-
-    menu() {
-        echo "What do you want to Launch?:"
-        for i in ${!options[@]}; do
-            printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
-        done
-        [[ "$msg" ]] && echo "$msg"; :
-    }
-
-    prompt="Check an option (again to uncheck, ENTER when done): "
-    while menu && read -rp "$prompt" numinput && [[ "$numinput" ]]; do
-        for num in $numinput; do
-            [[ "$num" != *[![:digit:]]* ]] && (( num > 0 && num <= ${#options[@]} )) || {
-                msg="Invalid option: $num"; break
-            }
-            ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
-            [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
-        done
-    done
-
-    for i in ${!options[@]}; do
-        if [[ "${choices[i]}" ]]; then
-            case ${options[i]} in
-                Redis)
-                    launch_redis;
-                    ;;
-                Ardb)
-                    launch_ardb;
-                    ;;
-                Logs)
-                    launch_logs;
-                    ;;
-                Queues)
-                    launch_queues;
-                    ;;
-                Scripts)
-                    launch_scripts;
-                    ;;
-                Flask)
-                    launch_flask;
-                    ;;
-                Crawler)
-                    launching_crawler;
-                    ;;
-                Killall)
-                    killall;
-                    ;;
-                Shutdown)
-                    shutdown;
-                    ;;
-                Update)
-                    update;
-                    ;;
-                Update-config)
-                    checking_configuration;
-                    ;;
-                Update-thirdparty)
-                    update_thirdparty;
-                    ;;
-            esac
-        fi
-    done
-
-    exit
 }
 
 #echo "$@"
@@ -553,6 +568,10 @@ while [ "$1" != "" ]; do
                                       ;;
         -k | --killAll )              killall;
                                       ;;
+        -ks | --killscript )          killscript;
+                                      ;;
+        -m | --menu )                 menu_display;
+                                      ;;
         -u | --update )               update;
                                       ;;
         -t | --thirdpartyUpdate )     update_thirdparty;
@@ -565,7 +584,6 @@ while [ "$1" != "" ]; do
                                       exit
                                       ;;
         -kh | --khelp )               helptext;
-
                                       ;;
         * )                           helptext
                                       exit 1

@@ -19,6 +19,7 @@ import Pgp
 import Item
 import Paste
 import Tag
+import Term
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required
@@ -57,8 +58,11 @@ def verify_token(token):
     else:
         return False
 
+def get_user_from_token(token):
+    return r_serv_db.hget('user:tokens', token)
+
 def verify_user_role(role, token):
-    user_id = r_serv_db.hget('user:tokens', token)
+    user_id = get_user_from_token(token)
     if user_id:
         if is_in_role(user_id, role):
             return True
@@ -311,6 +315,37 @@ def get_all_tags():
     return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # #        TRACKER       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/add/tracker/term", methods=['POST'])
+@token_required('analyst')
+def add_tracker_term():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
+    res = Term.parse_json_term_to_add(data, user_id)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/delete/tracker/term", methods=['DELETE'])
+@token_required('analyst')
+def delete_tracker_term():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
+    res = Term.parse_tracked_term_to_delete(data, user_id)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+@restApi.route("api/v1/get/tracker/term/item", methods=['POST'])
+@token_required('analyst')
+def get_tracker_term_item():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
+    res = Term.parse_get_tracker_term_item(data, user_id)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # #        CRYPTOCURRENCY       # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/cryptocurrency/bitcoin/metadata", methods=['POST'])
@@ -419,7 +454,6 @@ def get_item_cryptocurrency_bitcoin():
     res = Item.get_item(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 '''
-
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
