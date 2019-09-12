@@ -122,12 +122,12 @@ $(document).ready(function(){
 			$("#term").show();
 			$("#nb_word").hide();
 		} else if (tracker_type=="set") {
-			$("#tracker_desc").text("Terms to track (space separated), explain nb");
+			$("#tracker_desc").text("Terms to track (space separated). Select the numbers of different tokens to trigger this tracker");
 			$("#tracker_desc").show();
 			$("#term").show();
 			$("#nb_word").show();
 		} else {
-			$("#tracker_desc").text("valid python regex");
+			$("#tracker_desc").text("Enter a valid Python regex");
 			$("#tracker_desc").show();
 			$("#term").show();
 			$("#nb_word").hide();
