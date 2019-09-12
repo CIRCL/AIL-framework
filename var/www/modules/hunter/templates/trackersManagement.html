@@ -166,6 +166,13 @@ $(document).ready(function(){
   $("#page-Tracker").addClass("active");
   $("#nav_tracker_{{filter_type}}").addClass("active");
 
+  {% for dict_uuid in user_term %}
+    sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
+	{% endfor %}
+  {% for dict_uuid in global_term %}
+    sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
+	{% endfor %}
+
   $('#table_user_trackers').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
@@ -177,13 +184,6 @@ $(document).ready(function(){
         "order": [[ 0, "desc" ]]
   });
 
-
-	{% for dict_uuid in user_term %}
-    sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
-	{% endfor %}
-  {% for dict_uuid in global_term %}
-    sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
-	{% endfor %}
 
 });
 
