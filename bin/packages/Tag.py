@@ -82,7 +82,7 @@ def get_item_tags(item_id):
     if tags:
         return list(tags)
     else:
-        return '[]'
+        return []
 
 # TEMPLATE + API QUERY
 def add_items_tag(tags=[], galaxy_tags=[], item_id=None):

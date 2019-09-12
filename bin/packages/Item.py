@@ -22,6 +22,9 @@ def exist_item(item_id):
     else:
         return False
 
+def get_item_id(full_path):
+    return full_path.replace(PASTES_FOLDER, '', 1)
+
 def get_item_date(item_id):
     l_directory = item_id.split('/')
     return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])

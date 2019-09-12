@@ -180,6 +180,11 @@ host = localhost
 port = 6382
 db = 3
 
+[ARDB_Tracker]
+host = localhost
+port = 6382
+db = 3
+
 [ARDB_Hashs]
 host = localhost
 db = 1
