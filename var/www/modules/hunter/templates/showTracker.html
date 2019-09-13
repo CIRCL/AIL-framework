@@ -49,6 +49,12 @@
 					<div class="card my-3">
 						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
 							<h4 class="text-secondary">{{ tracker_metadata['uuid'] }} </h4>
+							<div class="text-info">
+								{%if tracker_metadata['description']%}
+									{{ tracker_metadata['description'] }}
+								{%endif%}
+								<span class="btn-link btn-interaction mouse_pointer" title="Edit Tracker description" onclick="edit_description();"><i class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
+							</div>
 							<ul class="list-group mb-2">
 								<li class="list-group-item py-0">
 									<div class="row">
@@ -107,6 +113,25 @@
 									</div>
 								</li>
 							</ul>
+
+							<div id="div_edit_description">
+								<form action="{{ url_for('hunter.update_tracker_description') }}" method='post'>
+									<input name="uuid" type="text" value="{{tracker_metadata['uuid']}}" hidden>
+									<div>Update this tracker description: </div>
+									<div class="input-group mb-2 mr-sm-2">
+										<div class="input-group-prepend">
+											<div class="input-group-text"><i class="fas fa-pencil-alt"></i></div>
+										</div>
+										<input id="description" name="description" class="form-control" placeholder="Tracker Description" type="text"
+										value="{%if tracker_metadata['description']%}{{tracker_metadata['description']}}{%endif%}">
+									</div>
+
+									<button class="btn btn-info">
+										<i class="fas fa-pencil-alt"></i> Edit Description
+									</button>
+								</form>
+
+							</div>
 
 							<div id="div_edit_tags">
 								<form action="{{ url_for('hunter.update_tracker_tags') }}" method='post'>
@@ -223,7 +248,8 @@
 <script>
 $(document).ready(function(){
 		$('#div_edit_mails').hide();
-		$('#div_edit_tags').hide();
+		$('#div_edit_tags').hide();edit_description
+		$('#div_edit_description').hide();
 		$("#page-Decoded").addClass("active");
 
 		$('#date-range-from').dateRangePicker({
@@ -283,12 +309,20 @@ function toggle_sidebar(){
 
 function edit_tags(){
 	$('#div_edit_mails').hide();
+	$('#div_edit_description').hide();
 	$('#div_edit_tags').show();
 }
 
 function edit_mails(){
 	$('#div_edit_tags').hide();
+	$('#div_edit_description').hide();
 	$('#div_edit_mails').show();
+}
+
+function edit_description(){
+	$('#div_edit_tags').hide();
+	$('#div_edit_mails').hide();
+	$('#div_edit_description').show();
 }
 
 function getItems() {

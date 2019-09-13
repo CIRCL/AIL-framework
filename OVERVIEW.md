@@ -109,17 +109,18 @@ Redis and ARDB overview
 | **uuid**:ltags | **tag** |
 | **uuid**:ltagsgalaxies | **tag** |
 
-## DB2 - Leak Hunter:
+## DB3 - Leak Hunter:
 
 ##### Tracker metadata:
 | Hset - Key | Field | Value |
 | ------ | ------ | ------ |
-| tracker:**uuid** | tracked   | **tacked word/set/regex**          |
-|                       | type      | **word/set/regex**                 |
-|                       | date      | **date added**                     |
-|                       | user_id   | **created by user_id**             |
-|                       | dashboard | **0/1 Display alert on dashboard** |
-|                       | level     | **0/1 Tracker visibility**         |
+| tracker:**uuid**      | tracker     | **tacked word/set/regex**          |
+|                       | type        | **word/set/regex**                 |
+|                       | date        | **date added**                     |
+|                       | user_id     | **created by user_id**             |
+|                       | dashboard   | **0/1 Display alert on dashboard** |
+|                       | description | **Tracker description**            |
+|                       | level       | **0/1 Tracker visibility**         |
 
 ##### Tracker by user_id (visibility level: user only):
 | Set - Key | Value |
@@ -179,51 +180,6 @@ Redis and ARDB overview
 | Set - Key | Value |
 | ------ | ------ |
 | stat_token_history | **date** |
-
-## DB2 - TermFreq:
-
-##### Set:
-
-##### Set:
-| Key | Value |
-| ------ | ------ |
-| TrackedSetTermSet | **tracked_term** |
-| TrackedSetSet | **tracked_set** |
-| TrackedRegexSet | **tracked_regex** |
-| | |
-| | |
-| tracked_**tracked_term** | **item_path** |
-| set_**tracked_set** | **item_path** |
-| regex_**tracked_regex** | **item_path** |
-| | |
-| TrackedNotifications | **tracked_trem / set / regex** |
-| | |
-| TrackedNotificationTags_**tracked_trem / set / regex** | **tag** |
-| | |
-| TrackedNotificationEmails_**tracked_trem / set / regex** | **email** |
-
-##### Zset:
-| Key | Field | Value |
-| ------ | ------ | ------ |
-| per_paste_TopTermFreq_set_month | **term** | **nb_seen** |
-| per_paste_TopTermFreq_set_week | **term** | **nb_seen** |
-| per_paste_TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
-| | | |
-| TopTermFreq_set_month | **term** | **nb_seen** |
-| TopTermFreq_set_week | **term** | **nb_seen** |
-| TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
-
-
-##### Hset:
-| Key | Field | Value |
-| ------ | ------ | ------ |
-| TrackedTermDate | **tracked_term** | **epoch** |
-| TrackedSetDate | **tracked_set** | **epoch** |
-| TrackedRegexDate | **tracked_regex** | **epoch** |
-| | | |
-| BlackListTermDate | **blacklisted_term** | **epoch** |
-| | | |
-| **epoch** | **term** | **nb_seen** |
 
 ## DB6 - Tags:
 

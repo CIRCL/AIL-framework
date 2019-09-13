@@ -144,6 +144,8 @@ def parse_json_term_to_add(dict_input, user_id):
     if not term_type:
         return ({"status": "error", "reason": "Term type not provided"}, 400)
     nb_words = dict_input.get('nb_words', 1)
+    description = dict_input.get('description', '')
+    description = escape(description)
 
     res = parse_tracked_term_to_add(term , term_type, nb_words=nb_words)
     if res[1]!=200:
@@ -174,7 +176,7 @@ def parse_json_term_to_add(dict_input, user_id):
         if is_term_tracked_in_user_level(term, term_type, user_id):
             return ({"status": "error", "reason": "Term already tracked"}, 409)
 
-    term_uuid = add_tracked_term(term , term_type, user_id, level, tags, mails)
+    term_uuid = add_tracked_term(term , term_type, user_id, level, tags, mails, description)
 
     return ({'term': term, 'type': term_type, 'uuid': term_uuid}, 200)
 
@@ -217,7 +219,7 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
         return ({"status": "error", "reason": "Incorrect type"}, 400)
     return ({"status": "success", "term": term, "type": term_type}, 200)
 
-def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0):
+def add_tracked_term(term , term_type, user_id, level, tags, mails, description, dashboard=0):
 
     term_uuid =  str(uuid.uuid4())
 
@@ -228,6 +230,9 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0)
     r_serv_term.hset('tracker:{}'.format(term_uuid), 'user_id', user_id)
     r_serv_term.hset('tracker:{}'.format(term_uuid), 'level', level)
     r_serv_term.hset('tracker:{}'.format(term_uuid), 'dashboard', dashboard)
+
+    if description:
+        r_serv_term.hset('tracker:{}'.format(term_uuid), 'description', description)
 
     # create all term set
     r_serv_term.sadd('all:tracker:{}'.format(term_type), term)
@@ -300,9 +305,14 @@ def delete_term(term_uuid):
         r_serv_term.delete('tracker:item:{}:{}'.format(term_uuid, date))
     r_serv_term.delete('tracker:stat:{}'.format(term_uuid))
 
+def replace_tracker_description(term_uuid, description):
+    description = escape(description)
+    r_serv_term.hset('tracker:{}'.format(term_uuid), 'description', description)
+
 def replace_tracked_term_tags(term_uuid, tags):
     r_serv_term.delete('tracker:tags:{}'.format(term_uuid))
     for tag in tags:
+        tag = escape(tag)
         r_serv_term.sadd('tracker:tags:{}'.format(term_uuid), tag)
 
 def replace_tracked_term_mails(term_uuid, mails):
@@ -312,6 +322,7 @@ def replace_tracked_term_mails(term_uuid, mails):
     else:
         r_serv_term.delete('tracker:mail:{}'.format(term_uuid))
         for mail in mails:
+            mail = escape(mail)
             r_serv_term.sadd('tracker:mail:{}'.format(term_uuid), mail)
 
 def get_term_uuid_list(term, term_type):
@@ -394,11 +405,12 @@ def get_tracked_term_last_seen(term_uuid):
     else:
         return None
 
-def get_term_metedata(term_uuid, user_id=False, level=False, tags=False, mails=False, sparkline=False):
+def get_term_metedata(term_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sparkline=False):
     dict_uuid = {}
     dict_uuid['term'] = r_serv_term.hget('tracker:{}'.format(term_uuid), 'tracked')
     dict_uuid['type'] = r_serv_term.hget('tracker:{}'.format(term_uuid), 'type')
     dict_uuid['date'] = r_serv_term.hget('tracker:{}'.format(term_uuid), 'date')
+    dict_uuid['description'] = r_serv_term.hget('tracker:{}'.format(term_uuid), 'description')
     dict_uuid['first_seen'] = get_tracked_term_first_seen(term_uuid)
     dict_uuid['last_seen'] = get_tracked_term_last_seen(term_uuid)
     if user_id:

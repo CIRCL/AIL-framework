@@ -783,6 +783,9 @@ You need to use a regex if you want to use one of the following special characte
   - tracker visibility
   - *int - 0: user only, 1: all users*
   - default: `1`
+- `description`
+  - tracker description
+  - *str*
 
 #### JSON response
 - `uuid`

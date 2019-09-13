@@ -9,7 +9,7 @@ import redis
 import datetime
 import calendar
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, Response
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, Response, escape
 
 from Role_Manager import login_admin, login_analyst
 from flask_login import login_required, current_user
@@ -88,6 +88,7 @@ def add_tracked_menu():
         term = request.form.get("term")
         term_type  = request.form.get("tracker_type")
         nb_words = request.form.get("nb_word", 1)
+        description = request.form.get("description", '')
         level = request.form.get("level", 0)
         tags = request.form.get("tags", [])
         mails = request.form.get("mails", [])
@@ -100,7 +101,7 @@ def add_tracked_menu():
         if tags:
             tags = tags.split()
 
-        input_dict = {"term": term, "type": term_type, "nb_words": nb_words, "tags": tags, "mails": mails, "level": level}
+        input_dict = {"term": term, "type": term_type, "nb_words": nb_words, "tags": tags, "mails": mails, "level": level, "description": description}
         user_id = current_user.get_id()
         res = Term.parse_json_term_to_add(input_dict, user_id)
         if res[1] == 200:
@@ -129,7 +130,7 @@ def show_tracker():
     if date_to:
         date_to = date_to.replace('-', '')
 
-    tracker_metadata = Term.get_term_metedata(term_uuid, user_id=True, level=True, tags=True, mails=True, sparkline=True)
+    tracker_metadata = Term.get_term_metedata(term_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sparkline=True)
 
     if date_from:
         res = Term.parse_get_tracker_term_item({'uuid': term_uuid, 'date_from': date_from, 'date_to': date_to}, user_id)
@@ -144,6 +145,19 @@ def show_tracker():
         tracker_metadata['date_to'] = ''
 
     return render_template("showTracker.html", tracker_metadata=tracker_metadata, bootstrap_label=bootstrap_label)
+
+@hunter.route("/tracker/update_tracker_description", methods=['POST'])
+@login_required
+@login_analyst
+def update_tracker_description():
+    user_id = current_user.get_id()
+    term_uuid = request.form.get('uuid')
+    res = Term.check_term_uuid_valid_access(term_uuid, user_id)
+    if res: # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    description = escape( str(request.form.get('description', '')) )
+    Term.replace_tracker_description(term_uuid, description)
+    return redirect(url_for('hunter.show_tracker', uuid=term_uuid))
 
 @hunter.route("/tracker/update_tracker_tags", methods=['POST'])
 @login_required
