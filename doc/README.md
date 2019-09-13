@@ -748,10 +748,13 @@ curl https://127.0.0.1:7000/api/v1/get/cryptocurrency/bitcoin/item --header "Aut
 
 
 
-### Add term tracker: `api/v1/add/tracker/term`<a name="add_term_tracker"></a>
+### Add term tracker: `api/v1/add/tracker`<a name="add_tracker"></a>
 
 #### Description
-Add term tracker
+Create a new tracker (word, set, regex).
+
+You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\
+
 
 **Method** : `POST`
 
@@ -788,13 +791,24 @@ Add term tracker
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/add/tracker --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example
 ```json
   {
-
+    "term": "test test2 test3",
+    "type": "set",
+    "nb_words": 2,
+    "tags": [
+      "mytags",
+      "othertags"
+    ],
+    "mails": [
+      "mail@mail.test",
+      "othermail@mail.test"
+    ],
+    "level": 1
   }
 ```
 
@@ -803,24 +817,31 @@ curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc
 
 ```json
   {
-
+    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8"
   }
 ```
 
 #### Expected Fail Response
-**HTTP Status Code** : `400`
+**HTTP Status Code** : 400
 
 ```json
+  {"status": "error", "reason": "Term not provided"}
+  {"status": "error", "reason": "Term type not provided"}
+  {"status": "error", "reason": "special character not allowed", "message": "Please use a regex or remove all special characters"}
+  {"status": "error", "reason": "Incorrect type"}
+```
+**HTTP Status Code** : 409
 
+```json
+  {"status": "error", "reason": "Term already tracked"}
 ```
 
 
 
-
-### Delete term tracker: `api/v1/delete/tracker/term`<a name="delete_term_tracker"></a>
+### Delete term tracker: `api/v1/delete/tracker`<a name="delete_tracker"></a>
 
 #### Description
-Delete term tracker
+Delete a tracker
 
 **Method** : `DELETE`
 
@@ -837,13 +858,13 @@ Delete term tracker
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/delete/tracker --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example
 ```json
   {
-
+    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8"
   }
 ```
 
@@ -852,7 +873,7 @@ curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc
 
 ```json
   {
-
+    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8"
   }
 ```
 
@@ -860,17 +881,22 @@ curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc
 **HTTP Status Code** : `400`
 
 ```json
+  {"status": "error", "reason": "Invalid uuid"}
+
+```
+
+**HTTP Status Code** : `404`
+
+```json
+  ({"status": "error", "reason": "Unknown uuid"}
 
 ```
 
 
-
-
-
-### Delete term tracker: `api/v1/delete/tracker/term/item`<a name="delete_term_tracker"></a>
+### Delete term tracker: `api/v1/get/tracker/item`<a name="get_tracker_item"></a>
 
 #### Description
-Delete term tracker
+Get tracked items by date-range
 
 **Method** : `POST`
 
@@ -904,29 +930,40 @@ Delete term tracker
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/v1/add/tracker/term --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/get/tracker/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example
 ```json
   {
-
+    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8",
+    "date_from": "20190823",
+    "date_to": "20190829",
+    "items": [
+      {
+        "id": "submitted/2019/08/25/4f929998-3921-4be3-b448-be3bf1722d6b.gz",
+        "date": 20190825,
+        "tags": [
+          "infoleak:automatic-detection=\"credential\"",
+          "mytags",
+          "othertags",
+        ]
+      }
+    ]
   }
 ```
 
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-
-  }
-```
-
-#### Expected Fail Response
 **HTTP Status Code** : `400`
 
 ```json
+  {"status": "error", "reason": "Invalid uuid"}
+
+```
+
+**HTTP Status Code** : `404`
+
+```json
+  ({"status": "error", "reason": "Unknown uuid"}
 
 ```
 
