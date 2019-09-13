@@ -108,7 +108,7 @@
 <script>
 var chart = {};
 $(document).ready(function(){
-	$("#page-Crawler").addClass("active");
+	$("#page-Tracker").addClass("active");
 	$("#nav_manual_crawler").addClass("active");
 	$("#tracker_desc").hide();
 	$("#term").hide();
@@ -117,12 +117,12 @@ $(document).ready(function(){
 	$('#tracker_type').on('change', function() {
 		var tracker_type = this.value;
 		if (tracker_type=="word") {
-			$("#tracker_desc").text("Term to track:");
+			$("#tracker_desc").text("Token to track. You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\ ");
 			$("#tracker_desc").show();
 			$("#term").show();
 			$("#nb_word").hide();
 		} else if (tracker_type=="set") {
-			$("#tracker_desc").text("Terms to track (space separated). Select the numbers of different tokens to trigger this tracker");
+			$("#tracker_desc").text("Set of Terms to track (space separated). This tracker is used to check if an item contain one or more terms specified in a set. If an item contain NB unique terms (by default NB of unique keywords = 1), this tracker is triggered. You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\ ");
 			$("#tracker_desc").show();
 			$("#term").show();
 			$("#nb_word").show();

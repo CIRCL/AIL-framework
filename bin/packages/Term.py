@@ -16,6 +16,7 @@ from textblob import TextBlob
 
 sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
 import Flask_config
+from flask import escape
 
 import Date
 import Item
@@ -244,11 +245,11 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, dashboard=0)
 
     # create term tags list
     for tag in tags:
-        r_serv_term.sadd('tracker:tags:{}'.format(term_uuid), tag)
+        r_serv_term.sadd('tracker:tags:{}'.format(term_uuid), escape(tag) )
 
     # create term tags mail notification list
     for mail in mails:
-        r_serv_term.sadd('tracker:mail:{}'.format(term_uuid), mail)
+        r_serv_term.sadd('tracker:mail:{}'.format(term_uuid), escape(mail) )
 
     # toggle refresh module tracker list/set
     r_serv_term.set('tracker:refresh:{}'.format(term_type), time.time())

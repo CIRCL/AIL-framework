@@ -256,7 +256,7 @@ $(document).ready(function(){
 		$('#myTable_').DataTable({
 	        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
 	        "iDisplayLength": 10,
-	        "order": [[ 0, "desc" ]]
+	        "order": [[ 0, "asc" ]]
 	  });
 
 		sparkline("sparkline", {{ tracker_metadata['sparkline'] }}, {});
