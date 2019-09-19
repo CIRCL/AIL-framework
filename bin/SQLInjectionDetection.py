@@ -25,7 +25,7 @@ from pyfaup.faup import Faup
 SQLI_REGEX = r"information_schema|sysdatabases|sysusers|floor\(rand\(|ORDER BY \d+|\bUNION\s+(ALL\s+)?SELECT\b|\b(UPDATEXML|EXTRACTVALUE)\(|\bCASE[^\w]+WHEN.*THEN\b|\bWAITFOR[^\w]+DELAY\b|\bCONVERT\(|VARCHAR\(|\bCOUNT\(\*\)|\b(pg_)?sleep\(|\bSELECT\b.*\bFROM\b.*\b(WHERE|GROUP|ORDER)\b|\bSELECT \w+ FROM \w+|\b(AND|OR|SELECT)\b.*/\*.*\*/|/\*.*\*/.*\b(AND|OR|SELECT)\b|\b(AND|OR)[^\w]+\d+['\") ]?[=><]['\"( ]?\d+|ODBC;DRIVER|\bINTO\s+(OUT|DUMP)FILE"
 
 def analyse(url, path):
-    if is_sql_injection(url.decode()):
+    if is_sql_injection(url):
         faup.decode(url)
         url_parsed = faup.get()
         paste = Paste.Paste(path)
@@ -54,9 +54,8 @@ def analyse(url, path):
 # defined above on it.
 def is_sql_injection(url_parsed):
     line = urllib.request.unquote(url_parsed)
-    line = str.upper(line)
 
-    return re.search(SQLI_REGEX, url_parsed, re.I) is not None
+    return re.search(SQLI_REGEX, line, re.I) is not None
 
 
 if __name__ == '__main__':
