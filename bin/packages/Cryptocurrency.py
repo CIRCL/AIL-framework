@@ -14,6 +14,7 @@ from Correlation import Correlation
 r_serv_metadata = Flask_config.r_serv_metadata
 
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+#address_validation = {'bitcoin': 'base58', 'dash': 'base58'}
 
 cryptocurrency = Correlation('cryptocurrency')
 
@@ -25,7 +26,7 @@ def decode_base58(bc, length):
     return n.to_bytes(length, 'big')
 
 # http://rosettacode.org/wiki/Bitcoin/address_validation#Python
-def check_bitcoin_address(bc):
+def check_base58_address(bc):
     try:
         bcbytes = decode_base58(bc, 25)
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
@@ -34,7 +35,7 @@ def check_bitcoin_address(bc):
 
 def verify_cryptocurrency_address(cryptocurrency_type, cryptocurrency_address):
     if cryptocurrency_type == 'bitcoin':
-        return check_bitcoin_address(cryptocurrency_address)
+        return check_base58_address(cryptocurrency_address)
     else:
         return True
 

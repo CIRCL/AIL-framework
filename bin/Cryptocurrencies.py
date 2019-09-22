@@ -41,7 +41,6 @@ signal.signal(signal.SIGALRM, timeout_handler)
 
 def search_crytocurrency(item_id, item_content):
 
-    # bitcoin_private_key = re.findall(regex_bitcoin_private_key, content)
 
     is_cryptocurrency_found = False
 
@@ -69,20 +68,7 @@ def search_crytocurrency(item_id, item_content):
                     # build bitcoin correlation
                     Cryptocurrency.save_cryptocurrency_data(crypto_name, Item.get_item_date(item_id), item_id, address)
 
-            # # TODO: add private key validation
-            #if(len(bitcoin_private_key) > 0):
-            #    for private_key in bitcoin_private_key:
-            #        print('Bitcoin private key found : {}'.format(private_key))
-            #        to_print = 'Bitcoin found: {} address and {} private Keys'.format(len(bitcoin_address), len(bitcoin_private_key))
-            #        print(to_print)
-            #        publisher.warning(to_print)
-            #        msg = 'infoleak:automatic-detection="bitcoin-private-key";{}'.format(message)
-            #        p.populate_set_out(msg, 'Tags')
-            #            to_print = 'Bitcoin;{};{};{};'.format(paste.p_source, paste.p_date,
-            #                                            paste.p_name)
-            #        publisher.warning('{}Detected {} Bitcoin private key;{}'.format(
-            #            to_print, len(bitcoin_private_key),paste.p_rel_path))
-
+            # At least one valid cryptocurrency address was found
             if(is_valid_crypto_addr):
                 # valid cryptocurrency found in this item
                 is_cryptocurrency_found = True
@@ -90,6 +76,35 @@ def search_crytocurrency(item_id, item_content):
                 # Tag Item
                 msg = '{};{}'.format(crypto_dict['tag'], item_id)
                 p.populate_set_out(msg, 'Tags')
+
+                # search cryptocurrency private key
+                if crypto_dict.get('private_key'):
+                    signal.alarm(crypto_dict['private_key']['max_execution_time'])
+                    try:
+                        addr_private_key = re.findall(crypto_dict['private_key']['regex'], item_content)
+                    except TimeoutException:
+                        addr_private_key = []
+                        p.incr_module_timeout_statistic() # add encoder type
+                        print ("{0} processing timeout".format(item_id))
+                        continue
+                    else:
+                        signal.alarm(0)
+
+                    if addr_private_key:
+                        # Tag Item
+                        msg = '{};{}'.format(crypto_dict['private_key']['tag'], item_id)
+                        p.populate_set_out(msg, 'Tags')
+
+                        # debug
+                        print(addr_private_key)
+                        to_print = '{} found: {} address and {} private Keys'.format(crypto_name, len(crypto_addr), len(addr_private_key))
+                        print(to_print)
+                        publisher.warning(to_print)
+
+                        to_print = 'Cryptocurrency;{};{};{};'.format(Item.get_source(item_id), Item.get_item_date(item_id), Item.get_item_basename(item_id))
+                        publisher.warning('{}Detected {} {} private key;{}'.format(
+                            to_print, len(addr_private_key), crypto_name, item_id))
+
 
     if is_cryptocurrency_found:
         # send to duplicate module
@@ -106,6 +121,11 @@ cryptocurrency_dict = {
                     'regex': r'\b[13][A-Za-z0-9]{26,33}\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="bitcoin-address"',
+                    'private_key': {
+                        'regex': r'[5KL][1-9A-HJ-NP-Za-km-z]{50,51}',
+                        'max_execution_time': default_max_execution_time,
+                        'tag': 'infoleak:automatic-detection="bitcoin-private-key"',
+                    },
     },
     'ethereum': {
                     'name': 'ethereum',     # e.g. 0x8466b50B53c521d0B4B163d186596F94fB8466f1
@@ -139,7 +159,7 @@ cryptocurrency_dict = {
     },
     'dash': {
                     'name': 'dash',         # e.g. XmNfXq2kDmrNBTiDTofohRemwGur1WmgTT
-                    'regex': r'\bX[a-za0-9]{33}\b',
+                    'regex': r'\bX[A-Za-z0-9]{33}\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="dash-address"',
     }
@@ -157,9 +177,6 @@ if __name__ == "__main__":
 
     # Sent to the logging a description of the module
     publisher.info("Run Cryptocurrency module ")
-
-
-    regex_bitcoin_private_key = re.compile(r'[5KL][1-9A-HJ-NP-Za-km-z]{50,51}')
 
     # Endless loop getting messages from the input queue
     while True:

@@ -29,6 +29,12 @@ def get_item_date(item_id):
     l_directory = item_id.split('/')
     return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
 
+def get_source(item_id):
+    return item_id.split('/')[-5]
+
+def get_item_basename(item_id):
+    return os.path.basename(item_id)
+
 def get_item_size(item_id):
     return round(os.path.getsize(os.path.join(PASTES_FOLDER, item_id))/1024.0, 2)
 
