@@ -77,7 +77,7 @@ if __name__ == "__main__":
                 try:
                     matched = dict_regex_tracked[regex].search(item_content)
                 except TimeoutException:
-                    print ("{0} processing timeout".format(paste.p_rel_path))
+                    print ("{0} processing timeout".format(item_id))
                     continue
                 else:
                     signal.alarm(0)

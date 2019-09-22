@@ -34,7 +34,7 @@ PASTES_FOLDER = Flask_config.PASTES_FOLDER
 hashDecoded = Blueprint('hashDecoded', __name__, template_folder='templates')
 
 ## TODO: put me in option
-all_cryptocurrency = ['bitcoin', 'monero']
+all_cryptocurrency = ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash']
 all_pgpdump = ['key', 'name', 'mail']
 
 # ============ FUNCTIONS ============
