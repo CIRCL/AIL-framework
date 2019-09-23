@@ -118,48 +118,48 @@ default_max_execution_time = 30
 cryptocurrency_dict = {
     'bitcoin': {
                     'name': 'bitcoin',      # e.g. 1NbEPRwbBZrFDsx1QW19iDs8jQLevzzcms
-                    'regex': r'\b[13][A-Za-z0-9]{26,33}\b',
+                    'regex': r'\b(?<![+/=])[13][A-Za-z0-9]{26,33}(?![+/=])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="bitcoin-address"',
                     'private_key': {
-                        'regex': r'[5KL][1-9A-HJ-NP-Za-km-z]{50,51}',
+                        'regex': r'\b(?<![+/=])[5KL][1-9A-HJ-NP-Za-km-z]{50,51}(?![+/=])\b',
                         'max_execution_time': default_max_execution_time,
                         'tag': 'infoleak:automatic-detection="bitcoin-private-key"',
                     },
     },
     'ethereum': {
                     'name': 'ethereum',     # e.g. 0x8466b50B53c521d0B4B163d186596F94fB8466f1
-                    'regex': r'\b0x[A-Za-z0-9]{40}\b',
+                    'regex': r'\b(?<![+/=])0x[A-Za-z0-9]{40}(?![+/=])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="ethereum-address"',
     },
     'bitcoin-cash': {
                     'name': 'bitcoin-cash', # e.g. bitcoincash:pp8skudq3x5hzw8ew7vzsw8tn4k8wxsqsv0lt0mf3g
-                    'regex': r'bitcoincash:[a-za0-9]{42}\b',
+                    'regex': r'bitcoincash:[a-za0-9]{42}(?![+/=])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="bitcoin-cash-address"',
     },
     'litecoin': {
                     'name': 'litecoin',     # e.g. MV5rN5EcX1imDS2gEh5jPJXeiW5QN8YrK3
-                    'regex': r'\b[ML][A-Za-z0-9]{33}\b',
+                    'regex': r'\b(?<![+/=])[ML][A-Za-z0-9]{33}(?![+/=])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="litecoin-address"',
     },
     'monero': {
                     'name': 'monero',       # e.g. 47JLdZWteNPFQPaGGNsqLBAU3qmTcWbRda4yJvaPTCB8JbY18MNrcmfCcxrfDF61Dm7pJc4bHbBW57URjwTWzTRH2RfsUB4
-                    'regex': r'\b4[A-Za-z0-9]{94}\b',
+                    'regex': r'\b(?<![+/=])4[A-Za-z0-9]{94}(?![+/=])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="monero-address"',
     },
     'zcash': {
                     'name': 'zcash',        # e.g. t1WvvNmFuKkUipcoEADNFvqamRrBec8rpUn
-                    'regex': r'\bt[12][A-Za-z0-9]{33}\b',
+                    'regex': r'\b(?<![+/=])t[12][A-Za-z0-9]{33}(?![+/=])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="zcash-address"',
     },
     'dash': {
                     'name': 'dash',         # e.g. XmNfXq2kDmrNBTiDTofohRemwGur1WmgTT
-                    'regex': r'\bX[A-Za-z0-9]{33}\b',
+                    'regex': r'\b(?<![+/=])X[A-Za-z0-9]{33}(?![+/=])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="dash-address"',
     }
