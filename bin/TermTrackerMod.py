@@ -87,8 +87,8 @@ if __name__ == "__main__":
                 signal.alarm(0)
 
             # create token statistics
-            for word in dict_words_freq:
-                Term.create_token_statistics(item_date, word, dict_words_freq[word])
+            #for word in dict_words_freq:
+            #    Term.create_token_statistics(item_date, word, dict_words_freq[word])
 
             # check solo words
             for word in list_tracked_words:
