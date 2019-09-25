@@ -40,7 +40,7 @@ def search_tools(item_id, item_content):
 
         regex_match = False
         for regex_nb in list(range(tool_dict['nb_regex'])):
-            regex_index = tool_dict['nb_regex'] + 1
+            regex_index = regex_nb + 1
             regex = tool_dict['regex{}'.format(regex_index)]
 
             signal.alarm(tool_dict['max_execution_time'])
@@ -61,13 +61,12 @@ def search_tools(item_id, item_content):
             else:
                 regex_match = True
                 if 'tag{}'.format(regex_index) in tool_dict:
+                    print('{} found: {}'.format(item_id, tool_dict['tag{}'.format(regex_index)]))
                     msg = '{};{}'.format(tool_dict['tag{}'.format(regex_index)], item_id)
-                else:
-                    msg = '{};{}'.format(tool_dict['tag'], item_id)
+                    p.populate_set_out(msg, 'Tags')
 
-                p.populate_set_out(msg, 'Tags')
-
-        if tools_found:
+        if regex_match:
+            print('{} found: {}'.format(item_id, tool_dict['name']))
             # Tag Item
             msg = '{};{}'.format(tool_dict['tag'], item_id)
             p.populate_set_out(msg, 'Tags')
@@ -205,6 +204,7 @@ if __name__ == "__main__":
     while True:
         # Get one message from the input queue
         item_id = p.get_from_set()
+        item_id = 'submitted/2019/09/25/4c299ce1-0147-4727-8030-d77f903a9774.gz'
         if item_id is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
             time.sleep(1)
