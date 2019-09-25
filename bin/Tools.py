@@ -205,7 +205,6 @@ if __name__ == "__main__":
     while True:
         # Get one message from the input queue
         item_id = p.get_from_set()
-        item_id = 'submitted/2019/09/25/4c299ce1-0147-4727-8030-d77f903a9774.gz'
         if item_id is None:
             publisher.debug("{} queue is empty, waiting".format(config_section))
             time.sleep(1)
