@@ -34,7 +34,7 @@ def check_base58_address(bc):
         return False
 
 def verify_cryptocurrency_address(cryptocurrency_type, cryptocurrency_address):
-    if cryptocurrency_type == 'bitcoin':
+    if cryptocurrency_type in ('bitcoin', 'litecoin', 'dash'):
         return check_base58_address(cryptocurrency_address)
     else:
         return True
