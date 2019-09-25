@@ -192,7 +192,8 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    config_section = 'Bitcoin'
+    config_section = 'Tools'
+    # # TODO: add duplicate
 
     # Setup the I/O queues
     p = Process(config_section)
