@@ -41,9 +41,9 @@ def search_tools(item_id, item_content):
         regex_match = False
         for regex_nb in list(range(tool_dict['nb_regex'])):
             regex_index = tool_dict['nb_regex'] + 1
-            regex = tools_dict['regex{}'.format(regex_index)]
+            regex = tool_dict['regex{}'.format(regex_index)]
 
-            signal.alarm(crypto_dict['max_execution_time'])
+            signal.alarm(tool_dict['max_execution_time'])
             try:
                 tools_found = re.findall(regex, item_content)
             except TimeoutException:
@@ -62,7 +62,10 @@ def search_tools(item_id, item_content):
                 regex_match = True
                 if 'tag{}'.format(regex_index) in tool_dict:
                     msg = '{};{}'.format(tool_dict['tag{}'.format(regex_index)], item_id)
-                    p.populate_set_out(msg, 'Tags')
+                else:
+                    msg = '{};{}'.format(tool_dict['tag'], item_id)
+
+                p.populate_set_out(msg, 'Tags')
 
         if tools_found:
             # Tag Item
@@ -78,14 +81,110 @@ def search_tools(item_id, item_content):
 default_max_execution_time = 30
 
 tools_dict = {
-    'tools_name': {
-                    'name': 'tools_name',
-                    'regex1': r'tools-regex1',
-                    'tag1': 'tag to add if we found something with the regex1',
-                    'regex2': r'tools-regex2',
-                    'nb_regex': 2,
-                    'max_execution_time': default_max_execution_time,
-                    'tag': 'infoleak:automatic-detection="tools-name"', # tag if all regex match
+    'sqlmap': {
+        'name': 'sqlmap',
+        'regex1': r'Usage of sqlmap for attacking targets without|all tested parameters do not appear to be injectable|sqlmap identified the following injection point|Title:[^\n]*((error|time|boolean)-based|stacked queries|UNION query)',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="sqlmap-tool"', # tag if all regex match
+    },
+    'wig': {
+        'name': 'wig',
+        'regex1': r'(?s)wig - WebApp Information Gatherer.+?_{10,}',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="wig-tool"', # tag if all regex match
+    },
+    'dmytry': {
+        'name': 'dmitry',
+        'regex1': r'(?s)Gathered (TCP Port|Inet-whois|Netcraft|Subdomain|E-Mail) information for.+?-{10,}',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="dmitry-tool"', # tag if all regex match
+    },
+    'inurlbr': {
+        'name': 'inurlbr',
+        'regex1': r'Usage of INURLBR for attacking targets without prior mutual consent is illegal',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="inurlbr-tool"', # tag if all regex match
+    },
+    'wafw00f': {
+        'name': 'wafw00f',
+        'regex1': r'(?s)WAFW00F - Web Application Firewall Detection Tool.+?Checking',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="wafw00f-tool"', # tag if all regex match
+    },
+    'sslyze': {
+        'name': 'sslyze',
+        'regex1': r'(?s)PluginSessionRenegotiation.+?SCAN RESULTS FOR',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="sslyze-tool"', # tag if all regex match
+    },
+    'nmap': {
+        'name': 'nmap',
+        'regex1': r'(?s)Nmap scan report for.+?Host is',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="nmap-tool"', # tag if all regex match
+    },
+    'dnsenum': {
+        'name': 'dnsenum',
+        'regex1': r'(?s)dnsenum VERSION:.+?Trying Zone Transfer',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="dnsenum-tool"', # tag if all regex match
+    },
+    'knock': {
+        'name': 'knock',
+        'regex1': r'I scannig with my internal wordlist',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="knock-tool"', # tag if all regex match
+    },
+    'nikto': {
+        'name': 'nikto',
+        'regex1': r'(?s)\+ Target IP:.+?\+ Start Time:',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="nikto-tool"', # tag if all regex match
+    },
+    'dnscan': {
+        'name': 'dnscan',
+        'regex1': r'(?s)\[\*\] Processing domain.+?\[\+\] Getting nameservers.+?records found',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="dnscan-tool"', # tag if all regex match
+    },
+    'dnsrecon': {
+        'name': 'dnsrecon',
+        'regex1': r'Performing General Enumeration of Domain:|Performing TLD Brute force Enumeration against',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="dnsrecon-tool"', # tag if all regex match
+    },
+    'striker': {
+        'name': 'striker',
+        'regex1': r'Crawling the target for fuzzable URLs|Honeypot Probabilty:',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="striker-tool"', # tag if all regex match
+    },
+    'rhawk': {
+        'name': 'rhawk',
+        'regex1': r'S U B - D O M A I N   F I N D E R',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="rhawk-tool"', # tag if all regex match
+    },
+    'uniscan': {
+        'name': 'uniscan',
+        'regex1': r'\| \[\+\] E-mail Found:',
+        'nb_regex': 1,
+        'max_execution_time': default_max_execution_time,
+        'tag': 'infoleak:automatic-detection="uniscan-tool"', # tag if all regex match
     },
 }
 
