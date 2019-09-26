@@ -147,13 +147,13 @@ cryptocurrency_dict = {
     },
     'monero': {
                     'name': 'monero',       # e.g. 47JLdZWteNPFQPaGGNsqLBAU3qmTcWbRda4yJvaPTCB8JbY18MNrcmfCcxrfDF61Dm7pJc4bHbBW57URjwTWzTRH2RfsUB4
-                    'regex': r'\b(?<![+/=])4[A-Za-z0-9]{94}(?![+/=])\b',
+                    'regex': r'\b(?<![+/=()])4[A-Za-z0-9]{94}(?![+/=()])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="monero-address"',
     },
     'zcash': {
                     'name': 'zcash',        # e.g. t1WvvNmFuKkUipcoEADNFvqamRrBec8rpUn
-                    'regex': r'\b(?<![+/=])t[12][A-Za-z0-9]{33}(?![+/=])\b',
+                    'regex': r'\b(?<![+/=()])t[12][A-Za-z0-9]{33}(?![+/=()])\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="zcash-address"',
     },
