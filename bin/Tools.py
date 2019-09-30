@@ -327,7 +327,7 @@ tools_dict = {
     },
     'searchsploit': {
         'name': 'searchsploit',
-        'regex1': r'\| (exploits|shellcodes|)/|\.searchsploit_rc',
+        'regex1': r'(exploits|shellcodes)/|searchsploit_rc|Exploit Title',
         'nb_regex': 1,
         'max_execution_time': default_max_execution_time,
         'tag': 'infoleak:automatic-detection="searchsploit-tool"', # tag if all regex match
