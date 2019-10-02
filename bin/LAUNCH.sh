@@ -213,6 +213,8 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./submit_paste.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "IPAddress" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./IPAddress.py; read x"
 
 }
 
