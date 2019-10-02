@@ -19,34 +19,8 @@ import re
 from pubsublogger import publisher
 from packages import Paste
 from Helper import Process
+from ipaddress import IPv4Network, IPv4Address
 
-
-#
-# Thanks to Syed Sadat Nazrul
-# URL: https://medium.com/@sadatnazrul/checking-if-ipv4-address-in-network-python-af61a54d714d
-
-def ip_to_binary(ip):
-    octet_list_int = ip.split(".")
-    octet_list_bin = [format(int(i), '08b') for i in octet_list_int]
-    binary = ("").join(octet_list_bin)
-    return binary
-
-def get_addr_network(address, net_size):
-    #Convert ip address to 32 bit binary
-    ip_bin = ip_to_binary(address)
-    #Extract Network ID from 32 binary
-    network = ip_bin[0:32-(32-net_size)]    
-    return network
-
-def ip_in_prefix(ip_address, prefix):
-    #CIDR based separation of address and network size
-    [prefix_address, net_size] = prefix.split("/")
-    #Convert string to int
-    net_size = int(net_size)
-    #Get the network ID of both prefix and ip based net size
-    prefix_network = get_addr_network(prefix_address, net_size)
-    ip_network = get_addr_network(ip_address, net_size)
-    return ip_network == prefix_network
 
 def search_ip(message):
     paste = Paste.Paste(message)
@@ -57,12 +31,11 @@ def search_ip(message):
     results = reg_ip.findall(content)
     matching_ips = []
 
-    print(results)
-
     for res in results:
+        address = IPv4Address(res)
         for network in ip_networks:
-            if ip_in_prefix(res,network):
-                matching_ips.append(res)
+            if address in network:
+                matching_ips.append(address)
 
     if len(matching_ips) > 0:
         print('{} contains {} IPs'.format(paste.p_name, len(matching_ips)))
@@ -86,7 +59,9 @@ if __name__ == '__main__':
     # Setup the I/O queues
     p = Process(config_section)
 
-    ip_networks = p.config.get("IP", "networks").split(",")
+    ip_networks = []
+    for network in p.config.get("IP", "networks").split(","):
+        ip_networks.append(IPv4Network(network))
 
 
     # Sent to the logging a description of the module
@@ -103,3 +78,4 @@ if __name__ == '__main__':
 
         # Do something with the message from the queue
         search_ip(message)
+
