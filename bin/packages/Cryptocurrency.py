@@ -10,11 +10,13 @@ from hashlib import sha256
 sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
 import Flask_config
 from Correlation import Correlation
+import Item
 
 r_serv_metadata = Flask_config.r_serv_metadata
 
+all_cryptocurrency = ['bitcoin', 'etherum']
+
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-#address_validation = {'bitcoin': 'base58', 'dash': 'base58'}
 
 cryptocurrency = Correlation('cryptocurrency')
 
@@ -52,6 +54,21 @@ def get_cryptocurrency(request_dict, cryptocurrency_type):
 
     return cryptocurrency.get_correlation(request_dict, cryptocurrency_type, field_name)
 
+# # TODO:  add get all cryptocurrency option
+def get_cryptocurrency_domain(request_dict, cryptocurrency_type):
+    res = cryptocurrency.verify_correlation_field_request(request_dict, cryptocurrency_type, item_type='domain')
+    if res:
+        return res
+    field_name = request_dict.get(cryptocurrency_type)
+    if not verify_cryptocurrency_address(cryptocurrency_type, field_name):
+        return ( {'status': 'error', 'reason': 'Invalid Cryptocurrency address'}, 400 )
+
+    return cryptocurrency.get_correlation_domain(request_dict, cryptocurrency_type, field_name)
+
+def get_domain_cryptocurrency(request_dict, cryptocurrency_type):
+    return cryptocurrency.get_domain_correlation_obj(self, request_dict, cryptocurrency_type, domain)
+
+
 def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrency_address):
     # create basic medata
     if not r_serv_metadata.exists('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address)):
@@ -65,7 +82,8 @@ def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrenc
             if int(last_seen) < int(date):
                 r_serv_metadata.hset('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'last_seen', date)
 
-    # global set
+    ## global set
+    # item
     r_serv_metadata.sadd('set_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), item_path)
 
     # daily
@@ -74,5 +92,12 @@ def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrenc
     # all type
     r_serv_metadata.zincrby('cryptocurrency_all:{}'.format(cryptocurrency_name), cryptocurrency_address, 1)
 
-    # item_metadata
+    ## object_metadata
+    # item
     r_serv_metadata.sadd('item_cryptocurrency_{}:{}'.format(cryptocurrency_name, item_path), cryptocurrency_address)
+
+    # domain
+    if Item.is_crawled(item_path):
+        domain = Item.get_item_domain(item_path)
+        r_serv_metadata.sadd('domain_cryptocurrency_{}:{}'.format(cryptocurrency_name, domain), cryptocurrency_address)
+        r_serv_metadata.sadd('set_domain_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), domain)

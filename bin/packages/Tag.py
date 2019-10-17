@@ -121,6 +121,11 @@ def add_item_tag(tag, item_path):
     r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
     r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
 
+    if Item.is_crawled(item_path):
+        domain = Item.get_item_domain(item_path)
+        r_serv_metadata.sadd('tag:{}'.format(domain), tag)
+        r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), domain)
+
     r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
 
     tag_first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')

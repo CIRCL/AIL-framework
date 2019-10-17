@@ -125,7 +125,6 @@ def get_item(request_dict):
 ###
 
 def _get_item_correlation(correlation_name, correlation_type, item_id):
-    print('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
     res = r_serv_metadata.smembers('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
     if res:
         return list(res)
@@ -144,6 +143,8 @@ def get_item_pgp_name(item_id):
 def get_item_pgp_mail(item_id):
     return _get_item_correlation('pgpdump', 'mail', item_id)
 
+def get_item_pgp_correlation(item_id):
+    pass
 
 ###
 ### GET Internal Module DESC
@@ -153,3 +154,29 @@ def get_item_list_desc(list_item_id):
     for item_id in list_item_id:
         desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_item_tags(item_id)} )
     return desc_list
+
+# # TODO: add an option to check the tag
+def is_crawled(item_id):
+    return item_id.startswith('crawled')
+
+def is_onion(item_id):
+    is_onion = False
+    if len(is_onion) > 62:
+        if is_crawled(item_id) and item_id[-42:-36] == '.onion':
+            is_onion = True
+    return is_onion
+
+def is_item_in_domain(domain, item_id):
+    is_in_domain = False
+    domain_lenght = len(domain)
+    if len(item_id) > (domain_lenght+48):
+        if item_id[-36-domain_lenght:-36] == domain:
+            is_in_domain = True
+    return is_in_domain
+
+def get_item_domain(item_id):
+    return item_id[19:-36]
+
+
+def get_item_children(item_id):
+    return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))

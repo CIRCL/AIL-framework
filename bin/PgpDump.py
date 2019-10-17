@@ -21,6 +21,8 @@ from bs4 import BeautifulSoup
 from Helper import Process
 from packages import Paste
 
+from packages import Pgp
+
 class TimeoutException(Exception):
     pass
 
@@ -117,31 +119,6 @@ def extract_id_from_output(pgp_dump_outpout):
         key_id = key_id.replace(key_id_str, '', 1)
         set_key.add(key_id)
 
-def save_pgp_data(type_pgp, date, item_path, data):
-    # create basic medata
-    if not serv_metadata.exists('pgpdump_metadata_{}:{}'.format(type_pgp, data)):
-        serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'first_seen', date)
-        serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
-    else:
-        last_seen = serv_metadata.hget('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen')
-        if not last_seen:
-            serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
-        else:
-            if int(last_seen) < int(date):
-                serv_metadata.hset('pgpdump_metadata_{}:{}'.format(type_pgp, data), 'last_seen', date)
-
-    # global set
-    serv_metadata.sadd('set_pgpdump_{}:{}'.format(type_pgp, data), item_path)
-
-    # daily
-    serv_metadata.hincrby('pgpdump:{}:{}'.format(type_pgp, date), data, 1)
-
-    # all type
-    serv_metadata.zincrby('pgpdump_all:{}'.format(type_pgp), data, 1)
-
-    # item_metadata
-    serv_metadata.sadd('item_pgpdump_{}:{}'.format(type_pgp, item_path), data)
-
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
@@ -236,12 +213,12 @@ if __name__ == '__main__':
 
         for key_id in set_key:
             print(key_id)
-            save_pgp_data('key', date, message, key_id)
+            Pgp.save_pgp_data('key', date, message, key_id)
 
         for name_id in set_name:
             print(name_id)
-            save_pgp_data('name', date, message, name_id)
+            Pgp.save_pgp_data('name', date, message, name_id)
 
         for mail_id in set_mail:
             print(mail_id)
-            save_pgp_data('mail', date, message, mail_id)
+            Pgp.save_pgp_data('mail', date, message, mail_id)

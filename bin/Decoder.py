@@ -18,6 +18,7 @@ from pubsublogger import publisher
 
 from Helper import Process
 from packages import Paste
+from packages import Item
 
 import re
 import signal
@@ -119,6 +120,12 @@ def save_hash(decoder_name, message, date, decoded):
 
     serv_metadata.zincrby('nb_seen_hash:'+hash, message, 1)# hash - paste map
     serv_metadata.zincrby(decoder_name+'_hash:'+hash, message, 1) # number of b64 on this paste
+
+    # Domain Object
+    if Item.is_crawled(message):
+        domain = Item.get_item_domain(message)
+        serv_metadata.sadd('hash_domain:{}'.format(domain), hash) # domain - hash map
+        serv_metadata.sadd('domain_hash:{}'.format(hash), domain) # hash - domain map
 
 
 def save_hash_on_disk(decode, type, hash, json_data):
