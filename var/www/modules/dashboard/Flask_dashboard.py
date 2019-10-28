@@ -21,7 +21,7 @@ from flask_login import login_required
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
+config_loader = Flask_config.config_loader
 baseUrl = Flask_config.baseUrl
 r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
@@ -171,8 +171,8 @@ def stuff():
 @login_required
 @login_analyst
 def index():
-    default_minute = cfg.get("Flask", "minute_processed_paste")
-    threshold_stucked_module = cfg.getint("Module_ModuleInformation", "threshold_stucked_module")
+    default_minute = config_loader.get_config_str("Flask", "minute_processed_paste")
+    threshold_stucked_module = config_loader.get_config_int("Module_ModuleInformation", "threshold_stucked_module")
     log_select = {10, 25, 50, 100}
     log_select.add(max_dashboard_logs)
     log_select = list(log_select)

@@ -58,7 +58,6 @@ class PubSub(object):
             for address in addresses.split(','):
                 new_sub = context.socket(zmq.SUB)
                 new_sub.connect(address)
-                # bytes64 encode bytes to ascii only bytes
                 new_sub.setsockopt_string(zmq.SUBSCRIBE, channel)
                 self.subscribers.append(new_sub)
 
