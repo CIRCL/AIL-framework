@@ -186,7 +186,9 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Decoder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Decoder.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Bitcoin" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Bitcoin.py; read x"
+    screen -S "Script_AIL" -X screen -t "Cryptocurrency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cryptocurrencies.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Tools" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tools.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Phone.py; read x"
     sleep 0.1
