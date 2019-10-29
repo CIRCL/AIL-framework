@@ -12,12 +12,17 @@ import sys
 import time
 import redis
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Correlation
+import Cryptocurrency
 import Item
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules/'))
-import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
-r_serv_onion = Flask_config.r_serv_onion
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
+config_loader = None
 
 def get_domain_type(domain):
     if str(domain).endswith('.onion'):
@@ -52,7 +57,7 @@ def get_link_tree():
 ###
 ### correlation
 ###
-
+"""
 def _get_domain_correlation(domain, correlation_name=None, correlation_type=None):
     res = r_serv_metadata.smembers('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
     if res:
@@ -74,7 +79,10 @@ def get_item_pgp_mail(item_id):
 
 def get_item_pgp_correlation(item_id):
     pass
+"""
 
+def _get_domain_correlation(domain, correlation_list):
+    return Cryptocurrency.get_cryptocurrency_domain(domain)
 
 class Domain(object):
     """docstring for Domain."""

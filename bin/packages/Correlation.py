@@ -49,6 +49,7 @@ class Correlation(object):
         if not request_dict:
             return ({'status': 'error', 'reason': 'Malformed JSON'}, 400)
 
+        print(correlation_type)
         field_name = request_dict.get(correlation_type, None)
         if not field_name:
             return ( {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400 )
