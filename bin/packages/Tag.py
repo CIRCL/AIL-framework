@@ -2,17 +2,22 @@
 # -*-coding:UTF-8 -*
 
 import os
+import sys
 import redis
 
-import Flask_config
 import Date
 import Item
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 
-r_serv_tags = Flask_config.r_serv_tags
-r_serv_metadata = Flask_config.r_serv_metadata
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
 def get_taxonomie_from_tag(tag):
     return tag.split(':')[0]
@@ -77,8 +82,12 @@ def is_tag_in_all_tag(tag):
 def get_all_tags():
     return list(r_serv_tags.smembers('list_tags'))
 
+'''
+Retun all the tags of a given item.
+:param item_id: (Paste or domain)
+'''
 def get_item_tags(item_id):
-    tags = r_serv_metadata.smembers('tag:'+item_id)
+    tags = r_serv_metadata.smembers('tag:{}'.format(item_id))
     if tags:
         return list(tags)
     else:

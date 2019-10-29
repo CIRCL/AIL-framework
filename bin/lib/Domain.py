@@ -14,8 +14,10 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Correlation
-import Cryptocurrency
+from Cryptocurrency import cryptocurrency
+from Pgp import pgp
 import Item
+import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -54,35 +56,53 @@ def get_link_tree():
     pass
 
 
-###
-### correlation
-###
-"""
-def _get_domain_correlation(domain, correlation_name=None, correlation_type=None):
-    res = r_serv_metadata.smembers('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
+def get_domain_tags(domain):
+    '''
+    Retun all tags of a given domain.
+
+    :param domain: crawled domain
+    '''
+    return Tag.get_item_tags(domain)
+
+def get_domain_cryptocurrency(domain, currencies_type=None):
+    '''
+    Retun all cryptocurrencies of a given domain.
+
+    :param domain: crawled domain
+    :param currencies_type: list of cryptocurrencies type
+    :type currencies_type: list, optional
+    '''
+    return cryptocurrency.get_domain_correlation_dict(domain, correlation_type=currencies_type)
+
+def get_domain_pgp(domain, currencies_type=None):
+    '''
+    Retun all pgp of a given domain.
+
+    :param domain: crawled domain
+    :param currencies_type: list of pgp type
+    :type currencies_type: list, optional
+    '''
+    return pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type)
+
+def get_domain_all_correlation(domain, correlation_type=None):
+    '''
+    Retun all correlation of a given domain.
+
+    :param domain: crawled domain
+    :type domain: str
+
+    :return: a dict of all correlation for a given domain
+    :rtype: dict
+    '''
+    domain_correl = {}
+    res = get_domain_cryptocurrency(domain)
     if res:
-        return list(res)
-    else:
-        return []
+        domain_correl['cryptocurrency'] = res
+    res = get_domain_pgp(domain)
+    if res:
+        domain_correl['pgp'] = res
+    return domain_correl
 
-def get_item_bitcoin(item_id):
-    return _get_item_correlation('cryptocurrency', 'bitcoin', item_id)
-
-def get_item_pgp_key(item_id):
-    return _get_item_correlation('pgpdump', 'key', item_id)
-
-def get_item_pgp_name(item_id):
-    return _get_item_correlation('pgpdump', 'name', item_id)
-
-def get_item_pgp_mail(item_id):
-    return _get_item_correlation('pgpdump', 'mail', item_id)
-
-def get_item_pgp_correlation(item_id):
-    pass
-"""
-
-def _get_domain_correlation(domain, correlation_list):
-    return Cryptocurrency.get_cryptocurrency_domain(domain)
 
 class Domain(object):
     """docstring for Domain."""

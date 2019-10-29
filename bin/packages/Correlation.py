@@ -5,16 +5,18 @@ import os
 import sys
 import redis
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules/'))
-import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'lib/'))
+import ConfigLoader
 
-r_serv_metadata = Flask_config.r_serv_metadata
-
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
 class Correlation(object):
 
-    def __init__(self, correlation_name):
+    def __init__(self, correlation_name, all_correlation_types):
         self.correlation_name = correlation_name
+        self.all_correlation_types = all_correlation_types
 
     def _exist_corelation_field(self, correlation_type, field_name, item_type='paste'):
         if type=='paste':
@@ -24,13 +26,6 @@ class Correlation(object):
 
     def _get_items(self, correlation_type, field_name):
         res =  r_serv_metadata.smembers('set_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
-        if res:
-            return list(res)
-        else:
-            return []
-
-    def _get_domains(self, correlation_type, field_name):
-        res =  r_serv_metadata.smembers('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
         if res:
             return list(res)
         else:
@@ -49,7 +44,6 @@ class Correlation(object):
         if not request_dict:
             return ({'status': 'error', 'reason': 'Malformed JSON'}, 400)
 
-        print(correlation_type)
         field_name = request_dict.get(correlation_type, None)
         if not field_name:
             return ( {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400 )
@@ -69,37 +63,72 @@ class Correlation(object):
 
         return (dict_resp, 200)
 
-    def get_correlation_domain(self, request_dict, correlation_type, field_name):
-        dict_resp = {}
+    def get_all_correlation_types(self):
+        '''
+        Gel all correlation types
 
-        dict_resp['domain'] = self._get_domains(correlation_type, field_name)
+        :return: A list of all the correlation types
+        :rtype: list
+        '''
+        return self.all_correlation_types
 
-        #if request_dict.get('metadata'):
-        #    dict_resp['metadata'] = self._get_metadata(correlation_type, field_name)
+    def sanythise_correlation_types(self, correlation_types):
+        '''
+        Check if all correlation types in the list are valid.
 
-        dict_resp[correlation_type] = field_name
+        :param correlation_types: list of correlation type
+        :type currency_type: list
 
-        return (dict_resp, 200)
+        :return: If a type is invalid, return the full list of correlation types else return the provided list
+        :rtype: list
+        '''
+        if correlation_types is None:
+            return self.get_all_correlation_types()
+        for correl in correlation_types: # # TODO: # OPTIMIZE:
+            if correl not in self.get_all_correlation_types():
+                return self.get_all_correlation_types()
+        return correlation_types
 
-######## INTERNAL ########
 
-def _get_domain_correlation_obj(correlation_name, correlation_type, domain):
-    print('domain_{}_{}:{}'.format(correlation_name, correlation_type, domain))
-    res = r_serv_metadata.smembers('domain_{}_{}:{}'.format(correlation_name, correlation_type, domain))
-    if res:
-        return list(res)
-    else:
-        return []
+    def _get_domain_correlation_obj(self, domain, correlation_type):
+        '''
+        Return correlation of a given domain.
 
-########  ########
+        :param domain: crawled domain
+        :type domain: str
+        :param correlation_type: correlation type
+        :type correlation_type: str
+
+        :return: a list of correlation
+        :rtype: list
+        '''
+        res = r_serv_metadata.smembers('domain_{}_{}:{}'.format(self.correlation_name, correlation_type, domain))
+        if res:
+            return list(res)
+        else:
+            return []
+
+    def get_domain_correlation_dict(self, domain, correlation_type=None):
+        '''
+        Return all correlation of a given domain.
+
+        :param domain: crawled domain
+        :param correlation_type: list of correlation types
+        :type correlation_type: list, optional
+
+        :return: a dictionnary of all the requested correlations
+        :rtype: dict
+        '''
+        correlation_type = self.sanythise_correlation_types(correlation_type)
+        dict_correlation = {}
+        for correl in correlation_type:
+            res = self._get_domain_correlation_obj(domain, correl)
+            if res:
+                dict_correlation[correl] = res
+        return dict_correlation
+
 
 ######## API EXPOSED ########
 
-def get_domain_correlation_obj(request_dict, correlation_name, correlation_type, domain):
-    dict_resp = {}
-    dict_resp[correlation_type] = _get_domain_correlation_obj(correlation_name, correlation_type, domain)
-    dict_resp['domain'] = domain
-
-    return (dict_resp, 200)
 
 ########  ########

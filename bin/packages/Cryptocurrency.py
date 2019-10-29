@@ -7,18 +7,25 @@ import redis
 
 from hashlib import sha256
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
-import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 from Correlation import Correlation
 import Item
 
-r_serv_metadata = Flask_config.r_serv_metadata
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
-all_cryptocurrency = ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash']
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
-cryptocurrency = Correlation('cryptocurrency')
+
+class Cryptocurrency(Correlation):
+    def __init__(self):
+        super().__init__('cryptocurrency', ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash'])
+
+cryptocurrency = Cryptocurrency()
 
 # http://rosettacode.org/wiki/Bitcoin/address_validation#Python
 def decode_base58(bc, length):
@@ -41,18 +48,6 @@ def verify_cryptocurrency_address(cryptocurrency_type, cryptocurrency_address):
     else:
         return True
 
-def get_all_all_cryptocurrency():
-    return all_cryptocurrency
-
-# check if all crypto type in the list are valid
-# if a type is invalid, return the full list of currency types
-def sanythise_cryptocurrency_types(cryptocurrency_types):
-    if cryptocurrency_types is None:
-        return get_all_all_cryptocurrency()
-    for currency in cryptocurrency_types: # # TODO: # OPTIMIZE:
-        if currency not in all_cryptocurrency:
-            return get_all_all_cryptocurrency()
-    return cryptocurrency_types
 
 def get_cryptocurrency(request_dict, cryptocurrency_type):
     # basic verification
@@ -65,22 +60,6 @@ def get_cryptocurrency(request_dict, cryptocurrency_type):
         return ( {'status': 'error', 'reason': 'Invalid Cryptocurrency address'}, 400 )
 
     return cryptocurrency.get_correlation(request_dict, cryptocurrency_type, field_name)
-
-def get_cryptocurrency_domain(request_dict, cryptocurrency_type=None):
-    currency_types = sanythise_cryptocurrency_types(cryptocurrency_type)
-
-    res = cryptocurrency.verify_correlation_field_request(request_dict, currency_types, item_type='domain')
-    if res:
-        return res
-    field_name = request_dict.get(cryptocurrency_type)
-    if not verify_cryptocurrency_address(cryptocurrency_type, field_name):
-        return ( {'status': 'error', 'reason': 'Invalid Cryptocurrency address'}, 400 )
-
-    return cryptocurrency.get_correlation_domain(request_dict, cryptocurrency_type, field_name)
-
-def get_domain_cryptocurrency(request_dict, cryptocurrency_type):
-    return cryptocurrency.get_domain_correlation_obj(self, request_dict, cryptocurrency_type, domain)
-
 
 def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrency_address):
     # create basic medata

@@ -5,18 +5,23 @@ import os
 import sys
 import redis
 
-from hashlib import sha256
-
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
-import Flask_config
-
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 from Correlation import Correlation
 import Item
 
-serv_metadata = Flask_config.r_serv_metadata
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
-pgpdump = Correlation('pgpdump')
+config_loader = ConfigLoader.ConfigLoader()
+serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
+
+class Pgp(Correlation):
+    def __init__(self):
+        super().__init__('pgpdump', ['key', 'mail', 'name'])
+
+pgp = Pgp()
 
 def get_pgp(request_dict, pgp_type):
     # basic verification
