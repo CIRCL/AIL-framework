@@ -108,6 +108,24 @@ class Correlation(object):
         else:
             return []
 
+    def _get_correlation_obj_domain(self, field_name, correlation_type):
+        '''
+        Return all domains that contain this correlation.
+
+        :param domain: field name
+        :type domain: str
+        :param correlation_type: correlation type
+        :type correlation_type: str
+
+        :return: a list of correlation
+        :rtype: list
+        '''
+        res = r_serv_metadata.smembers('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
+        if res:
+            return list(res)
+        else:
+            return []
+
     def get_domain_correlation_dict(self, domain, correlation_type=None):
         '''
         Return all correlation of a given domain.

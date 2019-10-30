@@ -56,6 +56,7 @@ def get_link_tree():
     pass
 
 
+
 def get_domain_tags(domain):
     '''
     Retun all tags of a given domain.
@@ -103,11 +104,119 @@ def get_domain_all_correlation(domain, correlation_type=None):
         domain_correl['pgp'] = res
     return domain_correl
 
+ # TODO: handle port
+def get_domain_history(domain, domain_type, port): # TODO: add date_range: from to + nb_elem
+    '''
+    Retun .
+
+    :param domain: crawled domain
+    :type domain: str
+
+    :return:
+    :rtype: list of tuple (item_core, epoch)
+    '''
+    return r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(domain_type, domain, port), 0, -1, withscores=True)
+
+def get_domain_history_with_status(domain, domain_type, port): # TODO: add date_range: from to + nb_elem
+    '''
+    Retun .
+
+    :param domain: crawled domain
+    :type domain: str
+
+    :return:
+    :rtype: list of dict (epoch, date: %Y/%m/%d - %H:%M.%S, boolean status)
+    '''
+    l_history = []
+    history = get_domain_history(domain, domain_type, port)
+    for root_item, epoch_val in history:
+        epoch_val = int(epoch_val) # force int
+        # domain down, root_item==epoch_val
+        try:
+            int(root_item)
+            status = False
+        # domain up, root_item=str
+        except ValueError:
+            status = True
+        l_history.append({"epoch": epoch_val, "date": time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(epoch_val)), "status": status})
+    return l_history
+
 
 class Domain(object):
     """docstring for Domain."""
 
     def __init__(self, domain, port=80):
         self.domain = str(domain)
-        ## TODO: handle none port
         self.type = get_domain_type(domain)
+
+    def get_domain_first_seen(self):
+        '''
+        Get domain first seen date
+
+        :return: domain first seen date
+        :rtype: str
+        '''
+        first_seen = r_serv_onion.hget('{}_metadata:{}'.format(self.type, self.domain), 'first_seen')
+        if first_seen is not None:
+            first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
+        return first_seen
+
+    def get_domain_last_check(self):# # TODO: add epoch ???
+        '''
+        Get domain last check date
+
+        :return: domain last check date
+        :rtype: str
+        '''
+        last_check = r_serv_onion.hget('{}_metadata:{}'.format(self.type, self.domain), 'last_check')
+        if last_check is not None:
+            last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
+        return last_check
+
+    #def get_domain_all_ports(self):
+    #    pass
+
+    def get_domain_metadata(self, first_seen=True, last_ckeck=True, ports=True):
+        '''
+        Get Domain basic metadata
+
+        :param first_seen: get domain first_seen
+        :type first_seen: boolean
+        :param last_ckeck: get domain last_check
+        :type last_ckeck: boolean
+        :param ports: get all domain ports
+        :type ports: boolean
+
+        :return: a dict of all metadata for a given domain
+        :rtype: dict
+        '''
+        dict_metadata = {}
+        if first_seen:
+            res = self.get_domain_first_seen()
+            if res is not None:
+                dict_metadata['first_seen'] = res
+        if last_ckeck:
+            res = self.get_domain_last_check()
+            if res is not None:
+                dict_metadata['last_check'] = res
+        return dict_metadata
+
+    def get_domain_tags(self):
+        '''
+        Retun all tags of a given domain.
+
+        :param domain: crawled domain
+        '''
+        return get_domain_tags(self.domain)
+
+    def get_domain_correlation(self):
+        '''
+        Retun all cryptocurrencies of a given domain.
+        '''
+        return get_domain_all_correlation(self.domain)
+
+    def get_domain_history_with_status(self):
+        '''
+        Retun the full history of a given domain and port.
+        '''
+        return get_domain_history_with_status(self.domain, self.type, 80)
