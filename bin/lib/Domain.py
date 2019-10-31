@@ -11,6 +11,7 @@ import os
 import sys
 import time
 import redis
+import random
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Correlation
@@ -32,6 +33,34 @@ def get_domain_type(domain):
     else:
         return 'regular'
 
+def sanathyse_port(port, domain, domain_type, strict=False, current_port=None):
+    '''
+    Retun a port number, If the port number is invalid, a port of the provided domain is randomly selected
+    '''
+    try:
+        port = int(port)
+    except (TypeError, ValueError):
+        if strict:
+            port = current_port
+        else:
+            port = get_random_domain_port(domain, domain_type)
+    return port
+
+def is_domain_up(domain, domain_type):
+    return r_serv_onion.hexists('{}_metadata:{}'.format(domain_type, domain), 'ports')
+
+def get_domain_all_ports(domain, domain_type):
+    '''
+    Return a list of all crawled ports
+    '''
+    l_ports = r_serv_onion.hget('{}_metadata:{}'.format(domain_type, domain), 'ports')
+    if l_ports:
+        return l_ports.split(";")
+    return []
+
+def get_random_domain_port(domain, domain_type):
+    return random.choice(get_domain_all_ports(domain, domain_type))
+
 def get_all_domain_up_by_type(domain_type):
     if domain_type in domains:
         list_domain = list(r_serv_onion.smembers('full_{}_up'.format(domain_type)))
@@ -52,6 +81,53 @@ def get_domain_item_children(domain, root_item_id):
             all_items.extend(get_domain_item_children(domain, item_id))
     return all_items
 
+def get_domain_last_crawled_item_root(domain, domain_type, port):
+    '''
+    Retun last_crawled_item_core dict
+    '''
+    res = r_serv_onion.zrevrange('crawler_history_{}:{}:{}'.format(domain_type, domain, port), 0, 0, withscores=True)
+    if res:
+        return {"root_item": res[0][0], "epoch": int(res[0][1])}
+    else:
+        return {}
+
+def get_domain_crawled_item_root(domain, domain_type, port, epoch=None):
+    '''
+    Retun the first item crawled for a given domain:port (and epoch)
+    '''
+    if epoch:
+        res = r_serv_onion.zrevrangebyscore('crawler_history_{}:{}:{}'.format(domain_type, domain, port), int(epoch), int(epoch))
+        if res:
+            return {"root_item": res[0], "epoch": int(epoch)}
+        # invalid epoch
+        epoch = None
+
+    if not epoch:
+        return get_domain_last_crawled_item_root(domain, domain_type, port)
+
+
+def get_domain_items_crawled(domain, domain_type, port, epoch=None, items_link=False, item_screenshot=False, item_tag=False):
+    '''
+
+    '''
+    item_crawled = {}
+    item_root = get_domain_crawled_item_root(domain, domain_type, port, epoch=epoch)
+    if item_root:
+        item_crawled['port'] = port
+        item_crawled['epoch'] = item_root['epoch']
+        item_crawled['date'] = time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(item_root['epoch']))
+        item_crawled['items'] = []
+        for item in get_domain_items(domain, item_root['root_item']):
+            dict_item = {"id": item}
+            if items_link:
+                dict_item['link'] = Item.get_item_link(item)
+            if item_screenshot:
+                dict_item['screenshot'] = Item.get_item_screenshot(item)
+            if item_tag:
+                dict_item['tags'] = Tag.get_item_tags_minimal(item)
+            item_crawled['items'].append(dict_item)
+    return item_crawled
+
 def get_link_tree():
     pass
 
@@ -65,7 +141,7 @@ def get_domain_tags(domain):
     '''
     return Tag.get_item_tags(domain)
 
-def get_domain_cryptocurrency(domain, currencies_type=None):
+def get_domain_cryptocurrency(domain, currencies_type=None, get_nb=False):
     '''
     Retun all cryptocurrencies of a given domain.
 
@@ -73,9 +149,9 @@ def get_domain_cryptocurrency(domain, currencies_type=None):
     :param currencies_type: list of cryptocurrencies type
     :type currencies_type: list, optional
     '''
-    return cryptocurrency.get_domain_correlation_dict(domain, correlation_type=currencies_type)
+    return cryptocurrency.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
 
-def get_domain_pgp(domain, currencies_type=None):
+def get_domain_pgp(domain, currencies_type=None, get_nb=False):
     '''
     Retun all pgp of a given domain.
 
@@ -83,9 +159,9 @@ def get_domain_pgp(domain, currencies_type=None):
     :param currencies_type: list of pgp type
     :type currencies_type: list, optional
     '''
-    return pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type)
+    return pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
 
-def get_domain_all_correlation(domain, correlation_type=None):
+def get_domain_all_correlation(domain, correlation_type=None, get_nb=False):
     '''
     Retun all correlation of a given domain.
 
@@ -96,10 +172,10 @@ def get_domain_all_correlation(domain, correlation_type=None):
     :rtype: dict
     '''
     domain_correl = {}
-    res = get_domain_cryptocurrency(domain)
+    res = get_domain_cryptocurrency(domain, get_nb=get_nb)
     if res:
         domain_correl['cryptocurrency'] = res
-    res = get_domain_pgp(domain)
+    res = get_domain_pgp(domain, get_nb=get_nb)
     if res:
         domain_correl['pgp'] = res
     return domain_correl
@@ -141,13 +217,26 @@ def get_domain_history_with_status(domain, domain_type, port): # TODO: add date_
         l_history.append({"epoch": epoch_val, "date": time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(epoch_val)), "status": status})
     return l_history
 
+def verify_if_domain_exist(domain):
+    return r_serv_onion.exists('{}_metadata:{}'.format(get_domain_type(domain), domain))
+
+def api_verify_if_domain_exist(domain):
+    if not verify_if_domain_exist(domain):
+        return ({'status': 'error', 'reason': 'Unknow Domain'}, 404)
+    else:
+        return None
 
 class Domain(object):
     """docstring for Domain."""
 
-    def __init__(self, domain, port=80):
+    def __init__(self, domain, port=None):
         self.domain = str(domain)
         self.type = get_domain_type(domain)
+        if self.is_domain_up():
+            self.current_port = sanathyse_port(port, self.domain, self.type)
+
+    def get_current_port(self):
+        return self.current_port
 
     def get_domain_first_seen(self):
         '''
@@ -161,7 +250,7 @@ class Domain(object):
             first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
         return first_seen
 
-    def get_domain_last_check(self):# # TODO: add epoch ???
+    def get_domain_last_check(self):
         '''
         Get domain last check date
 
@@ -173,10 +262,16 @@ class Domain(object):
             last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
         return last_check
 
-    #def get_domain_all_ports(self):
-    #    pass
+    def is_domain_up(self): # # TODO: handle multiple ports
+        '''
+        Return True if this domain is UP
+        '''
+        return is_domain_up(self.domain, self.type)
 
-    def get_domain_metadata(self, first_seen=True, last_ckeck=True, ports=True):
+    def get_domain_all_ports(self):
+        return get_domain_all_ports(self.domain, self.type)
+
+    def get_domain_metadata(self, first_seen=True, last_ckeck=True, status=True, ports=True):
         '''
         Get Domain basic metadata
 
@@ -199,6 +294,10 @@ class Domain(object):
             res = self.get_domain_last_check()
             if res is not None:
                 dict_metadata['last_check'] = res
+        if status:
+            dict_metadata['status'] = self.is_domain_up()
+        if ports:
+            dict_metadata['ports'] = self.get_domain_all_ports()
         return dict_metadata
 
     def get_domain_tags(self):
@@ -213,10 +312,17 @@ class Domain(object):
         '''
         Retun all cryptocurrencies of a given domain.
         '''
-        return get_domain_all_correlation(self.domain)
+        return get_domain_all_correlation(self.domain, get_nb=True)
 
     def get_domain_history_with_status(self):
         '''
         Retun the full history of a given domain and port.
         '''
         return get_domain_history_with_status(self.domain, self.type, 80)
+
+    def get_domain_items_crawled(self, port=None, epoch=None, items_link=False, item_screenshot=False, item_tag=False):
+        '''
+        Return ........................
+        '''
+        port = sanathyse_port(port, self.domain, self.type, strict=True, current_port=self.current_port)
+        return get_domain_items_crawled(self.domain, self.type, port, epoch=epoch, items_link=items_link, item_screenshot=item_screenshot, item_tag=item_tag)

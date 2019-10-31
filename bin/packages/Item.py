@@ -177,6 +177,14 @@ def is_item_in_domain(domain, item_id):
 def get_item_domain(item_id):
     return item_id[19:-36]
 
-
 def get_item_children(item_id):
     return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))
+
+def get_item_link(item_id):
+    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'real_link')
+
+def get_item_screenshot(item_id):
+    screenshot = r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'screenshot')
+    if screenshot:
+        return os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
+    return ''

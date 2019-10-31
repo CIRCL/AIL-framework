@@ -126,7 +126,7 @@ class Correlation(object):
         else:
             return []
 
-    def get_domain_correlation_dict(self, domain, correlation_type=None):
+    def get_domain_correlation_dict(self, domain, correlation_type=None, get_nb=False):
         '''
         Return all correlation of a given domain.
 
@@ -143,6 +143,8 @@ class Correlation(object):
             res = self._get_domain_correlation_obj(domain, correl)
             if res:
                 dict_correlation[correl] = res
+                if get_nb:
+                    dict_correlation['nb'] = dict_correlation.get('nb', 0) + len(dict_correlation[correl])
         return dict_correlation
 
 

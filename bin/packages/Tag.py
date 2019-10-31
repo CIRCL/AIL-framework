@@ -93,6 +93,22 @@ def get_item_tags(item_id):
     else:
         return []
 
+def get_min_tag(tag):
+    tag = tag.split('=')
+    if len(tag) > 1:
+        if tag[1] != '':
+            tag = tag[1][1:-1]
+        # no value
+        else:
+            tag = tag[0][1:-1]
+    # custom tags
+    else:
+        tag = tag[0]
+    return tag
+
+def get_item_tags_minimal(item_id):
+    return [ {"tag": tag, "min_tag": get_min_tag(tag)} for tag in get_item_tags(item_id) ]
+
 # TEMPLATE + API QUERY
 def add_items_tag(tags=[], galaxy_tags=[], item_id=None):
     res_dict = {}
