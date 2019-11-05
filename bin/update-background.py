@@ -53,3 +53,6 @@ if __name__ == "__main__":
             r_serv.delete('ail:current_background_script')
             r_serv.delete('ail:current_background_script_stat')
             r_serv.delete('ail:current_background_update')
+
+    if r_serv.scard('ail:update_v2.4') != 1:
+        pass

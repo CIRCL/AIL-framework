@@ -23,6 +23,9 @@ bash ${AIL_BIN}/LAUNCH.sh -lav &
 wait
 echo ""
 
+cp ${AIL_BIN}/packages/config.cfg ${AIL_HOME}/configs/core.cfg
+rm ${AIL_BIN}/packages/config.cfg
+
 echo ""
 echo -e $GREEN"Updating AIL VERSION ..."$DEFAULT
 echo ""
