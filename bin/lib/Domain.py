@@ -131,7 +131,28 @@ def get_domain_items_crawled(domain, domain_type, port, epoch=None, items_link=F
 def get_link_tree():
     pass
 
+def get_domain_last_check(domain, domain_type=None, r_format="str"):
+    '''
+    Get domain last check date
 
+    :param domain: crawled domain
+    :type domain: str
+    :param domain_type: domain type
+    :type domain_type: str
+
+    :return: domain last check date
+    :rtype: str
+    '''
+    if not domain_type:
+        domain_type = get_domain_type(domain)
+    last_check = r_serv_onion.hget('{}_metadata:{}'.format(domain_type, domain), 'last_check')
+    if last_check is not None:
+        if r_format=="int":
+            last_check = int(last_check)
+        # str
+        else:
+            last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
+    return last_check
 
 def get_domain_tags(domain):
     '''
@@ -257,10 +278,7 @@ class Domain(object):
         :return: domain last check date
         :rtype: str
         '''
-        last_check = r_serv_onion.hget('{}_metadata:{}'.format(self.type, self.domain), 'last_check')
-        if last_check is not None:
-            last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
-        return last_check
+        return get_domain_last_check(self.domain, domain_type=self.type)
 
     def is_domain_up(self): # # TODO: handle multiple ports
         '''

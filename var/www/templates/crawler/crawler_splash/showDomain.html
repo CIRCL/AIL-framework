@@ -7,11 +7,24 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+  <style>
+    .icon_img:hover{
+  		cursor: pointer;
+  		color: #17a2b8;
+  	}
+    .icon_selected{
+  		color: #007bff;
+  	}
+  </style>
 
 </head>
 <body>
@@ -77,6 +90,10 @@
 									</a>
 									{%  endfor %}
 									<br>
+                  {% include 'modals/add_tags.html' %}
+                  <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                    <i class="far fa-plus-square"></i>
+                  </button>
 								</div>
 
 							</div>
@@ -243,7 +260,7 @@
 			              	</td>
                     <td class="text-center">
                       {%if item["screenshot"]%}
-                      <button class="btn" onclick="reload_image('{{ item["screenshot"] }}', '{{ item["link"] }}', '{{ item["id"] }}');">
+                      <span class="icon_img" onclick="reload_image('{{ item["screenshot"] }}', '{{ item["link"] }}', '{{ item["id"] }}');" id="{{ item["screenshot"].replace('/', '') }}">
                         <i class="far fa-image"></i>
                       </button>
                       {%endif%}
@@ -358,8 +375,8 @@ function toggle_sidebar(){
 
 <script>
 var ctx = canvas.getContext('2d'), img = new Image();
-var base_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}"
-var screenshot_href = "{{ url_for('showsavedpastes.showsavedpaste') }}?paste="
+var base_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}";
+var screenshot_href = "{{ url_for('showsavedpastes.showsavedpaste') }}?paste=";
 
 /// turn off image smoothing
 ctx.webkitImageSmoothingEnabled = false;
@@ -369,12 +386,17 @@ img.onload = pixelate;
 img.addEventListener("error", img_error);
 var draw_img = false;
 
-{%if 'crawler_history' in dict_domain%}
-  var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}"
-  $("#screenshot_link").attr("href", "screenshot_href + {{dict_domain['crawler_history']['random_item']['id']}}")
-  $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}")
+{%if dict_domain['crawler_history']['random_item']['screenshot']%}
+  var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}";
+  var selected_icon = $("#"+screenshot.replace(/\//g, ""));
+  selected_icon.addClass("icon_selected");
+  selected_icon.removeClass("icon_img");
+
+
+  $("#screenshot_link").attr("href", "screenshot_href + {{dict_domain['crawler_history']['random_item']['id']}}");
+  $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
 {%else%}
-var screenshot = ""
+var screenshot = "";
 {%endif%}
 
 img.src = base_url + screenshot;
@@ -411,14 +433,22 @@ function img_error() {
 	pixelate;
 }
 
-function reload_image(screenshot, link, item_id) {
+function reload_image(new_screenshot, link, item_id) {
+  $("#"+screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
+  screenshot = new_screenshot;
+
   img.src=base_url + screenshot;
-  $("#screenshot_link").attr("href", screenshot_href + item_id)
-  $("#screenshot_link").text(link)
+  selected_icon = $("#"+screenshot.replace(/\//g, ""));
+  selected_icon.addClass("icon_selected");
+  selected_icon.removeClass("icon_img")
+
+  $("#screenshot_link").attr("href", screenshot_href + item_id);
+  $("#screenshot_link").text(link);
   pixelate;
 }
 
 
 </script>
+
 
 </html>

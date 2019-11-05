@@ -20,6 +20,9 @@ import Flask_config
 from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
 from Role_Manager import login_admin, login_analyst
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+from Tag import get_modal_add_tags
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Domain
 
@@ -40,8 +43,8 @@ def api_validator(api_response):
     if api_response:
         return Response(json.dumps(api_response[0], indent=2, sort_keys=True), mimetype='application/json'), api_response[1]
 
-
 # ============= ROUTES ==============
+# add route : /crawlers/show_domain
 @crawler_splash.route('/crawlers/showDomain')
 #@login_required
 #@login_analyst
@@ -65,4 +68,5 @@ def showDomain():
         dict_domain['crawler_history'] = domain.get_domain_items_crawled(items_link=True, epoch=epoch, item_screenshot=True, item_tag=True) # # TODO: handle multiple port
         dict_domain['crawler_history']['random_item'] = random.choice(dict_domain['crawler_history']['items'])
 
-    return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label)
+    return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
+                                modal_add_tags=get_modal_add_tags(dict_domain['domain'], tag_type="domain"))
