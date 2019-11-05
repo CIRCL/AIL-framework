@@ -143,7 +143,7 @@
                                     <i class="{{ var_icon }}"></i>
                                     &nbsp;&nbsp;{{ dict_key }}
                                   </td>
-                                  <td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ key_id }}">{{ key_id }}</a></td>
+                                  <td><a target="_blank" href="{{ url_for('hashDecoded.show_pgpdump') }}?type_id={{ dict_key }}&key_id={{ key_id }}">{{ key_id }}</a></td>
                                 </tr>
                               {% endfor %}
                             {% endif %}
@@ -200,7 +200,7 @@
                                     <i class="{{ var_icon }}"></i>
                                     &nbsp;&nbsp;{{ dict_key }}
                                   </td>
-                                  <td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ key_id }}">{{ key_id }}</a></td>
+                                  <td><a target="_blank" href="{{ url_for('hashDecoded.show_cryptocurrency') }}?type_id={{ dict_key }}&key_id={{ key_id }}">{{ key_id }}</a></td>
                                 </tr>
                               {% endfor %}
                             {% endif %}
