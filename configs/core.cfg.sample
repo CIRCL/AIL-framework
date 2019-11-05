@@ -266,3 +266,8 @@ default_crawler_closespider_pagecount = 50
 default_crawler_user_agent = Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0
 splash_url = http://127.0.0.1
 splash_port = 8050-8052
+
+[IP]
+# list of comma-separated CIDR that you wish to be alerted for. e.g:
+#networks = 192.168.34.0/24,10.0.0.0/8,192.168.33.0/24
+networks =

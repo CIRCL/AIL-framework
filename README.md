@@ -42,8 +42,8 @@ Features
 * Multiple feed support
 * Each module can process and reprocess the information already processed by AIL
 * Detecting and extracting URLs including their geographical location (e.g. IP address location)
-* Extracting and validating potential leak of credit cards numbers, credentials, ...
-* Extracting and validating email addresses leaked including DNS MX validation
+* Extracting and validating potential leaks of credit card numbers, credentials, ...
+* Extracting and validating leaked email addresses, including DNS MX validation
 * Module for extracting Tor .onion addresses (to be further processed for analysis)
 * Keep tracks of duplicates (and diffing between each duplicate found)
 * Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
