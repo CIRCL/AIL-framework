@@ -17,6 +17,7 @@ Conditions to fulfill to be able to use this class correctly:
 """
 
 import os
+import sys
 import time
 import gzip
 import redis
@@ -25,10 +26,11 @@ import random
 from io import BytesIO
 import zipfile
 
-import configparser
-import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 from Date import Date
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 class HiddenServices(object):
     """
@@ -43,27 +45,11 @@ class HiddenServices(object):
 
     def __init__(self, domain, type, port=80):
 
-        configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-        if not os.path.exists(configfile):
-            raise Exception('Unable to find the configuration file. \
-                            Did you set environment variables? \
-                            Or activate the virtualenv.')
+        config_loader = ConfigLoader.ConfigLoader()
+        self.r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
+        self.r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 
-        cfg = configparser.ConfigParser()
-        cfg.read(configfile)
-        self.r_serv_onion = redis.StrictRedis(
-            host=cfg.get("ARDB_Onion", "host"),
-            port=cfg.getint("ARDB_Onion", "port"),
-            db=cfg.getint("ARDB_Onion", "db"),
-            decode_responses=True)
-
-        self.r_serv_metadata = redis.StrictRedis(
-            host=cfg.get("ARDB_Metadata", "host"),
-            port=cfg.getint("ARDB_Metadata", "port"),
-            db=cfg.getint("ARDB_Metadata", "db"),
-            decode_responses=True)
-
-        self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+        self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 
         self.domain = domain
         self.type = type
@@ -71,17 +57,19 @@ class HiddenServices(object):
         self.tags = {}
 
         if type == 'onion' or type == 'regular':
-            self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
-            self.paste_crawled_directory = os.path.join(self.paste_directory, cfg.get("Directories", "crawled"))
-            self.paste_crawled_directory_name = cfg.get("Directories", "crawled")
-            self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
+            self.paste_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
+            self.paste_crawled_directory = os.path.join(self.paste_directory, config_loader.get_config_str("Directories", "crawled"))
+            self.paste_crawled_directory_name = config_loader.get_config_str("Directories", "crawled")
+            self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
             self.screenshot_directory_screenshot = os.path.join(self.screenshot_directory, 'screenshot')
         elif type == 'i2p':
-            self.paste_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
-            self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "crawled_screenshot"))
+            self.paste_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
+            self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
         else:
             ## TODO: # FIXME: add error
             pass
+            
+        config_loader = None
 
     #def remove_absolute_path_link(self, key, value):
     #    print(key)

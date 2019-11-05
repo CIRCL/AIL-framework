@@ -11,7 +11,6 @@ import redis
 import random
 import logging
 import logging.handlers
-import configparser
 
 from flask import Flask, render_template, jsonify, request, Request, Response, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required

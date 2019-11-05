@@ -2,9 +2,12 @@
 # -*-coding:UTF-8 -*
 
 import os
+import sys
 import redis
 import bcrypt
-import configparser
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 from flask_login import UserMixin
 
@@ -12,20 +15,10 @@ class User(UserMixin):
 
     def __init__(self, id):
 
-        configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-        if not os.path.exists(configfile):
-            raise Exception('Unable to find the configuration file. \
-                            Did you set environment variables? \
-                            Or activate the virtualenv.')
+        config_loader = ConfigLoader.ConfigLoader()
 
-        cfg = configparser.ConfigParser()
-        cfg.read(configfile)
-
-        self.r_serv_db = redis.StrictRedis(
-            host=cfg.get("ARDB_DB", "host"),
-            port=cfg.getint("ARDB_DB", "port"),
-            db=cfg.getint("ARDB_DB", "db"),
-            decode_responses=True)
+        self.r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+        config_loader = None
 
         if self.r_serv_db.hexists('user:all', id):
             self.id = id

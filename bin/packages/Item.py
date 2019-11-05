@@ -6,15 +6,18 @@ import sys
 import gzip
 import redis
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
-import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
 
-PASTES_FOLDER = Flask_config.PASTES_FOLDER
-r_cache = Flask_config.r_cache
-r_serv_metadata = Flask_config.r_serv_metadata
+config_loader = ConfigLoader.ConfigLoader()
+PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+r_cache = config_loader.get_redis_conn("Redis_Cache")
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
 def exist_item(item_id):
     if os.path.isfile(os.path.join(PASTES_FOLDER, item_id)):

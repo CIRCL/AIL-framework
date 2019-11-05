@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import configparser
 import os
 import sys
 import gzip
@@ -16,6 +15,9 @@ import sflock
 
 from Helper import Process
 from pubsublogger import publisher
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
 
@@ -154,44 +156,13 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
+    config_loader = ConfigLoader.ConfigLoader()
 
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
-
-    r_serv_db = redis.StrictRedis(
-        host=cfg.get("ARDB_DB", "host"),
-        port=cfg.getint("ARDB_DB", "port"),
-        db=cfg.getint("ARDB_DB", "db"),
-        decode_responses=True)
-
-    r_serv_log_submit = redis.StrictRedis(
-        host=cfg.get("Redis_Log_submit", "host"),
-        port=cfg.getint("Redis_Log_submit", "port"),
-        db=cfg.getint("Redis_Log_submit", "db"),
-        decode_responses=True)
-
-    r_serv_tags = redis.StrictRedis(
-        host=cfg.get("ARDB_Tags", "host"),
-        port=cfg.getint("ARDB_Tags", "port"),
-        db=cfg.getint("ARDB_Tags", "db"),
-        decode_responses=True)
-
-    r_serv_metadata = redis.StrictRedis(
-        host=cfg.get("ARDB_Metadata", "host"),
-        port=cfg.getint("ARDB_Metadata", "port"),
-        db=cfg.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
-
-    serv_statistics = redis.StrictRedis(
-        host=cfg.get('ARDB_Statistics', 'host'),
-        port=cfg.getint('ARDB_Statistics', 'port'),
-        db=cfg.getint('ARDB_Statistics', 'db'),
-        decode_responses=True)
+    r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+    r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
+    r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
+    r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+    serv_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 
     expire_time = 120
     MAX_FILE_SIZE = 1000000000
@@ -200,7 +171,9 @@ if __name__ == "__main__":
     config_section = 'submit_paste'
     p = Process(config_section)
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+
+    config_loader = None
 
     while True:
 

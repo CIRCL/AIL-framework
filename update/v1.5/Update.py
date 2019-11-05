@@ -6,33 +6,21 @@ import sys
 import time
 import redis
 import datetime
-import configparser
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 if __name__ == '__main__':
 
     start_deb = time.time()
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
+    config_loader = ConfigLoader.ConfigLoader()
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 
-    r_serv = redis.StrictRedis(
-        host=cfg.get("ARDB_DB", "host"),
-        port=cfg.getint("ARDB_DB", "port"),
-        db=cfg.getint("ARDB_DB", "db"),
-        decode_responses=True)
-
-    r_serv_onion = redis.StrictRedis(
-        host=cfg.get("ARDB_Onion", "host"),
-        port=cfg.getint("ARDB_Onion", "port"),
-        db=cfg.getint("ARDB_Onion", "db"),
-        decode_responses=True)
+    r_serv = config_loader.get_redis_conn("ARDB_DB")
+    r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
+    config_loader = None
 
     print()
     print('Updating ARDB_Onion ...')

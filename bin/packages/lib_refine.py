@@ -1,14 +1,20 @@
 #!/usr/bin/python3
 
-import re
 import os
-import configparser
+import re
+import sys
 import dns.resolver
 
 from pubsublogger import publisher
 
 from datetime import timedelta
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
+config_loader = ConfigLoader.ConfigLoader()
+dns_server = config_loader.get_config_str("Web", "dns")
+config_loader = None
 
 def is_luhn_valid(card_number):
     """Apply the Luhn algorithm to validate credit card.
@@ -103,14 +109,6 @@ def checking_MX_record(r_serv, adress_set, addr_dns):
 
 
 def checking_A_record(r_serv, domains_set):
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
-    dns_server = cfg.get("Web", "dns")
 
     score = 0
     num = len(domains_set)

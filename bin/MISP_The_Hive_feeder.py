@@ -8,20 +8,20 @@ module
 This module send tagged pastes to MISP or THE HIVE Project
 
 """
-
-import redis
-import sys
 import os
+import sys
+import uuid
+import redis
 import time
 import json
-import configparser
 
 from pubsublogger import publisher
 from Helper import Process
 from packages import Paste
 import ailleakObject
 
-import uuid
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 from pymisp import PyMISP
 
@@ -133,26 +133,10 @@ if __name__ == "__main__":
 
     config_section = 'MISP_The_hive_feeder'
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
+    config_loader = ConfigLoader.ConfigLoader()
 
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
-
-    r_serv_db = redis.StrictRedis(
-        host=cfg.get("ARDB_DB", "host"),
-        port=cfg.getint("ARDB_DB", "port"),
-        db=cfg.getint("ARDB_DB", "db"),
-        decode_responses=True)
-
-    r_serv_metadata = redis.StrictRedis(
-        host=cfg.get("ARDB_Metadata", "host"),
-        port=cfg.getint("ARDB_Metadata", "port"),
-        db=cfg.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
+    r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+    r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 
     # set sensor uuid
     uuid_ail = r_serv_db.get('ail:uuid')
@@ -212,7 +196,9 @@ if __name__ == "__main__":
 
     refresh_time = 3
     ## FIXME: remove it
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
+    config_loader = None
+
     time_1 = time.time()
 
     while True:

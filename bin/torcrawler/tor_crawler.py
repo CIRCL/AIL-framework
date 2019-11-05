@@ -5,8 +5,10 @@ import os
 import sys
 import json
 import redis
-import configparser
 from TorSplashCrawler import TorSplashCrawler
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 if __name__ == '__main__':
 
@@ -14,20 +16,10 @@ if __name__ == '__main__':
         print('usage:', 'tor_crawler.py', 'uuid')
         exit(1)
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
 
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
-
-    redis_cache = redis.StrictRedis(
-        host=cfg.get("Redis_Cache", "host"),
-        port=cfg.getint("Redis_Cache", "port"),
-        db=cfg.getint("Redis_Cache", "db"),
-        decode_responses=True)
+    config_loader = ConfigLoader.ConfigLoader()
+    redis_cache = config_loader.get_redis_conn("Redis_Cache")
+    config_loader = None
 
     # get crawler config key
     uuid = sys.argv[1]

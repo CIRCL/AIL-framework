@@ -29,15 +29,19 @@ Every data coming from a named feed can be sent to a pre-processing module befor
 The mapping can be done via the variable FEED_QUEUE_MAPPING
 
 """
+import os
+import sys
+
 import base64
 import hashlib
-import os
 import time
 from pubsublogger import publisher
 import redis
-import configparser
 
 from Helper import Process
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 
 # CONFIG #
@@ -52,37 +56,22 @@ if __name__ == '__main__':
 
     p = Process(config_section)
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
+    config_loader = ConfigLoader.ConfigLoader()
 
     # REDIS #
-    server = redis.StrictRedis(
-        host=cfg.get("Redis_Mixer_Cache", "host"),
-        port=cfg.getint("Redis_Mixer_Cache", "port"),
-        db=cfg.getint("Redis_Mixer_Cache", "db"),
-        decode_responses=True)
-
-    server_cache = redis.StrictRedis(
-        host=cfg.get("Redis_Log_submit", "host"),
-        port=cfg.getint("Redis_Log_submit", "port"),
-        db=cfg.getint("Redis_Log_submit", "db"),
-        decode_responses=True)
+    server = config_loader.get_redis_conn("Redis_Mixer_Cache")
+    server_cache = config_loader.get_redis_conn("Redis_Log_submit")
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")
 
     # OTHER CONFIG #
-    operation_mode = cfg.getint("Module_Mixer", "operation_mode")
-    ttl_key = cfg.getint("Module_Mixer", "ttl_duplicate")
-    default_unnamed_feed_name = cfg.get("Module_Mixer", "default_unnamed_feed_name")
+    operation_mode = config_loader.get_config_int("Module_Mixer", "operation_mode")
+    ttl_key = config_loader.get_config_int("Module_Mixer", "ttl_duplicate")
+    default_unnamed_feed_name = config_loader.get_config_str("Module_Mixer", "default_unnamed_feed_name")
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes")) + '/'
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+    config_loader = None
 
     # STATS #
     processed_paste = 0

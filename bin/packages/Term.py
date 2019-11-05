@@ -14,15 +14,20 @@ from collections import defaultdict
 from nltk.tokenize import RegexpTokenizer
 from textblob import TextBlob
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
-import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
 from flask import escape
 
 import Date
 import Item
 
-r_serv_term = Flask_config.r_serv_term
-email_regex = Flask_config.email_regex
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_term = config_loader.get_redis_conn("ARDB_Tracker")
+config_loader = None
+
+email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
+email_regex = re.compile(email_regex)
 
 special_characters = set('[<>~!?@#$%^&*|()_-+={}":;,.\'\n\r\t]/\\')
 special_characters.add('\\s')

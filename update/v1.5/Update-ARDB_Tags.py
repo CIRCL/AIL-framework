@@ -5,57 +5,35 @@ import os
 import sys
 import time
 import redis
-import configparser
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 if __name__ == '__main__':
 
     start_deb = time.time()
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
+    config_loader = ConfigLoader.ConfigLoader()
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 
-    r_serv = redis.StrictRedis(
-        host=cfg.get("ARDB_DB", "host"),
-        port=cfg.getint("ARDB_DB", "port"),
-        db=cfg.getint("ARDB_DB", "db"),
-        decode_responses=True)
-
-    r_serv_metadata = redis.StrictRedis(
-        host=cfg.get("ARDB_Metadata", "host"),
-        port=cfg.getint("ARDB_Metadata", "port"),
-        db=cfg.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
-
-    r_serv_tag = redis.StrictRedis(
-        host=cfg.get("ARDB_Tags", "host"),
-        port=cfg.getint("ARDB_Tags", "port"),
-        db=cfg.getint("ARDB_Tags", "db"),
-        decode_responses=True)
-
-    r_serv_onion = redis.StrictRedis(
-        host=cfg.get("ARDB_Onion", "host"),
-        port=cfg.getint("ARDB_Onion", "port"),
-        db=cfg.getint("ARDB_Onion", "db"),
-        decode_responses=True)
-
+    r_serv = config_loader.get_redis_conn("ARDB_DB")
+    r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+    r_serv_tag = config_loader.get_redis_conn("ARDB_Tags")
+    r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
     r_important_paste_2018 = redis.StrictRedis(
-        host=cfg.get("ARDB_Metadata", "host"),
-        port=cfg.getint("ARDB_Metadata", "port"),
+        host=config_loader.get_config_str("ARDB_Metadata", "host"),
+        port=config_loader.get_config_int("ARDB_Metadata", "port"),
         db=2018,
         decode_responses=True)
 
     r_important_paste_2019 = redis.StrictRedis(
-        host=cfg.get("ARDB_Metadata", "host"),
-        port=cfg.getint("ARDB_Metadata", "port"),
-        db=2018,
+        host=config_loader.get_config_str("ARDB_Metadata", "host"),
+        port=config_loader.get_config_int("ARDB_Metadata", "port"),
+        db=2019,
         decode_responses=True)
+
+    config_loader = None
 
     r_serv.set('ail:current_background_script', 'tags')
     r_serv.set('ail:current_background_script_stat', 0)

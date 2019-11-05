@@ -18,9 +18,6 @@ import NotificationHelper
 from packages import Item
 from packages import Term
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
-import Flask_config
-
 full_item_url = "/showsavedpaste/?paste="
 
 mail_body_template = "AIL Framework,\nNew occurrence for term tracked term: {}\nitem id: {}\nurl: {}{}"

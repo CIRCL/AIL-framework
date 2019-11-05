@@ -5,7 +5,7 @@ import os
 import sys
 import redis
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'lib/'))
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()

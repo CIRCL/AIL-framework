@@ -46,3 +46,9 @@ class ConfigLoader(object):
 
     def get_config_boolean(self, section, key_name):
         return self.cfg.getboolean(section, key_name)
+
+    def has_option(self, section, key_name):
+        return self.cfg.has_option(section, key_name)
+
+    def has_section(self, section):
+        return self.cfg.has_section(section)

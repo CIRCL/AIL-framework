@@ -386,15 +386,19 @@ img.onload = pixelate;
 img.addEventListener("error", img_error);
 var draw_img = false;
 
-{%if dict_domain['crawler_history']['random_item']['screenshot']%}
-  var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}";
-  var selected_icon = $("#"+screenshot.replace(/\//g, ""));
-  selected_icon.addClass("icon_selected");
-  selected_icon.removeClass("icon_img");
+{%if "crawler_history" in dict_domain%}
+  {%if dict_domain['crawler_history']['random_item']['screenshot']%}
+    var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}";
+    var selected_icon = $("#"+screenshot.replace(/\//g, ""));
+    selected_icon.addClass("icon_selected");
+    selected_icon.removeClass("icon_img");
 
 
-  $("#screenshot_link").attr("href", "screenshot_href + {{dict_domain['crawler_history']['random_item']['id']}}");
-  $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
+    $("#screenshot_link").attr("href", "screenshot_href + {{dict_domain['crawler_history']['random_item']['id']}}");
+    $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
+  {%else%}
+  var screenshot = "";
+  {%endif%}
 {%else%}
 var screenshot = "";
 {%endif%}

@@ -17,35 +17,32 @@
 #
 # Copyright (c) 2014 Alexandre Dulaunoy - a@foo.be
 
+import os
+import sys
 
 import zmq
 import random
-import sys
 import time
 import redis
 import base64
-import os
-import configparser
 
-configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-if not os.path.exists(configfile):
-    raise Exception('Unable to find the configuration file. \
-        Did you set environment variables? \
-        Or activate the virtualenv.')
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
-cfg = configparser.ConfigParser()
-cfg.read(configfile)
+config_loader = ConfigLoader.ConfigLoader()
 
-if cfg.has_option("ZMQ_Global", "bind"):
-    zmq_url = cfg.get("ZMQ_Global", "bind")
+if config_loader.has_option("ZMQ_Global", "bind"):
+    zmq_url = config_loader.get_config_str("ZMQ_Global", "bind")
 else:
     zmq_url = "tcp://127.0.0.1:5556"
 
-pystemonpath = cfg.get("Directories", "pystemonpath")
-pastes_directory = cfg.get("Directories", "pastes")
+pystemonpath = config_loader.get_config_str("Directories", "pystemonpath")
+pastes_directory = config_loader.get_config_str("Directories", "pastes")
 pastes_directory = os.path.join(os.environ['AIL_HOME'], pastes_directory)
 base_sleeptime = 0.01
 sleep_inc = 0
+
+config_loader = None
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)

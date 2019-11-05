@@ -2,13 +2,17 @@
 # -*-coding:UTF-8 -*
 
 import os
+import sys
 import uuid
 import redis
 
-import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
-r_serv_db = Flask_config.r_serv_db
-r_serv_log_submit = Flask_config.r_serv_log_submit
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
+config_loader = None
 
 def is_valid_uuid_v4(UUID):
     UUID = UUID.replace('-', '')
