@@ -7,11 +7,13 @@ import sys
 import time
 import redis
 import datetime
-import configparser
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
 import Term
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 
 def rreplace(s, old, new, occurrence):
@@ -23,25 +25,11 @@ if __name__ == '__main__':
 
     start_deb = time.time()
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg.sample')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
+    config_loader = ConfigLoader.ConfigLoader()
 
-    r_serv_term_stats = redis.StrictRedis(
-        host=cfg.get("ARDB_Trending", "host"),
-        port=cfg.getint("ARDB_Trending", "port"),
-        db=cfg.getint("ARDB_Trending", "db"),
-        decode_responses=True)
-
-    r_serv_termfreq = redis.StrictRedis(
-        host=cfg.get("ARDB_TermFreq", "host"),
-        port=cfg.getint("ARDB_TermFreq", "port"),
-        db=cfg.getint("ARDB_TermFreq", "db"),
-        decode_responses=True)
+    r_serv_term_stats = config_loader.get_redis_conn("ARDB_Trending")
+    r_serv_termfreq = config_loader.get_redis_conn("ARDB_TermFreq")
+    config_loader = None
 
     r_serv_term_stats.flushdb()
 

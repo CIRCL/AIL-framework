@@ -2,17 +2,23 @@
 # -*-coding:UTF-8 -*
 
 import os
+import sys
 import redis
 
-import Flask_config
 import Date
 import Item
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+import Domain
 
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 
-r_serv_tags = Flask_config.r_serv_tags
-r_serv_metadata = Flask_config.r_serv_metadata
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
 def get_taxonomie_from_tag(tag):
     return tag.split(':')[0]
@@ -77,15 +83,35 @@ def is_tag_in_all_tag(tag):
 def get_all_tags():
     return list(r_serv_tags.smembers('list_tags'))
 
+'''
+Retun all the tags of a given item.
+:param item_id: (Paste or domain)
+'''
 def get_item_tags(item_id):
-    tags = r_serv_metadata.smembers('tag:'+item_id)
+    tags = r_serv_metadata.smembers('tag:{}'.format(item_id))
     if tags:
         return list(tags)
     else:
         return []
 
+def get_min_tag(tag):
+    tag = tag.split('=')
+    if len(tag) > 1:
+        if tag[1] != '':
+            tag = tag[1][1:-1]
+        # no value
+        else:
+            tag = tag[0][1:-1]
+    # custom tags
+    else:
+        tag = tag[0]
+    return tag
+
+def get_item_tags_minimal(item_id):
+    return [ {"tag": tag, "min_tag": get_min_tag(tag)} for tag in get_item_tags(item_id) ]
+
 # TEMPLATE + API QUERY
-def add_items_tag(tags=[], galaxy_tags=[], item_id=None):
+def add_items_tag(tags=[], galaxy_tags=[], item_id=None): ## TODO: remove me
     res_dict = {}
     if item_id == None:
         return ({'status': 'error', 'reason': 'Item id not found'}, 404)
@@ -113,13 +139,60 @@ def add_items_tag(tags=[], galaxy_tags=[], item_id=None):
     return (res_dict, 200)
 
 
-def add_item_tag(tag, item_path):
+# TEMPLATE + API QUERY
+def add_items_tags(tags=[], galaxy_tags=[], item_id=None, item_type="paste"):
+    res_dict = {}
+    if item_id == None:
+        return ({'status': 'error', 'reason': 'Item id not found'}, 404)
+    if not tags and not galaxy_tags:
+        return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
+    if item_type not in ('paste', 'domain'):
+        return ({'status': 'error', 'reason': 'Incorrect item_type'}, 400)
 
-    item_date = int(Item.get_item_date(item_path))
+    res_dict['tags'] = []
+    for tag in tags:
+        if tag:
+            taxonomie = get_taxonomie_from_tag(tag)
+            if is_taxonomie_tag_enabled(taxonomie, tag):
+                add_item_tag(tag, item_id, item_type=item_type)
+                res_dict['tags'].append(tag)
+            else:
+                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, 400)
 
-    #add tag
-    r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
-    r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
+    for tag in galaxy_tags:
+        if tag:
+            galaxy = get_galaxy_from_tag(tag)
+            if is_galaxy_tag_enabled(galaxy, tag):
+                add_item_tag(tag, item_id, item_type=item_type)
+                res_dict['tags'].append(tag)
+            else:
+                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, 400)
+
+    res_dict['id'] = item_id
+    res_dict['type'] = item_type
+    return (res_dict, 200)
+
+def add_domain_tag(tag, domain, item_date):
+    r_serv_metadata.sadd('tag:{}'.format(domain), tag)
+    r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), domain)
+
+def add_item_tag(tag, item_path, item_type="paste", tag_date=None):
+
+    if item_type=="paste":
+        item_date = int(Item.get_item_date(item_path))
+
+        #add tag
+        r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
+        r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
+
+        if Item.is_crawled(item_path):
+            domain = Item.get_item_domain(item_path)
+            r_serv_metadata.sadd('tag:{}'.format(domain), tag)
+            r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), domain)
+    # domain item
+    else:
+        item_date = int(Domain.get_domain_last_check(item_path, r_format="int"))
+        add_domain_tag(tag, item_path, item_date)
 
     r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
 
@@ -220,3 +293,12 @@ def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
         else:
             tag_last_seen = Date.date_substract_day(tag_last_seen)
             update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
+
+
+# used by modal
+def get_modal_add_tags(item_id, tag_type='paste'):
+    '''
+    Modal: add tags to domain or Paste
+    '''
+    return {"active_taxonomies": get_active_taxonomies(), "active_galaxies": get_active_galaxies(),
+            "item_id": item_id, "type": tag_type}

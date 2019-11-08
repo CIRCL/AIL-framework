@@ -222,7 +222,7 @@ function launching_scripts {
 
 function launching_crawler {
     if [[ ! $iscrawler ]]; then
-        CONFIG=$AIL_BIN/packages/config.cfg
+        CONFIG=$AIL_HOME/configs/core.cfg
         lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_port/{print $3;exit}' "${CONFIG}")
 
         IFS='-' read -ra PORTS <<< "$lport"

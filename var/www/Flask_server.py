@@ -11,7 +11,6 @@ import redis
 import random
 import logging
 import logging.handlers
-import configparser
 
 from flask import Flask, render_template, jsonify, request, Request, Response, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
@@ -24,6 +23,10 @@ sys.path.append('./modules/')
 
 from User import User
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
+
 from pytaxonomies import Taxonomies
 
 # Import config
@@ -31,33 +34,21 @@ import Flask_config
 
 # Import Blueprint
 from blueprints.root import root
+from blueprints.crawler_splash import crawler_splash
 
 Flask_dir = os.environ['AIL_FLASK']
 
 # CONFIG #
-cfg = Flask_config.cfg
-baseUrl = cfg.get("Flask", "baseurl")
+config_loader = ConfigLoader.ConfigLoader()
+baseUrl = config_loader.get_config_str("Flask", "baseurl")
 baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':
     baseUrl = '/'+baseUrl
 
 # ========= REDIS =========#
-r_serv_db = redis.StrictRedis(
-    host=cfg.get("ARDB_DB", "host"),
-    port=cfg.getint("ARDB_DB", "port"),
-    db=cfg.getint("ARDB_DB", "db"),
-    decode_responses=True)
-r_serv_tags = redis.StrictRedis(
-    host=cfg.get("ARDB_Tags", "host"),
-    port=cfg.getint("ARDB_Tags", "port"),
-    db=cfg.getint("ARDB_Tags", "db"),
-    decode_responses=True)
-
-r_cache = redis.StrictRedis(
-    host=cfg.get("Redis_Cache", "host"),
-    port=cfg.getint("Redis_Cache", "port"),
-    db=cfg.getint("Redis_Cache", "db"),
-    decode_responses=True)
+r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
+r_cache = config_loader.get_redis_conn("Redis_Cache")
 
 # logs
 log_dir = os.path.join(os.environ['AIL_HOME'], 'logs')
@@ -88,6 +79,7 @@ app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 
 # =========  BLUEPRINT  =========#
 app.register_blueprint(root, url_prefix=baseUrl)
+app.register_blueprint(crawler_splash, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= session ========
@@ -199,7 +191,7 @@ def add_header(response):
 
 @app.errorhandler(405)
 def _handle_client_error(e):
-    if request.path.startswith('/api/'): ## # TODO: add baseUrl 
+    if request.path.startswith('/api/'): ## # TODO: add baseUrl
         res_dict = {"status": "error", "reason": "Method Not Allowed: The method is not allowed for the requested URL"}
         anchor_id = request.path[8:]
         anchor_id = anchor_id.replace('/', '_')

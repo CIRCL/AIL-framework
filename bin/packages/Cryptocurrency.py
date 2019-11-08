@@ -7,16 +7,25 @@ import redis
 
 from hashlib import sha256
 
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
-import Flask_config
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 from Correlation import Correlation
+import Item
 
-r_serv_metadata = Flask_config.r_serv_metadata
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-#address_validation = {'bitcoin': 'base58', 'dash': 'base58'}
 
-cryptocurrency = Correlation('cryptocurrency')
+
+class Cryptocurrency(Correlation):
+    def __init__(self):
+        super().__init__('cryptocurrency', ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash'])
+
+cryptocurrency = Cryptocurrency()
 
 # http://rosettacode.org/wiki/Bitcoin/address_validation#Python
 def decode_base58(bc, length):
@@ -52,6 +61,7 @@ def get_cryptocurrency(request_dict, cryptocurrency_type):
 
     return cryptocurrency.get_correlation(request_dict, cryptocurrency_type, field_name)
 
+# # TODO: refractor/move me in Correlation
 def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrency_address):
     # create basic medata
     if not r_serv_metadata.exists('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address)):
@@ -65,7 +75,8 @@ def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrenc
             if int(last_seen) < int(date):
                 r_serv_metadata.hset('cryptocurrency_metadata_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), 'last_seen', date)
 
-    # global set
+    ## global set
+    # item
     r_serv_metadata.sadd('set_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), item_path)
 
     # daily
@@ -74,5 +85,12 @@ def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrenc
     # all type
     r_serv_metadata.zincrby('cryptocurrency_all:{}'.format(cryptocurrency_name), cryptocurrency_address, 1)
 
-    # item_metadata
+    ## object_metadata
+    # item
     r_serv_metadata.sadd('item_cryptocurrency_{}:{}'.format(cryptocurrency_name, item_path), cryptocurrency_address)
+
+    # domain
+    if Item.is_crawled(item_path): # # TODO:  use save_domain_correlation
+        domain = Item.get_item_domain(item_path)
+        r_serv_metadata.sadd('domain_cryptocurrency_{}:{}'.format(cryptocurrency_name, domain), cryptocurrency_address)
+        r_serv_metadata.sadd('set_domain_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), domain)

@@ -35,9 +35,11 @@ var/www/server.crt
 var/www/server.key
 
 # Local config
-bin/packages/config.cfg
-bin/packages/config.cfg.backup
 configs/keys
+bin/packages/core.cfg
+bin/packages/config.cfg.backup
+configs/core.cfg
+configs/core.cfg.backup
 configs/update.cfg
 update/current_version
 files

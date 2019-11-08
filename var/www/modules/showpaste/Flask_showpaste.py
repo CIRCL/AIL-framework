@@ -23,7 +23,6 @@ import requests
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata

@@ -14,7 +14,6 @@ from flask_login import login_required
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
 
 rawSkeleton = Blueprint('rawSkeleton', __name__, template_folder='templates')
 

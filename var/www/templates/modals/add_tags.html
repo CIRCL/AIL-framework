@@ -1,0 +1,131 @@
+<div id="add_tags_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog modal-lg">
+
+    <div id="add_tags_modal_content" class="modal-content">
+      <div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
+        <h4>Add New Tags</h4>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="input-group" >
+          <input id="ltags" type="text" class="form-control" autocomplete="off" style="width: 760px">
+        </div>
+
+        <div class="dropdown">
+          <button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-taxonomie">
+             Taxonomie Selected
+          </button>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie"> <!-- TODO: make dropdown-scrollable -->
+            <h6 class="dropdown-header">Taxonomie Tags</h6>
+            <button class="dropdown-item" type="button" id="all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
+            <div class="dropdown-divider"></div>
+            {% for taxo in modal_add_tags['active_taxonomies'] %}
+                <button class="dropdown-item" type="button" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="input-group">
+          <input id="ltagsgalaxies" type="text" class="form-control" autocomplete="off" style="width: 760px">
+        </div>
+
+        <div class="dropdown">
+          <button type="button" class="btn btn-info dropdown-toggle mt-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-galaxy">
+             Galaxy Selected
+          </button>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-galaxy"> <!-- TODO: make dropdown-scrollable -->
+            <h6 class="dropdown-header">Galaxy Tags</h6>
+            <button class="dropdown-item" type="button" id="all-tags-galaxies">All Tags <i class="fas fa-tags"></i></button>
+            <div class="dropdown-divider"></div>
+            {% for galaxy in modal_add_tags['active_galaxies'] %}
+                <button class="dropdown-item" type="button" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <a class="btn btn-link" href="{{ url_for('Tags.taxonomies') }}" target="_blank">
+            <span class="label-icon">Edit Taxonomies List </span>
+            <i class="fas fa-wrench fa-2x"></i>
+        </a>
+        <a class="btn btn-link" href="{{ url_for('Tags.galaxies') }}" target="_blank">
+            <span class="label-icon">Edit Galaxies List</span>
+            <i class="fas fa-rocket fa-2x"></i>
+        </a>
+        <button class="btn btn-primary" onclick="addTags()">
+            <i class="fas fa-plus"></i>
+            Add Tags
+        </button>
+        <button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script> // TODO: add tags to PASTE or DOMAIN
+var ltags;
+var ltagsgalaxies;
+
+$.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+    function(data) {
+
+      ltags = $('#ltags').tagSuggest({
+        data: data,
+        maxDropHeight: 200,
+        name: 'ltags'
+      });
+    });
+
+$.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+  function(data) {
+
+    ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
+      data: data,
+      maxDropHeight: 200,
+      name: 'ltagsgalaxies'
+    });
+  });
+
+jQuery("#all-tags-taxonomies").click(function(e){
+        //change input tags list
+      $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+        function(data) {
+          ltags.setData(data)
+      });
+    });
+
+jQuery("#all-tags-galaxies").click(function(e){
+      $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+        function(data) {
+          ltagsgalaxies.setData(data)
+      });
+    });
+
+{% for taxo in modal_add_tags['active_taxonomies'] %}
+    jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
+      $.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
+        function(data) {
+          ltags.setData(data)
+  });
+});
+{% endfor %}
+
+{% for galaxy in modal_add_tags['active_galaxies'] %}
+    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
+      $.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
+        function(data) {
+          ltagsgalaxies.setData(data)
+  });
+});
+{% endfor %}
+
+function addTags() {
+  var tags = ltags.getValue()
+  var tagsgalaxy = ltagsgalaxies.getValue()
+  window.location.replace("{{ url_for('Tags.add_item_tags') }}?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy + "&item_id={{ modal_add_tags['item_id'] }}&type={{ modal_add_tags['type'] }}");
+}
+</script>

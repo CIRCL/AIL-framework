@@ -68,9 +68,9 @@ def main():
 
     #------------------------------------------------------------------------------------#
 
-    config_file_default = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    config_file_default_sample = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg.sample')
-    config_file_default_backup = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg.backup')
+    config_file_default = os.path.join(os.environ['AIL_HOME'], 'configs/core.cfg')
+    config_file_default_sample = os.path.join(os.environ['AIL_HOME'], 'configs/core.cfg.sample')
+    config_file_default_backup = os.path.join(os.environ['AIL_HOME'], 'configs/core.cfg.backup')
 
     config_file_update = os.path.join(os.environ['AIL_HOME'], 'configs/update.cfg')
     config_file_update_sample = os.path.join(os.environ['AIL_HOME'], 'configs/update.cfg.sample')

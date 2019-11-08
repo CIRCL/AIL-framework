@@ -25,7 +25,7 @@ import time
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
+config_loader = Flask_config.config_loader
 baseUrl = Flask_config.baseUrl
 r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
@@ -34,9 +34,8 @@ max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
 PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
-baseindexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
-indexRegister_path = os.path.join(os.environ['AIL_HOME'],
-                         cfg.get("Indexer", "register"))
+baseindexpath = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Indexer", "path"))
+indexRegister_path = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Indexer", "register"))
 
 searches = Blueprint('searches', __name__, template_folder='templates')
 

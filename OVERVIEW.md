@@ -261,6 +261,9 @@ Redis and ARDB overview
 | set_pgpdump_name:*name* | *item_path* |
 | | |
 | set_pgpdump_mail:*mail* | *item_path* |
+| | |
+| | |
+| set_domain_pgpdump_**pgp_type**:**key** | **domain** |
 
 ##### Hset date:
 | Key | Field | Value |
@@ -288,11 +291,20 @@ Redis and ARDB overview
 | item_pgpdump_name:*item_path* | *name* |
 | | |
 | item_pgpdump_mail:*item_path* | *mail* |
+| | |
+| | |
+| domain_pgpdump_**pgp_type**:**domain** | **key** |
 
 #### Cryptocurrency
 
 Supported cryptocurrency:
 - bitcoin
+- bitcoin-cash
+- dash
+- etherum
+- litecoin
+- monero
+- zcash
 
 ##### Hset:
 | Key | Field | Value |
@@ -303,7 +315,8 @@ Supported cryptocurrency:
 ##### set:
 | Key | Value |
 | ------ | ------ |
-| set_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **item_path** |
+| set_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **item_path** | PASTE
+| domain_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **domain** | DOMAIN
 
 ##### Hset date:
 | Key | Field | Value |
@@ -318,8 +331,14 @@ Supported cryptocurrency:
 ##### set:
 | Key | Value |
 | ------ | ------ |
-| item_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** |
+| item_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** | PASTE
+| domain_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** | DOMAIN
 
+#### HASH
+| Key | Value |
+| ------ | ------ |
+| hash_domain:**domain** | **hash** |
+| domain_hash:**hash** | **domain** |
 
 ## DB9 - Crawler:
 
@@ -361,6 +380,20 @@ Supported cryptocurrency:
   "png": 0
 }
 ```
+
+##### CRAWLER QUEUES:
+| SET - Key | Value |
+| ------ | ------ |
+| onion_crawler_queue | **url**;**item_id** | RE-CRAWL
+| regular_crawler_queue | - |
+|  |  |
+| onion_crawler_priority_queue   | **url**;**item_id** | USER
+| regular_crawler_priority_queue | - |
+|  |  |
+| onion_crawler_discovery_queue   | **url**;**item_id** | DISCOVER
+| regular_crawler_discovery_queue | - |
+
+##### TO CHANGE:
 
 ARDB overview
 

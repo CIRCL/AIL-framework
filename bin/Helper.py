@@ -20,10 +20,10 @@ import datetime
 import json
 
 
-class PubSub(object):
+class PubSub(object): ## TODO: remove config, use ConfigLoader by default
 
     def __init__(self):
-        configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+        configfile = os.path.join(os.environ['AIL_HOME'], 'configs/core.cfg')
         if not os.path.exists(configfile):
             raise Exception('Unable to find the configuration file. \
                             Did you set environment variables? \
@@ -58,7 +58,6 @@ class PubSub(object):
             for address in addresses.split(','):
                 new_sub = context.socket(zmq.SUB)
                 new_sub.connect(address)
-                # bytes64 encode bytes to ascii only bytes
                 new_sub.setsockopt_string(zmq.SUBSCRIBE, channel)
                 self.subscribers.append(new_sub)
 
@@ -112,7 +111,7 @@ class PubSub(object):
 class Process(object):
 
     def __init__(self, conf_section, module=True):
-        configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+        configfile = os.path.join(os.environ['AIL_HOME'], 'configs/core.cfg')
         if not os.path.exists(configfile):
             raise Exception('Unable to find the configuration file. \
                             Did you set environment variables? \

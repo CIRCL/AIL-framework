@@ -3,9 +3,12 @@
 
 import os
 import re
+import sys
 import redis
 import bcrypt
-import configparser
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 from functools import wraps
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
@@ -16,20 +19,10 @@ login_manager = LoginManager()
 login_manager.login_view = 'role'
 
 # CONFIG #
-configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-if not os.path.exists(configfile):
-    raise Exception('Unable to find the configuration file. \
-                    Did you set environment variables? \
-                    Or activate the virtualenv.')
+config_loader = ConfigLoader.ConfigLoader()
 
-cfg = configparser.ConfigParser()
-cfg.read(configfile)
-
-r_serv_db = redis.StrictRedis(
-    host=cfg.get("ARDB_DB", "host"),
-    port=cfg.getint("ARDB_DB", "port"),
-    db=cfg.getint("ARDB_DB", "db"),
-    decode_responses=True)
+r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+config_loader = None
 
 default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
 

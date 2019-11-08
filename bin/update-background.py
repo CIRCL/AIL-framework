@@ -13,23 +13,16 @@ import os
 import sys
 import redis
 import subprocess
-import configparser
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 if __name__ == "__main__":
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
+    config_loader = ConfigLoader.ConfigLoader()
 
-    r_serv = redis.StrictRedis(
-        host=cfg.get("ARDB_DB", "host"),
-        port=cfg.getint("ARDB_DB", "port"),
-        db=cfg.getint("ARDB_DB", "db"),
-        decode_responses=True)
+    r_serv = config_loader.get_redis_conn("ARDB_DB")
+    config_loader = None
 
     if r_serv.scard('ail:update_v1.5') != 5:
         r_serv.delete('ail:update_error')
@@ -60,3 +53,23 @@ if __name__ == "__main__":
             r_serv.delete('ail:current_background_script')
             r_serv.delete('ail:current_background_script_stat')
             r_serv.delete('ail:current_background_update')
+
+    if r_serv.get('ail:current_background_update') == 'v2.4':
+        r_serv.delete('ail:update_error')
+        r_serv.set('ail:update_in_progress', 'v2.4')
+        r_serv.set('ail:current_background_update', 'v2.4')
+        r_serv.set('ail:current_background_script', 'domain update')
+
+        update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v2.4', 'Update_domain.py')
+        process = subprocess.run(['python' ,update_file])
+
+
+        if int(r_serv.get('ail:current_background_script_stat')) != 100:
+            r_serv.set('ail:update_error', 'Update v2.4 Failed, please relaunch the bin/update-background.py script')
+        else:
+            r_serv.delete('ail:update_in_progress')
+            r_serv.delete('ail:current_background_script')
+            r_serv.delete('ail:current_background_script_stat')
+            r_serv.delete('ail:current_background_update')
+            r_serv.delete('update:nb_elem_to_convert')
+            r_serv.delete('update:nb_elem_converted')

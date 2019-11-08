@@ -7,6 +7,7 @@ import time
 import unittest
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'bin'))
 sys.path.append(os.environ['AIL_FLASK'])
 sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
 

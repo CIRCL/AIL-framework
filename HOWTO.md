@@ -25,7 +25,7 @@ Feed data to AIL:
 
 3. Launch pystemon ``` ./pystemon ```
 
-4. Edit your configuration file ```bin/packages/config.cfg``` and modify the pystemonpath path accordingly
+4. Edit your configuration file ```configs/core.cfg``` and modify the pystemonpath path accordingly
 
 5. Launch pystemon-feeder ``` ./bin/feeder/pystemon-feeder.py ```
 
@@ -123,7 +123,7 @@ There are two types of installation. You can install a *local* or a *remote* Spl
       (for a linux docker, the localhost IP is *172.17.0.1*; Should be adapted for other platform)
     - Restart the tor proxy: ``sudo service tor restart``
 
-3. *(AIL host)* Edit the ``/bin/packages/config.cfg`` file:
+3. *(AIL host)* Edit the ``/configs/core.cfg`` file:
     - In the crawler section, set ``activate_crawler`` to ``True``
     - Change the IP address of Splash servers if needed (remote only)
     - Set ``splash_onion_port`` according to your Splash servers port numbers that will be used.
@@ -134,7 +134,7 @@ There are two types of installation. You can install a *local* or a *remote* Spl
 
 - *(Splash host)* Launch all Splash servers with:
 ```sudo ./bin/torcrawler/launch_splash_crawler.sh -f <config absolute_path> -p <port_start> -n <number_of_splash>```
-With ``<port_start>`` and ``<number_of_splash>`` matching those specified at ``splash_onion_port`` in the configuration file of point 3 (``/bin/packages/config.cfg``)
+With ``<port_start>`` and ``<number_of_splash>`` matching those specified at ``splash_onion_port`` in the configuration file of point 3 (``/configs/core.cfg``)
 
 All Splash dockers are launched inside the ``Docker_Splash`` screen. You can use ``sudo screen -r Docker_Splash`` to connect to the screen session and check all Splash servers status.
 
@@ -148,7 +148,7 @@ All Splash dockers are launched inside the ``Docker_Splash`` screen. You can use
 - ```crawler_hidden_services_install.sh -y```
 - Add the following line in ``SOCKSPolicy accept 172.17.0.0/16`` in ``/etc/tor/torrc``
 - ```sudo service tor restart```
-- set activate_crawler to True in ``/bin/packages/config.cfg``
+- set activate_crawler to True in ``/configs/core.cfg``
 #### Start
 - ```sudo ./bin/torcrawler/launch_splash_crawler.sh -f $AIL_HOME/configs/docker/splash_onion/etc/splash/proxy-profiles/ -p 8050 -n 1```
 
@@ -166,4 +166,3 @@ Then starting the crawler service (if you follow the procedure above)
 ##### Python 3 Upgrade
 
 To upgrade from an existing AIL installation, you have to launch [python3_upgrade.sh](./python3_upgrade.sh), this script will delete and create a new virtual environment. The script **will upgrade the packages but won't keep your previous data** (neverthless the data is copied into a directory called `old`). If you install from scratch, you don't require to launch the [python3_upgrade.sh](./python3_upgrade.sh).
-

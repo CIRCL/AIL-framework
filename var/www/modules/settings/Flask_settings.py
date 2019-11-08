@@ -19,7 +19,6 @@ import git_status
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv_db = Flask_config.r_serv_db
 max_preview_char = Flask_config.max_preview_char

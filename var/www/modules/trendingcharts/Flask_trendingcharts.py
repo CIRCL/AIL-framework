@@ -17,7 +17,7 @@ from flask_login import login_required
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
+config_loader = Flask_config.config_loader
 baseUrl = Flask_config.baseUrl
 r_serv_charts = Flask_config.r_serv_charts
 
@@ -69,7 +69,7 @@ def progressionCharts():
 @login_required
 @login_analyst
 def wordstrending():
-    default_display = cfg.get("Flask", "default_display")
+    default_display = config_loader.get_config_str("Flask", "default_display")
     return render_template("Wordstrending.html", default_display = default_display)
 
 
@@ -77,7 +77,7 @@ def wordstrending():
 @login_required
 @login_analyst
 def protocolstrending():
-    default_display = cfg.get("Flask", "default_display")
+    default_display = config_loader.get_config_str("Flask", "default_display")
     return render_template("Protocolstrending.html", default_display = default_display)
 
 
@@ -85,7 +85,7 @@ def protocolstrending():
 @login_required
 @login_analyst
 def trending():
-    default_display = cfg.get("Flask", "default_display")
+    default_display = config_loader.get_config_str("Flask", "default_display")
     return render_template("Trending.html", default_display = default_display)
 
 
