@@ -154,6 +154,21 @@ def get_domain_last_check(domain, domain_type=None, r_format="str"):
             last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
     return last_check
 
+def get_domain_last_origin(domain, domain_type):
+    '''
+    Get domain last origin
+
+    :param domain: crawled domain
+    :type domain: str
+    :param domain_type: domain type
+    :type domain_type: str
+
+    :return: last orgin item_id
+    :rtype: str
+    '''
+    origin_item = r_serv_onion.hget('{}_metadata:{}'.format(domain_type, domain), 'paste_parent')
+    return origin_item
+
 def get_domain_tags(domain):
     '''
     Retun all tags of a given domain.
@@ -279,6 +294,20 @@ class Domain(object):
         :rtype: str
         '''
         return get_domain_last_check(self.domain, domain_type=self.type)
+
+    def get_domain_last_origin(self):
+        '''
+        Get domain last origin
+
+        :param domain: crawled domain
+        :type domain: str
+        :param domain_type: domain type
+        :type domain_type: str
+
+        :return: last orgin item_id
+        :rtype: str
+        '''
+        return get_domain_last_origin(self.domain, self.type)
 
     def is_domain_up(self): # # TODO: handle multiple ports
         '''

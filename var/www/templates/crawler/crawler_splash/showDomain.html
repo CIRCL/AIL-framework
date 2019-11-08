@@ -78,11 +78,6 @@
 									</tbody>
 								</table>
 
-								{% if origin_paste_name=='manual' or origin_paste_name=='auto' %}
-									<span class="badge badge-dark">{{ origin_paste_name }}</span>
-								{%else%}
-								<a class="badge badge-dark" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=origin_paste) }}" />{{ origin_paste_name }}</a>
-								{%endif%}
 								<div>
 									{% for tag in dict_domain['tags'] %}
 									<a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
@@ -95,6 +90,13 @@
                     <i class="far fa-plus-square"></i>
                   </button>
 								</div>
+
+                <hr>
+                {% if dict_domain['origin_item']=='manual' or dict_domain['origin_item']=='auto' %}
+									<span class="badge badge-dark">{{ dict_domain['origin_item'] }}</span>
+								{%else%}
+								Last Origin: <a class="badge" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=dict_domain['origin_item']) }}" />{{ dict_domain['origin_item'] }}</a>
+								{%endif%}
 
 							</div>
 						</div>

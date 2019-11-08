@@ -46,8 +46,8 @@ def api_validator(api_response):
 # ============= ROUTES ==============
 # add route : /crawlers/show_domain
 @crawler_splash.route('/crawlers/showDomain')
-#@login_required
-#@login_analyst
+@login_required
+@login_analyst
 def showDomain():
     domain_name = request.args.get('domain')
     epoch = request.args.get('epoch')
@@ -63,6 +63,7 @@ def showDomain():
     dict_domain['domain'] = domain_name
     if domain.is_domain_up():
         dict_domain = {**dict_domain, **domain.get_domain_correlation()}
+        dict_domain['origin_item'] = domain.get_domain_last_origin()
         dict_domain['tags'] = domain.get_domain_tags()
         dict_domain['history'] = domain.get_domain_history_with_status()
         dict_domain['crawler_history'] = domain.get_domain_items_crawled(items_link=True, epoch=epoch, item_screenshot=True, item_tag=True) # # TODO: handle multiple port
