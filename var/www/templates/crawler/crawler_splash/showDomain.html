@@ -102,6 +102,47 @@
 						</div>
 
 
+            {% if 'decoded' in dict_domain%}
+              <div id="accordiondecoded" class="mt-3">
+                <div class="card">
+                  <div class="card-header" id="headingDecoded">
+                    <div class="row">
+                      <div class="col-11">
+                        <div class="mt-2">
+                          <i class="fas fa-lock-open"></i> Decoded&nbsp;&nbsp;
+                          <div class="badge badge-warning">{{dict_domain['decoded']|length}}</div>
+                        </div>
+                      </div>
+                      <div class="col-1">
+                        <button class="btn btn-link collapsed rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="false" aria-controls="collapseDecoded">
+                          <i class="fas fa-chevron-circle-down"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="collapseDecoded" class="collapse" aria-labelledby="headingDecoded" data-parent="#accordiondecoded">
+                    <div class="card-body">
+                      <table id="tabledecoded" class="table table-striped">
+                        <thead class="thead-dark">
+                          <tr>
+                           <th>Decoded</th>
+                          </tr>
+                         </thead>
+                        <tbody>
+                          {% for decoded in dict_domain['decoded']%}
+                            <tr>
+                              <td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ decoded }}">{{ decoded }}</a></td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+
             {% if 'pgp' in dict_domain%}
               <div id="accordionpgp" class="mt-3">
                 <div class="card">
@@ -346,6 +387,9 @@
 <script>
 	var table;
   $(document).ready(function(){
+    {% if 'decoded' in dict_domain%}
+      $('#tabledecoded').DataTable();
+    {% endif %}
     {% if 'pgp' in dict_domain%}
       $('#tablepgp').DataTable();
     {% endif %}

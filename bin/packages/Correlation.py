@@ -147,6 +147,50 @@ class Correlation(object):
                     dict_correlation['nb'] = dict_correlation.get('nb', 0) + len(dict_correlation[correl])
         return dict_correlation
 
+    def _get_item_correlation_obj(self, item_id, correlation_type):
+        '''
+        Return correlation of a given item id.
+
+        :param item_id: item id
+        :type item_id: str
+        :param correlation_type: correlation type
+        :type correlation_type: str
+
+        :return: a list of correlation
+        :rtype: list
+        '''
+        res = r_serv_metadata.smembers('item_{}_{}:{}'.format(self.correlation_name, correlation_type, item_id))
+        if res:
+            return list(res)
+        else:
+            return []
+
+    def get_item_correlation_dict(self, item_id, correlation_type=None, get_nb=False):
+        '''
+        Return all correlation of a given item id.
+
+        :param item_id: item id
+        :param correlation_type: list of correlation types
+        :type correlation_type: list, optional
+
+        :return: a dictionnary of all the requested correlations
+        :rtype: dict
+        '''
+        correlation_type = self.sanythise_correlation_types(correlation_type)
+        dict_correlation = {}
+        for correl in correlation_type:
+            res = self._get_item_correlation_obj(item_id, correl)
+            if res:
+                dict_correlation[correl] = res
+                if get_nb:
+                    dict_correlation['nb'] = dict_correlation.get('nb', 0) + len(dict_correlation[correl])
+        return dict_correlation
+
+
+
+    def save_domain_correlation(self, domain, correlation_type, correlation_value):
+        r_serv_metadata.sadd('domain_{}_{}:{}'.format(self.correlation_name, correlation_type, domain), correlation_value)
+        r_serv_metadata.sadd('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, correlation_value), domain)
 
 ######## API EXPOSED ########
 

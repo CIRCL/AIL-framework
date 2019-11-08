@@ -8,10 +8,13 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import Decoded
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
+from Cryptocurrency import cryptocurrency
+from Pgp import pgp
 
 config_loader = ConfigLoader.ConfigLoader()
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
@@ -126,7 +129,61 @@ def get_item(request_dict):
 ###
 ### correlation
 ###
+def get_item_cryptocurrency(item_id, currencies_type=None, get_nb=False):
+    '''
+    Return all cryptocurrencies of a given item.
 
+    :param item_id: item id
+    :param currencies_type: list of cryptocurrencies type
+    :type currencies_type: list, optional
+    '''
+    return cryptocurrency.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
+
+def get_item_pgp(item_id, currencies_type=None, get_nb=False):
+    '''
+    Return all pgp of a given item.
+
+    :param item_id: item id
+    :param currencies_type: list of cryptocurrencies type
+    :type currencies_type: list, optional
+    '''
+    return pgp.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
+
+def get_item_decoded(item_id):
+    '''
+    Return all pgp of a given item.
+
+    :param item_id: item id
+    :param currencies_type: list of cryptocurrencies type
+    :type currencies_type: list, optional
+    '''
+    return Decoded.get_item_decoded(item_id)
+
+def get_item_all_correlation(item_id, correlation_type=None, get_nb=False):
+    '''
+    Retun all correlation of a given item id.
+
+    :param item_id: item id
+    :type domain: str
+
+    :return: a dict of all correlation for a item id
+    :rtype: dict
+    '''
+    item_correl = {}
+    res = get_item_cryptocurrency(item_id, get_nb=get_nb)
+    if res:
+        item_correl['cryptocurrency'] = res
+    res = get_item_pgp(item_id, get_nb=get_nb)
+    if res:
+        item_correl['pgp'] = res
+    res = get_item_decoded(item_id)
+    if res:
+        item_correl['decoded'] = res
+    return item_correl
+
+
+
+## TODO: REFRACTOR
 def _get_item_correlation(correlation_name, correlation_type, item_id):
     res = r_serv_metadata.smembers('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
     if res:
@@ -134,18 +191,23 @@ def _get_item_correlation(correlation_name, correlation_type, item_id):
     else:
         return []
 
+## TODO: REFRACTOR
 def get_item_bitcoin(item_id):
     return _get_item_correlation('cryptocurrency', 'bitcoin', item_id)
 
+## TODO: REFRACTOR
 def get_item_pgp_key(item_id):
     return _get_item_correlation('pgpdump', 'key', item_id)
 
+## TODO: REFRACTOR
 def get_item_pgp_name(item_id):
     return _get_item_correlation('pgpdump', 'name', item_id)
 
+## TODO: REFRACTOR
 def get_item_pgp_mail(item_id):
     return _get_item_correlation('pgpdump', 'mail', item_id)
 
+## TODO: REFRACTOR
 def get_item_pgp_correlation(item_id):
     pass
 

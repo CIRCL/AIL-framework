@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Correlation
 from Cryptocurrency import cryptocurrency
 from Pgp import pgp
+import Decoded
 import Item
 import Tag
 
@@ -197,6 +198,14 @@ def get_domain_pgp(domain, currencies_type=None, get_nb=False):
     '''
     return pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
 
+def get_domain_decoded(domain):
+    '''
+    Retun all decoded item of a given domain.
+
+    :param domain: crawled domain
+    '''
+    return Decoded.get_domain_decoded_item(domain)
+
 def get_domain_all_correlation(domain, correlation_type=None, get_nb=False):
     '''
     Retun all correlation of a given domain.
@@ -214,6 +223,9 @@ def get_domain_all_correlation(domain, correlation_type=None, get_nb=False):
     res = get_domain_pgp(domain, get_nb=get_nb)
     if res:
         domain_correl['pgp'] = res
+    res = get_domain_decoded(domain)
+    if res:
+        domain_correl['decoded'] = res
     return domain_correl
 
  # TODO: handle port
@@ -270,6 +282,12 @@ class Domain(object):
         self.type = get_domain_type(domain)
         if self.is_domain_up():
             self.current_port = sanathyse_port(port, self.domain, self.type)
+
+    def get_domain_name(self):
+        return self.domain
+
+    def get_domain_type(self):
+        return self.type
 
     def get_current_port(self):
         return self.current_port
@@ -361,9 +379,15 @@ class Domain(object):
         '''
         return get_domain_all_correlation(self.domain, get_nb=True)
 
-    def get_domain_history_with_status(self):
+    def get_domain_history(self):
         '''
         Retun the full history of a given domain and port.
+        '''
+        return get_domain_history(self.domain, self.type, 80)
+
+    def get_domain_history_with_status(self):
+        '''
+        Retun the full history (with status) of a given domain and port.
         '''
         return get_domain_history_with_status(self.domain, self.type, 80)
 

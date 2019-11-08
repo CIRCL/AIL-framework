@@ -172,8 +172,11 @@ def add_items_tags(tags=[], galaxy_tags=[], item_id=None, item_type="paste"):
     res_dict['type'] = item_type
     return (res_dict, 200)
 
+def add_domain_tag(tag, domain, item_date):
+    r_serv_metadata.sadd('tag:{}'.format(domain), tag)
+    r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), domain)
 
-def add_item_tag(tag, item_path, item_type="paste"):
+def add_item_tag(tag, item_path, item_type="paste", tag_date=None):
 
     if item_type=="paste":
         item_date = int(Item.get_item_date(item_path))
@@ -189,8 +192,7 @@ def add_item_tag(tag, item_path, item_type="paste"):
     # domain item
     else:
         item_date = int(Domain.get_domain_last_check(item_path, r_format="int"))
-        r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
-        r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), item_path)
+        add_domain_tag(tag, item_path, item_date)
 
     r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
 

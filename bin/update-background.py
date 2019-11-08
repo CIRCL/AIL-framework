@@ -54,5 +54,22 @@ if __name__ == "__main__":
             r_serv.delete('ail:current_background_script_stat')
             r_serv.delete('ail:current_background_update')
 
-    if r_serv.scard('ail:update_v2.4') != 1:
-        pass
+    if r_serv.get('ail:current_background_update') == 'v2.4':
+        r_serv.delete('ail:update_error')
+        r_serv.set('ail:update_in_progress', 'v2.4')
+        r_serv.set('ail:current_background_update', 'v2.4')
+        r_serv.set('ail:current_background_script', 'domain update')
+
+        update_file = os.path.join(os.environ['AIL_HOME'], 'update', 'v2.4', 'Update_domain.py')
+        process = subprocess.run(['python' ,update_file])
+
+
+        if int(r_serv.get('ail:current_background_script_stat')) != 100:
+            r_serv.set('ail:update_error', 'Update v2.4 Failed, please relaunch the bin/update-background.py script')
+        else:
+            r_serv.delete('ail:update_in_progress')
+            r_serv.delete('ail:current_background_script')
+            r_serv.delete('ail:current_background_script_stat')
+            r_serv.delete('ail:current_background_update')
+            r_serv.delete('update:nb_elem_to_convert')
+            r_serv.delete('update:nb_elem_converted')
