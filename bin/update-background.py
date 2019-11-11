@@ -22,6 +22,7 @@ if __name__ == "__main__":
     config_loader = ConfigLoader.ConfigLoader()
 
     r_serv = config_loader.get_redis_conn("ARDB_DB")
+    r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
     config_loader = None
 
     if r_serv.scard('ail:update_v1.5') != 5:
@@ -64,7 +65,7 @@ if __name__ == "__main__":
         process = subprocess.run(['python' ,update_file])
 
 
-        if int(r_serv.get('ail:current_background_script_stat')) != 100:
+        if int(r_serv_onion.scard('domain_update_v2.4')) != 0:
             r_serv.set('ail:update_error', 'Update v2.4 Failed, please relaunch the bin/update-background.py script')
         else:
             r_serv.delete('ail:update_in_progress')

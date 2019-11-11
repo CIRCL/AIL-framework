@@ -87,7 +87,7 @@ if __name__ == '__main__':
             server_metadata.sadd('tag:{}'.format(path), tag)
 
             # Domain Object
-            if Item.is_crawled(path):
+            if Item.is_crawled(path) and tag!='infoleak:submission="crawler"':
                 domain = Item.get_item_domain(path)
                 server_metadata.sadd('tag:{}'.format(domain), tag)
                 server.sadd('domain:{}:{}'.format(tag, item_date), domain)
