@@ -15,11 +15,13 @@ import random
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Correlation
-from Cryptocurrency import cryptocurrency
+import Cryptocurrency
 from Pgp import pgp
 import Decoded
 import Item
 import Tag
+
+cryptocurrency = Cryptocurrency.cryptocurrency
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader

@@ -69,7 +69,5 @@ def showDomain():
         dict_domain['crawler_history'] = domain.get_domain_items_crawled(items_link=True, epoch=epoch, item_screenshot=True, item_tag=True) # # TODO: handle multiple port
         dict_domain['crawler_history']['random_item'] = random.choice(dict_domain['crawler_history']['items'])
 
-    print(dict_domain)
-
     return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
                                 modal_add_tags=get_modal_add_tags(dict_domain['domain'], tag_type="domain"))

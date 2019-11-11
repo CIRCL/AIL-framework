@@ -26,8 +26,8 @@ import redis
 import signal
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Cryptocurrency
 import Item
+import Cryptocurrency
 
 
 class TimeoutException(Exception):
