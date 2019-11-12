@@ -6,15 +6,15 @@ import sys
 import gzip
 import redis
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import Decoded
-
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
-from Cryptocurrency import cryptocurrency
+import Cryptocurrency
 from Pgp import pgp
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+import Decoded
 
 config_loader = ConfigLoader.ConfigLoader()
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
@@ -137,7 +137,7 @@ def get_item_cryptocurrency(item_id, currencies_type=None, get_nb=False):
     :param currencies_type: list of cryptocurrencies type
     :type currencies_type: list, optional
     '''
-    return cryptocurrency.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
+    return Cryptocurrency.cryptocurrency.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
 
 def get_item_pgp(item_id, currencies_type=None, get_nb=False):
     '''

@@ -16,6 +16,14 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
+def get_decoded_item_type(sha1_string):
+    '''
+    Retun the estimed type of a given decoded item.
+
+    :param sha1_string: sha1_string
+    '''
+    return r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'estimated_type')
+
 def _get_decoded_items_list(sha1_string):
     return r_serv_metadata.zrange('nb_seen_hash:{}'.format(sha1_string), 0, -1)
 
@@ -38,6 +46,18 @@ def get_domain_decoded_item(domain):
     :param domain: crawled domain
     '''
     res = r_serv_metadata.smembers('hash_domain:{}'.format(domain))
+    if res:
+        return list(res)
+    else:
+        return []
+
+def get_decoded_domain_item(sha1_string):
+    '''
+    Retun all domain of a given decoded item.
+
+    :param sha1_string: sha1_string
+    '''
+    res = r_serv_metadata.smembers('domain_hash:{}'.format(sha1_string))
     if res:
         return list(res)
     else:

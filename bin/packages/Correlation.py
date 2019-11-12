@@ -108,24 +108,6 @@ class Correlation(object):
         else:
             return []
 
-    def _get_correlation_obj_domain(self, field_name, correlation_type):
-        '''
-        Return all domains that contain this correlation.
-
-        :param domain: field name
-        :type domain: str
-        :param correlation_type: correlation type
-        :type correlation_type: str
-
-        :return: a list of correlation
-        :rtype: list
-        '''
-        res = r_serv_metadata.smembers('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
-        if res:
-            return list(res)
-        else:
-            return []
-
     def get_domain_correlation_dict(self, domain, correlation_type=None, get_nb=False):
         '''
         Return all correlation of a given domain.
@@ -146,6 +128,44 @@ class Correlation(object):
                 if get_nb:
                     dict_correlation['nb'] = dict_correlation.get('nb', 0) + len(dict_correlation[correl])
         return dict_correlation
+
+    def _get_correlation_obj_domain(self, field_name, correlation_type):
+        '''
+        Return all domains that contain this correlation.
+
+        :param domain: field name
+        :type domain: str
+        :param correlation_type: correlation type
+        :type correlation_type: str
+
+        :return: a list of correlation
+        :rtype: list
+        '''
+        res = r_serv_metadata.smembers('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
+        if res:
+            return list(res)
+        else:
+            return []
+
+    def get_correlation_obj_domain(self, field_name, correlation_type=None):
+        '''
+        Return all domain correlation of a given correlation_value.
+
+        :param field_name: field_name
+        :param correlation_type: list of correlation types
+        :type correlation_type: list, optional
+
+        :return: a dictionnary of all the requested correlations
+        :rtype: list
+        '''
+        correlation_type = self.sanythise_correlation_types(correlation_type)
+        for correl in correlation_type:
+            res = self._get_correlation_obj_domain(field_name, correl)
+            if res:
+                return res
+        return []
+
+
 
     def _get_item_correlation_obj(self, item_id, correlation_type):
         '''
@@ -191,6 +211,8 @@ class Correlation(object):
     def save_domain_correlation(self, domain, correlation_type, correlation_value):
         r_serv_metadata.sadd('domain_{}_{}:{}'.format(self.correlation_name, correlation_type, domain), correlation_value)
         r_serv_metadata.sadd('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, correlation_value), domain)
+
+
 
 ######## API EXPOSED ########
 

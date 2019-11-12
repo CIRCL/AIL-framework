@@ -208,6 +208,7 @@ def get_domain_decoded(domain):
     '''
     return Decoded.get_domain_decoded_item(domain)
 
+
 def get_domain_all_correlation(domain, correlation_type=None, get_nb=False):
     '''
     Retun all correlation of a given domain.
@@ -229,6 +230,7 @@ def get_domain_all_correlation(domain, correlation_type=None, get_nb=False):
     if res:
         domain_correl['decoded'] = res
     return domain_correl
+
 
  # TODO: handle port
 def get_domain_history(domain, domain_type, port): # TODO: add date_range: from to + nb_elem
@@ -377,7 +379,7 @@ class Domain(object):
 
     def get_domain_correlation(self):
         '''
-        Retun all cryptocurrencies of a given domain.
+        Retun all correlation of a given domain.
         '''
         return get_domain_all_correlation(self.domain, get_nb=True)
 
