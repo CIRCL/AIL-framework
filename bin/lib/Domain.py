@@ -209,7 +209,7 @@ def get_domain_decoded(domain):
     return Decoded.get_domain_decoded_item(domain)
 
 
-def get_domain_all_correlation(domain, correlation_type=None, get_nb=False):
+def get_domain_all_correlation(domain, correlation_names=[], get_nb=False):
     '''
     Retun all correlation of a given domain.
 
@@ -219,16 +219,22 @@ def get_domain_all_correlation(domain, correlation_type=None, get_nb=False):
     :return: a dict of all correlation for a given domain
     :rtype: dict
     '''
+    if not correlation_names:
+        correlation_names = Correlation.get_all_correlation_names()
     domain_correl = {}
-    res = get_domain_cryptocurrency(domain, get_nb=get_nb)
-    if res:
-        domain_correl['cryptocurrency'] = res
-    res = get_domain_pgp(domain, get_nb=get_nb)
-    if res:
-        domain_correl['pgp'] = res
-    res = get_domain_decoded(domain)
-    if res:
-        domain_correl['decoded'] = res
+    for correlation_name in correlation_names:
+        if correlation_name=='cryptocurrency':
+            res = get_domain_cryptocurrency(domain, get_nb=get_nb)
+        elif correlation_name=='pgp':
+            res = get_domain_pgp(domain, get_nb=get_nb)
+        elif correlation_name=='decoded':
+            res = get_domain_decoded(domain)
+        else:
+            res = None
+        # add correllation to dict
+        if res:
+            domain_correl[correlation_name] = res
+
     return domain_correl
 
 

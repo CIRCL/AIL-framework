@@ -63,15 +63,30 @@ def get_decoded_domain_item(sha1_string):
     else:
         return []
 
+def get_decoded_correlated_object(sha1_string, correlation_objects=[]):
+    '''
+    Retun all correlation of a given sha1.
+
+    :param sha1_string: sha1
+    :type sha1_string: str
+
+    :return: a dict of all correlation for a given sha1
+    :rtype: dict
+    '''
+    if correlation_objects is None:
+        correlation_objects = Correlation.get_all_correlation_objects()
+    decoded_correlation = {}
+    for correlation_object in correlation_objects:
+        if correlation_object == 'paste':
+            res = get_decoded_items_list(sha1_string)
+        elif correlation_object == 'domain':
+            res = get_decoded_domain_item(sha1_string)
+        else:
+            res = None
+        if res:
+            decoded_correlation[correlation_object] = res
+    return decoded_correlation
+
 def save_domain_decoded(domain, sha1_string):
     r_serv_metadata.sadd('hash_domain:{}'.format(domain), sha1_string) # domain - hash map
     r_serv_metadata.sadd('domain_hash:{}'.format(sha1_string), domain) # hash - domain ma
-
-if __name__ == "__main__":
-    #sha1_str = '1e4db5adc1334ad2c9762db9ff6b845ee6ddc223'
-    #res = _get_decoded_items_list(sha1_str)
-    #print(res)
-    #print(len(res))
-
-    res = get_domain_decoded_item('2222222dpg65ioqu.onion')
-    print(res)

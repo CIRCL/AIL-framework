@@ -9,6 +9,7 @@ import redis
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
+import Correlation
 import Cryptocurrency
 from Pgp import pgp
 
@@ -159,7 +160,7 @@ def get_item_decoded(item_id):
     '''
     return Decoded.get_item_decoded(item_id)
 
-def get_item_all_correlation(item_id, correlation_type=None, get_nb=False):
+def get_item_all_correlation(item_id, correlation_names=[], get_nb=False):
     '''
     Retun all correlation of a given item id.
 
@@ -169,16 +170,21 @@ def get_item_all_correlation(item_id, correlation_type=None, get_nb=False):
     :return: a dict of all correlation for a item id
     :rtype: dict
     '''
+    if not correlation_names:
+        correlation_names = Correlation.get_all_correlation_names()
     item_correl = {}
-    res = get_item_cryptocurrency(item_id, get_nb=get_nb)
-    if res:
-        item_correl['cryptocurrency'] = res
-    res = get_item_pgp(item_id, get_nb=get_nb)
-    if res:
-        item_correl['pgp'] = res
-    res = get_item_decoded(item_id)
-    if res:
-        item_correl['decoded'] = res
+    for correlation_name in correlation_names:
+        if correlation_name=='cryptocurrency':
+            res = get_item_cryptocurrency(item_id, get_nb=get_nb)
+        elif correlation_name=='pgp':
+            res = get_item_pgp(item_id, get_nb=get_nb)
+        elif correlation_name=='decoded':
+            res = get_item_decoded(item_id)
+        else:
+            res = None
+        # add correllation to dict
+        if res:
+            item_correl[correlation_name] = res
     return item_correl
 
 

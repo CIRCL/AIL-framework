@@ -12,6 +12,18 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
+def get_all_correlation_names():
+    '''
+    Return a list of all available correlations
+    '''
+    return ['pgp', 'cryptocurrency', 'decoded']
+
+def get_all_correlation_objects():
+    '''
+    Return a list of all correllated objects
+    '''
+    return ['domain', 'paste']
+
 class Correlation(object):
 
     def __init__(self, correlation_name, all_correlation_types):
@@ -207,6 +219,20 @@ class Correlation(object):
         return dict_correlation
 
 
+    def get_correlation_all_object(self, correlation_type, correlation_value, correlation_objects=[]):
+        if correlation_objects is None:
+            correlation_objects = get_all_correlation_objects()
+        correlation_obj = {}
+        for correlation_object in correlation_objects:
+            if correlation_object == 'paste':
+                res = self._get_items(correlation_type, correlation_value)
+            elif correlation_object == 'domain':
+                res = self.get_correlation_obj_domain(correlation_value, correlation_type=correlation_type)
+            else:
+                res = None
+            if res:
+                correlation_obj[correlation_object] = res
+        return correlation_obj
 
     def save_domain_correlation(self, domain, correlation_type, correlation_value):
         r_serv_metadata.sadd('domain_{}_{}:{}'.format(self.correlation_name, correlation_type, domain), correlation_value)
