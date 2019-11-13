@@ -24,7 +24,7 @@ def get_decoded_item_type(sha1_string):
     '''
     return r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'estimated_type')
 
-def _get_decoded_items_list(sha1_string):
+def get_decoded_items_list(sha1_string):
     return r_serv_metadata.zrange('nb_seen_hash:{}'.format(sha1_string), 0, -1)
 
 def get_item_decoded(item_id):

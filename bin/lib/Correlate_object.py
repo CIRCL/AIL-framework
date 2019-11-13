@@ -79,7 +79,7 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
 
     elif correlation_name == 'domain':
         node_radius = 5
-        node_color = '#CC6677'
+        node_color = '#3DA760'
         if Domain.get_domain_type(value) == 'onion':
             icon_text = '\uf06e'
         else:
@@ -171,7 +171,7 @@ def create_node_id(correlation_name, value, correlation_type=''):
     return '{};{};{}'.format(correlation_name, correlation_type, value)
 
 
-def get_graph_node_domain_correlation(domain, mode, max_nodes=400):
+def get_graph_node_domain_correlation(domain, mode, max_nodes=50):
     links = set()
     nodes = set()
 
@@ -184,10 +184,12 @@ def get_graph_node_domain_correlation(domain, mode, max_nodes=400):
             for correl_type in domain_correlation[correl]:
                 for correl_val in domain_correlation[correl][correl_type]:
 
-                    # add correlation # # TODO:  put this in union
+                    # add correlation
                     correl_node_id = create_node_id(correl, correl_val, correl_type)
 
                     if mode=="union":
+                        if len(nodes) > max_nodes:
+                            break
                         nodes.add(correl_node_id)
                         links.add((root_node_id, correl_node_id))
 
@@ -205,6 +207,8 @@ def get_graph_node_domain_correlation(domain, mode, max_nodes=400):
                             if correl_key_val == domain:
                                 continue
 
+                            if len(nodes) > max_nodes:
+                                break
                             new_corel_1 = create_node_id('domain', correl_key_val)
                             new_corel_2 = create_node_id(correl, correl_val, correl_type)
                             nodes.add(new_corel_1)
@@ -219,6 +223,8 @@ def get_graph_node_domain_correlation(domain, mode, max_nodes=400):
 
                 correl_node_id = create_node_id(correl, correl_val)
                 if mode=="union":
+                    if len(nodes) > max_nodes:
+                        break
                     nodes.add(correl_node_id)
                     links.add((root_node_id, correl_node_id))
 
@@ -229,6 +235,8 @@ def get_graph_node_domain_correlation(domain, mode, max_nodes=400):
                         if correl_key_val == domain:
                             continue
 
+                        if len(nodes) > max_nodes:
+                            break
                         new_corel_1 = create_node_id('domain', correl_key_val)
                         new_corel_2 = create_node_id(correl, correl_val)
                         nodes.add(new_corel_1)
