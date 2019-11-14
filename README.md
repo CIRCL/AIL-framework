@@ -103,7 +103,7 @@ Starting AIL
 
 ```bash
 cd bin/
-./LAUNCH -l
+./LAUNCH.sh -l
 ```
 
 Eventually you can browse the status of the AIL framework website at the following URL:
