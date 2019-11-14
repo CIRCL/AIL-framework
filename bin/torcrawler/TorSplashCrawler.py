@@ -68,9 +68,11 @@ class TorSplashCrawler():
             self.date_month = date['date_month']
             self.date_epoch = int(date['epoch'])
 
+            # # TODO: timeout in config
             self.arg_crawler = {  'html': crawler_options['html'],
                                   'wait': 10,
                                   'render_all': 1,
+                                  'timeout': 30,
                                   'har': crawler_options['har'],
                                   'png': crawler_options['png']}
 

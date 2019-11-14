@@ -85,7 +85,44 @@
 
 				<div class="col-12 col-lg-10" id="core_content">
 
-
+					<div class="card my-3">
+						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+							<h4 class="text-secondary">{{ dict_object["correlation_id"] }} :</h4>
+							<ul class="list-group mb-2">
+								<li class="list-group-item py-0">
+									<div class="row">
+										<div class="col-md-10">
+											<table class="table">
+												<thead>
+													<tr>
+														<th>Object type</th>
+														<th>type</th>
+														{% if dict_object["metadata"]['first_seen'] %}
+															<th>First_seen</th>
+															<th>Last_seen</th>
+														{% endif %}
+													</tr>
+												</thead>
+												<tbody>
+													<tr>
+														<td>{{ dict_object["object_type"] }}</td>
+														<td><i class="fas fa-key"></i>&nbsp;&nbsp;{{ dict_object["metadata"]["type_id"] }}</td>
+														{% if dict_object["metadata"]['first_seen'] %}
+															<td>{{ dict_object["metadata"]['first_seen'] }}</td>
+															<td>{{ dict_object["metadata"]['last_seen'] }}</td>
+														{% endif %}
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<div class="col-md-1">
+											<div id="sparkline"></div>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div>
 
 					<div class="row">
 						<div class="col-xl-10">
@@ -103,7 +140,7 @@
 
 						<div class="col-xl-2">
 
-							<div class="card my-3">
+							<div class="card mb-3">
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 								</div>
@@ -112,11 +149,63 @@
 										<i class="fas fa-sync"></i>&nbsp;Resize Graph
 									</button>
 
-									{% if correlation_type=='pgpdump' %}
-										{% include 'decoded/show_helper_pgpdump.html' %}
-									{% elif correlation_type=='cryptocurrency' %}
-										{% include 'decoded/show_helper_cryptocurrency.html' %}
-									{% endif %}
+									<ul class="list-group">
+  									<li class="list-group-item list-group-item-info">Select Correlation</i></li>
+									  <li class="list-group-item text-left">
+
+											<form action="{{ url_for('correlation.showCorrelationDomain') }}" method="post">
+												<input type="hidden" id="object_type" name="object_type" value="{{ dict_object["object_type"] }}">
+												<input type="hidden" id="type_id" name="type_id" value="{{ dict_object["metadata"]["type_id"] }}">
+												<input type="hidden" id="correlation_id" name="correlation_id" value="{{ dict_object["correlation_id"] }}">
+
+												<div class="form-check">
+												  <input class="form-check-input" type="checkbox" value="True" id="CryptocurrencyCheck" name="CryptocurrencyCheck" {%if "cryptocurrency" in dict_object["correlation_names"]%}checked{%endif%}>
+												  <label class="form-check-label" for="CryptocurrencyCheck">Cryptocurrency</label>
+												</div>
+												<div class="form-check">
+												  <input class="form-check-input" type="checkbox" value="True" id="DecodedCheck" name="DecodedCheck" {%if "decoded" in dict_object["correlation_names"]%}checked{%endif%}>
+												  <label class="form-check-label" for="DecodedCheck">Decoded</label>
+												</div>
+												<div class="form-check">
+												  <input class="form-check-input" type="checkbox" value="True" id="PgpCheck" name="PgpCheck" {%if "pgp" in dict_object["correlation_names"]%}checked{%endif%}>
+												  <label class="form-check-label" for="PgpCheck">PGP</label>
+												</div>
+												<div class="form-check">
+												  <input class="form-check-input" type="checkbox" value="True" id="DomainCheck" name="DomainCheck" {%if "domain" in dict_object["correlation_objects"]%}checked{%endif%}>
+												  <label class="form-check-label" for="DomainCheck">Domain</label>
+												</div>
+												<div class="form-check">
+												  <input class="form-check-input" type="checkbox" value="True" id="PasteCheck" name="PasteCheck" {%if "paste" in dict_object["correlation_objects"]%}checked{%endif%}>
+												  <label class="form-check-label" for="PasteCheck">Paste</label>
+												</div>
+
+												</li>
+												<li class="list-group-item text-left">
+													<div class="d-flex mt-1">
+														Union&nbsp;&nbsp;
+														<div class="custom-control custom-switch">
+															<input class="custom-control-input" type="checkbox" name="mode" value="True" id="mode" {%if dict_object["mode"]=="inter"%}checked{%endif%}>
+															<label class="custom-control-label" for="mode">Intersection</label>
+														</div>
+													</div>
+												</li>
+												<li class="list-group-item text-left">
+
+												<div class="form-group">
+													<label for="max_nb_nodes_in">Max number of nodes:</label>
+												  <input class="form-control" type="number" value="{{dict_object["max_nodes"]}}" min="2" id="max_nb_nodes_in" name="max_nb_nodes_in">
+												</div>
+
+												<div class="text-center">
+													<input class="btn btn-primary" type="submit" value="Redraw Graph">
+												</div>
+
+											</form>
+
+									  </li>
+									</ul>
+
+									{% include 'decoded/show_helper_pgpdump.html' %}
 
 								</div>
 							</div>
@@ -133,7 +222,7 @@ var all_graph = {};
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.test') }}");
+		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?correlation_id={{ dict_object["correlation_id"] }}&object_type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&correlation_names={{ dict_object["correlation_names_str"] }}&correlation_objects={{ dict_object["correlation_objects_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&type_id={{ dict_object["metadata"]["type_id"] }}{% endif %}");
 		all_graph.onResize();
 });
 

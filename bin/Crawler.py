@@ -128,6 +128,13 @@ def get_elem_to_crawl(rotation_mode):
         if message is not None:
             domain_service_type = service_type
             break
+    #load_discovery_queue
+    if message is None:
+        for service_type in rotation_mode:
+            message = redis_crawler.spop('{}_crawler_discovery_queue'.format(service_type))
+            if message is not None:
+                domain_service_type = service_type
+                break
     #load_normal_queue
     if message is None:
         for service_type in rotation_mode:

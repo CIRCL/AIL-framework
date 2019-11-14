@@ -35,6 +35,7 @@ import Flask_config
 # Import Blueprint
 from blueprints.root import root
 from blueprints.crawler_splash import crawler_splash
+from blueprints.correlation import correlation
 
 Flask_dir = os.environ['AIL_FLASK']
 
@@ -80,6 +81,7 @@ app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 # =========  BLUEPRINT  =========#
 app.register_blueprint(root, url_prefix=baseUrl)
 app.register_blueprint(crawler_splash, url_prefix=baseUrl)
+app.register_blueprint(correlation, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= session ========

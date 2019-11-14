@@ -24,6 +24,12 @@ def get_decoded_item_type(sha1_string):
     '''
     return r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'estimated_type')
 
+def get_decoded_metadata(sha1_string):
+    metadata_dict = {}
+    metadata_dict['first_seen'] = r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'first_seen')
+    metadata_dict['last_seen'] = r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'last_seen')
+    return metadata_dict
+
 def get_decoded_items_list(sha1_string):
     return r_serv_metadata.zrange('nb_seen_hash:{}'.format(sha1_string), 0, -1)
 

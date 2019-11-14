@@ -22,6 +22,29 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
+def get_all_correlation_names():
+    '''
+    Return a list of all available correlations
+    '''
+    return ['pgp', 'cryptocurrency', 'decoded']
+
+def get_all_correlation_objects():
+    '''
+    Return a list of all correllated objects
+    '''
+    return ['domain', 'paste']
+
+def get_object_metadata(object_type, correlation_id, type_id=None):
+    if object_type == 'domain':
+        return Domain.Domain(correlation_id).get_domain_metadata()
+    elif object_type == 'paste':
+        return None
+    elif object_type == 'decoded':
+        return Decoded.get_decoded_metadata(correlation_id)
+    elif object_type == 'pgp':
+        return Pgp.pgp._get_metadata(type_id, correlation_id)
+    elif object_type == 'cryptocurrency':
+        return Cryptocurrency.cryptocurrency._get_metadata(type_id, correlation_id)
 
 def get_object_correlation(object_type, value, correlation_names, correlation_objects, requested_correl_type=None):
     if object_type == 'domain':
@@ -36,9 +59,6 @@ def get_object_correlation(object_type, value, correlation_names, correlation_ob
         return Cryptocurrency.cryptocurrency.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
 
     return {}
-
-
-
 
 def get_correlation_node_icon(correlation_name, correlation_type=None, value=None):
     '''
@@ -165,14 +185,14 @@ def create_node_id(correlation_name, value, correlation_type=''):
 
 
 # # TODO: filter by correlation type => bitcoin, mail, ...
-def get_graph_node_object_correlation(object_type, domain, mode, correlation_names, correlation_objects, max_nodes=300, requested_correl_type=None):
+def get_graph_node_object_correlation(object_type, root_value, mode, correlation_names, correlation_objects, max_nodes=300, requested_correl_type=None):
     links = set()
     nodes = set()
 
-    root_node_id = create_node_id(object_type, domain, requested_correl_type)
+    root_node_id = create_node_id(object_type, root_value, requested_correl_type)
     nodes.add(root_node_id)
 
-    root_correlation = get_object_correlation(object_type, domain, correlation_names, correlation_objects, requested_correl_type=requested_correl_type)
+    root_correlation = get_object_correlation(object_type, root_value, correlation_names, correlation_objects, requested_correl_type=requested_correl_type)
     for correl in root_correlation:
         if correl in ('pgp', 'cryptocurrency'):
             for correl_type in root_correlation[correl]:
@@ -192,8 +212,8 @@ def get_graph_node_object_correlation(object_type, domain, mode, correlation_nam
                     if res:
                         for corr_obj in res:
                             for correl_key_val in res[corr_obj]:
-                                #filter root domain
-                                if correl_key_val == domain:
+                                #filter root value
+                                if correl_key_val == root_value:
                                     continue
 
                                 if len(nodes) > max_nodes:
@@ -222,8 +242,8 @@ def get_graph_node_object_correlation(object_type, domain, mode, correlation_nam
                     for corr_obj in res:
                         if corr_obj in ('decoded', 'domain', 'paste'):
                             for correl_key_val in res[corr_obj]:
-                                #filter root domain
-                                if correl_key_val == domain:
+                                #filter root value
+                                if correl_key_val == root_value:
                                     continue
 
                                 if len(nodes) > max_nodes:
@@ -241,8 +261,8 @@ def get_graph_node_object_correlation(object_type, domain, mode, correlation_nam
                         if corr_obj in ('pgp', 'cryptocurrency'):
                             for correl_key_type in res[corr_obj]:
                                 for correl_key_val in res[corr_obj][correl_key_type]:
-                                    #filter root domain
-                                    if correl_key_val == domain:
+                                    #filter root value
+                                    if correl_key_val == root_value:
                                         continue
 
                                     if len(nodes) > max_nodes:
