@@ -2,6 +2,8 @@
 
 import datetime
 
+# # TODO: refractor me
+
 class Date(object):
     """docstring for Date"""
     def __init__(self, *args):
@@ -52,11 +54,20 @@ def date_substract_day(date, num_day=1):
     new_date = str(new_date).replace('-', '')
     return new_date
 
+# # TODO: remove me ## FIXME:
 def get_date_range(num_day):
     curr_date = datetime.date.today()
     date = Date(str(curr_date.year)+str(curr_date.month).zfill(2)+str(curr_date.day).zfill(2))
     date_list = []
 
+    for i in range(0, num_day+1):
+        date_list.append(date.substract_day(i))
+    return list(reversed(date_list))
+
+def get_previous_date_list(num_day):
+    curr_date = datetime.date.today()
+    date = Date(str(curr_date.year)+str(curr_date.month).zfill(2)+str(curr_date.day).zfill(2))
+    date_list = []
     for i in range(0, num_day+1):
         date_list.append(date.substract_day(i))
     return list(reversed(date_list))

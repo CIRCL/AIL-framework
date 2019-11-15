@@ -224,13 +224,7 @@ def get_correlation_type_page_endpoint(correlation_type):
     return endpoint
 
 def get_show_key_id_endpoint(correlation_type):
-    if correlation_type == 'pgpdump':
-        endpoint = 'hashDecoded.show_pgpdump'
-    elif correlation_type == 'cryptocurrency':
-        endpoint = 'hashDecoded.show_cryptocurrency'
-    else:
-        endpoint = 'hashDecoded.hashDecoded_page'
-    return endpoint
+    return 'correlation.show_correlation'
 
 def get_range_type_json_endpoint(correlation_type):
     if correlation_type == 'pgpdump':
@@ -351,8 +345,13 @@ def main_correlation_page(correlation_type, type_id, date_from, date_to, show_de
 
     l_type = get_all_types_id(correlation_type)
 
+    correlation_type_n = correlation_type
+    if correlation_type_n=='pgpdump':
+        correlation_type_n = 'pgp'
+
     return render_template("DaysCorrelation.html", all_metadata=keys_id_metadata,
                                                 correlation_type=correlation_type,
+                                                correlation_type_n=correlation_type_n,
                                                 correlation_type_endpoint=get_correlation_type_page_endpoint(correlation_type),
                                                 correlation_type_search_endpoint=get_correlation_type_search_endpoint(correlation_type),
                                                 show_key_id_endpoint=get_show_key_id_endpoint(correlation_type),
@@ -362,27 +361,27 @@ def main_correlation_page(correlation_type, type_id, date_from, date_to, show_de
                                                 date_from=date_from, date_to=date_to,
                                                 show_decoded_files=show_decoded_files)
 
-def show_correlation(correlation_type, type_id, key_id):
-    if is_valid_type_id(correlation_type, type_id):
-        key_id_metadata = get_key_id_metadata(correlation_type, type_id, key_id)
-        if key_id_metadata:
-
-            num_day_sparkline = 6
-            date_range_sparkline = get_date_range(num_day_sparkline)
-
-            sparkline_values = list_sparkline_type_id_values(date_range_sparkline, correlation_type, type_id, key_id)
-            return render_template('showCorrelation.html', key_id=key_id, type_id=type_id,
-                            correlation_type=correlation_type,
-                            graph_node_endpoint=get_graph_node_json_endpoint(correlation_type),
-                            graph_line_endpoint=get_graph_line_json_endpoint(correlation_type),
-                            font_family=get_font_family(correlation_type),
-                            key_id_metadata=key_id_metadata,
-                            type_icon=get_icon(correlation_type, type_id),
-                            sparkline_values=sparkline_values)
-        else:
-            return '404'
-    else:
-        return 'error'
+# def show_correlation(correlation_type, type_id, key_id):
+#     if is_valid_type_id(correlation_type, type_id):
+#         key_id_metadata = get_key_id_metadata(correlation_type, type_id, key_id)
+#         if key_id_metadata:
+#
+#             num_day_sparkline = 6
+#             date_range_sparkline = get_date_range(num_day_sparkline)
+#
+#             sparkline_values = list_sparkline_type_id_values(date_range_sparkline, correlation_type, type_id, key_id)
+#             return render_template('showCorrelation.html', key_id=key_id, type_id=type_id,
+#                             correlation_type=correlation_type,
+#                             graph_node_endpoint=get_graph_node_json_endpoint(correlation_type),
+#                             graph_line_endpoint=get_graph_line_json_endpoint(correlation_type),
+#                             font_family=get_font_family(correlation_type),
+#                             key_id_metadata=key_id_metadata,
+#                             type_icon=get_icon(correlation_type, type_id),
+#                             sparkline_values=sparkline_values)
+#         else:
+#             return '404'
+#     else:
+#         return 'error'
 
 def correlation_type_range_type_json(correlation_type, date_from, date_to):
     date_range = []
@@ -620,60 +619,60 @@ def hash_hash():
     hash = request.args.get('hash')
     return render_template('hash_hash.html')
 
-
-@hashDecoded.route('/hashDecoded/showHash')
-@login_required
-@login_analyst
-def showHash():
-    hash = request.args.get('hash')
-    #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
-
-    # TODO FIXME show error
-    if hash is None:
-        return hashDecoded_page()
-
-    estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
-    # hash not found
-    # TODO FIXME show error
-    if estimated_type is None:
-        return hashDecoded_page()
-
-    else:
-        file_icon = get_file_icon(estimated_type)
-        size = r_serv_metadata.hget('metadata_hash:'+hash, 'size')
-        first_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'first_seen')
-        last_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'last_seen')
-        nb_seen_in_all_pastes = r_serv_metadata.hget('metadata_hash:'+hash, 'nb_seen_in_all_pastes')
-
-        # get all encoding for this hash
-        list_hash_decoder = []
-        list_decoder = r_serv_metadata.smembers('all_decoder')
-        for decoder in list_decoder:
-            encoding = r_serv_metadata.hget('metadata_hash:'+hash, decoder+'_decoder')
-            if encoding is not None:
-                list_hash_decoder.append({'encoding': decoder, 'nb_seen': encoding})
-
-        num_day_type = 6
-        date_range_sparkline = get_date_range(num_day_type)
-        sparkline_values = list_sparkline_values(date_range_sparkline, hash)
-
-        if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
-            b64_vt = True
-            b64_vt_link = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_link')
-            b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
-        else:
-            b64_vt = False
-            b64_vt_link = ''
-            b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
-            # hash never refreshed
-            if b64_vt_report is None:
-                b64_vt_report = ''
-
-        return render_template('showHash.html', hash=hash, vt_enabled=vt_enabled, b64_vt=b64_vt, b64_vt_link=b64_vt_link,
-                                b64_vt_report=b64_vt_report,
-                                size=size, estimated_type=estimated_type, file_icon=file_icon,
-                                first_seen=first_seen, list_hash_decoder=list_hash_decoder,
-                                last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
+#
+# @hashDecoded.route('/hashDecoded/showHash')
+# @login_required
+# @login_analyst
+# def showHash():
+#     hash = request.args.get('hash')
+#     #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
+#
+#     # TODO FIXME show error
+#     if hash is None:
+#         return hashDecoded_page()
+#
+#     estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
+#     # hash not found
+#     # TODO FIXME show error
+#     if estimated_type is None:
+#         return hashDecoded_page()
+#
+#     else:
+#         file_icon = get_file_icon(estimated_type)
+#         size = r_serv_metadata.hget('metadata_hash:'+hash, 'size')
+#         first_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'first_seen')
+#         last_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'last_seen')
+#         nb_seen_in_all_pastes = r_serv_metadata.hget('metadata_hash:'+hash, 'nb_seen_in_all_pastes')
+#
+#         # get all encoding for this hash
+#         list_hash_decoder = []
+#         list_decoder = r_serv_metadata.smembers('all_decoder')
+#         for decoder in list_decoder:
+#             encoding = r_serv_metadata.hget('metadata_hash:'+hash, decoder+'_decoder')
+#             if encoding is not None:
+#                 list_hash_decoder.append({'encoding': decoder, 'nb_seen': encoding})
+#
+#         num_day_type = 6
+#         date_range_sparkline = get_date_range(num_day_type)
+#         sparkline_values = list_sparkline_values(date_range_sparkline, hash)
+#
+#         if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
+#             b64_vt = True
+#             b64_vt_link = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_link')
+#             b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+#         else:
+#             b64_vt = False
+#             b64_vt_link = ''
+#             b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
+#             # hash never refreshed
+#             if b64_vt_report is None:
+#                 b64_vt_report = ''
+#
+#         return render_template('showHash.html', hash=hash, vt_enabled=vt_enabled, b64_vt=b64_vt, b64_vt_link=b64_vt_link,
+#                                 b64_vt_report=b64_vt_report,
+#                                 size=size, estimated_type=estimated_type, file_icon=file_icon,
+#                                 first_seen=first_seen, list_hash_decoder=list_hash_decoder,
+#                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
 
 
 @hashDecoded.route('/hashDecoded/downloadHash')
@@ -1207,22 +1206,22 @@ def all_cryptocurrency_search():
     show_decoded_files = request.form.get('show_decoded_files')
     return redirect(url_for('hashDecoded.cryptocurrency_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
 
-@hashDecoded.route('/correlation/show_pgpdump')
-@login_required
-@login_analyst
-def show_pgpdump():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-    return show_correlation('pgpdump', type_id, key_id)
-
-
-@hashDecoded.route('/correlation/show_cryptocurrency')
-@login_required
-@login_analyst
-def show_cryptocurrency():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-    return show_correlation('cryptocurrency', type_id, key_id)
+# @hashDecoded.route('/correlation/show_pgpdump')
+# @login_required
+# @login_analyst
+# def show_pgpdump():
+#     type_id = request.args.get('type_id')
+#     key_id = request.args.get('key_id')
+#     return show_correlation('pgpdump', type_id, key_id)
+#
+#
+# @hashDecoded.route('/correlation/show_cryptocurrency')
+# @login_required
+# @login_analyst
+# def show_cryptocurrency():
+#     type_id = request.args.get('type_id')
+#     key_id = request.args.get('key_id')
+#     return show_correlation('cryptocurrency', type_id, key_id)
 
 @hashDecoded.route('/correlation/cryptocurrency_range_type_json')
 @login_required
@@ -1248,6 +1247,7 @@ def pgpdump_graph_node_json():
     key_id = request.args.get('key_id')
     return correlation_graph_node_json('pgpdump', type_id, key_id)
 
+# # TODO: REFRACTOR
 @hashDecoded.route('/correlation/cryptocurrency_graph_node_json')
 @login_required
 @login_analyst
@@ -1256,6 +1256,7 @@ def cryptocurrency_graph_node_json():
     key_id = request.args.get('key_id')
     return correlation_graph_node_json('cryptocurrency', type_id, key_id)
 
+# # TODO: REFRACTOR
 @hashDecoded.route('/correlation/pgpdump_graph_line_json')
 @login_required
 @login_analyst

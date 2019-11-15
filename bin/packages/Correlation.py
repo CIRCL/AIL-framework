@@ -8,6 +8,9 @@ import redis
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Date
+
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
@@ -35,7 +38,30 @@ class Correlation(object):
         meta_dict = {}
         meta_dict['first_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, correlation_type, field_name), 'first_seen')
         meta_dict['last_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, correlation_type, field_name), 'last_seen')
+        meta_dict['nb_seen'] = r_serv_metadata.scard('set_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
         return meta_dict
+
+    def get_metadata(self, correlation_type, field_name, date_format='str_date'):
+        meta_dict = self._get_metadata(correlation_type, field_name)
+        if date_format == "str_date":
+            if meta_dict['first_seen']:
+                meta_dict['first_seen'] = '{}/{}/{}'.format(meta_dict['first_seen'][0:4], meta_dict['first_seen'][4:6], meta_dict['first_seen'][6:8])
+            if meta_dict['last_seen']:
+                meta_dict['last_seen'] = '{}/{}/{}'.format(meta_dict['last_seen'][0:4], meta_dict['last_seen'][4:6], meta_dict['last_seen'][6:8])
+        return meta_dict
+
+    def get_nb_object_seen_by_date(self, correlation_type, field_name, date_day):
+        nb = r_serv_metadata.hget('{}:{}:{}'.format(self.correlation_name, correlation_type, date_day), field_name)
+        if nb is None:
+            return 0
+        else:
+            return int(nb)
+
+    def get_list_nb_previous_correlation_object(self, correlation_type, field_name, numDay):
+        nb_previous_correlation = []
+        for date_day in Date.get_previous_date_list(numDay):
+            nb_previous_correlation.append(self.get_nb_object_seen_by_date(correlation_type, field_name, date_day))
+        return nb_previous_correlation
 
     def _get_correlation_by_date(self, correlation_type, date):
         return r_serv_metadata.hkeys('{}:{}:{}'.format(self.correlation_name, correlation_type, date))

@@ -18,6 +18,11 @@
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 		<style>
+		.icon_legend {
+			color: #0c5460;
+			background-color: #bee5eb;
+		}
+
 		line.link {
 			stroke: #666;
 		}
@@ -85,44 +90,11 @@
 
 				<div class="col-12 col-lg-10" id="core_content">
 
-					<div class="card my-3">
-						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-							<h4 class="text-secondary">{{ dict_object["correlation_id"] }} :</h4>
-							<ul class="list-group mb-2">
-								<li class="list-group-item py-0">
-									<div class="row">
-										<div class="col-md-10">
-											<table class="table">
-												<thead>
-													<tr>
-														<th>Object type</th>
-														<th>type</th>
-														{% if dict_object["metadata"]['first_seen'] %}
-															<th>First_seen</th>
-															<th>Last_seen</th>
-														{% endif %}
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td>{{ dict_object["object_type"] }}</td>
-														<td><i class="fas fa-key"></i>&nbsp;&nbsp;{{ dict_object["metadata"]["type_id"] }}</td>
-														{% if dict_object["metadata"]['first_seen'] %}
-															<td>{{ dict_object["metadata"]['first_seen'] }}</td>
-															<td>{{ dict_object["metadata"]['last_seen'] }}</td>
-														{% endif %}
-													</tr>
-												</tbody>
-											</table>
-										</div>
-										<div class="col-md-1">
-											<div id="sparkline"></div>
-										</div>
-									</div>
-								</li>
-							</ul>
-						</div>
-					</div>
+					{% if dict_object["object_type"] in ["pgp", "cryptocurrency"] %}
+						{% include 'correlation/metadata_card_pgp.html' %}
+					{% elif dict_object["object_type"] == "decoded" %}
+						{% include 'correlation/metadata_card_decoded.html' %}
+					{% endif %}
 
 					<div class="row">
 						<div class="col-xl-10">
@@ -130,6 +102,11 @@
 							<div class="card mb-3">
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
+									<span class="float-right">
+										<button class="btn btn-primary py-1" onclick="resize_graph();">
+											<i class="fas fa-sync"></i>&nbsp;Resize Graph
+										</button>
+									</span>
 								</div>
 								<div class="card-body graph_panel">
 									<div id="graph">
@@ -141,19 +118,13 @@
 						<div class="col-xl-2">
 
 							<div class="card mb-3">
-								<div class="card-header">
-									<i class="fas fa-project-diagram"></i> Graph
-								</div>
 								<div class="card-body text-center px-0 py-0">
-									<button class="btn btn-primary my-4" onclick="resize_graph();">
-										<i class="fas fa-sync"></i>&nbsp;Resize Graph
-									</button>
 
 									<ul class="list-group">
   									<li class="list-group-item list-group-item-info">Select Correlation</i></li>
 									  <li class="list-group-item text-left">
 
-											<form action="{{ url_for('correlation.showCorrelationDomain') }}" method="post">
+											<form action="{{ url_for('correlation.show_correlation') }}" method="post">
 												<input type="hidden" id="object_type" name="object_type" value="{{ dict_object["object_type"] }}">
 												<input type="hidden" id="type_id" name="type_id" value="{{ dict_object["metadata"]["type_id"] }}">
 												<input type="hidden" id="correlation_id" name="correlation_id" value="{{ dict_object["correlation_id"] }}">
@@ -205,13 +176,44 @@
 									  </li>
 									</ul>
 
-									{% include 'decoded/show_helper_pgpdump.html' %}
+									<ul class="list-group">
+  									<li class="list-group-item list-group-item-info"><i class="fas fa-info-circle fa-2x"></i></li>
+									  <li class="list-group-item text-left">
+									    <p>Double click on a node to open this object<br><br>
+									      <svg height="26" width="26">
+													<g class="nodes">
+														<circle cx="13" cy="13" r="13" fill="orange"></circle>
+													</g>
+												</svg>
+									      Current Correlation<br>
+									    </p>
+									  </li>
+									</ul>
 
 								</div>
 							</div>
 						</div>
 					</div>
 
+					<div class="row">
+						<div class="col-xl-10">
+
+							{% include 'correlation/legend_graph_correlation.html' %}
+
+						</div>
+					</div>
+
+					{% if dict_object["object_type"] in ["decoded", "pgp", "cryptocurrency"] %}
+						<div class="card">
+							<div class="card-header">
+								<i class="fas fa-chart-bar"></i> Graph
+							</div>
+							<div class="panel-body ">
+								<div id="graph_line">
+								</div>
+							</div>
+						</div>
+						{% endif %}
 
 				</div>
 			</div>
@@ -223,6 +225,13 @@ $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
 
 		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?correlation_id={{ dict_object["correlation_id"] }}&object_type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&correlation_names={{ dict_object["correlation_names_str"] }}&correlation_objects={{ dict_object["correlation_objects_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&type_id={{ dict_object["metadata"]["type_id"] }}{% endif %}");
+		{% if dict_object["object_type"] == "pgp" %}
+			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.pgpdump_graph_line_json') }}?type_id={{dict_object["metadata"]["type_id"]}}&key_id={{dict_object["correlation_id"]}}");
+		{% elif dict_object["object_type"] == "cryptocurrency" %}
+			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.cryptocurrency_graph_line_json') }}?type_id={{dict_object["metadata"]["type_id"]}}&key_id={{dict_object["correlation_id"]}}");
+		{% elif dict_object["object_type"] == "decoded" %}
+			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.hash_graph_line_json') }}?hash={{dict_object["correlation_id"]}}");
+		{% endif %}
 		all_graph.onResize();
 });
 

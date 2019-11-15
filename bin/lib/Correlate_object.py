@@ -38,13 +38,13 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
     if object_type == 'domain':
         return Domain.Domain(correlation_id).get_domain_metadata()
     elif object_type == 'paste':
-        return None
+        return {}
     elif object_type == 'decoded':
-        return Decoded.get_decoded_metadata(correlation_id)
+        return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True)
     elif object_type == 'pgp':
-        return Pgp.pgp._get_metadata(type_id, correlation_id)
+        return Pgp.pgp.get_metadata(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
-        return Cryptocurrency.cryptocurrency._get_metadata(type_id, correlation_id)
+        return Cryptocurrency.cryptocurrency.get_metadata(type_id, correlation_id)
 
 def get_object_correlation(object_type, value, correlation_names, correlation_objects, requested_correl_type=None):
     if object_type == 'domain':
@@ -140,14 +140,14 @@ def get_item_url(correlation_name, value, correlation_type=None):
     '''
     url = '#'
     if correlation_name == "pgp":
-        endpoint = 'hashDecoded.show_pgpdump'
-        url = url_for(endpoint, type_id=correlation_type, key_id=value)
+        endpoint = 'correlation.show_correlation'
+        url = url_for(endpoint, object_type="pgp", type_id=correlation_type, correlation_id=value)
     elif correlation_name == 'cryptocurrency':
-        endpoint = 'hashDecoded.show_cryptocurrency'
-        url = url_for(endpoint, type_id=correlation_type, key_id=value)
+        endpoint = 'correlation.show_correlation'
+        url = url_for(endpoint, object_type="cryptocurrency", type_id=correlation_type, correlation_id=value)
     elif correlation_name == 'decoded':
-        endpoint = 'hashDecoded.showHash'
-        url = url_for(endpoint, hash=value)
+        endpoint = 'correlation.show_correlation'
+        url = url_for(endpoint, object_type="decoded", correlation_id=value)
     elif correlation_name == 'domain':
         endpoint = 'crawler_splash.showDomain'
         url = url_for(endpoint, domain=value)

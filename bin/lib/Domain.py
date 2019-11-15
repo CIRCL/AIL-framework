@@ -14,7 +14,6 @@ import redis
 import random
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Correlation
 import Cryptocurrency
 from Pgp import pgp
 import Decoded
@@ -25,6 +24,7 @@ cryptocurrency = Cryptocurrency.cryptocurrency
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import Correlate_object
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
@@ -220,7 +220,7 @@ def get_domain_all_correlation(domain, correlation_names=[], get_nb=False):
     :rtype: dict
     '''
     if not correlation_names:
-        correlation_names = Correlation.get_all_correlation_names()
+        correlation_names = Correlate_object.get_all_correlation_names()
     domain_correl = {}
     for correlation_name in correlation_names:
         if correlation_name=='cryptocurrency':
