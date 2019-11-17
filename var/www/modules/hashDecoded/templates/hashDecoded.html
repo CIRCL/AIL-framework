@@ -20,6 +20,7 @@
 	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
 
 	<style>
 		.input-group .form-control {
@@ -157,7 +158,7 @@
 							{% for b64 in l_64 %}
 									<tr>
 										<td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-										<td><a target="_blank" href="{{ url_for('hashDecoded.showHash') }}?hash={{ b64[2] }}">{{ b64[2] }}</a></td>
+										<td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ b64[2] }}&correlation_objects=paste">{{ b64[2] }}</a></td>
 										<td>{{ b64[5] }}</td>
 										<td>{{ b64[6] }}</td>
 										<td>{{ b64[3] }}</td>
@@ -296,46 +297,10 @@ function toggle_sidebar(){
 		});
 	}
 </script>
-<script>
-//var data = [6,3,3,2,5,3,9];
 
-// a sparklines plot
-function sparklines(id, points) {
-    var width = 100, height = 60;
-
-    var data = []
-    for (i = 0; i < points.length; i++) {
-        data[i] = {
-            'x': i,
-            'y': +points[i]
-        }
-    }
-
-    var x = d3.scaleLinear()
-        .range([0, width - 10])
-        .domain([0,5]);
-
-    var y = d3.scaleLinear()
-        .range([height, 0])
-        .domain([0,10]);
-
-    var line = d3.line()
-                .x(function(d) {return x(d.x)})
-                .y(function(d) {return y(d.y)});
-
-    d3.select("#"+id).append('svg')
-            .attr('width', width)
-            .attr('height', height)
-         .append('path')
-            .attr('class','line')
-            .datum(data)
-            .attr('d', line);
-
-}
-</script>
 <script>
 	{% for b64 in l_64 %}
-		sparklines("sparklines_{{ b64[2] }}", {{ b64[10] }})
+    sparkline("sparklines_{{ b64[2] }}", {{ b64[10] }}, {});
 	{% endfor %}
 </script>
 

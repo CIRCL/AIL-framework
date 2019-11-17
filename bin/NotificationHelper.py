@@ -1,46 +1,34 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import argparse
-import configparser
-import traceback
 import os
+import sys
+
+import argparse
+import traceback
 import smtplib
 from pubsublogger import publisher
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
 """
 This module allows the global configuration and management of notification settings and methods.
 """
 
-# CONFIG #
-configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
+config_loader = ConfigLoader.ConfigLoader()
 
 publisher.port = 6380
 publisher.channel = "Script"
 
-# notifications enabled/disabled
-TrackedTermsNotificationEnabled_Name = "TrackedNotifications"
-
-# associated notification email addresses for a specific term`
-# Keys will be e.g. TrackedNotificationEmails<TERMNAME>
-TrackedTermsNotificationEmailsPrefix_Name = "TrackedNotificationEmails_"
-
 def sendEmailNotification(recipient, alert_name, content):
 
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                    Did you set environment variables? \
-                    Or activate the virtualenv?')
-
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
-
-    sender = cfg.get("Notifications", "sender")
-    sender_host = cfg.get("Notifications", "sender_host")
-    sender_port = cfg.getint("Notifications", "sender_port")
-    sender_pw = cfg.get("Notifications", "sender_pw")
+    sender = config_loader.get_config_str("Notifications", "sender")
+    sender_host = config_loader.get_config_str("Notifications", "sender_host")
+    sender_port = config_loader.get_config_int("Notifications", "sender_port")
+    sender_pw = config_loader.get_config_str("Notifications", "sender_pw")
     if sender_pw == 'None':
         sender_pw = None
 

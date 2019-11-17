@@ -1,0 +1,42 @@
+      <div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
+
+      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar()">
+          <i class="fas fa-align-left"></i>
+      	  <span>Toggle Sidebar</span>
+      	</button>
+
+      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+      		<h5 class="d-flex text-muted w-100">
+      		  <span>Trackers </span>
+      			<a class="ml-auto" href="{{url_for('hunter.add_tracked_menu')}}">
+      				<i class="fas fa-plus-circle ml-auto"></i>
+      			</a>
+      		</h5>
+      	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+            <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu')}}" id="nav_tracker_">
+                <i class="fas fa-ruler-combined"></i>
+      	        <span>All Trackers</span>
+      	      </a>
+      	    </li>
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_word')}}" id="nav_tracker_word">
+                <i class="fas fa-font"></i>
+      	        <span>Tracked Words</span>
+      	      </a>
+      	    </li>
+            <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_set')}}" id="nav_tracker_set">
+      	        <i class="fas fa-layer-group"></i>
+      	        <span>Tracked Set</span>
+      	      </a>
+      	    </li>
+            <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_regex')}}" id="nav_tracker_regex">
+      	        <i class="fas fa-ruler"></i>
+                <span>Tracked Regex</span>
+      	      </a>
+      	    </li>
+          </ul>
+      	</nav>
+      </div>

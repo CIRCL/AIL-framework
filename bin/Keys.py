@@ -121,6 +121,13 @@ def search_key(paste):
         p.populate_set_out(msg, 'Tags')
         find = True
 
+    if '-----BEGIN PUBLIC KEY-----' in content:
+        publisher.warning('{} has a public key message'.format(paste.p_name))
+
+        msg = 'infoleak:automatic-detection="public-key";{}'.format(message)
+        p.populate_set_out(msg, 'Tags')
+        find = True
+
     # pgp content
     if get_pgp_content:
         p.populate_set_out(message, 'PgpDump')

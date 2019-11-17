@@ -50,6 +50,7 @@ flask-login
 bcrypt
 
 #DomainClassifier
+git+https://github.com/D4-project/BGP-Ranking.git/#egg=pybgpranking&subdirectory=client
 DomainClassifier
 #Indexer requirements
 whoosh

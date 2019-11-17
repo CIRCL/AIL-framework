@@ -23,6 +23,9 @@ import json
 
 import Paste
 
+import Import_helper
+import Tag
+
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 
@@ -41,7 +44,6 @@ except:
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_metadata = Flask_config.r_serv_metadata
@@ -86,65 +88,6 @@ def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
 
     # keep only whitelisted chars
     return ''.join(c for c in cleaned_filename if c in whitelist)
-
-def launch_submit(ltags, ltagsgalaxies, paste_content, UUID,  password, isfile = False):
-
-    # save temp value on disk
-    r_serv_db.set(UUID + ':ltags', ltags)
-    r_serv_db.set(UUID + ':ltagsgalaxies', ltagsgalaxies)
-    r_serv_db.set(UUID + ':paste_content', paste_content)
-    r_serv_db.set(UUID + ':password', password)
-    r_serv_db.set(UUID + ':isfile', isfile)
-
-    r_serv_log_submit.set(UUID + ':end', 0)
-    r_serv_log_submit.set(UUID + ':processing', 0)
-    r_serv_log_submit.set(UUID + ':nb_total', -1)
-    r_serv_log_submit.set(UUID + ':nb_end', 0)
-    r_serv_log_submit.set(UUID + ':nb_sucess', 0)
-    r_serv_log_submit.set(UUID + ':error', 'error:')
-    r_serv_log_submit.sadd(UUID + ':paste_submit_link', '')
-
-
-    # save UUID on disk
-    r_serv_db.sadd('submitted:uuid', UUID)
-
-
-def addTagsVerification(tags, tagsgalaxies):
-
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    taxonomies = Taxonomies()
-    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
-
-    active_galaxies = r_serv_tags.smembers('active_galaxies')
-
-    if list_tag != ['']:
-        for tag in list_tag:
-            # verify input
-            tax = tag.split(':')[0]
-            if tax in active_taxonomies:
-                if tag in r_serv_tags.smembers('active_tag_' + tax):
-                    pass
-                else:
-                    return False
-            else:
-                return False
-
-    if list_tag_galaxies != ['']:
-        for tag in list_tag_galaxies:
-            # verify input
-            gal = tag.split(':')[1]
-            gal = gal.split('=')[0]
-
-            if gal in active_galaxies:
-                if tag in r_serv_tags.smembers('active_tag_galaxies_' + gal):
-                    pass
-                else:
-                    return False
-            else:
-                return False
-    return True
 
 def date_to_str(date):
     return "{0}-{1}-{2}".format(date.year, date.month, date.day)
@@ -279,11 +222,9 @@ def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, 
 @login_required
 @login_analyst
 def PasteSubmit_page():
-    #active taxonomies
-    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
-
-    #active galaxies
-    active_galaxies = r_serv_tags.smembers('active_galaxies')
+    # Get all active tags/galaxy
+    active_taxonomies = Tag.get_active_taxonomies()
+    active_galaxies = Tag.get_active_galaxies()
 
     return render_template("submit_items.html",
                             active_taxonomies = active_taxonomies,
@@ -311,21 +252,27 @@ def submit():
     submitted_tag = 'infoleak:submission="manual"'
 
     #active taxonomies
-    active_taxonomies = r_serv_tags.smembers('active_taxonomies')
+    active_taxonomies = Tag.get_active_taxonomies()
     #active galaxies
-    active_galaxies = r_serv_tags.smembers('active_galaxies')
+    active_galaxies = Tag.get_active_galaxies()
 
     if ltags or ltagsgalaxies:
-        if not addTagsVerification(ltags, ltagsgalaxies):
+
+        ltags = ltags.split(',')
+        ltagsgalaxies = ltagsgalaxies.split(',')
+
+        print(ltags)
+        print(ltagsgalaxies)
+
+        if not Tags.is_valid_tags_taxonomies_galaxy(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
             print(content)
             return content, 400
 
     # add submitted tags
-    if(ltags != ''):
-        ltags = ltags + ',' + submitted_tag
-    else:
-        ltags = submitted_tag
+    if not ltags:
+        ltags = []
+    ltags.append(submitted_tag)
 
     if is_file:
         if file:
@@ -358,7 +305,7 @@ def submit():
 
                 paste_content = full_path
 
-                launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password ,True)
+                Import_helper.create_import_queue(ltags, ltagsgalaxies, paste_content, UUID, password ,True)
 
                 return render_template("submit_items.html",
                                             active_taxonomies = active_taxonomies,
@@ -376,12 +323,7 @@ def submit():
 
             # get id
             UUID = str(uuid.uuid4())
-
-            #if paste_name:
-                # clean file name
-                #id = clean_filename(paste_name)
-
-            launch_submit(ltags, ltagsgalaxies, paste_content, UUID, password)
+            Import_helper.create_import_queue(ltags, ltagsgalaxies, paste_content, UUID, password)
 
             return render_template("submit_items.html",
                                         active_taxonomies = active_taxonomies,
@@ -415,7 +357,7 @@ def submit_status():
         nb_sucess = r_serv_log_submit.get(UUID + ':nb_sucess')
         paste_submit_link = list(r_serv_log_submit.smembers(UUID + ':paste_submit_link'))
 
-        if (end != None) and (nb_total != None) and (nb_end != None) and (error != None) and (processing != None) and (paste_submit_link != None):
+        if (end != None) and (nb_total != None) and (nb_end != None) and (processing != None):
 
             link = ''
             if paste_submit_link:
@@ -433,10 +375,10 @@ def submit_status():
             else:
                 prog = 0
 
-            if error == 'error:':
-                isError = False
-            else:
+            if error:
                 isError = True
+            else:
+                isError = False
 
             if end == '0':
                 end = False

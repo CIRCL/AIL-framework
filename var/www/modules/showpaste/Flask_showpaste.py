@@ -10,7 +10,7 @@ import os
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory, redirect, url_for
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, no_cache
 from flask_login import login_required
 
 import difflib
@@ -23,7 +23,6 @@ import requests
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
@@ -446,6 +445,7 @@ def showDiff():
 @showsavedpastes.route('/screenshot/<path:filename>')
 @login_required
 @login_analyst
+@no_cache
 def screenshot(filename):
     return send_from_directory(SCREENSHOT_FOLDER, filename+'.png', as_attachment=True)
 

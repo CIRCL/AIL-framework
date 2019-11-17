@@ -11,60 +11,8 @@ from dateutil.rrule import rrule, DAILY
 import csv
 
 
-def listdirectory(path):
-    """Path Traversing Function.
-
-    :param path: -- The absolute pathname to a directory.
-
-    This function is returning all the absolute path of the files contained in
-    the argument directory.
-
-    """
-    fichier = []
-    for root, dirs, files in os.walk(path):
-
-        for i in files:
-
-            fichier.append(os.path.join(root, i))
-
-    return fichier
-
 clean = lambda dirty: ''.join(filter(string.printable.__contains__, dirty))
 """It filters out non-printable characters from the string it receives."""
-
-
-def create_dirfile(r_serv, directory, overwrite):
-    """Create a file of path.
-
-    :param r_serv: -- connexion to redis database
-    :param directory: -- The folder where to launch the listing of the .gz files
-
-    This function create a list in redis with inside the absolute path
-    of all the pastes needed to be proceeded by function using parallel
-    (like redis_words_ranking)
-
-    """
-    if overwrite:
-        r_serv.delete("filelist")
-
-        for x in listdirectory(directory):
-            r_serv.lpush("filelist", x)
-
-        publisher.info("The list was overwritten")
-
-    else:
-        if r_serv.llen("filelist") == 0:
-
-            for x in listdirectory(directory):
-                r_serv.lpush("filelist", x)
-
-            publisher.info("New list created")
-        else:
-
-            for x in listdirectory(directory):
-                r_serv.lpush("filelist", x)
-
-            publisher.info("The list was updated with new elements")
 
 
 def create_curve_with_word_file(r_serv, csvfilename, feederfilename, year, month):

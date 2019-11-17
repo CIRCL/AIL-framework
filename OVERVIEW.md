@@ -38,6 +38,21 @@ Redis and ARDB overview
 | failed_login_ip:**ip**           | **nb login failed** | TTL
 | failed_login_user_id:**user_id** | **nb login failed** | TTL
 
+##### Item Import:
+
+| Key | Value |
+| ------ | ------ |
+| **uuid**:nb_total   | **nb total**      | TTL *(if imported)*
+| **uuid**:nb_end     | **nb**            | TTL *(if imported)*
+| **uuid**:nb_sucess  | **nb success**    | TTL *(if imported)*
+| **uuid**:end        | **0 (in progress) or (item imported)** | TTL *(if imported)*
+| **uuid**:processing | **process status: 0 or 1**             | TTL *(if imported)*
+| **uuid**:error      | **error message** | TTL *(if imported)*
+
+| Set Key | Value |
+| ------ | ------ |
+| **uuid**:paste_submit_link | **item_path** | TTL *(if imported)*
+
 ## DB0 - Core:
 
 ##### Update keys:
@@ -92,47 +107,91 @@ Redis and ARDB overview
 | ------ | ------ |
 | misp_module:**module name** | **module dict** |
 
-## DB2 - TermFreq:
-
-##### Set:
+##### Item Import:
 | Key | Value |
 | ------ | ------ |
-| TrackedSetTermSet | **tracked_term** |
-| TrackedSetSet | **tracked_set** |
-| TrackedRegexSet | **tracked_regex** |
-| | |
-| tracked_**tracked_term** | **item_path** |
-| set_**tracked_set** | **item_path** |
-| regex_**tracked_regex** | **item_path** |
-| | |
-| TrackedNotifications | **tracked_trem / set / regex** |
-| | |
-| TrackedNotificationTags_**tracked_trem / set / regex** | **tag** |
-| | |
-| TrackedNotificationEmails_**tracked_trem / set / regex** | **email** |
+| **uuid**:isfile   | **boolean** |
+| **uuid**:paste_content | **item_content** |
 
-##### Zset:
+## DB2 - TermFreq:
+
+| Set Key | Value |
+| ------ | ------ |
+| submitted:uuid | **uuid** |
+| **uuid**:ltags | **tag** |
+| **uuid**:ltagsgalaxies | **tag** |
+
+## DB3 - Leak Hunter:
+
+##### Tracker metadata:
+| Hset - Key | Field | Value |
+| ------ | ------ | ------ |
+| tracker:**uuid**      | tracker     | **tacked word/set/regex**          |
+|                       | type        | **word/set/regex**                 |
+|                       | date        | **date added**                     |
+|                       | user_id     | **created by user_id**             |
+|                       | dashboard   | **0/1 Display alert on dashboard** |
+|                       | description | **Tracker description**            |
+|                       | level       | **0/1 Tracker visibility**         |
+
+##### Tracker by user_id (visibility level: user only):
+| Set - Key | Value |
+| ------ | ------ |
+| user:tracker:**user_id** | **uuid - tracker uuid** |
+| user:tracker:**user_id**:**word/set/regex - tracker type** | **uuid - tracker uuid** |
+
+##### Global Tracker (visibility level: all users):
+| Set - Key | Value |
+| ------ | ------ |
+| gobal:tracker | **uuid - tracker uuid** |
+| gobal:tracker:**word/set/regex - tracker type** | **uuid - tracker uuid** |
+
+##### All Tracker by type:
+| Set - Key | Value |
+| ------ | ------ |
+| all:tracker:**word/set/regex - tracker type** | **tracked item** |
+
+| Set - Key | Value |
+| ------ | ------ |
+| all:tracker_uuid:**tracker type**:**tracked item** | **uuid - tracker uuid** |
+
+##### All Tracked items:
+| Set - Key | Value |
+| ------ | ------ |
+| tracker:item:**uuid**:**date** | **item_id** |
+
+##### All Tracked tags:
+| Set - Key | Value |
+| ------ | ------ |
+| tracker:tags:**uuid** | **tag** |
+
+##### All Tracked mail:
+| Set - Key | Value |
+| ------ | ------ |
+| tracker:mail:**uuid** | **mail** |
+
+##### Refresh Tracker:
+| Key | Value |
+| ------ | ------ |
+| tracker:refresh:word | **last refreshed epoch** |
+| tracker:refresh:set | - |
+| tracker:refresh:regex | - |
+
+##### Zset Stat Tracker:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| per_paste_TopTermFreq_set_month | **term** | **nb_seen** |
-| per_paste_TopTermFreq_set_week | **term** | **nb_seen** |
-| per_paste_TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
-| | | |
-| TopTermFreq_set_month | **term** | **nb_seen** |
-| TopTermFreq_set_week | **term** | **nb_seen** |
-| TopTermFreq_set_day_**epoch** | **term** | **nb_seen** |
+| tracker:stat:**uuid** | **date** | **nb_seen** |
 
-
-##### Hset:
+##### Stat token:
 | Key | Field | Value |
 | ------ | ------ | ------ |
-| TrackedTermDate | **tracked_term** | **epoch** |
-| TrackedSetDate | **tracked_set** | **epoch** |
-| TrackedRegexDate | **tracked_regex** | **epoch** |
+| stat_token_total_by_day:**date** | **word** | **nb_seen** |
 | | | |
-| BlackListTermDate | **blacklisted_term** | **epoch** |
-| | | |
-| **epoch** | **term** | **nb_seen** |
+| stat_token_per_item_by_day:**date** | **word** | **nb_seen** |
+
+| Set - Key | Value |
+| ------ | ------ |
+| stat_token_history | **date** |
 
 ## DB6 - Tags:
 
@@ -214,6 +273,9 @@ Redis and ARDB overview
 | set_pgpdump_name:*name* | *item_path* |
 | | |
 | set_pgpdump_mail:*mail* | *item_path* |
+| | |
+| | |
+| set_domain_pgpdump_**pgp_type**:**key** | **domain** |
 
 ##### Hset date:
 | Key | Field | Value |
@@ -241,11 +303,20 @@ Redis and ARDB overview
 | item_pgpdump_name:*item_path* | *name* |
 | | |
 | item_pgpdump_mail:*item_path* | *mail* |
+| | |
+| | |
+| domain_pgpdump_**pgp_type**:**domain** | **key** |
 
 #### Cryptocurrency
 
 Supported cryptocurrency:
 - bitcoin
+- bitcoin-cash
+- dash
+- etherum
+- litecoin
+- monero
+- zcash
 
 ##### Hset:
 | Key | Field | Value |
@@ -256,7 +327,8 @@ Supported cryptocurrency:
 ##### set:
 | Key | Value |
 | ------ | ------ |
-| set_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **item_path** |
+| set_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **item_path** | PASTE
+| domain_cryptocurrency_**cryptocurrency name**:**cryptocurrency address** | **domain** | DOMAIN
 
 ##### Hset date:
 | Key | Field | Value |
@@ -271,8 +343,14 @@ Supported cryptocurrency:
 ##### set:
 | Key | Value |
 | ------ | ------ |
-| item_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** |
+| item_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** | PASTE
+| domain_cryptocurrency_**cryptocurrency name**:**item_path** | **cryptocurrency address** | DOMAIN
 
+#### HASH
+| Key | Value |
+| ------ | ------ |
+| hash_domain:**domain** | **hash** |
+| domain_hash:**hash** | **domain** |
 
 ## DB9 - Crawler:
 
@@ -314,6 +392,20 @@ Supported cryptocurrency:
   "png": 0
 }
 ```
+
+##### CRAWLER QUEUES:
+| SET - Key | Value |
+| ------ | ------ |
+| onion_crawler_queue | **url**;**item_id** | RE-CRAWL
+| regular_crawler_queue | - |
+|  |  |
+| onion_crawler_priority_queue   | **url**;**item_id** | USER
+| regular_crawler_priority_queue | - |
+|  |  |
+| onion_crawler_discovery_queue   | **url**;**item_id** | DISCOVER
+| regular_crawler_discovery_queue | - |
+
+##### TO CHANGE:
 
 ARDB overview
 

@@ -81,8 +81,8 @@ pushd ardb/
 make
 popd
 
-if [ ! -f bin/packages/config.cfg ]; then
-    cp bin/packages/config.cfg.sample bin/packages/config.cfg
+if [ ! -f configs/core.cfg ]; then
+    cp configs/core.cfg.sample configs/core.cfg
 fi
 
 if [ -z "$VIRTUAL_ENV" ]; then

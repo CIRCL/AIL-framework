@@ -14,6 +14,8 @@
         Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text. Eighth International Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
 
 """
+import os
+import sys
 
 import time
 import datetime
@@ -24,6 +26,9 @@ from pubsublogger import publisher
 from Helper import Process
 from packages import Paste
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk import tokenize
 
@@ -32,19 +37,6 @@ accepted_Mime_type = ['text/plain']
 size_threshold = 250
 line_max_length_threshold = 1000
 
-import os
-import configparser
-
-configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-if not os.path.exists(configfile):
-    raise Exception('Unable to find the configuration file. \
-        Did you set environment variables? \
-        Or activate the virtualenv.')
-
-cfg = configparser.ConfigParser()
-cfg.read(configfile)
-
-sentiment_lexicon_file = cfg.get("Directories", "sentiment_lexicon_file")
 #time_clean_sentiment_db = 60*60
 
 def Analyse(message, server):
@@ -151,12 +143,12 @@ if __name__ == '__main__':
     # Sent to the logging a description of the module
     publisher.info("<description of the module>")
 
+    config_loader = ConfigLoader.ConfigLoader()
+    sentiment_lexicon_file = config_loader.get_config_str("Directories", "sentiment_lexicon_file")
+
     # REDIS_LEVEL_DB #
-    server = redis.StrictRedis(
-        host=p.config.get("ARDB_Sentiment", "host"),
-        port=p.config.get("ARDB_Sentiment", "port"),
-        db=p.config.get("ARDB_Sentiment", "db"),
-        decode_responses=True)
+    server = config_loader.get_redis_conn("ARDB_Sentiment")
+    config_loader = None
 
     time1 = time.time()
 

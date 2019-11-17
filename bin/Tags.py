@@ -16,6 +16,8 @@ import datetime
 from pubsublogger import publisher
 from Helper import Process
 from packages import Paste
+from packages import Item
+
 
 def get_item_date(item_filename):
     l_directory = item_filename.split('/')
@@ -83,6 +85,12 @@ if __name__ == '__main__':
                 print("   tagged: {}".format(tag))
                 set_tag_metadata(tag, item_date)
             server_metadata.sadd('tag:{}'.format(path), tag)
+
+            # Domain Object
+            if Item.is_crawled(path) and tag!='infoleak:submission="crawler"':
+                domain = Item.get_item_domain(path)
+                server_metadata.sadd('tag:{}'.format(domain), tag)
+                server.sadd('domain:{}:{}'.format(tag, item_date), domain)
 
             curr_date = datetime.date.today().strftime("%Y%m%d")
             server.hincrby('daily_tags:{}'.format(item_date), tag, 1)

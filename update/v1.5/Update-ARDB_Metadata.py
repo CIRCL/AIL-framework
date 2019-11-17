@@ -5,7 +5,9 @@ import os
 import sys
 import time
 import redis
-import configparser
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 def update_tracked_terms(main_key, tracked_container_key):
     for tracked_item in r_serv_term.smembers(main_key):
@@ -50,45 +52,16 @@ if __name__ == '__main__':
 
     start_deb = time.time()
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
+    config_loader = ConfigLoader.ConfigLoader()
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 
-    r_serv = redis.StrictRedis(
-        host=cfg.get("ARDB_DB", "host"),
-        port=cfg.getint("ARDB_DB", "port"),
-        db=cfg.getint("ARDB_DB", "db"),
-        decode_responses=True)
-
-    r_serv_metadata = redis.StrictRedis(
-        host=cfg.get("ARDB_Metadata", "host"),
-        port=cfg.getint("ARDB_Metadata", "port"),
-        db=cfg.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
-
-    r_serv_tag = redis.StrictRedis(
-        host=cfg.get("ARDB_Tags", "host"),
-        port=cfg.getint("ARDB_Tags", "port"),
-        db=cfg.getint("ARDB_Tags", "db"),
-        decode_responses=True)
-
-    r_serv_term = redis.StrictRedis(
-        host=cfg.get("ARDB_TermFreq", "host"),
-        port=cfg.getint("ARDB_TermFreq", "port"),
-        db=cfg.getint("ARDB_TermFreq", "db"),
-        decode_responses=True)
-
-    r_serv_onion = redis.StrictRedis(
-        host=cfg.get("ARDB_Onion", "host"),
-        port=cfg.getint("ARDB_Onion", "port"),
-        db=cfg.getint("ARDB_Onion", "db"),
-        decode_responses=True)
+    r_serv = config_loader.get_redis_conn("ARDB_DB")
+    r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+    r_serv_tag = config_loader.get_redis_conn("ARDB_Tags")
+    r_serv_term = config_loader.get_redis_conn("ARDB_TermFreq")
+    r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
+    config_loader = None
 
     r_serv.set('ail:current_background_script', 'metadata')
 

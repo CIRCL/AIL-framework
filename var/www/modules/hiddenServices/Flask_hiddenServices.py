@@ -13,7 +13,7 @@ import json
 from pyfaup.faup import Faup
 from flask import Flask, render_template, jsonify, request, send_file, Blueprint, redirect, url_for
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, no_cache
 from flask_login import login_required
 
 from Date import Date
@@ -23,7 +23,6 @@ from HiddenServices import HiddenServices
 import Flask_config
 
 app = Flask_config.app
-cfg = Flask_config.cfg
 baseUrl = Flask_config.baseUrl
 r_cache = Flask_config.r_cache
 r_serv_onion = Flask_config.r_serv_onion
@@ -731,94 +730,10 @@ def show_domains_by_daterange():
                                 date_from=date_from, date_to=date_to, domains_up=domains_up, domains_down=domains_down,
                                 domains_tags=domains_tags, type=service_type, bootstrap_label=bootstrap_label)
 
-@hiddenServices.route("/crawlers/show_domain", methods=['GET'])
-@login_required
-@login_analyst
-def show_domain():
-    domain = request.args.get('domain')
-    epoch = request.args.get('epoch')
-    try:
-        epoch = int(epoch)
-    except:
-        epoch = None
-    port = request.args.get('port')
-    faup.decode(domain)
-    unpack_url = faup.get()
-
-    ## TODO: # FIXME: remove me
-    try:
-        domain = unpack_url['domain'].decode()
-    except:
-        domain = unpack_url['domain']
-
-    if not port:
-        if unpack_url['port']:
-            try:
-                port = unpack_url['port'].decode()
-            except:
-                port = unpack_url['port']
-        else:
-            port = 80
-    try:
-        port = int(port)
-    except:
-        port = 80
-    type = get_type_domain(domain)
-    if domain is None or not r_serv_onion.exists('{}_metadata:{}'.format(type, domain)):
-        return '404'
-        # # TODO: FIXME return 404
-
-    last_check = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'last_check')
-    if last_check is None:
-        last_check = '********'
-    last_check = '{}/{}/{}'.format(last_check[0:4], last_check[4:6], last_check[6:8])
-    first_seen = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'first_seen')
-    if first_seen is None:
-        first_seen = '********'
-    first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
-    ports = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'ports')
-    origin_paste = r_serv_onion.hget('{}_metadata:{}'.format(type, domain), 'paste_parent')
-
-    h = HiddenServices(domain, type, port=port)
-    item_core = h.get_domain_crawled_core_item(epoch=epoch)
-    if item_core:
-        l_pastes = h.get_last_crawled_pastes(item_root=item_core['root_item'])
-    else:
-        l_pastes = []
-    dict_links = h.get_all_links(l_pastes)
-    if l_pastes:
-        status = True
-    else:
-        status = False
-    last_check = '{} - {}'.format(last_check, time.strftime('%H:%M.%S', time.gmtime(epoch)))
-    screenshot = h.get_domain_random_screenshot(l_pastes)
-    if screenshot:
-        screenshot = screenshot[0]
-    else:
-        screenshot = 'None'
-
-    domain_tags = h.get_domain_tags()
-
-    origin_paste_name = h.get_origin_paste_name()
-    origin_paste_tags = unpack_paste_tags(r_serv_metadata.smembers('tag:{}'.format(origin_paste)))
-    paste_tags = []
-    for path in l_pastes:
-        p_tags = r_serv_metadata.smembers('tag:'+path)
-        paste_tags.append(unpack_paste_tags(p_tags))
-
-    domain_history = h.extract_epoch_from_history(h.get_domain_crawled_history())
-
-    return render_template("showDomain.html", domain=domain, last_check=last_check, first_seen=first_seen,
-                            l_pastes=l_pastes, paste_tags=paste_tags, bootstrap_label=bootstrap_label,
-                            dict_links=dict_links, port=port, epoch=epoch,
-                            ports=ports, domain_history=domain_history,
-                            origin_paste_tags=origin_paste_tags, status=status,
-                            origin_paste=origin_paste, origin_paste_name=origin_paste_name,
-                            domain_tags=domain_tags, screenshot=screenshot)
-
 @hiddenServices.route("/crawlers/download_domain", methods=['GET'])
 @login_required
 @login_analyst
+@no_cache
 def download_domain():
     domain = request.args.get('domain')
     epoch = request.args.get('epoch')

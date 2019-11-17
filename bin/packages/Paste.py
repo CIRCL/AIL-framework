@@ -17,19 +17,21 @@ Conditions to fulfill to be able to use this class correctly:
 """
 
 import os
+import re
+import sys
 import magic
 import gzip
 import redis
 import operator
 import string
-import re
 import json
-import configparser
 from io import StringIO
-import sys
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 from Date import Date
 from Hash import Hash
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 from langid.langid import LanguageIdentifier, model
 
@@ -58,31 +60,12 @@ class Paste(object):
 
     def __init__(self, p_path):
 
-        configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-        if not os.path.exists(configfile):
-            raise Exception('Unable to find the configuration file. \
-                            Did you set environment variables? \
-                            Or activate the virtualenv.')
+        config_loader = ConfigLoader.ConfigLoader()
+        self.cache = config_loader.get_redis_conn("Redis_Queues")
+        self.store = config_loader.get_redis_conn("Redis_Data_Merging")
+        self.store_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 
-        cfg = configparser.ConfigParser()
-        cfg.read(configfile)
-        self.cache = redis.StrictRedis(
-            host=cfg.get("Redis_Queues", "host"),
-            port=cfg.getint("Redis_Queues", "port"),
-            db=cfg.getint("Redis_Queues", "db"),
-            decode_responses=True)
-        self.store = redis.StrictRedis(
-            host=cfg.get("Redis_Data_Merging", "host"),
-            port=cfg.getint("Redis_Data_Merging", "port"),
-            db=cfg.getint("Redis_Data_Merging", "db"),
-            decode_responses=True)
-        self.store_metadata = redis.StrictRedis(
-            host=cfg.get("ARDB_Metadata", "host"),
-            port=cfg.getint("ARDB_Metadata", "port"),
-            db=cfg.getint("ARDB_Metadata", "db"),
-            decode_responses=True)
-
-        self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes"))
+        self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
         if self.PASTES_FOLDER not in p_path:
             self.p_rel_path = p_path
             self.p_path = os.path.join(self.PASTES_FOLDER, p_path)
@@ -114,6 +97,17 @@ class Paste(object):
         self.array_line_above_threshold = None
         self.p_duplicate = None
         self.p_tags = None
+
+    def get_item_dict(self):
+        dict_item = {}
+        dict_item['id'] = self.p_rel_path
+        dict_item['date'] = str(self.p_date)
+        dict_item['content'] = self.get_p_content()
+        tags = self._get_p_tags()
+        if tags:
+            dict_item['tags'] = tags
+        return dict_item
+
 
     def get_p_content(self):
         """
@@ -321,8 +315,8 @@ class Paste(object):
         return self.store_metadata.scard('dup:'+self.p_path) + self.store_metadata.scard('dup:'+self.p_rel_path)
 
     def _get_p_tags(self):
-        self.p_tags = self.store_metadata.smembers('tag:'+path, tag)
-        if self.self.p_tags is not None:
+        self.p_tags = self.store_metadata.smembers('tag:'+self.p_rel_path)
+        if self.p_tags is not None:
             return list(self.p_tags)
         else:
             return '[]'

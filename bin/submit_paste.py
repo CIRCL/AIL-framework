@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import configparser
 import os
 import sys
 import gzip
@@ -16,6 +15,9 @@ import sflock
 
 from Helper import Process
 from pubsublogger import publisher
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
 
@@ -47,7 +49,11 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
     r_serv_log_submit.hincrby("mixer_cache:list_feeder", "submitted", 1)
 
     # add tags
-    add_tags(ltags, ltagsgalaxies, rel_item_path)
+    for tag in ltags:
+        add_item_tag(tag, rel_item_path)
+
+    for tag in ltagsgalaxies:
+        add_item_tag(tag, rel_item_path)
 
     r_serv_log_submit.incr(uuid + ':nb_end')
     r_serv_log_submit.incr(uuid + ':nb_sucess')
@@ -92,7 +98,6 @@ def remove_submit_uuid(uuid):
     r_serv_log_submit.expire(uuid + ':nb_sucess', expire_time)
     r_serv_log_submit.expire(uuid + ':nb_end', expire_time)
     r_serv_log_submit.expire(uuid + ':error', expire_time)
-    r_serv_log_submit.srem(uuid + ':paste_submit_link', '')
     r_serv_log_submit.expire(uuid + ':paste_submit_link', expire_time)
 
     # delete uuid
@@ -134,18 +139,6 @@ def add_item_tag(tag, item_path):
     if item_date > tag_last_seen:
         r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
 
-def add_tags(tags, tagsgalaxies, path):
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    if list_tag != ['']:
-        for tag in list_tag:
-            add_item_tag(tag, path)
-
-    if list_tag_galaxies != ['']:
-        for tag in list_tag_galaxies:
-            add_item_tag(tag, path)
-
 def verify_extention_filename(filename):
     if not '.' in filename:
         return True
@@ -163,44 +156,13 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
+    config_loader = ConfigLoader.ConfigLoader()
 
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
-
-    r_serv_db = redis.StrictRedis(
-        host=cfg.get("ARDB_DB", "host"),
-        port=cfg.getint("ARDB_DB", "port"),
-        db=cfg.getint("ARDB_DB", "db"),
-        decode_responses=True)
-
-    r_serv_log_submit = redis.StrictRedis(
-        host=cfg.get("Redis_Log_submit", "host"),
-        port=cfg.getint("Redis_Log_submit", "port"),
-        db=cfg.getint("Redis_Log_submit", "db"),
-        decode_responses=True)
-
-    r_serv_tags = redis.StrictRedis(
-        host=cfg.get("ARDB_Tags", "host"),
-        port=cfg.getint("ARDB_Tags", "port"),
-        db=cfg.getint("ARDB_Tags", "db"),
-        decode_responses=True)
-
-    r_serv_metadata = redis.StrictRedis(
-        host=cfg.get("ARDB_Metadata", "host"),
-        port=cfg.getint("ARDB_Metadata", "port"),
-        db=cfg.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
-
-    serv_statistics = redis.StrictRedis(
-        host=cfg.get('ARDB_Statistics', 'host'),
-        port=cfg.getint('ARDB_Statistics', 'port'),
-        db=cfg.getint('ARDB_Statistics', 'db'),
-        decode_responses=True)
+    r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+    r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
+    r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
+    r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+    serv_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 
     expire_time = 120
     MAX_FILE_SIZE = 1000000000
@@ -209,7 +171,9 @@ if __name__ == "__main__":
     config_section = 'submit_paste'
     p = Process(config_section)
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], cfg.get("Directories", "pastes")) + '/'
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+
+    config_loader = None
 
     while True:
 
@@ -218,8 +182,8 @@ if __name__ == "__main__":
             uuid = r_serv_db.srandmember('submitted:uuid')
 
             # get temp value save on disk
-            ltags = r_serv_db.get(uuid + ':ltags')
-            ltagsgalaxies = r_serv_db.get(uuid + ':ltagsgalaxies')
+            ltags = r_serv_db.smembers(uuid + ':ltags')
+            ltagsgalaxies = r_serv_db.smembers(uuid + ':ltagsgalaxies')
             paste_content = r_serv_db.get(uuid + ':paste_content')
             isfile = r_serv_db.get(uuid + ':isfile')
             password = r_serv_db.get(uuid + ':password')
@@ -230,8 +194,6 @@ if __name__ == "__main__":
             r_serv_log_submit.set(uuid + ':nb_total', -1)
             r_serv_log_submit.set(uuid + ':nb_end', 0)
             r_serv_log_submit.set(uuid + ':nb_sucess', 0)
-            r_serv_log_submit.set(uuid + ':error', 'error:')
-            r_serv_log_submit.sadd(uuid + ':paste_submit_link', '')
 
 
             r_serv_log_submit.set(uuid + ':processing', 1)
@@ -275,7 +237,7 @@ if __name__ == "__main__":
                         else:
                             #decompress file
                             try:
-                                if password == '':
+                                if password == None:
                                     files = unpack(file_full_path.encode())
                                     #print(files.children)
                                 else:

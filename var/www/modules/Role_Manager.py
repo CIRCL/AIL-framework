@@ -3,38 +3,46 @@
 
 import os
 import re
+import sys
 import redis
 import bcrypt
-import configparser
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 from functools import wraps
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 
-from flask import request, current_app
+from flask import request, make_response, current_app
 
 login_manager = LoginManager()
 login_manager.login_view = 'role'
 
 # CONFIG #
-configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-if not os.path.exists(configfile):
-    raise Exception('Unable to find the configuration file. \
-                    Did you set environment variables? \
-                    Or activate the virtualenv.')
+config_loader = ConfigLoader.ConfigLoader()
 
-cfg = configparser.ConfigParser()
-cfg.read(configfile)
-
-r_serv_db = redis.StrictRedis(
-    host=cfg.get("ARDB_DB", "host"),
-    port=cfg.getint("ARDB_DB", "port"),
-    db=cfg.getint("ARDB_DB", "db"),
-    decode_responses=True)
+r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+config_loader = None
 
 default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
 
 regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,100}$'
 regex_password = re.compile(regex_password)
+
+###############################################################
+###############          FLASK CACHE         ##################
+###############################################################
+def no_cache(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        resp = make_response(func(*args, **kwargs))
+        resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        resp.headers['Pragma'] = 'no-cache'
+        return resp
+    return decorated_view
+###############################################################
+###############################################################
+###############################################################
 
 ###############################################################
 ###############       CHECK ROLE ACCESS      ##################

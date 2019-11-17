@@ -19,7 +19,7 @@
         <a class="nav-link" id="page-Browse-Items" href="{{ url_for('Tags.Tags_page') }}" aria-disabled="true"><i class="fas fa-tag"></i> Browse Items</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" href="{{ url_for('terms.terms_management') }}" aria-disabled="true"><i class="fas fa-crosshairs"></i> Leaks Hunter</a>
+        <a class="nav-link" id="page-Tracker" href="{{ url_for('hunter.tracked_menu') }}" aria-disabled="true"><i class="fas fa-crosshairs"></i> Leaks Hunter</a>
       </li>
       <li class="nav-item mr-3">
         <a class="nav-link" id="page-Crawler" href="{{ url_for('hiddenServices.dashboard') }}" tabindex="-1" aria-disabled="true"><i class="fas fa-spider"></i> Crawlers</a>
@@ -34,7 +34,7 @@
         <a class="nav-link" id="page-options" href="{{ url_for('settings.settings_page') }}" aria-disabled="true"><i class="fas fa-cog"></i> Server Management</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" id="page-options" href="{{ url_for('logout') }}" aria-disabled="true"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+        <a class="nav-link" id="page-options" href="{{ url_for('root.logout') }}" aria-disabled="true"><i class="fas fa-sign-out-alt"></i> Log Out</a>
       </li>
     </ul>
 

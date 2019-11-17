@@ -10,12 +10,15 @@ from asciimatics.event import Event
 from asciimatics.event import KeyboardEvent, MouseEvent
 import sys, os
 import time, datetime
-import argparse, configparser
+import argparse
 import json
 import redis
 import psutil
 from subprocess import PIPE, Popen
 from packages import Paste
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
  # CONFIG VARIABLES
 kill_retry_threshold = 60 #1m
@@ -798,21 +801,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-
-    cfg = configparser.ConfigParser()
-    cfg.read(configfile)
+    config_loader = ConfigLoader.ConfigLoader()
 
     # REDIS #
-    server = redis.StrictRedis(
-        host=cfg.get("Redis_Queues", "host"),
-        port=cfg.getint("Redis_Queues", "port"),
-        db=cfg.getint("Redis_Queues", "db"),
-        decode_responses=True)
+    server = config_loader.get_redis_conn("Redis_Queues")
+    config_loader = None
 
     if args.clear == 1:
         clearRedisModuleInfo()

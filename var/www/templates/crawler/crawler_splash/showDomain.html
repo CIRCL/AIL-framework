@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Show Domain - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+  <style>
+    .icon_img:hover{
+  		cursor: pointer;
+  		color: #17a2b8;
+  	}
+    .icon_selected{
+  		color: #007bff;
+  	}
+  </style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+
+
+				<div class="row">
+
+					<div class="col-12 col-xl-6">
+						<div class="card mt-2">
+							<div class="card-header bg-dark">
+								<span class="badge badge-pill badge-light flex-row-reverse float-right">
+									{% if dict_domain["status"] %}
+										<div style="color:Green;">
+											<i class="fas fa-check-circle fa-2x"></i>
+											UP
+										</div>
+									{% else %}
+										<div style="color:Red;">
+											<i class="fas fa-times-circle fa-2x"></i>
+											DOWN
+										</div>
+									{% endif %}
+								</span>
+								<h3 class="card-title text-white">{{ dict_domain['domain'] }} :</h3>
+							</div>
+							<div class="card-body">
+								<table class="table table-responsive table-condensed">
+									<thead>
+										<tr>
+											<th>First Seen</th>
+											<th>Last Check</th>
+                      <th>Ports</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td class="panelText">{%if "first_seen" in dict_domain%}{{ dict_domain['first_seen'] }}{%endif%}</td>
+											<td class="panelText">{%if "last_check" in dict_domain%}{{ dict_domain['last_check'] }}{%endif%}</td>
+                      <td class="panelText">{%if dict_domain["ports"]%}{{ dict_domain["ports"] }}{%endif%}</td>
+										</tr>
+									</tbody>
+								</table>
+
+								<div>
+									{% for tag in dict_domain['tags'] %}
+									<a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+									</a>
+									{%  endfor %}
+									<br>
+                  {% include 'modals/add_tags.html' %}
+                  <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                    <i class="far fa-plus-square"></i>
+                  </button>
+								</div>
+
+                <hr>
+                {% if dict_domain['origin_item']=='manual' or dict_domain['origin_item']=='auto' %}
+									<span class="badge badge-dark">{{ dict_domain['origin_item'] }}</span>
+								{%else%}
+								Last Origin: <a class="badge" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=dict_domain['origin_item']) }}" />{{ dict_domain['origin_item'] }}</a>
+								{%endif%}
+
+							</div>
+						</div>
+
+
+            {% if 'decoded' in dict_domain%}
+              <div id="accordiondecoded" class="mt-3">
+                <div class="card">
+                  <div class="card-header" id="headingDecoded">
+                    <div class="row">
+                      <div class="col-11">
+                        <div class="mt-2">
+                          <i class="fas fa-lock-open"></i> Decoded&nbsp;&nbsp;
+                          <div class="badge badge-warning">{{dict_domain['decoded']|length}}</div>
+                        </div>
+                      </div>
+                      <div class="col-1">
+                        <button class="btn btn-link collapsed rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="false" aria-controls="collapseDecoded">
+                          <i class="fas fa-chevron-circle-down"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="collapseDecoded" class="collapse" aria-labelledby="headingDecoded" data-parent="#accordiondecoded">
+                    <div class="card-body">
+                      <table id="tabledecoded" class="table table-striped">
+                        <thead class="thead-dark">
+                          <tr>
+                           <th>Decoded</th>
+                          </tr>
+                         </thead>
+                        <tbody>
+                          {% for decoded in dict_domain['decoded']%}
+                            <tr>
+                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ decoded }}&correlation_objects=domain">{{ decoded }}</a></td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+
+            {% if 'pgp' in dict_domain%}
+              <div id="accordionpgp" class="mt-3">
+                <div class="card">
+                  <div class="card-header" id="headingPgp">
+                    <div class="row">
+                      <div class="col-11">
+                        <div class="mt-2">
+                          <i class="fas fa-key"></i> PGP Dumps&nbsp;&nbsp;
+                          <div class="badge badge-warning">{{dict_domain['pgp']['nb']}}</div>
+                        </div>
+                      </div>
+                      <div class="col-1">
+                        <button class="btn btn-link collapsed rotate" data-toggle="collapse" data-target="#collapsePgp" aria-expanded="false" aria-controls="collapsePgp">
+                          <i class="fas fa-chevron-circle-down"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="collapsePgp" class="collapse" aria-labelledby="headingPgp" data-parent="#accordionpgp">
+                    <div class="card-body">
+                      <table id="tablepgp" class="table table-striped">
+                        <thead class="thead-dark">
+                          <tr>
+                           <th>PGP Type</th>
+                           <th>Key ID</th>
+                          </tr>
+                         </thead>
+                        <tbody>
+                          {% for dict_key in dict_domain['pgp']%}
+                            {% if dict_key != "nb" %}
+                              {% if dict_key=="mail" %}
+                                {% set var_icon = "fas fa-at" %}
+                              {% elif dict_key=="name" %}
+                                {% set var_icon = "fas fa-user-tag" %}
+                              {% else %}
+                                {% set var_icon = "fas fa-key" %}
+                              {% endif %}
+                              {% for key_id in dict_domain['pgp'][dict_key]%}
+                                <tr>
+                                  <td>
+                                    <i class="{{ var_icon }}"></i>
+                                    &nbsp;&nbsp;{{ dict_key }}
+                                  </td>
+                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=pgp&correlation_id={{ key_id }}&type_id={{ dict_key }}&correlation_objects=domain">{{ key_id }}</a></td>
+                                </tr>
+                              {% endfor %}
+                            {% endif %}
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+
+            {% if 'cryptocurrency' in dict_domain%}
+              <div id="accordioncurrency" class="mt-3">
+                <div class="card">
+                  <div class="card-header" id="headingcurrency">
+                    <div class="row">
+                      <div class="col-11">
+                        <div class="mt-2">
+                          <i class="fas fa-coins"></i> Cryptocurrencies&nbsp;&nbsp;
+                          <div class="badge badge-warning">{{dict_domain['cryptocurrency']['nb']}}</div>
+                        </div>
+                      </div>
+                      <div class="col-1">
+                        <button class="btn btn-link collapsed rotate" data-toggle="collapse" data-target="#collapsecurrency" aria-expanded="false" aria-controls="collapsecurrency">
+                          <i class="fas fa-chevron-circle-down"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="collapsecurrency" class="collapse" aria-labelledby="headingcurrency" data-parent="#accordioncurrency">
+                    <div class="card-body">
+                      <table id="tablecurrency" class="table table-striped">
+                        <thead class="thead-dark">
+                          <tr>
+                           <th>Currency</th>
+                           <th>address</th>
+                          </tr>
+                         </thead>
+                        <tbody>
+                          {% for dict_key in dict_domain['cryptocurrency']%}
+                            {% if dict_key != "nb" %}
+                              {% if dict_key=="bitcoin" %}
+                                {% set var_icon = "fab fa-bitcoin" %}
+                              {% elif dict_key=="monero" %}
+                                {% set var_icon = "fab fa-monero" %}
+                              {% else %}
+                                {% set var_icon = "fas fa-coins" %}
+                              {% endif %}
+                              {% for key_id in dict_domain['cryptocurrency'][dict_key]%}
+                                <tr>
+                                  <td>
+                                    <i class="{{ var_icon }}"></i>
+                                    &nbsp;&nbsp;{{ dict_key }}
+                                  </td>
+                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=pgp&correlation_id={{ key_id }}&type_id={{ dict_key }}&correlation_objects=domain">{{ key_id }}</a></td>
+                                </tr>
+                              {% endfor %}
+                            {% endif %}
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+
+            <!-- TODO: ADD HASH DECODED -->
+
+						{% if dict_domain["crawler_history"] %}
+              <hr class="my-4">
+
+              <div class="card mb-1">
+  							<div class="card-header">
+                  <div class="flex-row-reverse float-right text-secondary">
+                    Date:
+                    <span class="badge badge-pill badge-info mt-1">
+    									{{dict_domain["crawler_history"]["date"]}}
+    								</span>
+                    &nbsp;&nbsp;PORT:
+                    <span class="badge badge-pill badge-warning mt-1">
+    									{{dict_domain["crawler_history"]["port"]}}
+    								</span>
+                  </div>
+                  <h5>Crawled Items</h5>
+  							</div>
+
+              </div>
+
+							<table class="table table-striped table-bordered table-hover" id="myTable_1">
+						    <thead class="thead-dark">
+						      <tr>
+						        <th>Crawled Pastes</th>
+                    <th class="text-center"><i class="fas fa-images"></i></th>
+						      </tr>
+						    </thead>
+						    <tbody>
+					        {% for item in dict_domain["crawler_history"]["items"] %}
+					          <tr>
+				              <td>
+												<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item["id"]}}" class="text-secondary">
+													<div style="line-height:0.9;">{{ item["link"] }}</div>
+												</a>
+				                <div>
+				                  {% for tag in item["tags"] %}
+					                  <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag["tag"] }}">
+					                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag["min_tag"] }}</span>
+					                  </a>
+				                  {%  endfor %}
+				                </div>
+			              	</td>
+                    <td class="text-center">
+                      {%if item["screenshot"]%}
+                      <span class="icon_img" onclick="reload_image('{{ item["screenshot"] }}', '{{ item["link"] }}', '{{ item["id"] }}');" id="{{ item["screenshot"].replace('/', '') }}">
+                        <i class="far fa-image"></i>
+                      </button>
+                      {%endif%}
+                    </td>
+						        </tr>
+						      {%  endfor %}
+
+						    </tbody>
+						  </table>
+
+              <div class="text-center mb-4">
+                <a href="{{ url_for('hiddenServices.download_domain') }}?domain={{domain}}&port={{port}}{% if epoch %}&epoch={{epoch}}{% endif %}" target="blank" style="font-size: 15px">
+                    <button class="btn btn-info"><i class="fas fa-download"></i> Download Domain Content
+                    </button>
+                </a>
+              </div>
+						{%endif%}
+
+            {% if dict_domain["history"] %}
+							<table class="table table-hover mt-2" id="myTable_2">
+						    <thead>
+						      <tr>
+						        <th><i class="fas fa-history"></i> Domain History</th>
+						      </tr>
+						    </thead>
+						    <tbody>
+					        {% for dom_history in dict_domain["history"] %}
+					          <tr>
+				              <td class="{% if dom_history["epoch"]==dict_domain["crawler_history"]["epoch"] %}text-dark table-info{% endif %}">
+												<a href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["domain"]}}&port={{dict_domain["crawler_history"]["port"]}}&epoch={{dom_history["epoch"]}}" class="text-secondary">
+													<div class="d-flex justify-content-around" style="line-height:0.9;">
+                            <div>{{dict_domain["domain"]}}</div>
+                            {% if dom_history["status"] %}
+                              <div style="color:Green;"><i class="fas fa-check-circle"></i> UP</div>
+                            {% else %}
+                              <div style="color:Red;"><i class="fas fa-times-circle"></i>	DOWN</div>
+                            {% endif %}
+                            <div>{{ dom_history["date"] }}</div>
+                          </div>
+												</a>
+						        </tr>
+						      {%  endfor %}
+						    </tbody>
+						  </table>
+						{%endif%}
+
+					</div>
+
+					<div class="col-12 col-xl-6">
+						<div class="card my-2" style="background-color:#ecf0f1;">
+							<div class="card-body py-2">
+								<div class="row">
+									<div class="col-md-8">
+										<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="13">
+									</div>
+									<div class="col-md-4">
+										<button class="btn btn-primary" onclick="blocks.value=50;pixelate();">
+												<i class="fas fa-search-plu"></i>
+												<span class="label-icon">Full resolution</span>
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<canvas id="canvas" style="width:100%;"></canvas>
+						<div class="text-center">
+							<small class="text-info" style="line-height:0.9;">
+								<a target="_blank" href="" id="screenshot_link"></a>
+							<small>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+
+<script>
+	var table;
+  $(document).ready(function(){
+    {% if 'decoded' in dict_domain%}
+      $('#tabledecoded').DataTable();
+    {% endif %}
+    {% if 'pgp' in dict_domain%}
+      $('#tablepgp').DataTable();
+    {% endif %}
+    {% if 'cryptocurrency' in dict_domain%}
+      $('#tablecurrency').DataTable({});
+    {% endif %}
+  	table = $('#myTable_1').DataTable(
+  	{
+  		//"aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+  		//"iDisplayLength": 5,
+  		//"order": [[ 0, "desc" ]]
+  	});
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+<script>
+var ctx = canvas.getContext('2d'), img = new Image();
+var base_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}";
+var screenshot_href = "{{ url_for('showsavedpastes.showsavedpaste') }}?paste=";
+
+/// turn off image smoothing
+ctx.webkitImageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
+
+img.onload = pixelate;
+img.addEventListener("error", img_error);
+var draw_img = false;
+
+{%if "crawler_history" in dict_domain%}
+  {%if dict_domain['crawler_history']['random_item']['screenshot']%}
+    var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}";
+    var selected_icon = $("#"+screenshot.replace(/\//g, ""));
+    selected_icon.addClass("icon_selected");
+    selected_icon.removeClass("icon_img");
+
+
+    $("#screenshot_link").attr("href", "screenshot_href + {{dict_domain['crawler_history']['random_item']['id']}}");
+    $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
+  {%else%}
+  var screenshot = "";
+  {%endif%}
+{%else%}
+var screenshot = "";
+{%endif%}
+
+img.src = base_url + screenshot;
+
+function pixelate() {
+  /// use slider value
+  if( blocks.value == 50 ){
+    size = 1;
+  } else {
+    var size = (blocks.value) * 0.01;
+  }
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  /// cache scaled width and height
+  w = canvas.width * size;
+  h = canvas.height * size;
+
+	/// draw original image to the scaled size
+  ctx.drawImage(img, 0, 0, w, h);
+
+  /// pixelated
+  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+}
+
+blocks.addEventListener('change', pixelate, false);
+
+function img_error() {
+	img.onerror=null;
+	img.src="{{ url_for('static', filename='image/AIL.png') }}";
+	blocks.value = 50;
+	pixelate;
+}
+
+function reload_image(new_screenshot, link, item_id) {
+  $("#"+screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
+  screenshot = new_screenshot;
+
+  img.src=base_url + screenshot;
+  selected_icon = $("#"+screenshot.replace(/\//g, ""));
+  selected_icon.addClass("icon_selected");
+  selected_icon.removeClass("icon_img")
+
+  $("#screenshot_link").attr("href", screenshot_href + item_id);
+  $("#screenshot_link").text(link);
+  pixelate;
+}
+
+
+</script>
+
+
+</html>

@@ -10,11 +10,13 @@
 #
 # Copyright (c) 2014 Alexandre Dulaunoy - a@foo.be
 
-import configparser
 import argparse
 import gzip
 import os
+import sys
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 def readdoc(path=None):
     if path is None:
@@ -22,13 +24,11 @@ def readdoc(path=None):
     f = gzip.open(path, 'r')
     return f.read()
 
-configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-cfg = configparser.ConfigParser()
-cfg.read(configfile)
+config_loader = ConfigLoader.ConfigLoader()
 
 # Indexer configuration - index dir and schema setup
-indexpath = os.path.join(os.environ['AIL_HOME'], cfg.get("Indexer", "path"))
-indexertype = cfg.get("Indexer", "type")
+indexpath = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Indexer", "path"))
+indexertype = config_loader.get_config_str("Indexer", "type")
 
 argParser = argparse.ArgumentParser(description='Fulltext search for AIL')
 argParser.add_argument('-q', action='append', help='query to lookup (one or more)')

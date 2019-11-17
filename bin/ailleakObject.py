@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import os
+import sys
+
 from pymisp.tools.abstractgenerator import AbstractMISPObjectGenerator
-import configparser
 from packages import Paste
 import datetime
 import json
 from io import BytesIO
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
 
 class AilLeakObject(AbstractMISPObjectGenerator):
     def __init__(self, uuid_ail, p_source, p_date, p_content, p_duplicate, p_duplicate_number):
@@ -35,9 +40,9 @@ class ObjectWrapper:
         self.pymisp = pymisp
         self.currentID_date = None
         self.eventID_to_push = self.get_daily_event_id()
-        cfg = configparser.ConfigParser()
-        cfg.read('./packages/config.cfg')
-        self.maxDuplicateToPushToMISP = cfg.getint("ailleakObject", "maxDuplicateToPushToMISP")
+        config_loader = ConfigLoader.ConfigLoader()
+        self.maxDuplicateToPushToMISP = config_loader.get_config_int("ailleakObject", "maxDuplicateToPushToMISP")
+        config_loader = None
         self.attribute_to_tag = None
 
     def add_new_object(self, uuid_ail, path, p_source, tag):
