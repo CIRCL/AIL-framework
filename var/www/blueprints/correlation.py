@@ -22,6 +22,7 @@ from Role_Manager import login_admin, login_analyst
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Correlate_object
+import Domain
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Cryptocurrency
@@ -108,9 +109,10 @@ def get_card_metadata(object_type, correlation_id, type_id=None):
         card_dict["vt"] = Decoded.get_decoded_vt_report(correlation_id)
         card_dict["vt"]["status"] = vt_enabled
     elif object_type == 'domain':
-        pass
+        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
+        card_dict["tags"] = Domain.get_domain_tags(correlation_id)
     elif object_type == 'paste':
-        pass
+        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
     return card_dict
 
 # ============= ROUTES ==============
@@ -180,7 +182,7 @@ def show_correlation():
         if type_id:
             dict_object["metadata"]['type_id'] = type_id
         dict_object["metadata_card"] = get_card_metadata(object_type, correlation_id, type_id=type_id)
-        return render_template("show_correlation.html", dict_object=dict_object)
+        return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label)
 
 @correlation.route('/correlation/graph_node_json')
 @login_required
