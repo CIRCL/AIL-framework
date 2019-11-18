@@ -46,6 +46,27 @@ def is_galaxy_tag_enabled(galaxy, tag):
     else:
         return False
 
+def enable_taxonomy(taxonomie, enable_tags=True):
+    '''
+    Enable a taxonomy. (UI)
+
+    :param taxonomie: MISP taxonomy
+    :type taxonomie: str
+    :param enable_tags: crawled domain
+    :type enable_tags: boolean
+    '''
+    taxonomies = Taxonomies()
+    if enable_tags:
+        taxonomie_info = taxonomies.get(taxonomie)
+        if taxonomie_info:
+            # activate taxonomie
+            r_serv_tags.sadd('active_taxonomies', taxonomie)
+            # activate taxonomie tags
+            for tag in taxonomie_info.machinetags():
+                r_serv_tags.sadd('active_tag_{}'.format(taxonomie), tag)
+        else:
+            print('Error: {}, please update pytaxonomies'.format(taxonomie))
+
 # Check if tags are enabled in AIL
 def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
     if list_tags:

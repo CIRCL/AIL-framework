@@ -18,16 +18,19 @@ from flask_login import LoginManager, current_user, login_user, logout_user, log
 import flask
 import importlib
 from os.path import join
+
+# # TODO: put me in lib/Tag
+from pytaxonomies import Taxonomies
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Tag
+
 sys.path.append('./modules/')
 
 from User import User
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-
-
-from pytaxonomies import Taxonomies
 
 # Import config
 import Flask_config
@@ -217,20 +220,15 @@ def page_not_found(e):
     return render_template('error/404.html'), 404
 
 # ========== INITIAL taxonomies ============
-# add default ail taxonomies
-r_serv_tags.sadd('active_taxonomies', 'infoleak')
-r_serv_tags.sadd('active_taxonomies', 'gdpr')
-r_serv_tags.sadd('active_taxonomies', 'fpf')
-# add default tags
-taxonomies = Taxonomies()
-for tag in taxonomies.get('infoleak').machinetags():
-    r_serv_tags.sadd('active_tag_infoleak', tag)
-for tag in taxonomies.get('gdpr').machinetags():
-    r_serv_tags.sadd('active_tag_gdpr', tag)
-for tag in taxonomies.get('fpf').machinetags():
-    r_serv_tags.sadd('active_tag_fpf', tag)
+default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
+
+# enable default taxonomies
+for taxo in default_taxonomies:
+    Tag.enable_taxonomy(taxo)
 
 # ========== INITIAL tags auto export ============
+taxonomies = Taxonomies()
+
 infoleak_tags = taxonomies.get('infoleak').machinetags()
 infoleak_automatic_tags = []
 for tag in taxonomies.get('infoleak').machinetags():
