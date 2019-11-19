@@ -10,7 +10,7 @@ import sys
 import json
 import random
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
@@ -171,18 +171,24 @@ def show_correlation():
         correlation_names = sanitise_correlation_names(request.args.get('correlation_names'))
         correlation_objects = sanitise_correlation_objects(request.args.get('correlation_objects'))
 
-        dict_object = {"object_type": object_type, "correlation_id": correlation_id}
-        dict_object["max_nodes"] = max_nodes
-        dict_object["mode"] = mode
-        dict_object["correlation_names"] = correlation_names
-        dict_object["correlation_names_str"] = ",".join(correlation_names)
-        dict_object["correlation_objects"] = correlation_objects
-        dict_object["correlation_objects_str"] = ",".join(correlation_objects)
-        dict_object["metadata"] = Correlate_object.get_object_metadata(object_type, correlation_id, type_id=type_id)
-        if type_id:
-            dict_object["metadata"]['type_id'] = type_id
-        dict_object["metadata_card"] = get_card_metadata(object_type, correlation_id, type_id=type_id)
-        return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label)
+        # check if correlation_id exist
+        if not Correlate_object.exist_object(object_type, correlation_id, type_id=type_id):
+            abort(404) # return 404
+        # oject exist
+        else:
+            dict_object = {"object_type": object_type, "correlation_id": correlation_id}
+            dict_object["max_nodes"] = max_nodes
+            dict_object["mode"] = mode
+            dict_object["correlation_names"] = correlation_names
+            dict_object["correlation_names_str"] = ",".join(correlation_names)
+            dict_object["correlation_objects"] = correlation_objects
+            dict_object["correlation_objects_str"] = ",".join(correlation_objects)
+            dict_object["metadata"] = Correlate_object.get_object_metadata(object_type, correlation_id, type_id=type_id)
+            if type_id:
+                dict_object["metadata"]['type_id'] = type_id
+            dict_object["metadata_card"] = get_card_metadata(object_type, correlation_id, type_id=type_id)
+            return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label)
+
 
 @correlation.route('/correlation/graph_node_json')
 @login_required
