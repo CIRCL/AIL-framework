@@ -63,6 +63,7 @@ def showDomain():
     dict_domain['domain'] = domain_name
     if domain.is_domain_up():
         dict_domain = {**dict_domain, **domain.get_domain_correlation()}
+        dict_domain['correlation_nb'] = Domain.get_domain_total_nb_correlation(dict_domain)
         dict_domain['origin_item'] = domain.get_domain_last_origin()
         dict_domain['tags'] = domain.get_domain_tags()
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])
