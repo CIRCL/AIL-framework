@@ -124,6 +124,6 @@ if __name__ == "__main__":
 
     misp_module_url = 'http://localhost'
     misp_module_port = 6666
-    test_content = build_enrichment_request_json('btc_steroids', 'btc', 'btc_add')
+    test_content = build_enrichment_request_json('btc_steroids', 'btc', '1CSCdUXH2AzjsMb67KrshxyudThACT4Y8E')
     print(test_content)
     misp_module_enrichment_request(misp_module_url, misp_module_port, test_content)
