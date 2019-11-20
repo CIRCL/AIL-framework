@@ -13,7 +13,7 @@ import json
 from pyfaup.faup import Faup
 from flask import Flask, render_template, jsonify, request, send_file, Blueprint, redirect, url_for
 
-from Role_Manager import login_admin, login_analyst, no_cache
+from Role_Manager import login_admin, login_analyst, login_read_only, no_cache
 from flask_login import login_required
 
 from Date import Date
@@ -242,7 +242,7 @@ def delete_auto_crawler(url):
 
 @hiddenServices.route("/crawlers/", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def dashboard():
     crawler_metadata_onion = get_crawler_splash_status('onion')
     crawler_metadata_regular = get_crawler_splash_status('regular')
@@ -259,13 +259,13 @@ def dashboard():
 
 @hiddenServices.route("/crawlers/manual", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def manual():
     return render_template("Crawler_Splash_manual.html", crawler_enabled=crawler_enabled)
 
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def crawler_splash_onion():
     type = 'onion'
     last_onions = get_last_domains_crawled(type)
@@ -284,7 +284,7 @@ def crawler_splash_onion():
 
 @hiddenServices.route("/crawlers/Crawler_Splash_last_by_type", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def Crawler_Splash_last_by_type():
     type = request.args.get('type')
     # verify user input
@@ -309,7 +309,7 @@ def Crawler_Splash_last_by_type():
 
 @hiddenServices.route("/crawlers/blacklisted_domains", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def blacklisted_domains():
     blacklist_domain = request.args.get('blacklist_domain')
     unblacklist_domain = request.args.get('unblacklist_domain')
@@ -479,7 +479,7 @@ def create_spider_splash():
 
 @hiddenServices.route("/crawlers/auto_crawler", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def auto_crawler():
     nb_element_to_display = 100
     try:
@@ -544,7 +544,7 @@ def remove_auto_crawler():
 
 @hiddenServices.route("/crawlers/crawler_dashboard_json", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def crawler_dashboard_json():
 
     crawler_metadata_onion = get_crawler_splash_status('onion')
@@ -562,7 +562,7 @@ def crawler_dashboard_json():
 # # TODO: refractor
 @hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_json", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def last_crawled_domains_with_stats_json():
     last_onions = r_serv_onion.lrange('last_onion', 0 ,-1)
     list_onion = []
@@ -613,7 +613,7 @@ def last_crawled_domains_with_stats_json():
 
 @hiddenServices.route("/hiddenServices/get_onions_by_daterange", methods=['POST'])
 @login_required
-@login_analyst
+@login_read_only
 def get_onions_by_daterange():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -626,7 +626,7 @@ def get_onions_by_daterange():
 
 @hiddenServices.route("/hiddenServices/show_domains_by_daterange", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def show_domains_by_daterange():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -732,7 +732,7 @@ def show_domains_by_daterange():
 
 @hiddenServices.route("/crawlers/download_domain", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 @no_cache
 def download_domain():
     domain = request.args.get('domain')
@@ -798,7 +798,7 @@ def onion_son():
 # ============= JSON ==============
 @hiddenServices.route("/hiddenServices/domain_crawled_7days_json", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def domain_crawled_7days_json():
     type = 'onion'
         ## TODO: # FIXME: 404 error
@@ -818,7 +818,7 @@ def domain_crawled_7days_json():
 
 @hiddenServices.route('/hiddenServices/domain_crawled_by_type_json')
 @login_required
-@login_analyst
+@login_read_only
 def domain_crawled_by_type_json():
     current_date = request.args.get('date')
     type = request.args.get('type')

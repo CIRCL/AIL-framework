@@ -14,7 +14,7 @@ from Date import Date
 
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
 
 # ============ VARIABLES ============
@@ -113,13 +113,13 @@ def datetime_from_utc_to_local(utc_str):
 
 @dashboard.route("/_logs")
 @login_required
-@login_analyst
+@login_read_only
 def logs():
     return flask.Response(event_stream(), mimetype="text/event-stream")
 
 @dashboard.route("/_get_last_logs_json")
 @login_required
-@login_analyst
+@login_read_only
 def get_last_logs_json():
     date = datetime.datetime.now().strftime("%Y%m%d")
 
@@ -162,14 +162,14 @@ def get_last_logs_json():
 
 @dashboard.route("/_stuff", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def stuff():
     return jsonify(row1=get_queues(r_serv))
 
 
 @dashboard.route("/")
 @login_required
-@login_analyst
+@login_read_only
 def index():
     default_minute = config_loader.get_config_str("Flask", "minute_processed_paste")
     threshold_stucked_module = config_loader.get_config_int("Module_ModuleInformation", "threshold_stucked_module")

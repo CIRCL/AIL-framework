@@ -18,7 +18,7 @@ import Flask_config
 
 # Import Role_Manager
 from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, login_read_only
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Correlate_object
@@ -118,7 +118,7 @@ def get_card_metadata(object_type, correlation_id, type_id=None):
 # ============= ROUTES ==============
 @correlation.route('/correlation/show_correlation', methods=['GET', 'POST']) # GET + POST
 @login_required
-@login_analyst
+@login_read_only
 def show_correlation():
     if request.method == 'POST':
         object_type = request.form.get('object_type')
@@ -192,7 +192,7 @@ def show_correlation():
 
 @correlation.route('/correlation/graph_node_json')
 @login_required
-@login_analyst
+@login_read_only
 def graph_node_json(): # # TODO: use post
     correlation_id = request.args.get('correlation_id')
     type_id = request.args.get('type_id')

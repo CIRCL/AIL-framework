@@ -7,7 +7,7 @@
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 from flask_login import login_required, current_user
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, login_user, login_read_only
 from Role_Manager import create_user_db, edit_user_db, delete_user_db, check_password_strength, generate_new_token, gen_password
 
 import json
@@ -103,7 +103,7 @@ def get_all_roles():
 
 @settings.route("/settings/", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def settings_page():
     git_metadata = get_git_metadata()
     current_version = r_serv_db.get('ail:version')
@@ -117,7 +117,7 @@ def settings_page():
 
 @settings.route("/settings/edit_profile", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def edit_profile():
     user_metadata = get_user_metadata(current_user.get_id())
     admin_level = current_user.is_in_role('admin')
@@ -126,7 +126,7 @@ def edit_profile():
 
 @settings.route("/settings/new_token", methods=['GET'])
 @login_required
-@login_analyst
+@login_user
 def new_token():
     generate_new_token(current_user.get_id())
     return redirect(url_for('settings.edit_profile'))
@@ -233,7 +233,7 @@ def delete_user():
 
 @settings.route("/settings/get_background_update_stats_json", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def get_background_update_stats_json():
     # handle :end, error
     update_stats = {}

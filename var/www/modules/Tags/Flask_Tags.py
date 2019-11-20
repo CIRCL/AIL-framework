@@ -7,7 +7,7 @@
 import redis
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
 
 import json
@@ -125,7 +125,7 @@ def get_last_seen_from_tags_list(list_tags):
 
 @Tags.route("/tags/", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def Tags_page():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -260,7 +260,7 @@ def Tags_page():
 
 @Tags.route("/Tags/get_all_tags")
 @login_required
-@login_analyst
+@login_read_only
 def get_all_tags():
 
     all_tags = r_serv_tags.smembers('list_tags')
@@ -284,7 +284,7 @@ def get_all_tags():
 
 @Tags.route("/Tags/get_all_tags_taxonomies")
 @login_required
-@login_analyst
+@login_read_only
 def get_all_tags_taxonomies():
 
     taxonomies = Taxonomies()
@@ -303,7 +303,7 @@ def get_all_tags_taxonomies():
 
 @Tags.route("/Tags/get_all_tags_galaxies")
 @login_required
-@login_analyst
+@login_read_only
 def get_all_tags_galaxy():
 
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -318,7 +318,7 @@ def get_all_tags_galaxy():
 
 @Tags.route("/Tags/get_tags_taxonomie")
 @login_required
-@login_analyst
+@login_read_only
 def get_tags_taxonomie():
 
     taxonomie = request.args.get('taxonomie')
@@ -346,7 +346,7 @@ def get_tags_taxonomie():
 
 @Tags.route("/Tags/get_tags_galaxy")
 @login_required
-@login_analyst
+@login_read_only
 def get_tags_galaxy():
 
     galaxy = request.args.get('galaxy')
@@ -467,7 +467,7 @@ def add_item_tags():
 
 @Tags.route("/Tags/taxonomies")
 @login_required
-@login_analyst
+@login_read_only
 def taxonomies():
 
     active_taxonomies = r_serv_tags.smembers('active_taxonomies')
@@ -642,7 +642,7 @@ def edit_taxonomie_tag():
 
 @Tags.route("/Tags/galaxies")
 @login_required
-@login_analyst
+@login_read_only
 def galaxies():
 
     active_galaxies = r_serv_tags.smembers('active_galaxies')
@@ -901,7 +901,7 @@ def edit_galaxy_tag():
 
 @Tags.route("/Tags/tag_galaxy_info")
 @login_required
-@login_analyst
+@login_read_only
 def tag_galaxy_info():
 
     galaxy = request.args.get('galaxy')

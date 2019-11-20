@@ -7,7 +7,7 @@
 import redis
 from flask import Flask, render_template, jsonify, request, Blueprint
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
 
 # ============ VARIABLES ============
@@ -25,7 +25,7 @@ def one():
 
 @rawSkeleton.route("/rawSkeleton/", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def skeleton_page():
     return render_template("rawSkeleton.html")
 

@@ -16,7 +16,7 @@ from flask_login import LoginManager, current_user, login_user, logout_user, log
 from flask import request, make_response, current_app
 
 login_manager = LoginManager()
-login_manager.login_view = 'role'
+login_manager.login_view = 'root.role'
 
 # CONFIG #
 config_loader = ConfigLoader.ConfigLoader()
@@ -68,7 +68,35 @@ def login_analyst(func):
         return func(*args, **kwargs)
     return decorated_view
 
+def login_user(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+        elif (not current_user.is_in_role('user')):
+            return login_manager.unauthorized()
+        return func(*args, **kwargs)
+    return decorated_view
 
+def login_user_no_api(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+        elif (not current_user.is_in_role('user_no_api')):
+            return login_manager.unauthorized()
+        return func(*args, **kwargs)
+    return decorated_view
+
+def login_read_only(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+        elif (not current_user.is_in_role('read_only')):
+            return login_manager.unauthorized()
+        return func(*args, **kwargs)
+    return decorated_view
 
 ###############################################################
 ###############################################################
@@ -107,21 +135,30 @@ def create_user_db(username_id , password, default=False, role=None, update=Fals
     # create user token
     generate_new_token(username_id)
 
+    if not role:
+        role = 'read_only'
+
     if update:
         r_serv_db.hdel('user_metadata:{}'.format(username_id), 'change_passwd')
         # remove default user password file
         if username_id=='admin@admin.test':
             os.remove(default_passwd_file)
+        r_serv_db.hset('user:all', username_id, password_hash)
     else:
         if default:
             r_serv_db.hset('user_metadata:{}'.format(username_id), 'change_passwd', True)
         if role:
+            print(role)
+            print(get_all_role())
             if role in get_all_role():
+                print('yep')
+                print(get_all_user_role(role))
                 for role_to_add in get_all_user_role(role):
+                    print(role)
                     r_serv_db.sadd('user_role:{}'.format(role_to_add), username_id)
                 r_serv_db.hset('user_metadata:{}'.format(username_id), 'role', role)
 
-    r_serv_db.hset('user:all', username_id, password_hash)
+        r_serv_db.hset('user:all', username_id, password_hash)
 
 def edit_user_db(user_id, role, password=None):
     if password:
