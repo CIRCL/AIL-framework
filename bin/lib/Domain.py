@@ -237,6 +237,15 @@ def get_domain_all_correlation(domain, correlation_names=[], get_nb=False):
 
     return domain_correl
 
+def get_domain_total_nb_correlation(correlation_dict):
+    total_correlation = 0
+    if 'decoded' in correlation_dict:
+        total_correlation += len(correlation_dict['decoded'])
+    if 'cryptocurrency' in correlation_dict:
+        total_correlation += correlation_dict['cryptocurrency'].get('nb', 0)
+    if 'pgp' in correlation_dict:
+        total_correlation += correlation_dict['pgp'].get('nb', 0)
+    return total_correlation
 
  # TODO: handle port
 def get_domain_history(domain, domain_type, port): # TODO: add date_range: from to + nb_elem

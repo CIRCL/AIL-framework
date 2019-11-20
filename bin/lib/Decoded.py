@@ -39,6 +39,9 @@ def nb_decoded_item_size(sha1_string):
     else:
         return int(nb)
 
+def exist_decoded(sha1_string):
+    return r_serv_metadata.exists('metadata_hash:{}'.format(sha1_string))
+
 def get_decoded_metadata(sha1_string, nb_seen=False, size=False):
     metadata_dict = {}
     metadata_dict['first_seen'] = r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'first_seen')

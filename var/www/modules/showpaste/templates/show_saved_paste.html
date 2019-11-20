@@ -346,6 +346,13 @@
           {% endif %}
         </div>
 
+        <div>
+					<a href="{{ url_for('correlation.show_correlation')}}?object_type=paste&correlation_id={{ request.args.get('paste') }}&correlation_objects=paste" target="_blank" style="font-size: 15px">
+						<button class="btn btn-info"><i class="fa fa-search"></i> Show Paste Correlation
+						</button>
+					</a>
+				</div>
+
       </div>
 
     <div class="panel-body" id="panel-body">

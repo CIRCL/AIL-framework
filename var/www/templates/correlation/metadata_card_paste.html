@@ -1,0 +1,50 @@
+<div class="card my-3">
+	<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+		<h4 class="text-secondary">{{ dict_object["correlation_id"] }} :</h4>
+		<ul class="list-group mb-2">
+			<li class="list-group-item py-0">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Object type</th>
+							<th>type</th>
+							<th>date</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>{{ dict_object["object_type"] }}</td>
+							<td>
+								<svg height="26" width="26">
+									<g class="nodes">
+										<circle cx="13" cy="13" r="13" fill="orange"></circle>
+										<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ dict_object["metadata_card"]["icon"]["icon_class"] }}" font-size="16px">{{ dict_object["metadata_card"]["icon"]["icon_text"] }}</text>
+									</g>
+								</svg>
+								{{ dict_object["metadata"]["type_id"] }}
+							</td>
+							<td>{{ dict_object["metadata"]['date'][0:4] }}/{{ dict_object["metadata"]['date'][4:6] }}/{{ dict_object["metadata"]['date'][6:8] }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</li>
+
+			<li class="list-group-item py-0">
+				<br>
+				<div class="mb-3">
+					Tags:
+					{% for tag in dict_object["metadata"]['tags'] %}
+						<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+					{%  endfor %}
+				</div>
+				<div class="mb-2 float-right">
+					<a href="{{ url_for('showsavedpastes.showsavedpaste')}}?paste={{ dict_object["correlation_id"] }}" target="_blank" style="font-size: 15px">
+						<button class="btn btn-info"><i class="fas fa-search"></i> Show Paste
+						</button>
+					</a>
+				</div>
+
+			</li>
+		</ul>
+	</div>
+</div>

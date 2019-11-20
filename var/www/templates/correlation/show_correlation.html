@@ -94,6 +94,10 @@
 						{% include 'correlation/metadata_card_pgp.html' %}
 					{% elif dict_object["object_type"] == "decoded" %}
 						{% include 'correlation/metadata_card_decoded.html' %}
+					{% elif dict_object["object_type"] == "domain" %}
+						{% include 'correlation/metadata_card_domain.html' %}
+					{% elif dict_object["object_type"] == "paste" %}
+						{% include 'correlation/metadata_card_paste.html' %}
 					{% endif %}
 
 					<div class="row">

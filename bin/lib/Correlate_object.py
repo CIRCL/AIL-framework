@@ -34,11 +34,25 @@ def get_all_correlation_objects():
     '''
     return ['domain', 'paste']
 
+def exist_object(object_type, correlation_id, type_id=None):
+    if object_type == 'domain':
+        return Domain.verify_if_domain_exist(correlation_id)
+    elif object_type == 'paste':
+        return Item.exist_item(correlation_id)
+    elif object_type == 'decoded':
+        return Decoded.exist_decoded(correlation_id)
+    elif object_type == 'pgp':
+        return Pgp.pgp._exist_corelation_field(type_id, correlation_id)
+    elif object_type == 'cryptocurrency':
+        return Cryptocurrency.cryptocurrency._exist_corelation_field(type_id, correlation_id)
+    else:
+        return False
+
 def get_object_metadata(object_type, correlation_id, type_id=None):
     if object_type == 'domain':
         return Domain.Domain(correlation_id).get_domain_metadata()
     elif object_type == 'paste':
-        return {}
+        return Item.get_item({"id": correlation_id, "date": True, "tags": True})[0]
     elif object_type == 'decoded':
         return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True)
     elif object_type == 'pgp':

@@ -20,6 +20,21 @@ r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
+def build_unsafe_tags():
+    unsafe_tags = set()
+    ## CE content
+    unsafe_tags.add('dark-web:topic="pornography-child-exploitation"')
+    # add copine-scale tags
+    taxonomies = Taxonomies()
+    copine_scale = taxonomies.get('copine-scale')
+    if copine_scale:
+        for tag in copine_scale.machinetags():
+            unsafe_tags.add(tag)
+    return unsafe_tags
+
+# set of unsafe tags
+unsafe_tags = build_unsafe_tags()
+
 def get_taxonomie_from_tag(tag):
     return tag.split(':')[0]
 
@@ -45,6 +60,27 @@ def is_galaxy_tag_enabled(galaxy, tag):
         return True
     else:
         return False
+
+def enable_taxonomy(taxonomie, enable_tags=True):
+    '''
+    Enable a taxonomy. (UI)
+
+    :param taxonomie: MISP taxonomy
+    :type taxonomie: str
+    :param enable_tags: crawled domain
+    :type enable_tags: boolean
+    '''
+    taxonomies = Taxonomies()
+    if enable_tags:
+        taxonomie_info = taxonomies.get(taxonomie)
+        if taxonomie_info:
+            # activate taxonomie
+            r_serv_tags.sadd('active_taxonomies', taxonomie)
+            # activate taxonomie tags
+            for tag in taxonomie_info.machinetags():
+                r_serv_tags.sadd('active_tag_{}'.format(taxonomie), tag)
+        else:
+            print('Error: {}, please update pytaxonomies'.format(taxonomie))
 
 # Check if tags are enabled in AIL
 def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
@@ -73,6 +109,17 @@ def get_tag_metadata(tag):
     first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'first_seen')
     last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
     return {'tag': tag, 'first_seen': first_seen, 'last_seen': last_seen}
+
+def is_tags_safe(ltags):
+    '''
+    Check if a list of tags contain an unsafe tag (CE, ...)
+
+    :param ltags: list of tags
+    :type ltags: list
+    :return: is a tag in the unsafe set
+    :rtype: boolean
+    '''
+    return unsafe_tags.isdisjoint(ltags)
 
 def is_tag_in_all_tag(tag):
     if r_serv_tags.sismember('list_tags', tag):
