@@ -10,18 +10,12 @@ misp_module_url = 'http://localhost:6666'
 
 default_config_path = os.path.join(os.environ['AIL_HOME'], 'configs', 'misp_modules.cfg')
 
-configfile = os.path.join(os.environ['AIL_BIN'], 'packages/config.cfg')
-if not os.path.exists(configfile):
-    raise Exception('Unable to find the configuration file. \
-                    Did you set environment variables? \
-                    Or activate the virtualenv.')
-cfg = configparser.ConfigParser()
-cfg.read(configfile)
-r_serv = redis.StrictRedis(
-    host=cfg.get("ARDB_DB", "host"),
-    port=cfg.getint("ARDB_DB", "port"),
-    db=cfg.getint("ARDB_DB", "db"),
-    decode_responses=True)
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
+config_loader = ConfigLoader.ConfigLoader()
+r_serv = config_loader.get_redis_conn("ARDB_DB")
+config_loader = None
 
 def init_config(config_path=default_config_path):
     config = configparser.ConfigParser()
@@ -124,6 +118,8 @@ if __name__ == "__main__":
 
     misp_module_url = 'http://localhost'
     misp_module_port = 6666
-    test_content = build_enrichment_request_json('btc_steroids', 'btc', '1CSCdUXH2AzjsMb67KrshxyudThACT4Y8E')
+
+    bitcoin_address = 'bitcoin_address'
+    test_content = build_enrichment_request_json('btc_steroids', 'btc', bitcoin_address)
     print(test_content)
     misp_module_enrichment_request(misp_module_url, misp_module_port, test_content)
