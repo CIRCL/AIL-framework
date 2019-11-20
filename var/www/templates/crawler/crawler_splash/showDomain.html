@@ -98,7 +98,7 @@
 								Last Origin: <a class="badge" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=dict_domain['origin_item']) }}" />{{ dict_domain['origin_item'] }}</a>
 								{%endif%}
 
-                {% if dict_domain['correlation_nb'] > 0 %}
+                {% if 'correlation_nb' in dict_domain %}
                   <hr>
                   <div class="mt-2">
           					<a href="{{ url_for('correlation.show_correlation')}}?object_type=domain&correlation_id={{ dict_domain['domain'] }}&correlation_objects=domain" target="_blank" style="font-size: 15px">
