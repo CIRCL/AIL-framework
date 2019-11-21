@@ -42,7 +42,7 @@ def nb_decoded_item_size(sha1_string):
 def exist_decoded(sha1_string):
     return r_serv_metadata.exists('metadata_hash:{}'.format(sha1_string))
 
-def get_decoded_metadata(sha1_string, nb_seen=False, size=False):
+def get_decoded_metadata(sha1_string, nb_seen=False, size=False, file_type=False):
     metadata_dict = {}
     metadata_dict['first_seen'] = r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'first_seen')
     metadata_dict['last_seen'] = r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'last_seen')
@@ -50,6 +50,8 @@ def get_decoded_metadata(sha1_string, nb_seen=False, size=False):
         metadata_dict['nb_seen'] = nb_decoded_seen_in_item(sha1_string)
     if size:
         metadata_dict['size'] = nb_decoded_item_size(sha1_string)
+    if file_type:
+        metadata_dict['file_type'] = get_decoded_item_type(sha1_string)
     return metadata_dict
 
 def get_list_nb_previous_hash(sha1_string, num_day):

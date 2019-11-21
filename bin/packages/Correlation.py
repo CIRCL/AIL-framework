@@ -22,7 +22,7 @@ class Correlation(object):
         self.all_correlation_types = all_correlation_types
 
     def _exist_corelation_field(self, correlation_type, field_name, item_type='paste'):
-        if type=='paste':
+        if item_type=='paste':
             return r_serv_metadata.exists('set_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
         else:
             return r_serv_metadata.exists('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
