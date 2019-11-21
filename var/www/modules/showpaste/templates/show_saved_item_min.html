@@ -132,7 +132,7 @@
               {% for b64 in l_64 %}
                 <tr>
                   <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ b64[2] }}&correlation_objects=paste"</a> ({{ b64[2] }})</td>
+                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ b64[2] }}&correlation_objects=paste"</a> {{b64[2]}} ({{ b64[4] }})</td>
                 </tr>
               {% endfor %}
             </tbody>
