@@ -54,7 +54,7 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
     elif object_type == 'paste':
         return Item.get_item({"id": correlation_id, "date": True, "tags": True})[0]
     elif object_type == 'decoded':
-        return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True)
+        return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True, file_type=True)
     elif object_type == 'pgp':
         return Pgp.pgp.get_metadata(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
