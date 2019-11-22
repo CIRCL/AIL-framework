@@ -18,11 +18,12 @@ import Flask_config
 
 # Import Role_Manager
 from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, login_read_only
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Correlate_object
 import Domain
+import btc_ail
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Cryptocurrency
@@ -95,11 +96,13 @@ def sanitise_correlation_objects(correlation_objects):
         else:
             return all_correlation_objects
 
-def get_card_metadata(object_type, correlation_id, type_id=None):
+def get_card_metadata(object_type, correlation_id, type_id=None, expand_card=False):
     card_dict = {}
     if object_type == 'cryptocurrency':
         card_dict["sparkline"] = Cryptocurrency.cryptocurrency.get_list_nb_previous_correlation_object(type_id, correlation_id, 6)
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, type_id)
+        if type_id == 'bitcoin' and expand_card:
+            card_dict["related_btc"] = btc_ail.get_bitcoin_info(correlation_id)
     elif object_type == 'pgp':
         card_dict["sparkline"] = Pgp.pgp.get_list_nb_previous_correlation_object(type_id, correlation_id, 6)
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, type_id)
@@ -118,7 +121,7 @@ def get_card_metadata(object_type, correlation_id, type_id=None):
 # ============= ROUTES ==============
 @correlation.route('/correlation/show_correlation', methods=['GET', 'POST']) # GET + POST
 @login_required
-@login_analyst
+@login_read_only
 def show_correlation():
     if request.method == 'POST':
         object_type = request.form.get('object_type')
@@ -168,6 +171,8 @@ def show_correlation():
         max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
         mode = sanitise_graph_mode(request.args.get('mode'))
 
+        expand_card = request.args.get('expand_card')
+
         correlation_names = sanitise_correlation_names(request.args.get('correlation_names'))
         correlation_objects = sanitise_correlation_objects(request.args.get('correlation_objects'))
 
@@ -186,13 +191,13 @@ def show_correlation():
             dict_object["metadata"] = Correlate_object.get_object_metadata(object_type, correlation_id, type_id=type_id)
             if type_id:
                 dict_object["metadata"]['type_id'] = type_id
-            dict_object["metadata_card"] = get_card_metadata(object_type, correlation_id, type_id=type_id)
+            dict_object["metadata_card"] = get_card_metadata(object_type, correlation_id, type_id=type_id, expand_card=expand_card)
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label)
 
 
 @correlation.route('/correlation/graph_node_json')
 @login_required
-@login_analyst
+@login_read_only
 def graph_node_json(): # # TODO: use post
     correlation_id = request.args.get('correlation_id')
     type_id = request.args.get('type_id')

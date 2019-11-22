@@ -90,8 +90,10 @@
 
 				<div class="col-12 col-lg-10" id="core_content">
 
-					{% if dict_object["object_type"] in ["pgp", "cryptocurrency"] %}
+					{% if dict_object["object_type"] == "pgp" %}
 						{% include 'correlation/metadata_card_pgp.html' %}
+					{% elif dict_object["object_type"] == "cryptocurrency" %}
+						{% include 'correlation/metadata_card_cryptocurrency.html' %}
 					{% elif dict_object["object_type"] == "decoded" %}
 						{% include 'correlation/metadata_card_decoded.html' %}
 					{% elif dict_object["object_type"] == "domain" %}
