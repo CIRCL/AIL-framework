@@ -176,6 +176,12 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                 for mess_tag in list_all_tags:
                     commit, tag = mess_tag.split('\trefs/tags/')
 
+                    # check if tag is float
+                    try:
+                        float(tag.split('^{}')[0][1:])
+                    except ValueError:
+                        continue
+
                     # add tag with last commit
                     if float(tag.split('^{}')[0][1:]) >= float(current_tag):
                         if '^{}' in tag:
