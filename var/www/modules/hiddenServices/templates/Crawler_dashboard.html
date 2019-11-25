@@ -36,11 +36,11 @@
 								<h5><a class="text-info" href="{{ url_for('hiddenServices.Crawler_Splash_last_by_type')}}?type=onion"><i class="fas fa-user-secret"></i> Onions Crawlers</a></h5>
 								<div class="row">
 									<div class="col-6">
-										<span class="badge badge-success" id="stat_onion_domain_up">{{ statDomains_onion['domains_up'] }}</span> UP
-										<span class="badge badge-danger ml-md-3" id="stat_onion_domain_down">{{ statDomains_onion['domains_down'] }}</span> DOWN
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=onion&domains_up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_domain_up">{{ statDomains_onion['domains_up'] }}</a> UP
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=onion&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_onion_domain_down">{{ statDomains_onion['domains_down'] }}</a> DOWN
 									</div>
 									<div class="col-6">
-										<span class="badge badge-success" id="stat_onion_total">{{ statDomains_onion['total'] }}</span> Crawled
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=onion&domains_up=True&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_total">{{ statDomains_onion['total'] }}</a> Crawled
 										<span class="badge badge-warning ml-md-3" id="stat_onion_queue">{{ statDomains_onion['domains_queue'] }}</span> Queue
 									</div>
 								</div>
@@ -73,11 +73,11 @@
 								<h5><a class="text-info" href="{{ url_for('hiddenServices.Crawler_Splash_last_by_type')}}?type=regular"><i class="fab fa-html5"></i> Regular Crawlers</a></h5>
 								<div class="row">
 									<div class="col-6">
-										<span class="badge badge-success" id="stat_regular_domain_up">{{ statDomains_regular['domains_up'] }}</span> UP
-										<span class="badge badge-danger ml-md-3" id="stat_regular_domain_down">{{ statDomains_regular['domains_down'] }}</span> DOWN
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=regular&domains_up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_regular_domain_up">{{ statDomains_regular['domains_up'] }}</a> UP
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=regular&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_regular_domain_down">{{ statDomains_regular['domains_down'] }}</a> DOWN
 									</div>
 									<div class="col-6">
-										<span class="badge badge-success" id="stat_regular_total">{{ statDomains_regular['total'] }}</span> Crawled
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=regular&domains_up=True&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_regular_total">{{ statDomains_regular['total'] }}</a> Crawled
 										<span class="badge badge-warning ml-md-3" id="stat_regular_queue">{{ statDomains_regular['domains_queue'] }}</span> Queue
 									</div>
 								</div>

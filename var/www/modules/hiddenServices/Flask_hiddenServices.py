@@ -253,7 +253,7 @@ def dashboard():
     statDomains_regular = get_stats_last_crawled_domains('regular', date)
 
     return render_template("Crawler_dashboard.html", crawler_metadata_onion = crawler_metadata_onion,
-                                crawler_enabled=crawler_enabled,
+                                crawler_enabled=crawler_enabled, date=date,
                                 crawler_metadata_regular=crawler_metadata_regular,
                                 statDomains_onion=statDomains_onion, statDomains_regular=statDomains_regular)
 
