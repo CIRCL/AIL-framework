@@ -25,7 +25,7 @@ if __name__ == '__main__':
     r_serv.zadd('ail:all_role', 4, 'user_no_api')
     r_serv.zadd('ail:all_role', 5, 'read_only')
 
-    for user in r_serv.hkeys(user:all):
+    for user in r_serv.hkeys('user:all'):
         r_serv.sadd('user_role:user', user)
         r_serv.sadd('user_role:user_no_api', user)
         r_serv.sadd('user_role:read_only', user)
