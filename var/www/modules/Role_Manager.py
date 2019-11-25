@@ -148,13 +148,8 @@ def create_user_db(username_id , password, default=False, role=None, update=Fals
         if default:
             r_serv_db.hset('user_metadata:{}'.format(username_id), 'change_passwd', True)
         if role:
-            print(role)
-            print(get_all_role())
             if role in get_all_role():
-                print('yep')
-                print(get_all_user_role(role))
                 for role_to_add in get_all_user_role(role):
-                    print(role)
                     r_serv_db.sadd('user_role:{}'.format(role_to_add), username_id)
                 r_serv_db.hset('user_metadata:{}'.format(username_id), 'role', role)
 
