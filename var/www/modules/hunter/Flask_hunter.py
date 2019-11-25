@@ -11,7 +11,7 @@ import calendar
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, Response, escape
 
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required, current_user
 
 import re
@@ -41,7 +41,7 @@ hunter = Blueprint('hunter', __name__, template_folder='templates')
 
 @hunter.route("/trackers")
 @login_required
-@login_analyst
+@login_read_only
 def tracked_menu():
     user_id = current_user.get_id()
     user_term = Term.get_all_user_tracked_terms(user_id)
@@ -50,7 +50,7 @@ def tracked_menu():
 
 @hunter.route("/trackers/word")
 @login_required
-@login_analyst
+@login_read_only
 def tracked_menu_word():
     filter_type = 'word'
     user_id = current_user.get_id()
@@ -60,7 +60,7 @@ def tracked_menu_word():
 
 @hunter.route("/trackers/set")
 @login_required
-@login_analyst
+@login_read_only
 def tracked_menu_set():
     filter_type = 'set'
     user_id = current_user.get_id()
@@ -70,7 +70,7 @@ def tracked_menu_set():
 
 @hunter.route("/trackers/regex")
 @login_required
-@login_analyst
+@login_read_only
 def tracked_menu_regex():
     filter_type = 'regex'
     user_id = current_user.get_id()
@@ -113,7 +113,7 @@ def add_tracked_menu():
 
 @hunter.route("/tracker/show_tracker")
 @login_required
-@login_analyst
+@login_read_only
 def show_tracker():
     user_id = current_user.get_id()
     term_uuid = request.args.get('uuid', None)
@@ -207,7 +207,7 @@ def delete_tracker():
 
 @hunter.route("/tracker/get_json_tracker_stats", methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def get_json_tracker_stats():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')

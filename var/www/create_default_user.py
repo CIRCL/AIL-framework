@@ -23,6 +23,9 @@ if __name__ == "__main__":
     if not r_serv.exists('ail:all_role'):
         r_serv.zadd('ail:all_role', 1, 'admin')
         r_serv.zadd('ail:all_role', 2, 'analyst')
+        r_serv.zadd('ail:all_role', 3, 'user')
+        r_serv.zadd('ail:all_role', 4, 'user_no_api')
+        r_serv.zadd('ail:all_role', 5, 'read_only')
 
     username = 'admin@admin.test'
     password = gen_password()
