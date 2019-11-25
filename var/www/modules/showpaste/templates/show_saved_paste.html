@@ -461,7 +461,7 @@
                 <div class="panel-heading">
                     <div class="row">
                       <div class="col-md-8">
-                        <input class="center" id="blocks" type="range" min="1" max="50" value="13">
+                        <input class="center" id="blocks" type="range" min="1" max="50" value="{%if tags_safe%}13{%else%}0{%endif%}">
                       </div>
                       <div class="col-md-4">
                         <button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">

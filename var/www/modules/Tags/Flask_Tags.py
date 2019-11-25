@@ -434,7 +434,7 @@ def addTags():
     list_tag = tags.split(',')
     list_tag_galaxies = tagsgalaxies.split(',')
 
-    res = Tag.add_items_tag(list_tag, list_tag_galaxies, path)
+    res = Tag.add_items_tags(list_tag, list_tag_galaxies, item_id=path)
     print(res)
     # error
     if res[1] != 200:

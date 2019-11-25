@@ -130,11 +130,11 @@ def is_tag_in_all_tag(tag):
 def get_all_tags():
     return list(r_serv_tags.smembers('list_tags'))
 
-'''
-Retun all the tags of a given item.
-:param item_id: (Paste or domain)
-'''
 def get_item_tags(item_id):
+    '''
+    Retun all the tags of a given item.
+    :param item_id: (Paste or domain)
+    '''
     tags = r_serv_metadata.smembers('tag:{}'.format(item_id))
     if tags:
         return list(tags)
@@ -156,6 +156,11 @@ def get_min_tag(tag):
 
 def get_item_tags_minimal(item_id):
     return [ {"tag": tag, "min_tag": get_min_tag(tag)} for tag in get_item_tags(item_id) ]
+
+def unpack_str_tags_list(str_tags_list):
+    str_tags_list = str_tags_list.replace('"','\"')
+    return str_tags_list.split(',')
+
 
 # TEMPLATE + API QUERY
 def add_items_tag(tags=[], galaxy_tags=[], item_id=None): ## TODO: remove me
@@ -220,6 +225,7 @@ def add_items_tags(tags=[], galaxy_tags=[], item_id=None, item_type="paste"):
     return (res_dict, 200)
 
 def add_domain_tag(tag, domain, item_date):
+    r_serv_tags.sadd('list_tags:domain', tag)
     r_serv_metadata.sadd('tag:{}'.format(domain), tag)
     r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), domain)
 
