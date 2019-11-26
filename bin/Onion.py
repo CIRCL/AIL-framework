@@ -251,7 +251,7 @@ if __name__ == "__main__":
                                     r_onion.sadd('onion_domain_crawler_queue', subdomain)
                                     msg = '{};{}'.format(url,PST.p_rel_path)
                                     if not r_onion.hexists('onion_metadata:{}'.format(subdomain), 'first_seen'):
-                                        r_onion.sadd('onion_crawler_priority_queue', msg)
+                                        r_onion.sadd('onion_crawler_discovery_queue', msg)
                                         print('send to priority queue')
                                     else:
                                         r_onion.sadd('onion_crawler_queue', msg)
