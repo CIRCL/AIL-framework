@@ -159,7 +159,10 @@ def get_item_tags_minimal(item_id):
 
 def unpack_str_tags_list(str_tags_list):
     str_tags_list = str_tags_list.replace('"','\"')
-    return str_tags_list.split(',')
+    if str_tags_list:
+        return str_tags_list.split(',')
+    else:
+        return []
 
 
 # TEMPLATE + API QUERY

@@ -258,13 +258,10 @@ def submit():
 
     if ltags or ltagsgalaxies:
 
-        ltags = ltags.split(',')
-        ltagsgalaxies = ltagsgalaxies.split(',')
+        ltags = Tag.unpack_str_tags_list(ltags)
+        ltagsgalaxies = Tag.unpack_str_tags_list(ltagsgalaxies)
 
-        print(ltags)
-        print(ltagsgalaxies)
-
-        if not Tags.is_valid_tags_taxonomies_galaxy(ltags, ltagsgalaxies):
+        if not Tag.is_valid_tags_taxonomies_galaxy(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
             print(content)
             return content, 400
