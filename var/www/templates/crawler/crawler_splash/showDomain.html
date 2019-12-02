@@ -459,7 +459,7 @@ var draw_img = false;
     selected_icon.removeClass("icon_img");
 
 
-    $("#screenshot_link").attr("href", "screenshot_href + {{dict_domain['crawler_history']['random_item']['id']}}");
+    $("#screenshot_link").attr("href", screenshot_href + "{{dict_domain['crawler_history']['random_item']['id']}}");
     $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
   {%else%}
   var screenshot = "";
