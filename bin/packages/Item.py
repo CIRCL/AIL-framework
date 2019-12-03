@@ -15,12 +15,14 @@ from Pgp import pgp
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import Correlate_object
 import Decoded
 
 config_loader = ConfigLoader.ConfigLoader()
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
 config_loader = None
 
 def exist_item(item_id):
@@ -171,7 +173,7 @@ def get_item_all_correlation(item_id, correlation_names=[], get_nb=False):
     :rtype: dict
     '''
     if not correlation_names:
-        correlation_names = Correlation.get_all_correlation_names()
+        correlation_names = Correlate_object.get_all_correlation_names()
     item_correl = {}
     for correlation_name in correlation_names:
         if correlation_name=='cryptocurrency':
@@ -259,3 +261,13 @@ def get_item_screenshot(item_id):
     if screenshot:
         return os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
     return ''
+
+def get_item_har_name(item_id):
+    os.path.join(screenshot_directory, item_id) + '.json'
+    if os.path.isfile(har_path):
+        return har_path
+    else:
+        return None
+
+def get_item_har(har_path):
+    pass
