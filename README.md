@@ -98,6 +98,8 @@ Installation Notes
 
 In order to use AIL combined with **ZFS** or **unprivileged LXC** it's necessary to disable Direct I/O in `$AIL_HOME/configs/6382.conf` by changing the value of the directive `use_direct_io_for_flush_and_compaction` to `false`.
 
+Tor installation instructions can be found in the [HOWTO](https://github.com/CIRCL/AIL-framework/blob/master/HOWTO.md#installationconfiguration)
+
 Starting AIL
 --------------------------
 
@@ -113,8 +115,6 @@ https://localhost:7000/
 ```
 
 The default credentials for the web interface are located in ``DEFAULT_PASSWORD``. This file is removed when you change your password.
-
-Tor installation instructions can be found in the [HOWTO](https://github.com/CIRCL/AIL-framework/blob/master/HOWTO.md#installationconfiguration)
 
 Training
 --------
