@@ -56,7 +56,9 @@ if __name__ == '__main__':
     r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
     config_loader = None
 
-    nb_elem_to_update = int( r_serv_db.get('update:nb_elem_to_convert') )
+    nb_elem_to_update = r_serv_db.get('update:nb_elem_to_convert')
+    if not nb_elem_to_update:
+        nb_elem_to_update = 0
 
     while True:
         domain = r_serv_onion.spop('domain_update_v2.4')
