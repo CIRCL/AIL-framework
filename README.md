@@ -114,6 +114,8 @@ https://localhost:7000/
 
 The default credentials for the web interface are located in ``DEFAULT_PASSWORD``. This file is removed when you change your password.
 
+Tor installation instructions can be found in the [HOWTO](https://github.com/CIRCL/AIL-framework/blob/master/HOWTO.md#installationconfiguration)
+
 Training
 --------
 
