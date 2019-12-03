@@ -59,6 +59,8 @@ if __name__ == '__main__':
     nb_elem_to_update = r_serv_db.get('update:nb_elem_to_convert')
     if not nb_elem_to_update:
         nb_elem_to_update = 0
+    else:
+        nb_elem_to_update = int(nb_elem_to_update)
 
     while True:
         domain = r_serv_onion.spop('domain_update_v2.4')
