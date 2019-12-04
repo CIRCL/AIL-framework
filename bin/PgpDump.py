@@ -41,16 +41,19 @@ def save_in_file(message, pgp_content):
     r_serv_db.sadd('pgpdumb:uuid', '{};{}'.format(UUID, message))
 
 def remove_html(item_content):
-    if bool(BeautifulSoup(item_content, "html.parser").find()):
-        soup = BeautifulSoup(item_content, 'html.parser')
-        # kill all script and style elements
-        for script in soup(["script", "style"]):
-            script.extract()    # remove
+    try:
+        if bool(BeautifulSoup(item_content, "html.parser").find()):
+            soup = BeautifulSoup(item_content, 'html.parser')
+            # kill all script and style elements
+            for script in soup(["script", "style"]):
+                script.extract()    # remove
 
-        # get text
-        text = soup.get_text()
-        return text
-    else:
+            # get text
+            text = soup.get_text()
+            return text
+        else:
+            return item_content
+    except TypeError:
         return item_content
 
 def extract_all_id(message, item_content, regex=None, is_file=False):
