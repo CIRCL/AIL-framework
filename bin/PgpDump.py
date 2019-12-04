@@ -199,13 +199,13 @@ if __name__ == '__main__':
                 time.sleep(1)
                 continue
 
+            print(message)
             paste = Paste.Paste(message)
 
             date = str(paste._get_p_date())
             content = paste.get_p_content()
             content = remove_html(content)
 
-            print(message)
 
             extract_all_id(message, content, regex_pgp_public_blocs)
             extract_all_id(message, content, regex_pgp_signature)
