@@ -20,8 +20,6 @@ import ssdeep
 import Paste
 import requests
 
-from pyfaup.faup import Faup
-
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Tag
 
@@ -47,8 +45,6 @@ hive_case_url = Flask_config.hive_case_url
 vt_enabled = Flask_config.vt_enabled
 PASTES_FOLDER = Flask_config.PASTES_FOLDER
 SCREENSHOT_FOLDER = Flask_config.SCREENSHOT_FOLDER
-
-faup = Faup()
 
 showsavedpastes = Blueprint('showsavedpastes', __name__, template_folder='templates')
 
@@ -93,7 +89,6 @@ def showpaste(content_range, requested_path):
     p_simil_list = []
     p_date_list = []
     p_hashtype_list = []
-
 
     for dup_list in p_duplicate_str_full_list:
         dup_list = dup_list[1:-1].replace('\'', '').replace(' ', '').split(',')
@@ -221,9 +216,7 @@ def showpaste(content_range, requested_path):
     if 'infoleak:submission="crawler"' in l_tags:
         crawler_metadata['get_metadata'] = True
         crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'domain')
-        faup.decode(crawler_metadata['domain'])
-        domain_unpack = faup.get()
-        crawler_metadata['domain'] = domain_unpack['domain']
+        crawler_metadata['domain'] = crawler_metadata['domain'].rsplit(':', 1)[0]
         if tags_safe:
             tags_safe = Tag.is_tags_safe(Domain.get_domain_tags(crawler_metadata['domain']))
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+requested_path, 'father')
@@ -371,6 +364,7 @@ def show_item_min(requested_path , content_range=0):
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+relative_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+relative_path,'real_link')
         crawler_metadata['screenshot'] = get_item_screenshot_path(relative_path)
+        crawler_metadata['har_file'] = Item.get_item_har(relative_path)
     else:
         crawler_metadata['get_metadata'] = False
 
@@ -465,6 +459,13 @@ def showDiff():
 @no_cache
 def screenshot(filename):
     return send_from_directory(SCREENSHOT_FOLDER, filename+'.png', as_attachment=True)
+
+# @showsavedpastes.route('/har/paste/<path:filename>')
+# @login_required
+# @login_read_only
+# def har(filename):
+#     har_file = Item.get_item_har(filename)
+#     return jsonify(har_file)
 
 @showsavedpastes.route('/send_file_to_vt/', methods=['POST'])
 @login_required

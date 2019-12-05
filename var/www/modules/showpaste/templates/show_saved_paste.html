@@ -452,6 +452,10 @@
                           </tr>
                         </tbody>
                       </table>
+
+                      {% if crawler_metadata['har_file'] %}
+                        button
+                      {% endif %}
                 </div>
               </div>
             </div>
@@ -464,7 +468,7 @@
                         <input class="center" id="blocks" type="range" min="1" max="50" value="{%if tags_safe%}13{%else%}0{%endif%}">
                       </div>
                       <div class="col-md-4">
-                        <button class="btn btn-primary btn-tags" onclick="blocks.value=50;pixelate();">
+                        <button class="btn {%if tags_safe%}btn-primary{%else%}btn-danger{%endif%} btn-tags" onclick="blocks.value=50;pixelate();">
                             <span class="glyphicon glyphicon-zoom-in"></span>
                             <span class="label-icon">Full resolution</span>
                         </button>
