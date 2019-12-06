@@ -1,0 +1,44 @@
+% DO NOT COMPILE THIS FILE DIRECTLY!
+% This is included by the other .tex files.
+
+\begin{frame}[t,plain]
+%\titlepage
+\end{frame}
+
+\section{Useful commands}
+\begin{frame}
+\frametitle{Useful commands}
+
+\begin{tcblisting}{colback=black!85,coltext=green,listing only, title=Setting up AIL-Framework from source, fonttitle=\bfseries}
+git clone https://github.com/CIRCL/AIL-framework.git
+cd AIL-framework
+./installing_deps.sh
+cd var/www/
+./update_thirdparty.sh
+\end{tcblisting}
+
+%    \begin{tcblisting}{colback=black!85,coltext=green,listing only,
+%        title=Accessing the environment and starting AIL, fonttitle=\bfseries}
+%# Activate the virtualenv
+%. ./AILENV/bin/activate
+%
+%# Launch the system
+%cd bin/
+%./LAUNCH
+%    # check options 1->5
+%
+%# Start web interface
+%cd var/www/
+%./Flask_server.py
+%    # -> Browse http://localhost:7000/
+%\end{tcblisting}
+%
+%    \lstset{style=default}
+%    \begin{lstlisting}
+%Web interface (default network settings):
+%    http://192.168.56.51:7000/
+%Shell/SSH:
+%    ail/Password1234
+%\end{lstlisting}
+
+\end{frame}
