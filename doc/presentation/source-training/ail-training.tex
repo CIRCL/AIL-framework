@@ -654,7 +654,12 @@ response platforms.
     }
 \end{frame}
 
-\section{Correlations and relationship}
+\begin{frame}
+    \frametitle{Correlations and relationship}
+    \begin{figure}
+        \includegraphics[scale=0.18, angle=0]{images/ail-correlation.png}
+    \end{figure}
+\end{frame}
 
 \section{Live demo!}
 
@@ -958,19 +963,21 @@ cd bin/
 \end{tcblisting}
 \end{frame}
 
-%\begin{frame}[fragile]
-%    \frametitle{Running your own instance using the virtual machine}
-%    Login and passwords:
-%    \lstset{style=default}
-%    \begin{lstlisting}
-%Web interface (default network settings):
-%    https://192.168.56.51:7000/
-%Shell/SSH:
-%    ail/Password1234
-%Web interface:
-%    admin@admin.test/Password1234
-%    \end{lstlisting}
-%\end{frame}
+\begin{frame}[fragile]
+    \frametitle{Running your own instance using the virtual machine}
+    \begin{tcblisting}{colback=black!85,coltext=green,listing only,
+        title=Login and passwords:, fonttitle=\bfseries}
+# Web interface (default network settings)
+    https://127.0.0.1:7000/
+# Web interface:
+    admin@admin.test
+    Password1234
+# SSH:
+    ail
+    Password1234
+\end{tcblisting}
+
+\end{frame}
 
 \section{Feeding the framework}
 \begin{frame}
