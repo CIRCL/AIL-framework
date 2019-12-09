@@ -194,11 +194,38 @@ def show_correlation():
             dict_object["metadata_card"] = get_card_metadata(object_type, correlation_id, type_id=type_id, expand_card=expand_card)
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label)
 
+@correlation.route('/correlation/get/description')
+@login_required
+@login_read_only
+def get_description():
+    object_id = request.args.get('object_id')
+    object_id = object_id.split(';')
+    # unpack object_id # # TODO: put me in lib
+    if len(object_id) == 3:
+        object_type = object_id[0]
+        type_id = object_id[1]
+        correlation_id = object_id[2]
+    elif len(object_id) == 2:
+        object_type = object_id[0]
+        type_id = None
+        correlation_id = object_id[1]
+    else:
+        return jsonify({})
+
+
+    # check if correlation_id exist
+    # # TODO: return error json
+    if not Correlate_object.exist_object(object_type, correlation_id, type_id=type_id):
+        abort(404) # return 404
+    # oject exist
+    else:
+        res = Correlate_object.get_object_metadata(object_type, correlation_id, type_id=type_id)
+        return jsonify(res)
 
 @correlation.route('/correlation/graph_node_json')
 @login_required
 @login_read_only
-def graph_node_json(): # # TODO: use post
+def graph_node_json():
     correlation_id = request.args.get('correlation_id')
     type_id = request.args.get('type_id')
     object_type = request.args.get('object_type')

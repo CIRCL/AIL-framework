@@ -13,6 +13,7 @@
 
 	  <!-- JS -->
 		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
@@ -413,49 +414,42 @@ d.fy = d.y;
 
 function mouseovered(d) {
 
-// tooltip
-var content;
+var d3_pageX = d3.event.pageX;
+var d3_pageY = d3.event.pageY;
 
-if(d.hash == true){
-	content = "<b><span id='tooltip-id-name'></span></b><br/>"+
-						"<br/>"+
-						"<i>First seen</i>: <span id='tooltip-id-first_seen'></span><br/>"+
-						"<i>Last seen</i>: <span id='tooltip-id-last_seen'></span><br/>"+
-						"<i>nb_seen</i>: <span id='tooltip-id-nb_seen'></span>";
+if (d.popover) {
+	div.html(d.popover)
+		.style("left", (d3_pageX) + "px")
+		.style("top", (d3_pageY - 28) + "px");
 
 	div.transition()
-		 .duration(200)
-				.style("opacity", .9);
-	div.html(content)
-		 .style("left", (d3.event.pageX) + "px")
-		 .style("top", (d3.event.pageY - 28) + "px");
-
-	$("#tooltip-id-name").text(d.id);
-	$("#tooltip-id-first_seen").text(d.first_seen);
-	$("#tooltip-id-last_seen").text(d.last_seen);
-	$("#tooltip-id-nb_seen").text(d.nb_seen_in_paste);
-
+		.duration(200)
+		.style("opacity", .9);
 } else {
-	content = "<b><span id='tooltip-id-name'></span></b><br/>";
 
-	div.transition()
-		 .duration(200)
-				.style("opacity", .9);
-	div.html(content)
-		 .style("left", (d3.event.pageX) + "px")
-		 .style("top", (d3.event.pageY - 28) + "px");
+		//console.log(d);
+		var pop_header = "<b>"+ sanitize_text(d.text) + "</b><br><br>"
 
-	$("#tooltip-id-name").text(d.text);
+		div.html(pop_header)
+			.style("left", (d3_pageX) + "px")
+			.style("top", (d3_pageY - 28) + "px");
 
-}
+		div.transition()
+			.duration(200)
+			.style("opacity", .9);
 
-	//links
-	/*link.style("stroke-opacity", function(o) {
-			return o.source === d || o.target === d ? 1 : opacity;
-	});*/
-	link.style("stroke", function(o){
-			return o.source === d || o.target === d ? "#666" : "#ddd";
-	});
+		$.getJSON("{{ url_for('correlation.get_description') }}?object_id="+ d.id,
+				function(data){
+					var desc = pop_header
+					Object.keys(data).forEach(function(key) {
+						desc = desc + key + ": " + sanitize_text(data[key]) + "<br>"
+					})
+					div.html(desc)
+					 	.style("left", (d3_pageX) + "px")
+					 	.style("top", (d3_pageY - 28) + "px");
+					d.popover = desc
+				});
+		}
 }
 
 function mouseouted() {
