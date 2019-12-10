@@ -52,7 +52,7 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
     if object_type == 'domain':
         return Domain.Domain(correlation_id).get_domain_metadata()
     elif object_type == 'paste':
-        return Item.get_item({"id": correlation_id, "date": True, "tags": True})[0]
+        return Item.get_item({"id": correlation_id, "date": True, "date_separator": True, "tags": True})[0]
     elif object_type == 'decoded':
         return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True, file_type=True)
     elif object_type == 'pgp':

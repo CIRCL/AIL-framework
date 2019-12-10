@@ -216,7 +216,7 @@ def get_description():
     # check if correlation_id exist
     # # TODO: return error json
     if not Correlate_object.exist_object(object_type, correlation_id, type_id=type_id):
-        abort(404) # return 404
+        return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # oject exist
     else:
         res = Correlate_object.get_object_metadata(object_type, correlation_id, type_id=type_id)

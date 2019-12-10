@@ -34,9 +34,12 @@ def exist_item(item_id):
 def get_item_id(full_path):
     return full_path.replace(PASTES_FOLDER, '', 1)
 
-def get_item_date(item_id):
+def get_item_date(item_id, add_separator=False):
     l_directory = item_id.split('/')
-    return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+    if add_separator:
+        return '{}/{}/{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+    else:
+        return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
 
 def get_source(item_id):
     return item_id.split('/')[-5]
@@ -94,7 +97,10 @@ def get_item(request_dict):
     dict_item['id'] = item_id
     date = request_dict.get('date', True)
     if date:
-        dict_item['date'] = get_item_date(item_id)
+        add_separator = False
+        if request_dict.get('date_separator', False):
+            add_separator = True
+        dict_item['date'] = get_item_date(item_id, add_separator=add_separator)
     tags = request_dict.get('tags', True)
     if tags:
         dict_item['tags'] = Tag.get_item_tags(item_id)

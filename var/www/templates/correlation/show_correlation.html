@@ -427,10 +427,10 @@ if (d.popover) {
 		.style("opacity", .9);
 } else {
 
-		//console.log(d);
-		var pop_header = "<b>"+ sanitize_text(d.text) + "</b><br><br>"
+		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"+ sanitize_text(d.text) +"</h6></div>"
+		var spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
 
-		div.html(pop_header)
+		div.html(pop_header + spinner)
 			.style("left", (d3_pageX) + "px")
 			.style("top", (d3_pageY - 28) + "px");
 
@@ -440,14 +440,33 @@ if (d.popover) {
 
 		$.getJSON("{{ url_for('correlation.get_description') }}?object_id="+ d.id,
 				function(data){
-					var desc = pop_header
+					var desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
 					Object.keys(data).forEach(function(key) {
-						desc = desc + key + ": " + sanitize_text(data[key]) + "<br>"
-					})
+						if (key=="status") {
+							desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:Green;\"><i class=\"fas fa-check-circle\"></i>UP</div></dd>"
+						} else if (key!="tags" && key!="id") {
+							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+						}
+					});
+					desc = desc + "</dl>"
+
+					if (data["tags"]) {
+						data["tags"].forEach(function(tag) {
+							desc = desc + "<span class=\"badge badge-primary\">"+ sanitize_text(tag) +"</span>";
+						});
+					}
+
+					desc = desc + "</div>"
 					div.html(desc)
 					 	.style("left", (d3_pageX) + "px")
 					 	.style("top", (d3_pageY - 28) + "px");
 					d.popover = desc
+				})
+				.fail(function(error) {
+					desc = pop_header + "<div class=\"card-body bg-dark pt-0\"><i class=\"fas fa-3x fa-times text-danger\"></i>"+ error.statusText +"</div>"
+					div.html(desc)
+					 	.style("left", (d3_pageX) + "px")
+					 	.style("top", (d3_pageY - 28) + "px");
 				});
 		}
 }
