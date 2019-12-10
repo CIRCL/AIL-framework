@@ -12,6 +12,7 @@ Update AIL clone and fork
 import configparser
 import os
 import sys
+import argparse
 
 import subprocess
 
@@ -342,7 +343,13 @@ if __name__ == "__main__":
     print('*                        Updating AIL ...                        *')
     print('******************************************************************{}'.format(TERMINAL_DEFAULT))
 
-    if auto_update_enabled(cfg):
+    # manual updates
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--manual", nargs='?', const=True, default=False)
+    args = parser.parse_args()
+    manual_update = args.manual
+
+    if auto_update_enabled(cfg) or manual_update:
         if check_if_files_modified():
             is_fork = repo_is_fork()
             if is_fork:

@@ -445,7 +445,7 @@ function shutdown {
 function update() {
     bin_dir=${AIL_HOME}/bin
 
-    bash -c "python3 $bin_dir/Update.py"
+    bash -c "python3 $bin_dir/Update.py $1"
     exitStatus=$?
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Update Error"$DEFAULT
@@ -576,7 +576,7 @@ while [ "$1" != "" ]; do
                                       ;;
         -m | --menu )                 menu_display;
                                       ;;
-        -u | --update )               update;
+        -u | --update )               update "--manual";
                                       ;;
         -t | --thirdpartyUpdate )     update_thirdparty;
                                       ;;
