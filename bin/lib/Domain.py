@@ -355,7 +355,7 @@ class Domain(object):
     def get_domain_all_ports(self):
         return get_domain_all_ports(self.domain, self.type)
 
-    def get_domain_metadata(self, first_seen=True, last_ckeck=True, status=True, ports=True):
+    def get_domain_metadata(self, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False):
         '''
         Get Domain basic metadata
 
@@ -365,6 +365,8 @@ class Domain(object):
         :type last_ckeck: boolean
         :param ports: get all domain ports
         :type ports: boolean
+        :param tags: get all domain tags
+        :type tags: boolean
 
         :return: a dict of all metadata for a given domain
         :rtype: dict
@@ -382,6 +384,8 @@ class Domain(object):
             dict_metadata['status'] = self.is_domain_up()
         if ports:
             dict_metadata['ports'] = self.get_domain_all_ports()
+        if tags:
+            dict_metadata['tags'] = self.get_domain_tags()
         return dict_metadata
 
     def get_domain_tags(self):
