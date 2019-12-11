@@ -134,6 +134,28 @@ def get_domain_items_crawled(domain, domain_type, port, epoch=None, items_link=F
 def get_link_tree():
     pass
 
+def get_domain_first_seen(domain, domain_type=None, r_format="str"):
+    '''
+    Get domain first seen date
+
+    :param domain: crawled domain
+    :type domain: str
+    :param domain_type: domain type
+    :type domain_type: str
+
+    :return: domain first seen date
+    :rtype: str
+    '''
+    if not domain_type:
+        domain_type = get_domain_type(domain)
+    first_seen = r_serv_onion.hget('{}_metadata:{}'.format(domain_type, domain), 'first_seen')
+    if first_seen is not None:
+        if r_format=="int":
+            first_seen = int(first_seen)
+        else:
+            first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
+    return first_seen
+
 def get_domain_last_check(domain, domain_type=None, r_format="str"):
     '''
     Get domain last check date
@@ -179,6 +201,44 @@ def get_domain_tags(domain):
     :param domain: crawled domain
     '''
     return Tag.get_item_tags(domain)
+
+def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False):
+    '''
+    Get Domain basic metadata
+
+    :param first_seen: get domain first_seen
+    :type first_seen: boolean
+    :param last_ckeck: get domain last_check
+    :type last_ckeck: boolean
+    :param ports: get all domain ports
+    :type ports: boolean
+    :param tags: get all domain tags
+    :type tags: boolean
+
+    :return: a dict of all metadata for a given domain
+    :rtype: dict
+    '''
+    dict_metadata = {}
+    if first_seen:
+        res = get_domain_first_seen(domain, domain_type=domain_type)
+        if res is not None:
+            dict_metadata['first_seen'] = res
+    if last_ckeck:
+        res = get_domain_last_check(domain, domain_type=domain_type)
+        if res is not None:
+            dict_metadata['last_check'] = res
+    if status:
+        dict_metadata['status'] = is_domain_up(domain, domain_type)
+    if ports:
+        dict_metadata['ports'] = get_domain_all_ports(domain, domain_type)
+    if tags:
+        dict_metadata['tags'] = get_domain_tags(domain)
+    return dict_metadata
+
+def get_domain_metadata_basic(domain, domain_type=None):
+    if not domain_type:
+        domain_type = get_domain_type(domain)
+    return get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=False)
 
 def get_domain_cryptocurrency(domain, currencies_type=None, get_nb=False):
     '''
@@ -287,12 +347,15 @@ def get_domain_history_with_status(domain, domain_type, port): # TODO: add date_
 def verify_if_domain_exist(domain):
     return r_serv_onion.exists('{}_metadata:{}'.format(get_domain_type(domain), domain))
 
+## API ##
+
 def api_verify_if_domain_exist(domain):
     if not verify_if_domain_exist(domain):
-        return ({'status': 'error', 'reason': 'Unknow Domain'}, 404)
+        return ({'status': 'error', 'reason': 'Domain not found'}, 404)
     else:
         return None
 
+## CLASS ##
 class Domain(object):
     """docstring for Domain."""
 
@@ -318,10 +381,7 @@ class Domain(object):
         :return: domain first seen date
         :rtype: str
         '''
-        first_seen = r_serv_onion.hget('{}_metadata:{}'.format(self.type, self.domain), 'first_seen')
-        if first_seen is not None:
-            first_seen = '{}/{}/{}'.format(first_seen[0:4], first_seen[4:6], first_seen[6:8])
-        return first_seen
+        return get_domain_first_seen(self.domain, domain_type=self.type)
 
     def get_domain_last_check(self):
         '''
@@ -371,22 +431,7 @@ class Domain(object):
         :return: a dict of all metadata for a given domain
         :rtype: dict
         '''
-        dict_metadata = {}
-        if first_seen:
-            res = self.get_domain_first_seen()
-            if res is not None:
-                dict_metadata['first_seen'] = res
-        if last_ckeck:
-            res = self.get_domain_last_check()
-            if res is not None:
-                dict_metadata['last_check'] = res
-        if status:
-            dict_metadata['status'] = self.is_domain_up()
-        if ports:
-            dict_metadata['ports'] = self.get_domain_all_ports()
-        if tags:
-            dict_metadata['tags'] = self.get_domain_tags()
-        return dict_metadata
+        return get_domain_metadata(self.domain, self.type, first_seen=first_seen, last_ckeck=last_ckeck, status=status, ports=ports, tags=tags)
 
     def get_domain_tags(self):
         '''

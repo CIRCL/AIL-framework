@@ -13,6 +13,9 @@ import json
 import redis
 import datetime
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import Domain
+
 import Import_helper
 import Cryptocurrency
 import Pgp
@@ -133,6 +136,9 @@ def authErrors(user_role):
         return None
 
 # ============ API CORE =============
+
+def create_json_response(data_dict, response_code):
+    return Response(json.dumps(data_dict, indent=2, sort_keys=True), mimetype='application/json'), int(response_code)
 
 # ============ FUNCTIONS ============
 
@@ -453,6 +459,21 @@ def get_item_cryptocurrency_bitcoin():
     res = Item.get_item(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 '''
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # #        DOMAIN       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/get/domain/metadata/minimal", methods=['POST'])
+@token_required('analyst')
+def get_domain_metadata_minimal():
+    data = request.get_json()
+    domain = data.get('domain', None)
+    # error handler
+    res = Domain.api_verify_if_domain_exist(domain)
+    if res:
+        return create_json_response(res[0], res[1])
+    res = Domain.get_domain_metadata_basic(domain)
+    return create_json_response(res, 200)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
