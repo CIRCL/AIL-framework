@@ -30,6 +30,54 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 config_loader = None
 
+######## DOMAINS ########
+def get_all_domains_up(domain_type):
+    '''
+    Get all domain up (at least one time)
+
+    :param domain_type: domain type
+    :type domain_type: str
+
+    :return: list of domain
+    :rtype: list
+    '''
+    return list(r_serv_onion.smembers("full_onion_up"))
+
+def get_domains_up_by_month(date_year_month, domain_type, rlist=False):
+    '''
+    Get all domain up (at least one time)
+
+    :param domain_type: date_year_month YYYYMM
+    :type domain_type: str
+
+    :return: list of domain
+    :rtype: list
+    '''
+    res = r_serv_onion.smembers("month_onion_up:{}".format(date_year_month))
+    if rlist:
+        return list(res)
+    else:
+        return res
+
+def get_domain_up_by_day(date_year_month, domain_type, rlist=False):
+    '''
+    Get all domain up (at least one time)
+
+    :param domain_type: date YYYYMMDD
+    :type domain_type: str
+
+    :return: list of domain
+    :rtype: list
+    '''
+    res = r_serv_onion.smembers("onion_up:{}".format(date_year_month))
+    if rlist:
+        return list(res)
+    else:
+        return res
+
+
+######## DOMAIN ########
+
 def get_domain_type(domain):
     if str(domain).endswith('.onion'):
         return 'onion'
