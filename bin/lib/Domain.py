@@ -100,6 +100,58 @@ def sanathyse_port(port, domain, domain_type, strict=False, current_port=None):
 def is_domain_up(domain, domain_type):
     return r_serv_onion.hexists('{}_metadata:{}'.format(domain_type, domain), 'ports')
 
+def get_domain_first_up(domain, domain_type, ports=None):
+    '''
+    Get all domain up (at least one time)
+
+    :param ports: list of ports, optional
+    :type ports: list
+
+    :return: domain last up epoch
+    :rtype: int
+    '''
+    if ports is None:
+        ports = get_domain_all_ports(domain, domain_type)
+    epoch_min = None
+    for port in ports:
+        res = r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(domain_type, domain, port), 0, 0, withscores=True)[0]
+        if not epoch_min:
+            epoch_min = int(res[1])
+        elif res[1] < epoch_min:
+            epoch_min = int(res[1])
+    return epoch_min
+
+def get_last_domain_up_by_port(domain, domain_type, port):
+    current_index = 0
+    while True:
+        res = r_serv_onion.zrevrange('crawler_history_{}:{}:{}'.format(domain_type, domain, port), current_index, current_index, withscores=True)
+        # history found
+        if res:
+            item_core, epoch = res[0]
+            epoch = int(epoch)
+            if item_core == str(epoch):
+                current_index +=1
+            else:
+                return epoch
+        else:
+            return None
+
+def get_domain_last_up(domain, domain_type, ports=None):
+    if ports is None:
+        ports = get_domain_all_ports(domain, domain_type)
+    epoch_max = 0
+    for port in ports:
+        last_epoch_up = get_last_domain_up_by_port(domain, domain_type, port)
+        if last_epoch_up > epoch_max:
+            epoch_max = last_epoch_up
+    return epoch_max
+
+def get_domain_up_range(domain, domain_type):
+    domain_metadata = {}
+    domain_metadata['first_seen'] = get_domain_first_up(domain, domain_type)
+    domain_metadata['last_seen'] = get_domain_last_up(domain, domain_type)
+    return domain_metadata
+
 def get_domain_all_ports(domain, domain_type):
     '''
     Return a list of all crawled ports
@@ -399,9 +451,21 @@ def verify_if_domain_exist(domain):
 
 def api_verify_if_domain_exist(domain):
     if not verify_if_domain_exist(domain):
-        return ({'status': 'error', 'reason': 'Domain not found'}, 404)
+        return {'status': 'error', 'reason': 'Domain not found'}, 404
     else:
         return None
+
+def api_get_domain_up_range(domain, domain_type=None):
+    res = api_verify_if_domain_exist(domain)
+    if res:
+        return res
+    if not domain_type:
+        domain_type = get_domain_type(domain)
+    res = get_domain_up_range(domain, domain_type)
+    res['domain'] = domain
+    return res, 200
+
+
 
 ## CLASS ##
 class Domain(object):

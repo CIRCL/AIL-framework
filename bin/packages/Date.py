@@ -2,6 +2,39 @@
 
 import datetime
 
+from dateutil.rrule import rrule, MONTHLY
+from dateutil.relativedelta import relativedelta
+
+def convert_date_str_to_datetime(date_str):
+    res =  datetime.date(int(date_str[0:4]), int(date_str[4:6]), int(date_str[6:8]))
+    return res
+
+def get_full_month_str(date_from, date_to):
+    # add one day (if last day of the month)
+    date_to = date_to + relativedelta(days=+1)
+    full_month = [dt for dt in rrule(MONTHLY, bymonthday=1,dtstart=date_from, until=date_to)]
+    # remove last_month (incomplete)
+    if len(full_month):
+        full_month = full_month[:-1]
+    return full_month
+
+def get_date_range_full_month_and_days(date_from, date_to):
+    date_from = convert_date_str_to_datetime(date_from)
+    date_to = convert_date_str_to_datetime(date_to)
+
+    full_month = get_full_month_str(date_from, date_to)
+
+    day_list = substract_date(date_from.strftime('%Y%m%d'), full_month[0].strftime('%Y%m%d'))
+    # remove last day (day in full moth)
+    if day_list:
+        day_list = day_list[:-1]
+    print(day_list)
+    day_list.extend(substract_date( (full_month[-1] + relativedelta(months=+1) ).strftime('%Y%m%d'), date_to.strftime('%Y%m%d')))
+    print(day_list)
+
+    full_month = [dt_month.strftime('%Y%m') for dt_month in full_month]
+    return day_list, full_month
+
 # # TODO: refractor me
 
 class Date(object):
@@ -81,3 +114,23 @@ def substract_date(date_from, date_to):
         date = date_from + datetime.timedelta(i)
         l_date.append( date.strftime('%Y%m%d') )
     return l_date
+
+def validate_str_date(str_date, separator=''):
+    try:
+        datetime.datetime.strptime(str_date, '%Y{}%m{}%d'.format(separator, separator))
+        return True
+    except ValueError:
+        return False
+
+def sanitise_date_range(date_from, date_to, separator=''):
+    '''
+    Check/Return a correct date_form and date_to
+    '''
+    if not validate_str_date(date_from, separator=separator):
+        date_from = datetime.date.today().strftime("%Y%m%d")
+    if not validate_str_date(date_to, separator=separator):
+        date_to = datetime.date.today().strftime("%Y%m%d")
+
+    if int(date_from) > int(date_to):
+        date_from = date_to
+    return {"date_from": date_from, "date_to": date_to}
