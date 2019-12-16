@@ -148,6 +148,9 @@ def sanathyse_port(port, domain, domain_type, strict=False, current_port=None):
             port = get_random_domain_port(domain, domain_type)
     return port
 
+def domain_was_up(domain, domain_type):
+    return r_serv_onion.hexists('{}_metadata:{}'.format(domain_type, domain), 'ports')
+
 def is_domain_up(domain, domain_type, ports=[]):
     if not ports:
         ports = get_domain_all_ports(domain, domain_type)
@@ -580,6 +583,12 @@ class Domain(object):
         :rtype: str
         '''
         return get_domain_last_origin(self.domain, self.type)
+
+    def domain_was_up(self):
+        '''
+        Return True if this domain was UP at least one time
+        '''
+        return domain_was_up(self.domain, self.type)
 
     def is_domain_up(self): # # TODO: handle multiple ports
         '''

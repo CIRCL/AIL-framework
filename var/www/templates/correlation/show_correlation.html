@@ -443,7 +443,19 @@ if (d.popover) {
 					var desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
 					Object.keys(data).forEach(function(key) {
 						if (key=="status") {
-							desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:Green;\"><i class=\"fas fa-check-circle\"></i>UP</div></dd>"
+							desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:"
+							if (data["status"]) {
+								desc = desc + "Green"
+							} else {
+								desc = desc + "Red"
+							}
+							desc = desc + ";\"><i class=\"fas"
+							if (data["status"]) {
+								desc = desc + "fa-check-circle"
+							} else {
+								desc = desc + "fa-times-circle"
+							}
+							desc = desc + "\"></i>UP</div></dd>"
 						} else if (key!="tags" && key!="id") {
 							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
 						}
