@@ -990,9 +990,11 @@ Get crawled domain by date-range and status (default status = *UP*)
 - `date_from`
   - date from
   - *str - YYYYMMDD*
+  - mandatory
 - `date_to`
   - date to
   - *str - YYYYMMDD*
+  - mandatory
 
 #### JSON response
 - `domain_type`
@@ -1037,17 +1039,10 @@ curl https://127.0.0.1:7000/api/v1/get/crawled/domain/list --header "Authorizati
   }
 ```
 
-**HTTP Status Code** : `404`
-
-```json
-  ({"status": "error", "reason": "Domain not found"}
-
-```
 
 
 
-
-### Get min domain metadata: `api/v1/get/domain/metadata/minimal`<a name="get_domain_metadata_minimal"></a>
+### Get min domain metadata: `api/v1/get/domain/status/minimal`<a name="get_domain_status_minimal"></a>
 
 #### Description
 Get min domain metadata
@@ -1073,7 +1068,7 @@ Get min domain metadata
 
 #### Example
 ```
-curl https://127.0.0.1:7000/api/v1/get/domain/metadata/minimal --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+curl https://127.0.0.1:7000/api/v1/get/domain/status/minimal --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
 ```
 
 #### input.json Example

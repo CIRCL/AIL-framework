@@ -469,9 +469,9 @@ def get_item_cryptocurrency_bitcoin():
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        DOMAIN       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/get/domain/metadata/minimal", methods=['POST'])
+@restApi.route("api/v1/get/domain/status/minimal", methods=['POST'])
 @token_required('analyst')
-def get_domain_metadata_minimal():
+def get_domain_status_minimal():
     data = request.get_json()
     domain = data.get('domain', None)
     # error handler
@@ -482,9 +482,9 @@ def get_domain_metadata_minimal():
     res[0]['domain'] = domain
     return create_json_response(res[0], res[1])
 
-@restApi.route("api/v1/get/domain/list", methods=['POST'])
+@restApi.route("api/v1/get/crawled/domain/list", methods=['POST'])
 @token_required('analyst')
-def get_domain_list():
+def get_crawled_domain_list():
     data = request.get_json()
     res = get_mandatory_fields(data, ['date_from', 'date_to'])
     if res:
