@@ -140,6 +140,12 @@ def authErrors(user_role):
 def create_json_response(data_dict, response_code):
     return Response(json.dumps(data_dict, indent=2, sort_keys=True), mimetype='application/json'), int(response_code)
 
+def get_mandatory_fields(json_data, required_fields):
+    for field in required_fields:
+        if field not in json_data:
+            return {'status': 'error', 'reason': 'mandatory field: {} not provided'.format(field)}, 400
+    return None
+
 # ============ FUNCTIONS ============
 
 def is_valid_uuid_v4(header_uuid):
@@ -472,8 +478,29 @@ def get_domain_metadata_minimal():
     res = Domain.api_verify_if_domain_exist(domain)
     if res:
         return create_json_response(res[0], res[1])
-    res = Domain.get_domain_metadata_basic(domain)
-    return create_json_response(res, 200)
+    res = Domain.api_get_domain_up_range(domain)
+    res[0]['domain'] = domain
+    return create_json_response(res[0], res[1])
+
+@restApi.route("api/v1/get/domain/list", methods=['POST'])
+@token_required('analyst')
+def get_domain_list():
+    data = request.get_json()
+    res = get_mandatory_fields(data, ['date_from', 'date_to'])
+    if res:
+        return create_json_response(res[0], res[1])
+
+    date_from = data.get('date_from', None)
+    date_to = data.get('date_to', None)
+    domain_type = data.get('domain_type', None)
+    domain_status = 'UP'
+    res = Domain.api_get_domains_by_status_daterange(date_from, date_to, domain_type)
+    dict_res = res[0]
+    dict_res['date_from'] = date_from
+    dict_res['date_to'] = date_to
+    dict_res['domain_status'] = domain_status
+    dict_res['domain_type'] = domain_type
+    return create_json_response(dict_res, res[1])
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #

@@ -972,7 +972,134 @@ curl https://127.0.0.1:7000/api/v1/get/tracker/item --header "Authorization: iHc
 
 
 
+## Domain
 
+
+### Get min domain metadata: `api/v1/get/crawled/domain/list`<a name="get_crawled_domain_list"></a>
+
+#### Description
+Get crawled domain by date-range and status (default status = *UP*)
+
+**Method** : `POST`
+
+#### Parameters
+- `domain_type`
+  - domain type: *onion* or *regular*
+  - *str*
+  - default: *regular*
+- `date_from`
+  - date from
+  - *str - YYYYMMDD*
+- `date_to`
+  - date to
+  - *str - YYYYMMDD*
+
+#### JSON response
+- `domain_type`
+  - domain type: *onion* or *regular*
+  - *str*
+- `date_from`
+  - date from
+  - *str - YYYYMMDD*
+- `date_to`
+  - date to
+  - *str - YYYYMMDD*
+- `domains`
+  - list of domains
+  - *list - list of domains*
+
+#### Example
+```
+curl https://127.0.0.1:7000/api/v1/get/crawled/domain/list --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "date_from": "20191001",
+    "date_to": "20191222",
+    "domain_type": "onion"
+  }
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+
+```json
+  {
+    "date_from": "20191001",
+    "date_to": "20191222",
+    "domain_status": "UP",
+    "domain_type": "onion",
+    "domains": [
+      "2222222222222222.onion"
+    ]
+  }
+```
+
+**HTTP Status Code** : `404`
+
+```json
+  ({"status": "error", "reason": "Domain not found"}
+
+```
+
+
+
+
+### Get min domain metadata: `api/v1/get/domain/metadata/minimal`<a name="get_domain_metadata_minimal"></a>
+
+#### Description
+Get min domain metadata
+
+**Method** : `POST`
+
+#### Parameters
+- `domain`
+  - domain name
+  - *str*
+  - mandatory
+
+#### JSON response
+- `domain`
+  - domain
+  - *str*
+- `first_seen`
+  - domain first up time
+  - *epoch*
+- `last_seen`
+  - domain last up time
+  - *epoch*
+
+#### Example
+```
+curl https://127.0.0.1:7000/api/v1/get/domain/metadata/minimal --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
+```
+
+#### input.json Example
+```json
+  {
+    "domain": "2222222222222222.onion",
+  }
+```
+
+#### Expected Success Response
+**HTTP Status Code** : `200`
+
+```json
+  {
+    "domain": "2222222222222222.onion",
+    "first_seen": 1571314000,
+    "last_seen": 1571314000
+  }
+```
+
+**HTTP Status Code** : `404`
+
+```json
+  ({"status": "error", "reason": "Domain not found"}
+
+```
 
 
 

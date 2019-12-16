@@ -16,6 +16,7 @@ import random
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Cryptocurrency
 from Pgp import pgp
+import Date
 import Decoded
 import Item
 import Tag
@@ -30,6 +31,35 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 config_loader = None
 
+
+######## DB KEYS ########
+def get_db_keys_domain_up(domain_type, date_type): # sanitise domain_type
+    # get key name
+    if date_type=='day':
+        key_value = "{}_up:".format(domain_type)
+        key_value += "{}"
+    elif date_type=='month':
+        key_value = "month_{}_up:".format(domain_type)
+        key_value += "{}"
+    else:
+        key_value = None
+    return key_value
+
+def get_list_db_keys_domain_up(domain_type, l_dates, date_type):
+    l_keys_name = []
+    key_name = get_db_keys_domain_up(domain_type, date_type)
+    if key_name:
+        for str_date in l_dates:
+            l_keys_name.append(key_name.format(str_date))
+    return l_keys_name
+
+######## UTIL ########
+def sanitize_domain_type(domain_type):
+    if domain_type in ['onion', 'regular']:
+        return domain_type
+    else:
+        return 'regular'
+
 ######## DOMAINS ########
 def get_all_domains_up(domain_type):
     '''
@@ -41,7 +71,7 @@ def get_all_domains_up(domain_type):
     :return: list of domain
     :rtype: list
     '''
-    return list(r_serv_onion.smembers("full_onion_up"))
+    return list(r_serv_onion.smembers("full_{}_up".format(domain_type)))
 
 def get_domains_up_by_month(date_year_month, domain_type, rlist=False):
     '''
@@ -53,7 +83,7 @@ def get_domains_up_by_month(date_year_month, domain_type, rlist=False):
     :return: list of domain
     :rtype: list
     '''
-    res = r_serv_onion.smembers("month_onion_up:{}".format(date_year_month))
+    res = r_serv_onion.smembers( get_db_keys_domain_up(domain_type, "month").format(date_year_month) )
     if rlist:
         return list(res)
     else:
@@ -69,12 +99,33 @@ def get_domain_up_by_day(date_year_month, domain_type, rlist=False):
     :return: list of domain
     :rtype: list
     '''
-    res = r_serv_onion.smembers("onion_up:{}".format(date_year_month))
+    res = r_serv_onion.smembers(get_db_keys_domain_up(domain_type, "day").format(date_year_month))
     if rlist:
         return list(res)
     else:
         return res
 
+def get_domains_up_by_daterange(date_from, date_to, domain_type):
+    '''
+    Get all domain up (at least one time) by daterange
+
+    :param domain_type: date YYYYMMDD
+    :type domain_type: str
+
+    :return: list of domain
+    :rtype: list
+    '''
+    days_list, month_list = Date.get_date_range_full_month_and_days(date_from, date_to)
+    l_keys_name = get_list_db_keys_domain_up(domain_type, days_list, 'day')
+    l_keys_name.extend(get_list_db_keys_domain_up(domain_type, month_list, 'month'))
+
+    if len(l_keys_name) > 1:
+        domains_up = list(r_serv_onion.sunion(l_keys_name[0], *l_keys_name[1:]))
+    elif l_keys_name:
+        domains_up = list(r_serv_onion.smembers(l_keys_name[0]))
+    else:
+        domains_up = []
+    return domains_up
 
 ######## DOMAIN ########
 
@@ -465,7 +516,10 @@ def api_get_domain_up_range(domain, domain_type=None):
     res['domain'] = domain
     return res, 200
 
-
+def api_get_domains_by_status_daterange(date_from, date_to, domain_type):
+    sanitize_domain_type(domain_type)
+    res = {'domains': get_domains_up_by_daterange(date_from, date_to, domain_type)}
+    return res, 200
 
 ## CLASS ##
 class Domain(object):

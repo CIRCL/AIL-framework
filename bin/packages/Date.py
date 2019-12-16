@@ -24,13 +24,15 @@ def get_date_range_full_month_and_days(date_from, date_to):
 
     full_month = get_full_month_str(date_from, date_to)
 
-    day_list = substract_date(date_from.strftime('%Y%m%d'), full_month[0].strftime('%Y%m%d'))
-    # remove last day (day in full moth)
-    if day_list:
-        day_list = day_list[:-1]
-    print(day_list)
-    day_list.extend(substract_date( (full_month[-1] + relativedelta(months=+1) ).strftime('%Y%m%d'), date_to.strftime('%Y%m%d')))
-    print(day_list)
+    # request at least one month
+    if full_month:
+        day_list = substract_date(date_from.strftime('%Y%m%d'), full_month[0].strftime('%Y%m%d'))
+        # remove last day (day in full moth)
+        if day_list:
+            day_list = day_list[:-1]
+        day_list.extend(substract_date( (full_month[-1] + relativedelta(months=+1) ).strftime('%Y%m%d'), date_to.strftime('%Y%m%d')))
+    else:
+        day_list = substract_date(date_from.strftime('%Y%m%d'), date_to.strftime('%Y%m%d'))
 
     full_month = [dt_month.strftime('%Y%m') for dt_month in full_month]
     return day_list, full_month
