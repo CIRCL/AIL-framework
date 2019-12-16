@@ -451,11 +451,11 @@ if (d.popover) {
 							}
 							desc = desc + ";\"><i class=\"fas "
 							if (data["status"]) {
-								desc = desc + "fa-check-circle"
+								desc = desc + "fa-check-circle\"></i>UP"
 							} else {
-								desc = desc + "fa-times-circle"
+								desc = desc + "fa-times-circle\"></i>DOWN"
 							}
-							desc = desc + "\"></i>UP</div></dd>"
+							desc = desc + "</div></dd>"
 						} else if (key!="tags" && key!="id") {
 							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
 						}
