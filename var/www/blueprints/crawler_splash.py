@@ -61,7 +61,7 @@ def showDomain():
 
     dict_domain = domain.get_domain_metadata()
     dict_domain['domain'] = domain_name
-    if domain.is_domain_up():
+    if domain.domain_was_up():
         dict_domain = {**dict_domain, **domain.get_domain_correlation()}
         dict_domain['correlation_nb'] = Domain.get_domain_total_nb_correlation(dict_domain)
         dict_domain['origin_item'] = domain.get_domain_last_origin()
@@ -69,7 +69,8 @@ def showDomain():
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])
         dict_domain['history'] = domain.get_domain_history_with_status()
         dict_domain['crawler_history'] = domain.get_domain_items_crawled(items_link=True, epoch=epoch, item_screenshot=True, item_tag=True) # # TODO: handle multiple port
-        dict_domain['crawler_history']['random_item'] = random.choice(dict_domain['crawler_history']['items'])
+        if dict_domain['crawler_history']['items']:
+            dict_domain['crawler_history']['random_item'] = random.choice(dict_domain['crawler_history']['items'])
 
     return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
                                 modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], tag_type="domain"))

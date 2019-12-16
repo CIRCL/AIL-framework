@@ -287,52 +287,54 @@
     									{{dict_domain["crawler_history"]["port"]}}
     								</span>
                   </div>
-                  <h5>Crawled Items</h5>
+                  <h5>Crawled Items {% if not dict_domain["crawler_history"]["items"] %}: DOWN{% endif %}</h5>
   							</div>
 
               </div>
 
-							<table class="table table-striped table-bordered table-hover" id="myTable_1">
-						    <thead class="thead-dark">
-						      <tr>
-						        <th>Crawled Pastes</th>
-                    <th class="text-center"><i class="fas fa-images"></i></th>
-						      </tr>
-						    </thead>
-						    <tbody>
-					        {% for item in dict_domain["crawler_history"]["items"] %}
-					          <tr>
-				              <td>
-												<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item["id"]}}" class="text-secondary">
-													<div style="line-height:0.9;">{{ item["link"] }}</div>
-												</a>
-				                <div>
-				                  {% for tag in item["tags"] %}
-					                  <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag["tag"] }}">
-					                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag["min_tag"] }}</span>
-					                  </a>
-				                  {%  endfor %}
-				                </div>
-			              	</td>
-                    <td class="text-center">
-                      {%if item["screenshot"]%}
-                      <span class="icon_img" onclick="reload_image('{{ item["screenshot"] }}', '{{ item["link"] }}', '{{ item["id"] }}');" id="{{ item["screenshot"].replace('/', '') }}">
-                        <i class="far fa-image"></i>
+              {% if dict_domain["crawler_history"]["items"] %}
+  							<table class="table table-striped table-bordered table-hover" id="myTable_1">
+  						    <thead class="thead-dark">
+  						      <tr>
+  						        <th>Crawled Pastes</th>
+                      <th class="text-center"><i class="fas fa-images"></i></th>
+  						      </tr>
+  						    </thead>
+  						    <tbody>
+  					        {% for item in dict_domain["crawler_history"]["items"] %}
+  					          <tr>
+  				              <td>
+  												<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item["id"]}}" class="text-secondary">
+  													<div style="line-height:0.9;">{{ item["link"] }}</div>
+  												</a>
+  				                <div>
+  				                  {% for tag in item["tags"] %}
+  					                  <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag["tag"] }}">
+  					                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag["min_tag"] }}</span>
+  					                  </a>
+  				                  {%  endfor %}
+  				                </div>
+  			              	</td>
+                      <td class="text-center">
+                        {%if item["screenshot"]%}
+                        <span class="icon_img" onclick="reload_image('{{ item["screenshot"] }}', '{{ item["link"] }}', '{{ item["id"] }}');" id="{{ item["screenshot"].replace('/', '') }}">
+                          <i class="far fa-image"></i>
+                        </button>
+                        {%endif%}
+                      </td>
+  						        </tr>
+  						      {%  endfor %}
+
+  						    </tbody>
+  						  </table>
+
+                <div class="text-center mb-4">
+                  <a href="{{ url_for('hiddenServices.download_domain') }}?domain={{domain}}&port={{port}}{% if epoch %}&epoch={{epoch}}{% endif %}" target="blank" style="font-size: 15px">
+                      <button class="btn btn-info"><i class="fas fa-download"></i> Download Domain Content
                       </button>
-                      {%endif%}
-                    </td>
-						        </tr>
-						      {%  endfor %}
-
-						    </tbody>
-						  </table>
-
-              <div class="text-center mb-4">
-                <a href="{{ url_for('hiddenServices.download_domain') }}?domain={{domain}}&port={{port}}{% if epoch %}&epoch={{epoch}}{% endif %}" target="blank" style="font-size: 15px">
-                    <button class="btn btn-info"><i class="fas fa-download"></i> Download Domain Content
-                    </button>
-                </a>
-              </div>
+                  </a>
+                </div>
+              {%endif%}
 						{%endif%}
 
             {% if dict_domain["history"] %}
@@ -456,17 +458,18 @@ img.addEventListener("error", img_error);
 var draw_img = false;
 
 {%if "crawler_history" in dict_domain%}
-  {%if dict_domain['crawler_history']['random_item']['screenshot']%}
-    var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}";
-    var selected_icon = $("#"+screenshot.replace(/\//g, ""));
-    selected_icon.addClass("icon_selected");
-    selected_icon.removeClass("icon_img");
+  {%if "random_item" in dict_domain['crawler_history']%}
+    {%if dict_domain['crawler_history']['random_item']['screenshot']%}
+      var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}";
+      var selected_icon = $("#"+screenshot.replace(/\//g, ""));
+      selected_icon.addClass("icon_selected");
+      selected_icon.removeClass("icon_img");
 
-
-    $("#screenshot_link").attr("href", screenshot_href + "{{dict_domain['crawler_history']['random_item']['id']}}");
-    $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
-  {%else%}
-  var screenshot = "";
+      $("#screenshot_link").attr("href", screenshot_href + "{{dict_domain['crawler_history']['random_item']['id']}}");
+      $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
+    {%else%}
+    var screenshot = "";
+    {%endif%}
   {%endif%}
 {%else%}
 var screenshot = "";

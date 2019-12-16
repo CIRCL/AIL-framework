@@ -283,15 +283,16 @@ def get_domain_items_crawled(domain, domain_type, port, epoch=None, items_link=F
         item_crawled['epoch'] = item_root['epoch']
         item_crawled['date'] = time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(item_root['epoch']))
         item_crawled['items'] = []
-        for item in get_domain_items(domain, item_root['root_item']):
-            dict_item = {"id": item}
-            if items_link:
-                dict_item['link'] = Item.get_item_link(item)
-            if item_screenshot:
-                dict_item['screenshot'] = Item.get_item_screenshot(item)
-            if item_tag:
-                dict_item['tags'] = Tag.get_item_tags_minimal(item)
-            item_crawled['items'].append(dict_item)
+        if item_root['root_item'] != str(item_root['epoch']):
+            for item in get_domain_items(domain, item_root['root_item']):
+                dict_item = {"id": item}
+                if items_link:
+                    dict_item['link'] = Item.get_item_link(item)
+                if item_screenshot:
+                    dict_item['screenshot'] = Item.get_item_screenshot(item)
+                if item_tag:
+                    dict_item['tags'] = Tag.get_item_tags_minimal(item)
+                item_crawled['items'].append(dict_item)
     return item_crawled
 
 def get_link_tree():
@@ -540,7 +541,7 @@ class Domain(object):
     def __init__(self, domain, port=None):
         self.domain = str(domain)
         self.type = get_domain_type(domain)
-        if self.is_domain_up():
+        if self.domain_was_up():
             self.current_port = sanathyse_port(port, self.domain, self.type)
 
     def get_domain_name(self):
