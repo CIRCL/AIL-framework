@@ -148,8 +148,17 @@ def sanathyse_port(port, domain, domain_type, strict=False, current_port=None):
             port = get_random_domain_port(domain, domain_type)
     return port
 
-def is_domain_up(domain, domain_type):
-    return r_serv_onion.hexists('{}_metadata:{}'.format(domain_type, domain), 'ports')
+def is_domain_up(domain, domain_type, ports=[]):
+    if not ports:
+        ports = get_domain_all_ports(domain, domain_type)
+    for port in ports:
+        res = r_serv_onion.zrevrange('crawler_history_{}:{}:{}'.format(domain_type, domain, port), 0, 0, withscores=True)
+        if res:
+            item_core, epoch = res[0]
+            epoch = int(epoch)
+            if item_core != str(epoch):
+                return True
+    return False
 
 def get_domain_first_up(domain, domain_type, ports=None):
     '''
