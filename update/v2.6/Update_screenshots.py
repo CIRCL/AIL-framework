@@ -23,7 +23,12 @@ def get_all_item(screenshot_sha256):
 def sanitize_domain(domain):
     faup.decode(domain)
     domain_sanitized = faup.get()
-    return domain_sanitized['domain'].lower()
+    domain_sanitized = domain_sanitized['domain']
+    try:
+        domain_sanitized = domain_sanitized.decode()
+    except:
+        pass
+    return domain_sanitized.lower()
 
 def update_db(screenshot_sha256):
     screenshot_items = get_all_item(screenshot_sha256)
