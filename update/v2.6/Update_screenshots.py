@@ -81,7 +81,8 @@ if __name__ == '__main__':
                 screenshot_sha256 = screenshot_sha256.replace('/', '')
                 update_db(screenshot_sha256)
                 #print('Screenshot updated: {}'.format(nb))
-                r_serv_db.set('ail:current_background_script', 'screenshot updated: {}'.format(nb))
+                if nb % 1000 == 0:
+                    r_serv_db.set('ail:current_background_script', 'screenshot updated: {}'.format(nb))
 
     r_serv_db.set('ail:current_background_script_stat', 100)
 
