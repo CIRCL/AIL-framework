@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Correlate_object
 import Decoded
+import Screenshot
 
 config_loader = ConfigLoader.ConfigLoader()
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
@@ -168,6 +169,14 @@ def get_item_decoded(item_id):
     '''
     return Decoded.get_item_decoded(item_id)
 
+def get_item_all_screenshot(item_id):
+    '''
+    Return all screenshot of a given item.
+
+    :param item_id: item id
+    '''
+    return Screenshot.get_item_screenshot_list(item_id)
+
 def get_item_all_correlation(item_id, correlation_names=[], get_nb=False):
     '''
     Retun all correlation of a given item id.
@@ -188,6 +197,8 @@ def get_item_all_correlation(item_id, correlation_names=[], get_nb=False):
             res = get_item_pgp(item_id, get_nb=get_nb)
         elif correlation_name=='decoded':
             res = get_item_decoded(item_id)
+        elif correlation_name=='screenshot':
+            res = get_item_all_screenshot(item_id)
         else:
             res = None
         # add correllation to dict
@@ -255,6 +266,11 @@ def is_item_in_domain(domain, item_id):
 
 def get_item_domain(item_id):
     return item_id[19:-36]
+
+def get_domain(item_id):
+    item_id = item_id.split('/')
+    item_id = item_id[-1]
+    return item_id[:-36]
 
 def get_item_children(item_id):
     return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))

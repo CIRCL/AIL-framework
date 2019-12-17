@@ -12,6 +12,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Decoded
 import Domain
+import Screenshot
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Pgp
@@ -26,7 +27,7 @@ def get_all_correlation_names():
     '''
     Return a list of all available correlations
     '''
-    return ['pgp', 'cryptocurrency', 'decoded']
+    return ['pgp', 'cryptocurrency', 'decoded', 'screenshot']
 
 def get_all_correlation_objects():
     '''
@@ -45,6 +46,8 @@ def exist_object(object_type, correlation_id, type_id=None):
         return Pgp.pgp._exist_corelation_field(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency._exist_corelation_field(type_id, correlation_id)
+    elif object_type == 'screenshot':
+        return Screenshot.exist_screenshot(correlation_id)
     else:
         return False
 
@@ -59,6 +62,8 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
         return Pgp.pgp.get_metadata(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_metadata(type_id, correlation_id)
+    elif object_type == 'screenshot':
+        return Screenshot.get_metadata(correlation_id)
 
 def get_object_correlation(object_type, value, correlation_names, correlation_objects, requested_correl_type=None):
     if object_type == 'domain':
@@ -71,7 +76,8 @@ def get_object_correlation(object_type, value, correlation_names, correlation_ob
         return Pgp.pgp.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
-
+    elif object_type == 'screenshot':
+        return Screenshot.get_screenshot_correlated_object(value, correlation_objects)
     return {}
 
 def get_correlation_node_icon(correlation_name, correlation_type=None, value=None):
@@ -130,6 +136,10 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
         else:
             icon_text = '\uf249'
 
+    elif correlation_name == 'screenshot':
+        node_color = '#E1F5DF'
+        icon_text = '\uf03e'
+
     elif correlation_name == 'domain':
         node_radius = 5
         node_color = '#3DA760'
@@ -162,6 +172,9 @@ def get_item_url(correlation_name, value, correlation_type=None):
     elif correlation_name == 'decoded':
         endpoint = 'correlation.show_correlation'
         url = url_for(endpoint, object_type="decoded", correlation_id=value)
+    elif correlation_name == 'screenshot':
+        endpoint = 'correlation.show_correlation'
+        url = url_for(endpoint, object_type="screenshot", correlation_id=value)
     elif correlation_name == 'domain':
         endpoint = 'crawler_splash.showDomain'
         url = url_for(endpoint, domain=value)
@@ -241,7 +254,7 @@ def get_graph_node_object_correlation(object_type, root_value, mode, correlation
                                 if mode=="inter":
                                     nodes.add(correl_node_id)
                                     links.add((root_node_id, correl_node_id))
-        if correl in ('decoded', 'domain', 'paste'):
+        if correl in ('decoded', 'screenshot', 'domain', 'paste'):
             for correl_val in root_correlation[correl]:
 
                 correl_node_id = create_node_id(correl, correl_val)
@@ -254,7 +267,7 @@ def get_graph_node_object_correlation(object_type, root_value, mode, correlation
                 res = get_object_correlation(correl, correl_val, correlation_names, correlation_objects)
                 if res:
                     for corr_obj in res:
-                        if corr_obj in ('decoded', 'domain', 'paste'):
+                        if corr_obj in ('decoded', 'domain', 'paste', 'screenshot'):
                             for correl_key_val in res[corr_obj]:
                                 #filter root value
                                 if correl_key_val == root_value:

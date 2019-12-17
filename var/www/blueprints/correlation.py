@@ -147,6 +147,9 @@ def show_correlation():
         correl_option = request.form.get('DecodedCheck')
         if correl_option:
             correlation_names.append('decoded')
+        correl_option = request.form.get('ScreenshotCheck')
+        if correl_option:
+            correlation_names.append('screenshot')
         # correlation_objects
         correl_option = request.form.get('DomainCheck')
         if correl_option:

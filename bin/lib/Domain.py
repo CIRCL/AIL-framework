@@ -26,6 +26,7 @@ cryptocurrency = Cryptocurrency.cryptocurrency
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Correlate_object
+import Screenshot
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
@@ -432,6 +433,14 @@ def get_domain_decoded(domain):
     '''
     return Decoded.get_domain_decoded_item(domain)
 
+def get_domain_screenshot(domain):
+    '''
+    Retun all decoded item of a given domain.
+
+    :param domain: crawled domain
+    '''
+    return Screenshot.get_domain_screenshot(domain)
+
 
 def get_domain_all_correlation(domain, correlation_names=[], get_nb=False):
     '''
@@ -453,6 +462,8 @@ def get_domain_all_correlation(domain, correlation_names=[], get_nb=False):
             res = get_domain_pgp(domain, get_nb=get_nb)
         elif correlation_name=='decoded':
             res = get_domain_decoded(domain)
+        elif correlation_name=='screenshot':
+            res = get_domain_screenshot(domain)
         else:
             res = None
         # add correllation to dict

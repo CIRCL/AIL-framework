@@ -145,6 +145,10 @@
 												  <label class="form-check-label" for="DecodedCheck">Decoded</label>
 												</div>
 												<div class="form-check">
+												  <input class="form-check-input" type="checkbox" value="True" id="ScreenshotCheck" name="ScreenshotCheck" {%if "screenshot" in dict_object["correlation_names"]%}checked{%endif%}>
+												  <label class="form-check-label" for="ScreenshotCheck">Screenshot</label>
+												</div>
+												<div class="form-check">
 												  <input class="form-check-input" type="checkbox" value="True" id="PgpCheck" name="PgpCheck" {%if "pgp" in dict_object["correlation_names"]%}checked{%endif%}>
 												  <label class="form-check-label" for="PgpCheck">PGP</label>
 												</div>
