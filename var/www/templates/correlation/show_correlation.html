@@ -460,11 +460,15 @@ if (d.popover) {
 								desc = desc + "fa-times-circle\"></i>DOWN"
 							}
 							desc = desc + "</div></dd>"
-						} else if (key!="tags" && key!="id") {
+						} else if (key!="tags" && key!="id" && key!="img") {
 							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
 						}
 					});
 					desc = desc + "</dl>"
+
+					if (data["img"]) {
+						desc = desc + "<img src={{ url_for('showsavedpastes.screenshot', filename="") }}" + data["img"] +" class=\"img-thumbnail\" />";
+					}
 
 					if (data["tags"]) {
 						data["tags"].forEach(function(tag) {

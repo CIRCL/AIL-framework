@@ -32,7 +32,7 @@ def exist_screenshot(sha256_string):
 
 def get_metadata(sha256_string):
     metadata_dict = {}
-    metadata_dict['sha256'] = sha256_string
+    metadata_dict['img'] = get_screenshot_rel_path(sha256_string)
     return metadata_dict
 
 

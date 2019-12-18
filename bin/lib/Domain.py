@@ -476,6 +476,8 @@ def get_domain_total_nb_correlation(correlation_dict):
     total_correlation = 0
     if 'decoded' in correlation_dict:
         total_correlation += len(correlation_dict['decoded'])
+    if 'screenshot' in correlation_dict:
+        total_correlation += len(correlation_dict['screenshot'])
     if 'cryptocurrency' in correlation_dict:
         total_correlation += correlation_dict['cryptocurrency'].get('nb', 0)
     if 'pgp' in correlation_dict:
