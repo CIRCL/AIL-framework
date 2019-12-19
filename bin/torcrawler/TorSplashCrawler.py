@@ -203,7 +203,7 @@ class TorSplashCrawler():
                             self.r_serv_onion.sadd('screenshot:{}'.format(hash), relative_filename_paste)
                             # domain map
                             r_serv_onion.sadd('domain_screenshot:{}'.format(domain[0]), hash)
-                            r_serv_onion.sadd('screenshot_domain:{}'.format(hash), self.domain[0])
+                            r_serv_onion.sadd('screenshot_domain:{}'.format(hash), self.domains[0])
 
                     if 'har' in response.data:
                         dirname = os.path.dirname(filename_har)
