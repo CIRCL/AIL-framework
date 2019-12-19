@@ -597,7 +597,7 @@ def hashDecoded_page():
 
             b64_metadata.append( (file_icon, estimated_type, hash, nb_seen_in_paste, size, first_seen, last_seen, b64_vt, b64_vt_link, b64_vt_report, sparklines_value) )
 
-    l_type = r_serv_metadata.smembers('hash_all_type')
+    l_type = sorted(r_serv_metadata.smembers('hash_all_type'))
 
     return render_template("hashDecoded.html", l_64=b64_metadata, vt_enabled=vt_enabled, l_type=l_type, type=type, daily_type_chart=daily_type_chart, daily_date=daily_date,
                                                 encoding=encoding, all_encoding=all_encoding, date_from=date_from, date_to=date_to, show_decoded_files=show_decoded_files)
