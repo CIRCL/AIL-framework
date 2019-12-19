@@ -116,10 +116,29 @@
 									</span>
 								</div>
 								<div class="card-body graph_panel">
+									<div id="graph_loading" class="ml-3 mt-3">
+										<div class="spinner-border text-secondary" role="status">
+											<span class="sr-only">Loading...</span>
+										</div>
+										<span>Loading...</span>
+									</div>
 									<div id="graph">
 									</div>
 								</div>
 							</div>
+
+							<div role="alert" aria-live="assertive" aria-atomic="true" class="toast" data-autohide="false">
+							  <div class="toast-header">
+							    <strong class="mr-auto">Bootstrap</strong>
+							    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+							      <span aria-hidden="true">&times;</span>
+							    </button>
+							  </div>
+							  <div class="toast-body">
+							    Hello, world! This is a toast message.
+							  </div>
+							</div>
+
 						</div>
 
 						<div class="col-xl-2">
@@ -283,6 +302,9 @@ var zoom = d3.zoom()
 	.scaleExtent([.2, 10])
 	.on("zoom", zoomed);
 
+// Loading:
+//$("#graph_loading").show()
+
 //var transform = d3.zoomIdentity;
 
 var color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -307,6 +329,7 @@ var svg_node = d3.select("#graph").append("svg")
 var container_graph = svg_node.append("g");
 		//.attr("transform", "translate(40,0)")
 		//.attr("transform", "scale(2)");
+
 
 function create_graph(url){
 
@@ -384,7 +407,16 @@ d3.json(url)
 		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 	}
 
-});
+	// Loading ...
+	$("#graph_loading").remove();
+
+})
+.catch(function(error) {
+				$("#graph_loading").remove()
+				svg_node.remove();
+				d3.select("#graph").append("div")
+													 .text(error);
+		});
 }
 
 function zoomed() {
