@@ -104,7 +104,7 @@ def get_item(request_dict):
         dict_item['date'] = get_item_date(item_id, add_separator=add_separator)
     tags = request_dict.get('tags', True)
     if tags:
-        dict_item['tags'] = Tag.get_item_tags(item_id)
+        dict_item['tags'] = Tag.get_obj_tag(item_id)
 
     size = request_dict.get('size', False)
     if size:
@@ -242,7 +242,7 @@ def get_item_pgp_correlation(item_id):
 def get_item_list_desc(list_item_id):
     desc_list = []
     for item_id in list_item_id:
-        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_item_tags(item_id)} )
+        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_obj_tag(item_id)} )
     return desc_list
 
 # # TODO: add an option to check the tag

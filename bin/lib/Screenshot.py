@@ -43,13 +43,16 @@ def get_screenshot_items_list(sha256_string):
     else:
         return []
 
+def get_item_screenshot(item_id):
+    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'screenshot')
+
 def get_item_screenshot_list(item_id):
     '''
     Retun all decoded item of a given item id.
 
     :param item_id: item id
     '''
-    screenshot = r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'screenshot')
+    screenshot = get_item_screenshot(item_id)
     if screenshot:
         return [screenshot]
     else:

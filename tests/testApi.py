@@ -128,7 +128,7 @@ class TestApiV1(unittest.TestCase):
     # POST api/v1/add/item/tag
     def test_0007_api_add_item_tag(self):
         tags_to_add = ["infoleak:analyst-detection=\"api-key\""]
-        current_item_tag = Tag.get_item_tags(self.__class__.item_id)
+        current_item_tag = Tag.get_obj_tag(self.__class__.item_id)
         current_item_tag.append(tags_to_add[0])
 
         #galaxy_to_add = ["misp-galaxy:stealer=\"Vidar\""]
@@ -138,7 +138,7 @@ class TestApiV1(unittest.TestCase):
         item_tags = req_json['tags']
         self.assertEqual(item_tags, tags_to_add)
 
-        new_item_tag = Tag.get_item_tags(self.__class__.item_id)
+        new_item_tag = Tag.get_obj_tag(self.__class__.item_id)
         self.assertCountEqual(new_item_tag, current_item_tag)
 
     # DELETE api/v1/delete/item/tag
@@ -149,7 +149,7 @@ class TestApiV1(unittest.TestCase):
         req_json = parse_response(self, req)
         item_tags = req_json['tags']
         self.assertCountEqual(item_tags, tags_to_delete)
-        current_item_tag = Tag.get_item_tags(self.__class__.item_id)
+        current_item_tag = Tag.get_obj_tag(self.__class__.item_id)
         if tags_to_delete[0] in current_item_tag:
             self.fail('Tag no deleted')
 

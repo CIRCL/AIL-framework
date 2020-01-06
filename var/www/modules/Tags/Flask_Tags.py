@@ -422,7 +422,7 @@ def tag_validation():
     else:
         return 'input error'
 
-@Tags.route("/Tags/addTags")
+@Tags.route("/Tags/addTags") # REVIEW: # used in showPaste
 @login_required
 @login_analyst
 def addTags():
@@ -441,29 +441,6 @@ def addTags():
         return str(res[0])
     # success
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
-
-@Tags.route("/Tags/add_item_tags")
-@login_required
-@login_analyst
-def add_item_tags():
-
-    tags = request.args.get('tags')
-    tagsgalaxies = request.args.get('tagsgalaxies')
-    item_id = request.args.get('item_id')
-    item_type = request.args.get('type')
-
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    res = Tag.add_items_tags(tags=list_tag, galaxy_tags=list_tag_galaxies, item_id=item_id, item_type=item_type)
-    # error
-    if res[1] != 200:
-        return str(res[0])
-    # success
-    if item_type=='domain':
-        return redirect(url_for('crawler_splash.showDomain', domain=item_id))
-    else:
-        return redirect(url_for('showsavedpastes.showsavedpaste', paste=item_id))
 
 @Tags.route("/Tags/taxonomies")
 @login_required

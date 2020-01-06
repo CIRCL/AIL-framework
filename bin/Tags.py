@@ -8,29 +8,11 @@ The Tags Module
 This module create tags.
 
 """
-import redis
-
 import time
-import datetime
 
 from pubsublogger import publisher
 from Helper import Process
-from packages import Paste
-from packages import Item
-
-
-def get_item_date(item_filename):
-    l_directory = item_filename.split('/')
-    return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
-
-def set_tag_metadata(tag, date):
-    # First time we see this tag    ## TODO: filter paste from the paste ?
-    if not server.hexists('tag_metadata:{}'.format(tag), 'first_seen'):
-        server.hset('tag_metadata:{}'.format(tag), 'first_seen', date)
-    # Check and Set tag last_seen
-    last_seen = server.hget('tag_metadata:{}'.format(tag), 'last_seen')
-    if last_seen is None or date > last_seen:
-        server.hset('tag_metadata:{}'.format(tag), 'last_seen', date)
+from packages import Tag
 
 if __name__ == '__main__':
 
@@ -44,18 +26,6 @@ if __name__ == '__main__':
 
     # Setup the I/O queues
     p = Process(config_section)
-
-    server = redis.StrictRedis(
-                host=p.config.get("ARDB_Tags", "host"),
-                port=p.config.get("ARDB_Tags", "port"),
-                db=p.config.get("ARDB_Tags", "db"),
-                decode_responses=True)
-
-    server_metadata = redis.StrictRedis(
-                host=p.config.get("ARDB_Metadata", "host"),
-                port=p.config.get("ARDB_Metadata", "port"),
-                db=p.config.get("ARDB_Metadata", "db"),
-                decode_responses=True)
 
     # Sent to the logging a description of the module
     publisher.info("Tags module started")
@@ -71,27 +41,7 @@ if __name__ == '__main__':
             continue
 
         else:
-            tag, path = message.split(';')
-            # add the tag to the tags word_list
-            res = server.sadd('list_tags', tag)
-            if res == 1:
-                print("new tags added : {}".format(tag))
-            # add the path to the tag set
-            #curr_date = datetime.date.today().strftime("%Y%m%d")
-            item_date = get_item_date(path)
-            res = server.sadd('{}:{}'.format(tag, item_date), path)
-            if res == 1:
-                print("new paste: {}".format(path))
-                print("   tagged: {}".format(tag))
-                set_tag_metadata(tag, item_date)
-            server_metadata.sadd('tag:{}'.format(path), tag)
+            tag, item_id = message.split(';')
 
-            # Domain Object
-            if Item.is_crawled(path) and tag!='infoleak:submission="crawler"':
-                domain = Item.get_item_domain(path)
-                server_metadata.sadd('tag:{}'.format(domain), tag)
-                server.sadd('domain:{}:{}'.format(tag, item_date), domain)
-
-            curr_date = datetime.date.today().strftime("%Y%m%d")
-            server.hincrby('daily_tags:{}'.format(item_date), tag, 1)
+            Tag.add_tag("item", tag, item_id)
             p.populate_set_out(message, 'MISP_The_Hive_feeder')
