@@ -41,6 +41,7 @@ if __name__ == '__main__':
             continue
 
         else:
+            print(message)
             tag, item_id = message.split(';')
 
             Tag.add_tag("item", tag, item_id)

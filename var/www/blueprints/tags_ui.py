@@ -25,7 +25,7 @@ import Date
 import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Domain
+import Correlate_object
 
 r_cache = Flask_config.r_cache
 r_serv_db = Flask_config.r_serv_db
@@ -33,7 +33,7 @@ r_serv_tags = Flask_config.r_serv_tags
 bootstrap_label = Flask_config.bootstrap_label
 
 # ============ BLUEPRINT ============
-tags_ui = Blueprint('tags', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/tags'))
+tags_ui = Blueprint('tags_ui', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/tags'))
 
 # ============ VARIABLES ============
 
@@ -82,15 +82,8 @@ def add_tags():
     # error
     if res[1] != 200:
         return str(res[0])
-    # success
 
-    # # TODO: use object FUNCTIONS
-
-    if object_type=='domain':
-        return redirect(url_for('crawler_splash.showDomain', domain=object_id))
-    else:
-        return redirect(url_for('showsavedpastes.showsavedpaste', paste=object_id))
-
+    return redirect(Correlate_object.get_item_url(object_type, object_id))
 
 
 

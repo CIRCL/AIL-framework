@@ -181,7 +181,10 @@ def get_item_url(correlation_name, value, correlation_type=None):
     elif correlation_name == 'domain':
         endpoint = 'crawler_splash.showDomain'
         url = url_for(endpoint, domain=value)
-    elif correlation_name == 'paste':
+    elif correlation_name == 'item':
+        endpoint = 'showsavedpastes.showsavedpaste'
+        url = url_for(endpoint, paste=value)
+    elif correlation_name == 'paste':                   ### # TODO:  remove me
         endpoint = 'showsavedpastes.showsavedpaste'
         url = url_for(endpoint, paste=value)
     return url

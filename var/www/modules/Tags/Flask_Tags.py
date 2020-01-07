@@ -375,7 +375,7 @@ def remove_tag():
     path = request.args.get('paste')
     tag = request.args.get('tag')
 
-    res = Tag.api_delete_obj_tags(tags=tag, object_id=path, object_type="item")
+    res = Tag.api_delete_obj_tags(tags=[tag], object_id=path, object_type="item")
     if res[1] != 200:
         return str(res[0])
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
@@ -390,11 +390,11 @@ def confirm_tag():
     tag = request.args.get('tag')
 
     if(tag[9:28] == 'automatic-detection'):
-        Tag.api_delete_obj_tags(tags=tag, object_id=path, object_type="item")
+        Tag.api_delete_obj_tags(tags=[tag], object_id=path, object_type="item")
 
         tag = tag.replace('automatic-detection','analyst-detection', 1)
         #add analyst tag
-        Tag.add_item_tag(tag, path)
+        Tag.add_tag('item', tag, path)
 
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 

@@ -6,6 +6,7 @@ import sys
 import redis
 import datetime
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Item
 
@@ -156,7 +157,7 @@ def get_modal_add_tags(item_id, object_type='item'):
     Modal: add tags to domain or Paste
     '''
     return {"active_taxonomies": get_active_taxonomies(), "active_galaxies": get_active_galaxies(),
-            "object_id": item_id, "object_type": tag_type}
+            "object_id": item_id, "object_type": object_type}
 
 ######## NEW VERSION ########
 def get_tag_first_seen(tag, r_int=False):
@@ -204,7 +205,7 @@ def is_obj_tagged(object_id, tag):
     :return: is object tagged
     :rtype: boolean
     '''
-    return r_serv_tags.sismember('tag:{}'.format(object_id), tag)
+    return r_serv_metadata.sismember('tag:{}'.format(object_id), tag)
 
 def get_all_tags():
     return list(r_serv_tags.smembers('list_tags'))
@@ -333,16 +334,20 @@ def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item"
         return ({'status': 'error', 'reason': 'object_id id not found'}, 404)
     if not tags and not galaxy_tags:
         return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
-    if object_type not in ('paste', 'domain'):  # # TODO: put me in another file
+    if object_type not in ('item', 'domain'):  # # TODO: put me in another file
         return ({'status': 'error', 'reason': 'Incorrect object_type'}, 400)
 
-    res = add_obj_tags(object_id, object_type, tags=[], galaxy_tags=[])
+    # remove empty tags
+    tags = list(filter(bool, tags))
+    galaxy_tags = list(filter(bool, galaxy_tags))
+
+    res = add_obj_tags(object_id, object_type, tags=tags, galaxy_tags=galaxy_tags)
     if res:
         return res
 
     res_dict['tags'] = tags + galaxy_tags
-    res_dict['id'] = item_id
-    res_dict['type'] = item_type
+    res_dict['id'] = object_id
+    res_dict['type'] = object_type
     return (res_dict, 200)
 
 def add_obj_tag(object_type, object_id, tag, obj_date=None):
@@ -403,7 +408,7 @@ def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
     if not tags:
         return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
 
-    res = delete_obj_tags(object_id, object_type, tags=[])
+    res = delete_obj_tags(object_id, object_type, tags=tags)
     if res:
         return res
 

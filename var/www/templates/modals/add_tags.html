@@ -126,6 +126,6 @@ jQuery("#all-tags-galaxies").click(function(e){
 function addTags() {
   var tags = ltags.getValue()
   var tagsgalaxy = ltagsgalaxies.getValue()
-  window.location.replace("{{ url_for('tags_ui.add_item_tags') }}?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy + "&object_id={{ modal_add_tags['object_id'] }}&object_type={{ modal_add_tags['object_type'] }}");
+  window.location.replace("{{ url_for('tags_ui.add_tags') }}?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy + "&object_id={{ modal_add_tags['object_id'] }}&object_type={{ modal_add_tags['object_type'] }}");
 }
 </script>

@@ -570,7 +570,7 @@
       var tags = ltags.getValue()
       var tagsgalaxy = ltagsgalaxies.getValue()
       var path = '{{ request.args.get('paste') }}'
-      window.location.replace("{{ url_for('Tags.addTags') }}?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy + "&path=" + path);
+      window.location.replace("{{ url_for('tags_ui.add_tags') }}?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy + "&object_id=" + path + "&object_type=item");
     }
 
 </script>
