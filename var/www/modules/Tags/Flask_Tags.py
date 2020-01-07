@@ -375,9 +375,9 @@ def remove_tag():
     path = request.args.get('paste')
     tag = request.args.get('tag')
 
-    res = Tag.remove_item_tag(tag, path)
+    res = Tag.api_delete_obj_tags(tags=tag, object_id=path, object_type="item")
     if res[1] != 200:
-        str(res[0])
+        return str(res[0])
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
 @Tags.route("/Tags/confirm_tag")
@@ -390,7 +390,7 @@ def confirm_tag():
     tag = request.args.get('tag')
 
     if(tag[9:28] == 'automatic-detection'):
-        Tag.remove_item_tag(tag, path)
+        Tag.api_delete_obj_tags(tags=tag, object_id=path, object_type="item")
 
         tag = tag.replace('automatic-detection','analyst-detection', 1)
         #add analyst tag
@@ -421,26 +421,6 @@ def tag_validation():
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
     else:
         return 'input error'
-
-@Tags.route("/Tags/addTags") # REVIEW: # used in showPaste
-@login_required
-@login_analyst
-def addTags():
-
-    tags = request.args.get('tags')
-    tagsgalaxies = request.args.get('tagsgalaxies')
-    path = request.args.get('path')
-
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    res = Tag.add_items_tags(list_tag, list_tag_galaxies, item_id=path)
-    print(res)
-    # error
-    if res[1] != 200:
-        return str(res[0])
-    # success
-    return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
 @Tags.route("/Tags/taxonomies")
 @login_required

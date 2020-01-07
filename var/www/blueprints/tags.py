@@ -43,6 +43,28 @@ tags_ui = Blueprint('tags', __name__, template_folder=os.path.join(os.environ['A
 
 
 # ============= ROUTES ==============
+# @Tags.route("/Tags/addTags") # REVIEW: # used in showPaste
+# @login_required
+# @login_analyst
+# def addTags():
+#
+#     tags = request.args.get('tags')
+#     tagsgalaxies = request.args.get('tagsgalaxies')
+#     path = request.args.get('path')
+#
+#     list_tag = tags.split(',')
+#     list_tag_galaxies = tagsgalaxies.split(',')
+#
+#     res = Tag.add_items_tags(list_tag, list_tag_galaxies, item_id=path)
+#     print(res)
+#     # error
+#     if res[1] != 200:
+#         return str(res[0])
+#     # success
+#     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+
+
+
 @tags_ui.route('/tag/add_tags')
 @login_required
 @login_analyst
@@ -56,11 +78,13 @@ def add_tags():
     list_tag = tags.split(',')
     list_tag_galaxies = tagsgalaxies.split(',')
 
-    res = Tag.add_items_tags(tags=list_tag, galaxy_tags=list_tag_galaxies, item_id=object_id, item_type=item_type)
+    res = Tag.api_add_obj_tags(tags=list_tag, galaxy_tags=list_tag_galaxies, object_id=object_id, object_type=object_type)
     # error
     if res[1] != 200:
         return str(res[0])
     # success
+
+    # # TODO: use object FUNCTIONS
 
     if object_type=='domain':
         return redirect(url_for('crawler_splash.showDomain', domain=object_id))

@@ -11,7 +11,7 @@ import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-import Domain
+import Correlate_object
 
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
@@ -150,163 +150,6 @@ def unpack_str_tags_list(str_tags_list):
     else:
         return []
 
-
-# TEMPLATE + API QUERY # # TODO: # REVIEW:
-def add_items_tag(tags=[], galaxy_tags=[], item_id=None): ## TODO: remove me
-    res_dict = {}
-    if item_id == None:
-        return ({'status': 'error', 'reason': 'Item id not found'}, 404)
-    if not tags and not galaxy_tags:
-        return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
-
-    res_dict['tags'] = []
-    for tag in tags:
-        taxonomie = get_taxonomie_from_tag(tag)
-        if is_taxonomie_tag_enabled(taxonomie, tag):
-            add_item_tag(tag, item_id)
-            res_dict['tags'].append(tag)
-        else:
-            return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, 400)
-
-    for tag in galaxy_tags:
-        galaxy = get_galaxy_from_tag(tag)
-        if is_galaxy_tag_enabled(galaxy, tag):
-            add_item_tag(tag, item_id)
-            res_dict['tags'].append(tag)
-        else:
-            return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, 400)
-
-    res_dict['id'] = item_id
-    return (res_dict, 200)
-
-def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item"):
-    pass
-
-# TEMPLATE + API QUERY
-def add_items_tags(tags=[], galaxy_tags=[], item_id=None, item_type="paste"):
-    res_dict = {}
-    if item_id == None:
-        return ({'status': 'error', 'reason': 'Item id not found'}, 404)
-    if not tags and not galaxy_tags:
-        return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
-    if item_type not in ('paste', 'domain'):
-        return ({'status': 'error', 'reason': 'Incorrect item_type'}, 400)
-
-    res_dict['tags'] = []
-    for tag in tags:
-        if tag:
-            taxonomie = get_taxonomie_from_tag(tag)
-            if is_taxonomie_tag_enabled(taxonomie, tag):
-                add_item_tag(tag, item_id, item_type=item_type)
-                res_dict['tags'].append(tag)
-            else:
-                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, 400)
-
-    for tag in galaxy_tags:
-        if tag:
-            galaxy = get_galaxy_from_tag(tag)
-            if is_galaxy_tag_enabled(galaxy, tag):
-                add_item_tag(tag, item_id, item_type=item_type)
-                res_dict['tags'].append(tag)
-            else:
-                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, 400)
-
-    res_dict['id'] = item_id
-    res_dict['type'] = item_type
-    return (res_dict, 200)
-
-def add_domain_tag(tag, domain, item_date):
-    r_serv_tags.sadd('list_tags:domain', tag)
-    r_serv_metadata.sadd('tag:{}'.format(domain), tag)
-    r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), domain)
-
-def add_item_tag(tag, item_path, item_type="paste", tag_date=None):
-
-    if item_type=="paste":
-        item_date = int(Item.get_item_date(item_path))
-
-        #add tag
-        r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
-        r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
-
-        if Item.is_crawled(item_path):
-            domain = Item.get_item_domain(item_path)
-            r_serv_metadata.sadd('tag:{}'.format(domain), tag)
-            r_serv_tags.sadd('domain:{}:{}'.format(tag, item_date), domain)
-    # domain item
-    else:
-        item_date = int(Domain.get_domain_last_check(item_path, r_format="int"))
-        add_domain_tag(tag, item_path, item_date)
-
-    r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
-
-    tag_first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
-    if tag_first_seen is None:
-        tag_first_seen = 99999999
-    else:
-        tag_first_seen = int(tag_first_seen)
-    tag_last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
-    if tag_last_seen is None:
-        tag_last_seen = 0
-    else:
-        tag_last_seen = int(tag_last_seen)
-
-    #add new tag in list of all used tags
-    r_serv_tags.sadd('list_tags', tag)
-
-    # update fisrt_seen/last_seen
-    if item_date < tag_first_seen:
-        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', item_date)
-
-    # update metadata last_seen
-    if item_date > tag_last_seen:
-        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
-
-# API QUERY
-def remove_item_tags(tags=[], item_id=None):
-    if item_id == None:
-        return ({'status': 'error', 'reason': 'Item id not found'}, 404)
-    if not tags:
-        return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
-
-    dict_res = {}
-    dict_res['tags'] = []
-    for tag in tags:
-        res = remove_item_tag(tag, item_id)
-        if res[1] != 200:
-            return res
-        else:
-            dict_res['tags'].append(tag)
-    dict_res['id'] = item_id
-    return (dict_res, 200)
-
-# TEMPLATE + API QUERY
-def remove_item_tag(tag, item_id):
-    item_date = int(Item.get_item_date(item_id))
-
-    #remove tag
-    r_serv_metadata.srem('tag:{}'.format(item_id), tag)
-    res = r_serv_tags.srem('{}:{}'.format(tag, item_date), item_id)
-
-    if res ==1:
-        # no tag for this day
-        if int(r_serv_tags.hget('daily_tags:{}'.format(item_date), tag)) == 1:
-            r_serv_tags.hdel('daily_tags:{}'.format(item_date), tag)
-        else:
-            r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, -1)
-
-        tag_first_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
-        tag_last_seen = int(r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen'))
-        # update fisrt_seen/last_seen
-        if item_date == tag_first_seen:
-            update_tag_first_seen(tag, tag_first_seen, tag_last_seen)
-        if item_date == tag_last_seen:
-            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
-        return ({'status': 'success'}, 200)
-    else:
-        return ({'status': 'error', 'reason': 'Item id or tag not found'}, 400)
-
-
 # used by modal
 def get_modal_add_tags(item_id, object_type='item'):
     '''
@@ -386,7 +229,6 @@ def update_tag_first_seen(tag, tag_first_seen, tag_last_seen):
             r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', tag_first_seen)
         # no tag in db
         else:
-            r_serv_tags.srem('list_tags', tag)
             r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
             r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
     else:
@@ -402,7 +244,6 @@ def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
             r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
         # no tag in db
         else:
-            r_serv_tags.srem('list_tags', tag)
             r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'first_seen')
             r_serv_tags.hdel('tag_metadata:{}'.format(tag), 'last_seen')
     else:
@@ -432,9 +273,27 @@ def update_tag_metadata(tag, tag_date, object_type=None, add_tag=True):
         ## REMOVE tag ##
         else:
             if tag_date == tag_metadata['first_seen']:
-                update_tag_first_seen(tag, tag_metadata['first_seen'], tag_metadata['last_seen'])
+                update_tag_first_seen(object_type, tag, tag_metadata['first_seen'], tag_metadata['last_seen'])
             if tag_date == tag_metadata['last_seen']:
                 update_tag_last_seen(tag, tag_metadata['first_seen'], tag_metadata['last_seen'])
+
+def update_tag_global_by_obj_type(object_type, tag):
+    tag_deleted = False
+    if object_type=='item':
+        if not r_serv_tags.exists('tag_metadata:{}'.format(tag)):
+            tag_deleted = True
+    else:
+        if not r_serv_tags.exists('{}:{}'.format(object_type, tag)):
+            tag_deleted = True
+    if tag_deleted:
+        # update object global tags
+        r_serv_tags.srem('list_tags:{}'.format(object_type), tag)
+        # update global tags
+        for obj_type in Correlate_object.get_all_objects():
+            if r_serv_tags.exists('{}:{}'.format(obj_type, tag)):
+                tag_deleted = False
+        if tag_deleted:
+            r_serv_tags.srem('list_tags', tag)
 
 def add_global_tag(tag, object_type=None):
     '''
@@ -449,27 +308,68 @@ def add_global_tag(tag, object_type=None):
     if object_type:
         r_serv_tags.sadd('list_tags:{}'.format(object_type), tag)
 
-def add_obj_tag(object_type, object_id, tag, obj_date):
+def add_obj_tags(object_id, object_type, tags=[], galaxy_tags=[]):
+    obj_date = get_obj_date(object_type, object_id)
+    for tag in tags:
+        if tag:
+            taxonomie = get_taxonomie_from_tag(tag)
+            if is_taxonomie_tag_enabled(taxonomie, tag):
+                add_tag(object_type, tag, object_id, obj_date=obj_date)
+            else:
+                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400)
+
+    for tag in galaxy_tags:
+        if tag:
+            galaxy = get_galaxy_from_tag(tag)
+            if is_galaxy_tag_enabled(galaxy, tag):
+                add_tag(object_type, tag, object_id, obj_date=obj_date)
+            else:
+                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400)
+
+# TEMPLATE + API QUERY
+def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item"):
+    res_dict = {}
+    if object_id == None:
+        return ({'status': 'error', 'reason': 'object_id id not found'}, 404)
+    if not tags and not galaxy_tags:
+        return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
+    if object_type not in ('paste', 'domain'):  # # TODO: put me in another file
+        return ({'status': 'error', 'reason': 'Incorrect object_type'}, 400)
+
+    res = add_obj_tags(object_id, object_type, tags=[], galaxy_tags=[])
+    if res:
+        return res
+
+    res_dict['tags'] = tags + galaxy_tags
+    res_dict['id'] = item_id
+    res_dict['type'] = item_type
+    return (res_dict, 200)
+
+def add_obj_tag(object_type, object_id, tag, obj_date=None):
     if object_type=="item": # # TODO: # FIXME: # REVIEW: rename me !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if obj_date is None:
+            raise ValueError("obj_date is None")
+
         # add tag
         r_serv_metadata.sadd('tag:{}'.format(object_id), tag)
         r_serv_tags.sadd('{}:{}'.format(tag, obj_date), object_id)
 
         # add domain tag
-        if Item.is_crawled(object_id) and tag!='infoleak:submission="crawler"':
+        if Item.is_crawled(object_id) and tag!='infoleak:submission="crawler"' and tag != 'infoleak:submission="manual"':
             domain = Item.get_item_domain(object_id)
             add_tag("domain", tag, domain)
     else:
         r_serv_metadata.sadd('tag:{}'.format(object_id), tag)
         r_serv_tags.sadd('{}:{}'.format(object_type, tag), object_id)
 
-def add_tag(object_type, tag, object_id):
+def add_tag(object_type, tag, object_id, obj_date=None):
     # new tag
     if not is_obj_tagged(object_id, tag):
         # # TODO: # FIXME: sanityze object_type
-        obj_date = get_obj_date(object_type, object_id)
+        if not obj_date:
+            obj_date = get_obj_date(object_type, object_id)
         add_global_tag(tag, object_type=object_type)
-        add_obj_tag(object_type, object_id, tag, obj_date)
+        add_obj_tag(object_type, object_id, tag, obj_date=obj_date)
         update_tag_metadata(tag, obj_date)
 
     # create tags stats  # # TODO:  put me in cache
@@ -484,15 +384,42 @@ def delete_obj_tag(object_type, object_id, tag, obj_date):
         r_serv_metadata.srem('tag:{}'.format(object_id), tag)
         r_serv_tags.srem('{}:{}'.format(object_type, tag), object_id)
 
-def delete_tag(object_type, tag, object_id):
+def delete_tag(object_type, tag, object_id, obj_date=None):
     # tag exist
     if is_obj_tagged(object_id, tag):
-        obj_date = get_obj_date(object_type, object_id)
+        if not obj_date:
+            obj_date = get_obj_date(object_type, object_id)
         delete_obj_tag(object_type, object_id, tag, obj_date)
         update_tag_metadata(tag, obj_date, object_type=object_type, add_tag=False)
+        update_tag_global_by_obj_type(object_type, tag)
 
+    else:
+        return ({'status': 'error', 'reason': 'object id or tag not found', 'value': tag}, 400)
 
-def get_obj_date(object_type, object_id): # # TODO: move me in another file + REVIEW
+# API QUERY
+def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
+    if not object_id:
+        return ({'status': 'error', 'reason': 'object id not found'}, 404)
+    if not tags:
+        return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
+
+    res = delete_obj_tags(object_id, object_type, tags=[])
+    if res:
+        return res
+
+    dict_res = {}
+    dict_res['tags'] = tags
+    dict_res['id'] = object_id
+    return (dict_res, 200)
+
+def delete_obj_tags(object_id, object_type, tags=[]):
+    obj_date = get_obj_date(object_type, object_id)
+    for tag in tags:
+        res = delete_tag(object_type, tag, object_id, obj_date=obj_date)
+        if res:
+            return res
+
+def get_obj_date(object_type, object_id): # # TODO: move me in another file
     if object_type == "item":
         return Item.get_item_date(object_id)
     else:

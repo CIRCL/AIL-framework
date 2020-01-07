@@ -23,6 +23,9 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
+def get_all_objects():
+    return ['domain', 'paste', 'pgp', 'cryptocurrency', 'decoded', 'screenshot']
+
 def get_all_correlation_names():
     '''
     Return a list of all available correlations

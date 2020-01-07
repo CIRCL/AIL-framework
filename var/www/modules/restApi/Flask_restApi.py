@@ -246,11 +246,11 @@ def add_item_tags():
     if not data:
         return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
 
-    item_id = data.get('id', None)
+    object_id = data.get('id', None)
     tags = data.get('tags', [])
     galaxy = data.get('galaxy', [])
 
-    res = Tag.add_items_tag(tags, galaxy, item_id)
+    res = Tag.api_add_obj_tags(tags=tags, galaxy_tags=galaxy, object_id=object_id, object_type="item")
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -275,10 +275,10 @@ def delete_item_tags():
     if not data:
         return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
 
-    item_id = data.get('id', None)
+    object_id = data.get('id', None)
     tags = data.get('tags', [])
 
-    res = Tag.remove_item_tags(tags, item_id)
+    res = Tag.api_delete_obj_tags(tags=tags, object_id=object_id, object_type="item")
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
