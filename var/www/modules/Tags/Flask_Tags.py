@@ -369,9 +369,8 @@ def get_tags_galaxy():
 @Tags.route("/Tags/remove_tag")
 @login_required
 @login_analyst
-def remove_tag():
+def remove_tag(): #TODO remove me , used by showpaste 
 
-    #TODO verify input
     path = request.args.get('paste')
     tag = request.args.get('tag')
 

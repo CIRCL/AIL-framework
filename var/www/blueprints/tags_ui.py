@@ -43,28 +43,6 @@ tags_ui = Blueprint('tags_ui', __name__, template_folder=os.path.join(os.environ
 
 
 # ============= ROUTES ==============
-# @Tags.route("/Tags/addTags") # REVIEW: # used in showPaste
-# @login_required
-# @login_analyst
-# def addTags():
-#
-#     tags = request.args.get('tags')
-#     tagsgalaxies = request.args.get('tagsgalaxies')
-#     path = request.args.get('path')
-#
-#     list_tag = tags.split(',')
-#     list_tag_galaxies = tagsgalaxies.split(',')
-#
-#     res = Tag.add_items_tags(list_tag, list_tag_galaxies, item_id=path)
-#     print(res)
-#     # error
-#     if res[1] != 200:
-#         return str(res[0])
-#     # success
-#     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
-
-
-
 @tags_ui.route('/tag/add_tags')
 @login_required
 @login_analyst
@@ -72,8 +50,8 @@ def add_tags():
 
     tags = request.args.get('tags')
     tagsgalaxies = request.args.get('tagsgalaxies')
-    object_id = request.args.get('object_id') # old: item_id
-    object_type = request.args.get('object_type') # old type
+    object_id = request.args.get('object_id')
+    object_type = request.args.get('object_type')
 
     list_tag = tags.split(',')
     list_tag_galaxies = tagsgalaxies.split(',')
@@ -85,7 +63,19 @@ def add_tags():
 
     return redirect(Correlate_object.get_item_url(object_type, object_id))
 
+@tags_ui.route('/tag/delete_tag')
+@login_required
+@login_analyst
+def delete_tag():
 
+    object_type = request.args.get('object_type')
+    object_id = request.args.get('object_id')
+    tag = request.args.get('tag')
+
+    res = Tag.api_delete_obj_tags(tags=[tag], object_id=object_id, object_type=object_type)
+    if res[1] != 200:
+        return str(res[0])
+    return redirect(Correlate_object.get_item_url(object_type, object_id))
 
 # # add route : /crawlers/show_domain
 # @tags_ui.route('/tags/search/domain')

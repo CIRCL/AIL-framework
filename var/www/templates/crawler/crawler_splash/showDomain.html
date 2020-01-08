@@ -79,10 +79,13 @@
 								</table>
 
 								<div>
+                  {% include 'modals/edit_tag.html' %}
 									{% for tag in dict_domain['tags'] %}
-									<a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
-										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-									</a>
+  									<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
+                    data-tagid="{{ tag }}" data-objtype="domain" data-objid="{{ dict_domain['domain'] }}">
+                      {{ tag }}
+                    </button>
+
 									{%  endfor %}
 									<br>
                   {% include 'modals/add_tags.html' %}

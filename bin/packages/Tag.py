@@ -64,6 +64,12 @@ def get_active_taxonomies():
 def get_active_galaxies():
     return r_serv_tags.smembers('active_galaxies')
 
+def get_all_taxonomies_tags(): # # TODO: add + REMOVE + Update
+    return r_serv_tags.smembers('active_taxonomies_tags')
+
+def get_all_galaxies_tags(): # # TODO: add + REMOVE + Update
+    return r_serv_tags.smembers('active_galaxies_tags')
+
 def is_taxonomie_tag_enabled(taxonomie, tag):
     if tag in r_serv_tags.smembers('active_tag_' + taxonomie):
         return True
@@ -94,6 +100,7 @@ def enable_taxonomy(taxonomie, enable_tags=True):
             # activate taxonomie tags
             for tag in taxonomie_info.machinetags():
                 r_serv_tags.sadd('active_tag_{}'.format(taxonomie), tag)
+                #r_serv_tags.sadd('active_taxonomies_tags', tag)
         else:
             print('Error: {}, please update pytaxonomies'.format(taxonomie))
 
