@@ -201,7 +201,7 @@ Sentiment analysis
 Terms tracker
 ---------------------------
 
-![Term-tracker](./doc/screenshots/terms-tracker.png?raw=true "AIL framework termManager")
+![Term-tracker](./doc/screenshots/term-tracker.png?raw=true "AIL framework termManager")
 
 
 [AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
