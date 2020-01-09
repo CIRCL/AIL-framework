@@ -86,11 +86,31 @@ if __name__ == "__main__":
         update_file = os.path.join(os.environ['AIL_HOME'], 'update', new_version, 'Update_screenshots.py')
         process = subprocess.run(['python' ,update_file])
 
-        update_progress = r_serv_db.get('ail:current_background_script_stat')
+        update_progress = r_serv.get('ail:current_background_script_stat')
         if update_progress:
             if int(update_progress) == 100:
                 r_serv.delete('ail:update_in_progress')
                 r_serv.delete('ail:current_background_script')
                 r_serv.delete('ail:current_background_script_stat')
                 r_serv.delete('ail:current_background_update')
-                r_serv_db.srem('ail:to_update', new_version)
+                r_serv.srem('ail:to_update', new_version)
+
+    elif r_serv.sismember('ail:to_update', 'v2.7'):
+        new_version = 'v2.7'
+        r_serv.delete('ail:update_error')
+        r_serv.delete('ail:current_background_script_stat')
+        r_serv.set('ail:update_in_progress', new_version)
+        r_serv.set('ail:current_background_update', new_version)
+        r_serv.set('ail:current_background_script', 'domain tags update')
+
+        update_file = os.path.join(os.environ['AIL_HOME'], 'update', new_version, 'Update_domain_tags.py')
+        process = subprocess.run(['python' ,update_file])
+
+        update_progress = r_serv.get('ail:current_background_script_stat')
+        if update_progress:
+            if int(update_progress) == 100:
+                r_serv.delete('ail:update_in_progress')
+                r_serv.delete('ail:current_background_script')
+                r_serv.delete('ail:current_background_script_stat')
+                r_serv.delete('ail:current_background_update')
+                r_serv.srem('ail:to_update', new_version)
