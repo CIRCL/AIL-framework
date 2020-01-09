@@ -150,105 +150,106 @@ def save_tag_to_auto_push(list_tag):
 
 # ============ ROUTES ============
 
+ # TODO: remove + clean
 
-@terms.route("/terms_plot_tool/")
-@login_required
-@login_read_only
-def terms_plot_tool():
-    term =  request.args.get('term')
-    if term is not None:
-        return render_template("terms_plot_tool.html", term=term)
-    else:
-        return render_template("terms_plot_tool.html", term="")
+# @terms.route("/terms_plot_tool/")
+# @login_required
+# @login_read_only
+# def terms_plot_tool():
+#     term =  request.args.get('term')
+#     if term is not None:
+#         return render_template("terms_plot_tool.html", term=term)
+#     else:
+#         return render_template("terms_plot_tool.html", term="")
+#
+#
+# @terms.route("/terms_plot_tool_data/")
+# @login_required
+# @login_read_only
+# def terms_plot_tool_data():
+#     oneDay = 60*60*24
+#     range_start =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_start')))) if request.args.get('range_start') is not None else 0;
+#     range_start = range_start.replace(hour=0, minute=0, second=0, microsecond=0)
+#     range_start = calendar.timegm(range_start.timetuple())
+#     range_end =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_end')))) if request.args.get('range_end') is not None else 0;
+#     range_end = range_end.replace(hour=0, minute=0, second=0, microsecond=0)
+#     range_end = calendar.timegm(range_end.timetuple())
+#     term =  request.args.get('term')
+#
+#     per_paste = request.args.get('per_paste')
+#     if per_paste == "1" or per_paste is None:
+#         per_paste = "per_paste_"
+#     else:
+#         per_paste = ""
+#
+#     if term is None:
+#         return "None"
+#
+#     else:
+#         value_range = []
+#         for timestamp in range(range_start, range_end+oneDay, oneDay):
+#             value = r_serv_term.hget(per_paste+str(timestamp), term)
+#             curr_value_range = int(value) if value is not None else 0
+#             value_range.append([timestamp, curr_value_range])
+#         value_range.insert(0,term)
+#         return jsonify(value_range)
+#
 
-
-@terms.route("/terms_plot_tool_data/")
-@login_required
-@login_read_only
-def terms_plot_tool_data():
-    oneDay = 60*60*24
-    range_start =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_start')))) if request.args.get('range_start') is not None else 0;
-    range_start = range_start.replace(hour=0, minute=0, second=0, microsecond=0)
-    range_start = calendar.timegm(range_start.timetuple())
-    range_end =  datetime.datetime.utcfromtimestamp(int(float(request.args.get('range_end')))) if request.args.get('range_end') is not None else 0;
-    range_end = range_end.replace(hour=0, minute=0, second=0, microsecond=0)
-    range_end = calendar.timegm(range_end.timetuple())
-    term =  request.args.get('term')
-
-    per_paste = request.args.get('per_paste')
-    if per_paste == "1" or per_paste is None:
-        per_paste = "per_paste_"
-    else:
-        per_paste = ""
-
-    if term is None:
-        return "None"
-
-    else:
-        value_range = []
-        for timestamp in range(range_start, range_end+oneDay, oneDay):
-            value = r_serv_term.hget(per_paste+str(timestamp), term)
-            curr_value_range = int(value) if value is not None else 0
-            value_range.append([timestamp, curr_value_range])
-        value_range.insert(0,term)
-        return jsonify(value_range)
-
-
-@terms.route("/terms_plot_top/")
-@login_required
-@login_read_only
-def terms_plot_top():
-    per_paste = request.args.get('per_paste')
-    per_paste = per_paste if per_paste is not None else 1
-    return render_template("terms_plot_top.html", per_paste=per_paste)
-
-
-@terms.route("/terms_plot_top_data/")
-@login_required
-@login_read_only
-def terms_plot_top_data():
-    oneDay = 60*60*24
-    today = datetime.datetime.now()
-    today = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_timestamp = calendar.timegm(today.timetuple())
-
-    per_paste = request.args.get('per_paste')
-    if per_paste == "1" or per_paste is None:
-        per_paste = "per_paste_"
-    else:
-        per_paste = ""
-
-    set_day = per_paste + "TopTermFreq_set_day_" + str(today_timestamp)
-    set_week = per_paste + "TopTermFreq_set_week";
-    set_month = per_paste + "TopTermFreq_set_month";
-
-    the_set = per_paste + request.args.get('set')
-    num_day = int(request.args.get('num_day'))
-
-    if the_set is None:
-        return "None"
-    else:
-        to_return = []
-        if "TopTermFreq_set_day" in the_set:
-            the_set += "_" + str(today_timestamp)
-
-        for term, tot_value in r_serv_term.zrevrangebyscore(the_set, '+inf', '-inf', withscores=True, start=0, num=20):
-            position = {}
-            position['day'] = r_serv_term.zrevrank(set_day, term)
-            position['day'] = position['day']+1 if position['day'] is not None else "<20"
-            position['week'] = r_serv_term.zrevrank(set_week, term)
-            position['week'] = position['week']+1 if position['week'] is not None else "<20"
-            position['month'] = r_serv_term.zrevrank(set_month, term)
-            position['month'] = position['month']+1 if position['month'] is not None else "<20"
-            value_range = []
-            for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
-                value = r_serv_term.hget(per_paste+str(timestamp), term)
-                curr_value_range = int(value) if value is not None else 0
-                value_range.append([timestamp, curr_value_range])
-
-            to_return.append([term, value_range, tot_value, position])
-
-        return jsonify(to_return)
+# @terms.route("/terms_plot_top/"
+# @login_required
+# @login_read_only
+# def terms_plot_top():
+#     per_paste = request.args.get('per_paste')
+#     per_paste = per_paste if per_paste is not None else 1
+#     return render_template("terms_plot_top.html", per_paste=per_paste)
+# 
+#
+# @terms.route("/terms_plot_top_data/")
+# @login_required
+# @login_read_only
+# def terms_plot_top_data():
+#     oneDay = 60*60*24
+#     today = datetime.datetime.now()
+#     today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+#     today_timestamp = calendar.timegm(today.timetuple())
+#
+#     per_paste = request.args.get('per_paste')
+#     if per_paste == "1" or per_paste is None:
+#         per_paste = "per_paste_"
+#     else:
+#         per_paste = ""
+#
+#     set_day = per_paste + "TopTermFreq_set_day_" + str(today_timestamp)
+#     set_week = per_paste + "TopTermFreq_set_week";
+#     set_month = per_paste + "TopTermFreq_set_month";
+#
+#     the_set = per_paste + request.args.get('set')
+#     num_day = int(request.args.get('num_day'))
+#
+#     if the_set is None:
+#         return "None"
+#     else:
+#         to_return = []
+#         if "TopTermFreq_set_day" in the_set:
+#             the_set += "_" + str(today_timestamp)
+#
+#         for term, tot_value in r_serv_term.zrevrangebyscore(the_set, '+inf', '-inf', withscores=True, start=0, num=20):
+#             position = {}
+#             position['day'] = r_serv_term.zrevrank(set_day, term)
+#             position['day'] = position['day']+1 if position['day'] is not None else "<20"
+#             position['week'] = r_serv_term.zrevrank(set_week, term)
+#             position['week'] = position['week']+1 if position['week'] is not None else "<20"
+#             position['month'] = r_serv_term.zrevrank(set_month, term)
+#             position['month'] = position['month']+1 if position['month'] is not None else "<20"
+#             value_range = []
+#             for timestamp in range(today_timestamp, today_timestamp - num_day*oneDay, -oneDay):
+#                 value = r_serv_term.hget(per_paste+str(timestamp), term)
+#                 curr_value_range = int(value) if value is not None else 0
+#                 value_range.append([timestamp, curr_value_range])
+#
+#             to_return.append([term, value_range, tot_value, position])
+#
+#         return jsonify(to_return)
 
 
 @terms.route("/credentials_tracker/")
