@@ -90,7 +90,7 @@ The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu 
 
 There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
 
-Requirement: 
+Requirement:
 - Python 3.5+
 
 Installation Notes
@@ -165,7 +165,6 @@ Tor hidden service crawler
 Trending charts
 ---------------
 
-![Trending-Web](./doc/screenshots/trending-web.png?raw=true "AIL framework webtrending")
 ![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
 
 Extracted encoded files from pastes
@@ -199,15 +198,10 @@ Sentiment analysis
 
 ![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
 
-Terms manager and occurence
+Terms tracker
 ---------------------------
 
-![Term-Manager](./doc/screenshots/terms-manager.png?raw=true "AIL framework termManager")
-
-### Top terms
-
-![Term-Top](./doc/screenshots/terms-top.png?raw=true "AIL framework termTop")
-![Term-Plot](./doc/screenshots/terms-plot.png?raw=true "AIL framework termPlot")
+![Term-tracker](./doc/screenshots/terms-tracker.png?raw=true "AIL framework termManager")
 
 
 [AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
@@ -241,4 +235,3 @@ License
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
-
