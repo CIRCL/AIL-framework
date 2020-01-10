@@ -200,6 +200,20 @@ def get_tag_metadata(tag, r_int=False):
     tag_metadata['last_seen'] = get_tag_last_seen(tag)
     return tag_metadata
 
+def get_tags_min_last_seen(l_tags, r_int=False):
+    '''
+    Get max last seen from a list of tags (current: item only)
+    '''
+    min_last_seen = 99999999
+    for tag in l_tags:
+        last_seen = get_tag_last_seen(tag, r_int=True)
+        if last_seen < min_last_seen:
+                min_last_seen = last_seen
+    if r_int:
+        return min_last_seen
+    else:
+        return str(min_last_seen)
+
 def is_obj_tagged(object_id, tag):
     '''
     Check if a object is tagged
@@ -430,6 +444,106 @@ def delete_obj_tags(object_id, object_type, tags=[]):
         res = delete_tag(object_type, tag, object_id, obj_date=obj_date)
         if res:
             return res
+
+def sanitise_tags_date_range(l_tags, date_from=None, date_to=None):
+    if date_from and date_to is None:
+        date_from = get_tags_min_last_seen(l_tags, r_int=False)
+        date_to = date_from
+    return Date.sanitise_date_range(date_from, date_to)
+
+
+# # TODO: verify tags + object_type
+# get set_keys: intersection
+def get_obj_keys_by_tags(object_type, l_tags, date_day=None):
+    l_set_keys = []
+    if object_type=='item':
+        for tag in l_tags:
+            l_set_keys.append('{}:{}'.format(tag, date_day))
+    else:
+        for tag in l_tags:
+            l_set_keys.append('{}:{}'.format(object_type, tag))
+    return l_set_keys
+
+def get_obj_by_tag(key_tag):
+    return r_serv_tags.smembers(key_tag)
+
+def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50, page=1): # remove old object
+    # with daterange
+    l_tagged_obj = []
+    if object_type=='item':
+        #sanityze date
+        date_range = sanitise_tags_date_range(l_tags, date_from=date_from, date_to=date_to)
+        l_dates = Date.substract_date(date_from, date_to)
+
+        for date_day in l_dates:
+            l_set_keys = get_obj_keys_by_tags(object_type, l_tags, date_day)
+            # if len(l_set_keys) > nb_obj:
+            #     return l_tagged_obj
+            if len(l_set_keys) < 2:
+                date_day_obj = get_obj_by_tag(l_set_keys[0])
+            else:
+                date_day_obj = r_serv_tags.sinter(l_set_keys[0], *l_set_keys[1:])
+
+            # next_nb_start = len(l_tagged_obj) + len(date_day_obj) - nb_obj
+            # if next_nb_start > 0:
+            #  get + filter nb_start
+            l_tagged_obj.extend( date_day_obj )
+
+        # handle pagination
+        nb_pages = len(l_tagged_obj) / nb_obj
+        if not nb_pages.is_integer():
+            nb_pages = int(nb_pages)+1
+        else:
+            nb_pages = int(nb_pages)
+        if page > nb_pages:
+            page = nb_pages
+
+        # select index
+        start = nb_obj*(page -1)
+        stop = (nb_obj*page) -1
+        l_tagged_obj = l_tagged_obj[start:stop]
+
+        return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages}
+
+    # without daterange
+    else:
+        l_set_keys = get_obj_keys_by_tags(object_type, l_tags)
+        if len(l_set_keys) < 2:
+            l_tagged_obj = get_obj_by_tag(l_set_keys[0])
+        else:
+            l_tagged_obj = r_serv_tags.sinter(l_set_keys[0], *l_set_keys[1:])
+
+        if not l_tagged_obj:
+            return {"tagged_obj":l_tagged_obj, "page":0, "nb_pages":0}
+
+        # handle pagination
+        nb_pages = len(l_tagged_obj) / nb_obj
+        if not nb_pages.is_integer():
+            nb_pages = int(nb_pages)+1
+        else:
+            nb_pages = int(nb_pages)
+        if page > nb_pages:
+            page = nb_pages
+
+        # multiple pages
+        if nb_pages > 1:
+            start = nb_obj*(page -1)
+            stop = (nb_obj*page) -1
+            current_index = 0
+            l_obj = []
+            for elem in l_tagged_obj:
+                if current_index > stop:
+                    break
+                if start <= current_index and stop >= current_index:
+                    l_obj.append(elem)
+                current_index += 1
+            l_tagged_obj = l_obj
+        # only one page
+        else:
+            l_tagged_obj = list(l_tagged_obj)
+
+        return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages}
+
 
 def get_obj_date(object_type, object_id): # # TODO: move me in another file
     if object_type == "item":

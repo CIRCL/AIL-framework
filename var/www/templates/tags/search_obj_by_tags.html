@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Tags - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<!-- Modal -->
+  <div id="mymodal" class="modal fade" role="dialog">
+   <div class="modal-dialog modal-lg">
+
+     <!-- Modal content-->
+     <div id="mymodalcontent" class="modal-content">
+       <div id="mymodalbody" class="modal-body" max-width="850px">
+         <p>Loading paste information...</p>
+         <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
+       </div>
+       <div class="modal-footer">
+         <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
+         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+       </div>
+     </div>
+   </div>
+  </div>
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'tags/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				{% include 'tags/block_obj_tags_search.html' %}
+
+				<div>
+					{%if dict_tagged%}
+						<table class="table table-bordered table-hover" id="myTable_">
+				      <thead class="thead-dark">
+				        <tr>
+                  {%if dict_tagged["object_type"]=="domain"%}
+  				          <th>first seen</th>
+  				          <th>last check</th>
+                    <th style="max-width: 800px;">Domain</th>
+  				          <th>status</th>
+                  {%endif%}
+				        </tr>
+				      </thead>
+				      <tbody>
+
+                {%if dict_tagged["object_type"]=="domain"%}
+
+  				        {% for dict_obj in dict_tagged["tagged_obj"] %}
+  				          <tr>
+                      <td class="pb-0">{{ dict_obj['first_seen'] }}</td>
+                      <td class="pb-0">{{ dict_obj['last_check'] }}</td>
+  										<td class="pb-0">
+                        <a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{dict_obj['id']}}" class="text-secondary">
+                          <div style="line-height:0.9;">{{ dict_obj['id'] }}</div>
+                        </a>
+                        <div class="mb-2">
+  				                {% for tag in dict_obj['tags'] %}
+    				                <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+    				                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+    				                </a>
+  				                {%  endfor %}
+  				              </div>
+                      </td>
+  				            <td class="pb-0">
+                        {%if dict_obj['status'] %}
+      										<div style="color:Green;">
+      											<i class="fas fa-check-circle"></i>
+      											UP
+      										</div>
+      									{% else %}
+      										<div style="color:Red;">
+      											<i class="fas fa-times-circle"></i>
+      											DOWN
+      										</div>
+      									{% endif %}
+  										</td>
+  				          </tr>
+  				        {%  endfor %}
+
+                {%  endif %}
+
+				      </tbody>
+				    </table>
+
+					{%endif%}
+				</div>
+
+    	</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+var ltags;
+var search_table;
+
+$(document).ready(function(){
+	//search_table = $('#myTable_').DataTable({ "order": [[ 0, "asc" ]] });
+  $('#myTable_').DataTable({ "order": [[ 0, "asc" ]] });
+
+});
+</script>
+
+<script>
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+
+</html>

@@ -1,0 +1,101 @@
+<div class="card mb-3 mt-1">
+	<div class="card-header text-white bg-dark">
+		<h5 class="card-title">Search Domain by Tags :</h5>
+	</div>
+		<div class="card-body">
+
+			<!-- <div class="row mb-3">                      TODO: use condition
+				<div class="col-md-6">
+					<div class="input-group" id="date-range-from">
+						<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+						<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from" autocomplete="off">
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="input-group" id="date-range-to">
+						<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+						<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to" autocomplete="off">
+					</div>
+				</div>
+			</div> -->
+
+			<div class="input-group mb-3">
+			  <div class="input-group-prepend">
+					<button class="btn btn-outline-danger" type="button" id="button-clear-tags" style="z-index: 1;" onclick="emptyTags()">
+						<i class="fas fa-eraser"></i>
+					</button>
+			  </div>
+				<input id="ltags" name="ltags" type="text" class="form-control" aria-describedby="button-clear-tags" autocomplete="off">
+			</div>
+
+			<button class="btn btn-primary" type="button" id="button-search-tags" onclick="searchTags()">
+				<i class="fas fa-search"></i> Search Domains
+			</button>
+
+			</div>
+	</div>
+
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+<script>
+  var ltags;
+  $.getJSON("{{ url_for('tags_ui.get_all_obj_tags') }}?object_type={{dict_tagged['object_type']}}",
+    function(data) {
+      ltags = $('#ltags').tagSuggest({
+        data: data,
+				value: [{%if "current_tags" in dict_tagged%}{% for tag in dict_tagged['current_tags'] %}'{{tag|safe}}',{%endfor%}{%endif%}],
+        sortOrder: 'name',
+        maxDropHeight: 200,
+        name: 'ltags'
+      });
+  });
+
+  function searchTags() {
+  	var data = ltags.getValue();
+  	//var date_from = $('#date-range-from-input').val();
+  	//var date_to =$('#date-range-to-input').val();
+		//parameter = parameter + "&date_from="+date_from+"&date_to="+date_to
+  	window.location.replace("{{ url_for('tags_ui.get_obj_by_tags') }}?ltags=" + data + "&object_type={{dict_tagged['object_type']}}&page={{dict_tagged['page']}}");
+  }
+  function emptyTags() {
+  	ltags.clear();
+  }
+
+	// $('#date-range-from').dateRangePicker({
+	// 			separator : ' to ',
+	// 			getValue: function(){
+	// 					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+	// 							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+	// 					else
+	// 							return '';
+	// 					},
+	// 					setValue: function(s,s1,s2){
+	// 							$('#date-range-from-input').val(s1);
+	// 							$('#date-range-to-input').val(s2);
+	// 					}
+	// });
+	// $('#date-range-to').dateRangePicker({
+	// 		separator : ' to ',
+	// 		getValue: function(){
+	// 				if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+	// 						return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+	// 				else
+	// 						return '';
+	// 		},
+	// 		setValue: function(s,s1,s2){
+	// 				$('#date-range-from-input').val(s1);
+	// 				$('#date-range-to-input').val(s2);
+	// 		}
+	// });
+
+// tagid + objtype + objid
+// $('#edit_tags_modal').on('show.bs.modal', function (event) {
+//     var button = $(event.relatedTarget);
+//     var tagid = button.data('tagid')
+//     var objtype = button.data('objtype')
+//     var objid = button.data('objid')
+//     var modal = $(this)
+//     modal.find('#modal_tag_edit_tag_id').text(tagid)
+//     modal.find('#modal_tag_edit_delete_tag').prop("href", "{{ url_for('tags_ui.delete_tag') }}?object_type="+ objtype +"&object_id="+ objid +"&tag="+ tagid)
+//   })
+</script>
