@@ -58,7 +58,7 @@
                       <td class="pb-0">{{ dict_obj['first_seen'] }}</td>
                       <td class="pb-0">{{ dict_obj['last_check'] }}</td>
   										<td class="pb-0">
-                        <a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{dict_obj['id']}}" class="text-secondary">
+                        <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_obj['id']}}" class="text-secondary">
                           <div style="line-height:0.9;">{{ dict_obj['id'] }}</div>
                         </a>
                         <div class="mb-2">
@@ -113,7 +113,7 @@ var search_table;
 $(document).ready(function(){
   $("#nav_tags_search").removeClass("text-muted");
 	$("#nav_tags_search_{{dict_tagged['object_type']}}").addClass("active");
-  $('#myTable_').DataTable({ "order": [[ 0, "asc" ]] });
+  $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 10, "order": [[ 0, "asc" ]] });
 
 });
 </script>
