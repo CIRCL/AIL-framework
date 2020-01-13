@@ -163,29 +163,3 @@ def get_obj_by_tags():
         dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
 
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
-
-# # add route : /crawlers/show_domain
-# @tags_ui.route('/tags/search/domain')
-# @login_required
-# @login_analyst
-# def showDomain():
-#     date_from = request.args.get('date_from')
-#     date_to = request.args.get('date_to')
-#     tags = request.args.get('ltags')
-#
-#     print(date_from)
-#     print(date_to)
-#
-#     dates = Date.sanitise_date_range(date_from, date_to)
-#
-#     if tags is None:
-#         return 'tags_none'
-#         #return render_template("Tags.html", date_from=dates['date_from'], date_to=dates['date_to'])
-#     else:
-#         tags = Tag.unpack_str_tags_list(tags)
-#
-#
-#
-#
-#     return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
-#                                 tag_type="domain"))
