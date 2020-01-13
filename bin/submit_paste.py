@@ -16,6 +16,9 @@ import sflock
 from Helper import Process
 from pubsublogger import publisher
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Tag
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
@@ -50,10 +53,10 @@ def create_paste(uuid, paste_content, ltags, ltagsgalaxies, name):
 
     # add tags
     for tag in ltags:
-        add_item_tag(tag, rel_item_path)
+        Tag.add_tag('item', tag, rel_item_path)
 
     for tag in ltagsgalaxies:
-        add_item_tag(tag, rel_item_path)
+        Tag.add_tag('item', tag, rel_item_path)
 
     r_serv_log_submit.incr(uuid + ':nb_end')
     r_serv_log_submit.incr(uuid + ':nb_sucess')
@@ -107,37 +110,6 @@ def remove_submit_uuid(uuid):
 def get_item_date(item_filename):
     l_directory = item_filename.split('/')
     return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
-
-def add_item_tag(tag, item_path):
-    item_date = int(get_item_date(item_path))
-
-    #add tag
-    r_serv_metadata.sadd('tag:{}'.format(item_path), tag)
-    r_serv_tags.sadd('{}:{}'.format(tag, item_date), item_path)
-
-    r_serv_tags.hincrby('daily_tags:{}'.format(item_date), tag, 1)
-
-    tag_first_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
-    if tag_first_seen is None:
-        tag_first_seen = 99999999
-    else:
-        tag_first_seen = int(tag_first_seen)
-    tag_last_seen = r_serv_tags.hget('tag_metadata:{}'.format(tag), 'last_seen')
-    if tag_last_seen is None:
-        tag_last_seen = 0
-    else:
-        tag_last_seen = int(tag_last_seen)
-
-    #add new tag in list of all used tags
-    r_serv_tags.sadd('list_tags', tag)
-
-    # update fisrt_seen/last_seen
-    if item_date < tag_first_seen:
-        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'first_seen', item_date)
-
-    # update metadata last_seen
-    if item_date > tag_last_seen:
-        r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', item_date)
 
 def verify_extention_filename(filename):
     if not '.' in filename:

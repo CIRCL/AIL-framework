@@ -23,6 +23,15 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
+def is_valid_object_type(object_type):
+    if object_type in ['domain', 'item', 'image']:
+        return True
+    else:
+        return False
+
+def get_all_objects():
+    return ['domain', 'paste', 'pgp', 'cryptocurrency', 'decoded', 'screenshot']
+
 def get_all_correlation_names():
     '''
     Return a list of all available correlations
@@ -178,10 +187,20 @@ def get_item_url(correlation_name, value, correlation_type=None):
     elif correlation_name == 'domain':
         endpoint = 'crawler_splash.showDomain'
         url = url_for(endpoint, domain=value)
-    elif correlation_name == 'paste':
+    elif correlation_name == 'item':
+        endpoint = 'showsavedpastes.showsavedpaste'
+        url = url_for(endpoint, paste=value)
+    elif correlation_name == 'paste':                   ### # TODO:  remove me
         endpoint = 'showsavedpastes.showsavedpaste'
         url = url_for(endpoint, paste=value)
     return url
+
+def get_obj_tag_table_keys(object_type):
+    '''
+    Warning: use only in flask (dynamic templates)
+    '''
+    if object_type=="domain":
+        return ['id', 'first_seen', 'last_check', 'status'] # # TODO: add root screenshot
 
 
 def create_graph_links(links_set):
@@ -310,6 +329,7 @@ def get_graph_node_object_correlation(object_type, root_value, mode, correlation
 
 
 ######## API EXPOSED ########
-
-
+def sanitize_object_type(object_type):
+    if not is_valid_object_type(object_type):
+        return ({'status': 'error', 'reason': 'Incorrect object_type'}, 400)
 ########  ########

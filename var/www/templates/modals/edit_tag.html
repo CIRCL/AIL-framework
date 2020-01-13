@@ -1,0 +1,49 @@
+<div id="edit_tags_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog modal-lg">
+
+    <div id="add_tags_modal_content" class="modal-content">
+      <div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
+        <h4>Edit Tag</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body text-center">
+        <h2><span class="badge badge-warning" id="modal_tag_edit_tag_id">Warning</span></h2>
+      </div>
+
+      <div class="modal-footer">
+
+        <!-- <a href="{{ url_for('Tags.tag_validation') }}?object_id=rrrrr&tag=eeeeee&status=tp" class="btn btn-outline-success mr-0" data-toggle="tooltip" title="Good Detection">
+          <i class="fas fa-thumbs-up"></i>
+        </a>
+        <a href="{{ url_for('Tags.tag_validation') }}?object_id=rrrrr&tag=eeeeee&status=fp" class="btn btn-outline-danger mr-auto" data-toggle="tooltip" title="Bad Detection">
+          <i class="fas fa-thumbs-down"></i>
+        </a>
+
+        <a href="{{ url_for('Tags.confirm_tag') }}?object_id=rrrrr&tag=eeeeee" class="btn btn-primary">
+          <i class="fas fa-check"></i> Confirm this Tag
+        </a> -->
+
+        <a href="#" class="btn btn-danger" id="modal_tag_edit_delete_tag">
+          <i class="fas fa-trash-alt"></i> Delete this Tag
+        </a>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// tagid + objtype + objid
+$('#edit_tags_modal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var tagid = button.data('tagid')
+    var objtype = button.data('objtype')
+    var objid = button.data('objid')
+    var modal = $(this)
+    modal.find('#modal_tag_edit_tag_id').text(tagid)
+    modal.find('#modal_tag_edit_delete_tag').prop("href", "{{ url_for('tags_ui.delete_tag') }}?object_type="+ objtype +"&object_id="+ objid +"&tag="+ tagid)
+  })
+</script>

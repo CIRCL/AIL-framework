@@ -369,15 +369,14 @@ def get_tags_galaxy():
 @Tags.route("/Tags/remove_tag")
 @login_required
 @login_analyst
-def remove_tag():
+def remove_tag(): #TODO remove me , used by showpaste 
 
-    #TODO verify input
     path = request.args.get('paste')
     tag = request.args.get('tag')
 
-    res = Tag.remove_item_tag(tag, path)
+    res = Tag.api_delete_obj_tags(tags=[tag], object_id=path, object_type="item")
     if res[1] != 200:
-        str(res[0])
+        return str(res[0])
     return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
 @Tags.route("/Tags/confirm_tag")
@@ -390,11 +389,11 @@ def confirm_tag():
     tag = request.args.get('tag')
 
     if(tag[9:28] == 'automatic-detection'):
-        Tag.remove_item_tag(tag, path)
+        Tag.api_delete_obj_tags(tags=[tag], object_id=path, object_type="item")
 
         tag = tag.replace('automatic-detection','analyst-detection', 1)
         #add analyst tag
-        Tag.add_item_tag(tag, path)
+        Tag.add_tag('item', tag, path)
 
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
 
@@ -421,49 +420,6 @@ def tag_validation():
         return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
     else:
         return 'input error'
-
-@Tags.route("/Tags/addTags")
-@login_required
-@login_analyst
-def addTags():
-
-    tags = request.args.get('tags')
-    tagsgalaxies = request.args.get('tagsgalaxies')
-    path = request.args.get('path')
-
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    res = Tag.add_items_tags(list_tag, list_tag_galaxies, item_id=path)
-    print(res)
-    # error
-    if res[1] != 200:
-        return str(res[0])
-    # success
-    return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
-
-@Tags.route("/Tags/add_item_tags")
-@login_required
-@login_analyst
-def add_item_tags():
-
-    tags = request.args.get('tags')
-    tagsgalaxies = request.args.get('tagsgalaxies')
-    item_id = request.args.get('item_id')
-    item_type = request.args.get('type')
-
-    list_tag = tags.split(',')
-    list_tag_galaxies = tagsgalaxies.split(',')
-
-    res = Tag.add_items_tags(tags=list_tag, galaxy_tags=list_tag_galaxies, item_id=item_id, item_type=item_type)
-    # error
-    if res[1] != 200:
-        return str(res[0])
-    # success
-    if item_type=='domain':
-        return redirect(url_for('crawler_splash.showDomain', domain=item_id))
-    else:
-        return redirect(url_for('showsavedpastes.showsavedpaste', paste=item_id))
 
 @Tags.route("/Tags/taxonomies")
 @login_required

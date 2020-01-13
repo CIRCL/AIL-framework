@@ -292,7 +292,7 @@ def get_domain_items_crawled(domain, domain_type, port, epoch=None, items_link=F
                 if item_screenshot:
                     dict_item['screenshot'] = Item.get_item_screenshot(item)
                 if item_tag:
-                    dict_item['tags'] = Tag.get_item_tags_minimal(item)
+                    dict_item['tags'] = Tag.get_obj_tags_minimal(item)
                 item_crawled['items'].append(dict_item)
     return item_crawled
 
@@ -365,7 +365,7 @@ def get_domain_tags(domain):
 
     :param domain: crawled domain
     '''
-    return Tag.get_item_tags(domain)
+    return Tag.get_obj_tag(domain)
 
 def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False):
     '''

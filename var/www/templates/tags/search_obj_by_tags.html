@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Tags - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'tags/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+        {% with object_type=dict_tagged['object_type'], current_tags=dict_tagged['current_tags'], object_name=dict_tagged['object_name'] %}
+					{% include 'tags/block_obj_tags_search.html' %}
+				{% endwith %}
+
+				<div>
+					{%if 'tagged_obj' in dict_tagged%}
+						<table class="table table-bordered table-hover" id="myTable_">
+				      <thead class="thead-dark">
+				        <tr>
+                  {%if dict_tagged["object_type"]=="domain"%}
+  				          <th>first seen</th>
+  				          <th>last check</th>
+                    <th style="max-width: 800px;">Domain</th>
+  				          <th>status</th>
+                  {%endif%}
+				        </tr>
+				      </thead>
+				      <tbody>
+
+                {%if dict_tagged["object_type"]=="domain"%}
+
+  				        {% for dict_obj in dict_tagged["tagged_obj"] %}
+  				          <tr>
+                      <td class="pb-0">{{ dict_obj['first_seen'] }}</td>
+                      <td class="pb-0">{{ dict_obj['last_check'] }}</td>
+  										<td class="pb-0">
+                        <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_obj['id']}}" class="text-secondary">
+                          <div style="line-height:0.9;">{{ dict_obj['id'] }}</div>
+                        </a>
+                        <div class="mb-2">
+  				                {% for tag in dict_obj['tags'] %}
+    				                <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+    				                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+    				                </a>
+  				                {%  endfor %}
+  				              </div>
+                      </td>
+  				            <td class="pb-0">
+                        {%if dict_obj['status'] %}
+      										<div style="color:Green;">
+      											<i class="fas fa-check-circle"></i>
+      											UP
+      										</div>
+      									{% else %}
+      										<div style="color:Red;">
+      											<i class="fas fa-times-circle"></i>
+      											DOWN
+      										</div>
+      									{% endif %}
+  										</td>
+  				          </tr>
+  				        {% endfor %}
+
+                {% endif %}
+
+				      </tbody>
+				    </table>
+
+					{%endif%}
+				</div>
+        {%if 'tagged_obj' in dict_tagged%}
+          {% with page=dict_tagged['page'], nb_page_max=dict_tagged['nb_pages'],  nb_first_elem=dict_tagged['nb_first_elem'], nb_last_elem=dict_tagged['nb_last_elem'], nb_all_elem=dict_tagged['nb_all_elem'] %}
+            {% set object_name= dict_tagged['object_name'] %}
+            {% set target_url=url_for('tags_ui.get_obj_by_tags') + "?object_type=" + dict_tagged['object_type'] + "&ltags=" + dict_tagged['current_tags_str'] %}
+            {% include 'pagination.html' %}
+  				{% endwith %}
+        {%endif%}
+
+    	</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+var ltags;
+var search_table;
+
+$(document).ready(function(){
+  $("#nav_tags_search").removeClass("text-muted");
+	$("#nav_tags_search_{{dict_tagged['object_type']}}").addClass("active");
+  $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 10, "order": [[ 0, "asc" ]] });
+
+});
+</script>
+
+<script>
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+
+</html>

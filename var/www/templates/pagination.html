@@ -1,0 +1,50 @@
+<div class="my-2">
+	<div class="d-flex justify-content-center border-top">
+		<nav class="mt-4" aria-label="...">
+			<ul class="pagination">
+				<li class="page-item {%if page==1%}disabled{%endif%}">
+					<a class="page-link" href="{{ target_url }}&page={{page-1}}">Previous</a>
+				</li>
+
+				{%if page>3%}
+					<li class="page-item"><a class="page-link" href="{{ target_url }}&page=1">1</a></li>
+					<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+					<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{page-1}}">{{page-1}}</a></li>
+					<li class="page-item active"><a class="page-link" href="{{ target_url }}&page={{page}}">{{page}}</a></li>
+				{%else%}
+				{%if page>2%}<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{page-2}}">{{page-2}}</a></li>{%endif%}
+				{%if page>1%}<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{page-1}}">{{page-1}}</a></li>{%endif%}
+					<li class="page-item active"><a class="page-link" href="{{ target_url }}&page={{page}}">{{page}}</a></li>
+				{%endif%}
+
+				{%if nb_page_max-page>3%}
+					<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{page+1}}">{{page+1}}</a></li>
+					<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+					<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{nb_page_max}}">{{nb_page_max}}</a></li>
+				{%else%}
+				{%if nb_page_max-page>2%}<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{nb_page_max-2}}">{{nb_page_max-2}}</a></li>{%endif%}
+				{%if nb_page_max-page>1%}<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{nb_page_max-1}}">{{nb_page_max-1}}</a></li>{%endif%}
+				{%if nb_page_max-page>0%}<li class="page-item"><a class="page-link" href="{{ target_url }}&page={{nb_page_max}}">{{nb_page_max}}</a></li>{%endif%}
+				{%endif%}
+
+				<li class="page-item {%if page==nb_page_max%}disabled{%endif%}">
+					<a class="page-link" href="{{ target_url }}&page={{page+1}}" aria-disabled="true">Next</a>
+				</li>
+			</ul>
+		</nav>
+	</div>
+
+	{%if nb_all_elem%}
+		<div class="d-flex justify-content-center">
+			<span class="badge badge-info text-white">
+				{{object_name}}:&nbsp;
+				<span class="badge badge-light">{{nb_first_elem}}-{{nb_last_elem}}</span>
+				<span> / </span>
+				<span class="badge badge-light">{{nb_all_elem}}</span>
+			 </span>
+		</div>
+		<br>
+		<br>
+		<br>
+	{%endif%}
+</div>

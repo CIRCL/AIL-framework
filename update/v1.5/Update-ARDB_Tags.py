@@ -65,6 +65,9 @@ if __name__ == '__main__':
                 tag_metadata[tag]['last_seen'] = int(tag_metadata[tag]['last_seen'])
             nb_tags_to_update += r_serv_tag.scard(tag)
 
+        if nb_tags_to_update == 0:
+            nb_tags_to_update = 1
+
         for tag in tags_list:
 
             all_item =  r_serv_tag.smembers(tag)

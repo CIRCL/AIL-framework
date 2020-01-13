@@ -45,13 +45,18 @@ def api_validator(api_response):
 
 # ============= ROUTES ==============
 # add route : /crawlers/show_domain
-@crawler_splash.route('/crawlers/showDomain')
+@crawler_splash.route('/crawlers/showDomain', methods=['GET', 'POST'])
 @login_required
 @login_read_only
 def showDomain():
-    domain_name = request.args.get('domain')
-    epoch = request.args.get('epoch')
-    port = request.args.get('port')
+    if request.method == 'POST':
+        domain_name = request.form.get('in_show_domain')
+        epoch = None
+        port = None
+    else:
+        domain_name = request.args.get('domain')
+        epoch = request.args.get('epoch')
+        port = request.args.get('port')
 
     res = api_validator(Domain.api_verify_if_domain_exist(domain_name))
     if res:
@@ -73,4 +78,4 @@ def showDomain():
             dict_domain['crawler_history']['random_item'] = random.choice(dict_domain['crawler_history']['items'])
 
     return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
-                                modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], tag_type="domain"))
+                                modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], object_type="domain"))
