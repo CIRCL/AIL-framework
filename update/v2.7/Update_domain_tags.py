@@ -52,7 +52,7 @@ def update_domain_tags(domain):
     domain_tags = Tag.get_obj_tag(domain)
     for tag in domain_tags:
         # delete incorrect tags
-        if tag == 'infoleak:submission="crawler"' and tag == 'infoleak:submission="manual"':
+        if tag == 'infoleak:submission="crawler"' or tag == 'infoleak:submission="manual"':
             r_serv_metadata.srem('tag:{}'.format(domain), tag)
         else:
             Tag.add_global_tag(tag, object_type='domain')
@@ -84,6 +84,10 @@ def update_db():
         r_serv_db.set('ail:current_background_script', 'tags: remove deprecated keys')
         delete_domain_tag_daterange()
 
+    # sort all crawled domain
+    r_serv_onion.sort('full_onion_up', alpha=True)
+    r_serv_onion.sort('full_regular_up', alpha=True)
+
 if __name__ == '__main__':
 
     start_deb = time.time()
@@ -94,6 +98,7 @@ if __name__ == '__main__':
     r_serv_db = config_loader.get_redis_conn("ARDB_DB")
     r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
     r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
+    r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
     config_loader = None
 
     update_version = 'v2.7'
