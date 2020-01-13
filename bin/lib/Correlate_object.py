@@ -24,7 +24,7 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
 def is_valid_object_type(object_type):
-    if object_type in ['domain', 'item', 'screenshot']:
+    if object_type in ['domain', 'item', 'image']:
         return True
     else:
         return False

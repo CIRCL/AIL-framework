@@ -25,24 +25,6 @@
 
   {% include 'nav_bar.html' %}
 
-	<!-- Modal -->
-  <div id="mymodal" class="modal fade" role="dialog">
-   <div class="modal-dialog modal-lg">
-
-     <!-- Modal content-->
-     <div id="mymodalcontent" class="modal-content">
-       <div id="mymodalbody" class="modal-body" max-width="850px">
-         <p>Loading paste information...</p>
-         <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
-       </div>
-       <div class="modal-footer">
-         <a id="button_show_path" target="_blank" href=""><button type="button" class="btn btn-info">Show saved paste</button></a>
-         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-       </div>
-     </div>
-   </div>
-  </div>
-
 	<div class="container-fluid">
 		<div class="row">
 
@@ -50,10 +32,12 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-				{% include 'tags/block_obj_tags_search.html' %}
+        {% with object_type=dict_tagged['object_type'], current_tags=dict_tagged['current_tags'], object_name=dict_tagged['object_name'] %}
+					{% include 'tags/block_obj_tags_search.html' %}
+				{% endwith %}
 
 				<div>
-					{%if dict_tagged%}
+					{%if 'tagged_obj' in dict_tagged%}
 						<table class="table table-bordered table-hover" id="myTable_">
 				      <thead class="thead-dark">
 				        <tr>
@@ -80,7 +64,7 @@
                         <div class="mb-2">
   				                {% for tag in dict_obj['tags'] %}
     				                <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
-    				                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+    				                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
     				                </a>
   				                {%  endfor %}
   				              </div>
@@ -99,15 +83,22 @@
       									{% endif %}
   										</td>
   				          </tr>
-  				        {%  endfor %}
+  				        {% endfor %}
 
-                {%  endif %}
+                {% endif %}
 
 				      </tbody>
 				    </table>
 
 					{%endif%}
 				</div>
+        {%if 'tagged_obj' in dict_tagged%}
+          {% with page=dict_tagged['page'], nb_page_max=dict_tagged['nb_pages'],  nb_first_elem=dict_tagged['nb_first_elem'], nb_last_elem=dict_tagged['nb_last_elem'], nb_all_elem=dict_tagged['nb_all_elem'] %}
+            {% set object_name= dict_tagged['object_name'] %}
+            {% set target_url=url_for('tags_ui.get_obj_by_tags') + "?object_type=" + dict_tagged['object_type'] + "&ltags=" + dict_tagged['current_tags_str'] %}
+            {% include 'pagination.html' %}
+  				{% endwith %}
+        {%endif%}
 
     	</div>
 		</div>
@@ -120,7 +111,8 @@ var ltags;
 var search_table;
 
 $(document).ready(function(){
-	//search_table = $('#myTable_').DataTable({ "order": [[ 0, "asc" ]] });
+  $("#nav_tags_search").removeClass("text-muted");
+	$("#nav_tags_search_{{dict_tagged['object_type']}}").addClass("active");
   $('#myTable_').DataTable({ "order": [[ 0, "asc" ]] });
 
 });

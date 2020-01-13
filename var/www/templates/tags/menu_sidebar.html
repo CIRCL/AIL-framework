@@ -6,6 +6,29 @@
       	</button>
 
       	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+          <h5 class="d-flex text-muted w-100" id="nav_tags_search">
+      		  <span>Tags Search</span>
+      		</h5>
+      	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{ url_for('Tags.Tags_page') }}" id="nav_tags_search_item">
+      	        <i class="far fa-file"></i>
+      	        Search Items by Tags
+      	      </a>
+      	    </li>
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{ url_for('tags_ui.tags_search_domains') }}" id="nav_tags_search_domain">
+      					<i class="fab fa-html5"></i>
+      	       	Search Domains by Tags
+      	      </a>
+      	    </li>
+            <li class="nav-item">
+      	      <a class="nav-link" href="{{ url_for('tags_ui.tags_search_images') }}" id="nav_tags_search_image">
+      					<i class="fas fa-image"></i>
+      	       	Search Images by Tags
+      	      </a>
+      	    </li>
+          </ul>
       		<h5 class="d-flex text-muted w-100">
       		  <span>Tags Management </span>
       		</h5>

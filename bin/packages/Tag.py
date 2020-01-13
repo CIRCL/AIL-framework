@@ -490,7 +490,8 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
             l_tagged_obj.extend( date_day_obj )
 
         # handle pagination
-        nb_pages = len(l_tagged_obj) / nb_obj
+        nb_all_elem = len(l_tagged_obj)
+        nb_pages = nb_all_elem / nb_obj
         if not nb_pages.is_integer():
             nb_pages = int(nb_pages)+1
         else:
@@ -503,7 +504,7 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
         stop = (nb_obj*page) -1
         l_tagged_obj = l_tagged_obj[start:stop]
 
-        return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages}
+        return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages, "nb_first_elem":start+1, "nb_last_elem":stop+1, "nb_all_elem":nb_all_elem}
 
     # without daterange
     else:
@@ -517,7 +518,8 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
             return {"tagged_obj":l_tagged_obj, "page":0, "nb_pages":0}
 
         # handle pagination
-        nb_pages = len(l_tagged_obj) / nb_obj
+        nb_all_elem = len(l_tagged_obj)
+        nb_pages = nb_all_elem / nb_obj
         if not nb_pages.is_integer():
             nb_pages = int(nb_pages)+1
         else:
@@ -538,11 +540,16 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
                     l_obj.append(elem)
                 current_index += 1
             l_tagged_obj = l_obj
+            stop += 1
+            if stop > nb_all_elem:
+                stop = nb_all_elem
         # only one page
         else:
+            start = 0
+            stop = nb_all_elem
             l_tagged_obj = list(l_tagged_obj)
 
-        return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages}
+        return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages, "nb_first_elem":start+1, "nb_last_elem":stop, "nb_all_elem":nb_all_elem}
 
 
 def get_obj_date(object_type, object_id): # # TODO: move me in another file

@@ -1,6 +1,6 @@
 <div class="card mb-3 mt-1">
 	<div class="card-header text-white bg-dark">
-		<h5 class="card-title">Search Domain by Tags :</h5>
+		<h5 class="card-title">Search {{object_name}} by Tags :</h5>
 	</div>
 		<div class="card-body">
 
@@ -29,21 +29,22 @@
 			</div>
 
 			<button class="btn btn-primary" type="button" id="button-search-tags" onclick="searchTags()">
-				<i class="fas fa-search"></i> Search Domains
+				<i class="fas fa-search"></i> Search {{object_name}}
 			</button>
 
 			</div>
 	</div>
 
+
 <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
 <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 <script>
   var ltags;
-  $.getJSON("{{ url_for('tags_ui.get_all_obj_tags') }}?object_type={{dict_tagged['object_type']}}",
+  $.getJSON("{{ url_for('tags_ui.get_all_obj_tags') }}?object_type={{ object_type }}",
     function(data) {
       ltags = $('#ltags').tagSuggest({
         data: data,
-				value: [{%if "current_tags" in dict_tagged%}{% for tag in dict_tagged['current_tags'] %}'{{tag|safe}}',{%endfor%}{%endif%}],
+				value: [{%if "current_tags"%}{% for tag in current_tags %}'{{tag|safe}}',{%endfor%}{%endif%}],
         sortOrder: 'name',
         maxDropHeight: 200,
         name: 'ltags'
@@ -55,7 +56,8 @@
   	//var date_from = $('#date-range-from-input').val();
   	//var date_to =$('#date-range-to-input').val();
 		//parameter = parameter + "&date_from="+date_from+"&date_to="+date_to
-  	window.location.replace("{{ url_for('tags_ui.get_obj_by_tags') }}?ltags=" + data + "&object_type={{dict_tagged['object_type']}}&page={{dict_tagged['page']}}");
+		var parameter = "?ltags=" + data + "&object_type={{ object_type }}{%if page%}&page={{ page }}{%endif%}";
+  	window.location.replace("{{ url_for('tags_ui.get_obj_by_tags') }}" + parameter);
   }
   function emptyTags() {
   	ltags.clear();

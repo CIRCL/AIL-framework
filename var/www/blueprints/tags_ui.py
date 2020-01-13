@@ -94,6 +94,22 @@ def get_all_obj_tags():
         return jsonify(res)
     return jsonify(Tag.get_all_obj_tags(object_type))
 
+@tags_ui.route('/tag/search/domain')
+@login_required
+@login_read_only
+def tags_search_domains():
+    object_type = 'domain'
+    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
+@tags_ui.route('/tag/search/image')
+@login_required
+@login_read_only
+def tags_search_images():
+    object_type = 'image'
+    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
 @tags_ui.route('/tag/search/get_obj_by_tags')
 @login_required
 @login_read_only
@@ -102,7 +118,7 @@ def get_obj_by_tags():
     # # TODO: sanityze all
     object_type = request.args.get('object_type')
     ltags = request.args.get('ltags')
-    page = request.args.get('ltags')
+    page = request.args.get('page')
     date_from = request.args.get('ltags')
     date_to = request.args.get('ltags')
 
@@ -112,14 +128,23 @@ def get_obj_by_tags():
     for tag in list_tags:
         list_tag.append(tag.replace('"','\"'))
 
+    # object_type
     res = Correlate_object.sanitize_object_type(object_type)
     if res:
         return jsonify(res)
 
-    dict_obj = Tag.get_obj_by_tags(object_type, list_tag)
+    # page
+    try:
+        page = int(page)
+    except:
+        page = 1
+
+    dict_obj = Tag.get_obj_by_tags(object_type, list_tag, page=page)
 
     if dict_obj['tagged_obj']:
-        dict_tagged = {"object_type":object_type, "page":dict_obj['page'] ,"nb_pages":dict_obj['nb_pages'], "tagged_obj":[]}
+        dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s",
+                        "tagged_obj":[], "page":dict_obj['page'] ,"nb_pages":dict_obj['nb_pages'],
+                        "nb_first_elem":dict_obj['nb_first_elem'], "nb_last_elem":dict_obj['nb_last_elem'], "nb_all_elem":dict_obj['nb_all_elem']}
         for obj_id in dict_obj['tagged_obj']:
             obj_metadata = Correlate_object.get_object_metadata(object_type, obj_id)
             obj_metadata['id'] = obj_id
@@ -128,12 +153,16 @@ def get_obj_by_tags():
         dict_tagged['tab_keys'] = Correlate_object.get_obj_tag_table_keys(object_type)
 
         if len(list_tag) == 1:
-            dict_tagged['current_tags'] = ltags.replace('"', '').replace('=', '').replace(':', '')
+            dict_tagged['current_tags'] = [ltags.replace('"', '\"')]
         else:
             dict_tagged['current_tags'] = list_tag
+        dict_tagged['current_tags_str'] = ltags
 
         #return jsonify(dict_tagged)
-        return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+    else:
+        dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
 # # add route : /crawlers/show_domain
 # @tags_ui.route('/tags/search/domain')

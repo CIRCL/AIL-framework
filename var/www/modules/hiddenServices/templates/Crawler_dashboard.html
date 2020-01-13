@@ -105,7 +105,9 @@
 					</div>
 				</div>
 
-				{% include 'tags/block_obj_tags_search.html' %}
+				{% with object_type='domain' %}
+					{% include 'tags/block_obj_tags_search.html' %}
+				{% endwith %}
 
 			</div>
 		</div>
