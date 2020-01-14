@@ -55,7 +55,7 @@ def exist_object(object_type, correlation_id, type_id=None):
         return Pgp.pgp._exist_corelation_field(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency._exist_corelation_field(type_id, correlation_id)
-    elif object_type == 'screenshot':
+    elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.exist_screenshot(correlation_id)
     else:
         return False
@@ -63,7 +63,7 @@ def exist_object(object_type, correlation_id, type_id=None):
 def get_object_metadata(object_type, correlation_id, type_id=None):
     if object_type == 'domain':
         return Domain.Domain(correlation_id).get_domain_metadata(tags=True)
-    elif object_type == 'paste':
+    elif object_type == 'paste' or object_type == 'item':
         return Item.get_item({"id": correlation_id, "date": True, "date_separator": True, "tags": True})[0]
     elif object_type == 'decoded':
         return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True, file_type=True)
@@ -71,7 +71,7 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
         return Pgp.pgp.get_metadata(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_metadata(type_id, correlation_id)
-    elif object_type == 'screenshot':
+    elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.get_metadata(correlation_id)
 
 def get_object_correlation(object_type, value, correlation_names, correlation_objects, requested_correl_type=None):
@@ -85,7 +85,7 @@ def get_object_correlation(object_type, value, correlation_names, correlation_ob
         return Pgp.pgp.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
-    elif object_type == 'screenshot':
+    elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.get_screenshot_correlated_object(value, correlation_objects)
     return {}
 
@@ -145,7 +145,7 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
         else:
             icon_text = '\uf249'
 
-    elif correlation_name == 'screenshot':
+    elif correlation_name == 'screenshot' or correlation_name == 'image':
         node_color = '#E1F5DF'
         icon_text = '\uf03e'
 
@@ -181,7 +181,9 @@ def get_item_url(correlation_name, value, correlation_type=None):
     elif correlation_name == 'decoded':
         endpoint = 'correlation.show_correlation'
         url = url_for(endpoint, object_type="decoded", correlation_id=value)
-    elif correlation_name == 'screenshot':
+    elif correlation_name == 'screenshot':              ### # TODO:  remove me
+        endpoint = 'correlation.show_correlation'
+    elif correlation_name == 'image':
         endpoint = 'correlation.show_correlation'
         url = url_for(endpoint, object_type="screenshot", correlation_id=value)
     elif correlation_name == 'domain':
