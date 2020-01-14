@@ -181,9 +181,7 @@ def get_item_url(correlation_name, value, correlation_type=None):
     elif correlation_name == 'decoded':
         endpoint = 'correlation.show_correlation'
         url = url_for(endpoint, object_type="decoded", correlation_id=value)
-    elif correlation_name == 'screenshot':              ### # TODO:  remove me
-        endpoint = 'correlation.show_correlation'
-    elif correlation_name == 'image':
+    elif correlation_name == 'screenshot' or correlation_name == 'image':              ### # TODO:  rename me
         endpoint = 'correlation.show_correlation'
         url = url_for(endpoint, object_type="screenshot", correlation_id=value)
     elif correlation_name == 'domain':

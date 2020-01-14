@@ -245,6 +245,10 @@ def graph_node_json():
     correlation_names = sanitise_correlation_names(request.args.get('correlation_names'))
     correlation_objects = sanitise_correlation_objects(request.args.get('correlation_objects'))
 
+    # # TODO: remove me, rename screenshot to image
+    if object_type == 'image':
+        object_type == 'screenshot'
+
     mode = sanitise_graph_mode(request.args.get('mode'))
 
     res = Correlate_object.get_graph_node_object_correlation(object_type, correlation_id, mode, correlation_names, correlation_objects, requested_correl_type=type_id, max_nodes=max_nodes)
