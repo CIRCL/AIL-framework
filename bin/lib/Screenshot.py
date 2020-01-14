@@ -9,6 +9,7 @@ import redis
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
 import Date
+import Tag
 
 
 import ConfigLoader
@@ -33,7 +34,12 @@ def exist_screenshot(sha256_string):
 def get_metadata(sha256_string):
     metadata_dict = {}
     metadata_dict['img'] = get_screenshot_rel_path(sha256_string)
+    metadata_dict['tags'] = get_screenshot_tags(sha256_string)
+    metadata_dict['is_tags_safe'] = Tag.is_tags_safe(metadata_dict['tags'])
     return metadata_dict
+
+def get_screenshot_tags(sha256_string):
+    return Tag.get_obj_tag(sha256_string)
 
 
 def get_screenshot_items_list(sha256_string):

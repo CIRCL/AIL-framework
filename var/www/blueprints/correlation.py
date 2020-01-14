@@ -23,12 +23,14 @@ from Role_Manager import login_admin, login_analyst, login_read_only
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Correlate_object
 import Domain
+import Screenshot
 import btc_ail
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Cryptocurrency
 import Pgp
 import Decoded
+import Tag
 
 bootstrap_label = Flask_config.bootstrap_label
 vt_enabled = Flask_config.vt_enabled
@@ -114,6 +116,8 @@ def get_card_metadata(object_type, correlation_id, type_id=None, expand_card=Fal
     elif object_type == 'domain':
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
         card_dict["tags"] = Domain.get_domain_tags(correlation_id)
+    elif object_type == 'screenshot':
+        card_dict["add_tags_modal"] = Tag.get_modal_add_tags(correlation_id, object_type='image')
     elif object_type == 'paste':
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
     return card_dict
@@ -178,6 +182,10 @@ def show_correlation():
 
         correlation_names = sanitise_correlation_names(request.args.get('correlation_names'))
         correlation_objects = sanitise_correlation_objects(request.args.get('correlation_objects'))
+
+        # # TODO: remove me, rename screenshot to image
+        if object_type == 'image':
+            object_type == 'screenshot'
 
         # check if correlation_id exist
         if not Correlate_object.exist_object(object_type, correlation_id, type_id=type_id):

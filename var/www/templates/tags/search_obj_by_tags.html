@@ -46,6 +46,8 @@
   				          <th>last check</th>
                     <th style="max-width: 800px;">Domain</th>
   				          <th>status</th>
+                  {%elif dict_tagged["object_type"]=="image"%}
+                    <th style="max-width: 800px;">Image</th>
                   {%endif%}
 				        </tr>
 				      </thead>
@@ -63,7 +65,7 @@
                         </a>
                         <div class="mb-2">
   				                {% for tag in dict_obj['tags'] %}
-    				                <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+    				                <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type={{dict_tagged['object_type']}}&ltags={{ tag }}">
     				                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
     				                </a>
   				                {%  endfor %}
@@ -85,8 +87,24 @@
   				          </tr>
   				        {% endfor %}
 
+                {%elif dict_tagged["object_type"]=="image"%}
+                  {% for dict_obj in dict_tagged["tagged_obj"] %}
+                    <tr>
+                      <td class="pb-0">
+                        <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=screenshot&correlation_id={{dict_obj['id']}}" class="text-secondary">
+                          <div style="line-height:0.9;">{{ dict_obj['id'] }}</div>
+                        </a>
+                        <div class="mb-2">
+                          {% for tag in dict_obj['tags'] %}
+                            <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type={{dict_tagged['object_type']}}&ltags={{ tag }}">
+                              <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                            </a>
+                          {%  endfor %}
+                        </div>
+                      </td>
+                    </tr>
+                   {% endfor %}
                 {% endif %}
-
 				      </tbody>
 				    </table>
 

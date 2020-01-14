@@ -53,7 +53,7 @@
 			pointer-events: auto;
 		}
 
-		div.tooltip {
+		div.tooltip_graph {
 			position: absolute;
 			text-align: center;
 			padding: 2px;
@@ -99,6 +99,8 @@
 						{% include 'correlation/metadata_card_decoded.html' %}
 					{% elif dict_object["object_type"] == "domain" %}
 						{% include 'correlation/metadata_card_domain.html' %}
+					{% elif dict_object["object_type"] == "screenshot" %}
+						{% include 'correlation/metadata_card_screenshot.html' %}
 					{% elif dict_object["object_type"] == "paste" %}
 						{% include 'correlation/metadata_card_paste.html' %}
 					{% endif %}
@@ -125,18 +127,6 @@
 									<div id="graph">
 									</div>
 								</div>
-							</div>
-
-							<div role="alert" aria-live="assertive" aria-atomic="true" class="toast" data-autohide="false">
-							  <div class="toast-header">
-							    <strong class="mr-auto">Bootstrap</strong>
-							    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-							      <span aria-hidden="true">&times;</span>
-							    </button>
-							  </div>
-							  <div class="toast-body">
-							    Hello, world! This is a toast message.
-							  </div>
 							</div>
 
 						</div>
@@ -310,7 +300,7 @@ var zoom = d3.zoom()
 var color = d3.scaleOrdinal(d3.schemeCategory10);
 
 var div = d3.select("body").append("div")
-		.attr("class", "tooltip")
+		.attr("class", "tooltip_graph")
 		.style("opacity", 0);
 
 var simulation = d3.forceSimulation()
