@@ -1,0 +1,127 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{% with modal_add_tags=dict_object['metadata_card']['add_tags_modal']%}
+	{% include 'modals/add_tags.html' %}
+{% endwith %}
+
+{% include 'modals/edit_tag.html' %}
+
+<div class="card my-3">
+	<div class="card-header">
+		<h4 class="text-secondary">{{ dict_object["correlation_id"] }} :</h4>
+		<ul class="list-group mb-2">
+			<li class="list-group-item py-0">
+				<div id="accordionscreenshot" class="my-3">
+          <div class="card">
+            <div class="card-header py-1" id="headingScreenshot">
+              <div class="row">
+                <div class="col-11">
+                  <div class="mt-2">
+                    <i class="far fa-image"></i> Show Screenshot&nbsp;&nbsp;
+                  </div>
+                </div>
+                <div class="col-1">
+                  <button class="btn btn-link collapsed rotate" data-toggle="collapse" data-target="#collapseScreenshot" aria-expanded="false" aria-controls="collapseScreenshot">
+                    <i class="fas fa-chevron-circle-down"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="collapseScreenshot" class="collapse" aria-labelledby="headingScreenshot" data-parent="#accordionscreenshot">
+              <div class="card-body">
+								<div class="card my-2" style="background-color:#ecf0f1;">
+									<div class="card-body py-2">
+										<div class="row">
+											<div class="col-md-3 text-center">
+												<button class="btn {%if dict_object['metadata']['is_tags_safe']%}btn-primary{%else%}btn-danger{%endif%}" onclick="blocks.value=0;pixelate();">
+														<i class="fas fa-eye-slash"></i>
+														<span class="label-icon">Hide</span>
+												</button>
+											</div>
+											<div class="col-md-6">
+												<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="{%if dict_object['metadata']['is_tags_safe']%}13{%else%}0{%endif%}">
+											</div>
+											<div class="col-md-3 text-center">
+												<button class="btn {%if dict_object['metadata']['is_tags_safe']%}btn-primary{%else%}btn-danger{%endif%}" onclick="blocks.value=50;pixelate();">
+													{%if dict_object['metadata']['is_tags_safe']%}
+														<i class="fas fa-plus-square"></i>
+													{%else%}
+														<i class="fas fa-exclamation-triangle"></i>
+													{%endif%}
+														<span class="label-icon">Full resolution</span>
+												</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								<canvas id="canvas" style="width:100%;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+			</li>
+
+			<li class="list-group-item py-0">
+				<br>
+				<div class="mb-3">
+					Tags:
+					{% for tag in dict_object["metadata"]['tags'] %}
+						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
+						data-tagid="{{ tag }}" data-objtype="image" data-objid="{{ dict_object["correlation_id"] }}">
+							{{ tag }}
+						</button>
+					{%  endfor %}
+					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+          	<i class="far fa-plus-square"></i>
+          </button>
+				</div>
+			</li>
+		</ul>
+	</div>
+</div>
+
+<script>
+var ctx = canvas.getContext('2d'), img = new Image();
+/// turn off image smoothing
+ctx.webkitImageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
+
+img.onload = pixelate;
+img.addEventListener("error", img_error);
+var draw_img = false;
+
+img.src = "{{ url_for('showsavedpastes.screenshot', filename=dict_object['metadata']['img']) }}";
+
+function pixelate() {
+  /// use slider value
+  if( blocks.value == 50 ){
+    size = 1;
+  } else {
+    var size = (blocks.value) * 0.01;
+  }
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  /// cache scaled width and height
+  w = canvas.width * size;
+  h = canvas.height * size;
+
+	/// draw original image to the scaled size
+  ctx.drawImage(img, 0, 0, w, h);
+
+  /// pixelated
+  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+}
+
+blocks.addEventListener('change', pixelate, false);
+
+function img_error() {
+	img.onerror=null;
+	img.src="{{ url_for('static', filename='image/AIL.png') }}";
+	blocks.value = 50;
+	pixelate;
+}
+</script>
