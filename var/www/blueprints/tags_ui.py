@@ -111,6 +111,14 @@ def tags_search_domains():
     dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
+@tags_ui.route('/tag/search/decoded')
+@login_required
+@login_read_only
+def tags_search_decoded():
+    object_type = 'decoded'
+    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
 @tags_ui.route('/tag/search/image')
 @login_required
 @login_read_only

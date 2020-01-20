@@ -355,7 +355,7 @@ def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item"
         return ({'status': 'error', 'reason': 'object_id id not found'}, 404)
     if not tags and not galaxy_tags:
         return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
-    if object_type not in ('item', 'domain', 'image'):  # # TODO: put me in another file
+    if object_type not in ('item', 'domain', 'image', 'decoded'):  # # TODO: put me in another file
         return ({'status': 'error', 'reason': 'Incorrect object_type'}, 400)
 
     # remove empty tags

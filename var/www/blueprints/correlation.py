@@ -113,6 +113,7 @@ def get_card_metadata(object_type, correlation_id, type_id=None, expand_card=Fal
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
         card_dict["vt"] = Decoded.get_decoded_vt_report(correlation_id)
         card_dict["vt"]["status"] = vt_enabled
+        card_dict["add_tags_modal"] = Tag.get_modal_add_tags(correlation_id, object_type='decoded')
     elif object_type == 'domain':
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
         card_dict["tags"] = Domain.get_domain_tags(correlation_id)

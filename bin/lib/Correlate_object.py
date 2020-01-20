@@ -24,7 +24,7 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
 def is_valid_object_type(object_type):
-    if object_type in ['domain', 'item', 'image']:
+    if object_type in ['domain', 'item', 'image', 'decoded']:
         return True
     else:
         return False
@@ -60,13 +60,14 @@ def exist_object(object_type, correlation_id, type_id=None):
     else:
         return False
 
+# request_type => api or ui
 def get_object_metadata(object_type, correlation_id, type_id=None):
     if object_type == 'domain':
         return Domain.Domain(correlation_id).get_domain_metadata(tags=True)
     elif object_type == 'paste' or object_type == 'item':
         return Item.get_item({"id": correlation_id, "date": True, "date_separator": True, "tags": True})[0]
     elif object_type == 'decoded':
-        return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True, file_type=True)
+        return Decoded.get_decoded_metadata(correlation_id, nb_seen=True, size=True, file_type=True, tag=True)
     elif object_type == 'pgp':
         return Pgp.pgp.get_metadata(type_id, correlation_id)
     elif object_type == 'cryptocurrency':

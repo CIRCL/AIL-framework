@@ -1,3 +1,12 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{% with modal_add_tags=dict_object['metadata_card']['add_tags_modal']%}
+	{% include 'modals/add_tags.html' %}
+{% endwith %}
+
+{% include 'modals/edit_tag.html' %}
+
 <div class="card my-3">
 	<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
 		<h4 class="text-secondary">{{ dict_object["correlation_id"] }} :</h4>
@@ -39,6 +48,21 @@
 					<div class="col-md-1">
 						<div id="sparkline"></div>
 					</div>
+				</div>
+			</li>
+			<li class="list-group-item py-0">
+				<br>
+				<div class="mb-3">
+					Tags:
+					{% for tag in dict_object["metadata"]['tags'] %}
+						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
+						data-tagid="{{ tag }}" data-objtype="decoded" data-objid="{{ dict_object["correlation_id"] }}">
+							{{ tag }}
+						</button>
+					{%  endfor %}
+					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+          	<i class="far fa-plus-square"></i>
+          </button>
 				</div>
 			</li>
 		</ul>
