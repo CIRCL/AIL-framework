@@ -123,139 +123,139 @@ def get_last_seen_from_tags_list(list_tags):
 
 # ============= ROUTES ==============
 
-@Tags.route("/tags/", methods=['GET'])
-@login_required
-@login_read_only
-def Tags_page():
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    tags = request.args.get('ltags')
-
-    if tags is None:
-        dates = get_all_dates_range(date_from, date_to)
-        return render_template("Tags.html", date_from=dates['date_from'], date_to=dates['date_to'])
-
-    # unpack tags
-    list_tags = tags.split(',')
-    list_tag = []
-    for tag in list_tags:
-        list_tag.append(tag.replace('"','\"'))
-
-    #no search by date, use last_seen for  date_from/date_to
-    if date_from is None and date_to is None and tags is not None:
-        date_from = get_last_seen_from_tags_list(list_tags)
-        date_to = date_from
-
-    # TODO verify input
-
-    dates = get_all_dates_range(date_from, date_to)
-
-    if(type(list_tags) is list):
-        # no tag
-        if list_tags is False:
-            print('empty')
-        # 1 tag
-        elif len(list_tags) < 2:
-            tagged_pastes = []
-            for date in dates['date_range']:
-                tagged_pastes.extend(r_serv_tags.smembers('{}:{}'.format(list_tags[0], date)))
-
-        # 2 tags or more
-        else:
-            tagged_pastes = []
-            for date in dates['date_range']:
-                tag_keys = []
-                for tag in list_tags:
-                    tag_keys.append('{}:{}'.format(tag, date))
-
-                if len(tag_keys) > 1:
-                    daily_items = r_serv_tags.sinter(tag_keys[0], *tag_keys[1:])
-                else:
-                    daily_items = r_serv_tags.sinter(tag_keys[0])
-                tagged_pastes.extend(daily_items)
-
-    else :
-        return 'INCORRECT INPUT'
-
-    all_content = []
-    paste_date = []
-    paste_linenum = []
-    all_path = []
-    allPastes = list(tagged_pastes)
-    paste_tags = []
-
-    try:
-        page = int(request.args.get('page'))
-    except:
-        page = 1
-    if page <= 0:
-        page = 1
-    nb_page_max = len(tagged_pastes)/(max_tags_result)
-    if not nb_page_max.is_integer():
-        nb_page_max = int(nb_page_max)+1
-    else:
-        nb_page_max = int(nb_page_max)
-    if page > nb_page_max:
-        page = nb_page_max
-    start = max_tags_result*(page -1)
-    stop = max_tags_result*page
-
-    for path in allPastes[start:stop]:
-        all_path.append(path)
-        paste = Paste.Paste(path)
-        content = paste.get_p_content()
-        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-        all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
-        curr_date = str(paste._get_p_date())
-        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
-        paste_date.append(curr_date)
-        paste_linenum.append(paste.get_lines_info()[0])
-        p_tags = r_serv_metadata.smembers('tag:'+path)
-        complete_tags = []
-        l_tags = []
-        for tag in p_tags:
-            complete_tag = tag
-
-            tag = tag.split('=')
-            if len(tag) > 1:
-                if tag[1] != '':
-                    tag = tag[1][1:-1]
-                # no value
-                else:
-                    tag = tag[0][1:-1]
-            # use for custom tags
-            else:
-                tag = tag[0]
-
-            l_tags.append( (tag,complete_tag) )
-
-        paste_tags.append(l_tags)
-
-    if len(allPastes) > 10:
-        finished = False
-    else:
-        finished = True
-
-    if len(list_tag) == 1:
-        tag_nav=tags.replace('"', '').replace('=', '').replace(':', '')
-    else:
-        tag_nav='empty'
-
-    return render_template("Tags.html",
-            all_path=all_path,
-            tags=tags,
-            tag_nav=tag_nav,
-            list_tag = list_tag,
-            date_from=dates['date_from'],
-            date_to=dates['date_to'],
-            page=page, nb_page_max=nb_page_max,
-            paste_tags=paste_tags,
-            bootstrap_label=bootstrap_label,
-            content=all_content,
-            paste_date=paste_date,
-            paste_linenum=paste_linenum,
-            char_to_display=max_preview_modal,
-            finished=finished)
+# @Tags.route("/tags/", methods=['GET'])
+# @login_required
+# @login_read_only
+# def Tags_page():
+#     date_from = request.args.get('date_from')
+#     date_to = request.args.get('date_to')
+#     tags = request.args.get('ltags')
+#
+#     if tags is None:
+#         dates = get_all_dates_range(date_from, date_to)
+#         return render_template("Tags.html", date_from=dates['date_from'], date_to=dates['date_to'])
+#
+#     # unpack tags
+#     list_tags = tags.split(',')
+#     list_tag = []
+#     for tag in list_tags:
+#         list_tag.append(tag.replace('"','\"'))
+#
+#     #no search by date, use last_seen for  date_from/date_to
+#     if date_from is None and date_to is None and tags is not None:
+#         date_from = get_last_seen_from_tags_list(list_tags)
+#         date_to = date_from
+#
+#     # TODO verify input
+#
+#     dates = get_all_dates_range(date_from, date_to)
+#
+#     if(type(list_tags) is list):
+#         # no tag
+#         if list_tags is False:
+#             print('empty')
+#         # 1 tag
+#         elif len(list_tags) < 2:
+#             tagged_pastes = []
+#             for date in dates['date_range']:
+#                 tagged_pastes.extend(r_serv_tags.smembers('{}:{}'.format(list_tags[0], date)))
+#
+#         # 2 tags or more
+#         else:
+#             tagged_pastes = []
+#             for date in dates['date_range']:
+#                 tag_keys = []
+#                 for tag in list_tags:
+#                     tag_keys.append('{}:{}'.format(tag, date))
+#
+#                 if len(tag_keys) > 1:
+#                     daily_items = r_serv_tags.sinter(tag_keys[0], *tag_keys[1:])
+#                 else:
+#                     daily_items = r_serv_tags.sinter(tag_keys[0])
+#                 tagged_pastes.extend(daily_items)
+#
+#     else :
+#         return 'INCORRECT INPUT'
+#
+#     all_content = []
+#     paste_date = []
+#     paste_linenum = []
+#     all_path = []
+#     allPastes = list(tagged_pastes)
+#     paste_tags = []
+#
+#     try:
+#         page = int(request.args.get('page'))
+#     except:
+#         page = 1
+#     if page <= 0:
+#         page = 1
+#     nb_page_max = len(tagged_pastes)/(max_tags_result)
+#     if not nb_page_max.is_integer():
+#         nb_page_max = int(nb_page_max)+1
+#     else:
+#         nb_page_max = int(nb_page_max)
+#     if page > nb_page_max:
+#         page = nb_page_max
+#     start = max_tags_result*(page -1)
+#     stop = max_tags_result*page
+#
+#     for path in allPastes[start:stop]:
+#         all_path.append(path)
+#         paste = Paste.Paste(path)
+#         content = paste.get_p_content()
+#         content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
+#         all_content.append(content[0:content_range].replace("\"", "\'").replace("\r", " ").replace("\n", " "))
+#         curr_date = str(paste._get_p_date())
+#         curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+#         paste_date.append(curr_date)
+#         paste_linenum.append(paste.get_lines_info()[0])
+#         p_tags = r_serv_metadata.smembers('tag:'+path)
+#         complete_tags = []
+#         l_tags = []
+#         for tag in p_tags:
+#             complete_tag = tag
+#
+#             tag = tag.split('=')
+#             if len(tag) > 1:
+#                 if tag[1] != '':
+#                     tag = tag[1][1:-1]
+#                 # no value
+#                 else:
+#                     tag = tag[0][1:-1]
+#             # use for custom tags
+#             else:
+#                 tag = tag[0]
+#
+#             l_tags.append( (tag,complete_tag) )
+#
+#         paste_tags.append(l_tags)
+#
+#     if len(allPastes) > 10:
+#         finished = False
+#     else:
+#         finished = True
+#
+#     if len(list_tag) == 1:
+#         tag_nav=tags.replace('"', '').replace('=', '').replace(':', '')
+#     else:
+#         tag_nav='empty'
+#
+#     return render_template("Tags.html",
+#             all_path=all_path,
+#             tags=tags,
+#             tag_nav=tag_nav,
+#             list_tag = list_tag,
+#             date_from=dates['date_from'],
+#             date_to=dates['date_to'],
+#             page=page, nb_page_max=nb_page_max,
+#             paste_tags=paste_tags,
+#             bootstrap_label=bootstrap_label,
+#             content=all_content,
+#             paste_date=paste_date,
+#             paste_linenum=paste_linenum,
+#             char_to_display=max_preview_modal,
+#             finished=finished)
 
 
 @Tags.route("/Tags/get_all_tags")
@@ -369,7 +369,7 @@ def get_tags_galaxy():
 @Tags.route("/Tags/remove_tag")
 @login_required
 @login_analyst
-def remove_tag(): #TODO remove me , used by showpaste 
+def remove_tag(): #TODO remove me , used by showpaste
 
     path = request.args.get('paste')
     tag = request.args.get('tag')

@@ -68,7 +68,7 @@
                       <span><a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">{{dict_uuid['term']}}</a></span>
                       <div>
                         {% for tag in dict_uuid['tags'] %}
-                        <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+                        <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
                           <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
                         </a>
                         {%  endfor %}
@@ -121,7 +121,7 @@
                       <span><a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">{{dict_uuid['term']}}</a></span>
                       <div>
                         {% for tag in dict_uuid['tags'] %}
-                        <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag }}">
+                        <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
                           <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
                         </a>
                         {%  endfor %}

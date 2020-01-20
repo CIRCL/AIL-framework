@@ -11,7 +11,7 @@
       		</h5>
       	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
       	    <li class="nav-item">
-      	      <a class="nav-link" href="{{ url_for('Tags.Tags_page') }}" id="nav_tags_search_item">
+      	      <a class="nav-link" href="{{ url_for('tags_ui.tags_search_items') }}" id="nav_tags_search_item">
       	        <i class="far fa-file"></i>
       	        Search Items by Tags
       	      </a>
@@ -62,49 +62,49 @@
       		</h5>
           <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="credential"' id='nav_tag_infoleakautomatic-detectioncredential'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="credential"' id='nav_tag_infoleakautomatic-detectioncredential'>
                 <i class="fas fa-unlock-alt"></i>
                 Credentials
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="credit-card"' id='nav_tag_infoleakautomatic-detectioncredit-card'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="credit-card"' id='nav_tag_infoleakautomatic-detectioncredit-card'>
                 <i class="far fa-credit-card"></i>
                 Credit cards
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="mail"' id='nav_tag_infoleakautomatic-detectionmail'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="mail"' id='nav_tag_infoleakautomatic-detectionmail'>
                 <i class="fas fa-envelope"></i>
                 Mails
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="cve"' id='nav_tag_infoleakautomatic-detectioncve'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="cve"' id='nav_tag_infoleakautomatic-detectioncve'>
                 <i class="fas fa-bug"></i>
                 CVEs
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="onion"' id='nav_tag_infoleakautomatic-detectiononion'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="onion"' id='nav_tag_infoleakautomatic-detectiononion'>
                 <i class="fas fa-user-secret"></i>
                 Onions
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="bitcoin-address"' id='nav_tag_infoleakautomatic-detectionbitcoin-address'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="bitcoin-address"' id='nav_tag_infoleakautomatic-detectionbitcoin-address'>
                 <i class="fab fa-bitcoin"></i>
                 Bitcoin
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="base64"' id='nav_tag_infoleakautomatic-detectionbase64'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="base64"' id='nav_tag_infoleakautomatic-detectionbase64'>
                 <i class="fas fa-lock-open"></i>
                 Base64
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href='{{url_for('Tags.Tags_page')}}?ltags=infoleak:automatic-detection="phone-number"' id='nav_tag_infoleakautomatic-detectionphone-number'>
+              <a class="nav-link" href='{{url_for('tags_ui.get_obj_by_tags')}}?object_type=item&ltags=infoleak:automatic-detection="phone-number"' id='nav_tag_infoleakautomatic-detectionphone-number'>
                 <i class="fas fa-phone"></i>
                 Phones
               </a>

@@ -126,6 +126,8 @@ def validate_str_date(str_date, separator=''):
         return True
     except ValueError:
         return False
+    except TypeError:
+        return False
 
 def sanitise_date_range(date_from, date_to, separator=''):
     '''

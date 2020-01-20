@@ -1,0 +1,114 @@
+<div id="modal_show_min_item" class="modal fade" role="dialog">
+ <div class="modal-dialog modal-lg">
+
+   <!-- Modal content-->
+   <div id="modal_show_min_item_content" class="modal-content">
+     <div id="modal_show_min_item_body" class="modal-body" max-width="850px">
+       <p>Loading item information...</p>
+       <img id="loading-gif-modal" src="{{url_for('static', filename='image/loading.gif') }}" height="26" width="26" style="margin: 4px;">
+     </div>
+     <div class="modal-footer">
+       <a id="modal_show_min_item_button_show_item" target="_blank" href=""><button type="button" class="btn btn-info">Show Item</button></a>
+       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+     </div>
+   </div>
+ </div>
+</div>
+
+<script>
+// static data
+var can_change_modal_content = true;
+var alert_message = '<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>No more data.</strong> Full paste displayed.</div>';
+var complete_item = null;
+var char_to_display = {%if char_to_display%}{{ char_to_display }}{%else%}800{%endif%};
+var start_index = 0;
+
+// Reset modal content
+$("#modal_show_min_item").on('hidden.bs.modal', function () {
+    can_change_modal_content = true;
+    $("#modal_show_min_item_body").html("<p>Loading item information...</p>");
+    var loading_gif = "<img id='loading-gif-modal' class='img-center' src=\"{{url_for('static', filename='image/loading.gif') }}\" height='26' width='26' style='margin: 4px;'>";
+    $("#modal_show_min_item_body").append(loading_gif); // Show the loading GIF
+    $("#modal_show_min_item_button_show_item").attr('href', '');
+    $("#modal_show_min_item_button_show_item").hide();
+    complete_item = null;
+    start_index = 0;
+});
+
+// Update the item preview in the modal
+function update_preview() {
+    if (start_index + char_to_display > complete_item.length-1){ // end of item reached
+        var final_index = complete_item.length-1;
+        var flag_stop = true;
+    } else {
+        var final_index = start_index + char_to_display;
+    }
+
+    if (final_index != start_index){ // still have data to display
+        // Append the new content using text() and not append (XSS)
+        $("#modal_show_min_item_body").find("#paste-holder")
+                .text($("#modal_show_min_item_body")
+                .find("#paste-holder").text() + complete_item.substring(start_index+1, final_index+1));
+        start_index = final_index;
+        if (flag_stop)
+            nothing_to_display();
+    } else {
+        nothing_to_display();
+    }
+}
+
+// Update the modal when there is no more data
+function nothing_to_display() {
+    var new_content = $(alert_message).hide();
+    $("#modal_show_min_item_body").find("#panel-body").append(new_content);
+    new_content.show('fast');
+    $("#load-more-button").hide();
+}
+
+function get_html_and_update_modal(event, truemodal) {
+    event.preventDefault();
+
+    var modal=truemodal;
+    var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + modal.attr('data-path') + "&num=" + modal.attr('data-num');
+    last_clicked_paste =  modal.attr('data-num');
+    $.get(url, function (data) {
+
+        // verify that the reveived data is really the current clicked item. Otherwise, ignore it.
+        var received_num = parseInt(data.split("|num|")[1]);
+        if (received_num == last_clicked_paste && can_change_modal_content) {
+            can_change_modal_content = false;
+
+            // clear data by removing html, body, head tags. prevent dark modal background stack bug.
+            var cleared_data = data.split("<body>")[1].split("</body>")[0];
+            $("#modal_show_min_item_body").html(cleared_data);
+
+            var button = $('<button type="button" id="load-more-button" class="btn btn-outline-primary rounded-circle px-1 py-0" data-url="' + $(modal).attr('data-path') +'" data-toggle="tooltip" data-placement="bottom" title="Load more content"><i class="fas fa-arrow-circle-down mt-1"></i></button>');
+            button.tooltip(button);
+            $("#container-show-more").append(button);
+
+            $("#modal_show_min_item_button_show_item").attr('href', '{{ url_for('showsavedpastes.showsavedpaste')  }}?paste=' + $(modal).attr('data-path'));
+            $("#modal_show_min_item_button_show_item").show('fast');
+            $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
+            if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed
+                nothing_to_display();
+            }
+            // collapse decoded
+            $('#collapseDecoded').collapse('hide');
+            // On click, donwload all item's content
+            $("#load-more-button").on("click", function (event) {
+                if (complete_item == null) { //Donwload only once
+                    $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                        complete_item = data;
+                        update_preview();
+                    });
+                } else {
+                    update_preview();
+                }
+            });
+        } else if (can_change_modal_content) {
+            $("#modal_show_min_item_body").html("Ignoring previous not finished query of item #" + received_num);
+        }
+    });
+}
+
+</script>

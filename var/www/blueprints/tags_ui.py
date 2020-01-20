@@ -94,6 +94,15 @@ def get_all_obj_tags():
         return jsonify(res)
     return jsonify(Tag.get_all_obj_tags(object_type))
 
+@tags_ui.route('/tag/search/item')
+@login_required
+@login_read_only
+def tags_search_items():
+    object_type = 'item'
+    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+    dict_tagged['date'] = Date.sanitise_date_range('', '', separator='-')
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
 @tags_ui.route('/tag/search/domain')
 @login_required
 @login_read_only
@@ -119,8 +128,14 @@ def get_obj_by_tags():
     object_type = request.args.get('object_type')
     ltags = request.args.get('ltags')
     page = request.args.get('page')
-    date_from = request.args.get('ltags')
-    date_to = request.args.get('ltags')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    # remove date separator
+    if date_from:
+        date_from = date_from.replace('-', '')
+    if date_to:
+        date_to = date_to.replace('-', '')
 
     # unpack tags
     list_tags = ltags.split(',')
@@ -139,12 +154,13 @@ def get_obj_by_tags():
     except:
         page = 1
 
-    dict_obj = Tag.get_obj_by_tags(object_type, list_tag, page=page)
+    dict_obj = Tag.get_obj_by_tags(object_type, list_tag, date_from=date_from, date_to=date_to, page=page)
 
     if dict_obj['tagged_obj']:
         dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s",
                         "tagged_obj":[], "page":dict_obj['page'] ,"nb_pages":dict_obj['nb_pages'],
                         "nb_first_elem":dict_obj['nb_first_elem'], "nb_last_elem":dict_obj['nb_last_elem'], "nb_all_elem":dict_obj['nb_all_elem']}
+
         for obj_id in dict_obj['tagged_obj']:
             obj_metadata = Correlate_object.get_object_metadata(object_type, obj_id)
             obj_metadata['id'] = obj_id
@@ -161,5 +177,8 @@ def get_obj_by_tags():
         #return jsonify(dict_tagged)
     else:
         dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+
+    if 'date' in dict_obj:
+        dict_tagged['date'] = dict_obj['date']
 
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)

@@ -446,7 +446,7 @@ def delete_obj_tags(object_id, object_type, tags=[]):
             return res
 
 def sanitise_tags_date_range(l_tags, date_from=None, date_to=None):
-    if date_from and date_to is None:
+    if date_from or date_to is None:
         date_from = get_tags_min_last_seen(l_tags, r_int=False)
         date_to = date_from
     return Date.sanitise_date_range(date_from, date_to)
@@ -473,7 +473,7 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
     if object_type=='item':
         #sanityze date
         date_range = sanitise_tags_date_range(l_tags, date_from=date_from, date_to=date_to)
-        l_dates = Date.substract_date(date_from, date_to)
+        l_dates = Date.substract_date(date_range['date_from'], date_range['date_to'])
 
         for date_day in l_dates:
             l_set_keys = get_obj_keys_by_tags(object_type, l_tags, date_day)
@@ -499,12 +499,21 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
         if page > nb_pages:
             page = nb_pages
 
-        # select index
         start = nb_obj*(page -1)
-        stop = (nb_obj*page) -1
-        l_tagged_obj = l_tagged_obj[start:stop]
+        if nb_pages > 1:
+            stop = (nb_obj*page)
+            l_tagged_obj = l_tagged_obj[start:stop]
+        # only one page
+        else:
+            stop = nb_all_elem
+            l_tagged_obj = l_tagged_obj[start:]
 
-        return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages, "nb_first_elem":start+1, "nb_last_elem":stop+1, "nb_all_elem":nb_all_elem}
+        if stop > nb_all_elem:
+            stop = nb_all_elem
+        stop = stop -1
+
+        return {"tagged_obj":l_tagged_obj, "date" : date_range,
+                "page":page, "nb_pages":nb_pages, "nb_first_elem":start+1, "nb_last_elem":stop+1, "nb_all_elem":nb_all_elem}
 
     # without daterange
     else:

@@ -351,7 +351,7 @@
   												</a>
   				                <div>
   				                  {% for tag in item["tags"] %}
-  					                  <a href="{{ url_for('Tags.Tags_page') }}?ltags={{ tag["tag"] }}">
+  					                  <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag["tag"] }}">
   					                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag["min_tag"] }}</span>
   					                  </a>
   				                  {%  endfor %}

@@ -361,6 +361,7 @@ def show_item_min(requested_path , content_range=0):
     if 'infoleak:submission="crawler"' in l_tags:
         crawler_metadata['get_metadata'] = True
         crawler_metadata['domain'] = r_serv_metadata.hget('paste_metadata:'+relative_path, 'domain')
+        crawler_metadata['domain'] = crawler_metadata['domain'].rsplit(':', 1)[0]
         crawler_metadata['paste_father'] = r_serv_metadata.hget('paste_metadata:'+relative_path, 'father')
         crawler_metadata['real_link'] = r_serv_metadata.hget('paste_metadata:'+relative_path,'real_link')
         crawler_metadata['screenshot'] = get_item_screenshot_path(relative_path)

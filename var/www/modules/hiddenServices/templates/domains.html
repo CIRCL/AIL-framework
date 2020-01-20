@@ -67,7 +67,7 @@
 														<a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ domain }}">{{ domain }}</a>
 														<div>
 															{% for tag in domain_metadata[domain]['tags'] %}
-															<a href="{{ url_for('Tags.Tags_page') }}?date_from={{date}}&date_to={{date}}&ltags={{ tag }}">
+															<a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
 																<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }} <i>{{ domain_metadata[domain]['tags'][tag] }}</i></span>
 															</a>
 															{%  endfor %}
