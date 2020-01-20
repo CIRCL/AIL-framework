@@ -172,13 +172,15 @@ $(document).ready(function(){
   $("#navbar-tags").addClass("active");
   $("#nav_tags_search").removeClass("text-muted");
 	$("#nav_tags_search_{{dict_tagged['object_type']}}").addClass("active");
-  $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 10, "order": [[ 0, "asc" ]] });
 
   {%if dict_tagged["object_type"]=="item"%}
     $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
         get_html_and_update_modal(event, $(this));
     });
   {%endif%}
+
+  $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 10, "order": [[ 0, "asc" ]] });
+
 });
 </script>
 
