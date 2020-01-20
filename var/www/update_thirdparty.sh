@@ -40,8 +40,8 @@ mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js.map ./static/js/
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css ./static/css/bootstrap4.min.css
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css.map ./static/css/bootstrap4.min.css.map
 
-mv temp/popper.js-1.14.3/dist/umd/popper.min.js ./static/js/
-mv temp/popper.js-1.14.3/dist/umd/popper.min.js.map ./static/js/
+mv temp/popper-core-1.14.3/dist/umd/popper.min.js ./static/js/
+mv temp/popper-core-1.14.3/dist/umd/popper.min.js.map ./static/js/
 
 mv temp/startbootstrap-sb-admin-${SBADMIN_VERSION} temp/sb-admin
 mv temp/startbootstrap-sb-admin-2-${SBADMIN_VERSION} temp/sb-admin-2
