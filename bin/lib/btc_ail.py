@@ -34,11 +34,13 @@ def get_bitcoin_info(bitcoin_address, nb_transaction=50):
 
     for transaction in jreq['txs']:
         for input in transaction['inputs']:
-            if input['prev_out']['addr'] != bitcoin_address:
-                set_btc_in.add(input['prev_out']['addr'])
+            if 'addr' in input['prev_out']:
+                if input['prev_out']['addr'] != bitcoin_address:
+                    set_btc_in.add(input['prev_out']['addr'])
         for output in transaction['out']:
-            if output['addr'] != bitcoin_address:
-                set_btc_out.add(output['addr'])
+            if 'addr' in output:
+                if output['addr'] != bitcoin_address:
+                    set_btc_out.add(output['addr'])
 
     dict_btc['btc_in'] = filter_btc_seen(set_btc_in)
     dict_btc['btc_out'] = filter_btc_seen(set_btc_out)
