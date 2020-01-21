@@ -51,6 +51,11 @@ baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':
     baseUrl = '/'+baseUrl
 
+try:
+    FLASK_PORT = config_loader.get_config_int("Flask", "port")
+except Exception:
+    FLASK_PORT = 7000
+
 # ========= REDIS =========#
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
@@ -89,6 +94,9 @@ app.register_blueprint(crawler_splash, url_prefix=baseUrl)
 app.register_blueprint(correlation, url_prefix=baseUrl)
 app.register_blueprint(tags_ui, url_prefix=baseUrl)
 # =========       =========#
+
+# ========= Cookie name ========
+app.config.update(SESSION_COOKIE_NAME='ail_framework_{}'.format(FLASK_PORT))
 
 # ========= session ========
 app.secret_key = str(random.getrandbits(256))
@@ -242,4 +250,4 @@ r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=7000, threaded=True, ssl_context=ssl_context)
+    app.run(host='0.0.0.0', port=FLASK_PORT, threaded=True, ssl_context=ssl_context)

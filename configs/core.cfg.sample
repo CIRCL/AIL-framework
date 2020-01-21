@@ -36,6 +36,8 @@ sender_pw = None
 [Flask]
 #Proxying requests to the app
 baseUrl = /
+#Flask server port
+port = 7000
 #Number of logs to display in the dashboard
 max_dashboard_logs = 15
 #Maximum number of character to display in the toolip
