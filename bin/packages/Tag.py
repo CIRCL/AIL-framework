@@ -295,7 +295,7 @@ def update_tag_metadata(tag, tag_date, object_type=None, add_tag=True):
         ## REMOVE tag ##
         else:
             if tag_date == tag_metadata['first_seen']:
-                update_tag_first_seen(object_type, tag, tag_metadata['first_seen'], tag_metadata['last_seen'])
+                update_tag_first_seen(tag, tag_metadata['first_seen'], tag_metadata['last_seen'])
             if tag_date == tag_metadata['last_seen']:
                 update_tag_last_seen(tag, tag_metadata['first_seen'], tag_metadata['last_seen'])
 
