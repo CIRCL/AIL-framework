@@ -65,7 +65,7 @@ class TestApiV1(unittest.TestCase):
     def test_0002_api_get_import_item(self):
         input_json = {"uuid": self.__class__.import_uuid}
         item_not_imported = True
-        import_timout = 30
+        import_timout = 60
         start = time.time()
 
         while item_not_imported:
