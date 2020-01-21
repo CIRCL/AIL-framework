@@ -279,7 +279,7 @@ def update_tag_metadata(tag, tag_date, object_type=None, add_tag=True):
     '''
     Update tag metadata (current: item only)
     '''
-    if object_type=="item":
+    if object_type=="item": # # TODO: use another getter (get all object with date)
         # get object metadata
         tag_metadata = get_tag_metadata(tag, r_int=True)
         #############
@@ -396,7 +396,7 @@ def add_tag(object_type, tag, object_id, obj_date=None):
             obj_date = get_obj_date(object_type, object_id)
         add_global_tag(tag, object_type=object_type)
         add_obj_tag(object_type, object_id, tag, obj_date=obj_date)
-        update_tag_metadata(tag, obj_date)
+        update_tag_metadata(tag, obj_date, object_type=object_type)
 
     # create tags stats  # # TODO:  put me in cache
     r_serv_tags.hincrby('daily_tags:{}'.format(datetime.date.today().strftime("%Y%m%d")), tag, 1)
