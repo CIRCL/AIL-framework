@@ -196,8 +196,8 @@ def get_tag_metadata(tag, r_int=False):
     Get tag metadata (current: item only)
     '''
     tag_metadata = {"tag": tag}
-    tag_metadata['first_seen'] = get_tag_first_seen(tag)
-    tag_metadata['last_seen'] = get_tag_last_seen(tag)
+    tag_metadata['first_seen'] = get_tag_first_seen(tag, r_int=r_int)
+    tag_metadata['last_seen'] = get_tag_last_seen(tag, r_int=r_int)
     return tag_metadata
 
 def get_tags_min_last_seen(l_tags, r_int=False):
@@ -563,6 +563,6 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
 
 def get_obj_date(object_type, object_id): # # TODO: move me in another file
     if object_type == "item":
-        return Item.get_item_date(object_id)
+        return int(Item.get_item_date(object_id))
     else:
         return None
