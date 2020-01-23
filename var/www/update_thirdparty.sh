@@ -116,7 +116,7 @@ python3 -m pip install git+https://github.com/MISP/PyTaxonomies --upgrade
 python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies --upgrade
 
 #Update PyMISP
-python3 -m pip install git+https://github.com/MISP/PyMISP --upgrade
+python3 -m pip install git+https://github.com/MISP/PyMISP@v2.4.119.1 --upgrade
 
 #Update the Hive
 python3 -m pip install git+https://github.com/TheHive-Project/TheHive4py --upgrade
