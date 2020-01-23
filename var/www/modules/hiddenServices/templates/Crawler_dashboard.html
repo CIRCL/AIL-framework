@@ -124,6 +124,26 @@
 			</div>
 
 
+			<hr>
+			<div class="row mb-3">
+				<div class="col-xl-6">
+					<div class="text-center">
+						<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_onion')}}" role="button">
+							<i class="fas fa-user-secret"></i>  Onion Domain Explorer
+						</a>
+					</div>
+				</div>
+				<div class="col-xl-6">
+					<div class="text-center">
+						<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_web')}}" role="button">
+							<i class="fab fa-html5"></i> Web Domain Explorer
+						</a>
+					</div>
+				</div>
+			</div>
+
+
+
 				{% with object_type='domain' %}
 					{% include 'tags/block_obj_tags_search.html' %}
 				{% endwith %}

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Show Domain - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+
+  <style>
+    .card-columns {
+      column-count: 4;
+    }
+  </style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+        <div class="card my-2 border-secondary" >
+					<div class="card-body py-2">
+						<div class="row">
+              <div class="col-md-3 text-center">
+								<button class="btn btn-primary" onclick="blocks.value=0;pixelate_all();">
+										<i class="fas fa-eye-slash"></i>
+										<span class="label-icon">Hide</span>
+								</button>
+							</div>
+							<div class="col-md-6">
+								<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="5">
+							</div>
+							<div class="col-md-3 text-center">
+								<button class="btn btn-primary" onclick="blocks.value=50;pixelate_all();">
+                    <i class="fas fa-plus-square"></i>
+										<span class="label-icon">Full resolution</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+        {% for dict_domain in dict_data['list_elem'] %}
+
+          {% if loop.index0 % 4 == 0 %}
+            <div class="card-deck mt-3">
+          {% endif %}
+
+              <div class="card">
+                <div class="text-center">
+                  <canvas id="canvas_{{loop.index0}}" style="max-height: 400px; max-width: 100%;"></canvas>
+                  <!-- <img style="height:400px;" src="{{url_for('showsavedpastes.screenshot', filename='a6/b9/33/f5/f1/0a/16d8b1467093dd5469bfd86bdb2c12f3694677c44406fa758f8b')}}" alt="Card image cap"> -->
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["id"]}}">
+                      {{dict_domain["id"]}}
+                    </a>
+                  </h5>
+                  <p class="card-text">
+                    <small class="text-muted">
+                      First seen: {{dict_domain["first_seen"]}}<br>
+                      Last_seen: {{dict_domain["first_seen"]}}<br>
+                      Ports: {{dict_domain["ports"]}}
+                    </small>
+                  </p>
+                  <small class="text-muted">Status: </small>
+                  {% if dict_domain["status"] %}
+										<span style="color:Green;">
+											<i class="fas fa-check-circle"></i>
+											UP
+										</span>
+									{% else %}
+										<span style="color:Red;">
+											<i class="fas fa-times-circle"></i>
+											DOWN
+										</span>
+									{% endif %}
+                  <div>
+                  {% for tag in dict_domain['tags'] %}
+                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
+                      <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                    </a>
+                  {%  endfor %}
+                  </div>
+                </div>
+              </div>
+
+
+          {% if loop.index0 % 4 == 3 %}
+            </div>
+          {% endif %}
+
+        {% endfor %}
+
+        {% if dict_data['list_elem']|length % 4 != 0 %}
+          </div>
+        {% endif %}
+
+        <br>
+        <br>
+
+        {%if 'list_elem' in dict_data%}
+          {% with page=dict_data['page'], nb_page_max=dict_data['nb_pages'],  nb_first_elem=dict_data['nb_first_elem'], nb_last_elem=dict_data['nb_last_elem'], nb_all_elem=dict_data['nb_all_elem'] %}
+            {% set object_name="domain" %}
+            {%if domain_type=='onion'%}
+              {% set target_url=url_for('crawler_splash.domains_explorer_onion') + "?domain_type=onion" %}
+            {%else%}
+              {% set target_url=url_for('crawler_splash.domains_explorer_web') + "?domain_type=regular" %}
+            {%endif%}
+            {% include 'pagination.html' %}
+  				{% endwith %}
+        {%endif%}
+
+
+
+
+
+			</div>
+		</div>
+	</div>
+
+</body>
+
+
+<script>
+  $(document).ready(function(){
+
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+
+<script>
+
+// img_url
+// ctx
+// canevas_id
+
+var dict_canevas_blurr_img = {}
+
+function init_canevas_blurr_img(canevas_id, img_url){
+
+  // ctx, turn off image smoothin
+  dict_canevas_blurr_img[canevas_id] = {}
+  var canvas_container = document.getElementById(canevas_id);
+  var ctx = canvas_container.getContext('2d');
+  ctx.webkitImageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = false;
+  dict_canevas_blurr_img[canevas_id]["ctx"] = ctx;
+
+  // img
+  dict_canevas_blurr_img[canevas_id]["img"] = new Image();
+  dict_canevas_blurr_img[canevas_id]["img"].onload = function() {pixelate_img(canevas_id);};
+  dict_canevas_blurr_img[canevas_id]["img"].addEventListener("error", function() {img_error(canevas_id);});
+  dict_canevas_blurr_img[canevas_id]["img"].src = img_url;
+}
+
+function pixelate_all(){
+  Object.entries(dict_canevas_blurr_img).forEach(([key, value]) => {
+   pixelate_img(key);
+  });
+}
+
+function pixelate_img(canevas_id) {
+
+  if (typeof canevas_id !== 'undefined') {
+    var canevas_to_blurr = document.getElementById(canevas_id);
+
+    /// use slider value
+    if( blocks.value == 50 ){
+        size = 1;
+    } else {
+        var size = (blocks.value) * 0.01;
+    }
+
+    canevas_to_blurr.width = dict_canevas_blurr_img[canevas_id]["img"].width;
+    canevas_to_blurr.height = dict_canevas_blurr_img[canevas_id]["img"].height;
+
+    /// cache scaled width and height
+    w = canevas_to_blurr.width * size;
+    h = canevas_to_blurr.height * size;
+
+    /// draw original image to the scaled size
+    dict_canevas_blurr_img[canevas_id]["ctx"].drawImage(dict_canevas_blurr_img[canevas_id]["img"], 0, 0, w, h);
+
+    /// pixelated
+    dict_canevas_blurr_img[canevas_id]["ctx"].drawImage(canevas_to_blurr, 0, 0, w, h, 0, 0, canevas_to_blurr.width, canevas_to_blurr.height);
+  }
+
+}
+
+function img_error(canevas_id) {
+  dict_canevas_blurr_img[canevas_id]["img"].onerror=null;
+  dict_canevas_blurr_img[canevas_id]["img"].src="{{ url_for('static', filename='image/AIL.png') }}";
+  dict_canevas_blurr_img[canevas_id]["img"].width = 50
+}
+
+blocks.addEventListener('change', pixelate_all, false);
+
+
+{% for dict_domain in dict_data['list_elem'] %}
+  {% if 'screenshot' in dict_domain %}
+    var screenshot_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}{{dict_domain['screenshot']}}";
+    init_canevas_blurr_img("canvas_{{loop.index0}}", screenshot_url);
+  {% endif %}
+{% endfor %}
+
+</script>
+
+</html>

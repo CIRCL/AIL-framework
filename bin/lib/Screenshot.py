@@ -76,6 +76,17 @@ def get_domain_screenshot(domain):
     else:
         return []
 
+def get_randon_domain_screenshot(domain, r_path=True):
+    '''
+    Retun all screenshot of a given domain.
+
+    :param domain: crawled domain
+    '''
+    res = r_serv_onion.srandmember('domain_screenshot:{}'.format(domain))
+    if res and r_path:
+        return get_screenshot_rel_path(res)
+    return res
+
 def get_screenshot_domain(sha256_string):
     '''
     Retun all domain of a given screenshot.

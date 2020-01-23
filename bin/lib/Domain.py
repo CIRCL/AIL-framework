@@ -62,7 +62,7 @@ def sanitize_domain_type(domain_type):
         return 'regular'
 
 ######## DOMAINS ########
-def get_all_domains_up(domain_type):
+def get_all_domains_up(domain_type, r_list=True):
     '''
     Get all domain up (at least one time)
 
@@ -72,7 +72,13 @@ def get_all_domains_up(domain_type):
     :return: list of domain
     :rtype: list
     '''
-    return list(r_serv_onion.smembers("full_{}_up".format(domain_type)))
+    domains = r_serv_onion.smembers("full_{}_up".format(domain_type))
+    if r_list:
+        if domains:
+            list(domains)
+        else:
+            domains = []
+    return domains
 
 def get_domains_up_by_month(date_year_month, domain_type, rlist=False):
     '''
@@ -127,6 +133,64 @@ def get_domains_up_by_daterange(date_from, date_to, domain_type):
     else:
         domains_up = []
     return domains_up
+
+def paginate_iterator(iter_elems, nb_obj=50, page=1):
+    dict_page = {}
+    dict_page['nb_all_elem'] = len(iter_elems)
+    nb_pages = dict_page['nb_all_elem'] / nb_obj
+    if not nb_pages.is_integer():
+        nb_pages = int(nb_pages)+1
+    else:
+        nb_pages = int(nb_pages)
+    if page > nb_pages:
+        page = nb_pages
+
+    # multiple pages
+    if nb_pages > 1:
+        dict_page['list_elem'] = []
+        start = nb_obj*(page -1)
+        stop = (nb_obj*page) -1
+        current_index = 0
+        for elem in iter_elems:
+            if current_index > stop:
+                break
+            if start <= current_index and stop >= current_index:
+                dict_page['list_elem'].append(elem)
+            current_index += 1
+        stop += 1
+        if stop > dict_page['nb_all_elem']:
+            stop = dict_page['nb_all_elem']
+
+    else:
+        start = 0
+        stop = dict_page['nb_all_elem']
+        dict_page['list_elem'] = list(iter_elems)
+    dict_page['page'] = page
+    dict_page['nb_pages'] = nb_pages
+    # UI
+    dict_page['nb_first_elem'] = start+1
+    dict_page['nb_last_elem'] = stop
+    return dict_page
+
+def domains_up_by_page(domain_type, nb_obj=28, page=1):
+    '''
+    Get a list of domains up (alpha sorted)
+
+    :param domain_type: domain type
+    :type domain_type: str
+
+    :return: list of domain
+    :rtype: list
+    '''
+    domains = sorted(get_all_domains_up(domain_type, r_list=False))
+    domains = paginate_iterator(domains, nb_obj=nb_obj, page=page)
+
+    # # TODO: get tags + root_screenshot + metadata
+    l_domains = []
+    for domain in domains['list_elem']:
+        l_domains.append(get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=True, screenshot=True))
+    domains['list_elem'] = l_domains
+    return domains
 
 ######## DOMAIN ########
 
@@ -367,7 +431,15 @@ def get_domain_tags(domain):
     '''
     return Tag.get_obj_tag(domain)
 
-def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False):
+def get_domain_random_screenshot(domain):
+    '''
+    Retun last screenshot (core item).
+
+    :param domain: crawled domain
+    '''
+    return Screenshot.get_randon_domain_screenshot(domain)
+
+def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False, screenshot=False):
     '''
     Get Domain basic metadata
 
@@ -384,6 +456,7 @@ def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, s
     :rtype: dict
     '''
     dict_metadata = {}
+    dict_metadata['id'] = domain
     if first_seen:
         res = get_domain_first_seen(domain, domain_type=domain_type)
         if res is not None:
@@ -398,6 +471,8 @@ def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, s
         dict_metadata['ports'] = get_domain_all_ports(domain, domain_type)
     if tags:
         dict_metadata['tags'] = get_domain_tags(domain)
+    if screenshot:
+        dict_metadata['screenshot'] = get_domain_random_screenshot(domain)
     return dict_metadata
 
 def get_domain_metadata_basic(domain, domain_type=None):

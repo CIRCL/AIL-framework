@@ -79,3 +79,29 @@ def showDomain():
 
     return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
                                 modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], object_type="domain"))
+
+@crawler_splash.route('/domains/explorer/onion', methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def domains_explorer_onion():
+    page = request.args.get('page')
+    try:
+        page = int(page)
+    except:
+        page = 1
+
+    dict_data = Domain.domains_up_by_page('onion', page=page)
+    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='onion')
+
+@crawler_splash.route('/domains/explorer/web', methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def domains_explorer_web():
+    page = request.args.get('page')
+    try:
+        page = int(page)
+    except:
+        page = 1
+
+    dict_data = Domain.domains_up_by_page('regular', page=page)
+    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='onion')
