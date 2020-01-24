@@ -6,13 +6,10 @@
 	<!-- Core CSS -->
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
-  <script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
- 	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
   <style>
     .card-columns {
@@ -32,45 +29,84 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-        <div class="row">
-          	<div class="col-12 col-lg-6">
+        <div class="card my-2 border-secondary" >
+					<div class="card-body py-2">
+						<div class="row">
+              <div class="col-md-3 text-center">
+								<button class="btn btn-primary" onclick="blocks.value=0;pixelate_all();">
+										<i class="fas fa-eye-slash"></i>
+										<span class="label-icon">Hide</span>
+								</button>
+							</div>
+							<div class="col-md-6">
+								<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="5">
+							</div>
+							<div class="col-md-3 text-center">
+								<button class="btn btn-primary" onclick="blocks.value=50;pixelate_all();">
+                    <i class="fas fa-plus-square"></i>
+										<span class="label-icon">Full resolution</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
 
-              {% with domain_type=dict_data['domain_type'], date_from=dict_data['date_from'], date_to=dict_data['date_to'], domain_type=domain_type%}
-                {% include 'domains/filter_domains.html' %}
-              {% endwith %}
+        {% for dict_domain in dict_data['list_elem'] %}
 
+          {% if loop.index0 % 4 == 0 %}
+            <div class="card-deck mt-3">
+          {% endif %}
+
+              <div class="card">
+                <div class="text-center">
+                  <canvas id="canvas_{{loop.index0}}" style="max-height: 400px; max-width: 100%;"></canvas>
+                  <!-- <img style="height:400px;" src="{{url_for('showsavedpastes.screenshot', filename='a6/b9/33/f5/f1/0a/16d8b1467093dd5469bfd86bdb2c12f3694677c44406fa758f8b')}}" alt="Card image cap"> -->
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["id"]}}">
+                      {{dict_domain["id"]}}
+                    </a>
+                  </h5>
+                  <p class="card-text">
+                    <small class="text-muted">
+                      First seen: {{dict_domain["first_seen"]}}<br>
+                      Last_seen: {{dict_domain["first_seen"]}}<br>
+                      Ports: {{dict_domain["ports"]}}
+                    </small>
+                  </p>
+                  <small class="text-muted">Status: </small>
+                  {% if dict_domain["status"] %}
+										<span style="color:Green;">
+											<i class="fas fa-check-circle"></i>
+											UP
+										</span>
+									{% else %}
+										<span style="color:Red;">
+											<i class="fas fa-times-circle"></i>
+											DOWN
+										</span>
+									{% endif %}
+                  <div>
+                  {% for tag in dict_domain['tags'] %}
+                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
+                      <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                    </a>
+                  {%  endfor %}
+                  </div>
+                </div>
+              </div>
+
+
+          {% if loop.index0 % 4 == 3 %}
             </div>
-            <div class="col-12 col-xl-6">
+          {% endif %}
 
-              <div class="card my-2 border-secondary" >
-      					<div class="card-body py-2">
-      						<div class="row">
-                    <div class="col-md-3 text-center">
-      								<button class="btn btn-primary" onclick="blocks.value=0;pixelate_all();">
-      										<i class="fas fa-eye-slash"></i>
-      										<span class="label-icon">Hide</span>
-      								</button>
-      							</div>
-      							<div class="col-md-6">
-      								<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="5">
-      							</div>
-      							<div class="col-md-3 text-center">
-      								<button class="btn btn-primary" onclick="blocks.value=50;pixelate_all();">
-                          <i class="fas fa-plus-square"></i>
-      										<span class="label-icon">Full resolution</span>
-      								</button>
-      							</div>
-      						</div>
-      					</div>
-      				</div>
+        {% endfor %}
 
-            </div>
-        </div>
-
-
-        {% with dict_data=dict_data, bootstrap_label=bootstrap_label %}
-          {% include 'domains/card_img_domain.html' %}
-        {% endwith %}
+        {% if dict_data['list_elem']|length % 4 != 0 %}
+          </div>
+        {% endif %}
 
         <br>
         <br>
@@ -94,39 +130,13 @@
 			</div>
 		</div>
 	</div>
+
 </body>
 
 
 <script>
   $(document).ready(function(){
-    $('#nav_title_domains_explorer').removeClass("text-muted");
 
-    $('#date-range-from').dateRangePicker({
-  			separator : ' to ',
-  			getValue: function(){
-  					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-  							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-  					else
-  							return '';
-  					},
-  					setValue: function(s,s1,s2){
-  							$('#date-range-from-input').val(s1);
-  							$('#date-range-to-input').val(s2);
-  					}
-  	});
-  	$('#date-range-to').dateRangePicker({
-  			separator : ' to ',
-  			getValue: function(){
-  					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-  							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-  					else
-  							return '';
-  			},
-  			setValue: function(s,s1,s2){
-  					$('#date-range-from-input').val(s1);
-  					$('#date-range-to-input').val(s2);
-  			}
-  	});
   });
 
 function toggle_sidebar(){
@@ -207,16 +217,18 @@ function pixelate_img(canevas_id) {
 function img_error(canevas_id) {
   dict_canevas_blurr_img[canevas_id]["img"].onerror=null;
   dict_canevas_blurr_img[canevas_id]["img"].src="{{ url_for('static', filename='image/AIL.png') }}";
+  dict_canevas_blurr_img[canevas_id]["img"].width = 50
 }
 
 blocks.addEventListener('change', pixelate_all, false);
+
 
 {% for dict_domain in dict_data['list_elem'] %}
   {% if 'screenshot' in dict_domain %}
     {% if dict_domain['is_tags_safe'] %}
       var screenshot_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}{{dict_domain['screenshot']}}";
     {% else %}
-    var screenshot_url = "{{ url_for('static', filename='image/AIL.png') }}";
+    var screenshot_url = "{{ url_for('static', filename='image/misp-logo.png') }}";
     {% endif %}
     init_canevas_blurr_img("canvas_{{loop.index0}}", screenshot_url);
   {% endif %}

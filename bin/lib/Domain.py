@@ -48,20 +48,29 @@ def get_db_keys_domain_up(domain_type, date_type): # sanitise domain_type
 
 def get_list_db_keys_domain_up(domain_type, l_dates, date_type):
     l_keys_name = []
-    key_name = get_db_keys_domain_up(domain_type, date_type)
-    if key_name:
-        for str_date in l_dates:
-            l_keys_name.append(key_name.format(str_date))
+    if domain_type=='all':
+        domains_types = get_all_domains_type()
+    else:
+        domains_types = [domain_type]
+
+    for dom_type in domains_types:
+        key_name = get_db_keys_domain_up(dom_type, date_type)
+        if key_name:
+            for str_date in l_dates:
+                l_keys_name.append(key_name.format(str_date))
     return l_keys_name
 
 ######## UTIL ########
 def sanitize_domain_type(domain_type):
-    if domain_type in ['onion', 'regular']:
+    if domain_type in get_all_domains_type():
         return domain_type
     else:
         return 'regular'
 
 ######## DOMAINS ########
+def get_all_domains_type():
+    return ['onion', 'regular']
+
 def get_all_domains_up(domain_type, r_list=True):
     '''
     Get all domain up (at least one time)
@@ -116,7 +125,7 @@ def get_domains_up_by_daterange(date_from, date_to, domain_type):
     '''
     Get all domain up (at least one time) by daterange
 
-    :param domain_type: date YYYYMMDD
+    :param domain_type: domain_type
     :type domain_type: str
 
     :return: list of domain
@@ -184,13 +193,34 @@ def domains_up_by_page(domain_type, nb_obj=28, page=1):
     '''
     domains = sorted(get_all_domains_up(domain_type, r_list=False))
     domains = paginate_iterator(domains, nb_obj=nb_obj, page=page)
-
-    # # TODO: get tags + root_screenshot + metadata
-    l_domains = []
-    for domain in domains['list_elem']:
-        l_domains.append(get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=True, screenshot=True))
-    domains['list_elem'] = l_domains
+    domains['list_elem'] = create_domains_metadata_list(domains['list_elem'], domain_type)
     return domains
+
+def get_domains_up_by_filers(domain_type, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
+    if not tags:
+        if not date_from and not date_to:
+            return domains_up_by_page(domain_type, nb_obj=nb_obj, page=page)
+        else:
+            domains = sorted(get_domains_up_by_daterange(date_from, date_to, domain_type))
+            domains = paginate_iterator(domains, nb_obj=nb_obj, page=page)
+            domains['list_elem'] = create_domains_metadata_list(domains['list_elem'], domain_type)
+            domains['domain_type'] = domain_type
+            domains['date_from'] = date_from
+            domains['date_to'] = date_to
+            return domains
+    else:
+        return None
+
+def create_domains_metadata_list(list_domains, domain_type):
+    l_domains = []
+    for domain in list_domains:
+        if domain_type=='all':
+            dom_type = get_domain_type(domain)
+        else:
+            dom_type = domain_type
+        l_domains.append(get_domain_metadata(domain, dom_type, first_seen=True, last_ckeck=True, status=True,
+                            ports=True, tags=True, screenshot=True, tags_safe=True))
+    return l_domains
 
 ######## DOMAIN ########
 
@@ -439,7 +469,7 @@ def get_domain_random_screenshot(domain):
     '''
     return Screenshot.get_randon_domain_screenshot(domain)
 
-def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False, screenshot=False):
+def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False, tags_safe=False, screenshot=False):
     '''
     Get Domain basic metadata
 
@@ -471,6 +501,11 @@ def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, s
         dict_metadata['ports'] = get_domain_all_ports(domain, domain_type)
     if tags:
         dict_metadata['tags'] = get_domain_tags(domain)
+    if tags_safe:
+        if tags:
+            dict_metadata['is_tags_safe'] = Tag.is_tags_safe(dict_metadata['tags'])
+        else:
+            dict_metadata['is_tags_safe'] = Tag.is_tags_safe(get_domain_tags(domain))
     if screenshot:
         dict_metadata['screenshot'] = get_domain_random_screenshot(domain)
     return dict_metadata

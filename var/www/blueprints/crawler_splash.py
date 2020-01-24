@@ -80,28 +80,79 @@ def showDomain():
     return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
                                 modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], object_type="domain"))
 
-@crawler_splash.route('/domains/explorer/onion', methods=['GET', 'POST'])
+@crawler_splash.route('/domains/explorer/domain_type_post', methods=['POST'])
 @login_required
 @login_read_only
-def domains_explorer_onion():
+def domains_explorer_post_filter():
+    domain_onion = request.form.get('domain_onion_switch')
+    domain_regular = request.form.get('domain_regular_switch')
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+
+    if date_from and date_to:
+        date_from = date_from.replace('-', '')
+        date_to = date_to.replace('-', '')
+    else:
+        date_from = None
+        date_to = None
+
+    if domain_onion and domain_regular:
+        if date_from and date_to:
+            return redirect(url_for('crawler_splash.domains_explorer_all', date_from=date_from, date_to=date_to))
+        else:
+            return redirect(url_for('crawler_splash.domains_explorer_all'))
+    elif domain_regular:
+        if date_from and date_to:
+            return redirect(url_for('crawler_splash.domains_explorer_web', date_from=date_from, date_to=date_to))
+        else:
+            return redirect(url_for('crawler_splash.domains_explorer_web'))
+    else:
+        if date_from and date_to:
+            return redirect(url_for('crawler_splash.domains_explorer_onion', date_from=date_from, date_to=date_to))
+        else:
+            return redirect(url_for('crawler_splash.domains_explorer_onion'))
+
+@crawler_splash.route('/domains/explorer/all', methods=['GET'])
+@login_required
+@login_read_only
+def domains_explorer_all():
     page = request.args.get('page')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
     try:
         page = int(page)
     except:
         page = 1
 
-    dict_data = Domain.domains_up_by_page('onion', page=page)
+    dict_data = Domain.get_domains_up_by_filers('all', page=page, date_from=date_from, date_to=date_to)
+    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
+
+@crawler_splash.route('/domains/explorer/onion', methods=['GET'])
+@login_required
+@login_read_only
+def domains_explorer_onion():
+    page = request.args.get('page')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    try:
+        page = int(page)
+    except:
+        page = 1
+
+    dict_data = Domain.get_domains_up_by_filers('onion', page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='onion')
 
-@crawler_splash.route('/domains/explorer/web', methods=['GET', 'POST'])
+@crawler_splash.route('/domains/explorer/web', methods=['GET'])
 @login_required
 @login_read_only
 def domains_explorer_web():
     page = request.args.get('page')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
     try:
         page = int(page)
     except:
         page = 1
 
     dict_data = Domain.domains_up_by_page('regular', page=page)
-    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='onion')
+    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='regular')

@@ -1,0 +1,52 @@
+{% for dict_domain in dict_data['list_elem'] %}
+
+  {% if loop.index0 % 4 == 0 %}
+    <div class="card-deck mt-3">
+  {% endif %}
+
+      <div class="card">
+        <div class="text-center">
+          <canvas id="canvas_{{loop.index0}}" style="max-height: 400px; max-width: 100%;"></canvas>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">
+            <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["id"]}}">
+              {{dict_domain["id"]}}
+            </a>
+          </h5>
+          <p class="card-text">
+            <small class="text-muted">
+              First seen: {{dict_domain["first_seen"]}}<br>
+              Last_seen: {{dict_domain["first_seen"]}}<br>
+              Ports: {{dict_domain["ports"]}}
+            </small>
+          </p>
+          <small class="text-muted">Status: </small>
+          {% if dict_domain["status"] %}
+    				<span style="color:Green;">
+    					<i class="fas fa-check-circle"></i> UP
+    				</span>
+    			{% else %}
+    				<span style="color:Red;">
+    					<i class="fas fa-times-circle"></i>	DOWN
+    				</span>
+    			{% endif %}
+          <div>
+            {% for tag in dict_domain['tags'] %}
+              <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
+                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+              </a>
+            {%  endfor %}
+          </div>
+        </div>
+      </div>
+
+  {% if loop.index0 % 4 == 3 %}
+    </div>
+  {% endif %}
+
+{% endfor %}
+
+{% if dict_data['list_elem']|length % 4 != 0 %}
+    </div>
+{% endif %}
