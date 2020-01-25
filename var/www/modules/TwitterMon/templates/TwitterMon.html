@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+
+<!-- 
+============================================================================================================
+# Author: Alfonso G. Alonso
+# Twitter Monitor for AIL Framework
+# For license information, see LICENSE.TXT
+# ==========================================================================================================
+
+
+# ========================================= TWITTERMON MONITOR ============================================
+#
+# Module in charge of:
+# - Setting parameters for monitoring Twitter.
+# - Allowing the user to activate / deactivate Twitter monitoring.
+# - View current status of the monitoring.
+# 
+#
+# ==========================================================================================================
+-->
+
+<html>
+
+<head>
+  <title>Twitter Monitor - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+<div class="container-fluid">
+   <div class="row">
+      {% include 'twittermon/menu_sidebar.html' %}
+      <div class="col-12 col-lg-10" id="core_content">
+         <div class="card mb-3 mt-1">
+            <div class="card-header text-white bg-dark pb-1">
+               <h5 class="card-title">Twitter Monitoring</h5>
+            </div>
+            <div class="card-body">
+               <div class="row">
+                  <div class="col-xl-6">
+                     <div class="card text-left border-secondary">
+                        <div class="card-body px-1 py-0">
+                           <div style="padding-top:10px;padding-left:10px;padding-bottom:20px">Search name: <input id="TM-searchname" class="form-control" placeholder="Name your search" type="text" style="max-width:400px" onblur="checkIfSearchAlreadyExists()"></div>
+                           <div style="padding-top:22px;padding-left:9px"><h5 class="card-title">SEARCH PARAMETERS</h5></div>
+                           <div style="padding:10px">Terms: <input id="TM-terms" class="form-control" placeholder="Terms separated by spaces (use -term to exclude from search results)" type="text" style="max-width:800px"></div>
+                           <div style="padding:10px">Twitter username: <input id="TM-username" class="form-control" placeholder="Twitter username" type="text" style="max-width:300px"></div>
+			   <div style="padding:10px">Language: 
+		                <select class="form-control" placeholder="Tweet language" id="TM-language">
+        			    <option value="all" selected="selected">Todos los idiomas</option>
+        			    <option disabled="disabled">---</option>
+        			    <option value="en">inglés (English)</option>
+        			    <option value="ja">japonés (日本語)</option>
+        			    <option value="ar">árabe (العربية)</option>
+        			    <option value="es">español (español)</option>
+        			    <option disabled="disabled">---</option>
+        			    <option value="de">alemán (Deutsch)</option>
+        			    <option value="am">amárico (አማርኛ)</option>
+        			    <option value="hy">armenio (հայերեն)</option>
+        			    <option value="bn">bengalí (বাংলা)</option>
+        			    <option value="my">birmano (မြန်မာ)</option>
+        			    <option value="bg">búlgaro (български)</option>
+        			    <option value="kn">canarés (ಕನ್ನಡ)</option>
+        			    <option value="zh">chino (中文)</option>
+        			    <option value="si">cingalés (සිංහල)</option>
+        			    <option value="ko">coreano (한국어)</option>
+        			    <option value="ht">criollo haitiano (Haitian Creole)</option>
+        			    <option value="da">danés (dansk)</option>
+        			    <option value="dv">divehi (Divehi)</option>
+        			    <option value="sl">esloveno (slovenščina)</option>
+        			    <option value="et">estonio (eesti)</option>
+        			    <option value="fi">finés (suomi)</option>
+        			    <option value="fr">francés (français)</option>
+        			    <option value="ka">georgiano (ქართული)</option>
+        			    <option value="el">griego (Ελληνικά)</option>
+        			    <option value="gu">guyaratí (ગુજરાતી)</option>
+        			    <option value="he">hebreo (עברית)</option>
+        			    <option value="hi">hindi (हिन्दी)</option>
+        			    <option value="hu">húngaro (magyar)</option>
+        			    <option value="id">indonesio (Indonesia)</option>
+        			    <option value="is">islandés (íslenska)</option>
+        			    <option value="it">italiano (italiano)</option>
+        			    <option value="km">jemer (ខ្មែរ)</option>
+        			    <option value="ckb">kurdo sorani (کوردیی ناوەندی)</option>
+        			    <option value="lo">lao (ລາວ)</option>
+        			    <option value="lv">letón (latviešu)</option>
+        			    <option value="lt">lituano (lietuvių)</option>
+        			    <option value="ml">malayalam (മലയാളം)</option>
+        			    <option value="mr">maratí (मराठी)</option>
+         			    <option value="nl">neerlandés (Nederlands)</option>
+        			    <option value="ne">nepalí (नेपाली)</option>
+        			    <option value="no">noruego (norsk)</option>
+        			    <option value="or">oriya (ଓଡ଼ିଆ)</option>
+        			    <option value="pa">panyabí (ਪੰਜਾਬੀ)</option>
+        			    <option value="ps">pastún (پښتو)</option>
+        			    <option value="fa">persa (فارسی)</option>
+        			    <option value="pl">polaco (polski)</option>
+        			    <option value="pt">portugués (português)</option>
+        			    <option value="ro">rumano (română)</option>
+        			    <option value="ru">ruso (русский)</option>
+        			    <option value="sr">serbio (српски)</option>
+         			    <option value="sd">sindhi (سنڌي)</option>
+        			    <option value="sv">sueco (svenska)</option>
+        			    <option value="tl">tagalo (Tagalog)</option>
+        			    <option value="th">tailandés (ไทย)</option>
+        			    <option value="ta">tamil (தமிழ்)</option>
+        			    <option value="te">telugu (తెలుగు)</option>
+        			    <option value="bo">tibetano (བོད་སྐད་)</option>
+        			    <option value="tr">turco (Türkçe)</option>
+        			    <option value="ug">uigur (ئۇيغۇرچە)</option>
+        			    <option value="ur">urdu (اردو)</option>
+        			    <option value="vi">vietnamita (Tiếng Việt)</option>
+		                </select>
+			   </div>
+                           <div style="padding:10px">Location
+				<div> 
+				   Near: <input id="TM-near" class="form-control" placeholder="Near" type="text" style="max-width:100px;display:inline">
+				   within: <input id="TM-within" class="form-control" placeholder="within" type="text" style="max-width:100px;display:inline"> (km)
+				</div>
+			   </div>
+
+                           <div style="padding-top:22px;padding-left:9px"><h5 class="card-title">EXPLORATION TYPE</h5></div>
+			   <div style="padding:10px">
+        	                Maximum tweets: <input id="TM-maxTweets" class="form-control" placeholder="No limit" type="text" style="max-width:100px;display:inline">
+			   </div>
+			   <div style="padding:10px">
+	                        Only Top tweets: <input type="checkbox" name="topTweets" id="TM-top-tweets" value="topTweets" data-toggle="toggle">
+			   </div>
+			   <div style="padding:10px">
+				Monitor Mode:
+				<select name="Exploration Type" id="TM-exploration-type" onchange="changeExplorationType(this)" class="form-control" style="max-width:150px;display:inline"> 
+				   <option value="Real-Time" selected>Real time</option> 
+				   <option value="Time-frame">Time frame</option> 
+				</select>
+				<div class="row mb-3">
+				   <div class="col-md-6">
+				      <div class="input-group" style="display:none" id="date-range-from">
+				         <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span>
+				            <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from" autocomplete="off">
+				         </div>
+				     </div>
+				   </div><!-- col-md-6 -->
+				   <div class="col-md-6">
+				      <div class="input-group" style="display:none" id="date-range-to">
+				         <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span>
+				            <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to" autocomplete="off">
+				         </div>
+				      </div>
+				   </div><!-- col-md-6 -->
+				</div><!-- row mb-3 -->
+			   </div>
+                           <div style="padding-bottom:14px">
+			     <button id="TM-start-btn" class="btn btn-success" style="margin-left: 10px;"> START MONITORING </button>
+                             <button id="TM-stop-btn" class="btn btn-warning" style="margin-left: 10px;"> STOP </button>
+                           </div>
+                        </div><!-- card-body px-1 py-0 -->
+                     </div><!-- card text-center border-secondary -->
+                  </div><!-- col-xl-6 -->
+                  <div class="col-xl-6">
+                     <div class="card border-success" id="card_progress">
+                        <div class="card-body" id="card_progress_body">
+			   <div>
+			     <span class="fas fa-cog fa-spin fa-2x" id="TM-spinner"></span>
+                             <h5 class="card-title" style="display:inline">Status: <label id="TM-status"></label></h5>
+			   </div>              
+                           <div style="padding-top:12px">
+                              <label id="TM-statusDescription"></label>
+                           </div>
+                           <div style="text-align:right">
+			      <label id="TM-progress"></label><label id="TM-maxTweetsLog"></label>
+                           </div>
+                           <div style="text-align:left;height:200px;max-height:200px;overflow:scroll;overflow-x:hidden;overflow-y:scroll;">
+                                 <label id="TM-processing"></label>
+			   </div>
+			   <div id="currentSearchRow" style="padding-left:9px;text-align:left;border-style:groove;border-radius:4px;border-width:1px;border-color:#263779;margin-top:14px;visibility:hidden"><label id="TM-currentSearch" style="color:#e39300"></label></div>
+                 <div class="row" style="padding-top:20px">
+			<div style="padding-left:9px"><h5 class="card-title">TwitterMon console:</h5></div>
+		        <console style="border:3px groove #ccc;display:block;padding:10px;width:95%;height:185px;margin:15px;color:white;background-color:#343a40;max-height:185px;overflow-x:hidden;overflow-y:scroll"><label id="TM-userMessage"></label></console>
+                 </div>
+                        </div><!-- card-body -->
+                     </div><!-- card -->
+                  </div><!-- card -->
+                 </div><!-- col-xl-6 -->
+               </div><!-- row -->
+            </div><!-- card-body -->
+         </div><!-- card mb-3 mt-1 -->
+      </div><!-- col-12 col-lg-10 -->
+   </div><!-- row -->
+</div><!-- container-fluid -->
+</body>
+
+<script>
+
+	/* ---------------------------------------------------------------------
+	//
+	// DOCUMENT READY
+	//
+	// -------------------------------------------------------------------- */
+  
+	$(document).ready(function(){
+ 
+		// Set page for AIL
+		// ----------------------------------------
+	
+		activePage = "page-TwitterMon";
+		$("#"+activePage).addClass("active");
+
+		// Bind UI actions to functions
+		// ----------------------------------------
+
+		$('#TM-start-btn').click(processArguments);
+		$('#TM-stop-btn').click(cancelMonitoring);
+
+		// Default state
+		// ----------------------------------------
+ 
+		currProgress = "";
+		maxTweets = "";
+		currProcessing = "";
+		currStatusDescription = "";
+		monitorState = "Not loaded";
+
+		// Show monitor status on entering page
+		// ----------------------------------------
+ 
+		checkStatus();
+
+
+		// Date range picker
+		// ----------------------------------------
+
+		$('#date-range-from').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+				if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+					return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+				else
+					return '';
+				},
+				setValue: function(s,s1,s2){
+					$('#date-range-from-input').val(s1);
+					$('#date-range-to-input').val(s2);
+				}
+		});
+		$('#date-range-to').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+				if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+					return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+				else
+					return '';
+			},
+			setValue: function(s,s1,s2){
+					$('#date-range-from-input').val(s1);
+					$('#date-range-to-input').val(s2);
+			}
+		});
+ 
+	});
+
+ </script>
+ <script>
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// AUXILIARY --- CHECK IF SEARCH ALREADY EXISTS ---
+	//
+	// -------------------------------------------------------------------- */
+
+	function checkIfSearchAlreadyExists(){
+
+		searchname = $('#TM-searchname').val().trim().replace(/ /g,"_").toUpperCase();
+
+    		$.get("{{ url_for('TwitterMon.check_if_search_exists') }}",{searchname}, function(data){
+			if (data == "True"){
+			   $("#TM-userMessage").append("ℹ️ Search name already exists, data will be merged.<br/>");
+			}
+		});
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// UI MANAGEMENT --- REALTIME >< TIME FAME ---
+	//
+	// -------------------------------------------------------------------- */
+
+	function changeExplorationType(obj) {
+
+		var selectBox = obj;
+		var selected = selectBox.options[selectBox.selectedIndex].value;
+		var textareaDateFrom = document.getElementById("date-range-from");
+		var textareaDateTo = document.getElementById("date-range-to");
+
+		if(selected === 'Time-frame'){
+			textareaDateFrom.style.display = "block";
+			textareaDateTo.style.display = "block";
+		}else{
+			textareaDateFrom.style.display = "none";
+			textareaDateTo.style.display = "none";
+			$('date-range-from-input').val() = "{{date_from}}";
+			$('date-range-to-input').val() = "{{date_to}}";
+		}
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// UI MANAGEMENT --- INPUT FILTER ---
+	//
+	// -------------------------------------------------------------------- */
+
+
+	function setInputFilter(textbox, inputFilter) {
+  		["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function(event) {
+		    textbox.oldValue = "";
+		    textbox.addEventListener(event, function() {
+		      if (inputFilter(this.value)) {
+		        this.oldValue = this.value;
+		        this.oldSelectionStart = this.selectionStart;
+		        this.oldSelectionEnd = this.selectionEnd;
+		      } else if (this.hasOwnProperty("oldValue")) {
+		        this.value = this.oldValue;
+		        this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+		      }
+		    });
+		  });
+	}
+
+	setInputFilter(document.getElementById("TM-maxTweets"), function(value) {
+	  return /^\d*$/.test(value);
+	});
+
+	setInputFilter(document.getElementById("TM-searchname"), function(value) {
+	  return /^[0-9a-z\s]*$/i.test(value);
+	});
+
+	setInputFilter(document.getElementById("TM-within"), function(value) {
+	  return /^[0-9]*$/i.test(value);
+	});
+	
+
+	/* ---------------------------------------------------------------------
+	//
+	// UI MANAGEMENT --- TOGGLE SIDEBAR ---
+	//
+	// -------------------------------------------------------------------- */
+
+	function toggle_sidebar(){
+		
+		if($('#nav_menu').is(':visible')){
+			$('#nav_menu').hide();
+			$('#side_menu').removeClass('border-right');
+			$('#side_menu').removeClass('col-lg-2');
+			$('#core_content').removeClass('col-lg-10');
+		}else{
+			$('#nav_menu').show();
+			$('#side_menu').addClass('border-right');
+			$('#side_menu').addClass('col-lg-2');
+			$('#core_content').addClass('col-lg-10');
+		}
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// UI MANAGEMENT --- HIGHLIGHT INPUT ---
+	//
+	// -------------------------------------------------------------------- */
+
+	function highlightInput(inputName){
+
+		if (inputName == "#TM-searchname"){
+		 	bgcolor = "#ff767652";	
+		}else{
+		 	bgcolor = "#b6f0fd52";
+		}
+		$(inputName).css('background',bgcolor);
+	}
+
+	function cleanInput(inputName){
+		$(inputName).css('background','');
+	}
+
+	/* ---------------------------------------------------------------------
+	//
+	// UI MANAGEMENT --- CLEAN WARNING MESSAGES ---
+	//
+	// -------------------------------------------------------------------- */
+
+	function cleanWarningMessages(){
+
+		cleanInput("#TM-searchname");
+		cleanInput("#TM-username");
+		cleanInput("#TM-terms");
+		cleanInput("#TM-near");
+
+		$("#TM-userMessage").text("");
+	}
+
+
+ </script>
+ <script>
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// CANCEL MONITORING
+	//
+	// -------------------------------------------------------------------- */
+
+	function cancelMonitoring() {
+
+		$.get("{{ url_for('TwitterMon.stop_monitoring') }}",function(status){
+			if(status == "success") {
+				window.location.reload(false);
+			}
+		});
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// PROCESS ARGUMENTS
+	//
+	// -------------------------------------------------------------------- */
+
+	function processArguments() {
+
+
+		// Clean warning messages
+		// ----------------------------------------
+
+		cleanWarningMessages();
+
+
+		// Set parameters to default
+		// ----------------------------------------
+
+		var since = ""
+		var until = ""
+		var top = ""
+		var near = ""
+		var within = ""
+		var lang = ""
+
+		// Process parameters
+		// ----------------------------------------
+
+		searchname = $('#TM-searchname').val().trim().replace(/ /g,"_").toUpperCase();
+		username = $('#TM-username').val().trim();
+		terms = $('#TM-terms').val().trim();
+		since = $('#date-range-from-input').val();
+		until = $('#date-range-to-input').val();
+		if ($('#TM-top-tweets').is(":checked")) top = "True"
+		maxTweets = $('#TM-maxTweets').val().trim();
+		if (maxTweets == ""){
+			$("#TM-maxTweetsLog").text("∞");
+		}else{
+			$("#TM-maxTweetsLog").text(maxTweets);
+		}
+		near = $('#TM-near').val().trim();
+		if ($('#TM-within').val().trim() != ""){
+			within = (parseFloat($('#TM-within').val().trim())*0.62).toString()+"mi";
+		}
+		langTmp = $('#TM-language').val().trim();
+		if (langTmp != "all") lang = langTmp;
+		//console.log("Language = "+lang);
+
+		// CHECK IF NECESSARY PARAMETERS HAVE BEEN INTRODUCED
+
+		if (searchname == "" || ((username == "") && (terms == "") && (near == ""))){
+			messageText = ""
+			if (searchname == ""){
+				highlightInput("#TM-searchname");
+				messageText += "⚠️ You must set a name for your search.<br/>";
+			}
+			if ((username == "") && (terms == "") && (near == "")){
+				highlightInput("#TM-username");
+				highlightInput("#TM-terms");
+				highlightInput("#TM-near");
+				messageText += "⚠️ You must introduce at least one of the following parameters: username, terms, near.<br/>";
+			}
+			$("#TM-userMessage").append(messageText);
+			return;
+			//terms = 'a b c d e f g h i j k l m n ñ o p q r s t u v w x y z'
+		}
+
+		$.get("{{ url_for('TwitterMon.start_monitoring') }}",{searchname,username,terms,since,until,top,maxTweets,near,within,lang}, function(data, status){
+			if(status == "success") {}
+		});
+
+		checkStatus();
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// CHECK STATUS
+	//
+	// -------------------------------------------------------------------- */
+
+	function checkStatus(){
+
+		retrieveStatus();
+
+		getCurrentSearch();
+
+		// PERIODIC REQUEST
+		// -----------------------------------------
+
+		var refreshId = setInterval(function() {
+
+			// Request Monitoring status
+			// - - - - - - - - - - - - - - -
+
+			retrieveStatus();			
+
+			// Stop requesting if not working
+			// - - - - - - - - - - - - - - -
+
+			if (monitorState != "working"){
+				clearInterval(refreshId);
+			
+			}
+		}, 500)
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// HANDLE MONITOR STATUS
+	// 
+	// Possible values: Not loaded, finished, error, working, cancelled
+	// -------------------------------------------------------------------- */
+
+
+	function handleNewStatus() {
+
+
+			// MONITOR WORKING
+			//
+			if (monitorState == "working"){
+
+				if ($("#TM-spinner").is(":hidden")) $("#TM-spinner").show();
+				if ($("#TM-stop-btn").is(":hidden")) $("#TM-stop-btn").show();
+				if ($("#TM-start-btn").is(":visible")) $("#TM-start-btn").hide();
+
+				
+				$("#TM-progress").text(currProgress + "/");
+				$("#TM-processing").text(currProcessing);
+
+			// MONITOR WORKING
+			//
+
+			}else{
+
+				if ($("#TM-spinner").is(":visible")) $("#TM-spinner").hide();
+				if ($("#TM-stop-btn").is(":visible")) $("#TM-stop-btn").hide();
+				if ($("#TM-start-btn").is(":hidden")) $("#TM-start-btn").show();
+
+				// ERROR RECEIVED OR NOT WORKING
+				//
+				if (monitorState == "error"){
+
+				    $("#TM-progress").text("");
+				    $("#TM-maxTweetsLog").text("");
+				
+				}else if (monitorState == "Not loaded"){
+				
+				    $("#TM-progress").text("");
+				    $("#TM-maxTweetsLog").text("");
+				    currStatusDescription = "";
+				
+				// FINISHED OR CANCELLED
+				//				
+				}else{
+				    $("#TM-progress").text(currProgress + "/");
+				    if (maxTweets == ""){
+				    	$("#TM-maxTweetsLog").text("∞");
+				    }else{
+				    	$("#TM-maxTweetsLog").text(maxTweets);
+				    }
+				    $("#TM-processing").text(currProcessing);
+				}
+
+			}
+
+			$("#TM-status").text(monitorState);
+
+			
+			if (($("#TM-statusDescription").text() != "") && ($("#TM-statusDescription").text() !=currStatusDescription)){ 
+				var currentdate = new Date(); 
+				var currtime =  currentdate.getHours() + ":"  
+				                + currentdate.getMinutes() + ":" 
+				                + currentdate.getSeconds();
+
+				$("#TM-userMessage").prepend(currtime + ": " + $("#TM-statusDescription").text() + "</br>");
+			}
+			
+			$("#TM-statusDescription").text(currStatusDescription);
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// GET CURRENT SEARCH
+	//
+	// -------------------------------------------------------------------- */
+
+	function getCurrentSearch(){
+
+		$.get("{{ url_for('TwitterMon.get_Current_Search') }}",function(data) {
+			if (data!=""){
+				$("#TM-currentSearch").text(data);
+				$("#currentSearchRow").css('visibility','visible');
+			}						
+		});
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// RETRIEVE STATUS
+	//
+	// -------------------------------------------------------------------- */
+
+	function retrieveStatus(){
+		$.get("{{ url_for('TwitterMon.get_Status') }}",function(data) {
+			
+			monitorState = data;
+
+			retrieveStatusDescription(); // ()--->
+
+			retrieveProgress(); // ()--->
+
+			retrieveProcessing(); // ()--->
+
+			handleNewStatus(); // ()--->
+		});
+	}	
+
+
+	function retrieveStatusDescription(){
+		$.get("{{ url_for('TwitterMon.get_StatusDescription') }}",function(data) {
+			currStatusDescription = data;
+		});
+	}
+
+	function retrieveProcessing(){
+		$.get("{{ url_for('TwitterMon.get_Processing') }}",function(data) {	
+			currProcessing = data;
+		});
+	}
+
+
+	function retrieveProgress(){
+		$.get("{{ url_for('TwitterMon.get_Progress') }}",function(data) {
+			currProgress = data;
+        	});
+	}
+
+
+
+</script>
+</body>
+</html>
+
