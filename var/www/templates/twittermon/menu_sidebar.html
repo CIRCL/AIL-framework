@@ -1,0 +1,43 @@
+      <div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
+
+      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar();">
+          <i class="fas fa-align-left"></i>
+      	  <span>Toggle Sidebar</span>
+      	</button>
+
+      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+      		<h5 class="d-flex text-muted w-100" id="nav_server">
+      		  <span>Monitor</span>
+      		</h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('TwitterMon.TwitterMon_page')}}" id="nav_monitor_page">
+      	        <i class="fas fa-binoculars"></i>
+      	        <span>Monitor panel</span>
+      	      </a>
+      	    </li>
+          </ul>
+          <h5 class="d-flex text-muted w-100 py-2" id="nav_my_profile">
+            <span>Results</span>
+          </h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('TwitterMon.results_page')}}" id="nav_results_page">
+      	        <i class="fas fa-search"></i>
+      	        <span>Analyzer</span>
+      	      </a>
+      	    </li>
+          </ul>
+	  <h5 class="d-flex text-muted w-100 py-2" id="nav_my_profile">
+           <span>Configuration</span>
+          </h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('TwitterMon.settings_page')}}" id="nav_settings_page">
+      	        <i class="fas fa-cogs"></i>
+      	        <span>Settings</span>
+      	      </a>
+      	    </li>
+          </ul>
+        </nav>
+      </div>
