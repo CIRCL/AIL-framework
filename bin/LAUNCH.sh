@@ -218,7 +218,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "IPAddress" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./IPAddress.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "TwitterAnalyzer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./TwitterAnalyzer.py; read x
+    screen -S "Script_AIL" -X screen -t "TwitterAnalyzer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./TwitterAnalyzer.py; read x"
 
 }
 
