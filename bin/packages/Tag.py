@@ -392,6 +392,11 @@ def add_tag(object_type, tag, object_id, obj_date=None):
     # new tag
     if not is_obj_tagged(object_id, tag):
         # # TODO: # FIXME: sanityze object_type
+        if obj_date:
+            try:
+                obj_date = int(obj_date)
+            except:
+                obj_date = None
         if not obj_date:
             obj_date = get_obj_date(object_type, object_id)
         add_global_tag(tag, object_type=object_type)
