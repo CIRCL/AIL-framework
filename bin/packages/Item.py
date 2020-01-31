@@ -6,6 +6,8 @@ import sys
 import gzip
 import redis
 
+from io import BytesIO
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
@@ -34,6 +36,9 @@ def exist_item(item_id):
 
 def get_item_id(full_path):
     return full_path.replace(PASTES_FOLDER, '', 1)
+
+def get_item_filepath(item_id):
+    return os.path.join(PASTES_FOLDER, item_id)
 
 def get_item_date(item_id, add_separator=False):
     l_directory = item_id.split('/')
@@ -114,6 +119,10 @@ def get_item(request_dict):
     if content:
         # UTF-8 outpout, # TODO: use base64
         dict_item['content'] = get_item_content(item_id)
+
+    raw_content = request_dict.get('raw_content', False)
+    if raw_content:
+        dict_item['raw_content'] = get_raw_content(item_id)
 
     lines_info = request_dict.get('lines', False)
     if lines_info:
@@ -293,3 +302,9 @@ def get_item_har_name(item_id):
 
 def get_item_har(har_path):
     pass
+
+def get_raw_content(item_id):
+    filepath = get_item_filepath(item_id)
+    with open(filepath, 'rb') as f:
+        file_content = BytesIO(f.read())
+    return file_content

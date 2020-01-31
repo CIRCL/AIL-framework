@@ -94,3 +94,9 @@ def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrenc
         domain = Item.get_item_domain(item_path)
         r_serv_metadata.sadd('domain_cryptocurrency_{}:{}'.format(cryptocurrency_name, domain), cryptocurrency_address)
         r_serv_metadata.sadd('set_domain_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), domain)
+
+def get_cryptocurrency_symbol(crypto_type):
+    if type=='bitcoin':
+        return 'BTC'
+    else:
+        return ''

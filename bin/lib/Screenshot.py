@@ -5,13 +5,14 @@ import os
 import sys
 import redis
 
+from io import BytesIO
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
 import Date
 import Tag
 
-
+import Correlate_object
 import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
@@ -27,8 +28,11 @@ def get_screenshot_rel_path(sha256_string, add_extension=False):
         screenshot_path = screenshot_path + '.png'
     return screenshot_path
 
+def get_screenshot_filepath(sha256_string):
+    return os.path.join(SCREENSHOT_FOLDER, get_screenshot_rel_path(sha256_string, add_extension=True))
+
 def exist_screenshot(sha256_string):
-    screenshot_path = os.path.join(SCREENSHOT_FOLDER, get_screenshot_rel_path(sha256_string, add_extension=True))
+    screenshot_path = get_screenshot_filepath(sha256_string)
     return os.path.isfile(screenshot_path)
 
 def get_metadata(sha256_string):
@@ -110,7 +114,7 @@ def get_screenshot_correlated_object(sha256_string, correlation_objects=[]):
     :rtype: dict
     '''
     if correlation_objects is None:
-        correlation_objects = Correlation.get_all_correlation_objects()
+        correlation_objects = Correlate_object.get_all_correlation_objects()
     decoded_correlation = {}
     for correlation_object in correlation_objects:
         if correlation_object == 'paste':
@@ -122,3 +126,10 @@ def get_screenshot_correlated_object(sha256_string, correlation_objects=[]):
         if res:
             decoded_correlation[correlation_object] = res
     return decoded_correlation
+
+
+def get_screenshot_file_content(sha256_string):
+    filepath = get_screenshot_filepath(sha256_string)
+    with open(filepath, 'rb') as f:
+        file_content = BytesIO(f.read())
+    return file_content

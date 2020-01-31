@@ -47,7 +47,7 @@ def get_all_correlation_objects():
 def exist_object(object_type, correlation_id, type_id=None):
     if object_type == 'domain':
         return Domain.verify_if_domain_exist(correlation_id)
-    elif object_type == 'paste':
+    elif object_type == 'paste' or object_type == 'item':
         return Item.exist_item(correlation_id)
     elif object_type == 'decoded':
         return Decoded.exist_decoded(correlation_id)
@@ -75,19 +75,19 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.get_metadata(correlation_id)
 
-def get_object_correlation(object_type, value, correlation_names, correlation_objects, requested_correl_type=None):
+def get_object_correlation(object_type, value, correlation_names=None, correlation_objects=None, requested_correl_type=None):
     if object_type == 'domain':
         return Domain.get_domain_all_correlation(value, correlation_names=correlation_names)
-    elif object_type == 'paste':
+    elif object_type == 'paste' or object_type == 'item':
         return Item.get_item_all_correlation(value, correlation_names=correlation_names)
     elif object_type == 'decoded':
-        return Decoded.get_decoded_correlated_object(value, correlation_objects)
+        return Decoded.get_decoded_correlated_object(value, correlation_objects=correlation_objects)
     elif object_type == 'pgp':
         return Pgp.pgp.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'screenshot' or object_type == 'image':
-        return Screenshot.get_screenshot_correlated_object(value, correlation_objects)
+        return Screenshot.get_screenshot_correlated_object(value, correlation_objects=correlation_objects)
     return {}
 
 def get_correlation_node_icon(correlation_name, correlation_type=None, value=None):
@@ -328,6 +328,18 @@ def get_graph_node_object_correlation(object_type, root_value, mode, correlation
     return {"nodes": create_graph_nodes(nodes, root_node_id), "links": create_graph_links(links)}
 
 
+def get_obj_global_id(obj_type, obj_id, obj_sub_type=None):
+    if obj_sub_type:
+        return '{}:{}:{}'.format(obj_type, obj_sub_type, obj_id)
+    else:
+        # # TODO: remove me
+        if obj_type=='paste':
+            obj_type='item'
+        # # TODO: remove me
+        if obj_type=='screenshot':
+            obj_type='image'
+
+        return '{}:{}'.format(obj_type, obj_id)
 
 ######## API EXPOSED ########
 def sanitize_object_type(object_type):

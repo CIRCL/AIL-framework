@@ -5,6 +5,7 @@ import os
 import sys
 import redis
 
+from io import BytesIO
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
@@ -16,6 +17,7 @@ import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+HASH_DIR = config_loader.get_config_str('Directories', 'hash')
 config_loader = None
 
 def get_decoded_item_type(sha1_string):
@@ -39,6 +41,14 @@ def nb_decoded_item_size(sha1_string):
         return 0
     else:
         return int(nb)
+
+def get_decoded_relative_path(sha1_string, mimetype=None):
+    if not mimetype:
+        mimetype = get_decoded_item_type(sha1_string)
+    return os.path.join(HASH_DIR, mimetype, sha1_string[0:2], sha1_string)
+
+def get_decoded_filepath(sha1_string, mimetype=None):
+    return os.path.join(os.environ['AIL_HOME'], get_decoded_relative_path(sha1_string, mimetype=mimetype))
 
 def exist_decoded(sha1_string):
     return r_serv_metadata.exists('metadata_hash:{}'.format(sha1_string))
@@ -150,3 +160,10 @@ def get_decoded_correlated_object(sha1_string, correlation_objects=[]):
 def save_domain_decoded(domain, sha1_string):
     r_serv_metadata.sadd('hash_domain:{}'.format(domain), sha1_string) # domain - hash map
     r_serv_metadata.sadd('domain_hash:{}'.format(sha1_string), domain) # hash - domain ma
+
+
+def get_decoded_file_content(sha1_string, mimetype=None):
+    filepath = get_decoded_filepath(sha1_string, mimetype=mimetype)
+    with open(filepath, 'rb') as f:
+        file_content = BytesIO(f.read())
+    return file_content

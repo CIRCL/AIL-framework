@@ -7,6 +7,7 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import Correlate_object
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
@@ -235,7 +236,7 @@ class Correlation(object):
 
     def get_correlation_all_object(self, correlation_type, correlation_value, correlation_objects=[]):
         if correlation_objects is None:
-            correlation_objects = get_all_correlation_objects()
+            correlation_objects = Correlate_object.get_all_correlation_objects()
         correlation_obj = {}
         for correlation_object in correlation_objects:
             if correlation_object == 'paste':
