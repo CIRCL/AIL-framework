@@ -21,14 +21,24 @@ Requirements
 
 """
 import base64
+import hashlib
+import io
+import gzip
 import os
+import sys
 import time
 import uuid
 from pubsublogger import publisher
 
 from Helper import Process
 
-import magic
+def gunzip_bytes_obj(bytes_obj):
+    in_ = io.BytesIO()
+    in_.write(bytes_obj)
+    in_.seek(0)
+    with gzip.GzipFile(fileobj=in_, mode='rb') as fo:
+        gunzipped_bytes_obj = fo.read()
+    return gunzipped_bytes_obj
 
 def rreplace(s, old, new, occurrence):
     li = s.rsplit(old, occurrence)
@@ -67,9 +77,9 @@ if __name__ == '__main__':
                 publisher.debug("Empty Paste: {0} not processed".format(message))
                 continue
         else:
-            print("Empty Queues: Waiting...")
+            #print("Empty Queues: Waiting...")
             if int(time.time() - time_1) > 30:
-                to_print = 'Global; ; ; ;glob Processed {0} paste(s)'.format(processed_paste)
+                to_print = 'Global; ; ; ;glob Processed {0} paste(s) in {1} s'.format(processed_paste, time.time() - time_1)
                 print(to_print)
                 #publisher.info(to_print)
                 time_1 = time.time()
@@ -95,28 +105,53 @@ if __name__ == '__main__':
             print('Path traversal detected {}'.format(filename))
             publisher.warning('Global; Path traversal detected')
         else:
+
+            # decode compressed base64
+            decoded = base64.standard_b64decode(gzip64encoded)
+
+            # check if file exist
+            if os.path.isfile(filename):
+                print('File already exist {}'.format(filename))
+                publisher.warning('Global; File already exist')
+
+
+                with gzip.open(filename, 'rb') as f:
+                    curr_file_content = f.read()
+                curr_file_md5 = hashlib.md5(curr_file_content).hexdigest()
+
+                new_file_content = gunzip_bytes_obj(decoded)
+                new_file_md5 = hashlib.md5(new_file_content).hexdigest()
+
+                if new_file_md5 != curr_file_md5:
+
+                    if filename.endswith('.gz'):
+                        filename = '{}_{}.gz'.format(filename[:-3], new_file_md5)
+                    else:
+                        filename = '{}_{}'.format(filename, new_file_md5)
+
+                    # continue if new file already exist
+                    if os.path.isfile(filename):
+                        print('ignore duplicated file')
+                        continue
+
+                    print('new file: {}'.format(filename))
+                # ignore duplicate
+                else:
+                    print('ignore duplicated file')
+                    continue
+
+            # create subdir
             dirname = os.path.dirname(filename)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
 
-            decoded = base64.standard_b64decode(gzip64encoded)
-
             with open(filename, 'wb') as f:
                 f.write(decoded)
-            '''try:
-                decoded2 = gunzip_bytes_obj(decoded)
-            except:
-                decoded2 =''
 
-            type = magic.from_buffer(decoded2, mime=True)
-
-            if type!= 'text/x-c++' and type!= 'text/html' and type!= 'text/x-c' and type!= 'text/x-python' and type!= 'text/x-php' and type!= 'application/xml' and type!= 'text/x-shellscript' and type!= 'text/plain' and type!= 'text/x-diff' and type!= 'text/x-ruby':
-
-                print('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-                print(filename)
-                print(type)
-                print('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-            '''
+            paste = filename
+            # remove PASTES_FOLDER from
+            if PASTES_FOLDERS in paste:
+                paste = paste.replace(PASTES_FOLDERS, '', 1)
 
             p.populate_set_out(paste)
             processed_paste+=1
