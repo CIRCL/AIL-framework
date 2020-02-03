@@ -83,6 +83,9 @@
             {%else%}
               {% set target_url=url_for('crawler_splash.domains_explorer_web') + "?domain_type=regular" %}
             {%endif%}
+            {%if 'date_from' in dict_data %}
+              {% set target_url = target_url + '&date_from=' + dict_data['date_from'] + '&date_to=' + dict_data['date_to'] %}
+            {%endif%}
             {% include 'pagination.html' %}
   				{% endwith %}
         {%endif%}
