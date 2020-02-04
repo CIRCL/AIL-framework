@@ -7,7 +7,6 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-import Correlate_object
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
@@ -15,6 +14,12 @@ import Date
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
+
+def get_all_correlation_objects():
+    '''
+    Return a list of all correllated objects
+    '''
+    return ['domain', 'paste']
 
 class Correlation(object):
 
@@ -236,7 +241,7 @@ class Correlation(object):
 
     def get_correlation_all_object(self, correlation_type, correlation_value, correlation_objects=[]):
         if correlation_objects is None:
-            correlation_objects = Correlate_object.get_all_correlation_objects()
+            correlation_objects = get_all_correlation_objects()
         correlation_obj = {}
         for correlation_object in correlation_objects:
             if correlation_object == 'paste':

@@ -8,7 +8,7 @@ import redis
 from hashlib import sha256
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-from Correlation import Correlation
+import correlation
 import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
@@ -20,12 +20,7 @@ config_loader = None
 
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
-
-class Cryptocurrency(Correlation):
-    def __init__(self):
-        super().__init__('cryptocurrency', ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash'])
-
-cryptocurrency = Cryptocurrency()
+cryptocurrency = correlation.Correlation('cryptocurrency', ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash'])
 
 # http://rosettacode.org/wiki/Bitcoin/address_validation#Python
 def decode_base58(bc, length):

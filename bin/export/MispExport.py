@@ -8,7 +8,8 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-#from Cryptocurrency import cryptocurrency
+import Cryptocurrency
+import Pgp
 import Decoded
 import Domain
 import Item
@@ -45,6 +46,7 @@ def export_ail_item(item_id):
 def export_domain(domain):
     domain_obj = Domain.Domain(domain)
     dict_metadata = domain_obj.get_domain_metadata(tags=True)
+    dict_metadata['ports'] = ['80', '223', '443']
 
     # create domain-ip obj
     obj = MISPObject('domain-ip', standalone=True)
@@ -55,6 +57,8 @@ def export_domain(domain):
     l_obj_attr.append( obj.add_attribute('first-seen', value=dict_metadata['first_seen']) )
     l_obj_attr.append( obj.add_attribute('last-seen', value=dict_metadata['last_check']) )
     l_obj_attr.append( obj.add_attribute('domain', value=domain) )
+    for port in dict_metadata['ports']:
+        l_obj_attr.append( obj.add_attribute('port', value=port) )
 
     # add tags
     if dict_metadata['tags']:
@@ -100,7 +104,7 @@ def export_screenshot(sha256_string):
 
 # TODO: add tags
 def export_cryptocurrency(crypto_type, crypto_address):
-    dict_metadata = cryptocurrency.get_metadata(crypto_address, crypto_type)
+    dict_metadata = Cryptocurrency.cryptocurrency.get_metadata(crypto_type, crypto_address)
 
     obj = MISPObject('coin-address')
     obj.first_seen = dict_metadata['first_seen']
@@ -113,6 +117,26 @@ def export_cryptocurrency(crypto_type, crypto_address):
     l_obj_attr.append( obj.add_attribute('last-seen', value=dict_metadata['last_seen']) )
 
     return obj
+
+# TODO: add tags
+def export_pgp(pgp_type, pgp_value):
+    dict_metadata = Pgp.pgp.get_metadata(pgp_type, pgp_value)
+
+    obj = MISPObject('pgp-meta', misp_objects_path_custom='../../../misp-objects/objects')
+    obj.first_seen = dict_metadata['first_seen']
+    obj.last_seen = dict_metadata['last_seen']
+
+    l_obj_attr = []
+    if pgp_type=='key':
+        l_obj_attr.append( obj.add_attribute('key-id', value=pgp_value) )
+    elif pgp_type=='name':
+        #l_obj_attr.append( obj.add_attribute('key-id', value='debug') )
+        l_obj_attr.append( obj.add_attribute('user-id-name', value=pgp_value) )
+    else: # mail
+        #l_obj_attr.append( obj.add_attribute('key-id', value='debug') )
+        l_obj_attr.append( obj.add_attribute('user-id-email', value=pgp_value) )
+    return obj
+
 
 # filter objects to export, export only object who correlect which each other
 def filter_obj_linked(l_obj):
@@ -149,7 +173,7 @@ def add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl)
         lvl = lvl - 1
 
         # # TODO: filter by correlation types
-        obj_correlations = Correlate_object.get_object_correlation(dict_obj['type'], dict_obj['id'], dict_obj.get('subtype', None))
+        obj_correlations = Correlate_object.get_object_correlation(dict_obj['type'], dict_obj['id'], requested_correl_type=dict_obj.get('subtype', None))
         for obj_type in obj_correlations:
             dict_new_obj = {'type': obj_type}
             if obj_type=='pgp' or obj_type=='cryptocurrency':
@@ -195,10 +219,10 @@ def create_list_of_objs_to_export(l_obj, mode='union'):
             # add object to event
             event.add_object(dict_misp_obj[obj_global_id])
 
-    #print(event.to_json())
+    print(event.to_json())
 
-    misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
-    misp.add_event(event, pythonify=True)
+    #misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
+    #misp.add_event(event, pythonify=True)
 
 
 def create_all_misp_obj(all_obj_to_export, set_relationship):
@@ -221,7 +245,7 @@ def create_misp_obj(obj_type, obj_id):
         return export_cryptocurrency(obj_subtype, obj_id)
     elif obj_type == 'pgp':
         obj_subtype, obj_id = obj_id.split(':', 1)
-        pass
+        return export_pgp(obj_subtype, obj_id)
     elif obj_type == 'domain':
         return export_domain(obj_id)
 
@@ -246,12 +270,41 @@ def get_relationship_between_global_obj(obj_global_id_1, obj_global_id_2):
             src = obj_global_id_2
             dest = obj_global_id_1
         return {'relation': 'included-in', 'src': src, 'dest': dest}
-    elif 'pgp':
-        return None
+    elif 'pgp' in type_tuple:
+        if obj_type_1 == 'pgp':
+            src = obj_global_id_1
+            dest = obj_global_id_2
+        else:
+            src = obj_global_id_2
+            dest = obj_global_id_1
+        return {'relation': 'extracted-from', 'src': src, 'dest': dest}
     elif 'cryptocurrency':
-        return None
-    elif 'domain':
-        return None
+        if obj_type_1 == 'cryptocurrency':
+            src = obj_global_id_1
+            dest = obj_global_id_2
+        else:
+            src = obj_global_id_2
+            dest = obj_global_id_1
+        return {'relation': 'extracted-from', 'src': src, 'dest': dest}
+    elif 'domain' in type_tuple:
+        if 'item' in type_tuple:
+            if obj_type_1 == 'item':
+                src = obj_global_id_1
+                dest = obj_global_id_2
+            else:
+                src = obj_global_id_2
+                dest = obj_global_id_1
+            return {'relation': 'extracted-from', 'src': src, 'dest': dest} # replave by crawled-from
+    elif 'item' in type_tuple:
+        if 'domain' in type_tuple:
+            if obj_type_1 == 'item':
+                src = obj_global_id_1
+                dest = obj_global_id_2
+            else:
+                src = obj_global_id_2
+                dest = obj_global_id_1
+            return {'relation': 'extracted-from', 'src': src, 'dest': dest} # replave by crawled-from
+    return None
 
 ######
 #
@@ -263,31 +316,11 @@ def get_relationship_between_global_obj(obj_global_id_1, obj_global_id_2):
 
 if __name__ == '__main__':
 
-    l_obj = [{'id': 'crawled/2019/11/08/6d3zimnpbwbzdgnp.onionf58258c8-c990-4707-b236-762a2b881183', 'type': 'item', 'lvl': 3},
-                {'id': '6d3zimnpbwbzdgnp.onion', 'type': 'domain', 'lvl': 0},
-                #{'id': '0xA4BB02A75E6AF448', 'type': 'pgp', 'subtype': 'key', 'lvl': 0},
-                {'id': 'a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1', 'type': 'image', 'lvl': 3}]
+    l_obj = [#{'id': 'crawled/2019/11/08/6d3zimnpbwbzdgnp.onionf58258c8-c990-4707-b236-762a2b881183', 'type': 'item', 'lvl': 3},
+                #{'id': '6d3zimnpbwbzdgnp.onion', 'type': 'domain', 'lvl': 0},
+                #{'id': 'a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1', 'type': 'image', 'lvl': 3},
+                {'id': '15efuhpw5V9B1opHAgNXKPBPqdYALXP4hc', 'type': 'cryptocurrency', 'subtype': 'bitcoin', 'lvl': 1}]
     create_list_of_objs_to_export(l_obj, mode='union')
 
-
-
-
-
-    #event = MISPEvent()
-    #event.info = 'AIL framework export'
-    #
-    # obj_item = export_ail_item('crawled/2019/11/08/6d3zimnpbwbzdgnp.onionf58258c8-c990-4707-b236-762a2b881183')
-    # event.add_object(obj_item)
-    #
-    # obj_domain = export_domain('2222222222xkrmay.onion')
-    # event.add_object(obj_domain)
-    #
-    # obj_decoded = export_decoded('fc351baadefce6f702155fb908a9e84dd5dd0fa7')
-    # obj_decoded.add_reference(obj_domain.uuid, 'injected-into', 'add a comment')
-    # event.add_object(obj_decoded)
-
-    # obj_screenshot = export_screenshot('5fcc292ea8a699aa7a9ce93a704b78b8f493620ccdb2a5cebacb1069a4327211')
-    # obj_screenshot.add_reference(obj_domain.uuid, 'screenshot-of')
-    # event.add_object(obj_screenshot)
 
     #print(event.to_json())

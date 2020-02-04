@@ -12,6 +12,9 @@ import Item
 import Date
 import Tag
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import correlation
+
 
 import ConfigLoader
 
@@ -144,7 +147,7 @@ def get_decoded_correlated_object(sha1_string, correlation_objects=[]):
     :rtype: dict
     '''
     if correlation_objects is None:
-        correlation_objects = Correlation.get_all_correlation_objects()
+        correlation_objects = correlation.get_all_correlation_objects()
     decoded_correlation = {}
     for correlation_object in correlation_objects:
         if correlation_object == 'paste':

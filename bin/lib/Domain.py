@@ -15,13 +15,11 @@ import random
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Cryptocurrency
-from Pgp import pgp
+import Pgp
 import Date
 import Decoded
 import Item
 import Tag
-
-cryptocurrency = Cryptocurrency.cryptocurrency
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -523,7 +521,7 @@ def get_domain_cryptocurrency(domain, currencies_type=None, get_nb=False):
     :param currencies_type: list of cryptocurrencies type
     :type currencies_type: list, optional
     '''
-    return cryptocurrency.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
+    return Cryptocurrency.cryptocurrency.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
 
 def get_domain_pgp(domain, currencies_type=None, get_nb=False):
     '''
@@ -533,7 +531,7 @@ def get_domain_pgp(domain, currencies_type=None, get_nb=False):
     :param currencies_type: list of pgp type
     :type currencies_type: list, optional
     '''
-    return pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
+    return Pgp.pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
 
 def get_domain_decoded(domain):
     '''

@@ -11,9 +11,8 @@ from io import BytesIO
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Tag
-import Correlation
 import Cryptocurrency
-from Pgp import pgp
+import Pgp
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -166,7 +165,7 @@ def get_item_pgp(item_id, currencies_type=None, get_nb=False):
     :param currencies_type: list of cryptocurrencies type
     :type currencies_type: list, optional
     '''
-    return pgp.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
+    return Pgp.pgp.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
 
 def get_item_decoded(item_id):
     '''
