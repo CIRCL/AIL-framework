@@ -154,5 +154,5 @@ def domains_explorer_web():
     except:
         page = 1
 
-    dict_data = Domain.domains_up_by_page('regular', page=page)
+    dict_data = Domain.domains_up_by_page('regular', page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='regular')
