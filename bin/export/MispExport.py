@@ -112,9 +112,9 @@ def export_cryptocurrency(crypto_type, crypto_address):
 
     l_obj_attr = []
     l_obj_attr.append( obj.add_attribute('address', value=crypto_address) )
-    #l_obj_attr.append( obj.add_attribute('symbol', value=Cryptocurrency.get_cryptocurrency_symbol(crypto_type)) )
-    l_obj_attr.append( obj.add_attribute('first-seen', value=dict_metadata['first_seen']) )
-    l_obj_attr.append( obj.add_attribute('last-seen', value=dict_metadata['last_seen']) )
+    crypto_symbol = Cryptocurrency.get_cryptocurrency_symbol(crypto_type)
+    if crypto_symbol:
+        l_obj_attr.append( obj.add_attribute('symbol', value=crypto_symbol) )
 
     return obj
 
@@ -319,7 +319,9 @@ if __name__ == '__main__':
     l_obj = [#{'id': 'crawled/2019/11/08/6d3zimnpbwbzdgnp.onionf58258c8-c990-4707-b236-762a2b881183', 'type': 'item', 'lvl': 3},
                 #{'id': '6d3zimnpbwbzdgnp.onion', 'type': 'domain', 'lvl': 0},
                 #{'id': 'a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1', 'type': 'image', 'lvl': 3},
-                {'id': '15efuhpw5V9B1opHAgNXKPBPqdYALXP4hc', 'type': 'cryptocurrency', 'subtype': 'bitcoin', 'lvl': 1}]
+                #{'id': 'archive/pastebin.com_pro/2020/01/27/iHjcWhkD.gz', 'type': 'item', 'lvl': 3},
+                {'id': '15efuhpw5V9B1opHAgNXKPBPqdYALXP4hc', 'type': 'cryptocurrency', 'subtype': 'bitcoin', 'lvl': 0}
+            ]
     create_list_of_objs_to_export(l_obj, mode='union')
 
 

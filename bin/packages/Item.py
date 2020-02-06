@@ -21,14 +21,18 @@ import Decoded
 import Screenshot
 
 config_loader = ConfigLoader.ConfigLoader()
+# get and sanityze PASTE DIRECTORY
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+PASTES_FOLDER = os.path.join(os.path.realpath(PASTES_FOLDER), '')
+
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
 config_loader = None
 
 def exist_item(item_id):
-    if os.path.isfile(os.path.join(PASTES_FOLDER, item_id)):
+    filename = get_item_filepath(item_id)
+    if os.path.isfile(filename):
         return True
     else:
         return False
@@ -37,7 +41,8 @@ def get_item_id(full_path):
     return full_path.replace(PASTES_FOLDER, '', 1)
 
 def get_item_filepath(item_id):
-    return os.path.join(PASTES_FOLDER, item_id)
+    filename = os.path.join(PASTES_FOLDER, item_id)
+    return os.path.realpath(filename)
 
 def get_item_date(item_id, add_separator=False):
     l_directory = item_id.split('/')
@@ -302,8 +307,102 @@ def get_item_har_name(item_id):
 def get_item_har(har_path):
     pass
 
+
+def get_item_filename(item_id):
+    # Creating the full filepath
+    filename = os.path.join(PASTES_FOLDER, item_id)
+    filename = os.path.realpath(filename)
+
+    # incorrect filename
+    if not os.path.commonprefix([filename, PASTES_FOLDER]) == PASTES_FOLDER:
+        return None
+    else:
+        return filename
+
+def get_item_duplicate(item_id, r_list=True):
+    res = r_serv_metadata.smembers('dup:{}'.format(item_id))
+    if r_list:
+        if res:
+            return list(res)
+        else:
+            return []
+    return res
+
+def add_item_duplicate(item_id, l_dup):
+    for item_dup in l_dup:
+        r_serv_metadata.sadd('dup:{}'.format(item_dup), item_id)
+        r_serv_metadata.sadd('dup:{}'.format(item_id), item_dup)
+
+def delete_item_duplicate(item_id):
+    item_dup = get_item_duplicate(item_id)
+    for item_dup in get_item_duplicate(item_id):
+        r_serv_metadata.srem('dup:{}'.format(item_dup), item_id)
+    r_serv_metadata.delete('dup:{}'.format(item_id))
+
 def get_raw_content(item_id):
     filepath = get_item_filepath(item_id)
     with open(filepath, 'rb') as f:
         file_content = BytesIO(f.read())
     return file_content
+
+def save_raw_content(item_id, io_content):
+    filepath = get_item_filename(item_id)
+    if os.path.isfile(filepath):
+        print('File already exist')
+        return False
+    # # TODO: check if is IO file
+    with open(filepath, 'wb') as f:
+        f.write(io_content.getvalue())
+    return True
+
+# IDEA: send item to duplicate ?
+def create_item(obj_id, obj_metadata, io_content):
+    '''
+    Create a new Item (Import or Test only).
+
+    :param obj_id: item id
+    :type obj_metadata: dict - 'first_seen', 'tags'
+
+    :return: is item created
+    :rtype: boolean
+    '''
+    # check if datetime match ??
+
+
+    # # TODO: validate obj_id
+
+    res = save_raw_content(obj_id, io_content)
+    # item saved
+    if res:
+        # creata tags
+        if 'tags' in obj_metadata:
+            # # TODO: handle mixed tags: taxonomies and Galaxies
+            Tag.api_add_obj_tags(tags=obj_metadata['tags'], object_id=obj_id, object_type="item")
+        return True
+
+    # Item not created
+    return False
+
+def delete_item(obj_id):
+    # check if item exists
+    if not exist_item(obj_id):
+        return False
+    else:
+        Tag.delete_obj_tags(obj_id, 'item', Tag.get_obj_tag(obj_id))
+        delete_item_duplicate(obj_id)
+        # delete MISP event
+        r_serv_metadata.delete('misp_events:{}'.format(obj_id))
+        r_serv_metadata.delete('hive_cases:{}'.format(obj_id))
+
+        os.remove(get_item_filename(obj_id))
+        return True
+
+    # get all correlation
+        # delete them
+
+    ### REQUIRE MORE WORK
+    # delete child/son !!!
+    # delete from tracked items
+    # delete from queue
+    ###
+    return False

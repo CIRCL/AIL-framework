@@ -33,6 +33,13 @@ class Correlation(object):
         else:
             return r_serv_metadata.exists('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
 
+    def exist_correlation(self, subtype, obj_id):
+        res = r_serv_metadata.zscore('{}_all:{}'.format(self.correlation_name, subtype), obj_id)
+        if res:
+            return True
+        else:
+            return False
+
     def _get_items(self, correlation_type, field_name):
         res =  r_serv_metadata.smembers('set_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
         if res:
@@ -104,7 +111,13 @@ class Correlation(object):
         '''
         return self.all_correlation_types
 
-    def sanythise_correlation_types(self, correlation_types):
+    def get_correlation_obj_type(self):
+        if self.correlation_name=='pgpdump':
+            return 'pgp'
+        else:
+            return 'cryptocurrency'
+
+    def sanythise_correlation_types(self, correlation_types, r_boolean=False):
         '''
         Check if all correlation types in the list are valid.
 
@@ -115,11 +128,20 @@ class Correlation(object):
         :rtype: list
         '''
         if correlation_types is None:
-            return self.get_all_correlation_types()
+            if r_boolean:
+                return False
+            else:
+                return self.get_all_correlation_types()
         for correl in correlation_types: # # TODO: # OPTIMIZE:
             if correl not in self.get_all_correlation_types():
-                return self.get_all_correlation_types()
-        return correlation_types
+                if r_boolean:
+                    return False
+                else:
+                    return self.get_all_correlation_types()
+        if r_boolean:
+            return True
+        else:
+            return correlation_types
 
 
     def _get_domain_correlation_obj(self, domain, correlation_type):
@@ -254,11 +276,57 @@ class Correlation(object):
                 correlation_obj[correlation_object] = res
         return correlation_obj
 
+    def update_correlation_daterange(self, subtype, obj_id, date): # # TODO:  update fisrt_seen
+        # obj_id don't exit
+        if not r_serv_metadata.exists('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id)):
+            r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'first_seen', date)
+            r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen', date)
+        else:
+            last_seen = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen')
+            if not last_seen:
+                r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen', date)
+            else:
+                if int(last_seen) < int(date):
+                    r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen', date)
+
+    def save_item_correlation(self, subtype, date, obj_id, item_id, item_date):
+        update_correlation_daterange(subtype, obj_id, item_date)
+
+        # global set
+        r_serv_metadata.sadd('set_{}_{}:{}'.format(self.correlation_name, subtype, obj_id), item_id)
+
+        # daily
+        r_serv_metadata.hincrby('{}:{}:{}'.format(self.correlation_name, subtype, item_date), obj_id, 1)
+
+        # all type
+        r_serv_metadata.zincrby('{}_all:{}'.format(self.correlation_name, subtype), obj_id, 1)
+
+        ## object_metadata
+        # item
+        r_serv_metadata.sadd('item_{}_{}:{}'.format(self.correlation_name, subtype, item_id), obj_id)
+
     def save_domain_correlation(self, domain, correlation_type, correlation_value):
         r_serv_metadata.sadd('domain_{}_{}:{}'.format(self.correlation_name, correlation_type, domain), correlation_value)
         r_serv_metadata.sadd('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, correlation_value), domain)
 
 
+    def save_correlation(self, subtype, obj_id): # # TODO: add first_seen/last_seen
+        r_serv_metadata.zincrby('{}_all:{}'.format(self.correlation_name, subtype), obj_id, 0)
+
+    def create_correlation(self, subtype, obj_id, obj_meta):
+        res = self.sanythise_correlation_types(correlation_type, r_boolean=True)
+        if not res:
+            print('invalid subtype')
+            return False
+
+        if not exist_correlation(subtype, obj_id):
+            res = save_correlation(subtype, obj_id)
+            if res:
+                if 'tags' in obj_metadata:
+                    # # TODO: handle mixed tags: taxonomies and Galaxies
+                    Tag.api_add_obj_tags(tags=obj_metadata['tags'], object_id=obj_id, object_type=self.get_correlation_obj_type())
+                return True
+        return False
 
 ######## API EXPOSED ########
 

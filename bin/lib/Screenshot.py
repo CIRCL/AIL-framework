@@ -29,7 +29,8 @@ def get_screenshot_rel_path(sha256_string, add_extension=False):
     return screenshot_path
 
 def get_screenshot_filepath(sha256_string):
-    return os.path.join(SCREENSHOT_FOLDER, get_screenshot_rel_path(sha256_string, add_extension=True))
+    filename = os.path.join(SCREENSHOT_FOLDER, get_screenshot_rel_path(sha256_string, add_extension=True))
+    return os.path.realpath(filename)
 
 def exist_screenshot(sha256_string):
     screenshot_path = get_screenshot_filepath(sha256_string)
@@ -133,3 +134,25 @@ def get_screenshot_file_content(sha256_string):
     with open(filepath, 'rb') as f:
         file_content = BytesIO(f.read())
     return file_content
+
+def save_screenshot_file(sha256_string, io_content):
+    filepath = get_screenshot_filepath(sha256_string)
+    if os.path.isfile(filepath):
+        print('File already exist')
+        return False
+    # # TODO: check if is IO file
+    with open(filepath, 'wb') as f:
+        f.write(io_content.getvalue())
+    return True
+
+def create_screenshot(sha256_string, io_content):
+    # check if sha256
+    res = save_screenshot_file(sha256_string, io_content)
+    if res:
+        # creata tags
+        if 'tags' in obj_metadata:
+            # # TODO: handle mixed tags: taxonomies and Galaxies
+            Tag.api_add_obj_tags(tags=obj_metadata['tags'], object_id=obj_id, object_type="image")
+        return True
+
+    return False

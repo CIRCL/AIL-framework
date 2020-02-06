@@ -91,7 +91,35 @@ def save_cryptocurrency_data(cryptocurrency_name, date, item_path, cryptocurrenc
         r_serv_metadata.sadd('set_domain_cryptocurrency_{}:{}'.format(cryptocurrency_name, cryptocurrency_address), domain)
 
 def get_cryptocurrency_symbol(crypto_type):
-    if type=='bitcoin':
+    if crypto_type=='bitcoin':
         return 'BTC'
-    else:
-        return ''
+    elif crypto_type=='ethereum':
+        return 'ETH'
+    elif crypto_type=='bitcoin-cash':
+        return 'BCH'
+    elif crypto_type=='litecoin':
+        return 'LTC'
+    elif crypto_type=='monero':
+        return 'XMR'
+    elif crypto_type=='zcash':
+        return 'ZEC'
+    elif crypto_type=='dash':
+        return 'DASH'
+    return None
+
+def get_cryptocurrency_type(crypto_symbol):
+    if crypto_type=='BTC':
+        return 'bitcoin'
+    elif crypto_type=='ETH':
+        return 'ethereum'
+    elif crypto_type=='BCH':
+        return 'bitcoin-cash'
+    elif crypto_type=='LTC':
+        return 'litecoin'
+    elif crypto_type=='XMR':
+        return 'monero'
+    elif crypto_type=='ZEC':
+        return 'zcash'
+    elif crypto_type=='DASH':
+        return 'dash'
+    return None
