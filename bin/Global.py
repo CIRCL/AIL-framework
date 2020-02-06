@@ -114,9 +114,14 @@ if __name__ == '__main__':
                 print('File already exist {}'.format(filename))
                 publisher.warning('Global; File already exist')
 
+                try:
+                    with gzip.open(filename, 'rb') as f:
+                        curr_file_content = f.read()
+                except EOFError:
+                    publisher.warning('Global; Incomplete file: {}'.format(filename))
+                    # discard item
+                    continue
 
-                with gzip.open(filename, 'rb') as f:
-                    curr_file_content = f.read()
                 curr_file_md5 = hashlib.md5(curr_file_content).hexdigest()
 
                 new_file_content = gunzip_bytes_obj(decoded)
