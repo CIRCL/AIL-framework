@@ -28,9 +28,20 @@ import os
 import sys
 import time
 import uuid
+
+import datetime
+import redis
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+
 from pubsublogger import publisher
 
 from Helper import Process
+
+config_loader = ConfigLoader.ConfigLoader()
+r_stats = config_loader.get_redis_conn("ARDB_Statistics")
+config_loader = None
 
 def gunzip_bytes_obj(bytes_obj):
     in_ = io.BytesIO()
@@ -119,6 +130,14 @@ if __name__ == '__main__':
                         curr_file_content = f.read()
                 except EOFError:
                     publisher.warning('Global; Incomplete file: {}'.format(filename))
+                    # save daily stats
+                    r_stats.zincrby('module:Global:incomplete_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
+                    # discard item
+                    continue
+                except OSError:
+                    publisher.warning('Global; Not a gzipped file: {}'.format(filename))
+                    # save daily stats
+                    r_stats.zincrby('module:Global:invalid_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
                     # discard item
                     continue
 
