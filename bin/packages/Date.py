@@ -129,15 +129,32 @@ def validate_str_date(str_date, separator=''):
     except TypeError:
         return False
 
-def sanitise_date_range(date_from, date_to, separator=''):
+def sanitise_date_range(date_from, date_to, separator='', date_type='str'):
     '''
     Check/Return a correct date_form and date_to
     '''
-    if not validate_str_date(date_from, separator=separator):
-        date_from = datetime.date.today().strftime("%Y%m%d")
-    if not validate_str_date(date_to, separator=separator):
-        date_to = datetime.date.today().strftime("%Y%m%d")
+    if not date_from and date_to:
+        date_from = date_to
+    elif not date_to and date_from:
+        date_to = date_from
+
+    if date_type=='str':
+        if not validate_str_date(date_from, separator=separator):
+            date_from = datetime.date.today().strftime("%Y%m%d")
+        if not validate_str_date(date_to, separator=separator):
+            date_to = datetime.date.today().strftime("%Y%m%d")
+    else: # datetime
+        if isinstance(date_from, datetime.datetime):
+            date_from = date_from.strftime("%Y%m%d")
+        else:
+            date_from = datetime.date.today().strftime("%Y%m%d")
+        if isinstance(date_to, datetime.datetime):
+            date_to = date_to.strftime("%Y%m%d")
+        else:
+            date_to = datetime.date.today().strftime("%Y%m%d")
 
     if int(date_from) > int(date_to):
+        res = date_from
         date_from = date_to
+        date_to = res
     return {"date_from": date_from, "date_to": date_to}

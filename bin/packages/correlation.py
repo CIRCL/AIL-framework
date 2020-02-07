@@ -10,6 +10,8 @@ import ConfigLoader
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
+import Item
+import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
@@ -47,11 +49,31 @@ class Correlation(object):
         else:
             return []
 
-    def _get_metadata(self, correlation_type, field_name):
+    def get_correlation_first_seen(self, subtype, obj_id, r_int=False):
+        res = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'first_seen')
+        if r_int:
+            if res:
+                return int(res)
+            else:
+                return 99999999
+        else:
+            return res
+
+    def get_correlation_last_seen(self, subtype, obj_id, r_int=False):
+        res = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen')
+        if r_int:
+            if res:
+                return int(res)
+            else:
+                return 0
+        else:
+            return res
+
+    def _get_metadata(self, subtype, obj_id):
         meta_dict = {}
-        meta_dict['first_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, correlation_type, field_name), 'first_seen')
-        meta_dict['last_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, correlation_type, field_name), 'last_seen')
-        meta_dict['nb_seen'] = r_serv_metadata.scard('set_{}_{}:{}'.format(self.correlation_name, correlation_type, field_name))
+        meta_dict['first_seen'] = self.get_correlation_first_seen(subtype, obj_id)
+        meta_dict['last_seen'] = self.get_correlation_last_seen(subtype, obj_id)
+        meta_dict['nb_seen'] = r_serv_metadata.scard('set_{}_{}:{}'.format(self.correlation_name, subtype, obj_id))
         return meta_dict
 
     def get_metadata(self, correlation_type, field_name, date_format='str_date'):
@@ -276,18 +298,19 @@ class Correlation(object):
                 correlation_obj[correlation_object] = res
         return correlation_obj
 
-    def update_correlation_daterange(self, subtype, obj_id, date): # # TODO:  update fisrt_seen
+    def update_correlation_daterange(self, subtype, obj_id, date):
+        date = int(date)
         # obj_id don't exit
         if not r_serv_metadata.exists('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id)):
             r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'first_seen', date)
             r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen', date)
         else:
-            last_seen = r_serv_metadata.hget('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen')
-            if not last_seen:
+            first_seen = self.get_correlation_last_seen(subtype, obj_id, r_int=True)
+            last_seen = self.get_correlation_first_seen(subtype, obj_id, r_int=True)
+            if date < first_seen:
+                r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'first_seen', date)
+            if date > last_seen:
                 r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen', date)
-            else:
-                if int(last_seen) < int(date):
-                    r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen', date)
 
     def save_item_correlation(self, subtype, date, obj_id, item_id, item_date):
         update_correlation_daterange(subtype, obj_id, item_date)
@@ -305,28 +328,37 @@ class Correlation(object):
         # item
         r_serv_metadata.sadd('item_{}_{}:{}'.format(self.correlation_name, subtype, item_id), obj_id)
 
-    def save_domain_correlation(self, domain, correlation_type, correlation_value):
-        r_serv_metadata.sadd('domain_{}_{}:{}'.format(self.correlation_name, correlation_type, domain), correlation_value)
-        r_serv_metadata.sadd('set_domain_{}_{}:{}'.format(self.correlation_name, correlation_type, correlation_value), domain)
+        # domain
+        if Item.is_crawled(item_id):
+            domain = Item.get_item_domain(item_id)
+            self.save_domain_correlation(domain, subtype, obj_id)
+
+    def save_domain_correlation(self, domain, subtype, obj_id):
+        r_serv_metadata.sadd('domain_{}_{}:{}'.format(self.correlation_name, subtype, domain), obj_id)
+        r_serv_metadata.sadd('set_domain_{}_{}:{}'.format(self.correlation_name, subtype, obj_id), domain)
 
 
-    def save_correlation(self, subtype, obj_id): # # TODO: add first_seen/last_seen
+    def save_correlation(self, subtype, obj_id, date_range):
         r_serv_metadata.zincrby('{}_all:{}'.format(self.correlation_name, subtype), obj_id, 0)
+        self.update_correlation_daterange(subtype, obj_id, date_range['date_from'])
+        if date_range['date_from'] != date_range['date_to']:
+            self.update_correlation_daterange(subtype, obj_id, date_range['date_to'])
+        return True
 
     def create_correlation(self, subtype, obj_id, obj_meta):
-        res = self.sanythise_correlation_types(correlation_type, r_boolean=True)
+        res = self.sanythise_correlation_types([subtype], r_boolean=True)
         if not res:
             print('invalid subtype')
             return False
-
-        if not exist_correlation(subtype, obj_id):
-            res = save_correlation(subtype, obj_id)
-            if res:
-                if 'tags' in obj_metadata:
-                    # # TODO: handle mixed tags: taxonomies and Galaxies
-                    Tag.api_add_obj_tags(tags=obj_metadata['tags'], object_id=obj_id, object_type=self.get_correlation_obj_type())
-                return True
-        return False
+        first_seen = obj_meta.get('first_seen', None)
+        last_seen = obj_meta.get('last_seen', None)
+        date_range = Date.sanitise_date_range(first_seen, last_seen, separator='', date_type='datetime')
+        print(date_range)
+        res = self.save_correlation(subtype, obj_id, date_range)
+        if res and 'tags' in obj_meta:
+            # # TODO: handle mixed tags: taxonomies and Galaxies
+            Tag.api_add_obj_tags(tags=obj_meta['tags'], object_id=obj_id, object_type=self.get_correlation_obj_type())
+        return True
 
 ######## API EXPOSED ########
 

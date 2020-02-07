@@ -67,7 +67,7 @@ def unpack_item_obj(map_uuid_global_id, misp_obj):
         res = Item.create_item(obj_id, obj_meta, io_content)
         print(res)
 
-    map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id, io_content)
+    map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
 
 def get_obj_relationship(misp_obj):
     for item in misp_obj.ObjectReference:
@@ -87,34 +87,38 @@ def unpack_obj_pgp(map_uuid_global_id, misp_obj):
     elif obj_attr.object_relation == 'user-id-email':
         obj_subtype = 'mail'
 
-    obj_meta = get_object_metadata(misp_obj)
-    if obj_id and io_content:
-        res = Pgp.pgp.create_item(obj_subtype, obj_id, obj_meta)
-        print(res)
-
-    map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
-
-    get_obj_relationship(misp_obj)
-
-def unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj):
-    obj_id = None
-    crypto_symbol = None
-    for attribute in misp_obj.attributes:
-        if attribute.object_relation == 'address':
-            obj_id = attribute.value
-        elif attribute.object_relation == 'symbol':
-            pass
-
-
-
+    if obj_id and obj_subtype:
         obj_meta = get_object_metadata(misp_obj)
-        if obj_id and io_content:
-            res = Pgp.pgp.create_item(obj_subtype, obj_id, obj_meta)
-            print(res)
+        res = Pgp.pgp.create_correlation(obj_subtype, obj_id, obj_meta)
+        print(res)
 
         map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
 
-        get_obj_relationship(misp_obj)
+        #get_obj_relationship(misp_obj)
+
+def unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj):
+    obj_id = None
+    obj_subtype = None
+    for attribute in misp_obj.attributes:
+        if attribute.object_relation == 'address': # # TODO: handle xmr address field
+            obj_id = attribute.value
+        elif attribute.object_relation == 'symbol':
+            obj_subtype = Cryptocurrency.get_cryptocurrency_type(attribute.value)
+
+    # valid cryptocurrency type
+    if obj_subtype and obj_id:
+        print('crypto')
+        print(obj_id)
+        print(obj_subtype)
+
+        obj_meta = get_object_metadata(misp_obj)
+        print(obj_meta)
+        res = Cryptocurrency.cryptocurrency.create_correlation(obj_subtype, obj_id, obj_meta)
+        print(res)
+
+        map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
+
+    get_obj_relationship(misp_obj)
 
 def get_misp_import_fct(map_uuid_global_id, misp_obj):
     #print(misp_obj.ObjectReference)
@@ -155,4 +159,5 @@ if __name__ == '__main__':
 
     # misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
 
-    import_objs_from_file('test_import_item.json')
+    #import_objs_from_file('test_import_item.json')
+    import_objs_from_file('test_export.json')
