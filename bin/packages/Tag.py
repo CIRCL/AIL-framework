@@ -451,7 +451,7 @@ def delete_obj_tags(object_id, object_type, tags=[]):
             return res
 
 def sanitise_tags_date_range(l_tags, date_from=None, date_to=None):
-    if date_from or date_to is None:
+    if date_from is None or date_to is None:
         date_from = get_tags_min_last_seen(l_tags, r_int=False)
         date_to = date_from
     return Date.sanitise_date_range(date_from, date_to)
