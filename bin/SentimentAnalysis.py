@@ -64,7 +64,7 @@ def Analyse(message, server):
 
         try:
             sentences = tokenize.sent_tokenize(p_content)
-        except Exception as e:
+        except:
             # use the NLTK Downloader to obtain the resource
             download('punkt')
             sentences = tokenize.sent_tokenize(p_content)
