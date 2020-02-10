@@ -32,8 +32,9 @@ def search_ip(message):
     results = reg_ip.findall(content)
     matching_ips = []
 
-    for res in results:
-        address = IPv4Address(res)
+    for ip in results:
+        ip = '.'.join([str(int(x)) for x in ip.split('.')])
+        address = IPv4Address(ip)
         for network in ip_networks:
             if address in network:
                 matching_ips.append(address)
