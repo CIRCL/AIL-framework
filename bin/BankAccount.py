@@ -5,7 +5,7 @@
 The BankAccount Module
 ======================
 
-It apply IBAN regexes on paste content and warn if above a threshold.
+It apply IBAN regexes on item content and warn if above a threshold.
 
 """
 
@@ -17,7 +17,7 @@ import re
 import string
 from itertools import chain
 
-from packages import Paste
+from packages import Item
 from pubsublogger import publisher
 
 from Helper import Process
@@ -49,7 +49,7 @@ def is_valid_iban(iban):
         return True
     return False
 
-def check_all_iban(l_iban, paste, filename):
+def check_all_iban(l_iban, obj_id):
     nb_valid_iban = 0
     for iban in l_iban:
         iban = iban[0]+iban[1]+iban[2]
@@ -65,14 +65,14 @@ def check_all_iban(l_iban, paste, filename):
                 server_statistics.hincrby('iban_by_country:'+date, iban[0:2], 1)
 
     if(nb_valid_iban > 0):
-        to_print = 'Iban;{};{};{};'.format(paste.p_source, paste.p_date, paste.p_name)
+        to_print = 'Iban;{};{};{};'.format(Item.get_source(obj_id), Item.get_item_date(obj_id), Item.get_basename(obj_id))
         publisher.warning('{}Checked found {} IBAN;{}'.format(
-            to_print, nb_valid_iban, paste.p_rel_path))
-        msg = 'infoleak:automatic-detection="iban";{}'.format(filename)
+            to_print, nb_valid_iban, obj_id))
+        msg = 'infoleak:automatic-detection="iban";{}'.format(obj_id)
         p.populate_set_out(msg, 'Tags')
 
         #Send to duplicate
-        p.populate_set_out(filename, 'Duplicate')
+        p.populate_set_out(obj_id, 'Duplicate')
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -103,21 +103,21 @@ if __name__ == "__main__":
 
         if message is not None:
 
-            filename = message
-            paste = Paste.Paste(filename)
-            content = paste.get_p_content()
+            obj_id = Item.get_item_id(message)
+
+            content = Item.get_item_content(obj_id)
 
             signal.alarm(max_execution_time)
             try:
                 l_iban = iban_regex.findall(content)
             except TimeoutException:
-                 print ("{0} processing timeout".format(paste.p_rel_path))
+                 print ("{0} processing timeout".format(obj_id))
                  continue
             else:
                 signal.alarm(0)
 
             if(len(l_iban) > 0):
-                check_all_iban(l_iban, paste, filename)
+                check_all_iban(l_iban, obj_id)
 
         else:
             publisher.debug("Script BankAccount is Idling 10s")

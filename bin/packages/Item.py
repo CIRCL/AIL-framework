@@ -32,6 +32,9 @@ def exist_item(item_id):
     else:
         return False
 
+def get_basename(item_id):
+    return os.path.basename(item_id)
+
 def get_item_id(full_path):
     return full_path.replace(PASTES_FOLDER, '', 1)
 

@@ -17,7 +17,6 @@ import datetime
 from pubsublogger import publisher
 
 from Helper import Process
-from packages import Paste
 from packages import Item
 
 import re
@@ -50,11 +49,11 @@ def decode_string(content, message, date, encoded_list, decoder_name, encoded_mi
 
             save_hash(decoder_name, message, date, decode)
 
-            #remove encoded from paste content
+            #remove encoded from item content
             content = content.replace(encoded, '', 1)
 
     if(find):
-        set_out_paste(decoder_name, message)
+        set_out_item(decoder_name, message)
 
     return content
 
@@ -72,8 +71,8 @@ def save_hash(decoder_name, message, date, decoded):
     data['estimated type'] = type
     json_data = json.dumps(data)
 
-    date_paste = '{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])
-    date_key = date[0:4] + date[4:6] + date[6:8]
+    date_item = '{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])
+    date_key = date
 
     serv_metadata.incrby(decoder_name+'_decoded:'+date_key, 1)
     serv_metadata.zincrby('hash_date:'+date_key, hash, 1)
@@ -81,24 +80,24 @@ def save_hash(decoder_name, message, date, decoded):
 
     # first time we see this hash
     if not serv_metadata.hexists('metadata_hash:'+hash, 'estimated_type'):
-        serv_metadata.hset('metadata_hash:'+hash, 'first_seen', date_paste)
-        serv_metadata.hset('metadata_hash:'+hash, 'last_seen', date_paste)
+        serv_metadata.hset('metadata_hash:'+hash, 'first_seen', date_item)
+        serv_metadata.hset('metadata_hash:'+hash, 'last_seen', date_item)
     else:
-        serv_metadata.hset('metadata_hash:'+hash, 'last_seen', date_paste)
+        serv_metadata.hset('metadata_hash:'+hash, 'last_seen', date_item)
 
-    # first time we see this hash (all encoding) on this paste
+    # first time we see this hash (all encoding) on this item
     if serv_metadata.zscore('nb_seen_hash:'+hash, message) is None:
         serv_metadata.hincrby('metadata_hash:'+hash, 'nb_seen_in_all_pastes', 1)
-        serv_metadata.sadd('hash_paste:'+message, hash) # paste - hash map
+        serv_metadata.sadd('hash_paste:'+message, hash) # item - hash map
         # create hash metadata
         serv_metadata.hset('metadata_hash:'+hash, 'estimated_type', type)
         serv_metadata.sadd('hash_all_type', type)
 
-    # first time we see this hash encoding on this paste
+    # first time we see this hash encoding on this item
     if serv_metadata.zscore(decoder_name+'_hash:'+hash, message) is None:
         print('first '+decoder_name)
 
-        serv_metadata.sadd(decoder_name+'_paste:'+message, hash) # paste - hash map
+        serv_metadata.sadd(decoder_name+'_paste:'+message, hash) # item - hash map
 
         # create hash metadata
         serv_metadata.sadd('hash_'+ decoder_name +'_all_type', type)
@@ -118,8 +117,8 @@ def save_hash(decoder_name, message, date, decoded):
 
     serv_metadata.zincrby(decoder_name+'_type:'+type, date_key, 1)
 
-    serv_metadata.zincrby('nb_seen_hash:'+hash, message, 1)# hash - paste map
-    serv_metadata.zincrby(decoder_name+'_hash:'+hash, message, 1) # number of b64 on this paste
+    serv_metadata.zincrby('nb_seen_hash:'+hash, message, 1)# hash - item map
+    serv_metadata.zincrby(decoder_name+'_hash:'+hash, message, 1) # number of b64 on this item
 
     # Domain Object
     if Item.is_crawled(message):
@@ -150,7 +149,7 @@ def save_hash_on_disk(decode, type, hash, json_data):
     with open(filename_json, 'w') as f:
         f.write(json_data)
 
-def set_out_paste(decoder_name, message):
+def set_out_item(decoder_name, message):
     publisher.warning(decoder_name+' decoded')
     #Send to duplicate
     p.populate_set_out(message, 'Duplicate')
@@ -217,12 +216,11 @@ if __name__ == '__main__':
             time.sleep(1)
             continue
 
-        filename = message
-        paste = Paste.Paste(filename)
+        obj_id = Item.get_item_id(message)
 
         # Do something with the message from the queue
-        content = paste.get_p_content()
-        date = str(paste._get_p_date())
+        content = Item.get_item_content(obj_id)
+        date = Item.get_item_date(obj_id)
 
         for decoder in decoder_order: # add threshold and size limit
 
@@ -233,7 +231,7 @@ if __name__ == '__main__':
             except TimeoutException:
                 encoded_list = []
                 p.incr_module_timeout_statistic() # add encoder type
-                print ("{0} processing timeout".format(paste.p_rel_path))
+                print ("{0} processing timeout".format(obj_id))
                 continue
             else:
                 signal.alarm(0)
