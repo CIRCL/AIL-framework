@@ -30,7 +30,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from nltk import tokenize
+from nltk import tokenize, download
 
 # Config Variables
 accepted_Mime_type = ['text/plain']
@@ -62,7 +62,12 @@ def Analyse(message, server):
         combined_datetime = datetime.datetime.combine(the_date, the_time)
         timestamp = calendar.timegm(combined_datetime.timetuple())
 
-        sentences = tokenize.sent_tokenize(p_content)
+        try:
+            sentences = tokenize.sent_tokenize(p_content)
+        except Exception as e:
+            # use the NLTK Downloader to obtain the resource
+            download('punkt')
+            sentences = tokenize.sent_tokenize(p_content)
 
         if len(sentences) > 0:
             avg_score = {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compoundPos': 0.0, 'compoundNeg': 0.0}
