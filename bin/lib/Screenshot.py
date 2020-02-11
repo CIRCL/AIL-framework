@@ -145,7 +145,7 @@ def save_screenshot_file(sha256_string, io_content):
         f.write(io_content.getvalue())
     return True
 
-def create_screenshot(sha256_string, io_content):
+def create_screenshot(sha256_string, obj_meta, io_content):
     # check if sha256
     res = save_screenshot_file(sha256_string, io_content)
     if res:

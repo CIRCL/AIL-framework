@@ -44,7 +44,7 @@ def get_all_correlation_objects():
     '''
     return ['domain', 'paste']
 
-def exist_object(object_type, correlation_id, type_id=None):
+def exist_object(object_type, correlation_id, type_id=None): # => work on object level
     if object_type == 'domain':
         return Domain.verify_if_domain_exist(correlation_id)
     elif object_type == 'paste' or object_type == 'item':

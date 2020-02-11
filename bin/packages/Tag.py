@@ -12,7 +12,6 @@ import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-import Correlate_object
 
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
@@ -311,11 +310,14 @@ def update_tag_global_by_obj_type(object_type, tag):
         # update object global tags
         r_serv_tags.srem('list_tags:{}'.format(object_type), tag)
         # update global tags
-        for obj_type in Correlate_object.get_all_objects():
+        for obj_type in get_all_objects():
             if r_serv_tags.exists('{}:{}'.format(obj_type, tag)):
                 tag_deleted = False
         if tag_deleted:
             r_serv_tags.srem('list_tags', tag)
+
+def get_all_objects():
+    return ['domain', 'item', 'pgp', 'cryptocurrency', 'decoded', 'image']
 
 def add_global_tag(tag, object_type=None):
     '''
@@ -421,6 +423,13 @@ def delete_tag(object_type, tag, object_id, obj_date=None):
 
     else:
         return ({'status': 'error', 'reason': 'object id or tag not found', 'value': tag}, 400)
+
+# # TODO: move me
+def get_obj_date(object_type, object_id):
+    if object_type == "item":
+        return int(Item.get_item_date(object_id))
+    else:
+        return None
 
 # API QUERY
 def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
@@ -559,10 +568,3 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
             l_tagged_obj = list(l_tagged_obj)
 
         return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages, "nb_first_elem":start+1, "nb_last_elem":stop, "nb_all_elem":nb_all_elem}
-
-
-def get_obj_date(object_type, object_id): # # TODO: move me in another file
-    if object_type == "item":
-        return int(Item.get_item_date(object_id))
-    else:
-        return None

@@ -6,7 +6,8 @@ import sys
 import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import correlation
+import Correlation
+import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -15,7 +16,7 @@ config_loader = ConfigLoader.ConfigLoader()
 serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
-pgp = correlation.Correlation('pgpdump', ['key', 'mail', 'name'])
+pgp = Correlation.Correlation('pgpdump', ['key', 'mail', 'name'])
 
 def get_pgp(request_dict, pgp_type):
     # basic verification

@@ -8,7 +8,8 @@ import redis
 from hashlib import sha256
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import correlation
+import Correlation
+import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -19,7 +20,7 @@ config_loader = None
 
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
-cryptocurrency = correlation.Correlation('cryptocurrency', ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash'])
+cryptocurrency = Correlation.Correlation('cryptocurrency', ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash'])
 
 # http://rosettacode.org/wiki/Bitcoin/address_validation#Python
 def decode_base58(bc, length):
@@ -74,18 +75,18 @@ def get_cryptocurrency_symbol(crypto_type):
     return None
 
 def get_cryptocurrency_type(crypto_symbol):
-    if crypto_type=='BTC':
+    if crypto_symbol=='BTC':
         return 'bitcoin'
-    elif crypto_type=='ETH':
+    elif crypto_symbol=='ETH':
         return 'ethereum'
-    elif crypto_type=='BCH':
+    elif crypto_symbol=='BCH':
         return 'bitcoin-cash'
-    elif crypto_type=='LTC':
+    elif crypto_symbol=='LTC':
         return 'litecoin'
-    elif crypto_type=='XMR':
+    elif crypto_symbol=='XMR':
         return 'monero'
-    elif crypto_type=='ZEC':
+    elif crypto_symbol=='ZEC':
         return 'zcash'
-    elif crypto_type=='DASH':
+    elif crypto_symbol=='DASH':
         return 'dash'
     return None

@@ -144,7 +144,6 @@ def save_hash_on_disk(decode, type, hash, json_data):
         f.write(decode)
 
     # create hash metadata
-    serv_metadata.hset('metadata_hash:'+hash, 'saved_path', local_filename_hash)
     serv_metadata.hset('metadata_hash:'+hash, 'size', os.path.getsize(filename_hash))
 
     with open(filename_json, 'w') as f:

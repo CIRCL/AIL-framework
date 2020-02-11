@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import magic
 import sys
 import redis
 
@@ -13,7 +14,6 @@ import Date
 import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import correlation
 
 
 import ConfigLoader
@@ -23,6 +23,13 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 HASH_DIR = config_loader.get_config_str('Directories', 'hash')
 config_loader = None
 
+# # TODO: move me in another file
+def get_all_correlation_objects():
+    '''
+    Return a list of all correllated objects
+    '''
+    return ['domain', 'paste']
+
 def get_decoded_item_type(sha1_string):
     '''
     Retun the estimed type of a given decoded item.
@@ -30,6 +37,9 @@ def get_decoded_item_type(sha1_string):
     :param sha1_string: sha1_string
     '''
     return r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'estimated_type')
+
+def get_file_mimetype(bytes_content):
+    return magic.from_buffer(bytes_content, mime=True)
 
 def nb_decoded_seen_in_item(sha1_string):
     nb = r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'nb_seen_in_all_pastes')
@@ -147,7 +157,7 @@ def get_decoded_correlated_object(sha1_string, correlation_objects=[]):
     :rtype: dict
     '''
     if correlation_objects is None:
-        correlation_objects = correlation.get_all_correlation_objects()
+        correlation_objects = get_all_correlation_objects()
     decoded_correlation = {}
     for correlation_object in correlation_objects:
         if correlation_object == 'paste':
@@ -170,3 +180,53 @@ def get_decoded_file_content(sha1_string, mimetype=None):
     with open(filepath, 'rb') as f:
         file_content = BytesIO(f.read())
     return file_content
+
+# # TODO: check file format
+def save_decoded_file_content(sha1_string, io_content, date_range, mimetype=None):
+    if not mimetype:
+        if exist_decoded(sha1_string):
+            mimetype = get_decoded_item_type(sha1_string)
+        else:
+            mimetype = get_file_mimetype(io_content.getvalue())
+
+    
+
+    filepath = get_decoded_filepath(sha1_string, mimetype=mimetype)
+    if os.path.isfile(filepath):
+        print('File already exist')
+        return False
+
+    # create dir
+    dirname = os.path.dirname(filepath)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    with open(filepath, 'wb') as f:
+        f.write(io_content.getvalue())
+
+    # create hash metadata
+    r_serv_metadata.hset('metadata_hash:{}'.format(sha1_string), 'size', os.path.getsize(filepath))
+
+    r_serv_metadata.hset('metadata_hash:{}'.format(sha1_string), 'first_seen', date_range['date_from'])
+    r_serv_metadata.hset('metadata_hash:{}'.format(sha1_string), 'last_seen', date_range['date_to'])
+
+    return True
+
+def delete_decoded_file(obj_id, io_content):
+    # check if item exists
+    if not exist_decoded(obj_id):
+        return False
+    else:
+        Tag.delete_obj_tags(obj_id, 'decoded', Tag.get_obj_tag(obj_id))
+        os.remove(get_decoded_filepath(sha1_string))
+        r_serv_metadata.delete('metadata_hash:{}'.format(obj_id))
+        return True
+
+def create_decoded(obj_id, obj_meta, io_content):
+    first_seen = obj_meta.get('first_seen', None)
+    last_seen = obj_meta.get('last_seen', None)
+    date_range = Date.sanitise_date_range(first_seen, last_seen, separator='', date_type='datetime')
+
+    res = save_decoded_file_content(obj_id, io_content, date_range, mimetype=None)
+    if res and 'tags' in obj_meta:
+        Tag.api_add_obj_tags(tags=obj_metadata['tags'], object_id=obj_id, object_type="decoded")

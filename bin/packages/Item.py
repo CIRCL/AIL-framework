@@ -402,6 +402,7 @@ def delete_item(obj_id):
 
     ### REQUIRE MORE WORK
     # delete child/son !!!
+    ### TODO in inport V2  
     # delete from tracked items
     # delete from queue
     ###

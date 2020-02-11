@@ -69,10 +69,6 @@ def unpack_item_obj(map_uuid_global_id, misp_obj):
 
     map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
 
-def get_obj_relationship(misp_obj):
-    for item in misp_obj.ObjectReference:
-        print(item.to_json())
-
 
 
 ## TODO: handle multiple pgp in the same object
@@ -118,7 +114,57 @@ def unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj):
 
         map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
 
-    get_obj_relationship(misp_obj)
+    #get_obj_relationship(misp_obj)
+
+def get_obj_type_from_relationship(misp_obj):
+    obj_uuid = misp_obj.uuid
+    obj_type = None
+
+    for relation in misp_obj.ObjectReference:
+        if relation.object_uuid == obj_uuid:
+            if relation.relationship_type == "screenshot-of":
+                return 'screenshot'
+            if relation.relationship_type == "included-in":
+                obj_type = 'decoded'
+    return obj_type
+
+def get_obj_relationship(misp_obj):
+    for item in misp_obj.ObjectReference:
+        print(item.to_json())
+
+
+# # TODO: covert md5 and sha1 to expected
+def unpack_file(map_uuid_global_id, misp_obj):
+
+    obj_type = get_obj_type_from_relationship(misp_obj)
+    if obj_type:
+        obj_id = None
+        io_content = None
+        for attribute in misp_obj.attributes:
+            # get file content
+            if attribute.object_relation == 'attachment':
+                io_content = attribute.data
+            elif attribute.object_relation == 'malware-sample':
+                io_content = attribute.data
+
+            # # TODO: use/verify specified mimetype
+            elif attribute.object_relation == 'mimetype':
+                print(attribute.value)
+
+            # # TODO: support more
+            elif attribute.object_relation == 'sha1' and obj_type == 'decoded':
+                obj_id = attribute.value
+            elif attribute.object_relation == 'sha256' and obj_type == 'screenshot':
+                obj_id = attribute.value
+
+        if obj_id and io_content:
+            print(obj_type)
+            obj_meta = get_object_metadata(misp_obj)
+            if obj_type == 'screenshot':
+                #Screenshot.create_screenshot(obj_id, obj_meta, io_content)
+                pass
+            else: #decoded
+                Decoded.create_decoded(obj_id, obj_meta, io_content)
 
 def get_misp_import_fct(map_uuid_global_id, misp_obj):
     #print(misp_obj.ObjectReference)
@@ -129,17 +175,22 @@ def get_misp_import_fct(map_uuid_global_id, misp_obj):
     #print(misp_obj.name)
 
     if misp_obj.name == 'ail-leak':
-        unpack_item_obj(map_uuid_global_id, misp_obj)
+        #unpack_item_obj(map_uuid_global_id, misp_obj)
         #print(misp_obj.to_json())
         pass
     elif misp_obj.name == 'domain-ip':
         pass
     elif misp_obj.name == 'pgp-meta':
-        unpack_obj_pgp(map_uuid_global_id, misp_obj)
+        #unpack_obj_pgp(map_uuid_global_id, misp_obj)
+        pass
     elif misp_obj.name == 'coin-address':
+        #unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj)
         pass
     elif misp_obj.name == 'file':
-
+        unpack_file(map_uuid_global_id, misp_obj)
+        print()
+        print('---')
+        print()
         #unpack_item_obj(map_uuid_global_id, misp_obj)
         pass
 
@@ -160,4 +211,4 @@ if __name__ == '__main__':
     # misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
 
     #import_objs_from_file('test_import_item.json')
-    import_objs_from_file('test_export.json')
+    import_objs_from_file('test_import_item.json')
