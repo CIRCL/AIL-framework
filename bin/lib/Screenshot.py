@@ -114,7 +114,7 @@ def get_screenshot_correlated_object(sha256_string, correlation_objects=[]):
     :return: a dict of all correlation for a given sha256
     :rtype: dict
     '''
-    if correlation_objects is None:
+    if not correlation_objects:
         correlation_objects = Correlate_object.get_all_correlation_objects()
     decoded_correlation = {}
     for correlation_object in correlation_objects:
@@ -128,6 +128,19 @@ def get_screenshot_correlated_object(sha256_string, correlation_objects=[]):
             decoded_correlation[correlation_object] = res
     return decoded_correlation
 
+def save_item_relationship(obj_id, item_id):
+    r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'screenshot', obj_id)
+    r_serv_onion.sadd('screenshot:{}'.format(obj_id), item_id)
+
+def save_domain_relationship(obj_id, domain):
+    r_serv_onion.sadd('domain_screenshot:{}'.format(domain), obj_id)
+    r_serv_onion.sadd('screenshot_domain:{}'.format(obj_id), domain)
+
+def save_obj_relationship(obj_id, obj2_type, obj2_id):
+    if obj2_type == 'domain':
+        save_domain_relationship(obj_id, obj2_id)
+    elif obj2_type == 'item':
+        save_item_relationship(obj_id, obj2_id)
 
 def get_screenshot_file_content(sha256_string):
     filepath = get_screenshot_filepath(sha256_string)
@@ -145,14 +158,44 @@ def save_screenshot_file(sha256_string, io_content):
         f.write(io_content.getvalue())
     return True
 
-def create_screenshot(sha256_string, obj_meta, io_content):
-    # check if sha256
-    res = save_screenshot_file(sha256_string, io_content)
+def delete_screenshot_file(obj_id):
+    filepath = get_screenshot_filepath(obj_id)
+    if not os.path.isfile(filepath):
+        return False
+    Tag.delete_obj_tags(obj_id, 'image', Tag.get_obj_tag(obj_id))
+    os.remove(filepath)
+    return True
+
+def create_screenshot(obj_id, obj_meta, io_content):
+    print(obj_id)
+    # # TODO: check if sha256
+    res = save_screenshot_file(obj_id, io_content)
     if res:
         # creata tags
-        if 'tags' in obj_metadata:
+        if 'tags' in obj_meta:
             # # TODO: handle mixed tags: taxonomies and Galaxies
-            Tag.api_add_obj_tags(tags=obj_metadata['tags'], object_id=obj_id, object_type="image")
+            Tag.api_add_obj_tags(tags=obj_meta['tags'], object_id=obj_id, object_type="image")
         return True
 
     return False
+
+def delete_screenshot(obj_id):
+    if not exist_screenshot(obj_id):
+        return False
+
+    res = delete_screenshot_file(obj_id)
+    if not res:
+        return False
+
+    obj_correlations = get_screenshot_correlated_object(obj_id)
+    if 'domain' in obj_correlations:
+        for domain in obj_correlations['domain']:
+            r_serv_onion.srem('domain_screenshot:{}'.format(domain), obj_id)
+        r_serv_onion.delete('screenshot_domain:{}'.format(obj_id))
+
+    if 'paste' in obj_correlations: # TODO: handle item
+        for item_id in obj_correlations['paste']:
+            r_serv_metadata.hdel('paste_metadata:{}'.format(item_id), 'screenshot')
+        r_serv_onion.sadd('screenshot:{}'.format(obj_id), item_id)
+
+    return True

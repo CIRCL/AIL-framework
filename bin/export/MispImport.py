@@ -159,7 +159,7 @@ def unpack_file(map_uuid_global_id, misp_obj):
         if obj_id and io_content:
             obj_meta = get_object_metadata(misp_obj)
             if obj_type == 'screenshot':
-                #Screenshot.create_screenshot(obj_id, obj_meta, io_content)
+                Screenshot.create_screenshot(obj_id, obj_meta, io_content)
                 pass
             else: #decoded
                 Decoded.create_decoded(obj_id, obj_meta, io_content)
@@ -213,6 +213,8 @@ if __name__ == '__main__':
     # misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
 
     import_objs_from_file('test_import_item.json')
+
+    #Screenshot.delete_screenshot('d4065d632a232a323d33a30144924763ae229a972c363e12abf48009017ec10c')
 
     #Decoded.delete_correlation('23a44cc266880d26386a0a77318afbe09696f935')
     #Pgp.pgp.delete_correlation('key', '0xA4BB02A75E6AF448')

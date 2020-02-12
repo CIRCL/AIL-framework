@@ -207,7 +207,7 @@ def create_obj_relationship(obj1_type, obj1_id, obj2_type, obj2_id, obj1_subtype
     if obj1_type == 'domain':
         pass
     elif obj1_type == 'item':
-        pass
+        pass # son/father + duplicate
     elif obj1_type == 'pgp':
         Pgp.pgp.save_obj_relationship(obj1_subtype, obj1_id, obj2_type, obj2_id)
     elif obj1_type == 'cryptocurrency':
