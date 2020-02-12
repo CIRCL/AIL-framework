@@ -10,6 +10,7 @@ import ConfigLoader
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
+import Item
 #import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
@@ -36,7 +37,7 @@ class Correlation(object):
 
     def exist_correlation(self, subtype, obj_id):
         res = r_serv_metadata.zscore('{}_all:{}'.format(self.correlation_name, subtype), obj_id)
-        if res:
+        if res is not None:
             return True
         else:
             return False
@@ -283,7 +284,7 @@ class Correlation(object):
 
 
     def get_correlation_all_object(self, correlation_type, correlation_value, correlation_objects=[]):
-        if correlation_objects is None:
+        if not correlation_objects:
             correlation_objects = get_all_correlation_objects()
         correlation_obj = {}
         for correlation_object in correlation_objects:
@@ -311,8 +312,8 @@ class Correlation(object):
             if date > last_seen:
                 r_serv_metadata.hset('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id), 'last_seen', date)
 
-    def save_item_correlation(self, subtype, date, obj_id, item_id, item_date):
-        update_correlation_daterange(subtype, obj_id, item_date)
+    def save_item_correlation(self, subtype, obj_id, item_id, item_date):
+        self.update_correlation_daterange(subtype, obj_id, item_date)
 
         # global set
         r_serv_metadata.sadd('set_{}_{}:{}'.format(self.correlation_name, subtype, obj_id), item_id)
@@ -344,6 +345,12 @@ class Correlation(object):
             self.update_correlation_daterange(subtype, obj_id, date_range['date_to'])
         return True
 
+    def save_obj_relationship(self, subtype, obj_id, obj2_type, obj2_id):
+        if obj2_type == 'domain':
+            self.save_domain_correlation(obj2_id, subtype, obj_id)
+        elif obj2_type == 'item':
+            self.save_item_correlation(subtype, obj_id, obj2_id, Item.get_item_date(obj2_id))
+
     def create_correlation(self, subtype, obj_id, obj_meta):
         res = self.sanythise_correlation_types([subtype], r_boolean=True)
         if not res:
@@ -359,8 +366,40 @@ class Correlation(object):
             #Tag.api_add_obj_tags(tags=obj_meta['tags'], object_id=obj_id, object_type=self.get_correlation_obj_type())
         return True
 
+    # # TODO: handle tags
     def delete_correlation(self, subtype, obj_id):
-        pass
+        res = self.sanythise_correlation_types([subtype], r_boolean=True)
+        if not res:
+            print('invalid subtype')
+            return False
+        if not self.exist_correlation(subtype, obj_id):
+            return False
+
+        obj_correlations = self.get_correlation_all_object(subtype, obj_id)
+        if 'domain' in obj_correlations:
+            for domain in obj_correlations['domain']:
+                r_serv_metadata.srem('domain_{}_{}:{}'.format(self.correlation_name, subtype, domain), obj_id)
+            r_serv_metadata.delete('set_domain_{}_{}:{}'.format(self.correlation_name, subtype, obj_id))
+
+
+        if 'paste' in obj_correlations: # TODO: handle item
+            for item_id in obj_correlations['paste']:
+
+                r_serv_metadata.srem('item_{}_{}:{}'.format(self.correlation_name, subtype, item_id), obj_id)
+            r_serv_metadata.delete('set_{}_{}:{}'.format(self.correlation_name, subtype, obj_id))
+
+            # delete daily correlation
+            first_seen = self.get_correlation_first_seen(subtype, obj_id)
+            last_seen = self.get_correlation_last_seen(subtype, obj_id)
+            meta_date = Date.sanitise_date_range(first_seen, last_seen)
+            date_range = Date.substract_date(meta_date['date_from'], meta_date['date_to'])
+            for date_day in date_range:
+                r_serv_metadata.hdel('{}:{}:{}'.format(self.correlation_name, subtype, date_day), obj_id)
+
+        r_serv_metadata.delete('{}_metadata_{}:{}'.format(self.correlation_name, subtype, obj_id))
+        r_serv_metadata.zrem('{}_all:{}'.format(self.correlation_name, subtype), obj_id)
+
+        return True
 
 ######## API EXPOSED ########
 

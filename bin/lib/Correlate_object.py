@@ -52,9 +52,9 @@ def exist_object(object_type, correlation_id, type_id=None): # => work on object
     elif object_type == 'decoded':
         return Decoded.exist_decoded(correlation_id)
     elif object_type == 'pgp':
-        return Pgp.pgp._exist_corelation_field(type_id, correlation_id)
+        return Pgp.pgp.exist_correlation(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
-        return Cryptocurrency.cryptocurrency._exist_corelation_field(type_id, correlation_id)
+        return Cryptocurrency.cryptocurrency.exist_correlation(type_id, correlation_id)
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.exist_screenshot(correlation_id)
     else:
@@ -202,6 +202,20 @@ def get_obj_tag_table_keys(object_type):
     '''
     if object_type=="domain":
         return ['id', 'first_seen', 'last_check', 'status'] # # TODO: add root screenshot
+
+def create_obj_relationship(obj1_type, obj1_id, obj2_type, obj2_id, obj1_subtype=None, obj2_subtype=None):
+    if obj1_type == 'domain':
+        pass
+    elif obj1_type == 'item':
+        pass
+    elif obj1_type == 'pgp':
+        Pgp.pgp.save_obj_relationship(obj1_subtype, obj1_id, obj2_type, obj2_id)
+    elif obj1_type == 'cryptocurrency':
+        Cryptocurrency.cryptocurrency.save_obj_relationship(obj1_subtype, obj1_type, obj2_type, obj2_id)
+    elif obj1_type == 'decoded':
+        pass
+    elif obj1_type == 'image':
+        pass
 
 
 def create_graph_links(links_set):

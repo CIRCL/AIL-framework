@@ -170,10 +170,26 @@ def get_decoded_correlated_object(sha1_string, correlation_objects=[]):
             decoded_correlation[correlation_object] = res
     return decoded_correlation
 
+# # # TODO: check if item and decoded exist
+def save_decoded_item_correlation(sha1_string, item_id, decoder_type):
+    item_date = Item.get_item_date(item_id)
+
+
+    # domain
+    if Item.is_crawled(item_id):
+        domain = Item.get_item_domain(item_id)
+        save_domain_decoded(domain, sha1_string)
+    pass
+
 def save_domain_decoded(domain, sha1_string):
     r_serv_metadata.sadd('hash_domain:{}'.format(domain), sha1_string) # domain - hash map
     r_serv_metadata.sadd('domain_hash:{}'.format(sha1_string), domain) # hash - domain ma
 
+def save_decoded_correlation(sha1_string, referenced_obj_type, referenced_obj_id):
+    if referenced_obj_type=='domain':
+        save_domain_decoded(referenced_obj_type, sha1_string)
+    elif referenced_obj_type=='item':
+        pass
 
 def get_decoded_file_content(sha1_string, mimetype=None):
     filepath = get_decoded_filepath(sha1_string, mimetype=mimetype)
@@ -189,7 +205,7 @@ def save_decoded_file_content(sha1_string, io_content, date_range, mimetype=None
         else:
             mimetype = get_file_mimetype(io_content.getvalue())
 
-    
+
 
     filepath = get_decoded_filepath(sha1_string, mimetype=mimetype)
     if os.path.isfile(filepath):
@@ -205,6 +221,7 @@ def save_decoded_file_content(sha1_string, io_content, date_range, mimetype=None
         f.write(io_content.getvalue())
 
     # create hash metadata
+    # # TODO: save estimated type
     r_serv_metadata.hset('metadata_hash:{}'.format(sha1_string), 'size', os.path.getsize(filepath))
 
     r_serv_metadata.hset('metadata_hash:{}'.format(sha1_string), 'first_seen', date_range['date_from'])

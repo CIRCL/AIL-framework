@@ -8,11 +8,11 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+import Item
 import Cryptocurrency
 import Pgp
 import Decoded
 import Domain
-import Item
 import Screenshot
 import Correlate_object
 
@@ -31,8 +31,18 @@ def get_global_id(obj_type, obj_id, obj_subtype=None):
 # sub type
 # obj type
 # obj value
-def get_global_id_from_misp_obj(misp_obj):
-    pass
+def get_global_id_from_id(global_id):
+    obj_meta = {}
+    global_id = global_id.split(':', 3)
+    if len(global_id) > 2:
+        obj_meta['type'] = global_id[0]
+        obj_meta['subtype'] = global_id[1]
+        obj_meta['id'] = global_id[2]
+    else:
+        obj_meta['type'] = global_id[0]
+        obj_meta['subtype'] = None
+        obj_meta['id'] = global_id[1]
+    return obj_meta
 
 def get_misp_obj_tag(misp_obj):
     if misp_obj.attributes:
@@ -49,7 +59,7 @@ def get_object_metadata(misp_obj):
     if 'first_seen' in misp_obj.keys():
         obj_meta['first_seen'] = misp_obj.first_seen
     if 'last_seen' in misp_obj.keys():
-        obj_meta['last_seen'] = misp_obj.first_seen
+        obj_meta['last_seen'] = misp_obj.last_seen
     obj_meta['tags'] = get_misp_obj_tag(misp_obj)
     return obj_meta
 
@@ -65,9 +75,9 @@ def unpack_item_obj(map_uuid_global_id, misp_obj):
 
     if obj_id and io_content:
         res = Item.create_item(obj_id, obj_meta, io_content)
-        print(res)
+        #print(res)
 
-    map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
+        map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
 
 
 
@@ -85,12 +95,12 @@ def unpack_obj_pgp(map_uuid_global_id, misp_obj):
 
     if obj_id and obj_subtype:
         obj_meta = get_object_metadata(misp_obj)
+        print(obj_id)
+        print(obj_meta)
         res = Pgp.pgp.create_correlation(obj_subtype, obj_id, obj_meta)
-        print(res)
 
         map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
 
-        #get_obj_relationship(misp_obj)
 
 def unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj):
     obj_id = None
@@ -103,18 +113,10 @@ def unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj):
 
     # valid cryptocurrency type
     if obj_subtype and obj_id:
-        print('crypto')
-        print(obj_id)
-        print(obj_subtype)
-
         obj_meta = get_object_metadata(misp_obj)
-        print(obj_meta)
         res = Cryptocurrency.cryptocurrency.create_correlation(obj_subtype, obj_id, obj_meta)
-        print(res)
 
         map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
-
-    #get_obj_relationship(misp_obj)
 
 def get_obj_type_from_relationship(misp_obj):
     obj_uuid = misp_obj.uuid
@@ -127,10 +129,6 @@ def get_obj_type_from_relationship(misp_obj):
             if relation.relationship_type == "included-in":
                 obj_type = 'decoded'
     return obj_type
-
-def get_obj_relationship(misp_obj):
-    for item in misp_obj.ObjectReference:
-        print(item.to_json())
 
 
 # # TODO: covert md5 and sha1 to expected
@@ -149,7 +147,8 @@ def unpack_file(map_uuid_global_id, misp_obj):
 
             # # TODO: use/verify specified mimetype
             elif attribute.object_relation == 'mimetype':
-                print(attribute.value)
+                #print(attribute.value)
+                pass
 
             # # TODO: support more
             elif attribute.object_relation == 'sha1' and obj_type == 'decoded':
@@ -158,7 +157,6 @@ def unpack_file(map_uuid_global_id, misp_obj):
                 obj_id = attribute.value
 
         if obj_id and io_content:
-            print(obj_type)
             obj_meta = get_object_metadata(misp_obj)
             if obj_type == 'screenshot':
                 #Screenshot.create_screenshot(obj_id, obj_meta, io_content)
@@ -166,33 +164,34 @@ def unpack_file(map_uuid_global_id, misp_obj):
             else: #decoded
                 Decoded.create_decoded(obj_id, obj_meta, io_content)
 
+            map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
+
 def get_misp_import_fct(map_uuid_global_id, misp_obj):
-    #print(misp_obj.ObjectReference)
-    #for item in misp_obj.ObjectReference:
-    #    print(item.to_json())
-    #obj_meta = get_object_metadata(misp_obj)
-
-    #print(misp_obj.name)
-
     if misp_obj.name == 'ail-leak':
-        #unpack_item_obj(map_uuid_global_id, misp_obj)
-        #print(misp_obj.to_json())
+        unpack_item_obj(map_uuid_global_id, misp_obj)
         pass
     elif misp_obj.name == 'domain-ip':
         pass
     elif misp_obj.name == 'pgp-meta':
-        #unpack_obj_pgp(map_uuid_global_id, misp_obj)
+        unpack_obj_pgp(map_uuid_global_id, misp_obj)
         pass
     elif misp_obj.name == 'coin-address':
-        #unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj)
+        unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj)
         pass
     elif misp_obj.name == 'file':
         unpack_file(map_uuid_global_id, misp_obj)
-        print()
-        print('---')
-        print()
-        #unpack_item_obj(map_uuid_global_id, misp_obj)
         pass
+
+# import relationship between objects
+def create_obj_relationships(map_uuid_global_id, misp_obj):
+    if misp_obj.uuid in map_uuid_global_id:
+        for relationship in misp_obj.ObjectReference:
+            if relationship.referenced_uuid in map_uuid_global_id:
+                obj_meta_src = get_global_id_from_id(map_uuid_global_id[relationship.object_uuid])
+                obj_meta_target = get_global_id_from_id(map_uuid_global_id[relationship.referenced_uuid])
+                Correlate_object.create_obj_relationship(obj_meta_src['type'], obj_meta_src['id'], obj_meta_target['type'], obj_meta_target['id'],
+                                                            obj1_subtype=obj_meta_src['subtype'], obj2_subtype=obj_meta_target['subtype'])
+
 
 def import_objs_from_file(filepath):
     event_to_import = MISPEvent()
@@ -203,12 +202,17 @@ def import_objs_from_file(filepath):
     for misp_obj in event_to_import.objects:
         get_misp_import_fct(map_uuid_global_id, misp_obj)
 
-    print(map_uuid_global_id)
+    for misp_obj in event_to_import.objects:
+        create_obj_relationships(map_uuid_global_id, misp_obj)
+
+    #print(map_uuid_global_id)
 
 
 if __name__ == '__main__':
 
     # misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
 
-    #import_objs_from_file('test_import_item.json')
     import_objs_from_file('test_import_item.json')
+
+    #Decoded.delete_correlation('23a44cc266880d26386a0a77318afbe09696f935')
+    #Pgp.pgp.delete_correlation('key', '0xA4BB02A75E6AF448')

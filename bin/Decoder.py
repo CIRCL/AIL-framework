@@ -20,6 +20,8 @@ from Helper import Process
 from packages import Paste
 from packages import Item
 
+from lib import Decoded
+
 import re
 import signal
 
@@ -124,8 +126,7 @@ def save_hash(decoder_name, message, date, decoded):
     # Domain Object
     if Item.is_crawled(message):
         domain = Item.get_item_domain(message)
-        serv_metadata.sadd('hash_domain:{}'.format(domain), hash) # domain - hash map
-        serv_metadata.sadd('domain_hash:{}'.format(hash), domain) # hash - domain map
+        Decoded.save_domain_decoded(domain, hash)
 
 
 def save_hash_on_disk(decode, type, hash, json_data):

@@ -321,6 +321,7 @@ if __name__ == '__main__':
                 {'id': 'bfd5f1d89e55b10a8b122a9d7ce31667ec1d086a', 'type': 'decoded', 'lvl': 2},
                 #{'id': 'a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1', 'type': 'image', 'lvl': 3},
                 {'id': 'archive/pastebin.com_pro/2020/01/27/iHjcWhkD.gz', 'type': 'item', 'lvl': 1},
+                {'id': '0xA4BB02A75E6AF448', 'type': 'pgp', 'subtype': 'key', 'lvl': 1},
                 {'id': '15efuhpw5V9B1opHAgNXKPBPqdYALXP4hc', 'type': 'cryptocurrency', 'subtype': 'bitcoin', 'lvl': 1}
             ]
     create_list_of_objs_to_export(l_obj, mode='union')
