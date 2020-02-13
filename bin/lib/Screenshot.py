@@ -131,6 +131,12 @@ def get_screenshot_correlated_object(sha256_string, correlation_objects=[]):
 def save_item_relationship(obj_id, item_id):
     r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'screenshot', obj_id)
     r_serv_onion.sadd('screenshot:{}'.format(obj_id), item_id)
+    print('---')
+    print(item_id)
+    if Item.is_crawled(item_id):
+        domain = Item.get_item_domain(item_id)
+        print(domain)
+        save_domain_relationship(obj_id, domain)
 
 def save_domain_relationship(obj_id, domain):
     r_serv_onion.sadd('domain_screenshot:{}'.format(domain), obj_id)
@@ -196,6 +202,6 @@ def delete_screenshot(obj_id):
     if 'paste' in obj_correlations: # TODO: handle item
         for item_id in obj_correlations['paste']:
             r_serv_metadata.hdel('paste_metadata:{}'.format(item_id), 'screenshot')
-        r_serv_onion.sadd('screenshot:{}'.format(obj_id), item_id)
+        r_serv_onion.delete('screenshot:{}'.format(obj_id), item_id)
 
     return True

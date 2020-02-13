@@ -213,9 +213,9 @@ def create_obj_relationship(obj1_type, obj1_id, obj2_type, obj2_id, obj1_subtype
     elif obj1_type == 'cryptocurrency':
         Cryptocurrency.cryptocurrency.save_obj_relationship(obj1_subtype, obj1_type, obj2_type, obj2_id)
     elif obj1_type == 'decoded':
-        pass
+        Decoded.save_obj_relationship(obj1_id, obj2_type, obj2_id)
     elif obj1_type == 'image':
-        pass
+        Screenshot.save_obj_relationship(obj1_id, obj2_type, obj2_id)
 
 
 def create_graph_links(links_set):

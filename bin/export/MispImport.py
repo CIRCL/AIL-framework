@@ -95,8 +95,6 @@ def unpack_obj_pgp(map_uuid_global_id, misp_obj):
 
     if obj_id and obj_subtype:
         obj_meta = get_object_metadata(misp_obj)
-        print(obj_id)
-        print(obj_meta)
         res = Pgp.pgp.create_correlation(obj_subtype, obj_id, obj_meta)
 
         map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
@@ -116,7 +114,7 @@ def unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj):
         obj_meta = get_object_metadata(misp_obj)
         res = Cryptocurrency.cryptocurrency.create_correlation(obj_subtype, obj_id, obj_meta)
 
-        map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
+        map_uuid_global_id[misp_obj.uuid] = get_global_id('cryptocurrency', obj_id, obj_subtype=obj_subtype)
 
 def get_obj_type_from_relationship(misp_obj):
     obj_uuid = misp_obj.uuid
@@ -160,11 +158,11 @@ def unpack_file(map_uuid_global_id, misp_obj):
             obj_meta = get_object_metadata(misp_obj)
             if obj_type == 'screenshot':
                 Screenshot.create_screenshot(obj_id, obj_meta, io_content)
-                pass
+                map_uuid_global_id[misp_obj.uuid] = get_global_id('image', obj_id)
             else: #decoded
                 Decoded.create_decoded(obj_id, obj_meta, io_content)
+                map_uuid_global_id[misp_obj.uuid] = get_global_id('decoded', obj_id)
 
-            map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
 
 def get_misp_import_fct(map_uuid_global_id, misp_obj):
     if misp_obj.name == 'ail-leak':
@@ -189,6 +187,12 @@ def create_obj_relationships(map_uuid_global_id, misp_obj):
             if relationship.referenced_uuid in map_uuid_global_id:
                 obj_meta_src = get_global_id_from_id(map_uuid_global_id[relationship.object_uuid])
                 obj_meta_target = get_global_id_from_id(map_uuid_global_id[relationship.referenced_uuid])
+
+                print('000000')
+                print(obj_meta_src)
+                print(obj_meta_target)
+                print('111111')
+
                 Correlate_object.create_obj_relationship(obj_meta_src['type'], obj_meta_src['id'], obj_meta_target['type'], obj_meta_target['id'],
                                                             obj1_subtype=obj_meta_src['subtype'], obj2_subtype=obj_meta_target['subtype'])
 
@@ -214,7 +218,7 @@ if __name__ == '__main__':
 
     import_objs_from_file('test_import_item.json')
 
-    #Screenshot.delete_screenshot('d4065d632a232a323d33a30144924763ae229a972c363e12abf48009017ec10c')
+    #Screenshot.delete_screenshot('a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1')
 
-    #Decoded.delete_correlation('23a44cc266880d26386a0a77318afbe09696f935')
+    #Decoded.delete_decoded('bfd5f1d89e55b10a8b122a9d7ce31667ec1d086a')
     #Pgp.pgp.delete_correlation('key', '0xA4BB02A75E6AF448')
