@@ -202,25 +202,17 @@ def get_decoded_correlated_object(sha1_string, correlation_objects=[]):
             decoded_correlation[correlation_object] = res
     return decoded_correlation
 
-# # # TODO: check if item and decoded exist
-def save_item_relationship(sha1_string, item_id, decoder_type='base64'):
+# # TODO: add delete
+#         delete stats
+def create_decoder_matadata(sha1_string, item_id, decoder_type):
     estimated_type = get_decoded_item_type(sha1_string)
     if not estimated_type:
         print('error, unknow sha1_string')
-
     decoder_type = sanitize_decoder_name(decoder_type)
     item_date = Item.get_item_date(item_id)
 
     r_serv_metadata.incrby('{}_decoded:{}'.format(decoder_type, item_date), 1)
-    r_serv_metadata.zincrby('hash_date:{}'.format(item_date), sha1_string, 1)
     r_serv_metadata.zincrby('{}_date:{}'.format(decoder_type, item_date), sha1_string, 1)
-
-    update_decoded_daterange(sha1_string, item_date)
-
-    # first time we see this hash (all encoding) on this item
-    if r_serv_metadata.zscore('nb_seen_hash:{}'.format(sha1_string), item_id) is None:
-        r_serv_metadata.hincrby('metadata_hash:{}'.format(sha1_string), 'nb_seen_in_all_pastes', 1)
-        r_serv_metadata.sadd('hash_paste:{}'.format(item_id), sha1_string) # item - hash map
 
     # first time we see this hash encoding on this item
     if r_serv_metadata.zscore('{}_hash:{}'.format(decoder_type, sha1_string), item_id) is None:
@@ -235,18 +227,58 @@ def save_item_relationship(sha1_string, item_id, decoder_type='base64'):
     r_serv_metadata.hincrby('metadata_hash:{}'.format(sha1_string), '{}_decoder'.format(decoder_type), 1)
     r_serv_metadata.zincrby('{}_type:{}'.format(decoder_type, estimated_type), item_date, 1) # # TODO: # DUP1
 
-    r_serv_metadata.zincrby('nb_seen_hash:{}'.format(sha1_string), item_id, 1)# hash - paste map
     r_serv_metadata.zincrby('{}_hash:{}'.format(decoder_type, sha1_string), item_id, 1) # number of b64 on this paste
+
+# # # TODO: check if item and decoded exist
+def save_item_relationship(sha1_string, item_id):
+    estimated_type = get_decoded_item_type(sha1_string)
+    if not estimated_type:
+        print('error, unknow sha1_string')
+
+    item_date = Item.get_item_date(item_id)
+
+    r_serv_metadata.zincrby('hash_date:{}'.format(item_date), sha1_string, 1)
+
+    update_decoded_daterange(sha1_string, item_date)
+
+    # first time we see this hash (all encoding) on this item
+    if r_serv_metadata.zscore('nb_seen_hash:{}'.format(sha1_string), item_id) is None:
+        r_serv_metadata.hincrby('metadata_hash:{}'.format(sha1_string), 'nb_seen_in_all_pastes', 1) #### MOVE IT ????
+
+    # # FIXME:
+    r_serv_metadata.zincrby('nb_seen_hash:{}'.format(sha1_string), item_id, 1)# hash - paste map
+    r_serv_metadata.sadd('hash_paste:{}'.format(item_id), sha1_string) # item - hash map
 
     # domain
     if Item.is_crawled(item_id):
         domain = Item.get_item_domain(item_id)
         save_domain_relationship(domain, sha1_string)
-    pass
+
+def delete_item_relationship(sha1_string, item_id):
+    item_date = Item.get_item_date(item_id)
+
+    #update_decoded_daterange(sha1_string, item_date) 3 # TODO:
+    r_serv_metadata.srem('hash_paste:{}'.format(item_id), sha1_string) # item - hash map
+
+    res = r_serv_metadata.zincrby('hash_date:{}'.format(item_date), sha1_string, -1)
+    if int(res) < 1:
+        r_serv_metadata.zrem('hash_date:{}'.format(item_date), sha1_string)
+
+    res = r_serv_metadata.hget('metadata_hash:{}'.format(sha1_string), 'nb_seen_in_all_pastes')
+    if int(res) > 0:
+        r_serv_metadata.hincrby('metadata_hash:{}'.format(sha1_string), 'nb_seen_in_all_pastes', -1)
+
+    res = r_serv_metadata.zincrby('nb_seen_hash:{}'.format(sha1_string), item_id, 1)# hash - paste map
+    if int(res) < 1:
+         r_serv_metadata.zrem('nb_seen_hash:{}'.format(sha1_string), item_id)
 
 def save_domain_relationship(domain, sha1_string):
     r_serv_metadata.sadd('hash_domain:{}'.format(domain), sha1_string) # domain - hash map
     r_serv_metadata.sadd('domain_hash:{}'.format(sha1_string), domain) # hash - domain map
+
+def delete_domain_relationship(domain, sha1_string):
+    r_serv_metadata.srem('hash_domain:{}'.format(domain), sha1_string) # domain - hash map
+    r_serv_metadata.srem('domain_hash:{}'.format(sha1_string), domain) # hash - domain map
 
 def update_decoded_daterange(obj_id, new_date):
     new_date = int(new_date)
@@ -268,7 +300,13 @@ def save_obj_relationship(obj_id, referenced_obj_type, referenced_obj_id):
     if referenced_obj_type == 'domain':
         save_domain_relationship(referenced_obj_id, obj_id)
     elif referenced_obj_type == 'item':
-        save_item_relationship(obj_id, referenced_obj_id, decoder_type='base64') # # TODO: handle decoder type
+        save_item_relationship(obj_id, referenced_obj_id)
+
+def delete_obj_relationship(obj_id, referenced_obj_type, referenced_obj_id):
+    if referenced_obj_type == 'domain':
+        delete_domain_relationship(referenced_obj_id, obj_id)
+    elif referenced_obj_type == 'item':
+        delete_item_relationship(obj_id, referenced_obj_id)
 
 def get_decoded_file_content(sha1_string, mimetype=None):
     filepath = get_decoded_filepath(sha1_string, mimetype=mimetype)

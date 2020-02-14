@@ -333,10 +333,26 @@ class Correlation(object):
             domain = Item.get_item_domain(item_id)
             self.save_domain_correlation(domain, subtype, obj_id)
 
+    def delete_item_correlation(self, subtype, obj_id, item_id, item_date):
+        #self.update_correlation_daterange(subtype, obj_id, item_date) update daterange ! # # TODO:
+        r_serv_metadata.srem('set_{}_{}:{}'.format(self.correlation_name, subtype, obj_id), item_id)
+        r_serv_metadata.srem('item_{}_{}:{}'.format(self.correlation_name, subtype, item_id), obj_id)
+
+        res = r_serv_metadata.hincrby('{}:{}:{}'.format(self.correlation_name, subtype, item_date), obj_id, -1)
+        if int(res) < 0: # remove last
+            r_serv_metadata.hdel('{}:{}:{}'.format(self.correlation_name, subtype, item_date), obj_id)
+
+        res = r_serv_metadata.zscore('{}_all:{}'.format(self.correlation_name, subtype), obj_id)
+        if int(res) > 0:
+            r_serv_metadata.zincrby('{}_all:{}'.format(self.correlation_name, subtype), obj_id, -1)
+
     def save_domain_correlation(self, domain, subtype, obj_id):
         r_serv_metadata.sadd('domain_{}_{}:{}'.format(self.correlation_name, subtype, domain), obj_id)
         r_serv_metadata.sadd('set_domain_{}_{}:{}'.format(self.correlation_name, subtype, obj_id), domain)
 
+    def delete_domain_correlation(self, domain, subtype, obj_id):
+        r_serv_metadata.srem('domain_{}_{}:{}'.format(self.correlation_name, subtype, domain), obj_id)
+        r_serv_metadata.srem('set_domain_{}_{}:{}'.format(self.correlation_name, subtype, obj_id), domain)
 
     def save_correlation(self, subtype, obj_id, date_range):
         r_serv_metadata.zincrby('{}_all:{}'.format(self.correlation_name, subtype), obj_id, 0)
@@ -350,6 +366,12 @@ class Correlation(object):
             self.save_domain_correlation(obj2_id, subtype, obj_id)
         elif obj2_type == 'item':
             self.save_item_correlation(subtype, obj_id, obj2_id, Item.get_item_date(obj2_id))
+
+    def delete_obj_relationship(self, subtype, obj_id, obj2_type, obj2_id):
+        if obj2_type == 'domain':
+            self.delete_domain_correlation(obj2_id, subtype, obj_id)
+        elif obj2_type == 'item':
+            self.delete_item_correlation(subtype, obj_id, obj2_id, Item.get_item_date(obj2_id))
 
     def create_correlation(self, subtype, obj_id, obj_meta):
         res = self.sanythise_correlation_types([subtype], r_boolean=True)

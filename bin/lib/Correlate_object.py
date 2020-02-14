@@ -207,7 +207,7 @@ def create_obj_relationship(obj1_type, obj1_id, obj2_type, obj2_id, obj1_subtype
     if obj1_type == 'domain':
         pass
     elif obj1_type == 'item':
-        pass # son/father + duplicate
+        pass # son/father + duplicate + domain
     elif obj1_type == 'pgp':
         Pgp.pgp.save_obj_relationship(obj1_subtype, obj1_id, obj2_type, obj2_id)
     elif obj1_type == 'cryptocurrency':
@@ -217,6 +217,19 @@ def create_obj_relationship(obj1_type, obj1_id, obj2_type, obj2_id, obj1_subtype
     elif obj1_type == 'image':
         Screenshot.save_obj_relationship(obj1_id, obj2_type, obj2_id)
 
+def delete_obj_relationship(obj1_type, obj1_id, obj2_type, obj2_id, obj1_subtype=None, obj2_subtype=None):
+    if obj1_type == 'domain':
+        pass
+    elif obj1_type == 'item':
+        pass # son/father + duplicate + domain
+    elif obj1_type == 'pgp':
+        Pgp.pgp.delete_obj_relationship(obj1_subtype, obj1_id, obj2_type, obj2_id)
+    elif obj1_type == 'cryptocurrency':
+        Cryptocurrency.cryptocurrency.delete_obj_relationship(obj1_subtype, obj1_type, obj2_type, obj2_id)
+    elif obj1_type == 'decoded':
+        Decoded.delete_obj_relationship(obj1_id, obj2_type, obj2_id)
+    elif obj1_type == 'image':
+        Screenshot.delete_obj_relationship(obj1_id, obj2_type, obj2_id)
 
 def create_graph_links(links_set):
     graph_links_list = []

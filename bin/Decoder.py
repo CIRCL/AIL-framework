@@ -53,7 +53,8 @@ def decode_string(content, item_id, item_date, encoded_list, decoder_name, encod
             sha1_string = sha1(decoded_file).hexdigest()
             mimetype = Decoded.get_file_mimetype(file_content)
             Decoded.save_decoded_file_content(sha1_string, decoded_file, item_date, mimetype=mimetype)
-            Decoded.save_item_relationship(sha1_string, item_id, decoder_type=decoder_name)
+            Decoded.save_item_relationship(sha1_string, item_id)
+            Decoded.create_decoder_matadata(sha1_string, item_id, decoder_name)
 
             #remove encoded from paste content
             content = content.replace(encoded, '', 1)

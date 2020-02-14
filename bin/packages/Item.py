@@ -395,14 +395,23 @@ def delete_item(obj_id):
         r_serv_metadata.delete('hive_cases:{}'.format(obj_id))
 
         os.remove(get_item_filename(obj_id))
-        return True
 
-    # get all correlation
-        # delete them
+        # get all correlation
+        obj_correlations = get_item_all_correlation(obj_id)
+        for correlation in obj_correlations:
+            if correlation=='cryptocurrency' or correlation=='pgp':
+                for obj2_subtype in obj_correlations[correlation]:
+                    for obj2_id in obj_correlations[correlation][obj2_subtype]:
+                        Correlate_object.delete_obj_relationship(correlation, obj2_id, 'item', obj_id,
+                                                            obj1_subtype=obj2_subtype)
+            else:
+                for obj2_id in obj_correlations[correlation]:
+                    Correlate_object.delete_obj_relationship(correlation, obj2_id, 'item', obj_id)
+        return True
 
     ### REQUIRE MORE WORK
     # delete child/son !!!
-    ### TODO in inport V2  
+    ### TODO in inport V2
     # delete from tracked items
     # delete from queue
     ###

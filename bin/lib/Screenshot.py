@@ -46,7 +46,6 @@ def get_metadata(sha256_string):
 def get_screenshot_tags(sha256_string):
     return Tag.get_obj_tag(sha256_string)
 
-
 def get_screenshot_items_list(sha256_string):
     res = r_serv_onion.smembers('screenshot:{}'.format(sha256_string))
     if res:
@@ -131,15 +130,20 @@ def get_screenshot_correlated_object(sha256_string, correlation_objects=[]):
 def save_item_relationship(obj_id, item_id):
     r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'screenshot', obj_id)
     r_serv_onion.sadd('screenshot:{}'.format(obj_id), item_id)
-    print('---')
-    print(item_id)
     if Item.is_crawled(item_id):
         domain = Item.get_item_domain(item_id)
-        print(domain)
         save_domain_relationship(obj_id, domain)
+
+def delete_item_relationship(obj_id, item_id):
+    r_serv_metadata.hdel('paste_metadata:{}'.format(item_id), 'screenshot', obj_id)
+    r_serv_onion.srem('screenshot:{}'.format(obj_id), item_id)
 
 def save_domain_relationship(obj_id, domain):
     r_serv_onion.sadd('domain_screenshot:{}'.format(domain), obj_id)
+    r_serv_onion.sadd('screenshot_domain:{}'.format(obj_id), domain)
+
+def delete_domain_relationship(obj_id, domain):
+    r_serv_onion.srem('domain_screenshot:{}'.format(domain), obj_id)
     r_serv_onion.sadd('screenshot_domain:{}'.format(obj_id), domain)
 
 def save_obj_relationship(obj_id, obj2_type, obj2_id):
@@ -147,6 +151,12 @@ def save_obj_relationship(obj_id, obj2_type, obj2_id):
         save_domain_relationship(obj_id, obj2_id)
     elif obj2_type == 'item':
         save_item_relationship(obj_id, obj2_id)
+
+def delete_obj_relationship(obj_id, obj2_type, obj2_id):
+    if obj2_type == 'domain':
+        delete_domain_relationship(obj_id, obj2_id)
+    elif obj2_type == 'item':
+        delete_item_relationship(obj_id, obj2_id)
 
 def get_screenshot_file_content(sha256_string):
     filepath = get_screenshot_filepath(sha256_string)

@@ -75,7 +75,6 @@ def unpack_item_obj(map_uuid_global_id, misp_obj):
 
     if obj_id and io_content:
         res = Item.create_item(obj_id, obj_meta, io_content)
-        #print(res)
 
         map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
 
@@ -167,18 +166,14 @@ def unpack_file(map_uuid_global_id, misp_obj):
 def get_misp_import_fct(map_uuid_global_id, misp_obj):
     if misp_obj.name == 'ail-leak':
         unpack_item_obj(map_uuid_global_id, misp_obj)
-        pass
     elif misp_obj.name == 'domain-ip':
         pass
     elif misp_obj.name == 'pgp-meta':
         unpack_obj_pgp(map_uuid_global_id, misp_obj)
-        pass
     elif misp_obj.name == 'coin-address':
         unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj)
-        pass
     elif misp_obj.name == 'file':
         unpack_file(map_uuid_global_id, misp_obj)
-        pass
 
 # import relationship between objects
 def create_obj_relationships(map_uuid_global_id, misp_obj):
@@ -188,10 +183,11 @@ def create_obj_relationships(map_uuid_global_id, misp_obj):
                 obj_meta_src = get_global_id_from_id(map_uuid_global_id[relationship.object_uuid])
                 obj_meta_target = get_global_id_from_id(map_uuid_global_id[relationship.referenced_uuid])
 
-                print('000000')
-                print(obj_meta_src)
-                print(obj_meta_target)
-                print('111111')
+                if obj_meta_src == 'decoded' or obj_meta_src == 'item':
+                    print('000000')
+                    print(obj_meta_src)
+                    print(obj_meta_target)
+                    print('111111')
 
                 Correlate_object.create_obj_relationship(obj_meta_src['type'], obj_meta_src['id'], obj_meta_target['type'], obj_meta_target['id'],
                                                             obj1_subtype=obj_meta_src['subtype'], obj2_subtype=obj_meta_target['subtype'])
@@ -216,9 +212,11 @@ if __name__ == '__main__':
 
     # misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
 
-    import_objs_from_file('test_import_item.json')
+    #import_objs_from_file('test_import_item.json')
 
     #Screenshot.delete_screenshot('a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1')
-
-    #Decoded.delete_decoded('bfd5f1d89e55b10a8b122a9d7ce31667ec1d086a')
+    #Decoded.delete_decoded('d59a110ab233fe87cefaa0cf5603b047b432ee07')
     #Pgp.pgp.delete_correlation('key', '0xA4BB02A75E6AF448')
+
+    #Item.delete_item('submitted/2020/02/10/b2485894-4325-469b-bc8f-6ad1c2dbb202.gz')
+    Item.delete_item('archive/pastebin.com_pro/2020/02/10/K2cerjP4.gz')
