@@ -36,7 +36,7 @@
 						</div>
 							<div class="card-body">
 
-								<form action="{{ url_for('import_export.import_object_file') }}" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+								<form action="{{ url_for('import_export.import_object_file') }}" method="post" enctype=multipart/form-data>
 
 									<div class="form-group">
 										<label for="file">Select a <b>JSON File</b> to import:</label>
@@ -58,6 +58,7 @@
 <script>
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
+		$("#nav_misp_import").addClass("active");
 });
 
 function toggle_sidebar(){

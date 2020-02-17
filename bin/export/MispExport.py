@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import io
 import sys
 import uuid
 import redis
@@ -20,6 +21,28 @@ import Correlate_object
 # MISP
 from pymisp import MISPEvent, MISPObject, PyMISP
 
+def is_valid_obj_to_export(obj_type, obj_subtype, obj_id):
+    if not Correlate_object.is_valid_object_type(obj_type):
+        return False
+    if not Correlate_object.is_valid_object_subtype(obj_type, obj_subtype):
+        return False
+    if not Correlate_object.exist_object(obj_type, obj_id, type_id=obj_subtype):
+        return False
+    return True
+
+def sanitize_obj_export_lvl(lvl):
+    try:
+        lvl = int(lvl)
+    except:
+        lvl = 0
+    return lvl
+
+def get_export_filename(json_content):
+    print(json_content)
+    return 'ail_export.json'
+
+def create_in_memory_file(json_content):
+    return io.BytesIO(json_content.encode())
 
 def tag_misp_object_attributes(l_ref_obj_attr, tags):
     for obj_attr in l_ref_obj_attr:
@@ -144,12 +167,6 @@ def filter_obj_linked(l_obj):
         res = Correlate_object.get_object_correlation(obj['type'], obj['id'], obj.get('subtype', None))
         print(res)
 
-
-def export_object_list(l_obj, mode='union'):
-    # filter elements to export
-    if mode=='linked':
-        filter_obj_linked(l_obj)
-
 def add_relation_ship_to_create(set_relationship, dict_obj, dict_new_obj):
     global_id = Correlate_object.get_obj_global_id(dict_obj['type'], dict_obj['id'], dict_obj.get('subtype', None))
     global_id_new = Correlate_object.get_obj_global_id(dict_new_obj['type'], dict_new_obj['id'], dict_new_obj.get('subtype', None))
@@ -194,7 +211,7 @@ def add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl)
         add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl)
 
 
-def create_list_of_objs_to_export(l_obj, mode='union'):
+def create_list_of_objs_to_export(l_obj):
     all_obj_to_export = set()
     set_relationship = set()
     for obj in l_obj:
@@ -219,10 +236,9 @@ def create_list_of_objs_to_export(l_obj, mode='union'):
             # add object to event
             event.add_object(dict_misp_obj[obj_global_id])
 
-    print(event.to_json())
-
-    misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
-    misp.add_event(event, pythonify=True)
+    #misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
+    #misp.add_event(event, pythonify=True)
+    return event.to_json()
 
 
 def create_all_misp_obj(all_obj_to_export, set_relationship):

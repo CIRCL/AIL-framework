@@ -133,6 +133,12 @@ class Correlation(object):
         '''
         return self.all_correlation_types
 
+    def is_valid_obj_subtype(self, subtype):
+        if subtype in self.all_correlation_types:
+            return True
+        else:
+            return False
+
     def get_correlation_obj_type(self):
         if self.correlation_name=='pgpdump':
             return 'pgp'

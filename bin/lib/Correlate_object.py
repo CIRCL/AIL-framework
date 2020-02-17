@@ -24,7 +24,22 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
 def is_valid_object_type(object_type):
-    if object_type in ['domain', 'item', 'image', 'decoded']:
+    if object_type in ['domain', 'item', 'image', 'decoded', 'pgp', 'cryptocurrency']:
+        return True
+    else:
+        return False
+
+def is_valid_object_subtype(object_type, object_subtype):
+    if object_type == 'pgp':
+        return Pgp.pgp.is_valid_obj_subtype(object_subtype)
+    elif object_type == 'cryptocurrency':
+        return Pgp.pgp.is_valid_obj_subtype(object_subtype)
+    elif object_subtype == None:
+        return True
+    else:
+        return False
+
+    if object_type in ['domain', 'item', 'image', 'decoded', 'pgp', 'cryptocurrency']:
         return True
     else:
         return False

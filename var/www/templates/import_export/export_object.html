@@ -30,15 +30,66 @@
 
 				<div class="col-12 col-lg-10" id="core_content">
 
-					MISP exporter
+					<h3>MISP exporter</h3>
 
-				</div>
+					<form action="{{ url_for('import_export.export_object_file') }}" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+
+						<div id="container-id-to-import">
+
+							<p>Select a list of objects to export</p>
+
+							<div class="row">
+								<div class="col-2" for="obj_input_type"><b>Object Type</b></div>
+								<div class="col-8" for="obj_input_id"><b>Object ID</b></div>
+								<div class="col-1" for="obj_input_lvl"><b>Lvl</b></div>
+							</div>
+
+							<div class="form-horizontal">
+							  <div class="form-body">
+							    <div class="form-group">
+							      <div class="fields">
+							        <div class="input-group mb-1">
+												<select class="custom-select col-2" name="first_obj_to_export" id="obj_input_type">
+											    <option selected>Object type...</option>
+											    <option value="item">Item</option>
+											    <option value="domain">Domain</option>
+											    <option value="image">Image</option>
+													<option value="decoded">Decoded</option>
+													<option value="pgp;key">PGP - Key</option>
+													<option value="pgp;name">PGP - Name</option>
+													<option value="pgp;mail">PGP - Mail</option>
+													<option value="cryptocurrency;bitcoin">Cryptocurrency - Bitcoin</option>
+													<option value="cryptocurrency;bitcoin-cash">Cryptocurrency - Bitcoin Cash</option>
+													<option value="cryptocurrency;dash">Cryptocurrency - Dash</option>
+													<option value="cryptocurrency;etherum">Cryptocurrency - Etherum</option>
+													<option value="cryptocurrency;litecoin">Cryptocurrency - Litecoin</option>
+													<option value="cryptocurrency;monero">Cryptocurrency - Monero</option>
+													<option value="cryptocurrency;zcash">Cryptocurrency - Zcash</option>
+											  </select>
+							          <input type="text" class="form-control col-8" name="first_obj_to_export" id="obj_input_id">
+												<input class="form-control col-1" type="number" min="0" value="0" name="first_obj_to_export" id="obj_input_lvl">
+							          <span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
+							        </div>
+							        <span class="help-block" hidden>Export Objects</span>
+							      </div>
+							    </div>
+							  </div>
+						</div>
+
+					</div>
+						<div class="form-group">
+							<button class="btn btn-info" name="submit" type="submit">Export Objects</button>
+						</div>
+
+					</form>
+
 			</div>
 		</div>
 
 <script>
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
+		$("#nav_misp_export").addClass("active");
 });
 
 function toggle_sidebar(){
@@ -54,6 +105,31 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
+
+var input_1 = '<div class="input-group mb-1"><select class="custom-select col-2" name="'
+var input_2 = '"><option selected>Object type...</option><option value="item">Item</option><option value="domain">Domain</option><option value="image">Image</option><option value="decoded">Decoded</option><option value="pgp;key">PGP - Key</option><option value="pgp;name">PGP - Name</option><option value="pgp;mail">PGP - Mail</option><option value="cryptocurrency;bitcoin">Cryptocurrency - Bitcoin</option><option value="cryptocurrency;bitcoin-cash">Cryptocurrency - Bitcoin Cash</option><option value="cryptocurrency;dash">Cryptocurrency - Dash</option><option value="cryptocurrency;etherum">Cryptocurrency - Etherum</option><option value="cryptocurrency;litecoin">Cryptocurrency - Litecoin</option><option value="cryptocurrency;monero">Cryptocurrency - Monero</option><option value="cryptocurrency;zcash">Cryptocurrency - Zcash</option></select><input type="text" class="form-control col-8" name="'
+var input_3 = '"><input class="form-control col-1" type="number" min="0" value="0" name="'
+var input_4 = '"></div>';
+var minusButton = '<span class="btn btn-danger input-group-addon delete-field col-1"><i class="fas fa-trash-alt"></i></span>';
+
+$('.add-field').click(function() {
+	var new_uuid = uuidv4();
+	var template = input_1 + new_uuid + input_2 + new_uuid + input_3+ new_uuid + input_4;
+  var temp = $(template).insertBefore('.help-block');
+  temp.append(minusButton);
+});
+
+$('.fields').on('click', '.delete-field', function(){
+  $(this).parent().remove();
+});
+
+
+function uuidv4() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+
 </script>
 
 
