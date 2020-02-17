@@ -8,11 +8,11 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+import Item
 import Cryptocurrency
 import Pgp
 import Decoded
 import Domain
-import Item
 import Screenshot
 
 import Correlate_object
@@ -221,8 +221,8 @@ def create_list_of_objs_to_export(l_obj, mode='union'):
 
     print(event.to_json())
 
-    #misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
-    #misp.add_event(event, pythonify=True)
+    misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
+    misp.add_event(event, pythonify=True)
 
 
 def create_all_misp_obj(all_obj_to_export, set_relationship):

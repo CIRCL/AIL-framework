@@ -44,6 +44,21 @@ def get_global_id_from_id(global_id):
         obj_meta['id'] = global_id[1]
     return obj_meta
 
+def get_import_dir():
+    return os.path.join(os.environ['AIL_HOME'], 'temp/import')
+
+def sanitize_import_file_path(filename):
+    IMPORT_FOLDER = get_import_dir()
+    filename = os.path.join(IMPORT_FOLDER, filename)
+    filename = os.path.realpath(filename)
+    # path traversal
+    if not os.path.commonprefix([filename, IMPORT_FOLDER]) == IMPORT_FOLDER:
+        return os.path.join(IMPORT_FOLDER, str(uuid.uuid4()) + '.json')
+    # check if file already exist
+    if os.path.isfile(filename):
+        return os.path.join(IMPORT_FOLDER, str(uuid.uuid4()) + '.json')
+    return filename
+
 def get_misp_obj_tag(misp_obj):
     if misp_obj.attributes:
         misp_tags = misp_obj.attributes[0].tags
@@ -204,19 +219,19 @@ def import_objs_from_file(filepath):
 
     for misp_obj in event_to_import.objects:
         create_obj_relationships(map_uuid_global_id, misp_obj)
-
     #print(map_uuid_global_id)
+    return map_uuid_global_id
 
 
 if __name__ == '__main__':
 
     # misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
 
-    #import_objs_from_file('test_import_item.json')
+    import_objs_from_file('test_import_item.json')
 
     #Screenshot.delete_screenshot('a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1')
     #Decoded.delete_decoded('d59a110ab233fe87cefaa0cf5603b047b432ee07')
     #Pgp.pgp.delete_correlation('key', '0xA4BB02A75E6AF448')
 
     #Item.delete_item('submitted/2020/02/10/b2485894-4325-469b-bc8f-6ad1c2dbb202.gz')
-    Item.delete_item('archive/pastebin.com_pro/2020/02/10/K2cerjP4.gz')
+    #Item.delete_item('archive/pastebin.com_pro/2020/02/10/K2cerjP4.gz')
