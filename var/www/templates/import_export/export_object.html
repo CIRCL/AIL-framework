@@ -28,71 +28,100 @@
 
 				<div class="col-12 col-lg-10" id="core_content">
 
-					<h3>MISP exporter</h3>
+					<div class="card mb-3 mt-1">
+						<div class="card-header text-white bg-dark">
+							<h5 class="card-title"><img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP" style="width:100px;"> MISP Exporter</h5>
+						</div>
+						<div class="card-body">
 
-					<form action="{{ url_for('import_export.export_object_file') }}" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+							<form action="{{ url_for('import_export.export_object_file') }}" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
 
-						<div id="container-id-to-import">
+								<div id="container-id-to-import">
 
-							<p>Select a list of objects to export</p>
+									<p>Select a list of objects to export</p>
 
-							<div class="row">
-								<div class="col-2" for="obj_input_type"><b>Object Type</b></div>
-								<div class="col-8" for="obj_input_id"><b>Object ID</b></div>
-								<div class="col-1" for="obj_input_lvl"><b>Lvl</b></div>
+									<div class="row">
+										<div class="col-2" for="obj_input_type"><b>Object Type</b></div>
+										<div class="col-8" for="obj_input_id"><b>Object ID</b></div>
+										<div class="col-1" for="obj_input_lvl"><b>Lvl</b></div>
+									</div>
+
+									<div class="form-horizontal">
+									  <div class="form-body">
+									    <div class="form-group">
+									      <div class="fields">
+									        <div class="input-group mb-1">
+														<select class="custom-select col-2" name="first_obj_to_export" id="obj_input_type">
+													    <option selected>Object type...</option>
+													    <option value="item">Item</option>
+													    <option value="domain">Domain</option>
+													    <option value="image">Image</option>
+															<option value="decoded">Decoded</option>
+															<option value="pgp;key">PGP - Key</option>
+															<option value="pgp;name">PGP - Name</option>
+															<option value="pgp;mail">PGP - Mail</option>
+															<option value="cryptocurrency;bitcoin">Cryptocurrency - Bitcoin</option>
+															<option value="cryptocurrency;bitcoin-cash">Cryptocurrency - Bitcoin Cash</option>
+															<option value="cryptocurrency;dash">Cryptocurrency - Dash</option>
+															<option value="cryptocurrency;etherum">Cryptocurrency - Etherum</option>
+															<option value="cryptocurrency;litecoin">Cryptocurrency - Litecoin</option>
+															<option value="cryptocurrency;monero">Cryptocurrency - Monero</option>
+															<option value="cryptocurrency;zcash">Cryptocurrency - Zcash</option>
+													  </select>
+									          <input type="text" class="form-control col-8" name="first_obj_to_export" id="obj_input_id">
+														<input class="form-control col-1" type="number" min="0" value="0" name="first_obj_to_export" id="obj_input_lvl">
+									          <span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
+									        </div>
+													{% for obj_dict in l_obj_to_export %}
+														{% with obj_type=obj_dict['type'], obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict['uuid'], obj_error=False%}
+															{% include 'import_export/block_to_export_input.html' %}
+														{% endwith %}
+													{% endfor %}
+
+													<br>
+
+													{% for obj_dict in l_obj_invalid %}
+														{% with obj_type=obj_dict['type'], obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict['uuid'], obj_error=True%}
+															{% include 'import_export/block_to_export_input.html' %}
+														{% endwith %}
+													{% endfor %}
+									        <span class="help-block" hidden>Export Objects</span>
+									      </div>
+									    </div>
+									  </div>
+								</div>
+
 							</div>
 
-							<div class="form-horizontal">
-							  <div class="form-body">
-							    <div class="form-group">
-							      <div class="fields">
-							        <div class="input-group mb-1">
-												<select class="custom-select col-2" name="first_obj_to_export" id="obj_input_type">
-											    <option selected>Object type...</option>
-											    <option value="item">Item</option>
-											    <option value="domain">Domain</option>
-											    <option value="image">Image</option>
-													<option value="decoded">Decoded</option>
-													<option value="pgp;key">PGP - Key</option>
-													<option value="pgp;name">PGP - Name</option>
-													<option value="pgp;mail">PGP - Mail</option>
-													<option value="cryptocurrency;bitcoin">Cryptocurrency - Bitcoin</option>
-													<option value="cryptocurrency;bitcoin-cash">Cryptocurrency - Bitcoin Cash</option>
-													<option value="cryptocurrency;dash">Cryptocurrency - Dash</option>
-													<option value="cryptocurrency;etherum">Cryptocurrency - Etherum</option>
-													<option value="cryptocurrency;litecoin">Cryptocurrency - Litecoin</option>
-													<option value="cryptocurrency;monero">Cryptocurrency - Monero</option>
-													<option value="cryptocurrency;zcash">Cryptocurrency - Zcash</option>
-											  </select>
-							          <input type="text" class="form-control col-8" name="first_obj_to_export" id="obj_input_id">
-												<input class="form-control col-1" type="number" min="0" value="0" name="first_obj_to_export" id="obj_input_lvl">
-							          <span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
-							        </div>
-											{% for obj_dict in l_obj_to_export %}
-												{% with obj_type=obj_dict['type'], obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict['uuid'], obj_error=False%}
-													{% include 'import_export/block_to_export_input.html' %}
-												{% endwith %}
-											{% endfor %}
+							<div class="d-flex mb-3">
+								JSON Export&nbsp;
+								<div class="custom-control custom-switch">
+									<input class="custom-control-input" type="checkbox" name="export_to_misp" value="True" id="export_to_misp">
+									<label class="custom-control-label" for="export_to_misp">
+										Export to MISP Instance
+									</label>
+								</div>
+							</div>
 
-											<br>
+							<div class="card border-dark my-3 px-3 py-3" id="export_to_misp_div">
+								{% include 'import_export/block_create_misp_event.html' %}
+							</div>
 
-											{% for obj_dict in l_obj_invalid %}
-												{% with obj_type=obj_dict['type'], obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict['uuid'], obj_error=True%}
-													{% include 'import_export/block_to_export_input.html' %}
-												{% endwith %}
-											{% endfor %}
-							        <span class="help-block" hidden>Export Objects</span>
-							      </div>
-							    </div>
-							  </div>
+							<div class="form-group">
+								<button class="btn btn-info" type="submit">Export Objects</button>
+							</div>
+
+							</form>
+
 						</div>
-
 					</div>
-						<div class="form-group">
-							<button class="btn btn-info" name="submit" type="submit">Export Objects</button>
-						</div>
 
-					</form>
+					{% if event_metadata %}
+						MISP Event Created:
+						<a target="_blank" href="{{  event_metadata['url'] }}">
+							{{  event_metadata['url'] }}
+						</a>
+					{% endif %}
 
 			</div>
 		</div>
@@ -101,6 +130,11 @@
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
 		$("#nav_misp_export").addClass("active");
+		export_to_misp_input_controler();
+
+		$('#export_to_misp').change(function () {
+			export_to_misp_input_controler();
+		});
 });
 
 function toggle_sidebar(){
@@ -139,6 +173,14 @@ function uuidv4() {
   return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
   );
+}
+
+function export_to_misp_input_controler() {
+	if($('#export_to_misp').is(':checked')){
+			$("#export_to_misp_div").show();
+		}else{
+			$("#export_to_misp_div").hide();
+		}
 }
 
 </script>

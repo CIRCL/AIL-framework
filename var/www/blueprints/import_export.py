@@ -90,6 +90,10 @@ def export_object():
 def export_object_file():
     l_obj_to_export = []
     l_obj_invalid = []
+
+    export_to_misp = False
+    dict_misp_event_export = {}
+
     for obj_tuple in list(request.form):
         l_input = request.form.getlist(obj_tuple)
         if len(l_input) == 3:
@@ -114,6 +118,13 @@ def export_object_file():
             else:
                 if obj_id:
                     l_obj_invalid.append(obj_dict)
+        else:
+            dict_misp_event_export[str(obj_tuple)] = request.form.get(obj_tuple)
+
+    if dict_misp_event_export.get('export_to_misp', None):
+        export_to_misp = True
+    else:
+        dict_misp_event_export = None
 
     if l_obj_invalid:
         for obj_dict in l_obj_to_export:
@@ -124,10 +135,20 @@ def export_object_file():
             obj_dict['type'] = Correlate_object.get_obj_str_type_subtype(obj_dict['type'], obj_dict.get('subtype', None))
 
         return render_template("export_object.html", l_obj_to_export=l_obj_to_export,
-                                l_obj_invalid=l_obj_invalid)
+                                l_obj_invalid=l_obj_invalid, dict_misp_event_export=dict_misp_event_export)
     else:
-
-        json_export = MispExport.create_list_of_objs_to_export(l_obj_to_export)
-        export_filename = MispExport.get_export_filename(json_export)
-        json_export = MispExport.create_in_memory_file(json_export)
-        return send_file(json_export, as_attachment=True, attachment_filename=export_filename)
+        if export_to_misp:
+            event = MispExport.create_list_of_objs_to_export(l_obj_to_export, r_type='event')
+            event_metadata = MispExport.create_misp_event(event, distribution=dict_misp_event_export.get('export_to_misp', None),
+                                        threat_level_id=dict_misp_event_export.get('misp_threat_level_id', None),
+                                        publish=dict_misp_event_export.get('misp_publish', None),
+                                        analysis=dict_misp_event_export.get('misp_event_analysis', None),
+                                        event_info=dict_misp_event_export.get('misp_event_info', None))
+            return render_template("export_object.html", l_obj_to_export=l_obj_to_export,
+                                    event_metadata=event_metadata,
+                                    l_obj_invalid=[], dict_misp_event_export=[])
+        else:
+            json_export = MispExport.create_list_of_objs_to_export(l_obj_to_export)
+            export_filename = MispExport.get_export_filename(json_export)
+            json_export = MispExport.create_in_memory_file(json_export)
+            return send_file(json_export, as_attachment=True, attachment_filename=export_filename)

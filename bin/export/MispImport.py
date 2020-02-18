@@ -16,7 +16,7 @@ import Domain
 import Screenshot
 import Correlate_object
 
-import Import
+import AILObjects
 
 # MISP
 from pymisp import MISPEvent, MISPObject, PyMISP
@@ -209,11 +209,7 @@ def create_obj_relationships(map_uuid_global_id, misp_obj):
 
 def create_map_all_obj_uuid_golbal_id(map_uuid_global_id):
     for obj_uuid in map_uuid_global_id:
-        create_map_objuuid_golbal_id(obj_uuid, map_uuid_global_id[obj_uuid])
-
-def create_map_objuuid_golbal_id(obj_uuid, global_id):
-    print(obj_uuid)
-    print(global_id)
+        AILObjects.create_map_obj_uuid_golbal_id(obj_uuid, map_uuid_global_id[obj_uuid])
 
 def import_objs_from_file(filepath):
     map_uuid_global_id = {}

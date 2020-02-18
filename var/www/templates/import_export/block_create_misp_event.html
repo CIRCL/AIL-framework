@@ -1,0 +1,46 @@
+<div class="form-group row">
+  <label class="col-form-labe col-sm-2" for="EventDistribution">Distribution: </label>
+	<div class="col-sm-10">
+	  <select name="misp_event_distribution" id="EventDistribution">
+	    <option value="0" selected="selected">Your organisation only</option>
+	    <option value="1">This community only</option>
+	    <option value="2">Connected communities</option>
+	    <option value="3">All communities</option>
+		</select>
+	</div>
+</div>
+
+<div class="form-group row">
+	<label class="col-form-label col-sm-2" for="EventThreatLevelId">Threat Level: </label>
+	<div class="col-sm-10">
+		<select name="misp_threat_level_id" id="EventThreatLevelId">
+			<option value="1">High</option>
+			<option value="2" selected="selected">Medium</option>
+			<option value="3">Low</option>
+			<option value="4">Undefined</option>
+		</select>
+	</div>
+</div>
+
+<div class="form-group row">
+	<label class="col-form-label col-sm-2" for="EventAnalysis">Analysis: </label>
+	<div class="col-sm-10">
+		<select name="misp_event_analysis" id="EventAnalysis">
+			<option value="0">Initial</option>
+			<option value="1">Ongoing</option>
+			<option value="2">Completed</option>
+		</select>
+	</div>
+</div>
+
+<div class="form-group row">
+	<label class="col-form-label col-sm-2" for="EventInfo">Event Info: </label>
+	<div class="col-sm-10">
+		<input name="misp_event_info" class="form-control" placeholder="Quick Event Description or Tracking Info" type="text" id="EventInfo">
+	</div>
+</div>
+
+<div>
+	<label class="col-form-label" for="EventInfo">Publish Event </label>
+	<input type="checkbox" value="True" id="misp_publish" name="misp_publish">
+</div>

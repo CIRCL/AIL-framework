@@ -18,6 +18,10 @@ import Screenshot
 
 import Correlate_object
 
+# # TODO: # FIXME: REFRACTOR ME => use UI/Global config
+sys.path.append('../../configs/keys')
+from mispKEYS import misp_url, misp_key, misp_verifycert
+
 # MISP
 from pymisp import MISPEvent, MISPObject, PyMISP
 
@@ -38,7 +42,6 @@ def sanitize_obj_export_lvl(lvl):
     return lvl
 
 def get_export_filename(json_content):
-    print(json_content)
     return 'ail_export.json'
 
 def create_in_memory_file(json_content):
@@ -211,7 +214,7 @@ def add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl)
         add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl)
 
 
-def create_list_of_objs_to_export(l_obj):
+def create_list_of_objs_to_export(l_obj, r_type='json'):
     all_obj_to_export = set()
     set_relationship = set()
     for obj in l_obj:
@@ -236,10 +239,10 @@ def create_list_of_objs_to_export(l_obj):
             # add object to event
             event.add_object(dict_misp_obj[obj_global_id])
 
-    #misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
-    #misp.add_event(event, pythonify=True)
-    return event.to_json()
-
+    if r_type == 'json':
+        return event.to_json()
+    else:
+        return event
 
 def create_all_misp_obj(all_obj_to_export, set_relationship):
     dict_misp_obj = {}
@@ -322,9 +325,65 @@ def get_relationship_between_global_obj(obj_global_id_1, obj_global_id_2):
             return {'relation': 'extracted-from', 'src': src, 'dest': dest} # replave by crawled-from
     return None
 
+def sanitize_event_distribution(distribution):
+    try:
+        int(distribution)
+        if (0 <= distribution <= 3):
+            return distribution
+        else:
+            return 0
+    except:
+        return 0
+
+def sanitize_event_threat_level_id(threat_level_id):
+    try:
+        int(threat_level_id)
+        if (1 <= threat_level_id <= 4):
+            return threat_level_id
+        else:
+            return 4
+    except:
+        return 4
+
+def sanitize_event_analysis(analysis):
+    try:
+        int(analysis)
+        if (0 <= analysis <= 2):
+            return analysis
+        else:
+            return 0
+    except:
+        return 0
+
+def create_misp_event(event, distribution=0, threat_level_id=4, publish=False, analysis=0, event_info=None):
+    if event_info:
+        event.info = event_info
+    event.distribution = sanitize_event_distribution(distribution)
+    event.threat_level_id = sanitize_event_threat_level_id(threat_level_id)
+    event.analysis = sanitize_event_analysis(analysis)
+    if publish:
+        event.publish()
+
+    # # TODO: handle multiple MISP instance
+    misp = PyMISP(misp_url, misp_key, misp_verifycert)
+    misp_event = misp.add_event(event, pythonify=True)
+    # # TODO: handle error
+    event_metadata = extract_event_metadata(misp_event)
+    return event_metadata
+
+def extract_event_metadata(event):
+    event_metadata = {}
+    event_metadata['uuid'] = event.uuid
+    event_metadata['id'] = event.id
+    if misp_url[-1] == '/':
+        event_metadata['url'] = misp_url + 'events/view/' + str(event_metadata['id'])
+    else:
+        event_metadata['url'] = misp_url + '/events/view/' + str(event_metadata['id'])
+    return event_metadata
+
 ######
 #
-# EXPORT LVL DEFINITION:
+# EXPORT LVL DEFINITION: (== Correl<tion DEPTH)
 #
 # LVL 0 => PARTIAL    Only add core item Correlation
 # LVL 1 => DETAILED   Also add correlated_items correlation

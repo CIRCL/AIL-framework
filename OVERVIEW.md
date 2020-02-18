@@ -23,6 +23,7 @@ Redis and ARDB overview
      DB 7 - Metadata
      DB 8 - Statistics
      DB 9 - Crawler
+     DB 10 - Objects
 
 * ARDB on TCP port <year>
     - DB 0 - Lines duplicate
