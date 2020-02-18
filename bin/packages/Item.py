@@ -348,7 +348,7 @@ def get_raw_content(item_id):
 def save_raw_content(item_id, io_content):
     filepath = get_item_filename(item_id)
     if os.path.isfile(filepath):
-        print('File already exist')
+        #print('File already exist')
         return False
     # # TODO: check if is IO file
     with open(filepath, 'wb') as f:

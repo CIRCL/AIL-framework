@@ -10,13 +10,14 @@
 	  <!-- Core CSS -->
 		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
 
 	  <!-- JS -->
 		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 
 	</head>
 	<body>
@@ -48,10 +49,64 @@
 
 								</form>
 
+								{% if error %}
+								<div class="text-center text-danger">
+									<b>{{error}}</b>
+								</div>
+								{% endif %}
 
 						</div>
 
 				</div>
+
+				{% if all_imported_obj %}
+					<div class="card mb-3 mt-1">
+						<div class="card-header text-white bg-dark">
+							<h5 class="card-title">
+								<img src="{{ url_for('static', filename='image/ail-icon.png')}}" alt="AIL" style="width:100px;"> Objects Imported <span class="badge badge-primary">{{all_imported_obj|length}}</span></h5>
+						</div>
+							<div class="card-body">
+
+								<table class="table table-bordered table-hover" id="myTable_">
+					      <thead class="thead-dark">
+					        <tr>
+	  				      	<th>Object UUID</th>
+										<th></th>
+										<th>Object Type</th>
+	  				        <th>Object ID</th>
+	                </tr>
+					      </thead>
+					      <tbody>
+									{% for dict_obj in all_imported_obj %}
+	                <tr>
+	                  <td class="pb-0">{{ dict_obj['uuid'] }}</td>
+										<td class="pb-0">
+											<div class="my-1">
+												<svg height="26" width="26">
+													<g class="nodes">
+														<circle cx="13" cy="13" r="13" fill="{{ dict_obj['node']['node_color'] }}"></circle>
+														<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ dict_obj['node']['icon_class'] }}" font-size="16px">{{ dict_obj['node']['icon_text'] }}</text>
+													</g>
+												</svg>
+											</div>
+										</td>
+										<td class="pb-0">{{ dict_obj['type'] }}</td>
+	                  <td class="pb-0">
+											<a target="_blank" href="{{ dict_obj['url'] }}">
+												{{ dict_obj['id'] }}
+											</a>
+										</td>
+	                </tr>
+									{% endfor %}
+					      </tbody>
+					    </table>
+
+							{% include 'correlation/legend_graph_correlation.html' %}
+
+						</div>
+					</div>
+				{% endif %}
+
 			</div>
 		</div>
 
@@ -59,6 +114,10 @@
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
 		$("#nav_misp_import").addClass("active");
+
+		{% if all_imported_obj %}
+			$('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 10, "order": [[ 2, "asc" ]] });
+		{% endif %}
 });
 
 function toggle_sidebar(){

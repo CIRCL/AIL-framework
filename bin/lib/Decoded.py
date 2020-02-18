@@ -324,7 +324,7 @@ def save_decoded_file_content(sha1_string, file_content, date_from, date_to=None
 
     filepath = get_decoded_filepath(sha1_string, mimetype=mimetype)
     if os.path.isfile(filepath):
-        print('File already exist')
+        #print('File already exist')
         return False
 
     # create dir

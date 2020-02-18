@@ -167,7 +167,7 @@ def get_screenshot_file_content(sha256_string):
 def save_screenshot_file(sha256_string, io_content):
     filepath = get_screenshot_filepath(sha256_string)
     if os.path.isfile(filepath):
-        print('File already exist')
+        #print('File already exist')
         return False
     # # TODO: check if is IO file
     with open(filepath, 'wb') as f:
@@ -183,7 +183,6 @@ def delete_screenshot_file(obj_id):
     return True
 
 def create_screenshot(obj_id, obj_meta, io_content):
-    print(obj_id)
     # # TODO: check if sha256
     res = save_screenshot_file(obj_id, io_content)
     if res:

@@ -207,19 +207,30 @@ def create_obj_relationships(map_uuid_global_id, misp_obj):
                 Correlate_object.create_obj_relationship(obj_meta_src['type'], obj_meta_src['id'], obj_meta_target['type'], obj_meta_target['id'],
                                                             obj1_subtype=obj_meta_src['subtype'], obj2_subtype=obj_meta_target['subtype'])
 
+def create_map_all_obj_uuid_golbal_id(map_uuid_global_id):
+    for obj_uuid in map_uuid_global_id:
+        create_map_objuuid_golbal_id(obj_uuid, map_uuid_global_id[obj_uuid])
+
+def create_map_objuuid_golbal_id(obj_uuid, global_id):
+    print(obj_uuid)
+    print(global_id)
 
 def import_objs_from_file(filepath):
-    event_to_import = MISPEvent()
-    event_to_import.load_file(filepath)
-
     map_uuid_global_id = {}
+
+    event_to_import = MISPEvent()
+    try:
+        event_to_import.load_file(filepath)
+    except:
+        return map_uuid_global_id
 
     for misp_obj in event_to_import.objects:
         get_misp_import_fct(map_uuid_global_id, misp_obj)
 
     for misp_obj in event_to_import.objects:
         create_obj_relationships(map_uuid_global_id, misp_obj)
-    #print(map_uuid_global_id)
+
+    create_map_all_obj_uuid_golbal_id(map_uuid_global_id)
     return map_uuid_global_id
 
 

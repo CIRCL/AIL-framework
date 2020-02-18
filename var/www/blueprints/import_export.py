@@ -45,13 +45,13 @@ import_export = Blueprint('import_export', __name__, template_folder=os.path.joi
 @login_required
 @login_analyst
 def import_object():
-    tags = request.args.get('tags')
-    return render_template("import_object.html", bootstrap_label=bootstrap_label)
+    return render_template("import_object.html")
 
 @import_export.route("/import_export/import_file", methods=['POST'])
 @login_required
 @login_analyst
 def import_object_file():
+    error = None
 
     is_file = False
     if 'file' in request.files:
@@ -60,20 +60,29 @@ def import_object_file():
             if file.filename:
                 is_file = True
 
+    all_imported_obj = []
     if is_file:
         filename = MispImport.sanitize_import_file_path(file.filename)
         file.save(filename)
         map_uuid_global_id = MispImport.import_objs_from_file(filename)
         os.remove(filename)
+        for obj_uuid in map_uuid_global_id:
+            dict_obj = Correlate_object.get_global_id_from_id(map_uuid_global_id[obj_uuid])
+            dict_obj['uuid'] = obj_uuid
+            dict_obj['url'] = Correlate_object.get_item_url(dict_obj['type'], dict_obj['id'], correlation_type=dict_obj['subtype'])
+            dict_obj['node'] = Correlate_object.get_correlation_node_icon(dict_obj['type'], correlation_type=dict_obj['subtype'], value=dict_obj['id'])
+            all_imported_obj.append(dict_obj)
 
-    return render_template("import_object.html", bootstrap_label=bootstrap_label)
+        if not all_imported_obj:
+            error = "error: Empty or invalid JSON file"
+
+    return render_template("import_object.html", all_imported_obj=all_imported_obj, error=error)
 
 @import_export.route('/import_export/export')
 @login_required
 @login_analyst
 def export_object():
-    object_type = request.args.get('object_type')
-    return render_template("export_object.html", bootstrap_label=bootstrap_label)
+    return render_template("export_object.html")
 
 @import_export.route("/import_export/export_file", methods=['POST'])
 @login_required
