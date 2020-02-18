@@ -70,6 +70,19 @@
 												<input class="form-control col-1" type="number" min="0" value="0" name="first_obj_to_export" id="obj_input_lvl">
 							          <span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
 							        </div>
+											{% for obj_dict in l_obj_to_export %}
+												{% with obj_type=obj_dict['type'], obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict['uuid'], obj_error=False%}
+													{% include 'import_export/block_to_export_input.html' %}
+												{% endwith %}
+											{% endfor %}
+
+											<br>
+
+											{% for obj_dict in l_obj_invalid %}
+												{% with obj_type=obj_dict['type'], obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict['uuid'], obj_error=True%}
+													{% include 'import_export/block_to_export_input.html' %}
+												{% endwith %}
+											{% endfor %}
 							        <span class="help-block" hidden>Export Objects</span>
 							      </div>
 							    </div>

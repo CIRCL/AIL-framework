@@ -383,6 +383,13 @@ def get_obj_global_id(obj_type, obj_id, obj_sub_type=None):
 
         return '{}:{}'.format(obj_type, obj_id)
 
+# used by UI
+def get_obj_str_type_subtype(obj_type, obj_subtype):
+    if obj_subtype:
+        return '{};{}'.format(obj_type, obj_subtype)
+    else:
+        return obj_type
+
 ######## API EXPOSED ########
 def sanitize_object_type(object_type):
     if not is_valid_object_type(object_type):

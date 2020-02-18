@@ -7,6 +7,7 @@
 
 import os
 import sys
+import uuid
 import json
 import random
 
@@ -102,16 +103,22 @@ def export_object_file():
             if MispExport.is_valid_obj_to_export(obj_type, obj_subtype, obj_id):
                 l_obj_to_export.append(obj_dict)
             else:
-                l_obj_invalid.append(obj_dict)
-    print(l_obj_to_export)
-    print(l_obj_invalid)
+                if obj_id:
+                    l_obj_invalid.append(obj_dict)
 
-    if l_obj_to_export:
+    if l_obj_invalid:
+        for obj_dict in l_obj_to_export:
+            obj_dict['uuid'] = str(uuid.uuid4())
+            obj_dict['type'] = Correlate_object.get_obj_str_type_subtype(obj_dict['type'], obj_dict.get('subtype', None))
+        for obj_dict in l_obj_invalid:
+            obj_dict['uuid'] = str(uuid.uuid4())
+            obj_dict['type'] = Correlate_object.get_obj_str_type_subtype(obj_dict['type'], obj_dict.get('subtype', None))
+
+        return render_template("export_object.html", l_obj_to_export=l_obj_to_export,
+                                l_obj_invalid=l_obj_invalid)
+    else:
 
         json_export = MispExport.create_list_of_objs_to_export(l_obj_to_export)
         export_filename = MispExport.get_export_filename(json_export)
         json_export = MispExport.create_in_memory_file(json_export)
         return send_file(json_export, as_attachment=True, attachment_filename=export_filename)
-
-    else:
-        return render_template("export_object.html", bootstrap_label=bootstrap_label)
