@@ -149,6 +149,8 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
 
     elif correlation_name == 'decoded':
         node_color = '#88CCEE'
+        print(Decoded.get_decoded_item_type(value))
+        print(value)
         correlation_type = Decoded.get_decoded_item_type(value).split('/')[0]
         if correlation_type == 'application':
             icon_text = '\uf15b'

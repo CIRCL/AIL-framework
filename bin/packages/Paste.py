@@ -377,7 +377,6 @@ class Paste(object):
         Save an attribute as a field
         """
         for tuple in value:
-            tuple = tuple.replace(PASTES_FOLDER, '', 1)
             self.store_metadata.sadd('dup:'+self.p_path, tuple)
 
     def save_others_pastes_attribute_duplicate(self, list_value):
@@ -385,8 +384,8 @@ class Paste(object):
         Save a new duplicate on others pastes
         """
         for hash_type, path, percent, date in list_value:
-            path = path.replace(PASTES_FOLDER, '', 1)
-            to_add = (hash_type, self.p_path, percent, date)
+            path = path.replace(self.PASTES_FOLDER, '', 1)
+            to_add = (hash_type, self.p_rel_path, percent, date)
             self.store_metadata.sadd('dup:'+path,to_add)
 
     def _get_from_redis(self, r_serv):

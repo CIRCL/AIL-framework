@@ -1,0 +1,5 @@
+<a class="btn btn-lg btn-outline-dark" target="_blank" href="{{ url_for('import_export.add_object_id_to_export')}}?obj_type={{obj_type}}&obj_id={{obj_id}}&obj_lvl={{obj_lvl}}{%if obj_subtype%}&obj_subtype={{obj_subtype}}{%endif%}">
+  Add to
+  <img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="32">
+  Export
+</a>

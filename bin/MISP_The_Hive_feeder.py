@@ -165,7 +165,7 @@ if __name__ == "__main__":
                 misp_wrapper = ailleakObject.ObjectWrapper(pymisp)
                 r_serv_db.set('ail:misp', True)
                 print('Connected to MISP:', misp_url)
-            except e:
+            except Exception as e:
                 flag_misp = False
                 r_serv_db.set('ail:misp', False)
                 print(e)

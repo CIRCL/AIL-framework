@@ -19,6 +19,7 @@ from pubsublogger import publisher
 from bs4 import BeautifulSoup
 
 from Helper import Process
+from packages import Item
 from packages import Paste
 
 from packages import Pgp
@@ -214,14 +215,16 @@ if __name__ == '__main__':
             extract_all_id(message, content, regex_pgp_signature)
             extract_all_id(message, content, regex_pgp_message)
 
+        item_date = Item.get_item_date(message)
+
         for key_id in set_key:
             print(key_id)
-            Pgp.save_pgp_data('key', date, message, key_id)
+            Pgp.pgp.save_item_correlation('key', key_id, message, item_date)
 
         for name_id in set_name:
             print(name_id)
-            Pgp.save_pgp_data('name', date, message, name_id)
+            Pgp.pgp.save_item_correlation('name', key_id, message, item_date)
 
         for mail_id in set_mail:
             print(mail_id)
-            Pgp.save_pgp_data('mail', date, message, mail_id)
+            Pgp.pgp.save_item_correlation('mail', key_id, message, item_date)

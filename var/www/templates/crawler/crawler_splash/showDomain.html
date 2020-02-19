@@ -114,6 +114,12 @@
                   {%endif%}
                 {%endif%}
 
+                <div class="mt-2">
+                  {% with obj_type='domain', obj_id=dict_domain['domain'], obj_lvl=0%}
+				              {% include 'import_export/block_add_user_object_to_export.html' %}
+				          {% endwith %}
+                </div>
+
 							</div>
 						</div>
 

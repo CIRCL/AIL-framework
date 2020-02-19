@@ -910,7 +910,8 @@ def range_type_json():
         if l_hash:
             for hash in l_hash:
                 estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
-                all_type.add(estimated_type)
+                if estimated_type:
+                    all_type.add(estimated_type)
 
     range_type = []
 

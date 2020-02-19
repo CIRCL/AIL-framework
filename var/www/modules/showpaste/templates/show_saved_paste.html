@@ -199,82 +199,9 @@
         </table>
 
         <div>
-          {% if misp %}
-          <button class="btn btn-default btn-lg" data-toggle="modal" data-target="#myModal_MISP">
-            Create
-            <img id="misp-logo" src="{{url_for('static', filename='image/misp-logo.png') }}" height="32">
-            Event
-          </button>
-          <!-- Modal MISP-->
-          <div class="modal fade" id="myModal_MISP" role="dialog">
-            <div class="modal-dialog">
-
-              <div class="modal-content">
-                <div class="modal-header text-center">
-                  <img id="misp-logo" src="{{url_for('static', filename='image/misp-logo.png') }}" >
-                </div>
-                <div class="modal-body">
-
-                  <form method="post" action="{{ url_for('PasteSubmit.create_misp_event') }}" target="_blank">
-
-                  <div class="input select required">
-                    <label for="EventDistribution">Distribution</label>
-                    <select name="misp_data[Event][distribution]" id="EventDistribution" required="required">
-                      <option value="0" selected="selected">Your organisation only</option>
-                      <option value="1">This community only</option>
-                      <option value="2">Connected communities</option>
-                      <option value="3">All communities</option>
-                    </select>
-                  </div>
-                  <div class="input clear required">
-                    <label for="EventThreatLevelId">Threat Level</label>
-                    <select name="misp_data[Event][threat_level_id]" id="EventThreatLevelId" required="required">
-                      <option value="1">High</option>
-                      <option value="2" selected="selected">Medium</option>
-                      <option value="3">Low</option>
-                      <option value="4">Undefined</option>
-                    </select>
-                  </div>
-                  <div class="input select required">
-                    <label for="EventAnalysis">Analysis</label>
-                    <select name="misp_data[Event][analysis]" id="EventAnalysis" required="required">
-                      <option value="0">Initial</option>
-                      <option value="1">Ongoing</option>
-                      <option value="2">Completed</option>
-                    </select>
-                  </div>
-                  <div class="clear required">
-                    <label for="EventInfo">Event Info</label>
-                    <input name="misp_data[Event][info]" class="form-control span6" placeholder="Quick Event Description or Tracking Info" type="text" id="EventInfo" required="required"/>
-                  </div>
-                  <div class="clear">
-                    <label for="EventInfo">Publish Event</label>
-                    <input type="checkbox" value="True" id="misp_publish" name="misp_publish" >
-                  </div>
-                  <input type="hidden" id="paste" name="paste" value="{{ request.args.get('paste') }}">
-
-                  {% if misp_eventid %}
-                  <br>
-                  <div class="list-group" id="misp_event">
-                    <li class="list-group-item active">MISP Events already Created</li>
-                      <a target="_blank" href="{{ misp_url }}" class="list-group-item">{{ misp_url }}</a></div>
-                  {% endif %}
-
-                </div>
-                <div class="modal-footer center">
-                  <button class="btn btn-primary">
-                    <span class="glyphicon glyphicon-ok "></span> Create Event
-                  </button>
-
-                </form>
-                  <button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
-
-                </div>
-              </div>
-
-            </div>
-          </div>
-          {% endif %}
+          {% with obj_type='item', obj_id=request.args.get('paste'), obj_lvl=0%}
+            {% include 'import_export/block_add_user_object_to_export.html' %}
+          {% endwith %}
 
           {% if hive %}
           <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal_hive">

@@ -38,6 +38,8 @@ if __name__ == "__main__":
 
     p = Process(config_section)
 
+    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
+
     maximum_month_range = int(p.config.get("Modules_Duplicates", "maximum_month_range"))
     threshold_duplicate_ssdeep = int(p.config.get("Modules_Duplicates", "threshold_duplicate_ssdeep"))
     threshold_duplicate_tlsh = int(p.config.get("Modules_Duplicates", "threshold_duplicate_tlsh"))
@@ -142,6 +144,7 @@ if __name__ == "__main__":
                                 paste_date = paste_date
                                 paste_date = paste_date if paste_date != None else "No date available"
                                 if paste_path != None:
+                                    paste_path = paste_path.replace(PASTES_FOLDER+'/', '', 1)
                                     if paste_path != PST.p_rel_path:
                                         hash_dico[dico_hash] = (hash_type, paste_path, percent, paste_date)
 

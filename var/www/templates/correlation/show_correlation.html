@@ -112,6 +112,11 @@
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 									<span class="float-right">
+										{% with obj_type=dict_object["object_type"], obj_id=dict_object["correlation_id"], obj_subtype=dict_object["metadata"]["type_id"],obj_lvl=1%}
+				              {% include 'import_export/block_add_user_object_to_export.html' %}
+				            {% endwith %}
+									</span>
+									<span class="float-right">
 										<button class="btn btn-primary py-1" onclick="resize_graph();">
 											<i class="fas fa-sync"></i>&nbsp;Resize Graph
 										</button>

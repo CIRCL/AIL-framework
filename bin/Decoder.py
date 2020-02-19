@@ -50,24 +50,30 @@ def decode_string(content, item_id, item_date, encoded_list, decoder_name, encod
             find = True
 
             sha1_string = sha1(decoded_file).hexdigest()
-            mimetype = Decoded.get_file_mimetype(file_content)
+            mimetype = Decoded.get_file_mimetype(decoded_file)
+            if not mimetype:
+                print(item_id)
+                print(sha1_string)
+                raise Exception('Invalid mimetype')
             Decoded.save_decoded_file_content(sha1_string, decoded_file, item_date, mimetype=mimetype)
             Decoded.save_item_relationship(sha1_string, item_id)
             Decoded.create_decoder_matadata(sha1_string, item_id, decoder_name)
 
             #remove encoded from item content
             content = content.replace(encoded, '', 1)
+
+            print('{} : {} - {}'.format(item_id, decoder_name, mimetype))
     if(find):
-        set_out_item(decoder_name, message)
+        set_out_item(decoder_name, item_id)
 
     return content
 
-def set_out_item(decoder_name, message):
+def set_out_item(decoder_name, item_id):
     publisher.warning(decoder_name+' decoded')
     #Send to duplicate
-    p.populate_set_out(message, 'Duplicate')
+    p.populate_set_out(item_id, 'Duplicate')
 
-    msg = 'infoleak:automatic-detection="'+decoder_name+'";{}'.format(message)
+    msg = 'infoleak:automatic-detection="'+decoder_name+'";{}'.format(item_id)
     p.populate_set_out(msg, 'Tags')
 
 

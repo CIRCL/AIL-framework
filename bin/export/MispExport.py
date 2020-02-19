@@ -42,7 +42,7 @@ def sanitize_obj_export_lvl(lvl):
     return lvl
 
 def get_export_filename(json_content):
-    return 'ail_export.json'
+    return 'ail_export{}.json'.format(str(uuid.uuid4()))
 
 def create_in_memory_file(json_content):
     return io.BytesIO(json_content.encode())
