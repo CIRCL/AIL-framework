@@ -6,7 +6,7 @@ The IP Module
 
 This module is consuming the global channel.
 
-It first performs a regex to find IP addresses and then matches those IPs to 
+It first performs a regex to find IP addresses and then matches those IPs to
 some configured ip ranges.
 
 The list of IP ranges are expected to be in CIDR format (e.g. 192.168.0.0/16)
@@ -16,6 +16,7 @@ and should be defined in the config.cfg file, under the [IP] section
 
 import time
 import re
+import sys
 from pubsublogger import publisher
 from packages import Paste
 from Helper import Process
@@ -31,8 +32,9 @@ def search_ip(message):
     results = reg_ip.findall(content)
     matching_ips = []
 
-    for res in results:
-        address = IPv4Address(res)
+    for ip in results:
+        ip = '.'.join([str(int(x)) for x in ip.split('.')])
+        address = IPv4Address(ip)
         for network in ip_networks:
             if address in network:
                 matching_ips.append(address)
@@ -60,8 +62,12 @@ if __name__ == '__main__':
     p = Process(config_section)
 
     ip_networks = []
-    for network in p.config.get("IP", "networks").split(","):
-        ip_networks.append(IPv4Network(network))
+    try:
+        for network in p.config.get("IP", "networks").split(","):
+            ip_networks.append(IPv4Network(network))
+    except:
+        print('Please provide a list of valid IP addresses')
+        sys.exit(0)
 
 
     # Sent to the logging a description of the module
@@ -78,4 +84,3 @@ if __name__ == '__main__':
 
         # Do something with the message from the queue
         search_ip(message)
-

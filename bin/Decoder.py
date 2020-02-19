@@ -17,7 +17,6 @@ import datetime
 from pubsublogger import publisher
 
 from Helper import Process
-from packages import Paste
 from packages import Item
 
 from lib import Decoded
@@ -56,14 +55,14 @@ def decode_string(content, item_id, item_date, encoded_list, decoder_name, encod
             Decoded.save_item_relationship(sha1_string, item_id)
             Decoded.create_decoder_matadata(sha1_string, item_id, decoder_name)
 
-            #remove encoded from paste content
+            #remove encoded from item content
             content = content.replace(encoded, '', 1)
     if(find):
-        set_out_paste(decoder_name, item_id)
+        set_out_item(decoder_name, message)
 
     return content
 
-def set_out_paste(decoder_name, message):
+def set_out_item(decoder_name, message):
     publisher.warning(decoder_name+' decoded')
     #Send to duplicate
     p.populate_set_out(message, 'Duplicate')
@@ -130,12 +129,11 @@ if __name__ == '__main__':
             time.sleep(1)
             continue
 
-        filename = message
-        paste = Paste.Paste(filename)
+        obj_id = Item.get_item_id(message)
 
         # Do something with the message from the queue
-        content = paste.get_p_content()
-        date = str(paste._get_p_date())
+        content = Item.get_item_content(obj_id)
+        date = Item.get_item_date(obj_id)
 
         for decoder in decoder_order: # add threshold and size limit
 
@@ -146,7 +144,7 @@ if __name__ == '__main__':
             except TimeoutException:
                 encoded_list = []
                 p.incr_module_timeout_statistic() # add encoder type
-                print ("{0} processing timeout".format(paste.p_rel_path))
+                print ("{0} processing timeout".format(obj_id))
                 continue
             else:
                 signal.alarm(0)

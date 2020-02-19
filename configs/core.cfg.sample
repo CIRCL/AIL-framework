@@ -28,6 +28,9 @@ sender = sender@example.com
 sender_host = smtp.example.com
 sender_port = 1337
 sender_pw = None
+# Only needed when the credentials for email server needs a username instead of an email address
+#sender_user = sender
+sender_user =
 
 # optional for using with authenticated SMTP over SSL
 # sender_pw = securepassword

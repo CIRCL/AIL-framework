@@ -26,6 +26,7 @@ publisher.channel = "Script"
 def sendEmailNotification(recipient, alert_name, content):
 
     sender = config_loader.get_config_str("Notifications", "sender")
+    sender_user = config_loader.get_config_str("Notifications", "sender_user")
     sender_host = config_loader.get_config_str("Notifications", "sender_host")
     sender_port = config_loader.get_config_int("Notifications", "sender_port")
     sender_pw = config_loader.get_config_str("Notifications", "sender_pw")
@@ -49,7 +50,10 @@ def sendEmailNotification(recipient, alert_name, content):
                 smtp_server = smtplib.SMTP_SSL(sender_host, sender_port)
 
             smtp_server.ehlo()
-            smtp_server.login(sender, sender_pw)
+            if sender_user is not None:
+                smtp_server.login(sender_user, sender_pw)
+            else:
+                smtp_server.login(sender, sender_pw)
         else:
             smtp_server = smtplib.SMTP(sender_host, sender_port)
 

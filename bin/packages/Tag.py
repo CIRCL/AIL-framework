@@ -394,6 +394,11 @@ def add_tag(object_type, tag, object_id, obj_date=None):
     # new tag
     if not is_obj_tagged(object_id, tag):
         # # TODO: # FIXME: sanityze object_type
+        if obj_date:
+            try:
+                obj_date = int(obj_date)
+            except:
+                obj_date = None
         if not obj_date:
             obj_date = get_obj_date(object_type, object_id)
         add_global_tag(tag, object_type=object_type)
@@ -455,7 +460,7 @@ def delete_obj_tags(object_id, object_type, tags=[]):
             return res
 
 def sanitise_tags_date_range(l_tags, date_from=None, date_to=None):
-    if date_from or date_to is None:
+    if date_from is None or date_to is None:
         date_from = get_tags_min_last_seen(l_tags, r_int=False)
         date_to = date_from
     return Date.sanitise_date_range(date_from, date_to)
