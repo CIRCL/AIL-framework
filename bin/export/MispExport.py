@@ -20,7 +20,12 @@ import Correlate_object
 
 # # TODO: # FIXME: REFRACTOR ME => use UI/Global config
 sys.path.append('../../configs/keys')
-from mispKEYS import misp_url, misp_key, misp_verifycert
+try:
+    from mispKEYS import misp_url, misp_key, misp_verifycert
+except:
+    misp_url = ''
+    misp_key = ''
+    misp_verifycert = False
 
 # MISP
 from pymisp import MISPEvent, MISPObject, PyMISP
@@ -354,6 +359,15 @@ def sanitize_event_analysis(analysis):
             return 0
     except:
         return 0
+
+# # TODO: return error
+def ping_misp():
+    try:
+        PyMISP(misp_url, misp_key, misp_verifycert)
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 def create_misp_event(event, distribution=0, threat_level_id=4, publish=False, analysis=0, event_info=None):
     if event_info:
