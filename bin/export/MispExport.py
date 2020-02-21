@@ -18,6 +18,8 @@ import Screenshot
 
 import Correlate_object
 
+import AILObjects
+
 # # TODO: # FIXME: REFRACTOR ME => use UI/Global config
 sys.path.append('../../configs/keys')
 try:
