@@ -390,8 +390,8 @@ def create_misp_event(event, distribution=0, threat_level_id=4, publish=False, a
 
 def extract_event_metadata(event):
     event_metadata = {}
-    event_metadata['uuid'] = event.uuid
-    event_metadata['id'] = event.id
+    event_metadata['uuid'] = event['Event']['uuid']
+    event_metadata['id'] = event['Event']['id']
     if misp_url[-1] == '/':
         event_metadata['url'] = misp_url + 'events/view/' + str(event_metadata['id'])
     else:
