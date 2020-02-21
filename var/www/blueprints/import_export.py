@@ -168,7 +168,7 @@ def export_object_file():
             l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
             json_export = MispExport.create_list_of_objs_to_export(l_obj_to_export)
             export_filename = MispExport.get_export_filename(json_export)
-            json_export = MispExport.create_in_memory_file(json_export)
+            json_export = MispExport.create_in_memory_file(json_export.to_json())
             AILObjects.delete_all_user_object_to_export(user_id)
             return send_file(json_export, as_attachment=True, attachment_filename=export_filename)
 

@@ -21,6 +21,12 @@ def create_map_obj_uuid_golbal_id(obj_uuid, global_id):
     r_serv_objects.sadd('object:map:uuid_id:{}'.format(obj_uuid), global_id)
     r_serv_objects.sadd('object:map:id_uuid:{}'.format(global_id), obj_uuid)
 
+def create_map_obj_event_uuid(event_uuid, global_id):
+    r_serv_objects.sadd('export:all_object:event_uuid', event_uuid)
+    r_serv_objects.sadd('export:all_object:global_id', global_id)
+    r_serv_objects.sadd('object:map:event_id:{}'.format(event_uuid), global_id)
+    r_serv_objects.sadd('object:map:id_event:{}'.format(global_id), event_uuid)
+
 def get_user_list_of_obj_to_export(user_id, add_uuid=False):
     set_objs_to_export = []
     res = r_serv_objects.hgetall('user:all_objs_to_export:{}'.format(user_id))

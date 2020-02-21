@@ -47,7 +47,7 @@ def sanitize_obj_export_lvl(lvl):
     return lvl
 
 def get_export_filename(json_content):
-    return 'ail_export{}.json'.format(str(uuid.uuid4()))
+    return 'ail_export_{}.json'.format(json_content.uuid)
 
 def create_in_memory_file(json_content):
     return io.BytesIO(json_content.encode())
@@ -238,16 +238,14 @@ def create_list_of_objs_to_export(l_obj, r_type='json'):
 
     event = MISPEvent()
     event.info = 'AIL framework export'
+    event.uuid = str(uuid.uuid4())
     for obj_global_id in dict_misp_obj:
         misp_obj = dict_misp_obj[obj_global_id]
         if misp_obj:
             # add object to event
             event.add_object(dict_misp_obj[obj_global_id])
 
-    if r_type == 'json':
-        return event.to_json()
-    else:
-        return event
+    return event
 
 def create_all_misp_obj(all_obj_to_export, set_relationship):
     dict_misp_obj = {}
@@ -406,15 +404,7 @@ def extract_event_metadata(event):
 
 if __name__ == '__main__':
 
-    l_obj = [{'id': 'crawled/2019/11/08/6d3zimnpbwbzdgnp.onionf58258c8-c990-4707-b236-762a2b881183', 'type': 'item', 'lvl': 3},
-                {'id': '6d3zimnpbwbzdgnp.onion', 'type': 'domain', 'lvl': 0},
-                {'id': 'bfd5f1d89e55b10a8b122a9d7ce31667ec1d086a', 'type': 'decoded', 'lvl': 2},
-                #{'id': 'a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1', 'type': 'image', 'lvl': 3},
-                {'id': 'archive/pastebin.com_pro/2020/01/27/iHjcWhkD.gz', 'type': 'item', 'lvl': 1},
-                {'id': '0xA4BB02A75E6AF448', 'type': 'pgp', 'subtype': 'key', 'lvl': 1},
-                {'id': '15efuhpw5V9B1opHAgNXKPBPqdYALXP4hc', 'type': 'cryptocurrency', 'subtype': 'bitcoin', 'lvl': 1}
-            ]
+    l_obj = [{'id': 'bfd5f1d89e55b10a8b122a9d7ce31667ec1d086a', 'type': 'decoded', 'lvl': 2}]
     create_list_of_objs_to_export(l_obj)
-
 
     #print(event.to_json())
