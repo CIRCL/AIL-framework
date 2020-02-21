@@ -384,6 +384,7 @@ def create_misp_event(event, distribution=0, threat_level_id=4, publish=False, a
     misp = PyMISP(misp_url, misp_key, misp_verifycert)
     #print(event.to_json())
     misp_event = misp.add_event(event)
+     #print(misp_event)
     # # TODO: handle error
     event_metadata = extract_event_metadata(misp_event)
     return event_metadata

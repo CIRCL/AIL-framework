@@ -152,7 +152,9 @@ def export_object_file():
                                 l_obj_invalid=l_obj_invalid, dict_misp_event_export=dict_misp_event_export)
     else:
         if export_to_misp and MispExport.ping_misp():
+            l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
             event = MispExport.create_list_of_objs_to_export(l_obj_to_export, r_type='event')
+
             event_metadata = MispExport.create_misp_event(event, distribution=dict_misp_event_export.get('export_to_misp', None),
                                         threat_level_id=dict_misp_event_export.get('misp_threat_level_id', None),
                                         publish=dict_misp_event_export.get('misp_publish', None),
