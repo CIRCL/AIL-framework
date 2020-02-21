@@ -153,7 +153,7 @@ def export_cryptocurrency(crypto_type, crypto_address):
 def export_pgp(pgp_type, pgp_value):
     dict_metadata = Pgp.pgp.get_metadata(pgp_type, pgp_value)
 
-    obj = MISPObject('pgp-meta', misp_objects_path_custom='../../../misp-objects/objects')
+    obj = MISPObject('pgp-meta')
     obj.first_seen = dict_metadata['first_seen']
     obj.last_seen = dict_metadata['last_seen']
 
