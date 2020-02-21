@@ -197,7 +197,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                     # add tag with last commit
                     if float(tag_val) >= float(current_tag):
                         dict_tags_commit[tag_val] = commit
-                list_upper_tags = [(key, dict_tags_commit[key]) for key in dict_tags_commit]
+                list_upper_tags = [(str(key), dict_tags_commit[key]) for key in dict_tags_commit]
                 # force update order
                 list_upper_tags.sort()
                 return list_upper_tags
