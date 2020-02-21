@@ -119,4 +119,4 @@ python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies --upgrade
 python3 -m pip install git+https://github.com/MISP/PyMISP --upgrade
 
 #Update the Hive
-python3 -m pip install git+https://github.com/TheHive-Project/TheHive4py --upgrade
+python3 -m pip install thehive4py --upgrade

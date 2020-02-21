@@ -380,6 +380,7 @@ def create_misp_event(event, distribution=0, threat_level_id=4, publish=False, a
 
     # # TODO: handle multiple MISP instance
     misp = PyMISP(misp_url, misp_key, misp_verifycert)
+    #print(event.to_json())
     misp_event = misp.add_event(event, pythonify=True)
     # # TODO: handle error
     event_metadata = extract_event_metadata(misp_event)
@@ -413,7 +414,7 @@ if __name__ == '__main__':
                 {'id': '0xA4BB02A75E6AF448', 'type': 'pgp', 'subtype': 'key', 'lvl': 1},
                 {'id': '15efuhpw5V9B1opHAgNXKPBPqdYALXP4hc', 'type': 'cryptocurrency', 'subtype': 'bitcoin', 'lvl': 1}
             ]
-    create_list_of_objs_to_export(l_obj, mode='union')
+    create_list_of_objs_to_export(l_obj)
 
 
     #print(event.to_json())
