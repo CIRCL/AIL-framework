@@ -267,7 +267,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
         sys.exit(0)
 
 def launch_update_version(version, roll_back_commit, current_version_path, is_fork):
-    update_path = os.path.join(os.environ['AIL_HOME'], 'update', version, 'Update.sh')
+    update_path = os.path.join(os.environ['AIL_HOME'], 'update', str(version), 'Update.sh')
     print()
     print('{}------------------------------------------------------------------'.format(TERMINAL_YELLOW))
     print('-                 Launching Update: {}{}{}                         -'.format(TERMINAL_BLUE, version, TERMINAL_YELLOW))
