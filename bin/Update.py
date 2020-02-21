@@ -174,26 +174,33 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                 list_upper_tags.sort()
                 return list_upper_tags
             else:
+                dict_tags_commit = {}
                 for mess_tag in list_all_tags:
                     commit, tag = mess_tag.split('\trefs/tags/')
 
+                    tag = tag.replace('^{}', '')
+                    # remove 'v' version
+                    tag = tag[1:]
+                    # keep only first dot
+                    nb_dot = tag.count('.')
+                    if nb_dot > 0:
+                        nb_dot = nb_dot -1
+                    tag_val = tag.rsplit('.', nb_dot)
+                    tag_val = ''.join(tag_val)
+
                     # check if tag is float
                     try:
-                        float(tag.split('^{}')[0][1:])
+                        tag_val = float(tag_val)
                     except ValueError:
                         continue
 
                     # add tag with last commit
-                    if float(tag.split('^{}')[0][1:]) >= float(current_tag):
-                        if '^{}' in tag:
-                            list_upper_tags.append( (tag.split('^{}')[0], commit) )
-                # add last commit
-                if last_tag not in list_upper_tags[-1][0]:
-                    list_upper_tags.append( (last_tag, last_commit) )
+                    if float(tag_val) >= float(current_tag):
+                        dict_tags_commit[tag_val] = commit
+                list_upper_tags = [(key, dict_tags_commit[key]) for key in dict_tags_commit]
                 # force update order
                 list_upper_tags.sort()
                 return list_upper_tags
-
         else:
             print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
             aborting_update()
