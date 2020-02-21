@@ -241,6 +241,8 @@ def create_list_of_objs_to_export(l_obj, r_type='json'):
     event.uuid = str(uuid.uuid4())
     for obj_global_id in dict_misp_obj:
         misp_obj = dict_misp_obj[obj_global_id]
+        AILObjects.create_map_obj_event_uuid(event.uuid, obj_global_id)
+        AILObjects.create_map_obj_uuid_golbal_id(event.uuid, obj_global_id)
         if misp_obj:
             # add object to event
             event.add_object(dict_misp_obj[obj_global_id])
