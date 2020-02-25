@@ -52,7 +52,7 @@ echo ""
 
 echo ""
 echo -e $GREEN"Shutting down ARDB ..."$DEFAULT
-bash ${AIL_BIN}/LAUNCH.sh -k &
+bash ${AIL_BIN}/LAUNCH.sh -ks &
 wait
 
 echo ""

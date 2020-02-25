@@ -16,7 +16,7 @@ GREEN="\\033[1;32m"
 DEFAULT="\\033[0;39m"
 
 echo -e $GREEN"Shutting down AIL ..."$DEFAULT
-bash ${AIL_BIN}/LAUNCH.sh -k
+bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
 echo ""
@@ -69,7 +69,7 @@ python3 ${AIL_FLASK}create_default_user.py
 
 echo ""
 echo -e $GREEN"Shutting down ARDB ..."$DEFAULT
-bash ${AIL_BIN}/LAUNCH.sh -k
+bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
 exit 0
