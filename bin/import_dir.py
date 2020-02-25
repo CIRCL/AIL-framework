@@ -9,7 +9,7 @@ import gzip
 import argparse
 import os
 import time, datetime
-import mimetypes
+import magic
 
 '''
 '
@@ -75,10 +75,9 @@ if __name__ == "__main__":
                 messagedata = f.read()
 
             #verify that the data is gzipEncoded. if not compress it
-            if 'text' in str(mimetypes.guess_type(complete_path)[0]):
+            if 'text/plain' in str(magic.from_buffer(messagedata, mime=True)):
                 messagedata = gzip.compress(messagedata)
                 complete_path += '.gz'
-
 
             if complete_path[-4:] != '.gz':
 
@@ -94,10 +93,14 @@ if __name__ == "__main__":
                     wanted_path = wanted_path.split('/')
                     wanted_path = '/'.join(wanted_path[-(4+args.hierarchy):])
 
-                path_to_send = 'import_dir/' + args.name + '>>' + wanted_path
+                # remove whitespace
+                wanted_path = wanted_path.replace(' ', '')
+                feeder_name = args.name.replace(' ', '')
+
+                path_to_send = 'import_dir/' + feeder_name + '>>' + wanted_path
                 s = b' '.join( [ args.channel.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
                 socket.send(s)
-                print('import_dir/' + args.name+'>>'+wanted_path)
+                print('import_dir/' + feeder_name+'>>'+wanted_path)
                 time.sleep(args.seconds)
 
             else:
