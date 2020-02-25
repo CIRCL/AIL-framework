@@ -10,6 +10,7 @@ import argparse
 import os
 import time, datetime
 import magic
+import re
 
 '''
 '
@@ -50,6 +51,9 @@ def is_hierachy_valid(path):
         correctDate = False
     return correctDate
 
+def sanitize_str(str_var, invalid_char_regex):
+    res = re.sub(invalid_char_regex, "-", str_var)
+    return res.replace(' ', '_')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Take files from a directory and push them into a 0MQ feed.')
@@ -66,6 +70,9 @@ if __name__ == "__main__":
     socket = context.socket(zmq.PUB)
     socket.bind("tcp://*:{}".format(args.port))
     time.sleep(1) #Important, avoid loosing the 1 message
+
+    invalid_char = r'[\\/*?&%=:"<>|#\\\']'
+    invalid_char_dir = r'[\\*?&%=:"<>|#\\\']'
 
     for dirname, dirnames, filenames in os.walk(args.directory):
         for filename in filenames:
@@ -85,17 +92,20 @@ if __name__ == "__main__":
                 if not is_hierachy_valid(complete_path):
                     now = datetime.datetime.now()
                     paste_name = complete_path.split('/')[-1]
+                    paste_name = sanitize_str(paste_name, invalid_char)
                     directory = complete_path.split('/')[-2]
+                    directory = sanitize_str(directory, invalid_char_dir)
                     wanted_path = os.path.join(directory, now.strftime("%Y"), now.strftime("%m"), now.strftime("%d"), paste_name)
+                    wanted_path = os.path.relpath(wanted_path)
                 else:
                     #take wanted path of the file
-                    wanted_path = os.path.realpath(complete_path)
+                    wanted_path = os.path.relpath(complete_path)
                     wanted_path = wanted_path.split('/')
                     wanted_path = '/'.join(wanted_path[-(4+args.hierarchy):])
+                    wanted_path = sanitize_str(wanted_path, invalid_char_dir)
 
-                # remove whitespace
-                wanted_path = wanted_path.replace(' ', '')
-                feeder_name = args.name.replace(' ', '')
+                # sanitize feeder_name
+                feeder_name = os.path.relpath(sanitize_str(args.name, invalid_char))
 
                 path_to_send = 'import_dir/' + feeder_name + '>>' + wanted_path
                 s = b' '.join( [ args.channel.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
