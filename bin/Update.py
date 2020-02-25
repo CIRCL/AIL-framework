@@ -134,10 +134,20 @@ def get_git_current_tag(current_version_path):
         with open(current_version_path, 'w') as version_content:
             version_content.write(version)
 
-    version = version.replace(" ", "").splitlines()
-    return version[0]
+    version = version.replace(" ", "").splitlines()[0]
+    if version[0] != 'v':
+        version = 'v{}'.format(version)
+    return version
 
 def get_git_upper_tags_remote(current_tag, is_fork):
+    # keep only first dot
+    nb_dot = current_tag.count('.')
+    if nb_dot > 0:
+        nb_dot = nb_dot -1
+    current_tag_val = current_tag.rsplit('.', nb_dot)
+    current_tag_val = ''.join(current_tag_val)
+
+
     if is_fork:
         process = subprocess.run(['git', 'tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if process.returncode == 0:
@@ -150,7 +160,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                 list_upper_tags.sort()
                 return list_upper_tags
             for tag in list_all_tags:
-                if float(tag[1:]) >= float(current_tag):
+                if float(tag[1:]) >= float(current_tag_val):
                     list_upper_tags.append( (tag, None) )
             # force update order
             list_upper_tags.sort()
@@ -180,7 +190,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 
                     tag = tag.replace('^{}', '')
                     # remove 'v' version
-                    tag = tag[1:]
+                    tag = tag.replace('v', '')
                     # keep only first dot
                     nb_dot = tag.count('.')
                     if nb_dot > 0:
@@ -195,9 +205,9 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                         continue
 
                     # add tag with last commit
-                    if float(tag_val) >= float(current_tag):
+                    if float(tag_val) >= float(current_tag_val):
                         dict_tags_commit[tag_val] = commit
-                list_upper_tags = [(str(key), dict_tags_commit[key]) for key in dict_tags_commit]
+                list_upper_tags = [('v{}'.format(key), dict_tags_commit[key]) for key in dict_tags_commit]
                 # force update order
                 list_upper_tags.sort()
                 return list_upper_tags
@@ -366,7 +376,7 @@ if __name__ == "__main__":
             print()
             print('Current Version: {}{}{}'.format( TERMINAL_YELLOW, current_tag, TERMINAL_DEFAULT))
             print()
-            list_upper_tags_remote = get_git_upper_tags_remote(current_tag[1:], is_fork)
+            list_upper_tags_remote = get_git_upper_tags_remote(current_tag.replace('v', ''), is_fork)
             # new realease
             if len(list_upper_tags_remote) > 1:
                 print('New Releases:')
