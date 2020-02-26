@@ -223,8 +223,8 @@ if __name__ == '__main__':
 
         for name_id in set_name:
             print(name_id)
-            Pgp.pgp.save_item_correlation('name', key_id, message, item_date)
+            Pgp.pgp.save_item_correlation('name', name_id, message, item_date)
 
         for mail_id in set_mail:
             print(mail_id)
-            Pgp.pgp.save_item_correlation('mail', key_id, message, item_date)
+            Pgp.pgp.save_item_correlation('mail', mail_id, message, item_date)
