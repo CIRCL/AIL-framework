@@ -16,6 +16,10 @@ import argparse
 
 import subprocess
 
+UPDATER_FILENAME = os.path.join(os.environ['AIL_BIN'], 'Update.py')
+
+UPDATER_LAST_MODIFICATION = float(os.stat(UPDATER_FILENAME).st_mtime)
+
 def auto_update_enabled(cfg):
     auto_update = cfg.get('Update', 'auto_update')
     if auto_update == 'True' or auto_update == 'true':
@@ -229,6 +233,12 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
         if process.returncode == 0:
             output = process.stdout.decode()
             print(output)
+
+            # CHECK IF UPDATER Update
+            if float(os.stat(UPDATER_FILENAME).st_mtime) > UPDATER_LAST_MODIFICATION:
+                # request updater relauch
+                print('{}{}{}'.format(TERMINAL_RED, '                  Relaunch Launcher                    ', TERMINAL_DEFAULT))
+                sys.exit(3)
 
             if len(list_upper_tags_remote) == 1:
                 # additional update (between 2 commits on the same version)

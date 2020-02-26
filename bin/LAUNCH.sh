@@ -447,6 +447,16 @@ function update() {
 
     bash -c "python3 $bin_dir/Update.py $1"
     exitStatus=$?
+    if [ $exitStatus -ge 3 ]; then
+        echo -e "\t* Update..."
+        bash -c "python3 $bin_dir/Update.py $1"
+        exitStatus=$?
+        if [ $exitStatus -ge 1 ]; then
+            echo -e $RED"\t* Update Error"$DEFAULT
+            exit
+        fi
+    fi
+
     if [ $exitStatus -ge 1 ]; then
         echo -e $RED"\t* Update Error"$DEFAULT
         exit
