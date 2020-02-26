@@ -6,6 +6,8 @@ import sys
 import uuid
 import redis
 
+from hashlib import sha1, sha256
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
@@ -168,6 +170,13 @@ def unpack_file(map_uuid_global_id, misp_obj):
             elif attribute.object_relation == 'sha256' and obj_type == 'screenshot':
                 obj_id = attribute.value
 
+        # get SHA1/sha256
+        if io_content and not obj_id:
+            if obj_type=='screenshot':
+                obj_id = sha256(io_content.getvalue()).hexdigest()
+            else: # decoded file
+                obj_id = sha1(io_content.getvalue()).hexdigest()
+
         if obj_id and io_content:
             obj_meta = get_object_metadata(misp_obj)
             if obj_type == 'screenshot':
@@ -234,7 +243,7 @@ if __name__ == '__main__':
 
     # misp = PyMISP('https://127.0.0.1:8443/', 'uXgcN42b7xuL88XqK5hubwD8Q8596VrrBvkHQzB0', False)
 
-    import_objs_from_file('test_import_item.json')
+    import_objs_from_file('ail_export_c777a4d1-5f63-4fa2-86c0-07da677bdac2.json')
 
     #Screenshot.delete_screenshot('a92d459f70c4dea8a14688f585a5e2364be8b91fbf924290ead361d9b909dcf1')
     #Decoded.delete_decoded('d59a110ab233fe87cefaa0cf5603b047b432ee07')

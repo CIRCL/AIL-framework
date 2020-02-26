@@ -353,6 +353,10 @@ def save_raw_content(item_id, io_content):
     if os.path.isfile(filepath):
         #print('File already exist')
         return False
+    # create subdir
+    dirname = os.path.dirname(filepath)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
     # # TODO: check if is IO file
     with open(filepath, 'wb') as f:
         f.write(io_content.getvalue())
