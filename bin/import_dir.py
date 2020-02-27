@@ -7,9 +7,9 @@ from io import StringIO
 import datetime
 import gzip
 import argparse
+import binascii
 import os
 import time, datetime
-import magic
 import re
 
 '''
@@ -37,6 +37,8 @@ import re
 '
 '''
 
+def is_gzip_file(magic_nuber):
+     return binascii.hexlify(magic_nuber) == b'1f8b'
 
 def is_hierachy_valid(path):
     var = path.split('/')
@@ -82,7 +84,7 @@ if __name__ == "__main__":
                 messagedata = f.read()
 
             #verify that the data is gzipEncoded. if not compress it
-            if 'text/plain' in str(magic.from_buffer(messagedata, mime=True)):
+            if not is_gzip_file(messagedata[0:2]):
                 messagedata = gzip.compress(messagedata)
                 complete_path += '.gz'
 
