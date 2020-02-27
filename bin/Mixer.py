@@ -186,7 +186,6 @@ if __name__ == '__main__':
                 print("Empty Paste: not processed")
                 publisher.debug("Empty Paste: {0} not processed".format(message))
         else:
-            print("Empty Queues: Waiting...")
 
             if int(time.time() - time_1) > refresh_time:
                 # update internal feeder

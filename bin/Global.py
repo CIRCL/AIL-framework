@@ -95,7 +95,7 @@ if __name__ == '__main__':
                 #publisher.info(to_print)
                 time_1 = time.time()
                 processed_paste = 0
-            time.sleep(1)
+            time.sleep(0.5)
             continue
 
         # remove PASTES_FOLDER from item path (crawled item + submited)

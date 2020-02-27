@@ -53,13 +53,14 @@ class PubSub(object): ## TODO: remove config, use ConfigLoader by default
             self.zmq_sub = True
             context = zmq.Context()
 
+            # Get all feeds
             self.subscribers = []
             addresses = self.config.get(conn_name, 'address')
             for address in addresses.split(','):
-                new_sub = context.socket(zmq.SUB)
-                new_sub.connect(address)
-                new_sub.setsockopt_string(zmq.SUBSCRIBE, channel)
-                self.subscribers.append(new_sub)
+                subscriber = context.socket(zmq.SUB)
+                subscriber.connect(address)
+                subscriber.setsockopt_string(zmq.SUBSCRIBE, channel)
+                self.subscribers.append(subscriber)
 
     def setup_publish(self, conn_name):
         if self.config.has_section(conn_name):
@@ -96,14 +97,18 @@ class PubSub(object): ## TODO: remove config, use ConfigLoader by default
                 if msg.get('data', None) is not None:
                     yield msg['data']
         elif self.zmq_sub:
+            # Initialize poll set
+            poller = zmq.Poller()
+            for subscriber in self.subscribers:
+                poller.register(subscriber, zmq.POLLIN)
+
             while True:
-                for sub in self.subscribers:
-                    try:
-                        msg = sub.recv(zmq.NOBLOCK)
-                        yield msg.split(b" ", 1)[1]
-                    except zmq.error.Again as e:
-                        time.sleep(0.2)
-                        pass
+                socks = dict(poller.poll())
+
+                for subscriber in self.subscribers:
+                    if subscriber in socks:
+                        message = subscriber.recv()
+                        yield message.split(b' ', 1)[1]
         else:
             raise Exception('No subscribe function defined')
 
