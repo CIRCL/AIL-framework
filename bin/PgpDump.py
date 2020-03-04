@@ -76,11 +76,17 @@ def extract_all_id(message, item_content, regex=None, is_file=False):
             signal.alarm(0)
 
         for pgp_to_dump in pgp_extracted_block:
+
             pgp_packet = get_pgp_packet(message, pgp_to_dump)
             extract_id_from_output(pgp_packet)
 
 def get_pgp_packet(message, save_path):
     save_path = '{}'.format(save_path)
+    # remove Version
+    all_version = re.findall(regex_tool_version, save_path)
+    for version in all_version:
+        save_path = save_path.replace(version, '')
+
     if len(save_path) > 131072:
         save_in_file(message, save_path)
         return ''
@@ -166,12 +172,14 @@ if __name__ == '__main__':
     regex_pgp_public_blocs = '-----BEGIN PGP PUBLIC KEY BLOCK-----[\s\S]+?-----END PGP PUBLIC KEY BLOCK-----'
     regex_pgp_signature = '-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
     regex_pgp_message = '-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
+    regex_tool_version = r"\bVersion:.*\n"
 
     re.compile(regex_user_id)
     re.compile(regex_key_id)
     re.compile(regex_pgp_public_blocs)
     re.compile(regex_pgp_signature)
     re.compile(regex_pgp_message)
+    re.compile(regex_tool_version)
 
     max_execution_time = p.config.getint("PgpDump", "max_execution_time")
 
