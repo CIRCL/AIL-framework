@@ -239,7 +239,7 @@ function submitPaste(){
 </script>
 
 <script>
-    jQuery("#all-tags-taxonomies").click(function(e){
+    jQuery("#all-tags-taxonomies").on("click", function(e){
       //change input tags list
       $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
         function(data) {
@@ -249,7 +249,7 @@ function submitPaste(){
 
 </script>
 <script>
-    jQuery("#all-tags-galaxies").click(function(e){
+    jQuery("#all-tags-galaxies").on("click", function(e){
       $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
         function(data) {
           ltagsgalaxies.setData(data)
@@ -257,7 +257,7 @@ function submitPaste(){
     });
 
 {% for taxo in active_taxonomies %}
-    jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
+    jQuery("#{{ taxo }}-id{{ loop.index0 }}").on("click", function(e){
       $.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
         function(data) {
           ltags.setData(data)
@@ -267,7 +267,7 @@ function submitPaste(){
 </script>
 <script>
 {% for galaxy in active_galaxies %}
-    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
+    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").on("click", function(e){
       $.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
         function(data) {
           ltagsgalaxies.setData(data)
@@ -294,8 +294,8 @@ function submitPaste(){
 
 					if(processing){
 						$("#loading_button").hide();
-						$("#pr").removeAttr('hidden');
-						$("#files_submitted_btn").removeAttr('hidden');
+						$("#pr").prop('hidden', false);
+						$("#files_submitted_btn").prop('hidden', false);
 					}
 
 					if(i < 100){
@@ -309,8 +309,8 @@ function submitPaste(){
 						//error handler
 						if(isError){
 							document.getElementById('error_message').innerHTML = error;
-							$("#panel_error").removeAttr('hidden');
-							$("#error_submit_button").removeAttr('hidden');
+							$("#panel_error").prop('hidden', false);
+							$("#error_submit_button").prop('hidden', false);
 							err = err + 1;
 						}
 
@@ -321,15 +321,15 @@ function submitPaste(){
 					} else {
 						document.getElementById('files_submitted').innerHTML = in_progress;
 						$("#progress-bar").removeClass('progress-bar-animated');
-						$("#submit_result").removeAttr('hidden');
+						$("#submit_result").prop('hidden', false);
 
 						if(isError){
 							document.getElementById('error_message').innerHTML = error;
-							$("#panel_error").removeAttr('hidden');
-							$("#error_submit_button").removeAttr('hidden');
+							$("#panel_error").prop('hidden', false);
+							$("#error_submit_button").prop('hidden', false);
 
 						} else {
-							$("#success_submit_button").removeAttr('hidden');
+							$("#success_submit_button").prop('hidden', false);
 						}
 
 						if(in_progress == '0 / '){
@@ -339,7 +339,7 @@ function submitPaste(){
 						} else {
 							var link = data.link;
 							$("#submit_pastes").append(link);
-							$("#submit_pastes").removeAttr('hidden');
+							$("#submit_pastes").prop('hidden', false);
 						}
 
 

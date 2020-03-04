@@ -160,11 +160,11 @@ var to_refresh = false
 $(document).ready(function(){
 	$("#page-Crawler").addClass("active");
 	$("#nav_dashboard").addClass("active");
-	$( window ).focus(function() {
+	$( window ).on("focus", function() {
 			to_refresh = true
 			refresh_crawler_status();
 	});
-	$( window ).blur(function() {
+	$( window ).on("blur", function() {
 			to_refresh = false
 	});
 

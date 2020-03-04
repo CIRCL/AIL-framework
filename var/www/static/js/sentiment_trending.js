@@ -183,7 +183,7 @@ function query_and_plot(provider, graphNum) {
                     var neu = 0;
 
                     for(i=0; i<data_array.length; i++){
-                        var curr_data = jQuery.parseJSON(data_array[i].replace(/\'/g, '\"'));
+                        var curr_data = JSON.parse(data_array[i].replace(/\'/g, '\"'));
                         compPosAvg += curr_data['compoundPos'];
                         compNegAvg += curr_data['compoundNeg'];
                         pos += curr_data['pos'];

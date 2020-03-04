@@ -135,7 +135,7 @@ $(document).ready(function(){
 	$("#nav_manual_crawler").addClass("active");
 	manual_crawler_input_controler();
 
-	$('#crawler_type').change(function () {
+	$('#crawler_type').on("change", function () {
 		manual_crawler_input_controler();
 	});
 });

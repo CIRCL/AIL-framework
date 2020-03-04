@@ -137,7 +137,7 @@ function initfunc( csvay, scroot) {
 var source = new EventSource(urllog);
 
 source.onmessage = function(event) {
-    var feed = jQuery.parseJSON( event.data );
+    var feed = JSON.parse( event.data );
     create_log_table(feed);
 };
 

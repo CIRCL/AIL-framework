@@ -241,7 +241,7 @@
         $("#"+activePage).addClass("active");
         $('[data-toggle="tooltip"]').tooltip();
 
-        $("#LoadAll").click(function(){ draw_page("True"); });
+        $("#LoadAll").on("click", function(){ draw_page("True"); });
         draw_page("False");
         // Reload every 30min
         setTimeout(function(){ location.reload(); }, 30*60*1000);
