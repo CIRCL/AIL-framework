@@ -86,6 +86,17 @@ def get_pgp_packet(message, save_path):
     all_version = re.findall(regex_tool_version, save_path)
     for version in all_version:
         save_path = save_path.replace(version, '')
+    # remove comment
+    all_comment= re.findall(regex_block_comment, save_path)
+    for comment in all_comment:
+        save_path = save_path.replace(comment, '')
+    # remove empty line
+    save_path = [s for s in save_path.splitlines() if s]
+    save_path[0] = save_path[0] + '\n'
+    save_path[-1] = '\n' + save_path[-1]
+    save_path = '\n'.join(save_path)
+
+    #print(save_path)
 
     if len(save_path) > 131072:
         save_in_file(message, save_path)
@@ -173,6 +184,7 @@ if __name__ == '__main__':
     regex_pgp_signature = '-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
     regex_pgp_message = '-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
     regex_tool_version = r"\bVersion:.*\n"
+    regex_block_comment = r"\bComment:.*\n"
 
     re.compile(regex_user_id)
     re.compile(regex_key_id)
@@ -180,6 +192,7 @@ if __name__ == '__main__':
     re.compile(regex_pgp_signature)
     re.compile(regex_pgp_message)
     re.compile(regex_tool_version)
+    re.compile(regex_block_comment)
 
     max_execution_time = p.config.getint("PgpDump", "max_execution_time")
 
