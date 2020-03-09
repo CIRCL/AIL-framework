@@ -9,6 +9,7 @@ from TorSplashCrawler import TorSplashCrawler
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import crawler_splash
 
 if __name__ == '__main__':
 
@@ -36,8 +37,10 @@ if __name__ == '__main__':
     crawler_options = crawler_json['crawler_options']
     date = crawler_json['date']
     requested_mode = crawler_json['requested']
+    cookies = crawler_splash.load_cookies(crawler_splash.get_cookies())
+    print(cookies)
 
     redis_cache.delete('crawler_request:{}'.format(uuid))
 
     crawler = TorSplashCrawler(splash_url, crawler_options)
-    crawler.crawl(service_type, crawler_options, date, requested_mode, url, domain, port, original_item)
+    crawler.crawl(service_type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item)
