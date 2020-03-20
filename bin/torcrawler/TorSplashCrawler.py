@@ -120,7 +120,7 @@ class TorSplashCrawler():
             self.full_date = date['date_day']
             self.date_month = date['date_month']
             self.date_epoch = int(date['epoch'])
-            
+
             self.png = True
             self.har = True
             self.cookies = cookies
@@ -177,9 +177,6 @@ class TorSplashCrawler():
                 error_log = (json.loads(response.body.decode()))
                 print(error_log)
             else:
-                # DEBUG:
-                # print('----')
-                # print(response.data.keys())
 
                 item_id = crawler_splash.create_item_id(self.item_dir, self.domains[0])
                 self.save_crawled_item(item_id, response.data['html'])
@@ -190,14 +187,8 @@ class TorSplashCrawler():
                     crawler_splash.add_domain_root_item(item_id, self.domain_type, self.domains[0], self.date_epoch, self.port)
                     crawler_splash.create_domain_metadata(self.domain_type, self.domains[0], self.port, self.full_date, self.date_month)
 
-                #print(response.data['cookies'])
                 if 'cookies' in response.data:
                     all_cookies = response.data['cookies']
-                    # for cookie in all_cookies:
-                    #     print('------------------------')
-                    #     print(cookie['name'])
-                    #     print(cookie['value'])
-                    #     print(cookie)
                 else:
                     all_cookies = []
 

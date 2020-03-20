@@ -138,7 +138,3 @@ def save_har(har_dir, item_id, har_content):
     filename = os.path.join(har_dir, item_id + '.json')
     with open(filename, 'w') as f:
         f.write(json.dumps(har_content))
-
-if __name__ == "__main__":
-    all_cookies = load_cookies(get_cookies(), '3thxemke2x7hcibu.onion', crawler_type='onion')
-    print(json.dumps(all_cookies))
