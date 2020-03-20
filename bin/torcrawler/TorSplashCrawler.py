@@ -3,11 +3,8 @@
 
 import os
 import sys
-import gzip
-import base64
 import uuid
 import datetime
-import base64
 import redis
 import json
 import time
@@ -29,43 +26,9 @@ sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import ConfigLoader
-
-# script_lua_cookie = """
-# function main(splash, args)
-#
-#   -- default config
-#   -- load flash plugin
-#   splash.plugins_enabled = true
-#   splash.html5_media_enabled = true
-#
-#   -- to check
-#   splash.request_body_enabled = true
-#   splash.response_body_enabled = true
-#
-#   -- handle cookies
-#   splash:init_cookies(args.cookies)
-#
-#   assert(splash:go{
-#     args.url,
-#     headers=args.headers,
-#     http_method=args.http_method,
-#     body=args.body
-#     })
-#
-#   splash:wait(10)
-#
-#   -- Response
-#   return {
-#     url = splash:url(),
-#     html = splash:html(),
-#     har = splash:har(),
-#     cookies = splash:get_cookies(),
-#     png = splash:png(render_all=true)
-#   }
-# end
-# """
-
+#import ConfigLoader
+import Screenshot
+import crawler_splash
 
 script_cookie = """
 function main(splash, args)
@@ -75,25 +38,32 @@ function main(splash, args)
     splash.images_enabled = true
     splash.webgl_enabled = true
     splash.media_source_enabled = true
+
     -- Force enable things
     splash.plugins_enabled = true
     splash.request_body_enabled = true
     splash.response_body_enabled = true
-    -- Would be nice
+
     splash.indexeddb_enabled = true
     splash.html5_media_enabled = true
     splash.http2_enabled = true
+
     -- User defined
     splash.resource_timeout = args.resource_timeout
     splash.timeout = args.timeout
 
-   -- Allow to pass cookies
+    -- Allow to pass cookies
     splash:init_cookies(args.cookies)
+
     -- Run
     ok, reason = splash:go{args.url}
-    if not ok then
-        return {error = reason}
+    if not ok and not reason:find("http") then
+        return {
+            error = reason,
+            last_url = splash:url()
+        }
     end
+
     splash:wait{args.wait}
     -- Page instrumentation
     -- splash.scroll_position = {y=1000}
@@ -103,7 +73,8 @@ function main(splash, args)
         har = splash:har(),
         html = splash:html(),
         png = splash:png{render_all=true},
-        cookies = splash:get_cookies()
+        cookies = splash:get_cookies(),
+        last_url = splash:url()
     }
 end
 """
@@ -138,7 +109,7 @@ class TorSplashCrawler():
         name = 'TorSplashSpider'
 
         def __init__(self, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item, *args, **kwargs):
-            self.type = type
+            self.domain_type = type
             self.requested_mode = requested_mode
             self.original_item = original_item
             self.root_key = None
@@ -149,12 +120,22 @@ class TorSplashCrawler():
             self.full_date = date['date_day']
             self.date_month = date['date_month']
             self.date_epoch = int(date['epoch'])
-
-            print(requested_mode)
+            
             self.png = True
             self.har = True
-
             self.cookies = cookies
+
+            config_section = 'Crawler'
+            self.p = Process(config_section)
+            self.item_dir = os.path.join(self.p.config.get("Directories", "crawled"), date_str )
+            self.har_dir = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
+            self.r_serv_log_submit = redis.StrictRedis(
+                host=self.p.config.get("Redis_Log_submit", "host"),
+                port=self.p.config.getint("Redis_Log_submit", "port"),
+                db=self.p.config.getint("Redis_Log_submit", "db"),
+                decode_responses=True)
+
+            self.root_key = None
 
         def build_request_arg(self, cookies):
             return {'wait': 10,
@@ -171,54 +152,64 @@ class TorSplashCrawler():
                 self.parse,
                 errback=self.errback_catcher,
                 endpoint='execute',
-                #meta={'father': self.original_item, 'root_key': None},
+                meta={'father': self.original_item},
                 args=l_cookies
-                #session_id="foo"
             )
 
+        # # TODO: remove duplicate and anchor
         def parse(self,response):
             #print(response.headers)
             #print(response.status)
             if response.status == 504:
                 # down ?
                 print('504 detected')
+
+            # LUA ERROR # # TODO: print/display errors
+            elif 'error' in response.data:
+                if(response.data['error'] == 'network99'):
+                    print('Connection to proxy refused')
+                else:
+                    print(response.data['error'])
+
             elif response.status != 200:
                 print('other response: {}'.format(response.status))
-                #print(error_log)
-                #detect connection to proxy refused
+                # detect connection to proxy refused
                 error_log = (json.loads(response.body.decode()))
-                if(error_log['info']['text'] == 'Connection to proxy refused'):
-                    print('Connection to proxy refused')
+                print(error_log)
             else:
                 # DEBUG:
-                print('----')
-                print(response.data.keys())
+                # print('----')
+                # print(response.data.keys())
 
-                # LUA Script Errors
-                if 'error' in response.data:
-                    print(response.data['error'])
-                else:
-                    print(response.data['html'])
-                    pass
+                item_id = crawler_splash.create_item_id(self.item_dir, self.domains[0])
+                self.save_crawled_item(item_id, response.data['html'])
+                crawler_splash.create_item_metadata(item_id, self.domains[0], response.data['last_url'], self.port, response.meta['father'])
+
+                if self.root_key is None:
+                    self.root_key = item_id
+                    crawler_splash.add_domain_root_item(item_id, self.domain_type, self.domains[0], self.date_epoch, self.port)
+                    crawler_splash.create_domain_metadata(self.domain_type, self.domains[0], self.port, self.full_date, self.date_month)
 
                 #print(response.data['cookies'])
                 if 'cookies' in response.data:
                     all_cookies = response.data['cookies']
-                    for cookie in all_cookies:
-                        print('------------------------')
-                        print(cookie['name'])
-                        print(cookie['value'])
-                        print(cookie)
                     # for cookie in all_cookies:
-                    #     print(cookie.name)
+                    #     print('------------------------')
+                    #     print(cookie['name'])
+                    #     print(cookie['value'])
+                    #     print(cookie)
                 else:
                     all_cookies = []
 
-
-                #    if 'png' in response.data:
-
-
-                #if 'har' in response.data:
+                # SCREENSHOT
+                if 'png' in response.data:
+                    sha256_string = Screenshot.save_crawled_screeshot(response.data['png'], 5000000, f_save=self.requested_mode)
+                    if sha256_string:
+                        Screenshot.save_item_relationship(sha256_string, item_id)
+                        Screenshot.save_domain_relationship(sha256_string, self.domains[0])
+                # HAR
+                if 'har' in response.data:
+                    crawler_splash.save_har(self.har_dir, item_id, response.data['har'])
 
                 le = LinkExtractor(allow_domains=self.domains, unique=True)
                 for link in le.extract_links(response):
@@ -228,10 +219,8 @@ class TorSplashCrawler():
                         self.parse,
                         errback=self.errback_catcher,
                         endpoint='execute',
-                        #meta={'father': 'inter', 'root_key': response.meta['root_key'], 'session_id': '092384901834adef'},
-                        #meta={'father': 'inter', 'root_key': 'ido', 'session_id': '092384901834adef'},
+                        meta={'father': item_id},
                         args=l_cookies
-                        #session_id="foo"
                     )
 
         def errback_catcher(self, failure):
@@ -240,10 +229,8 @@ class TorSplashCrawler():
 
             if failure.check(ResponseNeverReceived):
                 request = failure.request
-                #url = request.meta['splash']['args']['url']
-                url= 'ido'
-                #father = request.meta['father']
-                father = 'ido'
+                url= response.data['last_url']
+                father = request.meta['father']
 
                 self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
                 time.sleep(10)
@@ -257,14 +244,26 @@ class TorSplashCrawler():
                     errback=self.errback_catcher,
                     endpoint='execute',
                     cache_args=['lua_source'],
-                    #meta={'father': father, 'root_key': response.meta['root_key']},
-                    #meta={'father': father, 'root_key': 'ido'},
+                    meta={'father': father},
                     args=self.build_request_arg(response.cookiejar)
-                    #session_id="foo"
                 )
 
             else:
                 print('failure')
                 #print(failure)
                 print(failure.type)
-                #print(failure.request.meta['item'])
+
+        def save_crawled_item(self, item_id, item_content):
+            gzip64encoded = crawler_splash.save_crawled_item(item_id, item_content)
+
+            # Send item to queue
+            # send paste to Global
+            relay_message = "{0} {1}".format(item_id, gzip64encoded)
+            self.p.populate_set_out(relay_message, 'Mixer')
+
+            # increase nb of paste by feeder name
+            self.r_serv_log_submit.hincrby("mixer_cache:list_feeder", "crawler", 1)
+
+            # tag crawled paste
+            msg = 'infoleak:submission="crawler";{}'.format(item_id)
+            self.p.populate_set_out(msg, 'Tags')

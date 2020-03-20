@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import base64
 import os
 import sys
 import redis
 
+from hashlib import sha256
 from io import BytesIO
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
@@ -163,6 +165,25 @@ def get_screenshot_file_content(sha256_string):
     with open(filepath, 'rb') as f:
         file_content = BytesIO(f.read())
     return file_content
+
+# if force save, ignore max_size
+def save_crawled_screeshot(b64_screenshot, max_size, f_save=False):
+    screenshot_size = (len(b64_screenshot)*3) /4
+    if screenshot_size < max_size or f_save:
+        image_content = base64.standard_b64decode(b64_screenshot.encode())
+        sha256_string = sha256(image_content).hexdigest()
+        filepath = get_screenshot_filepath(sha256_string)
+        if os.path.isfile(filepath):
+            #print('File already exist')
+            return False
+        # create dir
+        dirname = os.path.dirname(filepath)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        with open(filepath, 'wb') as f:
+            f.write(image_content)
+        return sha256_string
+    return False
 
 def save_screenshot_file(sha256_string, io_content):
     filepath = get_screenshot_filepath(sha256_string)

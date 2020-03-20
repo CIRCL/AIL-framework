@@ -37,7 +37,7 @@ if __name__ == '__main__':
     crawler_options = crawler_json['crawler_options']
     date = crawler_json['date']
     requested_mode = crawler_json['requested']
-    cookies = crawler_splash.load_cookies(crawler_splash.get_cookies())
+    cookies = crawler_splash.load_cookies(crawler_splash.get_cookies(), domain, crawler_type='onion')
     print(cookies)
 
     redis_cache.delete('crawler_request:{}'.format(uuid))
