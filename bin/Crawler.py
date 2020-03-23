@@ -351,19 +351,19 @@ if __name__ == '__main__':
     # get HAR files
     default_crawler_har = p.config.getboolean("Crawler", "default_crawler_har")
     if default_crawler_har:
-        default_crawler_har = 1
+        default_crawler_har = True
     else:
-        default_crawler_har = 0
+        default_crawler_har = False
 
     # get PNG files
     default_crawler_png = p.config.getboolean("Crawler", "default_crawler_png")
     if default_crawler_png:
-        default_crawler_png = 1
+        default_crawler_png = True
     else:
-        default_crawler_png = 0
+        default_crawler_png = False
 
     # Default crawler options
-    default_crawler_config = {'html': 1,
+    default_crawler_config = {'html': True,
                               'har': default_crawler_har,
                               'png': default_crawler_png,
                               'depth_limit': p.config.getint("Crawler", "crawler_depth_limit"),

@@ -121,8 +121,8 @@ class TorSplashCrawler():
             self.date_month = date['date_month']
             self.date_epoch = int(date['epoch'])
 
-            self.png = True
-            self.har = True
+            self.png = crawler_options['png']
+            self.har = crawler_options['har']
             self.cookies = cookies
 
             config_section = 'Crawler'
@@ -176,6 +176,8 @@ class TorSplashCrawler():
                 # detect connection to proxy refused
                 error_log = (json.loads(response.body.decode()))
                 print(error_log)
+            elif crawler_splash.is_redirection(self.domains[0], response.data['last_url']):
+                pass # ignore response
             else:
 
                 item_id = crawler_splash.create_item_id(self.item_dir, self.domains[0])

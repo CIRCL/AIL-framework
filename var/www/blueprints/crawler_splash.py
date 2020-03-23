@@ -25,6 +25,7 @@ import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Domain
+import crawler_splash
 
 r_cache = Flask_config.r_cache
 r_serv_db = Flask_config.r_serv_db
@@ -156,3 +157,55 @@ def domains_explorer_web():
 
     dict_data = Domain.get_domains_up_by_filers('regular', page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='regular')
+
+@crawler_splash.route('/crawler/cookies/add', methods=['GET'])
+#@login_required
+#@login_analyst
+def crawler_cookies_add():
+    return render_template("add_cookies.html")
+
+@crawler_splash.route('/crawler/cookies/add_post', methods=['POST'])
+#@login_required
+#@login_analyst
+def crawler_cookies_add_post():
+    user_id = current_user.get_id()
+
+    description = request.form.get('description')
+    level = request.form.get('level')
+    if level:
+        level = 1
+    else:
+        level = 0
+
+    if 'file' in request.files:
+        file = request.files['file']
+        json_file = file.read().decode()
+    else:
+        json_file = '[]'
+
+    # Get cookies to add
+    l_manual_cookie = []
+    l_invalid_cookie = []
+    for obj_tuple in list(request.form):
+        l_input = request.form.getlist(obj_tuple)
+        if len(l_input) == 2:
+            if l_input[0]: # cookie_name
+                cookie_dict = {'name': l_input[0], 'value': l_input[1]}
+                l_manual_cookie.append(cookie_dict)
+            elif l_input[1]: # cookie_value
+                    l_invalid_cookie.append({'name': '', 'value': l_input[1]})
+        else:
+            #print(l_input)
+            pass
+
+    cookie_uuid = crawler_splash.save_cookies(user_id, json_cookies=json_file, l_cookies=l_manual_cookie, level=level, description=description)
+    return render_template("add_cookies.html")
+
+@crawler_splash.route('/crawler/cookies/all', methods=['GET'])
+#@login_required
+#@login_read_only
+def crawler_cookies_all():
+    user_id = current_user.get_id(user_id)
+    user_cookies = crawler_splash.get_user_cookies(user_id)
+    global_cookies = crawler_splash.get_all_global_cookies()
+    return render_template("add_cookies.html", user_cookies=user_cookies, global_cookies=global_cookies)
