@@ -28,7 +28,7 @@ from Helper import Process
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 #import ConfigLoader
 import Screenshot
-import crawler_splash
+import crawlers
 
 script_cookie = """
 function main(splash, args)
@@ -176,18 +176,18 @@ class TorSplashCrawler():
                 # detect connection to proxy refused
                 error_log = (json.loads(response.body.decode()))
                 print(error_log)
-            elif crawler_splash.is_redirection(self.domains[0], response.data['last_url']):
+            elif crawlers.is_redirection(self.domains[0], response.data['last_url']):
                 pass # ignore response
             else:
 
-                item_id = crawler_splash.create_item_id(self.item_dir, self.domains[0])
+                item_id = crawlers.create_item_id(self.item_dir, self.domains[0])
                 self.save_crawled_item(item_id, response.data['html'])
-                crawler_splash.create_item_metadata(item_id, self.domains[0], response.data['last_url'], self.port, response.meta['father'])
+                crawlers.create_item_metadata(item_id, self.domains[0], response.data['last_url'], self.port, response.meta['father'])
 
                 if self.root_key is None:
                     self.root_key = item_id
-                    crawler_splash.add_domain_root_item(item_id, self.domain_type, self.domains[0], self.date_epoch, self.port)
-                    crawler_splash.create_domain_metadata(self.domain_type, self.domains[0], self.port, self.full_date, self.date_month)
+                    crawlers.add_domain_root_item(item_id, self.domain_type, self.domains[0], self.date_epoch, self.port)
+                    crawlers.create_domain_metadata(self.domain_type, self.domains[0], self.port, self.full_date, self.date_month)
 
                 if 'cookies' in response.data:
                     all_cookies = response.data['cookies']
@@ -202,7 +202,7 @@ class TorSplashCrawler():
                         Screenshot.save_domain_relationship(sha256_string, self.domains[0])
                 # HAR
                 if 'har' in response.data:
-                    crawler_splash.save_har(self.har_dir, item_id, response.data['har'])
+                    crawlers.save_har(self.har_dir, item_id, response.data['har'])
 
                 le = LinkExtractor(allow_domains=self.domains, unique=True)
                 for link in le.extract_links(response):
@@ -247,7 +247,7 @@ class TorSplashCrawler():
                 print(failure.type)
 
         def save_crawled_item(self, item_id, item_content):
-            gzip64encoded = crawler_splash.save_crawled_item(item_id, item_content)
+            gzip64encoded = crawlers.save_crawled_item(item_id, item_content)
 
             # Send item to queue
             # send paste to Global

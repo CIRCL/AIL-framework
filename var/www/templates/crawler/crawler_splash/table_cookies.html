@@ -1,0 +1,28 @@
+<table id="{{table_id}}" class="table table-striped table-bordered">
+  <thead class="bg-dark text-white">
+    <tr>
+        <th class="bg-info text-white">Description</th>
+        <th class="bg-info text-white">Date</th>
+        <th class="bg-info text-white">UUID</th>
+        <th class="bg-info text-white">User</th>
+    </tr>
+  </thead>
+  <tbody style="font-size: 15px;">
+    {% for dict_cookies in all_cookies %}
+      <tr>
+        <td>{{dict_cookies['description']}}</td>
+        <td>
+          {%if dict_cookies['date']%}
+            {{dict_cookies['date'][0:4]}}/{{dict_cookies['date'][4:6]}}/{{dict_cookies['date'][6:8]}}
+          {%endif%}
+        </td>
+        <td>
+          <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookies_show') }}?cookies_uuid={{ dict_cookies['cookies_uuid'] }}">
+            {{ dict_cookies['cookies_uuid']}}
+          </a>
+        </td>
+        <td>{{dict_cookies['user_id']}}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

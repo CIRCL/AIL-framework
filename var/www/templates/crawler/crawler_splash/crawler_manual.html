@@ -108,8 +108,13 @@
 													  </div>
 													</div>
 												</div>
-
 											</div>
+											<select class="custom-select" name="cookies" id="cookies">
+												<option selected>None</option>
+												{%for cookie in l_cookies%}
+													<option value="{{cookie}}">{{cookie}}</option>
+												{%endfor%}
+											</select>
 										</div>
 									</div>
 									<button class="btn btn-primary mt-2">

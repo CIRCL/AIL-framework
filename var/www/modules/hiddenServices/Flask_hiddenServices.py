@@ -30,6 +30,9 @@ r_serv_metadata = Flask_config.r_serv_metadata
 crawler_enabled = Flask_config.crawler_enabled
 bootstrap_label = Flask_config.bootstrap_label
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import crawlers
+
 hiddenServices = Blueprint('hiddenServices', __name__, template_folder='templates')
 
 faup = Faup()
@@ -257,12 +260,6 @@ def dashboard():
                                 crawler_metadata_regular=crawler_metadata_regular,
                                 statDomains_onion=statDomains_onion, statDomains_regular=statDomains_regular)
 
-@hiddenServices.route("/crawlers/manual", methods=['GET'])
-@login_required
-@login_read_only
-def manual():
-    return render_template("Crawler_Splash_manual.html", crawler_enabled=crawler_enabled)
-
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
 @login_required
 @login_read_only
@@ -475,7 +472,7 @@ def create_spider_splash():
     create_crawler_config(mode, service_type, crawler_config, domain, url=url)
     send_url_to_crawl_in_queue(mode, service_type, url)
 
-    return redirect(url_for('hiddenServices.manual'))
+    return redirect(url_for('crawler_splash.manual'))
 
 @hiddenServices.route("/crawlers/auto_crawler", methods=['GET'])
 @login_required

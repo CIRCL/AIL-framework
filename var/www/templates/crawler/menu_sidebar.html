@@ -8,7 +8,7 @@
       	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
       		<h5 class="d-flex text-muted w-100">
       		  <span>Splash Crawlers </span>
-      			<a class="ml-auto" href="{{url_for('hiddenServices.manual')}}">
+      			<a class="ml-auto" href="{{url_for('crawler_splash.manual')}}">
       				<i class="fas fa-plus-circle ml-auto"></i>
       			</a>
       		</h5>
@@ -32,7 +32,7 @@
               </a>
             </li>
       			<li class="nav-item">
-              <a class="nav-link" href="{{url_for('hiddenServices.manual')}}" id="nav_manual_crawler">
+              <a class="nav-link" href="{{url_for('crawler_splash.manual')}}" id="nav_manual_crawler">
       					<i class="fas fa-spider"></i>
                 Manual Crawler
               </a>
@@ -77,7 +77,7 @@
       	      </a>
       	    </li>
       	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('crawler_splash.domains_explorer_web')}}" id="nav_cookies_all">
+      	      <a class="nav-link" href="{{url_for('crawler_splash.crawler_cookies_all')}}" id="nav_cookies_all">
                 <i class="fas fa-cookie-bite"></i>
       	        <span>All Cookies</span>
       	      </a>

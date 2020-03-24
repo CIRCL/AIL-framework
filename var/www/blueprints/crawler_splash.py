@@ -10,7 +10,7 @@ import sys
 import json
 import random
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, make_response
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
@@ -25,7 +25,7 @@ import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Domain
-import crawler_splash
+import crawlers
 
 r_cache = Flask_config.r_cache
 r_serv_db = Flask_config.r_serv_db
@@ -44,7 +44,19 @@ def api_validator(api_response):
     if api_response:
         return Response(json.dumps(api_response[0], indent=2, sort_keys=True), mimetype='application/json'), api_response[1]
 
+def create_json_response(data, status_code):
+    return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
+
 # ============= ROUTES ==============
+@crawler_splash.route("/crawlers/manual", methods=['GET'])
+#@login_required
+#@login_read_only
+def manual():
+    user_id = current_user.get_id()
+    l_cookies = crawlers.api_get_cookies_list(user_id)
+    return render_template("crawler_manual.html", crawler_enabled=True, l_cookies=l_cookies)
+
+
 # add route : /crawlers/show_domain
 @crawler_splash.route('/crawlers/showDomain', methods=['GET', 'POST'])
 @login_required
@@ -194,18 +206,30 @@ def crawler_cookies_add_post():
                 l_manual_cookie.append(cookie_dict)
             elif l_input[1]: # cookie_value
                     l_invalid_cookie.append({'name': '', 'value': l_input[1]})
-        else:
-            #print(l_input)
-            pass
+    if l_invalid_cookie:
+        return create_json_response({'error': 'invalid cookie', 'invalid fileds': l_invalid_cookie}, 400)
 
-    cookie_uuid = crawler_splash.save_cookies(user_id, json_cookies=json_file, l_cookies=l_manual_cookie, level=level, description=description)
-    return render_template("add_cookies.html")
+    cookies_uuid = crawler_splash.save_cookies(user_id, json_cookies=json_file, l_cookies=l_manual_cookie, level=level, description=description)
+    return redirect(url_for('crawler_splash.crawler_cookies_all', cookies_uuid=cookies_uuid))
 
 @crawler_splash.route('/crawler/cookies/all', methods=['GET'])
 #@login_required
 #@login_read_only
 def crawler_cookies_all():
-    user_id = current_user.get_id(user_id)
-    user_cookies = crawler_splash.get_user_cookies(user_id)
-    global_cookies = crawler_splash.get_all_global_cookies()
-    return render_template("add_cookies.html", user_cookies=user_cookies, global_cookies=global_cookies)
+    user_id = current_user.get_id()
+    user_cookies = crawlers.get_all_user_cookies_metadata(user_id)
+    global_cookies = crawlers.get_all_global_cookies_metadata()
+    return render_template("all_cookies.html", user_cookies=user_cookies, global_cookies=global_cookies)
+
+@crawler_splash.route('/crawler/cookies/show', methods=['GET'])
+#@login_required
+#@login_read_only
+def crawler_cookies_show():
+    user_id = current_user.get_id()
+    cookies_uuid = request.args.get('cookies_uuid')
+    res = crawlers.api_get_cookies(cookies_uuid, user_id)
+    if res[1] !=200:
+        return create_json_response(res[0], res[1])
+    cookies_json = json.dumps(res[0]['json_cookies'], indent=4, sort_keys=True)
+    cookie_metadata = crawlers.get_cookies_metadata(cookies_uuid)
+    return render_template("edit_cookies.html", cookie_metadata=cookie_metadata, cookies_json=cookies_json, manual_cookies=res[0]['manual_cookies'])
