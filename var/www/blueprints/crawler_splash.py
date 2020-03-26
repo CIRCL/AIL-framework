@@ -170,6 +170,28 @@ def domains_explorer_web():
     dict_data = Domain.get_domains_up_by_filers('regular', page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='regular')
 
+## Cookiejar ##
+@crawler_splash.route('/crawler/cookiejar/add', methods=['GET'])
+#@login_required
+#@login_analyst
+def crawler_cookiejar_add():
+    return render_template("add_cookiejar.html")
+
+@crawler_splash.route('/crawler/cookiejar/all', methods=['GET'])
+#@login_required
+#@login_read_only
+def crawler_cookies_all():
+    user_id = current_user.get_id()
+    user_cookiejar = crawlers.get_all_user_cookies_metadata(user_id)
+    global_cookiejar = crawlers.get_all_global_cookies_metadata()
+    return render_template("all_cookies.html", user_cookies=user_cookies, global_cookies=global_cookies)
+
+
+
+
+
+##  - -  ##
+
 @crawler_splash.route('/crawler/cookies/add', methods=['GET'])
 #@login_required
 #@login_analyst

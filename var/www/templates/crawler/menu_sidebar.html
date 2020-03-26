@@ -84,4 +84,25 @@
       	    </li>
           </ul>
       	</nav>
+
+        <h5 class="d-flex text-muted w-100" id="nav_title_cookies">
+          <span>Cookiejar </span>
+          <a class="ml-auto" href="{{url_for('crawler_splash.crawler_cookies_add')}}">
+            <i class="fas fa-plus-circle ml-auto"></i>
+          </a>
+        </h5>
+        <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('crawler_splash.crawler_cookiejar_add')}}" id="nav_cookiejar_add">
+              <i class="fas fa-cookie"></i>
+              <span>Add Cookiejar</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('crawler_splash.crawler_cookies_all')}}" id="nav_cookiejar_all">
+              <i class="fas fa-cookie-bite"></i>
+              <span>All Cookiejar</span>
+            </a>
+          </li>
+        </ul>
       </div>
