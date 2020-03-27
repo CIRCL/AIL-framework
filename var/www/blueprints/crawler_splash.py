@@ -177,31 +177,10 @@ def domains_explorer_web():
 def crawler_cookiejar_add():
     return render_template("add_cookiejar.html")
 
-@crawler_splash.route('/crawler/cookiejar/all', methods=['GET'])
-#@login_required
-#@login_read_only
-def crawler_cookies_all():
-    user_id = current_user.get_id()
-    user_cookiejar = crawlers.get_all_user_cookies_metadata(user_id)
-    global_cookiejar = crawlers.get_all_global_cookies_metadata()
-    return render_template("all_cookies.html", user_cookies=user_cookies, global_cookies=global_cookies)
-
-
-
-
-
-##  - -  ##
-
-@crawler_splash.route('/crawler/cookies/add', methods=['GET'])
+@crawler_splash.route('/crawler/cookiejar/add_post', methods=['POST'])
 #@login_required
 #@login_analyst
-def crawler_cookies_add():
-    return render_template("add_cookies.html")
-
-@crawler_splash.route('/crawler/cookies/add_post', methods=['POST'])
-#@login_required
-#@login_analyst
-def crawler_cookies_add_post():
+def crawler_cookiejar_add_post():
     user_id = current_user.get_id()
 
     description = request.form.get('description')
@@ -213,9 +192,9 @@ def crawler_cookies_add_post():
 
     if 'file' in request.files:
         file = request.files['file']
-        json_file = file.read().decode()
+        json_cookies = file.read().decode()
     else:
-        json_file = '[]'
+        json_cookies = None
 
     # Get cookies to add
     l_manual_cookie = []
@@ -231,27 +210,38 @@ def crawler_cookies_add_post():
     if l_invalid_cookie:
         return create_json_response({'error': 'invalid cookie', 'invalid fileds': l_invalid_cookie}, 400)
 
-    cookies_uuid = crawler_splash.save_cookies(user_id, json_cookies=json_file, l_cookies=l_manual_cookie, level=level, description=description)
-    return redirect(url_for('crawler_splash.crawler_cookies_all', cookies_uuid=cookies_uuid))
+    cookiejar_uuid = crawlers.create_cookiejar(user_id, level=level, description=description)
+    if json_cookies:
+        res = crawlers.api_import_cookies_from_json(json_cookies, cookiejar_uuid)
+        if res:
+            return create_json_response(res[0], res[1])
+    if l_manual_cookie:
+        crawlers.add_cookies_to_cookiejar(cookiejar_uuid, l_manual_cookie)
+    return render_template("add_cookiejar.html")
 
-@crawler_splash.route('/crawler/cookies/all', methods=['GET'])
+@crawler_splash.route('/crawler/cookiejar/all', methods=['GET'])
 #@login_required
 #@login_read_only
-def crawler_cookies_all():
+def crawler_cookiejar_all():
     user_id = current_user.get_id()
-    user_cookies = crawlers.get_all_user_cookies_metadata(user_id)
-    global_cookies = crawlers.get_all_global_cookies_metadata()
-    return render_template("all_cookies.html", user_cookies=user_cookies, global_cookies=global_cookies)
+    user_cookiejar = crawlers.get_cookiejar_metadata_by_iterator(crawlers.get_user_cookiejar(user_id))
+    global_cookiejar = crawlers.get_cookiejar_metadata_by_iterator(crawlers.get_global_cookiejar())
+    return render_template("all_cookiejar.html", user_cookiejar=user_cookiejar, global_cookiejar=global_cookiejar)
 
-@crawler_splash.route('/crawler/cookies/show', methods=['GET'])
+@crawler_splash.route('/crawler/cookiejar/show', methods=['GET'])
 #@login_required
 #@login_read_only
-def crawler_cookies_show():
+def crawler_cookiejar_show():
     user_id = current_user.get_id()
-    cookies_uuid = request.args.get('cookies_uuid')
-    res = crawlers.api_get_cookies(cookies_uuid, user_id)
+    cookiejar_uuid = request.args.get('cookiejar_uuid')
+
+    res = crawlers.api_get_cookiejar_cookies(cookiejar_uuid, user_id))
     if res[1] !=200:
         return create_json_response(res[0], res[1])
-    cookies_json = json.dumps(res[0]['json_cookies'], indent=4, sort_keys=True)
-    cookie_metadata = crawlers.get_cookies_metadata(cookies_uuid)
-    return render_template("edit_cookies.html", cookie_metadata=cookie_metadata, cookies_json=cookies_json, manual_cookies=res[0]['manual_cookies'])
+
+    cookiejar_metadata = crawlers.get_cookiejar_metadata(cookiejar_uuid, level=False)
+
+    cookies = json.dumps(res[0]['json_cookies'], indent=4, sort_keys=True)
+    return render_template("show_cookiejar.html", cookiejar_metadata=cookiejar_metadata, l_cookies=res[0])
+
+##  - -  ##

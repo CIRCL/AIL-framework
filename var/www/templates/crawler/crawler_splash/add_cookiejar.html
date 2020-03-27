@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL - Add Cookies</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card mb-3 mt-1">
+						<div class="card-header text-white bg-dark">
+							<h5 class="card-title"><i class="fas fa-box"></i> Create Cookijar <i class="fas fa-cookie"></i></h5>
+						</div>
+						<div class="card-body">
+
+							<form action="{{ url_for('crawler_splash.crawler_cookiejar_add_post') }}" method="post" enctype="multipart/form-data">
+
+								<div class="row">
+									<div class="col-12 col-md-9">
+										<div class="input-group mb-2 mr-sm-2">
+											<div class="input-group-prepend">
+												<div class="input-group-text"><i class="fas fa-tag"></i></div>
+											</div>
+											<input id="description" name="description" class="form-control" placeholder="cookies description - (optional)" type="text">
+										</div>
+									</div>
+									<div class="col-12 col-md-3">
+										<div class="custom-control custom-switch mt-1">
+											<input class="custom-control-input" type="checkbox" name="level" id="id_level" checked="">
+											<label class="custom-control-label" for="id_level">
+												<i class="fas fa-users"></i>&nbsp;Show cookiejar to all Users
+											</label>
+										</div>
+									</div>
+								</div>
+
+								<hr>
+
+								<h5>Import cookies:</h5>
+								<div class="form-group">
+									<label for="file"><b>JSON File</b></label>
+									<input type="file" class="form-control-file btn btn-outline-secondary" id="file" name="file">
+								</div>
+
+								<hr>
+
+								<div>
+
+									<h5>Create cookies</h5>
+
+									<div class="row">
+										<div class="col-5" for="obj_input_cookie_name"><b>Cookie Name</b></div>
+										<div class="col-6" for="obj_input_cookie_value"><b>Cookie Value</b></div>
+									</div>
+
+									<div class="form-horizontal">
+									  <div class="form-body">
+									    <div class="form-group">
+									      <div class="fields">
+									        <div class="input-group mb-1">
+									          <input type="text" class="form-control col-5" name="first_cookie" id="obj_input_cookie_name">
+														<input type="text" class="form-control col-6" name="first_cookie" id="obj_input_cookie_value">
+									          <span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
+									        </div>
+
+													<br>
+
+									        <span class="help-block" hidden>Manual Cookies></span>
+									      </div>
+									    </div>
+									  </div>
+									</div>
+
+							</div>
+
+							<div class="form-group">
+								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie-bite"></i> Create Cookiejar</button>
+							</div>
+
+							</form>
+
+						</div>
+					</div>
+
+
+
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-crawler").addClass("active");
+	$("#nav_cookiejar_add").addClass("active");
+	$("#nav_title_cookiejar").removeClass("text-muted");
+});
+
+var input_1 = '<div class="input-group mb-1"><input type="text" class="form-control col-5" name="'
+var input_2 = '"><input type="text" class="form-control col-6" name="'
+var input_3 = '">';
+var minusButton = '<span class="btn btn-danger input-group-addon delete-field col-1"><i class="fas fa-trash-alt"></i></span></div>';
+
+$('.add-field').click(function() {
+	var new_uuid = uuidv4();
+	var template = input_1 + new_uuid + input_2 + new_uuid + input_3;
+  var temp = $(template).insertBefore('.help-block');
+  temp.append(minusButton);
+});
+
+$('.fields').on('click', '.delete-field', function(){
+  $(this).parent().remove();
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function uuidv4() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+
+</script>

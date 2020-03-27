@@ -27,13 +27,39 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-				<div class="card mb-3 mt-1">
-						<div class="card-header text-white bg-dark">
-							<h5 class="card-title"><i class="fas fa-cookie"></i> Add Cookies</h5>
-						</div>
-						<div class="card-body">
+				<table id="{{table_id}}" class="table table-striped table-bordered">
+				  <thead class="bg-dark text-white">
+				    <tr>
+				        <th class="bg-info text-white">Description</th>
+				        <th class="bg-info text-white">Date</th>
+				        <th class="bg-info text-white">UUID</th>
+				        <th class="bg-info text-white">User</th>
+				    </tr>
+				  </thead>
+				  <tbody style="font-size: 15px;">
+				    <tr>
+				    	<td>{{dict_cookiejar['description']}}</td>
+				      <td>
+				      {%if dict_cookiejar['date']%}
+				        {{dict_cookiejar['date'][0:4]}}/{{dict_cookiejar['date'][4:6]}}/{{dict_cookiejar['date'][6:8]}}
+				      {%endif%}
+				      </td>
+				      <td>
+				          {{ dict_cookiejar['cookiejar_uuid']}}
+				      </td>
+				      <td>{{dict_cookiejar['user_id']}}</td>
+				    </tr>
+				  </tbody>
+				</table>
 
-							<form action="{{ url_for('crawler_splash.crawler_cookies_add_post') }}" method="post" enctype="multipart/form-data">
+				<div class="card mb-3 mt-1">
+					<div class="card-header text-white bg-dark">
+						<h5 class="card-title"><i class="fas fa-box"></i> Create Cookijar <i class="fas fa-cookie"></i></h5>
+					</div>
+					<div class="card-body">
+
+
+							<form action="{{ url_for('crawler_splash.crawler_cookiejar_add_post') }}" method="post" enctype="multipart/form-data">
 
 								<div class="row">
 									<div class="col-12 col-md-9">
@@ -48,7 +74,7 @@
 										<div class="custom-control custom-switch mt-1">
 											<input class="custom-control-input" type="checkbox" name="level" id="id_level" checked="">
 											<label class="custom-control-label" for="id_level">
-												<i class="fas fa-users"></i>&nbsp;Show cookies to all Users
+												<i class="fas fa-users"></i>&nbsp;Show cookiejar to all Users
 											</label>
 										</div>
 									</div>
@@ -56,8 +82,9 @@
 
 								<hr>
 
+								<h5>Import cookies:</h5>
 								<div class="form-group">
-									<label for="file"><b>JSON File</b> Cookies to import:</label>
+									<label for="file"><b>JSON File</b></label>
 									<input type="file" class="form-control-file btn btn-outline-secondary" id="file" name="file">
 								</div>
 
@@ -65,7 +92,7 @@
 
 								<div>
 
-									<h5>Add manual cookies:</h5>
+									<h5>Create cookies</h5>
 
 									<div class="row">
 										<div class="col-5" for="obj_input_cookie_name"><b>Cookie Name</b></div>
@@ -93,7 +120,7 @@
 							</div>
 
 							<div class="form-group">
-								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie-bite"></i> Add Cookies</button>
+								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie-bite"></i> Create Cookiejar</button>
 							</div>
 
 							</form>
@@ -113,8 +140,8 @@
 var chart = {};
 $(document).ready(function(){
 	$("#page-crawler").addClass("active");
-	$("#nav_cookies_add").addClass("active");
-	$("#nav_title_cookies").removeClass("text-muted");
+	$("#nav_cookiejar_add").addClass("active");
+	$("#nav_title_cookiejar").removeClass("text-muted");
 });
 
 var input_1 = '<div class="input-group mb-1"><input type="text" class="form-control col-5" name="'

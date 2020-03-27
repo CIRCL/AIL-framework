@@ -176,8 +176,8 @@ class TorSplashCrawler():
                 # detect connection to proxy refused
                 error_log = (json.loads(response.body.decode()))
                 print(error_log)
-            elif crawlers.is_redirection(self.domains[0], response.data['last_url']):
-                pass # ignore response
+            #elif crawlers.is_redirection(self.domains[0], response.data['last_url']):
+            #    pass # ignore response
             else:
 
                 item_id = crawlers.create_item_id(self.item_dir, self.domains[0])
