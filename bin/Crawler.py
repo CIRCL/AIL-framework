@@ -368,6 +368,7 @@ if __name__ == '__main__':
                               'png': default_crawler_png,
                               'depth_limit': p.config.getint("Crawler", "crawler_depth_limit"),
                               'closespider_pagecount': p.config.getint("Crawler", "default_crawler_closespider_pagecount"),
+                              'cookiejar_uuid': None,
                               'user_agent': p.config.get("Crawler", "default_crawler_user_agent")}
 
     # Track launched crawler

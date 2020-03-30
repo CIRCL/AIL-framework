@@ -63,6 +63,10 @@ function main(splash, args)
             last_url = splash:url()
         }
     end
+    if reason == "http504" then
+        splash:set_result_status_code(504)
+        return ''
+    end
 
     splash:wait{args.wait}
     -- Page instrumentation
@@ -95,10 +99,10 @@ class TorSplashCrawler():
             'SPIDER_MIDDLEWARES': {'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,},
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
             'HTTPERROR_ALLOW_ALL': True,
-            'RETRY_TIMES': 0,
+            'RETRY_TIMES': 2,
             'CLOSESPIDER_PAGECOUNT': crawler_options['closespider_pagecount'],
             'DEPTH_LIMIT': crawler_options['depth_limit'],
-            'SPLASH_COOKIES_DEBUG': True
+            'SPLASH_COOKIES_DEBUG': False
             })
 
     def crawl(self, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item):
@@ -139,7 +143,7 @@ class TorSplashCrawler():
 
         def build_request_arg(self, cookies):
             return {'wait': 10,
-                    'resource_timeout': 10,
+                    'resource_timeout': 30, # /!\ Weird behaviour if timeout < resource_timeout /!\
                     'timeout': 30,
                     'cookies': cookies,
                     'lua_source': script_cookie
@@ -161,8 +165,9 @@ class TorSplashCrawler():
             #print(response.headers)
             #print(response.status)
             if response.status == 504:
-                # down ?
-                print('504 detected')
+                # no response
+                #print('504 detected')
+                pass
 
             # LUA ERROR # # TODO: print/display errors
             elif 'error' in response.data:

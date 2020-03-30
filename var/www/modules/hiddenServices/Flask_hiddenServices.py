@@ -217,18 +217,6 @@ def get_crawler_splash_status(type):
 
     return crawler_metadata
 
-def create_crawler_config(mode, service_type, crawler_config, domain, url=None):
-    if mode == 'manual':
-        r_cache.set('crawler_config:{}:{}:{}'.format(mode, service_type, domain), json.dumps(crawler_config))
-    elif mode == 'auto':
-        r_serv_onion.set('crawler_config:{}:{}:{}:{}'.format(mode, service_type, domain, url), json.dumps(crawler_config))
-
-def send_url_to_crawl_in_queue(mode, service_type, url):
-    r_serv_onion.sadd('{}_crawler_priority_queue'.format(service_type), '{};{}'.format(url, mode))
-    # add auto crawled url for user UI
-    if mode == 'auto':
-        r_serv_onion.sadd('auto_crawler_url:{}'.format(service_type), url)
-
 def delete_auto_crawler(url):
     domain = get_domain_from_url(url)
     type = get_type_domain(domain)
@@ -385,94 +373,6 @@ def unblacklist_domain():
             return redirect(url_for('hiddenServices.blacklisted_domains', page=page, type=type, unblacklist_domain=0))
     else:
         return 'Incorrect type'
-
-@hiddenServices.route("/crawlers/create_spider_splash", methods=['POST'])
-@login_required
-@login_analyst
-def create_spider_splash():
-    url = request.form.get('url_to_crawl')
-    automatic = request.form.get('crawler_type')
-    crawler_time = request.form.get('crawler_epoch')
-    #html = request.form.get('html_content_id')
-    screenshot = request.form.get('screenshot')
-    har = request.form.get('har')
-    depth_limit = request.form.get('depth_limit')
-    max_pages = request.form.get('max_pages')
-
-    # validate url
-    if url is None or url=='' or url=='\n':
-        return 'incorrect url'
-
-    crawler_config = {}
-
-    # verify user input
-    if automatic:
-        automatic = True
-    else:
-        automatic = False
-    if not screenshot:
-        crawler_config['png'] = 0
-    if not har:
-        crawler_config['har'] = 0
-
-    # verify user input
-    if depth_limit:
-        try:
-            depth_limit = int(depth_limit)
-            if depth_limit < 0:
-                return 'incorrect depth_limit'
-            else:
-                crawler_config['depth_limit'] = depth_limit
-        except:
-            return 'incorrect depth_limit'
-    if max_pages:
-        try:
-            max_pages = int(max_pages)
-            if max_pages < 1:
-                return 'incorrect max_pages'
-            else:
-                crawler_config['closespider_pagecount'] = max_pages
-        except:
-            return 'incorrect max_pages'
-
-    # get service_type
-    faup.decode(url)
-    unpack_url = faup.get()
-    ## TODO: # FIXME: remove me
-    try:
-        domain = unpack_url['domain'].decode()
-    except:
-        domain = unpack_url['domain']
-
-    ## TODO: # FIXME: remove me
-    try:
-        tld = unpack_url['tld'].decode()
-    except:
-        tld = unpack_url['tld']
-
-    if tld == 'onion':
-        service_type = 'onion'
-    else:
-        service_type = 'regular'
-
-    if automatic:
-        mode = 'auto'
-        try:
-            crawler_time = int(crawler_time)
-            if crawler_time < 0:
-                return 'incorrect epoch'
-            else:
-                crawler_config['time'] = crawler_time
-        except:
-            return 'incorrect epoch'
-    else:
-        mode = 'manual'
-        epoch = None
-
-    create_crawler_config(mode, service_type, crawler_config, domain, url=url)
-    send_url_to_crawl_in_queue(mode, service_type, url)
-
-    return redirect(url_for('crawler_splash.manual'))
 
 @hiddenServices.route("/crawlers/auto_crawler", methods=['GET'])
 @login_required

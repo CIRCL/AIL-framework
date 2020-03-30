@@ -37,7 +37,11 @@ if __name__ == '__main__':
     crawler_options = crawler_json['crawler_options']
     date = crawler_json['date']
     requested_mode = crawler_json['requested']
-    cookies = crawlers.load_cookies('ccad0090-bdcb-4ba5-875b-3dae8f936216', domain, crawler_type=service_type)
+
+    if crawler_options['cookiejar_uuid']:
+        cookies = crawlers.load_crawler_cookies(crawler_options['cookiejar_uuid'], crawler_type=service_type)
+    else:
+        cookies = []
 
     redis_cache.delete('crawler_request:{}'.format(uuid))
 

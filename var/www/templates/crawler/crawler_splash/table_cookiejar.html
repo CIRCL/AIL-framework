@@ -17,7 +17,7 @@
           {%endif%}
         </td>
         <td>
-          <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookies_show') }}?cookies_uuid={{ dict_cookiejar['cookiejar_uuid'] }}">
+          <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?cookiejar_uuid={{ dict_cookiejar['cookiejar_uuid'] }}">
             {{ dict_cookiejar['cookiejar_uuid']}}
           </a>
         </td>

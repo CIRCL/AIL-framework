@@ -49,13 +49,41 @@ def create_json_response(data, status_code):
 
 # ============= ROUTES ==============
 @crawler_splash.route("/crawlers/manual", methods=['GET'])
-#@login_required
-#@login_read_only
+@login_required
+@login_read_only
 def manual():
     user_id = current_user.get_id()
-    l_cookies = crawlers.api_get_cookies_list(user_id)
-    return render_template("crawler_manual.html", crawler_enabled=True, l_cookies=l_cookies)
+    l_cookiejar = crawlers.api_get_cookies_list_select(user_id)
+    return render_template("crawler_manual.html", crawler_enabled=True, l_cookiejar=l_cookiejar)
 
+@crawler_splash.route("/crawlers/send_to_spider", methods=['POST'])
+@login_required
+@login_analyst
+def send_to_spider():
+    user_id = current_user.get_id()
+
+    # POST val
+    url = request.form.get('url_to_crawl')
+    auto_crawler = request.form.get('crawler_type')
+    crawler_delta = request.form.get('crawler_epoch')
+    screenshot = request.form.get('screenshot')
+    har = request.form.get('har')
+    depth_limit = request.form.get('depth_limit')
+    max_pages = request.form.get('max_pages')
+    cookiejar_uuid = request.form.get('cookiejar')
+
+    if cookiejar_uuid:
+        if cookiejar_uuid == 'None':
+            cookiejar_uuid = None
+        else:
+            cookiejar_uuid = cookiejar_uuid.rsplit(':')
+            cookiejar_uuid = cookiejar_uuid[-1].replace(' ', '')
+
+    res = crawlers.api_create_crawler_task(user_id, url, screenshot=screenshot, har=har, depth_limit=depth_limit, max_pages=max_pages,
+                                                    auto_crawler=auto_crawler, crawler_delta=crawler_delta, cookiejar_uuid=cookiejar_uuid)
+    if res:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.manual'))
 
 # add route : /crawlers/show_domain
 @crawler_splash.route('/crawlers/showDomain', methods=['GET', 'POST'])
@@ -172,14 +200,14 @@ def domains_explorer_web():
 
 ## Cookiejar ##
 @crawler_splash.route('/crawler/cookiejar/add', methods=['GET'])
-#@login_required
-#@login_analyst
+@login_required
+@login_analyst
 def crawler_cookiejar_add():
     return render_template("add_cookiejar.html")
 
 @crawler_splash.route('/crawler/cookiejar/add_post', methods=['POST'])
-#@login_required
-#@login_analyst
+@login_required
+@login_analyst
 def crawler_cookiejar_add_post():
     user_id = current_user.get_id()
 
@@ -235,13 +263,13 @@ def crawler_cookiejar_show():
     user_id = current_user.get_id()
     cookiejar_uuid = request.args.get('cookiejar_uuid')
 
-    res = crawlers.api_get_cookiejar_cookies(cookiejar_uuid, user_id))
+    res = crawlers.api_get_cookiejar_cookies(cookiejar_uuid, user_id)
     if res[1] !=200:
         return create_json_response(res[0], res[1])
 
     cookiejar_metadata = crawlers.get_cookiejar_metadata(cookiejar_uuid, level=False)
 
-    cookies = json.dumps(res[0]['json_cookies'], indent=4, sort_keys=True)
-    return render_template("show_cookiejar.html", cookiejar_metadata=cookiejar_metadata, l_cookies=res[0])
+    cookies = json.dumps(res[0], indent=4, sort_keys=True)
+    return render_template("show_cookiejar.html", cookiejar_metadata=cookiejar_metadata, l_cookies=cookies)
 
 ##  - -  ##
