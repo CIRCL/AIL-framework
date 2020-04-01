@@ -156,7 +156,7 @@ class TorSplashCrawler():
                 self.parse,
                 errback=self.errback_catcher,
                 endpoint='execute',
-                meta={'father': self.original_item},
+                meta={'father': self.original_item, 'current_url': self.start_urls},
                 args=l_cookies
             )
 
@@ -217,7 +217,7 @@ class TorSplashCrawler():
                         self.parse,
                         errback=self.errback_catcher,
                         endpoint='execute',
-                        meta={'father': item_id},
+                        meta={'father': item_id, 'current_url': link.url},
                         args=l_cookies
                     )
 
@@ -227,7 +227,7 @@ class TorSplashCrawler():
 
             if failure.check(ResponseNeverReceived):
                 request = failure.request
-                url= response.data['last_url']
+                url= request.meta['current_url']
                 father = request.meta['father']
 
                 self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
@@ -242,7 +242,7 @@ class TorSplashCrawler():
                     errback=self.errback_catcher,
                     endpoint='execute',
                     cache_args=['lua_source'],
-                    meta={'father': father},
+                    meta={'father': father, 'current_url': url},
                     args=self.build_request_arg(response.cookiejar)
                 )
 
