@@ -1,0 +1,37 @@
+<div class="form-group row">
+  <label for="name" class="col-sm-2 col-form-label">name</label>
+  <div class="col-sm-10">
+    <input type="text" class="form-control" id="name" name="name" placeholder="cookie name" value="{%if 'name' in cookie_dict%}{{cookie_dict['name']}}{%endif%}" required>
+  </div>
+</div>
+<div class="form-group row">
+  <label for="value" class="col-sm-2 col-form-label">value</label>
+  <div class="col-sm-10">
+    <input type="text" class="form-control" id="value" name="value" placeholder="cookie value" value="{%if 'value' in cookie_dict%}{{cookie_dict['value']}}{%endif%}" required>
+  </div>
+</div>
+<div class="form-group row">
+  <label for="domain" class="col-sm-2 col-form-label">domain</label>
+  <div class="col-sm-10">
+    <input type="text" class="form-control" id="domain" name="domain" placeholder=".domain - optional" value="{%if 'domain' in cookie_dict%}{{cookie_dict['domain']}}{%endif%}">
+  </div>
+</div>
+<div class="form-group row">
+  <label for="path" class="col-sm-2 col-form-label">path</label>
+  <div class="col-sm-10">
+    <input type="text" class="form-control" id="path" name="path" placeholder="cookie path - optional" value="{%if 'path' in cookie_dict%}{{cookie_dict['path']}}{%endif%}">
+  </div>
+</div>
+
+<div class="custom-control custom-switch mt-1">
+  <input class="custom-control-input" type="checkbox" name="httpOnly" id="httpOnly" {%if 'httpOnly' in cookie_dict%}{%if cookie_dict['httpOnly']%}checked=""{%endif%}{%endif%}>
+  <label class="custom-control-label" for="httpOnly">
+    httpOnly
+  </label>
+</div>
+<div class="custom-control custom-switch mt-1">
+  <input class="custom-control-input" type="checkbox" name="secure" id="secure" {%if 'secure' in cookie_dict%}{%if cookie_dict['secure']%}checked=""{%endif%}{%endif%}>
+  <label class="custom-control-label" for="secure">
+    secure
+  </label>
+</div>

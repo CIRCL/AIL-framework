@@ -3,11 +3,8 @@
 
 import os
 import sys
-import gzip
-import base64
 import uuid
 import datetime
-import base64
 import redis
 import json
 import time
@@ -23,15 +20,73 @@ from scrapy import Spider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.crawler import CrawlerProcess, Crawler
 
-from scrapy_splash import SplashRequest
+from scrapy_splash import SplashRequest, SplashJsonResponse
 
 sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+#import ConfigLoader
+import Screenshot
+import crawlers
+
+script_cookie = """
+function main(splash, args)
+    -- Default values
+    splash.js_enabled = true
+    splash.private_mode_enabled = true
+    splash.images_enabled = true
+    splash.webgl_enabled = true
+    splash.media_source_enabled = true
+
+    -- Force enable things
+    splash.plugins_enabled = true
+    splash.request_body_enabled = true
+    splash.response_body_enabled = true
+
+    splash.indexeddb_enabled = true
+    splash.html5_media_enabled = true
+    splash.http2_enabled = true
+
+    -- User defined
+    splash.resource_timeout = args.resource_timeout
+    splash.timeout = args.timeout
+
+    -- Allow to pass cookies
+    splash:init_cookies(args.cookies)
+
+    -- Run
+    ok, reason = splash:go{args.url}
+    if not ok and not reason:find("http") then
+        return {
+            error = reason,
+            last_url = splash:url()
+        }
+    end
+    if reason == "http504" then
+        splash:set_result_status_code(504)
+        return ''
+    end
+
+    splash:wait{args.wait}
+    -- Page instrumentation
+    -- splash.scroll_position = {y=1000}
+    splash:wait{args.wait}
+    -- Response
+    return {
+        har = splash:har(),
+        html = splash:html(),
+        png = splash:png{render_all=true},
+        cookies = splash:get_cookies(),
+        last_url = splash:url()
+    }
+end
+"""
+
 class TorSplashCrawler():
 
     def __init__(self, splash_url, crawler_options):
-        self.process = CrawlerProcess({'LOG_ENABLED': False})
+        self.process = CrawlerProcess({'LOG_ENABLED': True})
         self.crawler = Crawler(self.TorSplashSpider, {
             'USER_AGENT': crawler_options['user_agent'],
             'SPLASH_URL': splash_url,
@@ -39,24 +94,26 @@ class TorSplashCrawler():
             'DOWNLOADER_MIDDLEWARES': {'scrapy_splash.SplashCookiesMiddleware': 723,
                                        'scrapy_splash.SplashMiddleware': 725,
                                        'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
+                                       'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
                                        },
             'SPIDER_MIDDLEWARES': {'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,},
             'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
             'HTTPERROR_ALLOW_ALL': True,
             'RETRY_TIMES': 2,
             'CLOSESPIDER_PAGECOUNT': crawler_options['closespider_pagecount'],
-            'DEPTH_LIMIT': crawler_options['depth_limit']
+            'DEPTH_LIMIT': crawler_options['depth_limit'],
+            'SPLASH_COOKIES_DEBUG': False
             })
 
-    def crawl(self, type, crawler_options, date, requested_mode, url, domain, port, original_item):
-        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, date=date, requested_mode=requested_mode, url=url, domain=domain, port=port, original_item=original_item)
+    def crawl(self, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item):
+        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, date=date, requested_mode=requested_mode, url=url, domain=domain, port=port, cookies=cookies, original_item=original_item)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, type, crawler_options, date, requested_mode, url, domain, port, original_item, *args, **kwargs):
-            self.type = type
+        def __init__(self, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item, *args, **kwargs):
+            self.domain_type = type
             self.requested_mode = requested_mode
             self.original_item = original_item
             self.root_key = None
@@ -68,166 +125,101 @@ class TorSplashCrawler():
             self.date_month = date['date_month']
             self.date_epoch = int(date['epoch'])
 
-            # # TODO: timeout in config
-            self.arg_crawler = {  'html': crawler_options['html'],
-                                  'wait': 10,
-                                  'render_all': 1,
-                                  'timeout': 30,
-                                  'har': crawler_options['har'],
-                                  'png': crawler_options['png']}
+            self.png = crawler_options['png']
+            self.har = crawler_options['har']
+            self.cookies = cookies
 
             config_section = 'Crawler'
             self.p = Process(config_section)
-
-            self.r_cache = redis.StrictRedis(
-                host=self.p.config.get("Redis_Cache", "host"),
-                port=self.p.config.getint("Redis_Cache", "port"),
-                db=self.p.config.getint("Redis_Cache", "db"),
-                decode_responses=True)
-
+            self.item_dir = os.path.join(self.p.config.get("Directories", "crawled"), date_str )
+            self.har_dir = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
             self.r_serv_log_submit = redis.StrictRedis(
                 host=self.p.config.get("Redis_Log_submit", "host"),
                 port=self.p.config.getint("Redis_Log_submit", "port"),
                 db=self.p.config.getint("Redis_Log_submit", "db"),
                 decode_responses=True)
 
-            self.r_serv_metadata = redis.StrictRedis(
-                host=self.p.config.get("ARDB_Metadata", "host"),
-                port=self.p.config.getint("ARDB_Metadata", "port"),
-                db=self.p.config.getint("ARDB_Metadata", "db"),
-                decode_responses=True)
+            self.root_key = None
 
-            self.r_serv_onion = redis.StrictRedis(
-                host=self.p.config.get("ARDB_Onion", "host"),
-                port=self.p.config.getint("ARDB_Onion", "port"),
-                db=self.p.config.getint("ARDB_Onion", "db"),
-                decode_responses=True)
-
-            self.crawler_path = os.path.join(self.p.config.get("Directories", "crawled"), date_str )
-
-            self.crawled_paste_filemame = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "pastes"),
-                                            self.p.config.get("Directories", "crawled"), date_str )
-
-            self.crawled_har = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
-            self.crawled_screenshot = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot") )
+        def build_request_arg(self, cookies):
+            return {'wait': 10,
+                    'resource_timeout': 30, # /!\ Weird behaviour if timeout < resource_timeout /!\
+                    'timeout': 30,
+                    'cookies': cookies,
+                    'lua_source': script_cookie
+                }
 
         def start_requests(self):
+            l_cookies = self.build_request_arg(self.cookies)
             yield SplashRequest(
                 self.start_urls,
                 self.parse,
                 errback=self.errback_catcher,
-                endpoint='render.json',
-                meta={'father': self.original_item, 'root_key': None},
-                args=self.arg_crawler
+                endpoint='execute',
+                meta={'father': self.original_item},
+                args=l_cookies
             )
 
+        # # TODO: remove duplicate and anchor
         def parse(self,response):
             #print(response.headers)
             #print(response.status)
             if response.status == 504:
-                # down ?
-                print('504 detected')
+                # no response
+                #print('504 detected')
+                pass
+
+            # LUA ERROR # # TODO: print/display errors
+            elif 'error' in response.data:
+                if(response.data['error'] == 'network99'):
+                    print('Connection to proxy refused')
+                else:
+                    print(response.data['error'])
+
             elif response.status != 200:
                 print('other response: {}'.format(response.status))
-                #print(error_log)
-                #detect connection to proxy refused
+                # detect connection to proxy refused
                 error_log = (json.loads(response.body.decode()))
-                if(error_log['info']['text'] == 'Connection to proxy refused'):
-                    print('Connection to proxy refused')
+                print(error_log)
+            #elif crawlers.is_redirection(self.domains[0], response.data['last_url']):
+            #    pass # ignore response
             else:
 
-                #avoid filename too big
-                if len(self.domains[0]) > 215:
-                    UUID = self.domains[0][-215:]+str(uuid.uuid4())
+                item_id = crawlers.create_item_id(self.item_dir, self.domains[0])
+                self.save_crawled_item(item_id, response.data['html'])
+                crawlers.create_item_metadata(item_id, self.domains[0], response.data['last_url'], self.port, response.meta['father'])
+
+                if self.root_key is None:
+                    self.root_key = item_id
+                    crawlers.add_domain_root_item(item_id, self.domain_type, self.domains[0], self.date_epoch, self.port)
+                    crawlers.create_domain_metadata(self.domain_type, self.domains[0], self.port, self.full_date, self.date_month)
+
+                if 'cookies' in response.data:
+                    all_cookies = response.data['cookies']
                 else:
-                    UUID = self.domains[0]+str(uuid.uuid4())
-                filename_paste_full = os.path.join(self.crawled_paste_filemame, UUID)
-                relative_filename_paste = os.path.join(self.crawler_path, UUID)
-                filename_har = os.path.join(self.crawled_har, UUID)
+                    all_cookies = []
 
-                # # TODO: modify me
-                # save new paste on disk
-                if self.save_crawled_paste(relative_filename_paste, response.data['html']):
+                # SCREENSHOT
+                if 'png' in response.data:
+                    sha256_string = Screenshot.save_crawled_screeshot(response.data['png'], 5000000, f_save=self.requested_mode)
+                    if sha256_string:
+                        Screenshot.save_item_relationship(sha256_string, item_id)
+                        Screenshot.save_domain_relationship(sha256_string, self.domains[0])
+                # HAR
+                if 'har' in response.data:
+                    crawlers.save_har(self.har_dir, item_id, response.data['har'])
 
-                    # add this paste to the domain crawled set # TODO: # FIXME:  put this on cache ?
-                    #self.r_serv_onion.sadd('temp:crawled_domain_pastes:{}'.format(self.domains[0]), filename_paste)
-
-                    self.r_serv_onion.sadd('{}_up:{}'.format(self.type, self.full_date), self.domains[0])
-                    self.r_serv_onion.sadd('full_{}_up'.format(self.type), self.domains[0])
-                    self.r_serv_onion.sadd('month_{}_up:{}'.format(self.type, self.date_month), self.domains[0])
-
-                    # create onion metadata
-                    if not self.r_serv_onion.exists('{}_metadata:{}'.format(self.type, self.domains[0])):
-                        self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'first_seen', self.full_date)
-
-                    # create root_key
-                    if self.root_key is None:
-                        self.root_key = relative_filename_paste
-                        # Create/Update crawler history
-                        self.r_serv_onion.zadd('crawler_history_{}:{}:{}'.format(self.type, self.domains[0], self.port), self.date_epoch, self.root_key)
-                        # Update domain port number
-                        all_domain_ports = self.r_serv_onion.hget('{}_metadata:{}'.format(self.type, self.domains[0]), 'ports')
-                        if all_domain_ports:
-                            all_domain_ports = all_domain_ports.split(';')
-                        else:
-                            all_domain_ports = []
-                        if self.port not in all_domain_ports:
-                            all_domain_ports.append(self.port)
-                            self.r_serv_onion.hset('{}_metadata:{}'.format(self.type, self.domains[0]), 'ports', ';'.join(all_domain_ports))
-
-                    #create paste metadata
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'super_father', self.root_key)
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'father', response.meta['father'])
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'domain', '{}:{}'.format(self.domains[0], self.port))
-                    self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'real_link', response.url)
-
-                    self.r_serv_metadata.sadd('paste_children:'+response.meta['father'], relative_filename_paste)
-
-                    if 'png' in response.data:
-                        size_screenshot = (len(response.data['png'])*3) /4
-
-                        if size_screenshot < 5000000 or self.requested_mode: #bytes or manual/auto
-                            image_content = base64.standard_b64decode(response.data['png'].encode())
-                            hash = sha256(image_content).hexdigest()
-                            img_dir_path = os.path.join(hash[0:2], hash[2:4], hash[4:6], hash[6:8], hash[8:10], hash[10:12])
-                            filename_img = os.path.join(self.crawled_screenshot, 'screenshot', img_dir_path, hash[12:] +'.png')
-                            dirname = os.path.dirname(filename_img)
-                            if not os.path.exists(dirname):
-                                os.makedirs(dirname)
-                            if not os.path.exists(filename_img):
-                                with open(filename_img, 'wb') as f:
-                                    f.write(image_content)
-                            # add item metadata
-                            self.r_serv_metadata.hset('paste_metadata:{}'.format(relative_filename_paste), 'screenshot', hash)
-                            # add sha256 metadata
-                            self.r_serv_onion.sadd('screenshot:{}'.format(hash), relative_filename_paste)
-                            # domain map
-                            self.r_serv_onion.sadd('domain_screenshot:{}'.format(self.domains[0]), hash)
-                            self.r_serv_onion.sadd('screenshot_domain:{}'.format(hash), self.domains[0])
-
-                    if 'har' in response.data:
-                        dirname = os.path.dirname(filename_har)
-                        if not os.path.exists(dirname):
-                            os.makedirs(dirname)
-                        with open(filename_har+'.json', 'wb') as f:
-                            f.write(json.dumps(response.data['har']).encode())
-
-                    # save external links in set
-                    #lext = LinkExtractor(deny_domains=self.domains, unique=True)
-                    #for link in lext.extract_links(response):
-                    #    self.r_serv_onion.sadd('domain_{}_external_links:{}'.format(self.type, self.domains[0]), link.url)
-                    #    self.r_serv_metadata.sadd('paste_{}_external_links:{}'.format(self.type, filename_paste), link.url)
-
-                    le = LinkExtractor(allow_domains=self.domains, unique=True)
-                    for link in le.extract_links(response):
-                        yield SplashRequest(
-                            link.url,
-                            self.parse,
-                            errback=self.errback_catcher,
-                            endpoint='render.json',
-                            meta={'father': relative_filename_paste, 'root_key': response.meta['root_key']},
-                            args=self.arg_crawler
-                        )
+                le = LinkExtractor(allow_domains=self.domains, unique=True)
+                for link in le.extract_links(response):
+                    l_cookies = self.build_request_arg(all_cookies)
+                    yield SplashRequest(
+                        link.url,
+                        self.parse,
+                        errback=self.errback_catcher,
+                        endpoint='execute',
+                        meta={'father': item_id},
+                        args=l_cookies
+                    )
 
         def errback_catcher(self, failure):
             # catch all errback failures,
@@ -235,7 +227,7 @@ class TorSplashCrawler():
 
             if failure.check(ResponseNeverReceived):
                 request = failure.request
-                url = request.meta['splash']['args']['url']
+                url= response.data['last_url']
                 father = request.meta['father']
 
                 self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
@@ -248,62 +240,28 @@ class TorSplashCrawler():
                     url,
                     self.parse,
                     errback=self.errback_catcher,
-                    endpoint='render.json',
-                    meta={'father': father, 'root_key': response.meta['root_key']},
-                    args=self.arg_crawler
+                    endpoint='execute',
+                    cache_args=['lua_source'],
+                    meta={'father': father},
+                    args=self.build_request_arg(response.cookiejar)
                 )
 
             else:
                 print('failure')
                 #print(failure)
                 print(failure.type)
-                #print(failure.request.meta['item'])
 
-            '''
-            #if isinstance(failure.value, HttpError):
-            elif failure.check(HttpError):
-                # you can get the response
-                response = failure.value.response
-                print('HttpError')
-                self.logger.error('HttpError on %s', response.url)
+        def save_crawled_item(self, item_id, item_content):
+            gzip64encoded = crawlers.save_crawled_item(item_id, item_content)
 
-            #elif isinstance(failure.value, DNSLookupError):
-            elif failure.check(DNSLookupError):
-                # this is the original request
-                request = failure.request
-                print(DNSLookupError)
-                print('DNSLookupError')
-                self.logger.error('DNSLookupError on %s', request.url)
-
-            #elif isinstance(failure.value, TimeoutError):
-            elif failure.check(TimeoutError):
-                request = failure.request
-                print('TimeoutError')
-                print(TimeoutError)
-                self.logger.error('TimeoutError on %s', request.url)
-            '''
-
-        def save_crawled_paste(self, filename, content):
-
-            if os.path.isfile(filename):
-                print('File: {} already exist in submitted pastes'.format(filename))
-                return False
-
-            try:
-                gzipencoded = gzip.compress(content.encode())
-                gzip64encoded = base64.standard_b64encode(gzipencoded).decode()
-            except:
-                print("file error: {}".format(filename))
-                return False
-
+            # Send item to queue
             # send paste to Global
-            relay_message = "{0} {1}".format(filename, gzip64encoded)
+            relay_message = "{0} {1}".format(item_id, gzip64encoded)
             self.p.populate_set_out(relay_message, 'Mixer')
 
             # increase nb of paste by feeder name
             self.r_serv_log_submit.hincrby("mixer_cache:list_feeder", "crawler", 1)
 
             # tag crawled paste
-            msg = 'infoleak:submission="crawler";{}'.format(filename)
+            msg = 'infoleak:submission="crawler";{}'.format(item_id)
             self.p.populate_set_out(msg, 'Tags')
-            return True

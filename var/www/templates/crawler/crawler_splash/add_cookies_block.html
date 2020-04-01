@@ -1,0 +1,58 @@
+<h5>Import cookies:</h5>
+<div class="form-group">
+	<label for="file"><b>JSON File</b></label>
+	<input type="file" class="form-control-file btn btn-outline-secondary" id="file" name="file">
+</div>
+
+<hr>
+
+<div>
+	<h5>Create cookies:</h5>
+
+	<div class="row">
+		<div class="col-5" for="obj_input_cookie_name"><b>Cookie Name</b></div>
+		<div class="col-6" for="obj_input_cookie_value"><b>Cookie Value</b></div>
+	</div>
+
+	<div class="form-horizontal">
+		<div class="form-body">
+			<div class="form-group">
+				<div class="fields">
+					<div class="input-group mb-1">
+						<input type="text" class="form-control col-5" name="first_cookie" id="obj_input_cookie_name">
+						<input type="text" class="form-control col-6" name="first_cookie" id="obj_input_cookie_value">
+						<span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
+					</div>
+
+					<br>
+
+					<span class="help-block" hidden>Manual Cookies></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+var input_1 = '<div class="input-group mb-1"><input type="text" class="form-control col-5" name="'
+var input_2 = '"><input type="text" class="form-control col-6" name="'
+var input_3 = '">';
+var minusButton = '<span class="btn btn-danger input-group-addon delete-field col-1"><i class="fas fa-trash-alt"></i></span></div>';
+
+$('.add-field').click(function() {
+	var new_uuid = uuidv4();
+	var template = input_1 + new_uuid + input_2 + new_uuid + input_3;
+  var temp = $(template).insertBefore('.help-block');
+  temp.append(minusButton);
+});
+
+$('.fields').on('click', '.delete-field', function(){
+  $(this).parent().remove();
+});
+
+function uuidv4() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+</script>

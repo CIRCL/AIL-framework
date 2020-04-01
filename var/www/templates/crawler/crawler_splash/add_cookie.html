@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL - Add Cookies</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card mb-3 mt-1">
+          <div class="card-header text-white bg-dark">
+						<div class="row">
+							<div class="col-8">
+		            <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Add Cookie to cookiejar: {{cookiejar_uuid}}</h5>
+							</div>
+							<div class="col-4">
+								<a class="btn btn-danger float-right" href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_delete') }}?cookiejar_uuid={{cookiejar_uuid}}&cookie_uuid={{cookie_uuid}}">
+		              <i class="fas fa-trash-alt"></i>
+		            </a>
+							</div>
+						</div>
+          </div>
+          <div class="card-body">
+
+						<form action="{{ url_for('crawler_splash.crawler_cookiejar_cookie_manual_add_post') }}" method="post" enctype="multipart/form-data">
+							<input type="text" name="cookiejar_uuid" value="{{cookiejar_uuid}}" hidden>
+							{% include 'crawler/crawler_splash/cookie_edit_block.html' %}
+							<div class="form-group">
+								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie"></i> Create Cookie</button>
+							</div>
+
+						</form>
+
+						<hr>
+
+						<form action="{{ url_for('crawler_splash.crawler_cookiejar_cookie_json_add_post') }}" method="post" enctype="multipart/form-data">
+							<input type="text" name="cookiejar_uuid" value="{{cookiejar_uuid}}" hidden>
+							<h5>Import cookies from file:</h5>
+							<div class="form-group">
+								<label for="file"><b>JSON File</b></label>
+								<input type="file" class="form-control-file btn btn-outline-secondary" id="file" name="file">
+							</div>
+
+							<div class="form-group">
+								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie"></i> Import Cookies</button>
+							</div>
+						</form>
+
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#description-edit-block').hide();
+	$("#page-crawler").addClass("active");
+	$("#nav_title_cookiejar").removeClass("text-muted");
+});
+
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function show_edit_description(){
+	console.log('edit');
+	$('#description-edit-block').show();
+}
+
+function edit_description(){
+	var new_description = $('#input-description').val()
+	var data_to_send = { cookiejar_uuid: "{{cookiejar_uuid}}", "description": new_description}
+
+	$.get("{{ url_for('crawler_splash.crawler_cookiejar_edit') }}", data_to_send, function(data, status){
+			if(status == "success") {
+				$('#description-text').text(new_description)
+				$('#description-edit-block').hide();
+			}
+	});
+}
+
+</script>

@@ -445,7 +445,7 @@
 						<div class="text-center">
 							<small class="text-info" style="line-height:0.9;">
 								<a target="_blank" href="" id="screenshot_link"></a>
-							<small>
+							</small>
 						</div>
 					</div>
 
@@ -519,11 +519,11 @@ var draw_img = false;
       $("#screenshot_link").attr("href", screenshot_href + "{{dict_domain['crawler_history']['random_item']['id']}}");
       $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
     {%else%}
-    var screenshot = "";
+      var screenshot = "";
     {%endif%}
   {%endif%}
 {%else%}
-var screenshot = "";
+  var screenshot = "";
 {%endif%}
 
 img.src = base_url + screenshot;
@@ -561,7 +561,9 @@ function img_error() {
 }
 
 function reload_image(new_screenshot, link, item_id) {
-  $("#"+screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
+  if (screenshot) {
+    $("#"+screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
+  }
   screenshot = new_screenshot;
 
   img.src=base_url + screenshot;

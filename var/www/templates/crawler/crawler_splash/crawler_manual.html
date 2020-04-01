@@ -38,7 +38,7 @@
 							</div>
 						  <div class="card-body">
 						    <p class="card-text">Enter a domain and choose what kind of data you want.</p>
-								<form action="{{ url_for('hiddenServices.create_spider_splash') }}" method='post'>
+								<form action="{{ url_for('crawler_splash.send_to_spider') }}" method='post'>
 									<div class="row">
 										<div class="col-12 col-lg-6">
 											<div class="input-group" id="date-range-from">
@@ -108,8 +108,18 @@
 													  </div>
 													</div>
 												</div>
-
 											</div>
+
+											<div class="mt-1">
+												<i class="mt-2 text-white fas fa-cookie-bite"></i> Cookiejar:
+												<select class="custom-select form-control mt-1" name="cookiejar" id="cookiejar">
+													<option value="None" selected>Don't use any cookiejar</option>
+													{%for cookiejar in l_cookiejar%}
+														<option value="{{cookiejar}}">{{cookiejar}}</option>
+													{%endfor%}
+												</select>
+											</div>
+
 										</div>
 									</div>
 									<button class="btn btn-primary mt-2">

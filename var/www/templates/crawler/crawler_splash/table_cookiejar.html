@@ -1,0 +1,28 @@
+<table id="{{table_id}}" class="table table-striped table-bordered">
+  <thead class="bg-dark text-white">
+    <tr>
+        <th class="bg-info text-white">Description</th>
+        <th class="bg-info text-white">Date</th>
+        <th class="bg-info text-white">UUID</th>
+        <th class="bg-info text-white">User</th>
+    </tr>
+  </thead>
+  <tbody style="font-size: 15px;">
+    {% for dict_cookiejar in all_cookiejar %}
+      <tr>
+        <td id="description-text">{{dict_cookiejar['description']}}</td>
+        <td>
+          {%if dict_cookiejar['date']%}
+            {{dict_cookiejar['date'][0:4]}}/{{dict_cookiejar['date'][4:6]}}/{{dict_cookiejar['date'][6:8]}}
+          {%endif%}
+        </td>
+        <td>
+          <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?cookiejar_uuid={{ dict_cookiejar['cookiejar_uuid'] }}">
+            {{ dict_cookiejar['cookiejar_uuid']}}
+          </a>
+        </td>
+        <td>{{dict_cookiejar['user_id']}}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

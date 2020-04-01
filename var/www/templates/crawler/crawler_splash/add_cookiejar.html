@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL - Add Cookies</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card mb-3 mt-1">
+						<div class="card-header text-white bg-dark">
+							<h5 class="card-title"><i class="fas fa-box"></i> Create Cookijar <i class="fas fa-cookie"></i></h5>
+						</div>
+						<div class="card-body">
+
+							<form action="{{ url_for('crawler_splash.crawler_cookiejar_add_post') }}" method="post" enctype="multipart/form-data">
+
+								<div class="row">
+									<div class="col-12 col-md-9">
+										<div class="input-group mb-2 mr-sm-2">
+											<div class="input-group-prepend">
+												<div class="input-group-text"><i class="fas fa-tag"></i></div>
+											</div>
+											<input id="description" name="description" class="form-control" placeholder="cookies description - (optional)" type="text">
+										</div>
+									</div>
+									<div class="col-12 col-md-3">
+										<div class="custom-control custom-switch mt-1">
+											<input class="custom-control-input" type="checkbox" name="level" id="id_level" checked="">
+											<label class="custom-control-label" for="id_level">
+												<i class="fas fa-users"></i>&nbsp;Show cookiejar to all Users
+											</label>
+										</div>
+									</div>
+								</div>
+
+								<hr>
+
+								{% include 'crawler/crawler_splash/add_cookies_block.html' %}
+
+								<div class="form-group">
+									<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie-bite"></i> Create Cookiejar</button>
+								</div>
+
+							</form>
+
+						</div>
+					</div>
+
+
+
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-crawler").addClass("active");
+	$("#nav_cookiejar_add").addClass("active");
+	$("#nav_title_cookiejar").removeClass("text-muted");
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
