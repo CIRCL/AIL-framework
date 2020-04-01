@@ -7,7 +7,6 @@
 	<!-- Core CSS -->
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
 
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -31,47 +30,43 @@
           <div class="card-header text-white bg-dark">
 						<div class="row">
 							<div class="col-8">
-		            <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Edit Cookiejar</h5>
+		            <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Add Cookie to cookiejar: {{cookiejar_uuid}}</h5>
 							</div>
 							<div class="col-4">
-								<a class="btn btn-danger float-right" href="{{ url_for('crawler_splash.crawler_cookiejar_delete') }}?cookiejar_uuid={{cookiejar_uuid}}">
+								<a class="btn btn-danger float-right" href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_delete') }}?cookiejar_uuid={{cookiejar_uuid}}&cookie_uuid={{cookie_uuid}}">
 		              <i class="fas fa-trash-alt"></i>
 		            </a>
 							</div>
 						</div>
           </div>
           <div class="card-body">
-						{% with all_cookiejar=[cookiejar_metadata], table_id='table_cookiejar'%}
-	            {% include 'crawler/crawler_splash/table_cookiejar.html' %}
-	          {% endwith %}
 
-						<button class="btn btn-info" onclick="show_edit_description();">
-							Edit Description <i class="fas fa-pencil-alt"></i>
-						</button>
-
-						<a href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_add')}}?cookiejar_uuid={{cookiejar_uuid}}">
-							<button class="btn btn-primary">
-								Add Cookies <i class="fas fa-cookie"></i>
-							</button>
-            </a>
-
-						<span class="mt-1" id="description-edit-block">
-							<div class="input-group">
-								<input class="form-control" type="text" id="input-description" value="{{cookiejar_metadata['description']}}"></input>
-								<div class="input-group-append">
-									<button class="btn btn-info" onclick="edit_description();">
-										<i class="fas fa-pencil-alt"></i> Edit
-									</button>
-								</div>
+						<form action="{{ url_for('crawler_splash.crawler_cookiejar_cookie_manual_add_post') }}" method="post" enctype="multipart/form-data">
+							<input type="text" name="cookiejar_uuid" value="{{cookiejar_uuid}}" hidden>
+							{% include 'crawler/crawler_splash/cookie_edit_block.html' %}
+							<div class="form-group">
+								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie"></i> Create Cookie</button>
 							</div>
-						</span>
+
+						</form>
+
+						<hr>
+
+						<form action="{{ url_for('crawler_splash.crawler_cookiejar_cookie_json_add_post') }}" method="post" enctype="multipart/form-data">
+							<input type="text" name="cookiejar_uuid" value="{{cookiejar_uuid}}" hidden>
+							<h5>Import cookies from file:</h5>
+							<div class="form-group">
+								<label for="file"><b>JSON File</b></label>
+								<input type="file" class="form-control-file btn btn-outline-secondary" id="file" name="file">
+							</div>
+
+							<div class="form-group">
+								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie"></i> Import Cookies</button>
+							</div>
+						</form>
 
 					</div>
 				</div>
-
-				{% with l_elem=l_cookies, l_cookie_uuid=l_cookie_uuid, cookiejar_uuid=cookiejar_uuid %}
-          {% include 'crawler/crawler_splash/cookies_card_block.html' %}
-        {% endwith %}
 
 			</div>
 		</div>
@@ -80,7 +75,6 @@
 </body>
 
 <script>
-var chart = {};
 $(document).ready(function(){
 	$('#description-edit-block').hide();
 	$("#page-crawler").addClass("active");

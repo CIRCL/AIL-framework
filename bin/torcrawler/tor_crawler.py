@@ -39,7 +39,7 @@ if __name__ == '__main__':
     requested_mode = crawler_json['requested']
 
     if crawler_options['cookiejar_uuid']:
-        cookies = crawlers.load_crawler_cookies(crawler_options['cookiejar_uuid'], crawler_type=service_type)
+        cookies = crawlers.load_crawler_cookies(crawler_options['cookiejar_uuid'], domain, crawler_type=service_type)
     else:
         cookies = []
 

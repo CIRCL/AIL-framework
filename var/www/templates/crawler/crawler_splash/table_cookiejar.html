@@ -10,7 +10,7 @@
   <tbody style="font-size: 15px;">
     {% for dict_cookiejar in all_cookiejar %}
       <tr>
-        <td>{{dict_cookiejar['description']}}</td>
+        <td id="description-text">{{dict_cookiejar['description']}}</td>
         <td>
           {%if dict_cookiejar['date']%}
             {{dict_cookiejar['date'][0:4]}}/{{dict_cookiejar['date'][4:6]}}/{{dict_cookiejar['date'][6:8]}}

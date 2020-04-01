@@ -245,7 +245,8 @@ def crawler_cookiejar_add_post():
             return create_json_response(res[0], res[1])
     if l_manual_cookie:
         crawlers.add_cookies_to_cookiejar(cookiejar_uuid, l_manual_cookie)
-    return render_template("add_cookiejar.html")
+
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
 
 @crawler_splash.route('/crawler/cookiejar/all', methods=['GET'])
 #@login_required
@@ -263,13 +264,143 @@ def crawler_cookiejar_show():
     user_id = current_user.get_id()
     cookiejar_uuid = request.args.get('cookiejar_uuid')
 
-    res = crawlers.api_get_cookiejar_cookies(cookiejar_uuid, user_id)
+    res = crawlers.api_get_cookiejar_cookies_with_uuid(cookiejar_uuid, user_id)
     if res[1] !=200:
         return create_json_response(res[0], res[1])
 
     cookiejar_metadata = crawlers.get_cookiejar_metadata(cookiejar_uuid, level=False)
 
-    cookies = json.dumps(res[0], indent=4, sort_keys=True)
-    return render_template("show_cookiejar.html", cookiejar_metadata=cookiejar_metadata, l_cookies=cookies)
+    l_cookies = []
+    l_cookie_uuid = []
+    for cookie in res[0]:
+        l_cookies.append(json.dumps(cookie[0], indent=4, sort_keys=True))
+        l_cookie_uuid.append(cookie[1])
+    return render_template("show_cookiejar.html", cookiejar_uuid=cookiejar_uuid, cookiejar_metadata=cookiejar_metadata,
+                                        l_cookies=l_cookies, l_cookie_uuid=l_cookie_uuid)
+
+@crawler_splash.route('/crawler/cookiejar/cookie/delete', methods=['GET'])
+#@login_required
+#@login_read_only
+def crawler_cookiejar_cookie_delete():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.args.get('cookiejar_uuid')
+    cookie_uuid = request.args.get('cookie_uuid')
+
+    res = crawlers.api_delete_cookie_from_cookiejar(user_id, cookiejar_uuid, cookie_uuid)
+    if res[1] !=200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
+
+@crawler_splash.route('/crawler/cookiejar/delete', methods=['GET'])
+#@login_required
+#@login_read_only
+def crawler_cookiejar_delete():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.args.get('cookiejar_uuid')
+
+    res = crawlers.api_delete_cookie_jar(user_id, cookiejar_uuid)
+    if res[1] !=200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawler_cookiejar_all'))
+
+@crawler_splash.route('/crawler/cookiejar/edit', methods=['GET'])
+@login_required
+@login_read_only
+def crawler_cookiejar_edit():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.args.get('cookiejar_uuid')
+    description = request.args.get('description')
+
+    res = crawlers.api_edit_cookiejar_description(user_id, cookiejar_uuid, description)
+    return create_json_response(res[0], res[1])
+
+@crawler_splash.route('/crawler/cookiejar/cookie/edit', methods=['GET'])
+@login_required
+@login_read_only
+def crawler_cookiejar_cookie_edit():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.args.get('cookiejar_uuid')
+    cookie_uuid = request.args.get('cookie_uuid')
+
+    cookie_dict = crawlers.get_cookie_dict(cookie_uuid)
+    return render_template("edit_cookie.html", cookiejar_uuid=cookiejar_uuid, cookie_uuid=cookie_uuid, cookie_dict=cookie_dict)
+
+@crawler_splash.route('/crawler/cookiejar/cookie/edit_post', methods=['POST'])
+@login_required
+@login_read_only
+def crawler_cookiejar_cookie_edit_post():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.form.get('cookiejar_uuid')
+    cookie_uuid = request.form.get('cookie_uuid')
+    name = request.form.get('name')
+    value = request.form.get('value')
+    domain = request.form.get('domain')
+    path = request.form.get('path')
+    httpOnly = request.form.get('httpOnly')
+    secure = request.form.get('secure')
+
+    cookie_dict = {'name': name, 'value': value}
+    if domain:
+        cookie_dict['domain'] = domain
+    if path:
+        cookie_dict['path'] = path
+    if httpOnly:
+        cookie_dict['httpOnly'] = True
+    if secure:
+        cookie_dict['secure'] = True
+
+    res = crawlers.api_edit_cookie(user_id, cookiejar_uuid, cookie_uuid, cookie_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
+
+@crawler_splash.route('/crawler/cookiejar/cookie/add', methods=['GET'])
+@login_required
+@login_read_only
+def crawler_cookiejar_cookie_add():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.args.get('cookiejar_uuid')
+    return render_template("add_cookie.html", cookiejar_uuid=cookiejar_uuid)
+
+@crawler_splash.route('/crawler/cookiejar/cookie/manual_add_post', methods=['POST'])
+@login_required
+@login_read_only
+def crawler_cookiejar_cookie_manual_add_post():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.form.get('cookiejar_uuid')
+    name = request.form.get('name')
+    value = request.form.get('value')
+    domain = request.form.get('domain')
+    path = request.form.get('path')
+    httpOnly = request.form.get('httpOnly')
+    secure = request.form.get('secure')
+
+    cookie_dict = {'name': name, 'value': value}
+    if domain:
+        cookie_dict['domain'] = domain
+    if path:
+        cookie_dict['path'] = path
+    if httpOnly:
+        cookie_dict['httpOnly'] = True
+    if secure:
+        cookie_dict['secure'] = True
+
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
+
+@crawler_splash.route('/crawler/cookiejar/cookie/json_add_post', methods=['POST'])
+@login_required
+@login_read_only
+def crawler_cookiejar_cookie_json_add_post():
+    user_id = current_user.get_id()
+    cookiejar_uuid = request.form.get('cookiejar_uuid')
+
+    if 'file' in request.files:
+        file = request.files['file']
+        json_cookies = file.read().decode()
+        if json_cookies:
+            res = crawlers.api_import_cookies_from_json(json_cookies, cookiejar_uuid)
+            return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
+
+    return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', cookiejar_uuid=cookiejar_uuid))
 
 ##  - -  ##

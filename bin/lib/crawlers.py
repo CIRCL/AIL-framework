@@ -39,7 +39,11 @@ def generate_uuid():
 
 # # TODO: handle prefix cookies
 # # TODO: fill empty fields
-def create_cookie_crawler(cookie_dict, crawler_type='regular'):
+def create_cookie_crawler(cookie_dict, domain, crawler_type='regular'):
+    # check cookie domain filed
+    if not 'domain' in cookie_dict:
+        cookie_dict['domain'] = '.{}'.format(domain)
+
     # tor browser: disable secure cookie
     if crawler_type=='onion':
         cookie_dict['secure'] = False
@@ -53,11 +57,11 @@ def create_cookie_crawler(cookie_dict, crawler_type='regular'):
     cookie_dict['expires'] = (datetime.now() + timedelta(days=10)).strftime('%Y-%m-%dT%H:%M:%S') + 'Z'
     return cookie_dict
 
-def load_crawler_cookies(cookiejar_uuid, crawler_type='regular'):
+def load_crawler_cookies(cookiejar_uuid, domain, crawler_type='regular'):
     cookies = get_cookiejar_cookies_list(cookiejar_uuid)
     all_cookies = []
     for cookie_dict in cookies:
-        all_cookies.append(create_cookie_crawler(cookie_dict, crawler_type=crawler_type))
+        all_cookies.append(create_cookie_crawler(cookie_dict, domain, crawler_type=crawler_type))
     return all_cookies
 
 ################################################################################
@@ -118,10 +122,13 @@ def get_cookiejar_cookies_uuid(cookiejar_uuid):
         res = []
     return res
 
-def get_cookiejar_cookies_list(cookiejar_uuid):
+def get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=False):
     l_cookiejar = []
     for cookie_uuid in get_cookiejar_cookies_uuid(cookiejar_uuid):
-        l_cookiejar.append(get_cookie_dict(cookie_uuid))
+        if add_cookie_uuid:
+            l_cookiejar.append((get_cookie_dict(cookie_uuid), cookie_uuid))
+        else:
+            l_cookiejar.append(get_cookie_dict(cookie_uuid))
     return l_cookiejar
 
 ## Cookiejar metadata ##
@@ -160,6 +167,9 @@ def get_cookiejar_metadata_by_iterator(iter_cookiejar_uuid):
         l_cookiejar_metadata.append(get_cookiejar_metadata(cookiejar_uuid))
     return l_cookiejar_metadata
 
+def edit_cookiejar_description(cookiejar_uuid, description):
+    r_serv_onion.hset('cookiejar_metadata:{}'.format(cookiejar_uuid), 'description', description)
+
 # # # # # # # #
 #             #
 #   COOKIES   #
@@ -176,6 +186,8 @@ def get_cookiejar_metadata_by_iterator(iter_cookiejar_uuid):
 #   - httpOnly  (optional)
 #   - text      (optional)
 # # # #
+def get_cookie_all_keys_name():
+    return ['name', 'value', 'domain', 'path', 'httpOnly', 'secure']
 
 def exists_cookie(cookie_uuid):
     if int(r_serv_onion.scard('cookies:map:cookiejar:{}'.format(cookie_uuid))) > 0:
@@ -187,6 +199,9 @@ def get_cookie_value(cookie_uuid, name):
 
 def set_cookie_value(cookie_uuid, name, value):
     r_serv_onion.hset('cookiejar:cookie:{}'.format(cookie_uuid), name, value)
+
+def delete_cookie_value(cookie_uuid, name):
+    r_serv_onion.hdel('cookiejar:cookie:{}'.format(cookie_uuid), name)
 
 def get_cookie_dict(cookie_uuid):
     cookie_dict = {}
@@ -226,7 +241,18 @@ def delete_cookie_from_cookiejar(cookiejar_uuid, cookie_uuid):
     r_serv_onion.srem('cookiejar:{}:cookies:uuid'.format(cookiejar_uuid), cookie_uuid)
     r_serv_onion.srem('cookies:map:cookiejar:{}'.format(cookie_uuid), cookiejar_uuid)
     if not exists_cookie(cookie_uuid):
-        r_serv_onion.delete('cookiejar:cookie:{}'.format(cookies_uuid))
+        r_serv_onion.delete('cookiejar:cookie:{}'.format(cookie_uuid))
+
+def edit_cookie(cookiejar_uuid, cookie_uuid, cookie_dict):
+    # delete old keys
+    for key_name in r_serv_onion.hkeys('cookiejar:cookie:{}'.format(cookie_uuid)):
+        if key_name not in cookie_dict:
+            delete_cookie_value(cookie_uuid, key_name)
+    # add new keys
+    cookie_all_keys_name = get_cookie_all_keys_name()
+    for key_name in cookie_dict:
+        if key_name in cookie_all_keys_name:
+            set_cookie_value(cookie_uuid, key_name, cookie_dict[key_name])
 
 ##  - -  ##
 ## Cookies import ##       # TODO: add browser type ?
@@ -265,7 +291,7 @@ def api_import_cookies_from_json(json_cookies_str, cookiejar_uuid): # # TODO: ad
 
 #### COOKIES API ####
 
-def api_get_cookiejar_cookies_uuid(cookiejar_uuid, user_id):
+def api_verify_basic_cookiejar(cookiejar_uuid, user_id):
     if not exist_cookiejar(cookiejar_uuid):
         return ({'error': 'unknow cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404)
     level = get_cookiejar_level(cookiejar_uuid)
@@ -273,19 +299,26 @@ def api_get_cookiejar_cookies_uuid(cookiejar_uuid, user_id):
         cookie_owner = get_cookiejar_owner(cookiejar_uuid)
         if cookie_owner != user_id:
             return ({'error': 'The access to this cookiejar is restricted'}, 403)
-    res = get_cookiejar_cookies_uuid(cookiejar_uuid)
-    res = {'json_cookies': res[0], 'manual_cookies': res[1]}
-    return (res, 200)
 
 def api_get_cookiejar_cookies(cookiejar_uuid, user_id):
-    if not exist_cookiejar(cookiejar_uuid):
-        return ({'error': 'unknow cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404)
-    level = get_cookiejar_level(cookiejar_uuid)
-    if level == 0: # # TODO: check if user is admin
-        cookie_owner = get_cookiejar_owner(cookiejar_uuid)
-        if cookie_owner != user_id:
-            return ({'error': 'The access to this cookiejar is restricted'}, 403)
+    res = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
+    if res:
+        return res
     res = get_cookiejar_cookies_list(cookiejar_uuid)
+    return (res, 200)
+
+def api_edit_cookiejar_description(user_id, cookiejar_uuid, description):
+    res = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
+    if res:
+        return res
+    edit_cookiejar_description(cookiejar_uuid, description)
+    return ({'cookiejar_uuid': cookiejar_uuid}, 200)
+
+def api_get_cookiejar_cookies_with_uuid(cookiejar_uuid, user_id):
+    res = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
+    if res:
+        return res
+    res = get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=True)
     return (res, 200)
 
 def api_get_cookies_list_select(user_id):
@@ -295,6 +328,39 @@ def api_get_cookies_list_select(user_id):
     for cookies_uuid in get_user_cookiejar(user_id):
         l_cookiejar.append('{} : {}'.format(get_cookiejar_description(cookies_uuid), cookies_uuid))
     return sorted(l_cookiejar)
+
+def api_delete_cookie_from_cookiejar(user_id, cookiejar_uuid, cookie_uuid):
+    res = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
+    if res:
+        return res
+    delete_cookie_from_cookiejar(cookiejar_uuid, cookie_uuid)
+    return ({'cookiejar_uuid': cookiejar_uuid, 'cookie_uuid': cookie_uuid}, 200)
+
+def api_delete_cookie_jar(user_id, cookiejar_uuid):
+    res = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
+    if res:
+        return res
+    delete_cookie_jar(cookiejar_uuid)
+    return ({'cookiejar_uuid': cookiejar_uuid}, 200)
+
+def api_edit_cookie(user_id, cookiejar_uuid, cookie_uuid, cookie_dict):
+    res = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
+    if res:
+        return res
+    if 'name' not in cookie_dict or 'value' not in cookie_dict or cookie_dict['name'] == '':
+        ({'error': 'cookie name or value not provided'}, 400)
+    edit_cookie(cookiejar_uuid, cookie_uuid, cookie_dict)
+    return (get_cookie_dict(cookie_uuid), 200)
+
+def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
+    res = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
+    if res:
+        return res
+    if 'name' not in cookie_dict or 'value' not in cookie_dict or cookie_dict['name'] == '':
+        ({'error': 'cookie name or value not provided'}, 400)
+    res = add_cookie_to_cookiejar(cookiejar_uuid, cookie_dict)
+    return (res, 200)
+
 #### ####
 
 #### CRAWLER TASK ####

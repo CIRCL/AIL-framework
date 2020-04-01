@@ -175,7 +175,7 @@ def save_crawled_screeshot(b64_screenshot, max_size, f_save=False):
         filepath = get_screenshot_filepath(sha256_string)
         if os.path.isfile(filepath):
             #print('File already exist')
-            return False
+            return sha256_string
         # create dir
         dirname = os.path.dirname(filepath)
         if not os.path.exists(dirname):
