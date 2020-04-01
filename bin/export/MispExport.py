@@ -75,23 +75,23 @@ def export_ail_item(item_id):
         tag_misp_object_attributes(l_obj_attr, dict_metadata['tags'])
     return obj
 
-# # TODO: create domain-port-history object
 def export_domain(domain):
     domain_obj = Domain.Domain(domain)
     dict_metadata = domain_obj.get_domain_metadata(tags=True)
-    dict_metadata['ports'] = ['80', '223', '443']
 
     # create domain-ip obj
-    obj = MISPObject('domain-ip', standalone=True)
+    obj = MISPObject('domain-crawled', standalone=True)
     obj.first_seen = dict_metadata['first_seen']
     obj.last_seen = dict_metadata['last_check']
 
     l_obj_attr = []
-    l_obj_attr.append( obj.add_attribute('first-seen', value=dict_metadata['first_seen']) )
-    l_obj_attr.append( obj.add_attribute('last-seen', value=dict_metadata['last_check']) )
     l_obj_attr.append( obj.add_attribute('domain', value=domain) )
-    for port in dict_metadata['ports']:
-        l_obj_attr.append( obj.add_attribute('port', value=port) )
+    dict_all_url = Domain.get_domain_all_url(domain, domain_obj.get_domain_type())
+    for crawled_url in dict_all_url:
+        attribute = obj.add_attribute('url', value=crawled_url)
+        attribute.first_seen = str(dict_all_url[crawled_url]['first_seen'])
+        attribute.last_seen = str(dict_all_url[crawled_url]['last_seen'])
+        l_obj_attr.append( attribute )
 
     # add tags
     if dict_metadata['tags']:

@@ -8,7 +8,7 @@
         <div class="text-center">
           <canvas id="canvas_{{loop.index0}}" style="max-height: 400px; max-width: 100%;"></canvas>
         </div>
-        <div class="card-body">
+        <div class="card-body pb-0">
           <h5 class="card-title">
             <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["id"]}}">
               {{dict_domain["id"]}}
@@ -39,6 +39,9 @@
             {%  endfor %}
           </div>
         </div>
+        {% with obj_type='domain', obj_id=dict_domain["id"], obj_lvl=0%}
+            {% include 'import_export/block_add_user_object_to_export_small.html' %}
+        {% endwith %}
       </div>
 
   {% if loop.index0 % 4 == 3 %}

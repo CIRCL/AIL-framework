@@ -112,7 +112,7 @@ then
 fi
 
 #Update MISP Taxonomies and Galaxies
-python3 -m pip install git+https://github.com/MISP/PyTaxonomies
+python3 -m pip install git+https://github.com/MISP/PyTaxonomies --upgrade
 python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies --upgrade
 
 #Update PyMISP

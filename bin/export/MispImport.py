@@ -190,7 +190,7 @@ def unpack_file(map_uuid_global_id, misp_obj):
 def get_misp_import_fct(map_uuid_global_id, misp_obj):
     if misp_obj.name == 'ail-leak':
         unpack_item_obj(map_uuid_global_id, misp_obj)
-    elif misp_obj.name == 'domain-ip':
+    elif misp_obj.name == 'domain-crawled':
         pass
     elif misp_obj.name == 'pgp-meta':
         unpack_obj_pgp(map_uuid_global_id, misp_obj)

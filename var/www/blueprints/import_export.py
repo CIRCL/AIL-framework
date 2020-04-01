@@ -137,14 +137,10 @@ def export_object_file():
         dict_misp_event_export = None
 
     if l_obj_invalid:
-        for obj_dict in l_obj_to_export:
-            obj_dict['uuid'] = str(uuid.uuid4())
-            obj_dict['type'] = Correlate_object.get_obj_str_type_subtype(obj_dict['type'], obj_dict.get('subtype', None))
-
         # get user saved obj to export # # TODO: # performance
         l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
 
-        for obj_dict in l_obj_invalid:
+        for obj_dict in l_obj_invalid: # set uuid input
             obj_dict['uuid'] = str(uuid.uuid4())
             obj_dict['type'] = Correlate_object.get_obj_str_type_subtype(obj_dict['type'], obj_dict.get('subtype', None))
 
@@ -152,7 +148,6 @@ def export_object_file():
                                 l_obj_invalid=l_obj_invalid, dict_misp_event_export=dict_misp_event_export)
     else:
         if export_to_misp and MispExport.ping_misp():
-            l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
             event = MispExport.create_list_of_objs_to_export(l_obj_to_export, r_type='event')
 
             event_metadata = MispExport.create_misp_event(event, distribution=dict_misp_event_export.get('export_to_misp', None),
@@ -167,7 +162,6 @@ def export_object_file():
                                     l_obj_invalid=[], dict_misp_event_export=[])
         else:
             # get user saved obj to export # # TODO: # performance
-            l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
             json_export = MispExport.create_list_of_objs_to_export(l_obj_to_export)
             export_filename = MispExport.get_export_filename(json_export)
             json_export = MispExport.create_in_memory_file(json_export.to_json())

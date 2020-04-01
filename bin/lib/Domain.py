@@ -327,6 +327,28 @@ def get_all_domain_up_by_type(domain_type):
     else:
         return ({"status": "error", "reason": "Invalid domain type"}, 400)
 
+def get_domain_all_url(domain, domain_type, domain_ports=None):
+    if not domain_ports:
+        domain_ports = get_domain_all_ports(domain, domain_type)
+    all_url = {}
+    for port in domain_ports:
+        for dict_history in get_domain_history_with_status(domain, domain_type, port, add_root_item=True):
+            if dict_history['status']: # domain UP
+                crawled_items = get_domain_items(domain, dict_history['root_item'])
+                for item_id in crawled_items:
+                    item_url = Item.get_item_link(item_id)
+                    item_date = int(Item.get_item_date(item_id))
+                    if item_url:
+                        if item_url not in all_url:
+                            all_url[item_url] = {'first_seen': item_date,'last_seen': item_date}
+                        else: # update first_seen / last_seen
+                            if item_date < all_url[item_url]['first_seen']:
+                                all_url[item_url]['first_seen'] = item_date
+                            if item_date > all_url[item_url]['last_seen']:
+                                all_url[item_url]['last_seen'] = item_date
+    return all_url
+
+
 def get_domain_items(domain, root_item_id):
     dom_item =  get_domain_item_children(domain, root_item_id)
     dom_item.append(root_item_id)
@@ -605,7 +627,7 @@ def get_domain_history(domain, domain_type, port): # TODO: add date_range: from 
     '''
     return r_serv_onion.zrange('crawler_history_{}:{}:{}'.format(domain_type, domain, port), 0, -1, withscores=True)
 
-def get_domain_history_with_status(domain, domain_type, port): # TODO: add date_range: from to + nb_elem
+def get_domain_history_with_status(domain, domain_type, port, add_root_item=False): # TODO: add date_range: from to + nb_elem
     '''
     Retun .
 
@@ -619,14 +641,17 @@ def get_domain_history_with_status(domain, domain_type, port): # TODO: add date_
     history = get_domain_history(domain, domain_type, port)
     for root_item, epoch_val in history:
         epoch_val = int(epoch_val) # force int
+        dict_history = {"epoch": epoch_val, "date": time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(epoch_val))}
         # domain down, root_item==epoch_val
         try:
             int(root_item)
-            status = False
+            dict_history['status'] = False
         # domain up, root_item=str
         except ValueError:
-            status = True
-        l_history.append({"epoch": epoch_val, "date": time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(epoch_val)), "status": status})
+            dict_history['status'] = True
+            if add_root_item:
+                dict_history['root_item'] = root_item
+        l_history.append(dict_history)
     return l_history
 
 def verify_if_domain_exist(domain):
