@@ -187,7 +187,7 @@ class TorSplashCrawler():
                             errback=self.errback_catcher,
                             endpoint='execute',
                             cache_args=['lua_source'],
-                            meta={'father': father, 'current_url': url, 'error_retry' = error_retry},
+                            meta={'father': father, 'current_url': url, 'error_retry': error_retry},
                             args=self.build_request_arg(response.cookiejar)
                         )
                     else:
