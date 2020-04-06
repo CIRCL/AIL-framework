@@ -6,6 +6,7 @@ import sys
 import ssl
 import json
 import time
+import uuid
 
 import redis
 import random
@@ -98,7 +99,7 @@ app.register_blueprint(import_export, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========
-app.config.update(SESSION_COOKIE_NAME='ail_framework_{}'.format(FLASK_PORT))
+app.config.update(SESSION_COOKIE_NAME='ail_framework_{}'.format(uuid.uuid4().int))
 
 # ========= session ========
 app.secret_key = str(random.getrandbits(256))
