@@ -172,7 +172,26 @@ class TorSplashCrawler():
             # LUA ERROR # # TODO: print/display errors
             elif 'error' in response.data:
                 if(response.data['error'] == 'network99'):
-                    print('Connection to proxy refused')
+                    ## splash restart ##
+                    error_retry = request.meta.get('error_retry', 0)
+                    if error_retry < 3:
+                        error_retry += 1
+                        url= request.meta['current_url']
+                        father = request.meta['father']
+
+                        self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
+                        time.sleep(10)
+                        yield SplashRequest(
+                            url,
+                            self.parse,
+                            errback=self.errback_catcher,
+                            endpoint='execute',
+                            cache_args=['lua_source'],
+                            meta={'father': father, 'current_url': url, 'error_retry' = error_retry},
+                            args=self.build_request_arg(response.cookiejar)
+                        )
+                    else:
+                        print('Connection to proxy refused')
                 else:
                     print(response.data['error'])
 
