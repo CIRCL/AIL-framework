@@ -313,6 +313,27 @@ Redis and ARDB overview
 | | |
 | domain_pgpdump_**pgp_type**:**domain** | **key** |
 
+#### SimpleCorrelation:
+##### zset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| s_correl:*correlation name*:all | *object_id* | *nb_seen* |
+| s_correl:date:*correlation name*:*date_day* | *object_id* | *nb_seen |
+
+##### set:
+| Key | Value |
+| ------ | ------ |
+| s_correl:set_*object type*_*correlation name*:*object_id* | *item_id* |
+| *object type*:s_correl:*correlation name*:*object_id* | *correlation_id* |
+
+object type: item + domain
+
+##### hset:
+| Key | Field | Value |
+| ------ | ------ | ------ |
+| 's_correl:*correlation name*:metadata:*obj_id* | first_seen | *first_seen* |
+| 's_correl:*correlation name*:metadata:*obj_id* | last_seen | *last_seen* |
+
 #### Cryptocurrency
 
 Supported cryptocurrency:
