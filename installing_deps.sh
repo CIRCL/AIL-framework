@@ -119,6 +119,10 @@ pip3 install -U pip
 pip3 install 'git+https://github.com/D4-project/BGP-Ranking.git/@7e698f87366e6f99b4d0d11852737db28e3ddc62#egg=pybgpranking&subdirectory=client'
 pip3 install -U -r requirements.txt
 
+# Install dependencies for TwitterMon
+pip3 install pyquery
+pip3 install vaderSentiment
+
 # Pyfaup
 pushd faup/src/lib/bindings/python/
 python3 setup.py install

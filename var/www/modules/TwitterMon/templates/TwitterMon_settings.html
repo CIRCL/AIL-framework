@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<!-- 
+============================================================================================================
+# Author: Alfonso G. Alonso
+# Twitter Monitor for AIL Framework
+# For license information, see LICENSE.TXT
+# ==========================================================================================================
+
+
+# ========================================= TWITTERMON SETTINGS ============================================
+#
+#
+# Loads and sets parameters stored in ./config/TwitterMon.cfg
+# Parameters are used by:
+#  - TweetsImporter
+#  - TwitterAnalyzer
+#
+# ==========================================================================================================
+-->
+
+<html>
+
+<head>
+  <title>TwitterMon - Results</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+<style>
+
+
+
+
+</style>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+<div class="container-fluid">
+<div class="row">
+
+{% include 'twittermon/menu_sidebar.html' %}
+
+<div class="col-12 col-lg-10" id="core_content">
+
+
+       <div class="row">
+           <div class="col-lg-12">
+
+                   <div class="panel-heading">
+                      <div class="row" style="padding:20px">
+                        <strong>TWITTERMON SETTINGS</strong>
+	              </div>		
+                   </div>
+
+                  <div class="panel-body" style="padding:14px">
+
+		    <div class="row"><h5 class="card-title" style="display:inline;padding-bottom:12px">TWEETS IMPORTER</h5></div>
+		    <div class="row"><i class="fas fa-cog fa-1x" style="padding:5px"></i>Maximum time backwards:<input id="TM-maxTimeBW" class="form-control" placeholder="seconds" type="text" style="max-width:90px;margin-left:9px"></div>
+		    <p style="text-align:justify;max-width:55%">This parameter indicates, in seconds, the backward time window that will be used when real-time monitoring is executed. Tweets older than the time established by this time window will be discarded.</p>
+		    <div class="row"><h5 class="card-title" style="display:inline;padding-bottom:12px;padding-top:12px">TWEETS ANALYZER</h5></div>
+                    <div class="row"><i class="fas fa-cog fa-1x" style="padding:5px"></i>E-mail for Tweets translation:<input id="TM-emailTrans" class="form-control" placeholder="Valid e-mail" type="text" style="max-width:300px;margin-left:9px"></div>
+		    <p style="text-align:justify;max-width:55%">The online service http://mymemory.translated.net/, used to translate collected tweets that are not in English (the language used in sentiment analysis), has a translation limitation of 1,000 characters per day, which can be extended to 10,000 if a valid e-mail is provided in the query.</p>
+
+                    <div class="row">
+			     <button id="TM-save-conf" class="btn btn-success" style="margin-left: 10px;"> SAVE </button>
+			     <label id="TM-settingsMsg" style="padding-left:12px;color:red"></label>
+		    </div> <!-- row -->
+              </div> <!-- row -->
+            </div> <!-- panel-body -->
+
+
+    </div><!-- col-lg-12 -->
+   </div><!-- row -->
+
+</div><!-- col-12 col-lg-10 -->
+</div><!-- row -->
+</div><!-- container-fluid -->
+
+<script>
+
+// ================================================================================
+// ============================                 ===================================
+// ============================   LOADING       ===================================
+// ============================                 ===================================
+// ================================================================================
+
+	/* ---------------------------------------------------------------------
+	//
+	// DOCUMENT READY
+	//
+	// -------------------------------------------------------------------- */
+  
+	$(document).ready(function(){
+
+
+		// Set page for AIL
+		// ----------------------------------------
+	
+		activePage = "page-TwitterMon"
+		$("#"+activePage).addClass("active");
+
+		// Bind UI actions to functions
+		// ----------------------------------------
+
+		$('#TM-save-conf').click(saveConfiguration);
+
+		// Get configuration from file
+		// ----------------------------------------
+
+		getConfFromFile();
+
+	});
+
+// ================================================================================
+// ============================                 ===================================
+// ============================   AUXILIARY     ===================================
+// ============================   FUNCTIONS     ===================================
+// ============================                 ===================================
+// ================================================================================
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// UI MANAGEMENT --- INPUT FILTER ---
+	//
+	// -------------------------------------------------------------------- */
+
+
+	function setInputFilter(textbox, inputFilter) {
+  		["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function(event) {
+		    textbox.oldValue = "";
+		    textbox.addEventListener(event, function() {
+		      if (inputFilter(this.value)) {
+		        this.oldValue = this.value;
+		        this.oldSelectionStart = this.selectionStart;
+		        this.oldSelectionEnd = this.selectionEnd;
+		      } else if (this.hasOwnProperty("oldValue")) {
+		        this.value = this.oldValue;
+		        this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+		      }
+		    });
+		  });
+	}
+
+	setInputFilter(document.getElementById("TM-maxTimeBW"), function(value) {
+	  return /^[0-9]*$/i.test(value);
+	});
+
+
+
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// I/O             --- GET CONFIGURATION FROM FILE  ---
+	//
+	// -------------------------------------------------------------------- */
+
+
+
+	function getConfFromFile (){
+
+		$.get("{{ url_for('TwitterMon.get_configuration') }}",function(data){
+
+			confData = data.split(";");
+
+			$("#TM-maxTimeBW").val(confData[0]);
+			$("#TM-emailTrans").val(confData[1]);
+		
+			$("#TM-settingsMsg").text("");
+
+		});
+
+
+	}
+
+
+	/* ---------------------------------------------------------------------
+	//
+	// I/O             --- SAVE CONFIGURATION ---
+	//
+	// -------------------------------------------------------------------- */
+
+
+	function saveConfiguration (){
+
+	        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#TM-emailTrans").val()) == false){
+			$("#TM-settingsMsg").text("Invalid e-mail, please review");
+		}else{
+
+			$("#TM-settingsMsg").text("");
+
+			parameters = $("#TM-maxTimeBW").val() + ";" + $("#TM-emailTrans").val();
+
+			$.get("{{ url_for('TwitterMon.save_configuration') }}",{parameters},function(result){
+	
+				$("#TM-settingsMsg").text(result);
+			});
+		}
+
+	}
+
+// ================================================================================
+// ============================                 ===================================
+// ============================      UI         ===================================
+// ============================   MANAGEMENT    ===================================
+// ============================                 ===================================
+// ================================================================================
+
+   /* ---------------------------------------------------------------------
+   //
+   // UI MANAGEMENT --- TOGGLE SIDEBAR ---
+   //
+   // -------------------------------------------------------------------- */
+
+	function toggle_sidebar(){
+		
+		if($('#nav_menu').is(':visible')){
+			$('#nav_menu').hide();
+			$('#side_menu').removeClass('border-right');
+			$('#side_menu').removeClass('col-lg-2');
+			$('#core_content').removeClass('col-lg-10');
+		}else{
+			$('#nav_menu').show();
+			$('#side_menu').addClass('border-right');
+			$('#side_menu').addClass('col-lg-2');
+			$('#core_content').addClass('col-lg-10');
+		}
+	}
+
+
+</script>
+</body>
+</html>
