@@ -446,8 +446,8 @@ def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit
 
     if auto_crawler:
         try:
-            crawler_time = int(crawler_time)
-            if crawler_time < 0:
+            crawler_delta = int(crawler_delta)
+            if crawler_delta < 0:
                 return ({'error':'invalid delta bettween two pass of the crawler'}, 400)
         except ValueError:
             return ({'error':'invalid delta bettween two pass of the crawler'}, 400)
