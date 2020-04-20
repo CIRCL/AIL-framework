@@ -16,6 +16,10 @@ import argparse
 
 import subprocess
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages')) # # TODO: move other functions
+import git_status
+
+
 UPDATER_FILENAME = os.path.join(os.environ['AIL_BIN'], 'Update.py')
 
 UPDATER_LAST_MODIFICATION = float(os.stat(UPDATER_FILENAME).st_mtime)
@@ -29,6 +33,7 @@ def auto_update_enabled(cfg):
 
 # check if files are modify locally
 def check_if_files_modified():
+    return True
     process = subprocess.run(['git', 'ls-files' ,'-m'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         modified_files = process.stdout
@@ -51,6 +56,9 @@ def repo_is_fork():
         if 'origin	{}'.format(AIL_REPO) in res:
             print('    This repository is a {}clone of {}{}'.format(TERMINAL_BLUE, AIL_REPO, TERMINAL_DEFAULT))
             return False
+        elif 'origin	{}'.format(OLD_AIL_REPO) in res:
+            print('    old AIL repository, Updating remote origin...')
+            git_status.set_default_remote(AIL_REPO, verbose=False)
         else:
             print('    This repository is a {}fork{}'.format(TERMINAL_BLUE, TERMINAL_DEFAULT))
             print()
@@ -354,7 +362,8 @@ if __name__ == "__main__":
     TERMINAL_BLINK = '\33[6m'
     TERMINAL_DEFAULT = '\033[0m'
 
-    AIL_REPO = 'https://github.com/CIRCL/AIL-framework.git'
+    AIL_REPO = 'https://github.com/ail-project/ail-framework'
+    OLD_AIL_REPO = 'https://github.com/CIRCL/AIL-framework.git'
 
     configfile = os.path.join(os.environ['AIL_HOME'], 'configs/update.cfg')
     if not os.path.exists(configfile):
