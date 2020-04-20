@@ -9,6 +9,20 @@ TERMINAL_BLUE = '\33[94m'
 TERMINAL_BLINK = '\33[6m'
 TERMINAL_DEFAULT = '\033[0m'
 
+# set defaut_remote
+def set_default_remote(new_origin_url, verbose=False):
+    process = subprocess.run(['git', 'remote', 'set-url', 'origin', new_origin_url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if process.returncode == 0:
+        res = process.stdout
+        if res == b'':
+            return True
+        else:
+            return False
+    else:
+        if verbose:
+            print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
+        return False
+
 # Check if working directory is clean
 def is_working_directory_clean(verbose=False):
     if verbose:
@@ -135,6 +149,6 @@ if __name__ == "__main__":
     get_last_commit_id_from_local(verbose=True)
     get_last_tag_from_local(verbose=True)
     get_current_branch(verbose=True)
-    print(is_fork('https://github.com/CIRCL/AIL-framework.git'))
+    print(is_fork('https://github.com/ail-project/ail-framework.git'))
     print(is_working_directory_clean())
     get_last_tag_from_remote(verbose=True)
