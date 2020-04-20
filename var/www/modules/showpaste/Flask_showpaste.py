@@ -9,7 +9,7 @@ import json
 import os
 import sys
 import flask
-from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory, redirect, url_for
+from flask import Flask, render_template, jsonify, request, Blueprint, make_response, Response, send_from_directory, redirect, url_for, abort
 
 from Role_Manager import login_admin, login_analyst, login_read_only, no_cache
 from flask_login import login_required
@@ -72,7 +72,11 @@ def showpaste(content_range, requested_path):
 
     vt_enabled = Flask_config.vt_enabled
 
-    paste = Paste.Paste(requested_path)
+    try:
+        paste = Paste.Paste(requested_path)
+    except FileNotFoundError:
+        abort(404)
+
     p_date = str(paste._get_p_date())
     p_date = p_date[6:]+'/'+p_date[4:6]+'/'+p_date[0:4]
     p_source = paste.p_source
