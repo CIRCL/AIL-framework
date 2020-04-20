@@ -1,7 +1,9 @@
 AIL
 ===
 
-<img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="300" />
+<p align="center">
+<img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="250" />
+</p>
 
 <table>
 <tr>
@@ -9,7 +11,7 @@ AIL
   <td><a href="https://github.com/ail-project/ail-framework/releases/latest"><img src="https://img.shields.io/github/release/ail-project/ail-framework/all.svg"></a></td>
 </tr>
   <td>Travis</td>
-  <td><a href="https://travis-ci.org/ail-project/ail-framework"><img src="https://img.shields.io/travis/ail-project/ail-framework.svg" /></a></td>
+  <td><a href="https://travis-ci.com/ail-project/ail-framework"><img src="https://img.shields.io/travis/ail-project/ail-framework.svg" /></a></td>
 </tr>
 <tr>
   <td>Gitter</td>
