@@ -11,7 +11,7 @@ AIL
   <td><a href="https://github.com/ail-project/ail-framework/releases/latest"><img src="https://img.shields.io/github/release/ail-project/ail-framework/all.svg"></a></td>
 </tr>
   <td>Travis</td>
-  <td><a href="https://travis-ci.com/ail-project/ail-framework"><img src="https://img.shields.io/travis/ail-project/ail-framework.svg" /></a></td>
+  <td><a href="https://travis-ci.com/ail-project/ail-framework"><img src="https://travis-ci.com/ail-project/ail-framework.svg?branch=master" /></a></td>
 </tr>
 <tr>
   <td>Gitter</td>
