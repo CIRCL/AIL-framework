@@ -1,13 +1,15 @@
 AIL
 ===
 
+![Logo](./var/www/static/image/ail-project.png?raw=true "AIL logo")
+
 <table>
 <tr>
   <td>Latest Release</td>
-  <td><a href="https://github.com/CIRCL/AIL-framework/releases/latest"><img src="https://img.shields.io/github/release/CIRCL/AIL-framework/all.svg"></a></td>
+  <td><a href="https://github.com/ail-project/ail-framework/releases/latest"><img src="https://img.shields.io/github/release/ail-project/ail-framework/all.svg"></a></td>
 </tr>
   <td>Travis</td>
-  <td><a href="https://travis-ci.org/CIRCL/AIL-framework"><img src="https://img.shields.io/travis/CIRCL/AIL-framework.svg" /></a></td>
+  <td><a href="https://travis-ci.org/ail-project/ail-framework"><img src="https://img.shields.io/travis/ail-project/ail-framework.svg" /></a></td>
 </tr>
 <tr>
   <td>Gitter</td>
@@ -15,11 +17,11 @@ AIL
 </tr>
 <tr>
   <td>Contributors</td>
-  <td><img src="https://img.shields.io/github/contributors/CIRCL/AIL-Framework.svg" /></td>
+  <td><img src="https://img.shields.io/github/contributors/ail-project/ail-framework.svg" /></td>
 </tr>
 <tr>
   <td>License</td>
-  <td><img src="https://img.shields.io/github/license/CIRCL/AIL-Framework.svg" /></td>
+  <td><img src="https://img.shields.io/github/license/ail-project/ail-framework.svg" /></td>
 </tr>
 </table>
 
@@ -98,7 +100,7 @@ Installation Notes
 
 In order to use AIL combined with **ZFS** or **unprivileged LXC** it's necessary to disable Direct I/O in `$AIL_HOME/configs/6382.conf` by changing the value of the directive `use_direct_io_for_flush_and_compaction` to `false`.
 
-Tor installation instructions can be found in the [HOWTO](https://github.com/CIRCL/AIL-framework/blob/master/HOWTO.md#installationconfiguration)
+Tor installation instructions can be found in the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#installationconfiguration)
 
 Starting AIL
 --------------------------
