@@ -81,7 +81,7 @@ Installation
 
 Type these command lines for a fully automated installation and start AIL framework:
 ```bash
-git clone https://github.com/CIRCL/AIL-framework.git
+git clone https://github.com/ail-project/ail-framework.git
 cd AIL-framework
 ./installing_deps.sh
 
@@ -220,11 +220,11 @@ License
 
 ```
     Copyright (C) 2014 Jules Debra
-    Copyright (C) 2014-2019 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
-    Copyright (c) 2014-2019 Raphaël Vinot
-    Copyright (c) 2014-2019 Alexandre Dulaunoy
-    Copyright (c) 2016-2019 Sami Mokaddem
-    Copyright (c) 2018-2019 Thirion Aurélien
+    Copyright (C) 2014-2020 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014-2020 Raphaël Vinot
+    Copyright (c) 2014-2020 Alexandre Dulaunoy
+    Copyright (c) 2016-2020 Sami Mokaddem
+    Copyright (c) 2018-2020 Thirion Aurélien
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by

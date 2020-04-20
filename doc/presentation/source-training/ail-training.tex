@@ -210,7 +210,7 @@ ation-leaks-analysis-and-gdpr.pdf}}.
 
         \node[simplenode] (pastebin) at (0, 0) {\includegraphics[scale=0.20]{images/pastebin.png}};
         \node[simplenode] (leaks) at (4, -2) {Other leaks};
-        \node[simplenode] (ail) at (4, 0) {\includegraphics[scale=0.3]{images/circl-small.png}};
+        \node[simplenode] (ail) at (4, 0) {\includegraphics[scale=0.14]{images/ail-project.png}};
         \node[simplenode] (res) at (8, 0) {\includegraphics[scale=0.1]{images/alert.png}};
 
         \begin{scope}
@@ -412,11 +412,11 @@ response platforms
 \begin{frame}
     \frametitle{threat sharing and incident response platforms}
     \centerline{
-        \includegraphics[scale=0.20]{images/circl-small.png}
+        \includegraphics[scale=0.14]{images/ail-project.png}
         \hskip 2em 
         $\longrightarrow$
         \hskip 2em
-        \includegraphics[scale=0.7]{images/MISP.png}
+        \includegraphics[scale=0.8]{images/MISP.png}
     }
 
     \vskip 2em
@@ -427,11 +427,11 @@ response platforms.
 \begin{frame}
     \frametitle{threat sharing and incident response platforms}
     \centerline{
-        \includegraphics[scale=0.20]{images/circl-small.png}
+        \includegraphics[scale=0.12]{images/ail-project.png}
         \hskip 2em
         $\longrightarrow$
         \hskip 2em
-        \includegraphics[scale=0.7]{images/MISP.png}
+        \includegraphics[scale=0.8]{images/MISP.png}
     }
 
     \vskip 2em
@@ -736,7 +736,7 @@ response platforms.
     \frametitle{Setting up AIL-Framework from source or virtual machine}
     \begin{tcblisting}{colback=black!85,coltext=green,listing only,
         title=Setting up AIL-Framework from source, fonttitle=\bfseries}
-git clone https://github.com/CIRCL/AIL-framework.git
+git clone https://github.com/ail-project/ail-framework.git
 cd AIL-framework
 ./installing_deps.sh
 \end{tcblisting}
@@ -1217,7 +1217,6 @@ if __name__ == '__main__':
             \end{itemize}
             \item Crawled items
             \begin{itemize}
-            	\item add screenshot correlation
             	\item duplicate crawled domains
             	\item tor indexer
             	\item crawler cookie authentication
