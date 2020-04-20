@@ -85,19 +85,9 @@ if [ ! -f configs/core.cfg ]; then
     cp configs/core.cfg.sample configs/core.cfg
 fi
 
-if [ -z "$VIRTUAL_ENV" ]; then
+# create AILENV + intall python packages
+./install_virtualenv.sh
 
-    virtualenv -p python3 AILENV
-
-    echo export AIL_HOME=$(pwd) >> ./AILENV/bin/activate
-    echo export AIL_BIN=$(pwd)/bin/ >> ./AILENV/bin/activate
-    echo export AIL_FLASK=$(pwd)/var/www/ >> ./AILENV/bin/activate
-    echo export AIL_REDIS=$(pwd)/redis/src/ >> ./AILENV/bin/activate
-    echo export AIL_ARDB=$(pwd)/ardb/src/ >> ./AILENV/bin/activate
-
-    . ./AILENV/bin/activate
-
-fi
 
 pushd ${AIL_BIN}helper/gen_cert
 ./gen_root.sh
@@ -109,31 +99,7 @@ popd
 cp ${AIL_BIN}helper/gen_cert/server.crt ${AIL_FLASK}server.crt
 cp ${AIL_BIN}helper/gen_cert/server.key ${AIL_FLASK}server.key
 
-pushd ${AIL_FLASK}
-./update_thirdparty.sh
-popd
-
 mkdir -p $AIL_HOME/PASTES
-
-pip3 install -U pip
-pip3 install 'git+https://github.com/D4-project/BGP-Ranking.git/@7e698f87366e6f99b4d0d11852737db28e3ddc62#egg=pybgpranking&subdirectory=client'
-pip3 install -U -r requirements.txt
-
-# Pyfaup
-pushd faup/src/lib/bindings/python/
-python3 setup.py install
-popd
-
-# Py tlsh
-pushd tlsh/py_ext
-python3 setup.py build
-python3 setup.py install
-
-# Download the necessary NLTK corpora and sentiment vader
-HOME=$(pwd) python3 -m textblob.download_corpora
-python3 -m nltk.downloader vader_lexicon
-python3 -m nltk.downloader punkt
-popd
 
 #Create the file all_module and update the graph in doc
 $AIL_HOME/doc/generate_modules_data_flow_graph.sh
