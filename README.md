@@ -1,7 +1,7 @@
 AIL
 ===
 
-![Logo](./var/www/static/image/ail-project.png?raw=true "AIL logo")
+<img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="300" />
 
 <table>
 <tr>
