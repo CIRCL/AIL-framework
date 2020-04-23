@@ -107,7 +107,9 @@ $AIL_HOME/doc/generate_modules_data_flow_graph.sh
 #### DB SETUP ####
 
 # init update version
+pushd ${AIL_HOME}
 git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
+popd
 
 # LAUNCH ARDB
 bash ${AIL_BIN}LAUNCH.sh -lav &
