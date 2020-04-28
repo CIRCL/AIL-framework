@@ -24,6 +24,10 @@ import Paste
 import Tag
 import Term
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import'))
+import importer
+
+
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required
 
@@ -587,6 +591,18 @@ def import_item_uuid():
         return Response(json.dumps(data[0]), mimetype='application/json'), data[1]
 
     return Response(json.dumps({'status': 'error', 'reason': 'Invalid response'}), mimetype='application/json'), 400
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/import/json/item", methods=['POST'])
+@token_required('user')
+def import_json_item():
+
+    data_json = request.get_json()
+    res = importer.api_import_json_item(data_json)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
 # ========= REGISTRATION =========
 app.register_blueprint(restApi, url_prefix=baseUrl)

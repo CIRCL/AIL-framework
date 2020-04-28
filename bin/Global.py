@@ -119,6 +119,12 @@ if __name__ == '__main__':
 
             # decode compressed base64
             decoded = base64.standard_b64decode(gzip64encoded)
+            try:
+                new_file_content = gunzip_bytes_obj(decoded)
+            except OSError as e:
+                print('{}, {}'.format(filename, e))
+                publisher.warning('Global; Invalid Gzip file: {}, {}'.format(filename, e))
+                continue
 
             # check if file exist
             if os.path.isfile(filename):
@@ -143,7 +149,6 @@ if __name__ == '__main__':
 
                 curr_file_md5 = hashlib.md5(curr_file_content).hexdigest()
 
-                new_file_content = gunzip_bytes_obj(decoded)
                 new_file_md5 = hashlib.md5(new_file_content).hexdigest()
 
                 if new_file_md5 != curr_file_md5:

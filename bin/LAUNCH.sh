@@ -148,6 +148,11 @@ function launching_scripts {
     sleep 0.1
     echo -e $GREEN"\t* Launching scripts"$DEFAULT
 
+    # LAUNCH CORE MODULE
+    screen -S "Script_AIL" -X screen -t "JSON_importer" bash -c "cd ${AIL_BIN}/import; ${ENV_PY} ./JSON_importer.py; read x"
+    sleep 0.1
+
+
     screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModulesInformationV2.py -k 0 -c 1; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mixer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Mixer.py; read x"

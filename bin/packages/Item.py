@@ -15,6 +15,7 @@ import Cryptocurrency
 import Pgp
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import item_basic
 import ConfigLoader
 import Correlate_object
 import Decoded
@@ -31,11 +32,7 @@ screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_co
 config_loader = None
 
 def exist_item(item_id):
-    filename = get_item_filepath(item_id)
-    if os.path.isfile(filename):
-        return True
-    else:
-        return False
+    return item_basic.exist_item(item_id)
 
 def get_basename(item_id):
     return os.path.basename(item_id)
@@ -44,8 +41,7 @@ def get_item_id(full_path):
     return full_path.replace(PASTES_FOLDER, '', 1)
 
 def get_item_filepath(item_id):
-    filename = os.path.join(PASTES_FOLDER, item_id)
-    return os.path.realpath(filename)
+    return item_basic.get_item_filepath(item_id)
 
 def get_item_date(item_id, add_separator=False):
     l_directory = item_id.split('/')
