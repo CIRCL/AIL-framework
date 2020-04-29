@@ -121,7 +121,7 @@ if __name__ == '__main__':
             decoded = base64.standard_b64decode(gzip64encoded)
             try:
                 new_file_content = gunzip_bytes_obj(decoded)
-            except OSError as e:
+            except Exception as e:
                 print('{}, {}'.format(filename, e))
                 publisher.warning('Global; Invalid Gzip file: {}, {}'.format(filename, e))
                 continue
