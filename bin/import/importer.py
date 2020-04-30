@@ -104,7 +104,7 @@ def api_import_json_item(data_json):
         return ({'status': 'error', 'reason': 'Malformed JSON'}, 400)
 
     # # TODO: add JSON verification
-    res = add_json_to_json_queue(item_json)
+    res = add_json_to_json_queue(data_json)
     if res:
         return ({'status': 'error'}, 400)
     return ({'status': 'success'}, 200)
