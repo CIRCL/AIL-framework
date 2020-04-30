@@ -32,7 +32,10 @@ class Ail_feeder_twitter(Default_json):
         # use twitter timestamp ?
         item_date = datetime.date.today().strftime("%Y/%m/%d")
         item_id = str(self.json_item['meta']['twitter:url-extracted'])
-        item_id = '{}{}.gz'.format(file_name_paste[:215], str(uuid.uuid4()))
+        if len(item_id) > 215:
+            item_id = '{}{}.gz'.format(item_id[:215], str(uuid.uuid4()))
+        else:
+            item_id = '{}{}.gz'.format(item_id, str(uuid.uuid4()))
         return os.path.join('urlextract', item_date, item_id) + '.gz'
 
     # # TODO:
