@@ -81,7 +81,7 @@ def get_json_source(json_item):
 def process_json(importer_obj, process):
     item_id = importer_obj.get_item_id()
     if 'meta' in importer_obj.get_json_file():
-        importer_obj.process_json_meta(process)
+        importer_obj.process_json_meta(process, item_id)
 
     # send data to queue
     send_item_to_ail_queue(item_id, importer_obj.get_item_gzip64encoded_content(), importer_obj.get_feeder_name(), process)

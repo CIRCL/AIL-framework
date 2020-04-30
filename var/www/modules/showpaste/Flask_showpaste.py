@@ -22,6 +22,7 @@ import requests
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Tag
+import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import Domain
@@ -229,6 +230,8 @@ def showpaste(content_range, requested_path):
     else:
         crawler_metadata['get_metadata'] = False
 
+    item_parent = Item.get_item_parent(requested_path)
+
     if Flask_config.pymisp is False:
         misp = False
     else:
@@ -256,7 +259,7 @@ def showpaste(content_range, requested_path):
         hive_url = hive_case_url.replace('id_here', hive_case)
 
     return render_template("show_saved_paste.html", date=p_date, bootstrap_label=bootstrap_label, active_taxonomies=active_taxonomies, active_galaxies=active_galaxies, list_tags=list_tags, source=p_source, encoding=p_encoding, language=p_language, size=p_size, mime=p_mime, lineinfo=p_lineinfo, content=p_content, initsize=len(p_content), duplicate_list = p_duplicate_list, simil_list = p_simil_list, hashtype_list = p_hashtype_list, date_list=p_date_list,
-                            crawler_metadata=crawler_metadata, tags_safe=tags_safe,
+                            crawler_metadata=crawler_metadata, tags_safe=tags_safe, item_parent=item_parent,
                             l_64=l_64, vt_enabled=vt_enabled, misp=misp, hive=hive, misp_eventid=misp_eventid, misp_url=misp_url, hive_caseid=hive_caseid, hive_url=hive_url)
 
 def get_item_basic_info(item):
@@ -373,6 +376,8 @@ def show_item_min(requested_path , content_range=0):
     else:
         crawler_metadata['get_metadata'] = False
 
+    item_parent = Item.get_item_parent(requested_path)
+
     misp_event = r_serv_metadata.get('misp_events:' + requested_path)
     if misp_event is None:
         misp_eventid = False
@@ -391,6 +396,7 @@ def show_item_min(requested_path , content_range=0):
 
     return render_template("show_saved_item_min.html", bootstrap_label=bootstrap_label, content=item_content,
                             item_basic_info=item_basic_info, item_info=item_info,
+                            item_parent=item_parent,
                             initsize=len(item_content),
                             hashtype_list = p_hashtype_list,
                             crawler_metadata=crawler_metadata,

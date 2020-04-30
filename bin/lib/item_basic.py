@@ -23,3 +23,11 @@ def exist_item(item_id):
 def get_item_filepath(item_id):
     filename = os.path.join(PASTES_FOLDER, item_id)
     return os.path.realpath(filename)
+
+def add_item_parent(item_parent, item_id):
+    if not exist_item(item_parent):
+        return False
+    else:
+        r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'father', item_parent)
+        r_serv_metadata.sadd('paste_children:{}'.format(item_parent), item_id)
+        return True

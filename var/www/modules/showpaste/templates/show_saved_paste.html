@@ -198,6 +198,12 @@
           </tbody>
         </table>
 
+        {% if item_parent %}
+          <div>
+            <a href="{{ url_for('showsavedpastes.showsavedpaste')}}?paste={{item_parent}}" target="_blank">{{item_parent}}</a>
+          </div>
+        {% endif %}
+
         <div>
           {% with obj_type='item', obj_id=request.args.get('paste'), obj_lvl=0%}
             {% include 'import_export/block_add_user_object_to_export.html' %}

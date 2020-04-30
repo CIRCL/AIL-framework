@@ -44,6 +44,9 @@ class Default_json(object):
         '''
         return self.json_item
 
+    def get_json_meta(self):
+        return self.json_item['meta']
+
     def get_feeder_uuid(self):
         pass
 
@@ -62,7 +65,7 @@ class Default_json(object):
         return os.path.join(self.get_feeder_name(), item_date, str(uuid.uuid4())) + '.gz'
 
     ## OVERWRITE ME ##
-    def process_json_meta(self, process):
+    def process_json_meta(self, process, item_id):
         '''
         Process JSON meta filed.
         '''

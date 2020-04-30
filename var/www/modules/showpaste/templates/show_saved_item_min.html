@@ -71,6 +71,12 @@
     </div>
   </div>
 
+  {% if item_parent %}
+    <div class="list-group" id="item_parent">
+      <a href="{{ url_for('showsavedpastes.showsavedpaste')}}?paste={{item_parent}}" target="_blank">{{item_parent}}</a>
+    </div>
+  {% endif %}
+
   {% if misp_eventid %}
     <div class="list-group" id="misp_event">
       <li class="list-group-item active">MISP Events already Created</li>

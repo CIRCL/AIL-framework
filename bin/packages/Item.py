@@ -284,8 +284,14 @@ def get_domain(item_id):
     item_id = item_id[-1]
     return item_id[:-36]
 
+def get_item_parent(item_id):
+    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'father')
+
 def get_item_children(item_id):
     return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))
+
+def add_item_parent(item_parent, item_id):
+    return item_basic.add_item_parent(item_parent, item_id)
 
 def get_item_link(item_id):
     return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'real_link')
@@ -305,7 +311,6 @@ def get_item_har_name(item_id):
 
 def get_item_har(har_path):
     pass
-
 
 def get_item_filename(item_id):
     # Creating the full filepath

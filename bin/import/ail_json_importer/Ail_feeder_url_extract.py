@@ -12,8 +12,8 @@ import json
 import sys
 import datetime
 
-# sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-# import item_basic
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import item_basic
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import', 'ail_json_importer'))
 from Default_json import Default_json
@@ -39,8 +39,16 @@ class Ail_feeder_twitter(Default_json):
         return os.path.join('urlextract', item_date, item_id) + '.gz'
 
     # # TODO:
-    def process_json_meta(self, process):
+    def process_json_meta(self, process, item_id):
         '''
         Process JSON meta filed.
         '''
-        return None
+        json_meta = self.get_json_meta()
+
+        # # TODO: change me
+        parent_type = 'twitter'
+        item_parent = json_meta['parent:twitter:tweet_id']
+        parent_date = datetime.date.today().strftime("%Y/%m/%d")
+        item_parent = os.path.join('twitter', parent_date, item_parent) + '.gz'
+
+        item_basic.add_item_parent(item_parent, item_id)

@@ -34,8 +34,8 @@ class Ail_feeder_twitter(Default_json):
         item_id = str(self.json_item['meta']['twitter:tweet_id'])
         return os.path.join('twitter', item_date, item_id) + '.gz'
 
-    # # TODO: 
-    def process_json_meta(self, process):
+    # # TODO:
+    def process_json_meta(self, process, item_id):
         '''
         Process JSON meta filed.
         '''
