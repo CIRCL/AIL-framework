@@ -48,7 +48,7 @@ class Ail_feeder_urlextract(Default_json):
 
         # # TODO: change me
         parent_type = 'twitter'
-        item_parent = json_meta['parent:twitter:tweet_id']
+        item_parent = str(json_meta['parent:twitter:tweet_id'])
         parent_date = datetime.date.today().strftime("%Y/%m/%d")
         item_parent = os.path.join('twitter', parent_date, item_parent) + '.gz'
 
