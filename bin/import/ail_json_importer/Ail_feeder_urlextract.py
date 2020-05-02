@@ -11,6 +11,7 @@ import os
 import json
 import sys
 import datetime
+import uuid
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import item_basic
