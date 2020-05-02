@@ -18,8 +18,8 @@ import item_basic
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import', 'ail_json_importer'))
 from Default_json import Default_json
 
-class Ail_feeder_twitter(Default_json):
-    """Twitter Feeder functions"""
+class Ail_feeder_urlextract(Default_json):
+    """urlextract Feeder functions"""
 
     def __init__(self, name, json_item):
         super().__init__(name, json_item)
