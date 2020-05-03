@@ -33,11 +33,17 @@ class Ail_feeder_urlextract(Default_json):
         # use twitter timestamp ?
         item_date = datetime.date.today().strftime("%Y/%m/%d")
         item_id = str(self.json_item['meta']['twitter:url-extracted'])
+        item_id = item_id.split('//')
+        if len(item_id) > 1:
+            item_id = ''.join(item_id[1:])
+        else:
+            item_id = item_id[0]
+        item_id = item_id.replace('/', '_')
         if len(item_id) > 215:
             item_id = '{}{}.gz'.format(item_id[:215], str(uuid.uuid4()))
         else:
             item_id = '{}{}.gz'.format(item_id, str(uuid.uuid4()))
-        return os.path.join('urlextract', item_date, item_id) + '.gz'
+        return os.path.join('urlextract', item_date, item_id)
 
     # # TODO:
     def process_json_meta(self, process, item_id):

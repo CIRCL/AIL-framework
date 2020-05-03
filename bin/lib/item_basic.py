@@ -11,6 +11,8 @@ config_loader = ConfigLoader.ConfigLoader()
 # get and sanityze PASTE DIRECTORY
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 PASTES_FOLDER = os.path.join(os.path.realpath(PASTES_FOLDER), '')
+
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
 def exist_item(item_id):
