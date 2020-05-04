@@ -27,12 +27,11 @@ def is_luhn_valid(card_number):
     return (sum(r[0::2]) + sum(sum(divmod(d*2, 10)) for d in r[1::2])) % 10 == 0
 
 
-def checking_MX_record(r_serv, adress_set, addr_dns):
+def checking_MX_record(r_serv, MXdomains, addr_dns):
     """Check if emails MX domains are responding.
 
     :param r_serv: -- Redis connexion database
     :param adress_set: -- (set) This is a set of emails adress
-    :param adress_set: -- (str) This is a server dns address
     :return: (int) Number of adress with a responding and valid MX domains
 
     This function will split the email adress and try to resolve their domains
@@ -40,15 +39,10 @@ def checking_MX_record(r_serv, adress_set, addr_dns):
 
     """
 
-    #remove duplicate
-    adress_set = list(set(adress_set))
-
     score = 0
-    num = len(adress_set)
     WalidMX = set([])
     validMX = {}
-    # Transforming the set into a string
-    MXdomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", str(adress_set).lower())
+    num = len(MXdomains)
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [addr_dns]
     resolver.timeout = 5

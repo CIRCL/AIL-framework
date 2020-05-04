@@ -23,6 +23,20 @@ from pyfaup.faup import Faup
 
 from Helper import Process
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+import Item
+
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
+max_execution_time = 30
+
 if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
@@ -35,7 +49,7 @@ if __name__ == "__main__":
     addr_dns = p.config.get("Mail", "dns")
 
     # REDIS #
-    r_serv2 = redis.StrictRedis(
+    r_serv_cache = redis.StrictRedis(
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),
         db=p.config.getint("Redis_Cache", "db"),
@@ -52,23 +66,53 @@ if __name__ == "__main__":
 
     # FIXME For retro compatibility
     channel = 'mails_categ'
-
-    message = p.get_from_set()
-    prec_filename = None
+    prec_item_id = None
 
     # Log as critical if there are more that that amout of valid emails
     is_critical = 10
 
+    max_execution_time = 60
     email_regex = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
     MX_values = None
     while True:
-        if message is not None:
-            filename, score = message.split()
+        message = p.get_from_set()
 
-            if prec_filename is None or filename != prec_filename:
-                PST = Paste.Paste(filename)
-                MX_values = lib_refine.checking_MX_record(
-                    r_serv2, PST.get_regex(email_regex), addr_dns)
+        if message is not None:
+            item_id, score = message.split()
+
+            if prec_item_id is None or item_id != prec_item_id:
+                PST = Paste.Paste(item_id)
+
+                # max execution time on regex
+                signal.alarm(max_execution_time)
+                try:
+                    l_mails = re.findall(email_regex, Item.get_item_content())
+                except TimeoutException:
+                    p.incr_module_timeout_statistic() # add encoder type
+                    err_mess = "Mail: processing timeout: {}".format(item_id)
+                    print(err_mess)
+                    publisher.info(err_mess)
+                    continue
+                else:
+                    signal.alarm(0)
+
+                l_mails = list(set(l_mails))
+
+                # max execution time on regex
+                signal.alarm(max_execution_time)
+                try:
+                    # Transforming the set into a string
+                    MXdomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", str(l_mails).lower())
+                except TimeoutException:
+                    p.incr_module_timeout_statistic() # add encoder type
+                    err_mess = "Mail: processing timeout: {}".format(item_id)
+                    print(err_mess)
+                    publisher.info(err_mess)
+                    continue
+                else:
+                    signal.alarm(0)
+
+                MX_values = lib_refine.checking_MX_record(r_serv_cache, MXdomains, addr_dns)
 
                 if MX_values[0] >= 1:
 
@@ -82,9 +126,9 @@ if __name__ == "__main__":
                     if MX_values[0] > is_critical:
                         publisher.warning(to_print)
                         #Send to duplicate
-                        p.populate_set_out(filename, 'Duplicate')
+                        p.populate_set_out(item_id, 'Duplicate')
 
-                        msg = 'infoleak:automatic-detection="mail";{}'.format(filename)
+                        msg = 'infoleak:automatic-detection="mail";{}'.format(item_id)
                         p.populate_set_out(msg, 'Tags')
 
                         #create country statistics
@@ -108,11 +152,9 @@ if __name__ == "__main__":
                     print('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date))
                     p.populate_set_out('mail;{};{};{}'.format(MX_values[1][mail], mail, PST.p_date), 'ModuleStats')
 
-            prec_filename = filename
+            prec_item_id = item_id
 
         else:
             publisher.debug("Script Mails is Idling 10s")
             print('Sleeping')
             time.sleep(10)
-
-        message = p.get_from_set()
