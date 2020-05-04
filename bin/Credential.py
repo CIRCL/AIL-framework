@@ -148,8 +148,20 @@ if __name__ == "__main__":
             p.populate_set_out(msg, 'Tags')
 
             #Put in form, count occurences, then send to moduleStats
+            signal.alarm(max_execution_time)
+            try:
+                site_occurence = re.findall(regex_site_for_stats, content)
+            except TimeoutException:
+                p.incr_module_timeout_statistic()
+                err_mess = "Credential: site occurence, processing timeout: {}".format(item_id)
+                print(err_mess)
+                publisher.info(err_mess)
+                site_occurence = []
+            else:
+                signal.alarm(0)
+
             creds_sites = {}
-            site_occurence = re.findall(regex_site_for_stats, content)
+
             for site in site_occurence:
                 site_domain = site[1:-1]
                 if site_domain in creds_sites.keys():
