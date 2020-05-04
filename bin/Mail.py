@@ -89,7 +89,7 @@ if __name__ == "__main__":
                 # max execution time on regex
                 signal.alarm(max_execution_time)
                 try:
-                    l_mails = re.findall(email_regex, Item.get_item_content())
+                    l_mails = re.findall(email_regex, Item.get_item_content(item_id))
                 except TimeoutException:
                     p.incr_module_timeout_statistic() # add encoder type
                     err_mess = "Mail: processing timeout: {}".format(item_id)
