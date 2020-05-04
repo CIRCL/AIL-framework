@@ -11,6 +11,8 @@ It apply mail regexes on paste content and warn if above a threshold.
 
 """
 
+import os
+import sys
 import redis
 import time
 import datetime
