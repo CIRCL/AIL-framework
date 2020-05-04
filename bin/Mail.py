@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # Log as critical if there are more that that amout of valid emails
     is_critical = 10
 
-    max_execution_time = 60
+    max_execution_time = 30
     email_regex = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
     MX_values = None
     while True:
