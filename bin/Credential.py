@@ -33,6 +33,17 @@ import re
 import redis
 from pyfaup.faup import Faup
 
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
+max_execution_time = 30
+
 #split username with spec. char or with upper case, distinguish start with upper
 REGEX_CRED = "[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+"
 REDIS_KEY_NUM_USERNAME = 'uniqNumForUsername'
@@ -85,13 +96,38 @@ if __name__ == "__main__":
 
         paste = Paste.Paste(filepath)
         content = paste.get_p_content()
-        creds = set(re.findall(regex_cred, content))
+
+        item_id = filepath
+
+        # max execution time on regex
+        signal.alarm(max_execution_time)
+        try:
+            creds = set(re.findall(regex_cred, content))
+        except TimeoutException:
+            p.incr_module_timeout_statistic() # add encoder type
+            err_mess = "Credential: processing timeout: {}".format(item_id)
+            print(err_mess)
+            publisher.info(err_mess)
+            continue
+        else:
+            signal.alarm(0)
 
         if len(creds) == 0:
             continue
 
-        sites= re.findall(regex_web, content) #Use to count occurences
-        sites_set = set(re.findall(regex_web, content))
+        signal.alarm(max_execution_time)
+        try:
+            sites = re.findall(regex_web, content) #Use to count occurences
+        except TimeoutException:
+            p.incr_module_timeout_statistic()
+            err_mess = "Credential: site, processing timeout: {}".format(item_id)
+            print(err_mess)
+            publisher.info(err_mess)
+            sites = []
+        else:
+            signal.alarm(0)
+
+        sites_set = set(sites)
 
         message = 'Checked {} credentials found.'.format(len(creds))
         if sites_set:
