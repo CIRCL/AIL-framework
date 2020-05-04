@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import dns.resolver
+import dns.exception
 
 from pubsublogger import publisher
 
@@ -45,8 +46,8 @@ def checking_MX_record(r_serv, MXdomains, addr_dns):
     num = len(MXdomains)
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [addr_dns]
-    resolver.timeout = 5
-    resolver.lifetime = 2
+    resolver.timeout = 5.0
+    resolver.lifetime = 2.0
     if MXdomains != []:
 
             for MXdomain in MXdomains:
@@ -90,8 +91,8 @@ def checking_MX_record(r_serv, MXdomains, addr_dns):
                     publisher.debug('The Label is too long')
                     print('The Label is too long')
 
-                except dns.resolver.Timeout:
-                    print('timeout')
+                except dns.exception.Timeout:
+                    print('dns timeout')
                     r_serv.setex(MXdomain, 1, timedelta(days=1))
 
                 except Exception as e:
@@ -109,8 +110,8 @@ def checking_A_record(r_serv, domains_set):
     WalidA = set([])
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [dns_server]
-    resolver.timeout = 5
-    resolver.lifetime = 2
+    resolver.timeout = 5.0
+    resolver.lifetime = 2.0
 
     for Adomain in domains_set:
         try:
