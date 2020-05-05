@@ -15,7 +15,7 @@ AIL
 </tr>
 <tr>
   <td>Gitter</td>
-  <td><a href="https://gitter.im/SteveClement/AIL-framework?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/SteveClement/AIL-framework.svg" /></a></td>
+  <td><a href="https://gitter.im/ail-project/?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/ail-project.svg" /></a></td>
 </tr>
 <tr>
   <td>Contributors</td>
