@@ -12,8 +12,8 @@ import json
 import sys
 import datetime
 
-# sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-# import item_basic
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import item_basic
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import', 'ail_json_importer'))
 from Default_json import Default_json
@@ -39,4 +39,6 @@ class Ail_feeder_twitter(Default_json):
         '''
         Process JSON meta filed.
         '''
+        twitter_id = str(self.json_item['meta']['twitter:tweet_id'])
+        item_basic.add_map_obj_id_item_id(twitter_id, item_id, 'twitter_id')
         return None
