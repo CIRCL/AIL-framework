@@ -108,6 +108,8 @@ $AIL_HOME/doc/generate_modules_data_flow_graph.sh
 
 # init update version
 pushd ${AIL_HOME}
+# shallow clone
+git fetch --tags
 git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
 echo "AIL current version:"
 git describe --abbrev=0 --tags
