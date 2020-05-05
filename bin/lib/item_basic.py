@@ -29,7 +29,7 @@ def get_item_filepath(item_id):
 def add_item_parent_by_parent_id(parent_type, parent_id, item_id):
     parent_item_id = get_obj_id_item_id(parent_type, parent_id)
     if parent_item_id:
-        add_item_parent(item_parent, item_id)
+        add_item_parent(parent_item_id, item_id)
 
 def add_item_parent(parent_item_id, item_id):
     if not exist_item(parent_item_id):
