@@ -46,10 +46,10 @@ def get_json_importer_list():
 
 def add_json_to_json_queue(json_item):
     json_item = json.dumps(json_item)
-    r_serv_db.sadd('importer:json:item', json_item)
+    r_serv_db.rpush('importer:json:item', json_item)
 
 def get_json_item_to_import():
-    return r_serv_db.spop('importer:json:item')
+    return r_serv_db.lpop('importer:json:item')
 
 def get_json_receiver_class(feeder_name_in):
     global importer_list

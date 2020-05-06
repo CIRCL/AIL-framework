@@ -32,12 +32,9 @@ def add_item_parent_by_parent_id(parent_type, parent_id, item_id):
         add_item_parent(parent_item_id, item_id)
 
 def add_item_parent(parent_item_id, item_id):
-    if not exist_item(parent_item_id):
-        return False
-    else:
-        r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'father', parent_item_id)
-        r_serv_metadata.sadd('paste_children:{}'.format(parent_item_id), item_id)
-        return True
+    r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'father', parent_item_id)
+    r_serv_metadata.sadd('paste_children:{}'.format(parent_item_id), item_id)
+    return True
 
 def add_map_obj_id_item_id(obj_id, item_id, obj_type):
     if obj_type == 'twitter_id':
