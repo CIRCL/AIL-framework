@@ -122,7 +122,7 @@ def search_telegram(item_id, item_date, item_content):
 
     for telegram_link in telegram_links:
         res = extract_data_from_telegram_url(item_id, item_date, telegram_link[0], telegram_link[1])
-        if res;
+        if res:
             invite_code_found = True
 
     # tg links
@@ -138,7 +138,7 @@ def search_telegram(item_id, item_date, item_content):
 
     for tg_link in tg_links:
         res = extract_data_from_tg_url(item_id, item_date, tg_link)
-        if res;
+        if res:
             invite_code_found = True
 
     if invite_code_found:
