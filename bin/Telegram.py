@@ -118,8 +118,12 @@ def search_telegram(item_id, item_date, item_content):
     else:
         signal.alarm(0)
 
+    invite_code_found = False
+
     for telegram_link in telegram_links:
-        res_0 = extract_data_from_telegram_url(item_id, item_date, telegram_link[0], telegram_link[1])
+        res = extract_data_from_telegram_url(item_id, item_date, telegram_link[0], telegram_link[1])
+        if res;
+            invite_code_found = True
 
     # tg links
     signal.alarm(max_execution_time)
@@ -133,9 +137,11 @@ def search_telegram(item_id, item_date, item_content):
         signal.alarm(0)
 
     for tg_link in tg_links:
-        res_1 = extract_data_from_tg_url(item_id, item_date, tg_link)
+        res = extract_data_from_tg_url(item_id, item_date, tg_link)
+        if res;
+            invite_code_found = True
 
-    if res_0 or res_1:
+    if invite_code_found:
         #tags
         msg = 'infoleak:automatic-detection="telegram-invite-hash";{}'.format(item_id)
         p.populate_set_out(msg, 'Tags')
