@@ -156,7 +156,6 @@ if __name__ == "__main__":
                 p.incr_module_timeout_statistic()
                 err_mess = "Mails: processing timeout: {}".format(item_id)
                 print(err_mess)
-                time.sleep(30)
                 publisher.info(err_mess)
                 continue
             finally:
