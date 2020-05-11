@@ -24,9 +24,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import simple_correlation
-
-telegram = simple_correlation.SimpleCorrelation('telegram')
+import telegram
 
 class TimeoutException(Exception):
     pass
@@ -45,7 +43,7 @@ regex_join_hash = re.compile(r'[0-9a-zA-z-]+')
 
 max_execution_time = 60
 
-def extract_data_from_telegram_url(item_id, base_url, url_path):
+def extract_data_from_telegram_url(item_id, item_date, base_url, url_path):
     #url = urlparse(url_path)
     url_path = url_path.split('/')
     # username len > 5, a-z A-Z _
@@ -55,19 +53,20 @@ def extract_data_from_telegram_url(item_id, base_url, url_path):
         if username:
             username = username[0]
             print('username: {}'.format(username))
-            telegram.save_item_correlation(username, item_id, Item.get_item_date(item_id))
+            telegram.save_item_correlation(username, item_id, item_date)
     elif url_path[0] == 'joinchat':
         invite_hash = regex_join_hash.search(url_path[1])
         if invite_hash:
             invite_hash = invite_hash[0]
-            print(invite_hash)
+            telegram.save_telegram_invite_hash(invite_hash, item_id)
+            print('invite code: {}'.format(invite_hash))
 
 # # TODO:
 #   Add openmessafe
 #   Add passport ?
 #   Add confirmphone
 #   Add user
-def extract_data_from_tg_url(item_id, tg_link):
+def extract_data_from_tg_url(item_id, item_date, tg_link):
     url = urlparse(tg_link)
     # username len > 5, a-z A-Z _
     if url.netloc == 'resolve' and len(url.query) > 7:
@@ -78,21 +77,24 @@ def extract_data_from_tg_url(item_id, tg_link):
             if username:
                 username = username[0]
                 print('username: {}'.format(username))
-                telegram.save_item_correlation(username, item_id, Item.get_item_date(item_id))
+                telegram.save_item_correlation(username, item_id, item_date)
     elif url.netloc == 'join' and len(url.query) > 7:
         if url.query[:7] == 'invite=':
             invite_hash = url.query[7:]
             invite_hash = regex_join_hash.search(invite_hash)
             if invite_hash:
                 invite_hash = invite_hash[0]
+                telegram.save_telegram_invite_hash(invite_hash, item_id)
                 print('invite code: {}'.format(invite_hash))
+
     elif url.netloc == 'login' and len(url.query) > 5:
         login_code = url.query[5:]
         print('login code: {}').format(login_code)
+
     else:
         print(url)
 
-def search_telegram(item_id, item_content):
+def search_telegram(item_id, item_date, item_content):
     # telegram links
     signal.alarm(max_execution_time)
     try:
@@ -105,7 +107,7 @@ def search_telegram(item_id, item_content):
         signal.alarm(0)
 
     for telegram_link in telegram_links:
-        extract_data_from_telegram_url(item_id, telegram_link[0], telegram_link[1])
+        extract_data_from_telegram_url(item_id, item_date, telegram_link[0], telegram_link[1])
 
     # tg links
     signal.alarm(max_execution_time)
@@ -119,7 +121,7 @@ def search_telegram(item_id, item_content):
         signal.alarm(0)
 
     for tg_link in tg_links:
-        extract_data_from_tg_url(item_id, tg_link)
+        extract_data_from_tg_url(item_id, item_date, tg_link)
 
 
 if __name__ == "__main__":
@@ -146,5 +148,6 @@ if __name__ == "__main__":
 
         # Do something with the message from the queue
         item_content = Item.get_item_content(item_id)
-        search_telegram(item_id, item_content)
+        item_date = Item.get_item_date(item_id)
+        search_telegram(item_id, item_date, item_content)
         sys.exit(0)
