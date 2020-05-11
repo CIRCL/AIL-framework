@@ -193,9 +193,9 @@ if __name__ == "__main__":
                     server_statistics.hincrby('mail_by_tld:{}'.format(item_date), tld, 1)
 
             msg = 'Mails;{};{};{};Checked {} e-mail(s);{}'.format(Item.get_source(item_id), item_date, Item.get_item_basename(item_id), num_valid_email, item_id)
-            print(msg)
 
             if num_valid_email > mail_threshold:
+                print('{}    Checked {} e-mail(s)'.format(item_id, num_valid_email))
                 publisher.warning(msg)
                 #Send to duplicate
                 p.populate_set_out(item_id, 'Duplicate')
