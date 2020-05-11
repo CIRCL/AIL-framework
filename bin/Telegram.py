@@ -150,4 +150,3 @@ if __name__ == "__main__":
         item_content = Item.get_item_content(item_id)
         item_date = Item.get_item_date(item_id)
         search_telegram(item_id, item_date, item_content)
-        sys.exit(0)
