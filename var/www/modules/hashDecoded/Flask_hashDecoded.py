@@ -35,6 +35,7 @@ hashDecoded = Blueprint('hashDecoded', __name__, template_folder='templates')
 ## TODO: put me in option
 all_cryptocurrency = ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash']
 all_pgpdump = ['key', 'name', 'mail']
+all_username = ['telegram']
 
 # ============ FUNCTIONS ============
 
@@ -120,6 +121,9 @@ def get_icon(correlation_type, type_id):
             icon_text = 'fab fa-ethereum'
         else:
             icon_text = 'fas fa-coins'
+    elif correlation_type == 'username':
+        if type_id == 'telegram':
+            icon_text = 'fab fa-telegram-plane'
     return icon_text
 
 def get_icon_text(correlation_type, type_id):
@@ -142,6 +146,9 @@ def get_icon_text(correlation_type, type_id):
             icon_text = '\uf42e'
         else:
             icon_text = '\uf51e'
+    elif correlation_type == 'cryptocurrency':
+        if type_id == 'telegram':
+            icon_text = '\uf2c6'
     return icon_text
 
 def get_all_types_id(correlation_type):
@@ -149,6 +156,8 @@ def get_all_types_id(correlation_type):
         return all_pgpdump
     elif correlation_type == 'cryptocurrency':
         return all_cryptocurrency
+    elif correlation_type == 'username':
+        return all_username
     else:
         return []
 
@@ -210,6 +219,8 @@ def get_correlation_type_search_endpoint(correlation_type):
         endpoint = 'hashDecoded.all_pgpdump_search'
     elif correlation_type == 'cryptocurrency':
         endpoint = 'hashDecoded.all_cryptocurrency_search'
+    elif correlation_type == 'username':
+        endpoint = 'hashDecoded.all_username_search'
     else:
         endpoint = 'hashDecoded.hashDecoded_page'
     return endpoint
@@ -219,6 +230,8 @@ def get_correlation_type_page_endpoint(correlation_type):
         endpoint = 'hashDecoded.pgpdump_page'
     elif correlation_type == 'cryptocurrency':
         endpoint = 'hashDecoded.cryptocurrency_page'
+    elif correlation_type == 'username':
+        endpoint = 'hashDecoded.username_page'
     else:
         endpoint = 'hashDecoded.hashDecoded_page'
     return endpoint
@@ -231,6 +244,8 @@ def get_range_type_json_endpoint(correlation_type):
         endpoint = 'hashDecoded.pgpdump_range_type_json'
     elif correlation_type == 'cryptocurrency':
         endpoint = 'hashDecoded.cryptocurrency_range_type_json'
+    elif correlation_type == 'username':
+        endpoint = 'hashDecoded.username_range_type_json'
     else:
         endpoint = 'hashDecoded.hashDecoded_page'
     return endpoint
@@ -240,6 +255,8 @@ def get_graph_node_json_endpoint(correlation_type):
         endpoint = 'hashDecoded.pgpdump_graph_node_json'
     elif correlation_type == 'cryptocurrency':
         endpoint = 'hashDecoded.cryptocurrency_graph_node_json'
+    elif correlation_type == 'username':
+        endpoint = 'hashDecoded.username_graph_node_json'
     else:
         endpoint = 'hashDecoded.hashDecoded_page'
     return endpoint
@@ -249,6 +266,8 @@ def get_graph_line_json_endpoint(correlation_type):
         endpoint = 'hashDecoded.pgpdump_graph_line_json'
     elif correlation_type == 'cryptocurrency':
         endpoint = 'hashDecoded.cryptocurrency_graph_line_json'
+    elif correlation_type == 'username':
+        endpoint = 'hashDecoded.username_graph_line_json'
     else:
         endpoint = 'hashDecoded.hashDecoded_page'
     return endpoint
@@ -1187,6 +1206,18 @@ def cryptocurrency_page():
     res = main_correlation_page('cryptocurrency', type_id, date_from, date_to, show_decoded_files)
     return res
 
+@hashDecoded.route("/correlation/username", methods=['GET'])
+@login_required
+@login_read_only
+def username_page():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    type_id = request.args.get('type_id')
+
+    show_decoded_files = request.args.get('show_decoded_files')
+    res = main_correlation_page('username', type_id, date_from, date_to, show_decoded_files)
+    return res
+
 @hashDecoded.route("/correlation/all_pgpdump_search", methods=['POST'])
 @login_required
 @login_read_only
@@ -1206,6 +1237,16 @@ def all_cryptocurrency_search():
     type_id = request.form.get('type')
     show_decoded_files = request.form.get('show_decoded_files')
     return redirect(url_for('hashDecoded.cryptocurrency_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
+
+@hashDecoded.route("/correlation/all_username_search", methods=['POST'])
+@login_required
+@login_read_only
+def all_username_search():
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    type_id = request.form.get('type')
+    show_decoded_files = request.form.get('show_decoded_files')
+    return redirect(url_for('hashDecoded.username_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
 
 # @hashDecoded.route('/correlation/show_pgpdump')
 # @login_required
@@ -1240,6 +1281,14 @@ def pgpdump_range_type_json():
     date_to = request.args.get('date_to')
     return correlation_type_range_type_json('pgpdump', date_from, date_to)
 
+@hashDecoded.route('/correlation/username_range_type_json')
+@login_required
+@login_read_only
+def username_range_type_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    return correlation_type_range_type_json('username', date_from, date_to)
+
 @hashDecoded.route('/correlation/pgpdump_graph_node_json')
 @login_required
 @login_read_only
@@ -1256,6 +1305,14 @@ def cryptocurrency_graph_node_json():
     type_id = request.args.get('type_id')
     key_id = request.args.get('key_id')
     return correlation_graph_node_json('cryptocurrency', type_id, key_id)
+
+@hashDecoded.route('/correlation/username_graph_node_json')
+@login_required
+@login_read_only
+def username_graph_node_json():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    return correlation_graph_node_json('username', type_id, key_id)
 
 # # TODO: REFRACTOR
 @hashDecoded.route('/correlation/pgpdump_graph_line_json')
@@ -1301,6 +1358,16 @@ def cryptocurrency_graph_line_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     return correlation_graph_line_json('cryptocurrency', type_id, key_id, date_from, date_to)
+
+@hashDecoded.route('/correlation/username_graph_line_json')
+@login_required
+@login_read_only
+def username_graph_line_json():
+    type_id = request.args.get('type_id')
+    key_id = request.args.get('key_id')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    return correlation_graph_line_json('username', type_id, key_id, date_from, date_to)
 
 # ========= REGISTRATION =========
 app.register_blueprint(hashDecoded, url_prefix=baseUrl)
