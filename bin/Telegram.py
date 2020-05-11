@@ -44,6 +44,8 @@ regex_join_hash = re.compile(r'[0-9a-zA-z-]+')
 max_execution_time = 60
 
 def extract_data_from_telegram_url(item_id, item_date, base_url, url_path):
+    invite_code_found = False
+
     #url = urlparse(url_path)
     url_path = url_path.split('/')
     # username len > 5, a-z A-Z _
@@ -51,7 +53,7 @@ def extract_data_from_telegram_url(item_id, item_date, base_url, url_path):
         username = url_path[0].lower()
         username = regex_username.search(username)
         if username:
-            username = username[0].replace('/', '')
+            username = username[0].replace('\\', '')
             if len(username) > 5:
                 print('username: {}'.format(username))
                 telegram.save_item_correlation(username, item_id, item_date)
@@ -61,6 +63,9 @@ def extract_data_from_telegram_url(item_id, item_date, base_url, url_path):
             invite_hash = invite_hash[0]
             telegram.save_telegram_invite_hash(invite_hash, item_id)
             print('invite code: {}'.format(invite_hash))
+            invite_code_found = True
+    return invite_code_found
+
 
 # # TODO:
 #   Add openmessafe
@@ -68,6 +73,8 @@ def extract_data_from_telegram_url(item_id, item_date, base_url, url_path):
 #   Add confirmphone
 #   Add user
 def extract_data_from_tg_url(item_id, item_date, tg_link):
+    invite_code_found = False
+
     url = urlparse(tg_link)
     # username len > 5, a-z A-Z _
     if url.netloc == 'resolve' and len(url.query) > 7:
@@ -76,7 +83,7 @@ def extract_data_from_tg_url(item_id, item_date, tg_link):
             username = url.query[7:]
             username = regex_username.search(username)
             if username:
-                username = username[0].replace('/', '')
+                username = username[0].replace('\\', '')
                 if len(username) > 5:
                     print('username: {}'.format(username))
                     telegram.save_item_correlation(username, item_id, item_date)
@@ -88,6 +95,7 @@ def extract_data_from_tg_url(item_id, item_date, tg_link):
                 invite_hash = invite_hash[0]
                 telegram.save_telegram_invite_hash(invite_hash, item_id)
                 print('invite code: {}'.format(invite_hash))
+                invite_code_found = True
 
     elif url.netloc == 'login' and len(url.query) > 5:
         login_code = url.query[5:]
@@ -95,6 +103,8 @@ def extract_data_from_tg_url(item_id, item_date, tg_link):
 
     else:
         print(url)
+
+    return invite_code_found
 
 def search_telegram(item_id, item_date, item_content):
     # telegram links
@@ -109,7 +119,7 @@ def search_telegram(item_id, item_date, item_content):
         signal.alarm(0)
 
     for telegram_link in telegram_links:
-        extract_data_from_telegram_url(item_id, item_date, telegram_link[0], telegram_link[1])
+        res_0 = extract_data_from_telegram_url(item_id, item_date, telegram_link[0], telegram_link[1])
 
     # tg links
     signal.alarm(max_execution_time)
@@ -123,7 +133,12 @@ def search_telegram(item_id, item_date, item_content):
         signal.alarm(0)
 
     for tg_link in tg_links:
-        extract_data_from_tg_url(item_id, item_date, tg_link)
+        res_1 = extract_data_from_tg_url(item_id, item_date, tg_link)
+
+    if res_0 or res_1:
+        #tags
+        msg = 'infoleak:automatic-detection="telegram-invite-hash";{}'.format(item_id)
+        p.populate_set_out(msg, 'Tags')
 
 
 if __name__ == "__main__":
