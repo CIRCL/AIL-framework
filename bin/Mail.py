@@ -33,10 +33,10 @@ class TimeoutException(Exception):
     pass
 
 def timeout_handler(signum, frame):
-    raise TimeoutException
+    raise TimeoutException()
 
 signal.signal(signal.SIGALRM, timeout_handler)
-max_execution_time = 30
+max_execution_time = 20
 ## -- ##
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
@@ -156,9 +156,11 @@ if __name__ == "__main__":
                 p.incr_module_timeout_statistic()
                 err_mess = "Mails: processing timeout: {}".format(item_id)
                 print(err_mess)
+                time.sleep(30)
                 publisher.info(err_mess)
                 continue
-            signal.alarm(0)
+            else:
+                signal.alarm(0)
 
             # filtering duplicate
             all_emails = set(all_emails)
