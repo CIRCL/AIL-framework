@@ -146,7 +146,7 @@ def get_icon_text(correlation_type, type_id):
             icon_text = '\uf42e'
         else:
             icon_text = '\uf51e'
-    elif correlation_type == 'cryptocurrency':
+    elif correlation_type == 'username':
         if type_id == 'telegram':
             icon_text = '\uf2c6'
     return icon_text

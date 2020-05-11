@@ -95,6 +95,8 @@
 						{% include 'correlation/metadata_card_pgp.html' %}
 					{% elif dict_object["object_type"] == "cryptocurrency" %}
 						{% include 'correlation/metadata_card_cryptocurrency.html' %}
+					{% elif dict_object["object_type"] == "username" %}
+							{% include 'correlation/metadata_card_username.html' %}
 					{% elif dict_object["object_type"] == "decoded" %}
 						{% include 'correlation/metadata_card_decoded.html' %}
 					{% elif dict_object["object_type"] == "domain" %}
@@ -112,9 +114,11 @@
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 									<span class="float-right">
-										{% with obj_type=dict_object["object_type"], obj_id=dict_object["correlation_id"], obj_subtype=dict_object["metadata"]["type_id"],obj_lvl=1%}
-				              {% include 'import_export/block_add_user_object_to_export.html' %}
-				            {% endwith %}
+										{% if dict_object["object_type"] != "username" %}
+											{% with obj_type=dict_object["object_type"], obj_id=dict_object["correlation_id"], obj_subtype=dict_object["metadata"]["type_id"],obj_lvl=1%}
+					              {% include 'import_export/block_add_user_object_to_export.html' %}
+					            {% endwith %}
+										{% endif %}
 									</span>
 									<span class="float-right">
 										<button class="btn btn-primary py-1" onclick="resize_graph();">
@@ -165,6 +169,10 @@
 												<div class="form-check">
 												  <input class="form-check-input" type="checkbox" value="True" id="PgpCheck" name="PgpCheck" {%if "pgp" in dict_object["correlation_names"]%}checked{%endif%}>
 												  <label class="form-check-label" for="PgpCheck">PGP</label>
+												</div>
+												<div class="form-check">
+												  <input class="form-check-input" type="checkbox" value="True" id="UsernameCheck" name="UsernameCheck" {%if "username" in dict_object["correlation_names"]%}checked{%endif%}>
+												  <label class="form-check-label" for="UsernameCheck">Username</label>
 												</div>
 												<div class="form-check">
 												  <input class="form-check-input" type="checkbox" value="True" id="DomainCheck" name="DomainCheck" {%if "domain" in dict_object["correlation_objects"]%}checked{%endif%}>

@@ -20,6 +20,7 @@ import ConfigLoader
 import Correlate_object
 import Decoded
 import Screenshot
+import telegram
 
 config_loader = ConfigLoader.ConfigLoader()
 # get and sanityze PASTE DIRECTORY
@@ -171,6 +172,16 @@ def get_item_pgp(item_id, currencies_type=None, get_nb=False):
     '''
     return Pgp.pgp.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
 
+def get_item_username(item_id, currencies_type=None, get_nb=False):
+    '''
+    Return all pgp of a given item.
+
+    :param item_id: item id
+    :param currencies_type: list of cryptocurrencies type
+    :type currencies_type: list, optional
+    '''
+    return telegram.correlation.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
+
 def get_item_decoded(item_id):
     '''
     Return all pgp of a given item.
@@ -207,6 +218,8 @@ def get_item_all_correlation(item_id, correlation_names=[], get_nb=False):
             res = get_item_cryptocurrency(item_id, get_nb=get_nb)
         elif correlation_name=='pgp':
             res = get_item_pgp(item_id, get_nb=get_nb)
+        elif correlation_name=='username':
+            res = get_item_username(item_id, get_nb=get_nb)
         elif correlation_name=='decoded':
             res = get_item_decoded(item_id)
         elif correlation_name=='screenshot':

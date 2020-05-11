@@ -25,6 +25,7 @@ import Correlate_object
 import Domain
 import Screenshot
 import btc_ail
+import telegram
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Cryptocurrency
@@ -108,6 +109,9 @@ def get_card_metadata(object_type, correlation_id, type_id=None, expand_card=Fal
     elif object_type == 'pgp':
         card_dict["sparkline"] = Pgp.pgp.get_list_nb_previous_correlation_object(type_id, correlation_id, 6)
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, type_id)
+    elif object_type == 'username':
+        card_dict["sparkline"] = telegram.correlation.get_list_nb_previous_correlation_object(type_id, correlation_id, 6)
+        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, type_id)
     elif object_type == 'decoded':
         card_dict["sparkline"] = Decoded.get_list_nb_previous_hash(correlation_id, 6)
         card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
@@ -149,6 +153,9 @@ def show_correlation():
         correl_option = request.form.get('PgpCheck')
         if correl_option:
             correlation_names.append('pgp')
+        correl_option = request.form.get('UsernameCheck')
+        if correl_option:
+            correlation_names.append('username')
         correl_option = request.form.get('DecodedCheck')
         if correl_option:
             correlation_names.append('decoded')

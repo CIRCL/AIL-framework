@@ -13,6 +13,7 @@ import ConfigLoader
 import Decoded
 import Domain
 import Screenshot
+import telegram
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Pgp
@@ -24,7 +25,7 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
 def is_valid_object_type(object_type):
-    if object_type in ['domain', 'item', 'image', 'decoded', 'pgp', 'cryptocurrency']:
+    if object_type in ['domain', 'item', 'image', 'decoded', 'pgp', 'cryptocurrency', 'username']:
         return True
     else:
         return False
@@ -33,25 +34,22 @@ def is_valid_object_subtype(object_type, object_subtype):
     if object_type == 'pgp':
         return Pgp.pgp.is_valid_obj_subtype(object_subtype)
     elif object_type == 'cryptocurrency':
-        return Pgp.pgp.is_valid_obj_subtype(object_subtype)
+        return Cryptocurrency.cryptocurrency.is_valid_obj_subtype(object_subtype)
+    elif object_type == 'username':
+        return telegram.correlation.is_valid_obj_subtype(object_subtype)
     elif object_subtype == None:
         return True
     else:
         return False
 
-    if object_type in ['domain', 'item', 'image', 'decoded', 'pgp', 'cryptocurrency']:
-        return True
-    else:
-        return False
-
 def get_all_objects():
-    return ['domain', 'paste', 'pgp', 'cryptocurrency', 'decoded', 'screenshot']
+    return ['domain', 'paste', 'pgp', 'cryptocurrency', 'decoded', 'screenshot', 'username']
 
 def get_all_correlation_names():
     '''
     Return a list of all available correlations
     '''
-    return ['pgp', 'cryptocurrency', 'decoded', 'screenshot']
+    return ['pgp', 'cryptocurrency', 'decoded', 'screenshot', 'username']
 
 def get_all_correlation_objects():
     '''
@@ -70,6 +68,8 @@ def exist_object(object_type, correlation_id, type_id=None): # => work on object
         return Pgp.pgp.exist_correlation(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.exist_correlation(type_id, correlation_id)
+    elif object_type == 'username':
+        return telegram.correlation.exist_correlation(type_id, correlation_id)
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.exist_screenshot(correlation_id)
     else:
@@ -87,6 +87,8 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
         return Pgp.pgp.get_metadata(type_id, correlation_id)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_metadata(type_id, correlation_id)
+    elif object_type == 'username':
+        return telegram.correlation.get_metadata(type_id, correlation_id)
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.get_metadata(correlation_id)
 
@@ -101,6 +103,8 @@ def get_object_correlation(object_type, value, correlation_names=None, correlati
         return Pgp.pgp.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
+    elif object_type == 'username':
+        return telegram.correlation.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.get_screenshot_correlated_object(value, correlation_objects=correlation_objects)
     return {}
@@ -118,6 +122,7 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
     :return: a dictionnary {font awesome class, icon_code}
     :rtype: dict
     '''
+
     icon_class = 'fas'
     icon_text = ''
     node_color = "#332288"
@@ -146,6 +151,14 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
             icon_text = '\uf42e'
         else:
             icon_text = '\uf51e'
+
+    elif correlation_name == 'username':
+        node_color = '#4dffff'
+        if correlation_type == 'telegram':
+            icon_class = 'fab'
+            icon_text = '\uf2c6'
+        else:
+            icon_text = '\uf007'
 
     elif correlation_name == 'decoded':
         node_color = '#88CCEE'
@@ -196,6 +209,9 @@ def get_item_url(correlation_name, value, correlation_type=None):
     elif correlation_name == 'cryptocurrency':
         endpoint = 'correlation.show_correlation'
         url = url_for(endpoint, object_type="cryptocurrency", type_id=correlation_type, correlation_id=value)
+    elif correlation_name == 'username':
+        endpoint = 'correlation.show_correlation'
+        url = url_for(endpoint, object_type="username", type_id=correlation_type, correlation_id=value)
     elif correlation_name == 'decoded':
         endpoint = 'correlation.show_correlation'
         url = url_for(endpoint, object_type="decoded", correlation_id=value)
@@ -285,7 +301,7 @@ def get_graph_node_object_correlation(object_type, root_value, mode, correlation
 
     root_correlation = get_object_correlation(object_type, root_value, correlation_names, correlation_objects, requested_correl_type=requested_correl_type)
     for correl in root_correlation:
-        if correl in ('pgp', 'cryptocurrency'):
+        if correl in ('pgp', 'cryptocurrency', 'username'):
             for correl_type in root_correlation[correl]:
                 for correl_val in root_correlation[correl][correl_type]:
 
@@ -349,7 +365,7 @@ def get_graph_node_object_correlation(object_type, root_value, mode, correlation
                                     nodes.add(correl_node_id)
                                     links.add((root_node_id, correl_node_id))
 
-                        if corr_obj in ('pgp', 'cryptocurrency'):
+                        if corr_obj in ('pgp', 'cryptocurrency', 'username'):
                             for correl_key_type in res[corr_obj]:
                                 for correl_key_val in res[corr_obj][correl_key_type]:
                                     #filter root value

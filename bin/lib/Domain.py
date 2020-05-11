@@ -25,6 +25,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Correlate_object
 import Screenshot
+import telegram
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
@@ -555,6 +556,16 @@ def get_domain_pgp(domain, currencies_type=None, get_nb=False):
     '''
     return Pgp.pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
 
+def get_domain_username(domain, currencies_type=None, get_nb=False):
+    '''
+    Retun all pgp of a given domain.
+
+    :param domain: crawled domain
+    :param currencies_type: list of pgp type
+    :type currencies_type: list, optional
+    '''
+    return telegram.correlation.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
+
 def get_domain_decoded(domain):
     '''
     Retun all decoded item of a given domain.
@@ -590,6 +601,8 @@ def get_domain_all_correlation(domain, correlation_names=[], get_nb=False):
             res = get_domain_cryptocurrency(domain, get_nb=get_nb)
         elif correlation_name=='pgp':
             res = get_domain_pgp(domain, get_nb=get_nb)
+        elif correlation_name=='username':
+            res = get_domain_username(domain, get_nb=get_nb)
         elif correlation_name=='decoded':
             res = get_domain_decoded(domain)
         elif correlation_name=='screenshot':
