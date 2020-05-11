@@ -54,6 +54,9 @@ dns_server = config_loader.get_config_str('Mail', 'dns')
 
 config_loader = None
 ## -- ##
+def extract_all_email(email_regex, item_content):
+    return re.findall(email_regex, item_content)
+
 def is_mxdomain_in_cache(mxdomain):
     return r_serv_cache.exists('mxdomain:{}'.format(mxdomain))
 
@@ -148,15 +151,14 @@ if __name__ == "__main__":
             # Get all emails address
             signal.alarm(max_execution_time)
             try:
-                all_emails = re.findall(email_regex, item_content)
+                all_emails = extract_all_email(email_regex, item_content)
             except TimeoutException:
                 p.incr_module_timeout_statistic()
                 err_mess = "Mails: processing timeout: {}".format(item_id)
                 print(err_mess)
                 publisher.info(err_mess)
                 continue
-            else:
-                signal.alarm(0)
+            signal.alarm(0)
 
             # filtering duplicate
             all_emails = set(all_emails)
