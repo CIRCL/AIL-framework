@@ -51,9 +51,10 @@ def extract_data_from_telegram_url(item_id, item_date, base_url, url_path):
         username = url_path[0].lower()
         username = regex_username.search(username)
         if username:
-            username = username[0]
-            print('username: {}'.format(username))
-            telegram.save_item_correlation(username, item_id, item_date)
+            username = username[0].replace('/', '')
+            if len(username) > 5:
+                print('username: {}'.format(username))
+                telegram.save_item_correlation(username, item_id, item_date)
     elif url_path[0] == 'joinchat':
         invite_hash = regex_join_hash.search(url_path[1])
         if invite_hash:
@@ -75,9 +76,10 @@ def extract_data_from_tg_url(item_id, item_date, tg_link):
             username = url.query[7:]
             username = regex_username.search(username)
             if username:
-                username = username[0]
-                print('username: {}'.format(username))
-                telegram.save_item_correlation(username, item_id, item_date)
+                username = username[0].replace('/', '')
+                if len(username) > 5:
+                    print('username: {}'.format(username))
+                    telegram.save_item_correlation(username, item_id, item_date)
     elif url.netloc == 'join' and len(url.query) > 7:
         if url.query[:7] == 'invite=':
             invite_hash = url.query[7:]
