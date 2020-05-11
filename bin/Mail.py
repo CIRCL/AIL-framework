@@ -29,11 +29,12 @@ from pyfaup.faup import Faup
 ## REGEX TIMEOUT ##
 import signal
 
+def timeout_handler(signum, frame):
+    raise TimeoutException()
+
 class TimeoutException(Exception):
     pass
 
-def timeout_handler(signum, frame):
-    raise TimeoutException()
 
 signal.signal(signal.SIGALRM, timeout_handler)
 max_execution_time = 20
@@ -54,9 +55,6 @@ dns_server = config_loader.get_config_str('Mail', 'dns')
 
 config_loader = None
 ## -- ##
-def extract_all_email(email_regex, item_content):
-    return re.findall(email_regex, item_content)
-
 def is_mxdomain_in_cache(mxdomain):
     return r_serv_cache.exists('mxdomain:{}'.format(mxdomain))
 
@@ -148,10 +146,12 @@ if __name__ == "__main__":
             item_content = Item.get_item_content(item_id)
             item_date = Item.get_item_date(item_id)
 
+            print(item_id)
+
             # Get all emails address
-            signal.alarm(max_execution_time)
+            signal.alarm(20)
             try:
-                all_emails = extract_all_email(email_regex, item_content)
+                all_emails = re.findall(email_regex, item_content)
             except TimeoutException:
                 p.incr_module_timeout_statistic()
                 err_mess = "Mails: processing timeout: {}".format(item_id)
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                 time.sleep(30)
                 publisher.info(err_mess)
                 continue
-            else:
+            finally:
                 signal.alarm(0)
 
             # filtering duplicate
