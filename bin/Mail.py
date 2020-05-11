@@ -137,8 +137,7 @@ if __name__ == "__main__":
     email_regex = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
 
     while True:
-        #message = p.get_from_set()
-        message = 'archive/pastebin.com_pro/2020/02/07/Fnz1wUim.gz 3'
+        message = p.get_from_set()
 
         if message is not None:
             item_id, score = message.split()
@@ -174,11 +173,7 @@ if __name__ == "__main__":
 
                 ## TODO: add MAIL trackers
 
-            print(all_emails)
-            print()
-
             valid_mx = check_mx_record(set_mxdomains, dns_server)
-            print(valid_mx)
 
             num_valid_email = 0
             for domain_mx in valid_mx:
@@ -209,11 +204,6 @@ if __name__ == "__main__":
                 p.populate_set_out(msg, 'Tags')
             else:
                 publisher.info(msg)
-
-            time.sleep(30)
-
-
-
 
         else:
             time.sleep(10)
