@@ -157,6 +157,7 @@ if __name__ == "__main__":
                 err_mess = "Mails: processing timeout: {}".format(item_id)
                 print(err_mess)
                 publisher.info(err_mess)
+                signal.signal(signal.SIGALRM, timeout_handler)
                 continue
             finally:
                 signal.alarm(0)
