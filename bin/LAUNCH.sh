@@ -193,6 +193,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Cryptocurrency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cryptocurrencies.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Telegram" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Telegram.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tools" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tools.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Phone.py; read x"
@@ -466,6 +468,7 @@ function update() {
         echo -e $RED"\t* Update Error"$DEFAULT
         exit
     fi
+
 }
 
 function update_thirdparty {
