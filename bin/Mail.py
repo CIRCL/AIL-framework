@@ -140,6 +140,8 @@ if __name__ == "__main__":
         if message is not None:
             item_id, score = message.split()
 
+            print(item_id)
+
             item_content = Item.get_item_content(item_id)
 
             proc = Proc(target=extract_all_emails, args=(q, item_content))
