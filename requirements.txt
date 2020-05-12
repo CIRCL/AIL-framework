@@ -22,6 +22,10 @@ textblob
 #Tokeniser
 nltk
 
+#Crawler
+scrapy
+scrapy-splash
+
 #Graph
 numpy
 matplotlib
