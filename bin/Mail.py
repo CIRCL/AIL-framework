@@ -146,10 +146,10 @@ if __name__ == "__main__":
             item_content = Item.get_item_content(item_id)
             item_date = Item.get_item_date(item_id)
 
-            print(item_id)
+            #print(item_id)
 
             # Get all emails address
-            signal.alarm(20)
+            signal.alarm(30)
             try:
                 all_emails = re.findall(email_regex, item_content)
             except TimeoutException:
