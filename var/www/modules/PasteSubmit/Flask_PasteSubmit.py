@@ -439,7 +439,7 @@ def create_hive_case():
     threat_level = int(request.form['threat_level_hive'])
     hive_description = request.form['hive_description']
     hive_case_title = request.form['hive_case_title']
-    path = request.form['paste']
+    path = os.environ['AIL_HOME'] + "/PASTES/"+ request.form['paste']
 
     #verify input
     if (0 <= hive_tlp <= 3) and (1 <= threat_level <= 4):
