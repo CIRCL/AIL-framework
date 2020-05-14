@@ -142,7 +142,6 @@ if __name__ == "__main__":
 
     while True:
         message = p.get_from_set()
-        message = 'urlextract/2020/05/06/throwbin.io_guNTS59b94413e7-a6e8-428a-b561-c9829ec77587.gz 2'
 
         if message is not None:
             item_id, score = message.split()
