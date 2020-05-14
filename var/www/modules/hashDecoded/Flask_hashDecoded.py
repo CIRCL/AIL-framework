@@ -6,6 +6,7 @@
 '''
 import redis
 import os
+import sys
 import datetime
 import json
 from Date import Date
@@ -19,6 +20,9 @@ import requests
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, send_file
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import Decoded
 
 # ============ VARIABLES ============
 import Flask_config
@@ -705,8 +709,7 @@ def downloadHash():
     # hash exist
     if r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type') is not None:
 
-        b64_path = r_serv_metadata.hget('metadata_hash:'+hash, 'saved_path')
-        b64_full_path = os.path.join(os.environ['AIL_HOME'], b64_path)
+        b64_full_path = Decoded.get_decoded_filepath(hash)
         hash_content = ''
         try:
             with open(b64_full_path, 'rb') as f:
@@ -1079,8 +1082,7 @@ def hash_types():
 def send_file_to_vt_js():
     hash = request.args.get('hash')
 
-    b64_path = r_serv_metadata.hget('metadata_hash:'+hash, 'saved_path')
-    b64_full_path = os.path.join(os.environ['AIL_HOME'], b64_path)
+    b64_full_path = Decoded.get_decoded_filepath(hash)
     b64_content = ''
     with open(b64_full_path, 'rb') as f:
         b64_content = f.read()
