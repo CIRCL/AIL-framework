@@ -118,11 +118,17 @@ if __name__ == '__main__':
                 last_progress = progress
 
         #flush browse importante pastes db
-        r_important_paste_2018.flushdb()
-        r_important_paste_2019.flushdb()
+        try:
+            r_important_paste_2018.flushdb()
+        except Exception:
+            pass
+            
+        try:
+            r_important_paste_2019.flushdb()
+        except Exception:
+            pass
 
         end = time.time()
-
 
         print('Updating ARDB_Tags Done => {} paths: {} s'.format(index, end - start))
 
