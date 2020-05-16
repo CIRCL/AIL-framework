@@ -6,6 +6,7 @@
 '''
 import json
 import os
+import sys
 import datetime
 import time
 import flask
@@ -16,6 +17,9 @@ from flask import Flask, render_template, jsonify, request, Blueprint, url_for
 
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import queues_modules
 
 # ============ VARIABLES ============
 import Flask_config
@@ -52,27 +56,7 @@ def event_stream():
 
 def get_queues(r):
     # We may want to put the llen in a pipeline to do only one query.
-    newData = []
-    for queue, card in r.hgetall("queues").items():
-
-        key = "MODULE_" + queue + "_"
-        keySet = "MODULE_TYPE_" + queue
-
-        for moduleNum in r.smembers(keySet):
-
-            value = r.get(key + str(moduleNum))
-
-            if value is not None:
-                timestamp, path = value.split(", ")
-                if timestamp is not None:
-                    startTime_readable = datetime.datetime.fromtimestamp(int(timestamp))
-                    processed_time_readable = str((datetime.datetime.now() - startTime_readable)).split('.')[0]
-                    seconds = int((datetime.datetime.now() - startTime_readable).total_seconds())
-                    newData.append( (queue, card, seconds, moduleNum) )
-                else:
-                    newData.append( (queue, cards, 0, moduleNum) )
-
-    return newData
+    return queues_modules.get_all_modules_queues_stats()
 
 def get_date_range(date_from, num_day):
     date = Date(str(date_from[0:4])+str(date_from[4:6]).zfill(2)+str(date_from[6:8]).zfill(2))
