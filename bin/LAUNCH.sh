@@ -83,6 +83,7 @@ function helptext {
       [-c  | --crawler]            LAUNCH Crawlers
       [-f  | --launchFeeder]       LAUNCH Pystemon feeder
       [-t  | --thirdpartyUpdate]   Update Web
+      [-rp | --resetPassword]      Reset Password
       [-m  | --menu]               Display Advanced Menu
       [-h  | --help]               Help
     "
@@ -483,6 +484,17 @@ function update_thirdparty {
     fi
 }
 
+function reset_password() {
+  echo -e "\t* Reseting UI admin password..."
+  if checking_ardb && checking_redis; then
+      python ${AIL_HOME}/var/www/create_default_user.py &
+      wait
+  else
+      echo -e $RED"\t* Error: Please launch all Redis and ARDB servers"$DEFAULT
+      exit
+  fi
+}
+
 function launch_all {
     checking_configuration;
     update;
@@ -597,6 +609,8 @@ while [ "$1" != "" ]; do
         -u | --update )               update "--manual";
                                       ;;
         -t | --thirdpartyUpdate )     update_thirdparty;
+                                      ;;
+        -rp | --resetPassword )       reset_password;
                                       ;;
         -c | --crawler )              launching_crawler;
                                       ;;
