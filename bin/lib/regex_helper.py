@@ -17,7 +17,7 @@ from pubsublogger import publisher
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import ConfigLoader
-import statistics
+import Statistics
 
 ## LOAD CONFIG ##
 config_loader = ConfigLoader.ConfigLoader()
@@ -56,7 +56,7 @@ def regex_findall(module_name, redis_key, regex, item_content, max_time=30, r_se
         proc.join(max_time)
         if proc.is_alive():
             proc.terminate()
-            statistics.incr_module_timeout_statistic(module_name)
+            Statistics.incr_module_timeout_statistic(module_name)
             err_mess = "{}: processing timeout: {}".format(module_name, item_id)
             print(err_mess)
             publisher.info(err_mess)
