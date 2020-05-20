@@ -48,7 +48,7 @@ def _regex_findall(redis_key, regex, item_content, r_set):
             r_serv_cache.lpush(redis_key, all_items[0])
             r_serv_cache.expire(redis_key, 360)
 
-def regex_findall(module_name, redis_key, regex, item_content, max_time=30, r_set=True):
+def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time=30, r_set=True):
 
     proc = Proc(target=_regex_findall, args=(redis_key, regex, item_content, r_set, ))
     try:
