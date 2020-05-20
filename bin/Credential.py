@@ -97,12 +97,12 @@ if __name__ == "__main__":
         item_content = Item.get_item_content(item_id)
 
         # Extract all credentials
-        all_credentials = regex_helper.regex_findall(module_name, redis_cache_key, regex_cred, item_content, max_time=max_execution_time)
+        all_credentials = regex_helper.regex_findall(module_name, redis_cache_key, regex_cred, item_id, item_content, max_time=max_execution_time)
 
         if not all_credentials:
             continue
 
-        all_sites = regex_helper.regex_findall(module_name, redis_cache_key, regex_web, item_content, max_time=max_execution_time)
+        all_sites = regex_helper.regex_findall(module_name, redis_cache_key, regex_web, item_id, item_content, max_time=max_execution_time)
 
         message = 'Checked {} credentials found.'.format(len(all_credentials))
         if all_sites:
@@ -122,7 +122,7 @@ if __name__ == "__main__":
             msg = 'infoleak:automatic-detection="credential";{}'.format(item_id)
             p.populate_set_out(msg, 'Tags')
 
-            site_occurence = regex_helper.regex_findall(module_name, redis_cache_key, regex_site_for_stats, item_content, max_time=max_execution_time, r_set=False)
+            site_occurence = regex_helper.regex_findall(module_name, redis_cache_key, regex_site_for_stats, item_id, item_content, max_time=max_execution_time, r_set=False)
 
             creds_sites = {}
 
