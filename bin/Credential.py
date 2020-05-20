@@ -7,7 +7,7 @@ The Credential Module
 
 This module is consuming the Redis-list created by the Categ module.
 
-It apply credential regexes on paste content and warn if above a threshold.
+It apply credential regexes on item content and warn if above a threshold.
 
 It also split the username and store it into redis for searching purposes.
 
@@ -24,24 +24,37 @@ Redis organization:
 """
 
 import time
+import os
 import sys
-from packages import Paste
-from pubsublogger import publisher
-from Helper import Process
 import datetime
 import re
 import redis
 from pyfaup.faup import Faup
 
+from pubsublogger import publisher
+from Helper import Process
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+import Item
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+import ConfigLoader
+import regex_helper
+
+## LOAD CONFIG ##
+config_loader = ConfigLoader.ConfigLoader()
+server_cred = config_loader.get_redis_conn("ARDB_TermCred")
+server_statistics = config_loader.get_redis_conn("ARDB_Statistics")
+
+minimumLengthThreshold = config_loader.get_config_int("Credential", "minimumLengthThreshold")
+criticalNumberToAlert = config_loader.get_config_int("Credential", "criticalNumberToAlert")
+minTopPassList = config_loader.get_config_int("Credential", "minTopPassList")
+
+config_loader = None
+## -- ##
+
 import signal
 
-class TimeoutException(Exception):
-    pass
-
-def timeout_handler(signum, frame):
-    raise TimeoutException
-
-signal.signal(signal.SIGALRM, timeout_handler)
 max_execution_time = 30
 
 #split username with spec. char or with upper case, distinguish start with upper
@@ -58,107 +71,58 @@ if __name__ == "__main__":
     publisher.port = 6380
     publisher.channel = "Script"
     config_section = "Credential"
+    module_name = "Credential"
     p = Process(config_section)
     publisher.info("Find credentials")
 
-    minimumLengthThreshold = p.config.getint("Credential", "minimumLengthThreshold")
-
     faup = Faup()
-    server_cred = redis.StrictRedis(
-        host=p.config.get("ARDB_TermCred", "host"),
-        port=p.config.get("ARDB_TermCred", "port"),
-        db=p.config.get("ARDB_TermCred", "db"),
-        decode_responses=True)
 
-    server_statistics = redis.StrictRedis(
-        host=p.config.get("ARDB_Statistics", "host"),
-        port=p.config.getint("ARDB_Statistics", "port"),
-        db=p.config.getint("ARDB_Statistics", "db"),
-        decode_responses=True)
-
-    criticalNumberToAlert = p.config.getint("Credential", "criticalNumberToAlert")
-    minTopPassList = p.config.getint("Credential", "minTopPassList")
-
-    regex_web = "((?:https?:\/\/)[-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
+    regex_web = "((?:https?:\/\/)[\.-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
     #regex_cred = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:[a-zA-Z0-9\_\-]+"
     regex_cred = "[a-zA-Z0-9\\._-]+@[a-zA-Z0-9\\.-]+\.[a-zA-Z]{2,6}[\\rn :\_\-]{1,10}[a-zA-Z0-9\_\-]+"
     regex_site_for_stats = "@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:"
 
+    redis_cache_key = regex_helper.generate_redis_cache_key(module_name)
+
     while True:
         message = p.get_from_set()
+
         if message is None:
             publisher.debug("Script Credential is Idling 10s")
-            #print('sleeping 10s')
             time.sleep(10)
             continue
 
-        filepath, count = message.split(' ')
+        item_id, count = message.split()
 
-        paste = Paste.Paste(filepath)
-        content = paste.get_p_content()
+        item_content = Item.get_item_content(item_id)
 
-        item_id = filepath
+        # Extract all credentials
+        all_credentials = regex_helper.regex_findall(module_name, redis_cache_key, regex_cred, item_content, max_time=max_execution_time)
 
-        # max execution time on regex
-        signal.alarm(max_execution_time)
-        try:
-            creds = set(re.findall(regex_cred, content))
-        except TimeoutException:
-            p.incr_module_timeout_statistic() # add encoder type
-            err_mess = "Credential: processing timeout: {}".format(item_id)
-            print(err_mess)
-            publisher.info(err_mess)
-            continue
-        else:
-            signal.alarm(0)
-
-        if len(creds) == 0:
+        if not all_credentials:
             continue
 
-        signal.alarm(max_execution_time)
-        try:
-            sites = re.findall(regex_web, content) #Use to count occurences
-        except TimeoutException:
-            p.incr_module_timeout_statistic()
-            err_mess = "Credential: site, processing timeout: {}".format(item_id)
-            print(err_mess)
-            publisher.info(err_mess)
-            sites = []
-        else:
-            signal.alarm(0)
+        all_sites = regex_helper.regex_findall(module_name, redis_cache_key, regex_web, item_content, max_time=max_execution_time)
 
-        sites_set = set(sites)
+        message = 'Checked {} credentials found.'.format(len(all_credentials))
+        if all_sites:
+            message += ' Related websites: {}'.format( (', '.join(all_sites)) )
+        print(message)
 
-        message = 'Checked {} credentials found.'.format(len(creds))
-        if sites_set:
-            message += ' Related websites: {}'.format( (', '.join(sites_set)) )
+        to_print = 'Credential;{};{};{};{};{}'.format(Item.get_source(item_id), Item.get_item_date(item_id), Item.get_item_basename(item_id), message, item_id)
 
-        to_print = 'Credential;{};{};{};{};{}'.format(paste.p_source, paste.p_date, paste.p_name, message, paste.p_rel_path)
-
-        print('\n '.join(creds))
 
         #num of creds above tresh, publish an alert
-        if len(creds) > criticalNumberToAlert:
-            print("========> Found more than 10 credentials in this file : {}".format( filepath ))
+        if len(all_credentials) > criticalNumberToAlert:
+            print("========> Found more than 10 credentials in this file : {}".format( item_id ))
             publisher.warning(to_print)
             #Send to duplicate
-            p.populate_set_out(filepath, 'Duplicate')
+            p.populate_set_out(item_id, 'Duplicate')
 
-            msg = 'infoleak:automatic-detection="credential";{}'.format(filepath)
+            msg = 'infoleak:automatic-detection="credential";{}'.format(item_id)
             p.populate_set_out(msg, 'Tags')
 
-            #Put in form, count occurences, then send to moduleStats
-            signal.alarm(max_execution_time)
-            try:
-                site_occurence = re.findall(regex_site_for_stats, content)
-            except TimeoutException:
-                p.incr_module_timeout_statistic()
-                err_mess = "Credential: site occurence, processing timeout: {}".format(item_id)
-                print(err_mess)
-                publisher.info(err_mess)
-                site_occurence = []
-            else:
-                signal.alarm(0)
+            site_occurence = regex_helper.regex_findall(module_name, redis_cache_key, regex_site_for_stats, item_content, max_time=max_execution_time, r_set=False)
 
             creds_sites = {}
 
@@ -169,7 +133,7 @@ if __name__ == "__main__":
                 else:
                     creds_sites[site_domain] = 1
 
-            for url in sites:
+            for url in all_sites:
                 faup.decode(url)
                 domain = faup.get()['domain']
                 ## TODO: # FIXME: remove me
@@ -184,15 +148,15 @@ if __name__ == "__main__":
 
             for site, num in creds_sites.items(): # Send for each different site to moduleStats
 
-                mssg = 'credential;{};{};{}'.format(num, site, paste.p_date)
+                mssg = 'credential;{};{};{}'.format(num, site, Item.get_item_date(item_id))
                 print(mssg)
                 p.populate_set_out(mssg, 'ModuleStats')
 
-            if sites_set:
-                print("=======> Probably on : {}".format(', '.join(sites_set)))
+            if all_sites:
+                print("=======> Probably on : {}".format(', '.join(all_sites)))
 
             date = datetime.datetime.now().strftime("%Y%m")
-            for cred in creds:
+            for cred in all_credentials:
                 maildomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
                 faup.decode(maildomains)
                 tld = faup.get()['tld']
@@ -204,17 +168,17 @@ if __name__ == "__main__":
                 server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
         else:
             publisher.info(to_print)
-            print('found {} credentials'.format(len(creds)))
+            print('found {} credentials'.format(len(all_credentials)))
 
 
         #for searching credential in termFreq
-        for cred in creds:
+        for cred in all_credentials:
             cred = cred.split('@')[0] #Split to ignore mail address
 
             #unique number attached to unique path
             uniq_num_path = server_cred.incr(REDIS_KEY_NUM_PATH)
-            server_cred.hmset(REDIS_KEY_ALL_PATH_SET, {filepath: uniq_num_path})
-            server_cred.hmset(REDIS_KEY_ALL_PATH_SET_REV, {uniq_num_path: filepath})
+            server_cred.hmset(REDIS_KEY_ALL_PATH_SET, {item_id: uniq_num_path})
+            server_cred.hmset(REDIS_KEY_ALL_PATH_SET_REV, {uniq_num_path: item_id})
 
             #unique number attached to unique username
             uniq_num_cred = server_cred.hget(REDIS_KEY_ALL_CRED_SET, cred)
