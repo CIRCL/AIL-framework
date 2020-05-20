@@ -127,7 +127,7 @@ if __name__ == "__main__":
             creds_sites = {}
 
             for site in site_occurence:
-                site_domain = site[1:-1]
+                site_domain = site[1:-1].lower()
                 if site_domain in creds_sites.keys():
                     creds_sites[site_domain] += 1
                 else:
