@@ -15,8 +15,8 @@ import configparser
 
 # Get Config file
 config_dir = os.path.join(os.environ['AIL_HOME'], 'configs')
-config_file = os.path.join(config_dir, 'core.cfg')
-if not os.path.exists(config_file):
+default_config_file = os.path.join(config_dir, 'core.cfg')
+if not os.path.exists(default_config_file):
     raise Exception('Unable to find the configuration file. \
                     Did you set environment variables? \
                     Or activate the virtualenv.')
@@ -28,9 +28,12 @@ if not os.path.exists(config_file):
 class ConfigLoader(object):
     """docstring for Config_Loader."""
 
-    def __init__(self):
+    def __init__(self, config_file=None):
         self.cfg = configparser.ConfigParser()
-        self.cfg.read(config_file)
+        if config_file:
+            self.cfg.read(os.path.join(config_dir, config_file))
+        else:
+            self.cfg.read(default_config_file)
 
     def get_redis_conn(self, redis_name, decode_responses=True): ## TODO: verify redis name
         return redis.StrictRedis( host=self.cfg.get(redis_name, "host"),

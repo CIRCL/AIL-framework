@@ -20,14 +20,26 @@ from urllib.parse import urlparse
 
 from pyfaup.faup import Faup
 
+# interact with splash_crawler API
+import requests
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'core/'))
+import screen
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
+config_loader = None
+
+# load crawler config
+config_loader = ConfigLoader.ConfigLoader(config_file='crawlers.cfg')
+splash_manager_url = config_loader.get_config_str('Splash_Manager', 'splash_url')
+splash_api_key = config_loader.get_config_str('Splash_Manager', 'api_key')
 config_loader = None
 
 faup = Faup()
@@ -530,3 +542,176 @@ def save_har(har_dir, item_id, har_content):
     filename = os.path.join(har_dir, item_id + '.json')
     with open(filename, 'w') as f:
         f.write(json.dumps(har_content))
+
+
+#### SPLASH MANAGER ####
+def get_splash_manager_url(reload=False): # TODO: add config reload
+    return splash_manager_url
+
+def get_splash_api_key(reload=False): # TODO: add config reload
+    return splash_api_key
+
+def get_splash_url_from_manager_url(splash_manager_url, splash_port):
+    url = urlparse(splash_manager_url)
+    host = url.netloc.split(':', 1)[0]
+    return 'http://{}:{}'.format(host, splash_port)
+
+    ## API ##
+def ping_splash_manager():
+    req = requests.get('{}/api/v1/ping'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+    if req.status_code == 200:
+        return True
+    else:
+        print(req.json())
+        return False
+
+def get_all_splash_manager_containers_name():
+    req = requests.get('{}/api/v1/get/splash/name/all'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+    if req.status_code == 200:
+        return req.json()
+    else:
+        print(req.json())
+
+def get_all_splash_manager_proxies():
+    req = requests.get('{}/api/v1/get/proxies/all'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+    if req.status_code == 200:
+        return req.json()
+    else:
+        print(req.json())
+    ## -- ##
+
+    ## SPLASH ##
+def get_all_splash(r_list=False):
+    res = r_serv_onion.smembers('all_splash')
+    if res:
+        if r_list:
+            return list(res)
+        else:
+            return res
+    else:
+        return []
+
+def get_splash_proxy(splash_name):
+    return r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'proxy')
+
+def get_splash_all_url(splash_name, r_list=False):
+    res = r_serv_onion.smembers('splash:url:{}'.format(splash_name))
+    if res:
+        if r_list:
+            return list(res)
+        else:
+            return res
+    else:
+        return []
+
+def get_splash_name_by_url(splash_url):
+    return r_serv_onion.get('splash:map:url:name:{}'.format(splash_url))
+
+def get_splash_crawler_type(splash_name):
+    return r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'crawler_type')
+
+def get_all_splash_by_proxy(proxy_name):
+    res = r_serv_onion.smembers('proxy:splash:{}'.format(proxy_name))
+    if res:
+        if r_list:
+            return list(res)
+        else:
+            return res
+    else:
+        return []
+
+def delete_all_splash_containers():
+    for splash_name in get_all_splash():
+        delete_splash_container(splash_name)
+
+def delete_splash_container(splash_name):
+    r_serv_onion.srem('proxy:splash:{}'.format(get_splash_proxy(splash_name)), splash_name)
+    r_serv_onion.delete('splash:metadata:{}'.format(splash_name))
+
+    for splash_url in get_splash_all_url(splash_name):
+        r_serv_onion.delete('splash:map:url:name:{}'.format(splash_url), splash_name)
+        r_serv_onion.srem('splash:url:{}'.format(splash_name), splash_url)
+    r_serv_onion.srem('all_splash', splash_name)
+    ## -- ##
+
+    ## PROXY ##
+def get_all_proxies(r_list=False):
+    res = r_serv_onion.smembers('all_proxy')
+    if res:
+        return list(res)
+    else:
+        return []
+
+def delete_all_proxies():
+    for proxy_name in get_all_proxies():
+        delete_proxy(proxy_name)
+
+def delete_proxy(proxy_name): # # TODO: force delete (delete all proxy)
+    proxy_splash = get_all_splash_by_proxy(proxy_name)
+    if proxy_splash:
+        print('error, a splash container is using this proxy')
+    r_serv_onion.delete('proxy:metadata:{}'.format(proxy_name))
+    r_serv_onion.srem('all_proxy', proxy_name)
+    ## -- ##
+
+    ## LOADER ##
+def load_all_splash_containers():
+    all_splash_containers_name = get_all_splash_manager_containers_name()
+    for splash_name in all_splash_containers_name:
+        r_serv_onion.sadd('all_splash', splash_name)
+
+        proxy = all_splash_containers_name[splash_name]['proxy']
+        if not proxy:
+            proxy = {'name': 'no_proxy', 'crawler_type': 'web'}
+
+        r_serv_onion.sadd('proxy:splash:{}'.format(proxy['name']), splash_name)
+
+        r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'crawler_type', proxy['crawler_type'])
+        r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'proxy', proxy['name'])
+        description = all_splash_containers_name[splash_name].get('description', None)
+        if description:
+            r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'description', description)
+
+        for port in all_splash_containers_name[splash_name]['ports']:
+            splash_url = get_splash_url_from_manager_url(get_splash_manager_url(), port)
+            r_serv_onion.sadd('splash:url:{}'.format(splash_name), splash_url)
+            r_serv_onion.set('splash:map:url:name:{}'.format(splash_url), splash_name)
+
+def load_all_proxy():
+    all_proxies = get_all_splash_manager_proxies()
+    for proxy_name in all_proxies:
+        proxy_dict = all_proxies[proxy_name]
+        r_serv_onion.hset('proxy:metadata:{}'.format(proxy_name), 'host', proxy_dict['host'])
+        r_serv_onion.hset('proxy:metadata:{}'.format(proxy_name), 'port', proxy_dict['port'])
+        r_serv_onion.hset('proxy:metadata:{}'.format(proxy_name), 'type', proxy_dict['type'])
+        r_serv_onion.hset('proxy:metadata:{}'.format(proxy_name), 'crawler_type', proxy_dict['crawler_type'])
+        description = all_proxies[proxy_name].get('description', None)
+        if description:
+            r_serv_onion.hset('proxy:metadata:{}'.format(proxy_name), 'description', description)
+
+def init_splash_list_db():
+    delete_all_splash_containers()
+    delete_all_proxies()
+    if ping_splash_manager():
+        load_all_splash_containers()
+        load_all_proxy()
+    # # TODO: kill crawler screen ?
+    ## -- ##
+
+    ## SPLASH CONTROLLER ##
+def launch_ail_splash_crawler(splash_url, script_options=''):
+    screen_name = 'Crawler_AIL'
+    dir_project = os.environ['AIL_HOME']
+    script_location = os.path.join(os.environ['AIL_BIN'])
+    script_name = 'Crawler.py'
+    screen.create_screen(screen_name)
+    screen.launch_windows_script(screen_name, splash_url, dir_project, script_location, script_name, script_options=script_options)
+
+
+    ## -- ##
+
+#### ---- ####
+
+#### CRAWLER PROXY ####
+
+#### ---- ####
