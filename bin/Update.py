@@ -57,7 +57,11 @@ def repo_is_fork():
             return False
         elif 'origin	{}'.format(OLD_AIL_REPO) in res:
             print('    old AIL repository, Updating remote origin...')
-            git_status.set_default_remote(AIL_REPO, verbose=False)
+            res = git_status.set_default_remote(AIL_REPO, verbose=False)
+            if res:
+                return False
+            else:
+                return True
         else:
             print('    This repository is a {}fork{}'.format(TERMINAL_BLUE, TERMINAL_DEFAULT))
             print()
