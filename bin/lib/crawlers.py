@@ -397,6 +397,7 @@ def create_crawler_task(url, screenshot=True, har=True, depth_limit=1, max_pages
 
     if auto_crawler:
         crawler_mode = 'auto'
+        crawler_config['time'] = crawler_delta
     else:
         crawler_mode = 'manual'
 
