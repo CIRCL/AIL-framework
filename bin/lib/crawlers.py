@@ -38,8 +38,8 @@ config_loader = None
 
 # load crawler config
 config_loader = ConfigLoader.ConfigLoader(config_file='crawlers.cfg')
-splash_manager_url = config_loader.get_config_str('Splash_Manager', 'splash_url')
-splash_api_key = config_loader.get_config_str('Splash_Manager', 'api_key')
+#splash_manager_url = config_loader.get_config_str('Splash_Manager', 'splash_url')
+#splash_api_key = config_loader.get_config_str('Splash_Manager', 'api_key')
 config_loader = None
 
 faup = Faup()
