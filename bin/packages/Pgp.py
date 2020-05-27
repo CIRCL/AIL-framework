@@ -6,7 +6,6 @@ import sys
 import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Item
 import Correlation
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))

@@ -7,10 +7,10 @@ import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import item_basic
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
-import Item
 #import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
@@ -335,8 +335,8 @@ class Correlation(object):
         r_serv_metadata.sadd('item_{}_{}:{}'.format(self.correlation_name, subtype, item_id), obj_id)
 
         # domain
-        if Item.is_crawled(item_id):
-            domain = Item.get_item_domain(item_id)
+        if item_basic.is_crawled(item_id):
+            domain = item_basic.get_item_domain(item_id)
             self.save_domain_correlation(domain, subtype, obj_id)
 
     def delete_item_correlation(self, subtype, obj_id, item_id, item_date):
@@ -371,13 +371,13 @@ class Correlation(object):
         if obj2_type == 'domain':
             self.save_domain_correlation(obj2_id, subtype, obj_id)
         elif obj2_type == 'item':
-            self.save_item_correlation(subtype, obj_id, obj2_id, Item.get_item_date(obj2_id))
+            self.save_item_correlation(subtype, obj_id, obj2_id, item_basic.get_item_date(obj2_id))
 
     def delete_obj_relationship(self, subtype, obj_id, obj2_type, obj2_id):
         if obj2_type == 'domain':
             self.delete_domain_correlation(obj2_id, subtype, obj_id)
         elif obj2_type == 'item':
-            self.delete_item_correlation(subtype, obj_id, obj2_id, Item.get_item_date(obj2_id))
+            self.delete_item_correlation(subtype, obj_id, obj2_id, item_basic.get_item_date(obj2_id))
 
     def create_correlation(self, subtype, obj_id, obj_meta):
         res = self.sanythise_correlation_types([subtype], r_boolean=True)

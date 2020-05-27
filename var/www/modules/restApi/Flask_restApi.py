@@ -604,5 +604,14 @@ def import_json_item():
     res = importer.api_import_json_item(data_json)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/ping", methods=['GET'])
+@token_required('user')
+def v1_ping():
+    return Response(json.dumps({'status': 'pong'}), mimetype='application/json'), 200
+
 # ========= REGISTRATION =========
 app.register_blueprint(restApi, url_prefix=baseUrl)

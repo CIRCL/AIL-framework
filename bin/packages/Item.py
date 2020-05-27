@@ -45,11 +45,7 @@ def get_item_filepath(item_id):
     return item_basic.get_item_filepath(item_id)
 
 def get_item_date(item_id, add_separator=False):
-    l_directory = item_id.split('/')
-    if add_separator:
-        return '{}/{}/{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
-    else:
-        return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+    return item_basic.get_item_date(item_id, add_separator=add_separator)
 
 def get_source(item_id):
     return item_id.split('/')[-5]
@@ -270,9 +266,8 @@ def get_item_list_desc(list_item_id):
         desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_obj_tag(item_id)} )
     return desc_list
 
-# # TODO: add an option to check the tag
 def is_crawled(item_id):
-    return item_id.startswith('crawled')
+    return item_basic.is_crawled(item_id)
 
 def is_onion(item_id):
     is_onion = False
@@ -290,7 +285,7 @@ def is_item_in_domain(domain, item_id):
     return is_in_domain
 
 def get_item_domain(item_id):
-    return item_id[19:-36]
+    return item_basic.get_item_domain(item_id)
 
 def get_domain(item_id):
     item_id = item_id.split('/')

@@ -26,6 +26,20 @@ def get_item_filepath(item_id):
     filename = os.path.join(PASTES_FOLDER, item_id)
     return os.path.realpath(filename)
 
+def get_item_date(item_id, add_separator=False):
+    l_directory = item_id.split('/')
+    if add_separator:
+        return '{}/{}/{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+    else:
+        return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+
+# # TODO: add an option to check the tag
+def is_crawled(item_id):
+    return item_id.startswith('crawled')
+
+def get_item_domain(item_id):
+    return item_id[19:-36]
+
 def add_item_parent_by_parent_id(parent_type, parent_id, item_id):
     parent_item_id = get_obj_id_item_id(parent_type, parent_id)
     if parent_item_id:

@@ -9,7 +9,6 @@ from hashlib import sha256
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Correlation
-import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
