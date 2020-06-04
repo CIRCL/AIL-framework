@@ -377,14 +377,15 @@ def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
 
 #### CRAWLER TASK ####
 def create_crawler_task(url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, cookiejar_uuid=None, user_agent=None):
+
     crawler_config = {}
     crawler_config['depth_limit'] = depth_limit
     crawler_config['closespider_pagecount'] = max_pages
 
     if screenshot:
-        crawler_config['screenshot'] = True
+        crawler_config['png'] = True
     else:
-        crawler_config['screenshot'] = False
+        crawler_config['png'] = False
     if har:
         crawler_config['har'] = True
     else:

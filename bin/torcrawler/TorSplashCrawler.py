@@ -219,13 +219,13 @@ class TorSplashCrawler():
                     all_cookies = []
 
                 # SCREENSHOT
-                if 'png' in response.data:
+                if 'png' in response.data and self.png:
                     sha256_string = Screenshot.save_crawled_screeshot(response.data['png'], 5000000, f_save=self.requested_mode)
                     if sha256_string:
                         Screenshot.save_item_relationship(sha256_string, item_id)
                         Screenshot.save_domain_relationship(sha256_string, self.domains[0])
                 # HAR
-                if 'har' in response.data:
+                if 'har' in response.data and self.har:
                     crawlers.save_har(self.har_dir, item_id, response.data['har'])
 
                 le = LinkExtractor(allow_domains=self.domains, unique=True)

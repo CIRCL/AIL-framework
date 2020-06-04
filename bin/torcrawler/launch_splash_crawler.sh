@@ -1,5 +1,7 @@
 #!/bin/bash
 
+issplashed=`screen -ls | egrep '[0-9]+.Docker_Splash' | cut -d. -f1`
+
 usage() { echo "Usage: sudo $0 [-f <config_absolute_path>] [-p <port_start>] [-n <number_of_splash_servers>]" 1>&2;
           echo "          -f: absolute path to splash docker proxy-profiles directory (used for proxy configuration)";
           echo "          -p: number of the first splash server port number. This number is incremented for the others splash server";
@@ -34,10 +36,6 @@ while getopts ":p:f:n:u:" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${u}" ]; then
-    u=3000;
-fi
-
 if [ -z "${p}" ] || [ -z "${f}" ] || [ -z "${n}" ]; then
     usage;
 fi
@@ -47,6 +45,11 @@ DEFAULT="\\033[0;39m"
 GREEN="\\033[1;32m"
 WHITE="\\033[0;02m"
 
+if [ "$EUID" -ne 0 ]; then
+    echo -e $RED"\t* Please run as root or sudo.\n"$DEFAULT
+    exit 1
+fi
+
 if [ ! -d "${f}" ]; then
     printf "$RED\n Error -f, proxy-profiles directory: $WHITE${f}$RED not found\n$DEFAULT Please check if you enter the correct path\n"
     exit 1
@@ -55,6 +58,15 @@ fi
 if [ ! -f "${f}default.ini" ]; then
     printf "$RED\n Error -f, proxy configuration file:$WHITE default.ini$RED not found\n$DEFAULT Please check if you enter the correct path\n"
     exit 1
+fi
+
+if [[ $issplashed ]]; then
+    echo -e $RED"\t* A screen is already launched, please kill it before creating another one."$DEFAULT
+    exit 1
+fi
+
+if [ -z "${u}" ]; then
+    u=3000;
 fi
 
 screen -dmS "Docker_Splash"
