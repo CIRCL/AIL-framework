@@ -38,8 +38,8 @@ config_loader = None
 
 # load crawler config
 config_loader = ConfigLoader.ConfigLoader(config_file='crawlers.cfg')
-#splash_manager_url = config_loader.get_config_str('Splash_Manager', 'splash_url')
-#splash_api_key = config_loader.get_config_str('Splash_Manager', 'api_key')
+splash_manager_url = config_loader.get_config_str('Splash_Manager', 'splash_url')
+splash_api_key = config_loader.get_config_str('Splash_Manager', 'api_key')
 config_loader = None
 
 faup = Faup()
@@ -691,11 +691,13 @@ def load_all_proxy():
         if description:
             r_serv_onion.hset('proxy:metadata:{}'.format(proxy_name), 'description', description)
 
-def init_splash_list_db():
-    delete_all_splash_containers()
-    delete_all_proxies()
+def reload_splash_and_proxies_list():
     if ping_splash_manager():
+        # LOAD SPLASH containers
+        delete_all_splash_containers()
         load_all_splash_containers()
+        # LOAD PROXIES containers
+        delete_all_proxies()
         load_all_proxy()
     # # TODO: kill crawler screen ?
     ## -- ##

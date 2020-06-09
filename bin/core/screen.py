@@ -4,6 +4,7 @@
 import os
 import subprocess
 import sys
+import re
 
 all_screen_name = set()
 
@@ -16,8 +17,11 @@ def is_screen_install():
     print(p.stderr)
     return False
 
-def exist_screen(screen_name):
-    cmd_1 = ['screen', '-ls']
+def exist_screen(screen_name, with_sudoer=False):
+    if with_sudoer:
+        cmd_1 = ['sudo', 'screen', '-ls']
+    else:
+        cmd_1 = ['screen', '-ls']
     cmd_2 = ['egrep', '[0-9]+.{}'.format(screen_name)]
     p1 = subprocess.Popen(cmd_1, stdout=subprocess.PIPE)
     p2 = subprocess.Popen(cmd_2, stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -26,6 +30,28 @@ def exist_screen(screen_name):
     if output:
         return True
     return False
+
+def get_screen_pid(screen_name,  with_sudoer=False):
+    if with_sudoer:
+        cmd_1 = ['sudo', 'screen', '-ls']
+    else:
+        cmd_1 = ['screen', '-ls']
+    cmd_2 = ['egrep', '[0-9]+.{}'.format(screen_name)]
+    p1 = subprocess.Popen(cmd_1, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(cmd_2, stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+    output = p2.communicate()[0]
+    if output:
+        # extract pids with screen name
+        regex_pid_screen_name = b'[0-9]+.' + screen_name.encode()
+        pids = re.findall(regex_pid_screen_name, output)
+        # extract pids
+        all_pids = []
+        for pid_name in pids:
+            pid = pid_name.split(b'.')[0].decode()
+            all_pids.append(pid)
+        return all_pids
+    return []
 
 def create_screen(screen_name):
     if not exist_screen(screen_name):
@@ -36,6 +62,18 @@ def create_screen(screen_name):
             return True
         else:
             print(p.stderr)
+    return False
+
+def kill_screen(screen_name, with_sudoer=False):
+    if get_screen_pid(screen_name, with_sudoer=with_sudoer):
+        for pid in get_screen_pid(screen_name,  with_sudoer=with_sudoer):
+            cmd = ['kill', pid]
+            p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if p.stderr:
+                print(p.stderr)
+            else:
+                print('{} killed'.format(pid))
+        return True
     return False
 
 # # TODO: add check if len(window_name) == 20
@@ -70,5 +108,5 @@ def kill_screen_window(screen_name, window_id, force=False):
     print(p.stderr)
 
 if __name__ == '__main__':
-    res = get_screen_windows_list('Script_AIL')
+    res = kill_screen('Docker_Splash', with_sudoer=True)
     print(res)

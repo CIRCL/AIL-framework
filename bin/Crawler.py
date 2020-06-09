@@ -224,8 +224,8 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
     crawler_config['port'] = port
     print('Launching Crawler: {}'.format(url))
 
-    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'crawling_domain', domain)
-    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
+    r_cache.hset('metadata_crawler:{}'.format(splash_url), 'crawling_domain', domain)
+    r_cache.hset('metadata_crawler:{}'.format(splash_url), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
     retry = True
     nb_retry = 0
@@ -243,7 +243,7 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
                 print('--------------------------------------')
                 print('         \033[91m DOCKER SPLASH DOWN\033[0m')
                 print('          {} DOWN'.format(splash_url))
-                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'SPLASH DOWN')
+                r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'SPLASH DOWN')
                 nb_retry == 0
 
             print('         \033[91m DOCKER SPLASH NOT AVAILABLE\033[0m')
@@ -251,7 +251,7 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
             time.sleep(10)
 
     if r.status_code == 200:
-        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
+        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'Crawling')
         # save config in cash
         UUID = str(uuid.uuid4())
         r_cache.set('crawler_request:{}'.format(UUID), json.dumps(crawler_config))
@@ -273,7 +273,7 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
                 print('')
                 print('            PROXY DOWN OR BAD CONFIGURATION\033[0m'.format(splash_url))
                 print('------------------------------------------------------------------------')
-                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Error')
+                r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'Error')
                 exit(-2)
         else:
             print(process.stdout.read())
@@ -283,7 +283,7 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
         print('--------------------------------------')
         print('         \033[91m DOCKER SPLASH DOWN\033[0m')
         print('          {} DOWN'.format(splash_url))
-        r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Crawling')
+        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'Crawling')
         exit(1)
 
 # check external links (full_crawl)
@@ -304,16 +304,11 @@ def search_potential_source_domain(type_service, domain):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
         print('usage:', 'Crawler.py', 'splash_port')
+        print('usage:', 'Crawler.py', 'splash_name', 'splash_url')
         exit(1)
 ##################################################
-    #mode = sys.argv[1]
-    splash_port = sys.argv[1]
-
-    rotation_mode = deque(['onion', 'regular'])
-    default_proto_map = {'http': 80, 'https': 443}
-######################################################## add ftp ???
 
     publisher.port = 6380
     publisher.channel = "Script"
@@ -323,8 +318,19 @@ if __name__ == '__main__':
     # Setup the I/O queues
     p = Process(config_section)
 
-    splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url"),  splash_port)
+    if len(sys.argv) == 2:
+        splash_port = sys.argv[1]
+        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url"),  splash_port)
+    else:
+        splash_name = sys.argv[1]
+        splash_url =  sys.argv[2]
+        print(splash_name)
+
     print('splash url: {}'.format(splash_url))
+
+    rotation_mode = deque(['onion', 'regular'])
+    default_proto_map = {'http': 80, 'https': 443}
+######################################################## add ftp ???
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
@@ -372,9 +378,9 @@ if __name__ == '__main__':
                               'user_agent': p.config.get("Crawler", "default_crawler_user_agent")}
 
     # Track launched crawler
-    r_cache.sadd('all_crawler', splash_port)
-    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
-    r_cache.hset('metadata_crawler:{}'.format(splash_port), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
+    r_cache.sadd('all_crawler', splash_url)
+    r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'Waiting')
+    r_cache.hset('metadata_crawler:{}'.format(splash_url), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
     # update hardcoded blacklist
     load_blacklist('onion')
@@ -408,7 +414,7 @@ if __name__ == '__main__':
                         'epoch': int(time.time())}
 
                 # Update crawler status type
-                r_cache.sadd('{}_crawlers'.format(to_crawl['type_service']), splash_port)
+                r_cache.sadd('{}_crawlers'.format(to_crawl['type_service']), splash_url)
 
                 crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'],  to_crawl['url'], date)
                 # check if default crawler
@@ -456,11 +462,11 @@ if __name__ == '__main__':
                 redis_crawler.ltrim('last_{}'.format(to_crawl['type_service']), 0, 15)
 
                 #update crawler status
-                r_cache.hset('metadata_crawler:{}'.format(splash_port), 'status', 'Waiting')
-                r_cache.hdel('metadata_crawler:{}'.format(splash_port), 'crawling_domain')
+                r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'Waiting')
+                r_cache.hdel('metadata_crawler:{}'.format(splash_url), 'crawling_domain')
 
                 # Update crawler status type
-                r_cache.srem('{}_crawlers'.format(to_crawl['type_service']), splash_port)
+                r_cache.srem('{}_crawlers'.format(to_crawl['type_service']), splash_url)
 
                 # add next auto Crawling in queue:
                 if to_crawl['paste'] == 'auto':

@@ -55,3 +55,12 @@ class ConfigLoader(object):
 
     def has_section(self, section):
         return self.cfg.has_section(section)
+
+    def get_all_keys_values_from_section(self, section):
+        if section in self.cfg:
+            all_keys_values = []
+            for key_name in self.cfg[section]:
+                all_keys_values.append((key_name, self.cfg.get(section, key_name)))
+            return all_keys_values
+        else:
+            return []
