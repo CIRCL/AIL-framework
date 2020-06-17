@@ -88,16 +88,18 @@ fi
 # create AILENV + intall python packages
 ./install_virtualenv.sh
 
+# force virtual environment
+. ./AILENV/bin/activate
 
-pushd ${AIL_BIN}helper/gen_cert
+pushd ${AIL_BIN}/helper/gen_cert
 ./gen_root.sh
 wait
 ./gen_cert.sh
 wait
 popd
 
-cp ${AIL_BIN}helper/gen_cert/server.crt ${AIL_FLASK}server.crt
-cp ${AIL_BIN}helper/gen_cert/server.key ${AIL_FLASK}server.key
+cp ${AIL_BIN}/helper/gen_cert/server.crt ${AIL_FLASK}server.crt
+cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}server.key
 
 mkdir -p $AIL_HOME/PASTES
 
@@ -116,7 +118,7 @@ git describe --abbrev=0 --tags
 popd
 
 # LAUNCH ARDB
-bash ${AIL_BIN}LAUNCH.sh -lav &
+bash ${AIL_BIN}/LAUNCH.sh -lav &
 wait
 echo ""
 
@@ -125,6 +127,6 @@ pushd ${AIL_FLASK}
 python3 create_default_user.py
 popd
 
-bash ${AIL_BIN}LAUNCH.sh -k &
+bash ${AIL_BIN}/LAUNCH.sh -k &
 wait
 echo ""
