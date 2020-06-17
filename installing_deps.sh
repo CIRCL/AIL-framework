@@ -88,16 +88,18 @@ fi
 # create AILENV + intall python packages
 ./install_virtualenv.sh
 
+# force virtualenv activation
+. ./AILENV/bin/activate
 
-pushd ${AIL_BIN}helper/gen_cert
+pushd ${AIL_BIN}/helper/gen_cert
 ./gen_root.sh
 wait
 ./gen_cert.sh
 wait
 popd
 
-cp ${AIL_BIN}helper/gen_cert/server.crt ${AIL_FLASK}server.crt
-cp ${AIL_BIN}helper/gen_cert/server.key ${AIL_FLASK}server.key
+cp ${AIL_BIN}/helper/gen_cert/server.crt ${AIL_FLASK}/server.crt
+cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}/server.key
 
 mkdir -p $AIL_HOME/PASTES
 
@@ -109,14 +111,14 @@ $AIL_HOME/doc/generate_modules_data_flow_graph.sh
 # init update version
 pushd ${AIL_HOME}
 # shallow clone
-git fetch --tags --prune --unshallow
+git fetch --tags --prune --depth=10000
 git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
 echo "AIL current version:"
 git describe --abbrev=0 --tags
 popd
 
 # LAUNCH ARDB
-bash ${AIL_BIN}LAUNCH.sh -lav &
+bash ${AIL_BIN}/LAUNCH.sh -lav &
 wait
 echo ""
 
@@ -125,6 +127,6 @@ pushd ${AIL_FLASK}
 python3 create_default_user.py
 popd
 
-bash ${AIL_BIN}LAUNCH.sh -k &
+bash ${AIL_BIN}/LAUNCH.sh -k &
 wait
 echo ""
