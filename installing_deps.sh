@@ -89,7 +89,9 @@ fi
 ./install_virtualenv.sh
 
 # force virtualenv activation
-. ./AILENV/bin/activate
+if [ -z "$VIRTUAL_ENV" ]; then
+    . ./AILENV/bin/activate
+fi
 
 pushd ${AIL_BIN}/helper/gen_cert
 ./gen_root.sh
