@@ -7,6 +7,7 @@ import sys
 import uuid
 import redis
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
