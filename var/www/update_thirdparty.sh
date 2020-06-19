@@ -76,9 +76,11 @@ wget -q https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css -O 
 wget -q https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js -O ./static/js/dataTables.bootstrap.min.js
 
 #Ressources for bootstrap popover
-POPPER_VERSION="2.0.6"
-wget -q https://unpkg.com/@popperjs/core@${POPPER_VERSION}/dist/umd/popper.min.js -O ./static/js/popper.min.js
-wget -q https://unpkg.com/@popperjs/core@${POPPER_VERSION}/dist/umd/popper.min.js.map -O ./static/js/popper.min.js.map
+POPPER_VERSION="1.16.1"
+wget https://github.com/FezVrasta/popper.js/archive/v${POPPER_VERSION}.zip -O temp/popper.zip
+unzip temp/popper.zip -d temp/
+mv temp/popper-core-${POPPER_VERSION}/dist/umd/popper.min.js ./static/js/
+mv temp/popper-core-${POPPER_VERSION}/dist/umd/popper.min.js.map ./static/js/
 
 #Ressource for graph
 wget -q https://raw.githubusercontent.com/flot/flot/958e5fd43c6dff4bab3e1fd5cb6109df5c1e8003/jquery.flot.js -O ./static/js/jquery.flot.js
@@ -112,11 +114,11 @@ then
 fi
 
 #Update MISP Taxonomies and Galaxies
-python3 -m pip install git+https://github.com/MISP/PyTaxonomies --upgrade
-python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies --upgrade
+pip3 install git+https://github.com/MISP/PyTaxonomies --upgrade
+pip3 install git+https://github.com/MISP/PyMISPGalaxies --upgrade
 
 #Update PyMISP
-python3 -m pip install git+https://github.com/MISP/PyMISP --upgrade
+pip3 install git+https://github.com/MISP/PyMISP --upgrade
 
 #Update the Hive
-python3 -m pip install thehive4py --upgrade
+pip3 install thehive4py --upgrade
