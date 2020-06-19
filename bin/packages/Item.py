@@ -48,7 +48,7 @@ def get_item_date(item_id, add_separator=False):
     return item_basic.get_item_date(item_id, add_separator=add_separator)
 
 def get_source(item_id):
-    return item_id.split('/')[-5]
+    return item_basic.get_source(item_id)
 
 def get_item_basename(item_id):
     return os.path.basename(item_id)

@@ -33,6 +33,9 @@ def get_item_date(item_id, add_separator=False):
     else:
         return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
 
+def get_source(item_id):
+    return item_id.split('/')[-5]
+
 # # TODO: add an option to check the tag
 def is_crawled(item_id):
     return item_id.startswith('crawled')

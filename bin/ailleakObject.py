@@ -4,7 +4,10 @@
 import os
 import sys
 
+from pymisp import MISPEvent, MISPObject
 from pymisp.tools.abstractgenerator import AbstractMISPObjectGenerator
+MISPEvent
+
 from packages import Paste
 import datetime
 import json
@@ -12,28 +15,10 @@ from io import BytesIO
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import item_basic
 
-class AilLeakObject(AbstractMISPObjectGenerator):
-    def __init__(self, uuid_ail, p_source, p_date, p_content, p_duplicate, p_duplicate_number):
-        super(AbstractMISPObjectGenerator, self).__init__('ail-leak')
-        self._uuid = uuid_ail
-        self._p_source = p_source
-        self._p_date = p_date
-        self._p_content = p_content
-        self._p_duplicate = p_duplicate
-        self._p_duplicate_number = p_duplicate_number
-        self.generate_attributes()
-
-    def generate_attributes(self):
-        self.add_attribute('origin', value=self._p_source, type='text')
-        self.add_attribute('last-seen', value=self._p_date, type='datetime')
-        if self._p_duplicate_number > 0:
-            self.add_attribute('duplicate', value=self._p_duplicate, type='text')
-            self.add_attribute('duplicate_number', value=self._p_duplicate_number, type='counter')
-        self._pseudofile = BytesIO(self._p_content.encode())
-        res = self.add_attribute('raw-data', value=self._p_source, data=self._pseudofile, type="attachment")# , ShadowAttribute=self.p_tag)
-        #res.add_shadow_attributes(tag)
-        self.add_attribute('sensor', value=self._uuid, type="text")
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
+import MispExport
 
 class ObjectWrapper:
     def __init__(self, pymisp):
@@ -45,53 +30,48 @@ class ObjectWrapper:
         config_loader = None
         self.attribute_to_tag = None
 
-    def add_new_object(self, uuid_ail, path, p_source, tag):
+    def add_new_object(self, uuid_ail, item_id, tag):
         self.uuid_ail = uuid_ail
-        self.path = path
-        self.p_source = p_source
-        self.paste = Paste.Paste(path)
-        self.p_date = self.date_to_str(self.paste.p_date)
-        self.p_content = self.paste.get_p_content()
-        self.p_tag = tag
 
-        temp = self.paste._get_p_duplicate()
+        # self.paste = Paste.Paste(path)
+        # temp = self.paste._get_p_duplicate()
+        #
+        # #beautifier
+        # if not temp:
+        #     temp = ''
+        #
+        # p_duplicate_number = len(temp) if len(temp) >= 0 else 0
+        #
+        # to_ret = ""
+        # for dup in temp[:10]:
+        #     dup = dup.replace('\'','\"').replace('(','[').replace(')',']')
+        #     dup = json.loads(dup)
+        #     algo = dup[0]
+        #     path = dup[1].split('/')[-6:]
+        #     path = '/'.join(path)[:-3] # -3 removes .gz
+        #     if algo == 'tlsh':
+        #         perc = 100 - int(dup[2])
+        #     else:
+        #         perc = dup[2]
+        #     to_ret += "{}: {} [{}%]\n".format(path, algo, perc)
+        # p_duplicate = to_ret
 
-        #beautifier
-        if not temp:
-            temp = ''
-
-        p_duplicate_number = len(temp) if len(temp) >= 0 else 0
-
-        to_ret = ""
-        for dup in temp[:10]:
-            dup = dup.replace('\'','\"').replace('(','[').replace(')',']')
-            dup = json.loads(dup)
-            algo = dup[0]
-            path = dup[1].split('/')[-6:]
-            path = '/'.join(path)[:-3] # -3 removes .gz
-            if algo == 'tlsh':
-                perc = 100 - int(dup[2])
-            else:
-                perc = dup[2]
-            to_ret += "{}: {} [{}%]\n".format(path, algo, perc)
-        p_duplicate = to_ret
-
-        self.mispObject = AilLeakObject(self.uuid_ail, self.p_source, self.p_date, self.p_content, p_duplicate, p_duplicate_number)
+        return MispExport.export_ail_item(item_id, [tag])
 
     def date_to_str(self, date):
         return "{0}-{1}-{2}".format(date.year, date.month, date.day)
 
-    def get_all_related_events(self):
-        to_search = "Daily AIL-leaks"
-        result = self.pymisp.search_all(to_search)
+    def get_all_related_events(self, to_search):
+        result = self.pymisp.search(controller='events', eventinfo=to_search, metadata=False)
         events = []
-        for e in result['response']:
-            events.append({'id': e['Event']['id'], 'org_id': e['Event']['org_id'], 'info': e['Event']['info']})
+        if result:
+            for e in result:
+                events.append({'id': e['Event']['id'], 'org_id': e['Event']['org_id'], 'info': e['Event']['info']})
         return events
 
     def get_daily_event_id(self):
         to_match = "Daily AIL-leaks {}".format(datetime.date.today())
-        events = self.get_all_related_events()
+        events = self.get_all_related_events(to_match)
         for dic in events:
             info = dic['info']
             e_id = dic['id']
@@ -99,8 +79,8 @@ class ObjectWrapper:
                 print('Found: ', info, '->', e_id)
                 self.currentID_date = datetime.date.today()
                 return e_id
-        created_event = self.create_daily_event()['Event']
-        new_id = created_event['id']
+        created_event = self.create_daily_event()
+        new_id = created_event['Event']['id']
         print('New event created:', new_id)
         self.currentID_date = datetime.date.today()
         return new_id
@@ -120,17 +100,20 @@ class ObjectWrapper:
         orgc_id = None
         sharing_group_id = None
         date = None
-        event = self.pymisp.new_event(distribution, threat,
-                analysis, info, date,
-                published, orgc_id, org_id, sharing_group_id)
-        eventUuid = event['Event']['uuid']
-        self.pymisp.tag(eventUuid, 'infoleak:output-format="ail-daily"')
-        return event
+
+        event = MISPEvent()
+        event.distribution = distribution
+        event.info = info
+        event.analysis = analysis
+        event.threat = threat
+        event.published = published
+
+        event.add_tag('infoleak:output-format="ail-daily"')
+        existing_event = self.pymisp.add_event(event)
+        return existing_event
 
     # Publish object to MISP
-    def pushToMISP(self, uuid_ail, path, tag):
-        self._p_source = path.split('/')[-5:]
-        self._p_source = '/'.join(self._p_source)[:-3]
+    def pushToMISP(self, uuid_ail, item_id, tag):
 
         if self.currentID_date != datetime.date.today(): #refresh id
             self.eventID_to_push = self.get_daily_event_id()
@@ -138,42 +121,37 @@ class ObjectWrapper:
         mispTYPE = 'ail-leak'
 
         # paste object already exist
-        if self.paste_object_exist(self.eventID_to_push, self._p_source):
+        if self.paste_object_exist(self.eventID_to_push, item_id):
             # add new tag
             self.tag(self.attribute_to_tag, tag)
-            print(self._p_source + ' tagged: ' + tag)
+            print(item_id + ' tagged: ' + tag)
         #create object
         else:
-            self.add_new_object(uuid_ail, path, self._p_source, tag)
+            misp_obj = self.add_new_object(uuid_ail, item_id, tag)
+
+            # deprecated
+            # try:
+            #     templateID = [x['ObjectTemplate']['id'] for x in self.pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == mispTYPE][0]
+            # except IndexError:
+            #     valid_types = ", ".join([x['ObjectTemplate']['name'] for x in self.pymisp.get_object_templates_list()])
+            #     print ("Template for type %s not found! Valid types are: %s" % (mispTYPE, valid_types))
 
 
-            try:
-                templateID = [x['ObjectTemplate']['id'] for x in self.pymisp.get_object_templates_list() if x['ObjectTemplate']['name'] == mispTYPE][0]
-            except IndexError:
-                valid_types = ", ".join([x['ObjectTemplate']['name'] for x in self.pymisp.get_object_templates_list()])
-                print ("Template for type %s not found! Valid types are: %s" % (mispTYPE, valid_types))
-            r = self.pymisp.add_object(self.eventID_to_push, templateID, self.mispObject)
+            r = self.pymisp.add_object(self.eventID_to_push, misp_obj, pythonify=True)
             if 'errors' in r:
                 print(r)
             else:
-                # tag new object
-                self.set_attribute_to_tag_uuid(self.eventID_to_push, self._p_source)
-                self.tag(self.attribute_to_tag, tag)
-                print('Pushed:', tag, '->', self._p_source)
+                print('Pushed:', tag, '->', item_id)
 
-    def paste_object_exist(self, eventId, source):
-        res = self.pymisp.search(controller='attributes', eventid=eventId, values=source)
+    def paste_object_exist(self, eventId, item_id):
+        res = self.pymisp.search(controller='attributes', eventid=eventId, value=item_id)
         # object already exist
-        if res['response']:
-            self.attribute_to_tag = res['response']['Attribute'][0]['uuid']
+        if res.get('Attribute', []):
+            self.attribute_to_tag = res['Attribute'][0]['uuid']
             return True
         # new object
         else:
             return False
-
-    def set_attribute_to_tag_uuid(self, eventId, source):
-        res = self.pymisp.search(controller='attributes', eventid=eventId, values=source)
-        self.attribute_to_tag = res['response']['Attribute'][0]['uuid']
 
     def tag(self, uuid, tag):
         self.pymisp.tag(uuid, tag)
