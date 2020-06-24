@@ -200,8 +200,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Phone.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
-    sleep 0.1
+    #screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
+    #sleep 0.1
     screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cve.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "WebStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./WebStats.py; read x"
