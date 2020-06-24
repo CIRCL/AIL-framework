@@ -73,3 +73,30 @@ def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time
         print("Caught KeyboardInterrupt, terminating workers")
         proc.terminate()
         sys.exit(0)
+
+def _regex_search(redis_key, regex, item_content):
+    first_occ = regex.search(item_content)
+    if r_set:
+        r_serv_cache.set(redis_key, first_occ)
+
+def regex_search(module_name, redis_key, regex, item_id, item_content, max_time=30):
+    proc = Proc(target=_regex_search, args=(redis_key, regex, item_content, ))
+    try:
+        proc.start()
+        proc.join(max_time)
+        if proc.is_alive():
+            proc.terminate()
+            Statistics.incr_module_timeout_statistic(module_name)
+            err_mess = "{}: processing timeout: {}".format(module_name, item_id)
+            print(err_mess)
+            publisher.info(err_mess)
+            return None
+        else:
+            first_occ = r_serv_cache.get(redis_key)
+            r_serv_cache.delete(redis_key)
+            proc.terminate()
+            return first_occ
+    except KeyboardInterrupt:
+        print("Caught KeyboardInterrupt, terminating workers")
+        proc.terminate()
+        sys.exit(0)

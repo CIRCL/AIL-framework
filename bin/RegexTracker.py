@@ -10,7 +10,6 @@ import os
 import re
 import sys
 import time
-import signal
 
 from Helper import Process
 from pubsublogger import publisher
@@ -20,17 +19,14 @@ import NotificationHelper
 from packages import Item
 from packages import Term
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import regex_helper
+
 full_item_url = "/showsavedpaste/?paste="
 mail_body_template = "AIL Framework,\nNew occurrence for term tracked regex: {}\nitem id: {}\nurl: {}{}"
 
 dict_regex_tracked = Term.get_regex_tracked_words_dict()
 last_refresh = time.time()
-
-class TimeoutException(Exception):
-    pass
-def timeout_handler(signum, frame):
-    raise TimeoutException
-signal.signal(signal.SIGALRM, timeout_handler)
 
 def new_term_found(term, term_type, item_id, item_date):
     uuid_list = Term.get_term_uuid_list(term, 'regex')
@@ -56,10 +52,13 @@ if __name__ == "__main__":
     publisher.info("Script RegexTracker started")
 
     config_section = 'RegexTracker'
+    module_name = "RegexTracker"
     p = Process(config_section)
     max_execution_time = p.config.getint(config_section, "max_execution_time")
 
     ull_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
+
+    redis_cache_key = regex_helper.generate_redis_cache_key(module_name)
 
     # Regex Frequency
     while True:
@@ -72,19 +71,9 @@ if __name__ == "__main__":
             item_content = Item.get_item_content(item_id)
 
             for regex in dict_regex_tracked:
-
-                signal.alarm(max_execution_time)
-                try:
-                    matched = dict_regex_tracked[regex].search(item_content)
-                except TimeoutException:
-                    print ("{0} processing timeout".format(item_id))
-                    continue
-                else:
-                    signal.alarm(0)
-
+                matched = regex_helper.regex_search(module_name, redis_cache_key, dict_regex_tracked[regex], item_id, item_content, max_time=max_execution_time)
                 if matched:
                     new_term_found(regex, 'regex', item_id, item_date)
-
 
         else:
             time.sleep(5)
