@@ -76,8 +76,7 @@ def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time
 
 def _regex_search(redis_key, regex, item_content):
     first_occ = regex.search(item_content)
-    if r_set:
-        r_serv_cache.set(redis_key, first_occ)
+    r_serv_cache.set(redis_key, first_occ)
 
 def regex_search(module_name, redis_key, regex, item_id, item_content, max_time=30):
     proc = Proc(target=_regex_search, args=(redis_key, regex, item_content, ))
