@@ -57,14 +57,20 @@ topic = '102'
 
 while True:
     time.sleep(base_sleeptime + sleep_inc)
-    paste = r.lpop("pastes")
-    if paste is None:
+    item_id = r.lpop("pastes")
+    if item_id is None:
         continue
     try:
-        print(paste)
-        with open(pystemonpath+paste, 'rb') as f: #.read()
+        print(item_id)
+        full_item_path = os.path.join(pystemonpath, item_id)
+        if not os.path.isfile(full_item_path):
+            print('Error: {}, file not found'.format(full_item_path))
+            sleep_inc = 1
+            continue
+
+        with open(full_item_path, 'rb') as f: #.read()
             messagedata = f.read()
-        path_to_send = os.path.join(pastes_directory,paste)
+        path_to_send = os.path.join(pastes_directory, item_id)
 
         s = b' '.join( [ topic.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
         socket.send(s)
