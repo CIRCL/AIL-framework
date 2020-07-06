@@ -82,10 +82,10 @@ Installation
 Type these command lines for a fully automated installation and start AIL framework:
 ```bash
 git clone https://github.com/ail-project/ail-framework.git
-cd AIL-framework
+cd ail-framework
 ./installing_deps.sh
 
-cd ~/AIL-framework/
+cd ~/ail-framework/
 cd bin/
 ./LAUNCH.sh -l
 ```
