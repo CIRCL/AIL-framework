@@ -49,6 +49,7 @@ Flask_dir = os.environ['AIL_FLASK']
 # CONFIG #
 config_loader = ConfigLoader.ConfigLoader()
 baseUrl = config_loader.get_config_str("Flask", "baseurl")
+host = config_loader.get_config_str("Flask", "host")
 baseUrl = baseUrl.replace('/', '')
 if baseUrl != '':
     baseUrl = '/'+baseUrl
@@ -253,4 +254,4 @@ r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=FLASK_PORT, threaded=True, ssl_context=ssl_context)
+    app.run(host=host, port=FLASK_PORT, threaded=True, ssl_context=ssl_context)
