@@ -3,7 +3,6 @@
 
 import os
 import sys
-import gzip
 import redis
 
 from io import BytesIO
@@ -16,11 +15,14 @@ import Pgp
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import item_basic
+import domain_basic
 import ConfigLoader
 import Correlate_object
 import Decoded
 import Screenshot
 import telegram
+
+from item_basic import *
 
 config_loader = ConfigLoader.ConfigLoader()
 # get and sanityze PASTE DIRECTORY
@@ -30,6 +32,7 @@ PASTES_FOLDER = os.path.join(os.path.realpath(PASTES_FOLDER), '')
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
+
 config_loader = None
 
 def exist_item(item_id):
@@ -71,22 +74,7 @@ def get_lines_info(item_id, item_content=None):
 
 
 def get_item_content(item_id):
-    item_full_path = os.path.join(PASTES_FOLDER, item_id)
-    try:
-        item_content = r_cache.get(item_full_path)
-    except UnicodeDecodeError:
-        item_content = None
-    except Exception as e:
-        item_content = None
-    if item_content is None:
-        try:
-            with gzip.open(item_full_path, 'r') as f:
-                item_content = f.read().decode()
-                r_cache.set(item_full_path, item_content)
-                r_cache.expire(item_full_path, 300)
-        except:
-            item_content = ''
-    return str(item_content)
+    return item_basic.get_item_content(item_id)
 
 # API
 def get_item(request_dict):
@@ -292,14 +280,8 @@ def get_domain(item_id):
     item_id = item_id[-1]
     return item_id[:-36]
 
-def get_item_parent(item_id):
-    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'father')
-
-def get_item_children(item_id):
-    return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))
-
-def add_item_parent(item_parent, item_id):
-    return item_basic.add_item_parent(item_parent, item_id)
+def get_item_domain_with_port(item_id):
+    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'domain')
 
 def get_item_link(item_id):
     return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'real_link')
@@ -423,12 +405,32 @@ def delete_item(obj_id):
             else:
                 for obj2_id in obj_correlations[correlation]:
                     Correlate_object.delete_obj_relationship(correlation, obj2_id, 'item', obj_id)
+
+        # delete father/child
+        delete_node(obj_id)
+
+        # delete item metadata
+        r_serv_metadata.delete('paste_metadata:{}'.format(obj_id))
+
         return True
 
-    ### REQUIRE MORE WORK
-    # delete child/son !!!
     ### TODO in inport V2
     # delete from tracked items
     # delete from queue
     ###
     return False
+
+#### ####
+def delete_node(item_id):
+    if is_node(item_id):
+        if is_crawled(item_id):
+            delete_domain_node(item_id)
+        item_basic._delete_node(item_id)
+
+def delete_domain_node(item_id):
+    if is_domain_root(item_id):
+        # remove from domain history
+        domain, port = get_item_domain_with_port(item_id).split(':')
+        domain_basic.delete_domain_item_core(item_id, domain, port)
+    for child_id in get_all_domain_node_by_item_id(item_id):
+        delete_item(child_id)
