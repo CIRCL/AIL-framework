@@ -20,7 +20,7 @@ import ConfigLoader
 import Correlate_object
 import Decoded
 import Screenshot
-import telegram
+import Username
 
 from item_basic import *
 
@@ -156,15 +156,15 @@ def get_item_pgp(item_id, currencies_type=None, get_nb=False):
     '''
     return Pgp.pgp.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
 
-def get_item_username(item_id, currencies_type=None, get_nb=False):
+def get_item_username(item_id, sub_type=None, get_nb=False):
     '''
     Return all pgp of a given item.
 
     :param item_id: item id
-    :param currencies_type: list of cryptocurrencies type
-    :type currencies_type: list, optional
+    :param sub_type: list of username type
+    :type sub_type: list, optional
     '''
-    return telegram.correlation.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
+    return Username.correlation.get_item_correlation_dict(item_id, correlation_type=sub_type, get_nb=get_nb)
 
 def get_item_decoded(item_id):
     '''
