@@ -23,7 +23,7 @@ config_loader = ConfigLoader.ConfigLoader()
 publisher.port = 6380
 publisher.channel = "Script"
 
-def sendEmailNotification(recipient, alert_name, content):
+def sendEmailNotification(recipient, mail_subject, mail_body):
 
     sender = config_loader.get_config_str("Notifications", "sender")
     sender_user = config_loader.get_config_str("Notifications", "sender_user")
@@ -60,14 +60,13 @@ def sendEmailNotification(recipient, alert_name, content):
         mime_msg = MIMEMultipart()
         mime_msg['From'] = sender
         mime_msg['To'] = recipient
-        mime_msg['Subject'] = "AIL Framework " + alert_name + " Alert"
+        mime_msg['Subject'] = mail_subject
 
-        body = content
-        mime_msg.attach(MIMEText(body, 'plain'))
+        mime_msg.attach(MIMEText(mail_body, 'plain'))
 
         smtp_server.sendmail(sender, recipient, mime_msg.as_string())
         smtp_server.quit()
-        print('Send notification ' + alert_name + ' to '+recipient)
+        print('Send notification: ' + mail_subject + ' to '+recipient)
 
     except Exception as err:
         traceback.print_tb(err.__traceback__)
