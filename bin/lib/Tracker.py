@@ -15,7 +15,7 @@ r_serv_tracker = config_loader.get_redis_conn("ARDB_Tracker")
 config_loader = None
 
 def get_tracker_description(tracker_uuid):
-    return r_serv_tracker.hget('tracker:{}'.format(term_uuid), 'description')
+    return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'description')
 
 def get_email_subject(tracker_uuid):
     tracker_description = get_tracker_description(tracker_uuid)
