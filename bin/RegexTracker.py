@@ -43,7 +43,7 @@ def new_term_found(term, term_type, item_id, item_date):
 
         mail_to_notify = Term.get_term_mails(term_uuid)
         if mail_to_notify:
-            mail_subject = Tracker.get_email_subject(tracker_uuid)
+            mail_subject = Tracker.get_email_subject(term_uuid)
             mail_body = mail_body_template.format(term, item_id, full_item_url, item_id)
         for mail in mail_to_notify:
             NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
