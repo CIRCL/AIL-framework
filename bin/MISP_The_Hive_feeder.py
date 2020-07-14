@@ -66,7 +66,7 @@ def create_the_hive_alert(source, item_id, tag):
 
     artifacts = [
         AlertArtifact( dataType='uuid-ail', data=r_serv_db.get('ail:uuid') ),
-        AlertArtifact( dataType='file', data=item_id, tags=tags )
+        AlertArtifact( dataType='file', data=item_basic.get_item_filepath(item_id), tags=tags )
     ]
 
     # Prepare the sample Alert
