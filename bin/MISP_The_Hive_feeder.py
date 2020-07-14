@@ -58,15 +58,15 @@ from thehive4py.models import Case, CaseTask, CustomFieldHelper
 
 
 
-def create_the_hive_alert(source, path, tag):
+def create_the_hive_alert(source, item_id, tag):
     # # TODO: check items status (processed by all modules)
     # # TODO: add item metadata: decoded content, link to auto crawled content, pgp correlation, cryptocurrency correlation...
     # # # TODO: description, add AIL link:show items ?
-    tags = list( r_serv_metadata.smembers('tag:{}'.format(path)) )
+    tags = list( r_serv_metadata.smembers('tag:{}'.format(item_id)) )
 
     artifacts = [
         AlertArtifact( dataType='uuid-ail', data=r_serv_db.get('ail:uuid') ),
-        AlertArtifact( dataType='file', data=path, tags=tags )
+        AlertArtifact( dataType='file', data=item_id, tags=tags )
     ]
 
     # Prepare the sample Alert
@@ -115,7 +115,7 @@ def feeder(message, count=0):
         if HiveApi != False:
             if int(r_serv_db.get('hive:auto-alerts')) == 1:
                 if r_serv_db.sismember('whitelist_hive', tag):
-                    create_the_hive_alert(source, path, tag)
+                    create_the_hive_alert(source, item_id, tag)
             else:
                 print('hive, auto alerts creation disable')
         if flag_misp:
