@@ -8,10 +8,10 @@ install_docker() {
     sudo docker pull scrapinghub/splash;
 }
 
-install_python_requirement() {
-    . ./AILENV/bin/activate;
-    pip3 install -U -r crawler_requirements.txt;
-}
+# install_python_requirement() {
+#     . ./AILENV/bin/activate;
+#     pip3 install -U -r crawler_requirements.txt;
+# }
 
 install_all() {
     read -p "Do you want to install docker? (use local splash server) [y/n] " -n 1 -r
@@ -20,7 +20,6 @@ install_all() {
     then
         install_docker;
     fi
-    install_python_requirement;
 }
 
 usage() {
