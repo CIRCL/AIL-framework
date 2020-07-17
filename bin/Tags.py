@@ -45,4 +45,5 @@ if __name__ == '__main__':
             tag, item_id = message.split(';')
 
             Tag.add_tag("item", tag, item_id)
+
             p.populate_set_out(message, 'MISP_The_Hive_feeder')

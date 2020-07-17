@@ -54,7 +54,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        #next_page = request.form.get('next_page')
+        next_page = request.form.get('next_page')
 
         if username is not None:
             user = User.get(username)
@@ -74,7 +74,10 @@ def login():
                 if user.request_password_change():
                     return redirect(url_for('root.change_password'))
                 else:
-                    return redirect(url_for('dashboard.index'))
+                    if next_page and next_page!='None':
+                        return redirect(next_page)
+                    else:
+                        return redirect(url_for('dashboard.index'))
             # login failed
             else:
                 # set brute force protection
@@ -91,9 +94,9 @@ def login():
         return 'please provide a valid username'
 
     else:
-        #next_page = request.args.get('next')
+        next_page = request.args.get('next')
         error = request.args.get('error')
-        return render_template("login.html" , error=error)
+        return render_template("login.html" , next_page=next_page, error=error)
 
 @root.route('/change_password', methods=['POST', 'GET'])
 @login_required

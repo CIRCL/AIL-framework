@@ -13,7 +13,7 @@ import ConfigLoader
 import Decoded
 import Domain
 import Screenshot
-import telegram
+import Username
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Pgp
@@ -36,7 +36,7 @@ def is_valid_object_subtype(object_type, object_subtype):
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.is_valid_obj_subtype(object_subtype)
     elif object_type == 'username':
-        return telegram.correlation.is_valid_obj_subtype(object_subtype)
+        return Username.correlation.is_valid_obj_subtype(object_subtype)
     elif object_subtype == None:
         return True
     else:
@@ -69,7 +69,7 @@ def exist_object(object_type, correlation_id, type_id=None): # => work on object
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.exist_correlation(type_id, correlation_id)
     elif object_type == 'username':
-        return telegram.correlation.exist_correlation(type_id, correlation_id)
+        return Username.correlation.exist_correlation(type_id, correlation_id)
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.exist_screenshot(correlation_id)
     else:
@@ -88,7 +88,7 @@ def get_object_metadata(object_type, correlation_id, type_id=None):
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_metadata(type_id, correlation_id)
     elif object_type == 'username':
-        return telegram.correlation.get_metadata(type_id, correlation_id)
+        return Username.correlation.get_metadata(type_id, correlation_id)
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.get_metadata(correlation_id)
 
@@ -104,7 +104,7 @@ def get_object_correlation(object_type, value, correlation_names=None, correlati
     elif object_type == 'cryptocurrency':
         return Cryptocurrency.cryptocurrency.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'username':
-        return telegram.correlation.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
+        return Username.correlation.get_correlation_all_object(requested_correl_type, value, correlation_objects=correlation_objects)
     elif object_type == 'screenshot' or object_type == 'image':
         return Screenshot.get_screenshot_correlated_object(value, correlation_objects=correlation_objects)
     return {}
@@ -157,6 +157,9 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
         if correlation_type == 'telegram':
             icon_class = 'fab'
             icon_text = '\uf2c6'
+        elif correlation_type == 'twitter':
+            icon_class = 'fab'
+            icon_text = '\uf099'
         else:
             icon_text = '\uf007'
 

@@ -39,7 +39,7 @@ hashDecoded = Blueprint('hashDecoded', __name__, template_folder='templates')
 ## TODO: put me in option
 all_cryptocurrency = ['bitcoin', 'ethereum', 'bitcoin-cash', 'litecoin', 'monero', 'zcash', 'dash']
 all_pgpdump = ['key', 'name', 'mail']
-all_username = ['telegram']
+all_username = ['telegram', 'twitter']
 
 # ============ FUNCTIONS ============
 
@@ -128,6 +128,8 @@ def get_icon(correlation_type, type_id):
     elif correlation_type == 'username':
         if type_id == 'telegram':
             icon_text = 'fab fa-telegram-plane'
+        elif type_id == 'twitter':
+            icon_text = 'fab fa-twitter'
     return icon_text
 
 def get_icon_text(correlation_type, type_id):
@@ -153,6 +155,8 @@ def get_icon_text(correlation_type, type_id):
     elif correlation_type == 'username':
         if type_id == 'telegram':
             icon_text = '\uf2c6'
+        elif type_id == 'twitter':
+            icon_text = '\uf099'
     return icon_text
 
 def get_all_types_id(correlation_type):

@@ -73,6 +73,7 @@
 		      <input type="email" id="inputEmail" name="username" class="form-control" placeholder="Email address" required autofocus>
 		      <label for="inputPassword" class="sr-only">Password</label>
 		      <input type="password" id="inputPassword" name="password" class="form-control {% if error %}is-invalid{% endif %}" placeholder="Password" required>
+					<input type="text" id="next_page" name="next_page" value="{{next_page}}" hidden>
 					{% if error %}
 						<div class="invalid-feedback">
 							{{error}}

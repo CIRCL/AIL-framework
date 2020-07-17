@@ -7,6 +7,7 @@ import sys
 import uuid
 import redis
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
@@ -19,6 +20,7 @@ import Screenshot
 import Correlate_object
 
 import AILObjects
+import Export
 
 # # TODO: # FIXME: REFRACTOR ME => use UI/Global config
 sys.path.append('../../configs/keys')
@@ -59,8 +61,12 @@ def tag_misp_object_attributes(l_ref_obj_attr, tags):
         for tag in tags:
             obj_attr.add_tag(tag)
 
-def export_ail_item(item_id):
+def export_ail_item(item_id, tags=[]):
     dict_metadata = Item.get_item({'id': item_id, 'date':True, 'tags':True, 'raw_content':True})[0]
+    # force tags
+    for tag in tags:
+        if tag not in dict_metadata['tags']:
+            dict_metadata['tags'].append(tag)
 
     #obj = MISPObject('ail-item', standalone=True)
     obj = MISPObject('ail-leak', standalone=True)
@@ -69,6 +75,7 @@ def export_ail_item(item_id):
     l_obj_attr = []
     l_obj_attr.append( obj.add_attribute('first-seen', value=dict_metadata['date']) )
     l_obj_attr.append( obj.add_attribute('raw-data', value=item_id, data=dict_metadata['raw_content']) )
+    l_obj_attr.append( obj.add_attribute('sensor', value=Export.get_ail_uuid()) )
 
     # add tags
     if dict_metadata['tags']:

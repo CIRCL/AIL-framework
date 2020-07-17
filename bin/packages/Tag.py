@@ -8,10 +8,10 @@ import datetime
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
-import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import item_basic
 
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
@@ -383,8 +383,8 @@ def add_obj_tag(object_type, object_id, tag, obj_date=None):
         r_serv_tags.sadd('{}:{}'.format(tag, obj_date), object_id)
 
         # add domain tag
-        if Item.is_crawled(object_id) and tag!='infoleak:submission="crawler"' and tag != 'infoleak:submission="manual"':
-            domain = Item.get_item_domain(object_id)
+        if item_basic.is_crawled(object_id) and tag!='infoleak:submission="crawler"' and tag != 'infoleak:submission="manual"':
+            domain = item_basic.get_item_domain(object_id)
             add_tag("domain", tag, domain)
     else:
         r_serv_metadata.sadd('tag:{}'.format(object_id), tag)
@@ -432,7 +432,7 @@ def delete_tag(object_type, tag, object_id, obj_date=None):
 # # TODO: move me
 def get_obj_date(object_type, object_id):
     if object_type == "item":
-        return int(Item.get_item_date(object_id))
+        return int(item_basic.get_item_date(object_id))
     else:
         return None
 
@@ -573,3 +573,19 @@ def get_obj_by_tags(object_type, l_tags, date_from=None, date_to=None, nb_obj=50
             l_tagged_obj = list(l_tagged_obj)
 
         return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages, "nb_first_elem":start+1, "nb_last_elem":stop, "nb_all_elem":nb_all_elem}
+
+
+#### TAGS EXPORT ####
+# # TODO:
+def is_updated_tags_to_export(): # by type
+    return False
+
+def get_list_of_solo_tags_to_export_by_type(export_type): # by type
+    if export_type in ['misp', 'thehive']:
+        return r_serv_db.smembers('whitelist_{}'.format(export_type))
+    else:
+        return None
+    #r_serv_db.smembers('whitelist_hive')
+
+
+#### -- ####

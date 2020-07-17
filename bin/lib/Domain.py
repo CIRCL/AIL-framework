@@ -25,7 +25,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Correlate_object
 import Screenshot
-import telegram
+import Username
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
@@ -564,7 +564,7 @@ def get_domain_username(domain, currencies_type=None, get_nb=False):
     :param currencies_type: list of pgp type
     :type currencies_type: list, optional
     '''
-    return telegram.correlation.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
+    return Username.correlation.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
 
 def get_domain_decoded(domain):
     '''

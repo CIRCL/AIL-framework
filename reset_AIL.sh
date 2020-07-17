@@ -6,6 +6,29 @@ GREEN="\\033[1;32m"
 
 [ -z "$AIL_HOME" ] && echo "Needs the env var AIL_HOME. Run the script from the virtual environment." && exit 1;
 
+function helptext {
+    echo -e $GREEN"
+
+              .o.            ooooo      ooooo
+             .888.           \`888'      \`888'
+            .8\"888.           888        888
+           .8' \`888.          888        888
+          .88ooo8888.         888        888
+         .8'     \`888.        888        888       o
+        o88o     o8888o   o  o888o   o  o888ooooood8
+
+         Analysis Information Leak framework
+    "$DEFAULT"
+    Use this script to reset AIL (DB + stored items):
+
+    Usage:
+    -----
+    reset_AIL.sh
+      [--softReset]               Keep All users accounts
+      [-h  | --help]              Help
+    "
+}
+
 function reset_dir {
   # Access dirs and delete
   cd $AIL_HOME
@@ -21,16 +44,6 @@ function reset_dir {
     rm -r *
     echo 'cleaned indexdir'
     popd
-  fi
-
-  if [ $userInput -eq $num ]
-  then
-    if [ -d DATA_ARDB/ ]; then
-      pushd DATA_ARDB/
-      rm -r *
-      echo 'cleaned DATA_ARDB'
-      popd
-    fi
   fi
 
   if [ -d logs/ ]; then
@@ -97,29 +110,36 @@ function flush_DB_keep_user {
   bash ${AIL_BIN}LAUNCH.sh -k
 }
 
+function validate_reset {
+  echo -e $RED"WARNING: DELETE AIL DATA"$DEFAULT
+
+  # Make sure the reseting is intentional
+  num=$(( ( RANDOM % 100 )  + 1 ))
+
+  echo -e $RED"To reset the platform, enter the following number: "$DEFAULT $num
+  read userInput
+
+  if [ $userInput -eq $num ]
+  then
+      echo "Reseting AIL..."
+  else
+      echo "Wrong number"
+      exit 1;
+  fi
+}
+
 function soft_reset {
+  validate_reset;
   reset_dir;
   flush_DB_keep_user;
 }
 
 #If no params,
 [[ $@ ]] || {
-    # Make sure the reseting is intentional
-    num=$(( ( RANDOM % 100 )  + 1 ))
-
-    echo -e $RED"To reset the platform, enter the following number: "$DEFAULT $num
-    read userInput
-
-    if [ $userInput -eq $num ]
-    then
-        echo "Reseting AIL..."
-    else
-        echo "Wrong number"
-        exit 1;
-    fi
+    validate_reset;
 
     num=$(( ( RANDOM % 100 )  + 1 ))
-    echo -e $RED"If yes you want to delete the DB , enter the following number: "$DEFAULT $num
+    echo -e $RED"If you want to delete the DB , enter the following number: "$DEFAULT $num
     read userInput
 
     reset_dir;
@@ -142,6 +162,9 @@ function soft_reset {
 while [ "$1" != "" ]; do
     case $1 in
         --softReset )           soft_reset;
+                                ;;
+        -h | --help )           helptext;
+                                exit
                                 ;;
         * )                     exit 1
     esac

@@ -88,8 +88,10 @@ fi
 # create AILENV + intall python packages
 ./install_virtualenv.sh
 
-# force virtual environment
-. ./AILENV/bin/activate
+# force virtualenv activation
+if [ -z "$VIRTUAL_ENV" ]; then
+    . ./AILENV/bin/activate
+fi
 
 pushd ${AIL_BIN}/helper/gen_cert
 ./gen_root.sh
@@ -98,8 +100,8 @@ wait
 wait
 popd
 
-cp ${AIL_BIN}/helper/gen_cert/server.crt ${AIL_FLASK}server.crt
-cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}server.key
+cp ${AIL_BIN}/helper/gen_cert/server.crt ${AIL_FLASK}/server.crt
+cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}/server.key
 
 mkdir -p $AIL_HOME/PASTES
 
@@ -111,7 +113,7 @@ $AIL_HOME/doc/generate_modules_data_flow_graph.sh
 # init update version
 pushd ${AIL_HOME}
 # shallow clone
-git fetch --tags --prune --unshallow
+git fetch --tags --prune --depth=10000
 git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
 echo "AIL current version:"
 git describe --abbrev=0 --tags

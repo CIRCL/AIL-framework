@@ -20,8 +20,12 @@ from Helper import Process
 from packages import Paste
 import ailleakObject
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+import Tag
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import ConfigLoader
+import item_basic
 
 from pymisp import PyMISP
 
@@ -54,15 +58,15 @@ from thehive4py.models import Case, CaseTask, CustomFieldHelper
 
 
 
-def create_the_hive_alert(source, path, tag):
+def create_the_hive_alert(source, item_id, tag):
     # # TODO: check items status (processed by all modules)
     # # TODO: add item metadata: decoded content, link to auto crawled content, pgp correlation, cryptocurrency correlation...
     # # # TODO: description, add AIL link:show items ?
-    tags = list( r_serv_metadata.smembers('tag:{}'.format(path)) )
+    tags = list( r_serv_metadata.smembers('tag:{}'.format(item_id)) )
 
     artifacts = [
         AlertArtifact( dataType='uuid-ail', data=r_serv_db.get('ail:uuid') ),
-        AlertArtifact( dataType='file', data=path, tags=tags )
+        AlertArtifact( dataType='file', data=item_basic.get_item_filepath(item_id), tags=tags )
     ]
 
     # Prepare the sample Alert
@@ -94,34 +98,30 @@ def create_the_hive_alert(source, path, tag):
 def feeder(message, count=0):
 
     if flag_the_hive or flag_misp:
-        tag, path = message.split(';')
+        tag, item_id = message.split(';')
+
         ## FIXME: remove it
-        if PASTES_FOLDER not in path:
-            path = os.path.join(PASTES_FOLDER, path)
-        try:
-            paste = Paste.Paste(path)
-        except FileNotFoundError:
+        if not item_basic.exist_item(item_id):
             if count < 10:
                 r_serv_db.zincrby('mess_not_saved_export', message, 1)
                 return 0
             else:
                 r_serv_db.zrem('mess_not_saved_export', message)
-                print('Error: {} do not exist, tag= {}'.format(path, tag))
+                print('Error: {} do not exist, tag= {}'.format(item_id, tag))
                 return 0
 
-        source = '/'.join(paste.p_path.split('/')[-6:])
+        source = item_basic.get_source(item_id)
 
         if HiveApi != False:
             if int(r_serv_db.get('hive:auto-alerts')) == 1:
-                whitelist_hive = r_serv_db.scard('whitelist_hive')
                 if r_serv_db.sismember('whitelist_hive', tag):
-                    create_the_hive_alert(source, path, tag)
+                    create_the_hive_alert(source, item_id, tag)
             else:
                 print('hive, auto alerts creation disable')
         if flag_misp:
             if int(r_serv_db.get('misp:auto-events')) == 1:
                 if r_serv_db.sismember('whitelist_misp', tag):
-                    misp_wrapper.pushToMISP(uuid_ail, path, tag)
+                    misp_wrapper.pushToMISP(uuid_ail, item_id, tag)
             else:
                 print('misp, auto events creation disable')
 
@@ -161,15 +161,15 @@ if __name__ == "__main__":
             print('Not connected to MISP')
 
         if flag_misp:
-            try:
-                misp_wrapper = ailleakObject.ObjectWrapper(pymisp)
-                r_serv_db.set('ail:misp', True)
-                print('Connected to MISP:', misp_url)
-            except Exception as e:
-                flag_misp = False
-                r_serv_db.set('ail:misp', False)
-                print(e)
-                print('Not connected to MISP')
+            #try:
+            misp_wrapper = ailleakObject.ObjectWrapper(pymisp)
+            r_serv_db.set('ail:misp', True)
+            print('Connected to MISP:', misp_url)
+            #except Exception as e:
+            #    flag_misp = False
+            #    r_serv_db.set('ail:misp', False)
+            #    print(e)
+            #    print('Not connected to MISP')
 
     # create The HIVE connection
     if flag_the_hive:

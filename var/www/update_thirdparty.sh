@@ -62,8 +62,6 @@ mv temp/d3.min.js ./static/js/
 mv temp/moment-2.24.0/min/moment.min.js ./static/js/
 mv temp/jquery-date-range-picker-0.20.0/dist/jquery.daterangepicker.min.js ./static/js/
 
-rm -rf temp
-
 JQVERSION="3.4.1"
 wget -q http://code.jquery.com/jquery-${JQVERSION}.js -O ./static/js/jquery.js
 
@@ -76,9 +74,11 @@ wget -q https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css -O 
 wget -q https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js -O ./static/js/dataTables.bootstrap.min.js
 
 #Ressources for bootstrap popover
-POPPER_VERSION="2.0.6"
-wget -q https://unpkg.com/@popperjs/core@${POPPER_VERSION}/dist/umd/popper.min.js -O ./static/js/popper.min.js
-wget -q https://unpkg.com/@popperjs/core@${POPPER_VERSION}/dist/umd/popper.min.js.map -O ./static/js/popper.min.js.map
+POPPER_VERSION="1.16.1"
+wget -q https://github.com/FezVrasta/popper.js/archive/v${POPPER_VERSION}.zip -O temp/popper.zip
+unzip -qq temp/popper.zip -d temp/
+mv temp/popper-core-${POPPER_VERSION}/dist/umd/popper.min.js ./static/js/
+mv temp/popper-core-${POPPER_VERSION}/dist/umd/popper.min.js.map ./static/js/
 
 #Ressource for graph
 wget -q https://raw.githubusercontent.com/flot/flot/958e5fd43c6dff4bab3e1fd5cb6109df5c1e8003/jquery.flot.js -O ./static/js/jquery.flot.js
@@ -88,7 +88,6 @@ wget -q https://raw.githubusercontent.com/flot/flot/958e5fd43c6dff4bab3e1fd5cb61
 
 #Ressources for sparkline and canvasJS and slider
 wget -q http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js -O ./static/js/jquery.sparkline.min.js
-mkdir temp
 wget -q http://canvasjs.com/fdm/chart/ -O temp/canvasjs.zip
 unzip -qq temp/canvasjs.zip -d temp/
 mv temp/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
@@ -97,6 +96,8 @@ wget -q https://jqueryui.com/resources/download/jquery-ui-1.12.1.zip -O temp/jqu
 unzip -qq temp/jquery-ui.zip -d temp/
 mv temp/jquery-ui-1.12.1/jquery-ui.min.js ./static/js/jquery-ui.min.js
 mv temp/jquery-ui-1.12.1/jquery-ui.min.css ./static/css/jquery-ui.min.css
+
+
 rm -rf temp
 
 mkdir -p ./static/image
@@ -112,11 +113,11 @@ then
 fi
 
 #Update MISP Taxonomies and Galaxies
-python3 -m pip install git+https://github.com/MISP/PyTaxonomies --upgrade
-python3 -m pip install git+https://github.com/MISP/PyMISPGalaxies --upgrade
+pip3 install git+https://github.com/MISP/PyTaxonomies --upgrade
+pip3 install git+https://github.com/MISP/PyMISPGalaxies --upgrade
 
 #Update PyMISP
-python3 -m pip install git+https://github.com/MISP/PyMISP --upgrade
+pip3 install git+https://github.com/MISP/PyMISP --upgrade
 
 #Update the Hive
-python3 -m pip install thehive4py --upgrade
+pip3 install thehive4py --upgrade

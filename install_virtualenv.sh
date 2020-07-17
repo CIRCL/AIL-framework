@@ -16,7 +16,6 @@ if [ -z "$VIRTUAL_ENV" ]; then
     echo export AIL_REDIS=$(pwd)/redis/src/ >> ./AILENV/bin/activate
     echo export AIL_ARDB=$(pwd)/ardb/src/ >> ./AILENV/bin/activate
 
-
 fi
 
 # activate virtual environment
