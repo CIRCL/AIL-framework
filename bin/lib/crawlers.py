@@ -34,6 +34,7 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
+PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
 config_loader = None
 
 # load crawler config
@@ -545,6 +546,48 @@ def save_har(har_dir, item_id, har_content):
     with open(filename, 'w') as f:
         f.write(json.dumps(har_content))
 
+#### CRAWLER QUEUES ####
+def get_crawler_queue_type_by_proxy(splash_name, proxy_type):
+    all_domain_type = []
+    if splash_name != 'default_splash' and splash_name != 'default_splash_tor':
+        all_domain_type.append(splash_name)
+        # check if can be used for discovery
+        if not is_splash_used_in_discovery(splash_name):
+            return all_domain_type
+    if proxy_type == 'tor':
+        all_domain_type.append('onion')
+        all_domain_type.append('regular')
+    # proxy_type = web
+    else:
+        all_domain_type.append('regular')
+    return all_domain_type
+
+def get_elem_to_crawl_by_queue_type(l_queue_type):
+    ## queues priority:
+    # 1 - priority queue
+    # 2 - discovery queue
+    # 3 - normal queue
+    ##
+    all_queue_key = ['{}_crawler_priority_queue', '{}_crawler_discovery_queue', '{}_crawler_queue']
+
+    for queue_key in all_queue_key:
+        for queue_type in l_queue_type:
+            message = r_serv_onion.spop(queue_key.format(queue_type))
+            if message:
+                dict_to_crawl = {}
+                splitted = message.rsplit(';', 1)
+                if len(splitted) == 2:
+                    url, item_id = splitted
+                    item_id = item_id.replace(PASTES_FOLDER+'/', '')
+                else:
+                # # TODO: to check/refractor
+                    item_id = None
+                    url = message
+                return {'url': url, 'paste': item_id, 'type_service': queue_type, 'original_message': message}
+    return None
+
+#### ---- ####
+
 
 #### SPLASH MANAGER ####
 def get_splash_manager_url(reload=False): # TODO: add config reload
@@ -557,6 +600,17 @@ def get_splash_url_from_manager_url(splash_manager_url, splash_port):
     url = urlparse(splash_manager_url)
     host = url.netloc.split(':', 1)[0]
     return 'http://{}:{}'.format(host, splash_port)
+
+def is_splash_used_in_discovery(splash_name):
+    res = r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'discovery_queue')
+    if res == 'True':
+        return True
+    else:
+        return False
+
+def restart_splash_docker(splash_url):
+    splash_port = splash_url.split(':')[-1]
+    return _restart_splash_docker(splash_port)
 
     ## API ##
 def ping_splash_manager():
@@ -576,6 +630,14 @@ def get_all_splash_manager_containers_name():
 
 def get_all_splash_manager_proxies():
     req = requests.get('{}/api/v1/get/proxies/all'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+    if req.status_code == 200:
+        return req.json()
+    else:
+        print(req.json())
+
+def _restart_splash_docker(splash_port):
+    dict_to_send = {'docker_port': splash_port}
+    req = requests.post('{}/api/v1/splash/restart'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False, json=dict_to_send)
     if req.status_code == 200:
         return req.json()
     else:
@@ -647,6 +709,9 @@ def get_all_proxies(r_list=False):
 def delete_all_proxies():
     for proxy_name in get_all_proxies():
         delete_proxy(proxy_name)
+
+def set_proxy_used_in_discovery(proxy_name, value):
+    r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'discovery_queue', value)
 
 def delete_proxy(proxy_name): # # TODO: force delete (delete all proxy)
     proxy_splash = get_all_splash_by_proxy(proxy_name)

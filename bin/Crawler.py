@@ -19,6 +19,9 @@ sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 from pubsublogger import publisher
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
+import crawlers
+
 # ======== FUNCTIONS ========
 
 def load_blacklist(service_type):
@@ -117,43 +120,6 @@ def unpack_url(url):
 
     return to_crawl
 
-# get url, paste and service_type to crawl
-def get_elem_to_crawl(rotation_mode):
-    message = None
-    domain_service_type = None
-
-    #load_priority_queue
-    for service_type in rotation_mode:
-        message = redis_crawler.spop('{}_crawler_priority_queue'.format(service_type))
-        if message is not None:
-            domain_service_type = service_type
-            break
-    #load_discovery_queue
-    if message is None:
-        for service_type in rotation_mode:
-            message = redis_crawler.spop('{}_crawler_discovery_queue'.format(service_type))
-            if message is not None:
-                domain_service_type = service_type
-                break
-    #load_normal_queue
-    if message is None:
-        for service_type in rotation_mode:
-            message = redis_crawler.spop('{}_crawler_queue'.format(service_type))
-            if message is not None:
-                domain_service_type = service_type
-                break
-
-    if message:
-        splitted = message.rsplit(';', 1)
-        if len(splitted) == 2:
-            url, paste = splitted
-            if paste:
-                paste = paste.replace(PASTES_FOLDER+'/', '')
-
-        message = {'url': url, 'paste': paste, 'type_service': domain_service_type, 'original_message': message}
-
-    return message
-
 def get_crawler_config(redis_server, mode, service_type, domain, url=None):
     crawler_options = {}
     if mode=='auto':
@@ -237,6 +203,9 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
             # TODO: relaunch docker or send error message
             nb_retry += 1
 
+            if nb_retry == 2:
+                crawlers.restart_splash_docker(splash_url)
+
             if nb_retry == 6:
                 on_error_send_message_back_in_queue(type_service, domain, message)
                 publisher.error('{} SPASH DOWN'.format(splash_url))
@@ -304,11 +273,23 @@ def search_potential_source_domain(type_service, domain):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 2 and len(sys.argv) != 3:
-        print('usage:', 'Crawler.py', 'splash_port')
-        print('usage:', 'Crawler.py', 'splash_name', 'splash_url')
+    if len(sys.argv) != 2:
+        print('usage:', 'Crawler.py', 'splash_url')
         exit(1)
 ##################################################
+    splash_url = sys.argv[1]
+
+    splash_name = crawlers.get_splash_name_by_url(splash_url)
+    crawler_type = crawlers.get_splash_crawler_type(splash_name)
+
+    print(splash_name)
+    print(crawler_type)
+
+    #rotation_mode = deque(['onion', 'regular'])
+    rotation_mode = deque(crawlers.get_crawler_queue_type_by_proxy(splash_name, crawler_type))
+
+    default_proto_map = {'http': 80, 'https': 443}
+######################################################## add ftp ???
 
     publisher.port = 6380
     publisher.channel = "Script"
@@ -318,19 +299,7 @@ if __name__ == '__main__':
     # Setup the I/O queues
     p = Process(config_section)
 
-    if len(sys.argv) == 2:
-        splash_port = sys.argv[1]
-        splash_url = '{}:{}'.format( p.config.get("Crawler", "splash_url"),  splash_port)
-    else:
-        splash_name = sys.argv[1]
-        splash_url =  sys.argv[2]
-        print(splash_name)
-
     print('splash url: {}'.format(splash_url))
-
-    rotation_mode = deque(['onion', 'regular'])
-    default_proto_map = {'http': 80, 'https': 443}
-######################################################## add ftp ???
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
 
@@ -391,7 +360,7 @@ if __name__ == '__main__':
         update_auto_crawler()
 
         rotation_mode.rotate()
-        to_crawl = get_elem_to_crawl(rotation_mode)
+        to_crawl = crawlers.get_elem_to_crawl_by_queue_type(rotation_mode)
         if to_crawl:
             url_data = unpack_url(to_crawl['url'])
             # remove domain from queue
