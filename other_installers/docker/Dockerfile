@@ -1,4 +1,6 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
+ENV TZ=Europe/Rome
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Make sure that all updates are in place
 RUN apt-get clean && apt-get update -y && apt-get upgrade -y \
@@ -19,12 +21,6 @@ WORKDIR /opt/AIL
 RUN ./installing_deps.sh 
 WORKDIR /opt/AIL
 
-# Installing Web dependencies,
-# remove all the parts below if you dont need the Web UI
-WORKDIR /opt/AIL/var/www
-RUN ./update_thirdparty.sh
-WORKDIR /opt/AIL
-
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 ENV AIL_HOME /opt/AIL
@@ -38,7 +34,6 @@ ENV PATH ${AIL_VENV}/bin:${AIL_HOME}:${AIL_REDIS}:${AIL_ARDB}:${AIL_BIN}:${AIL_F
 
 RUN ./pystemon/install.sh
 RUN pip install -r /opt/pystemon/requirements.txt
-RUN pip install -r /opt/AIL/crawler_requirements.txt
 
 COPY docker_start.sh /docker_start.sh
 ENTRYPOINT ["/bin/bash", "docker_start.sh"]
