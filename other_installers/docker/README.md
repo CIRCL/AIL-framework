@@ -19,6 +19,7 @@ curl https://get.docker.com | /bin/bash
 ```bash
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
+cp -r ./other_installers/docker/Dockerfile ./other_installers/docker/docker_start.sh ./other_installers/docker/pystemon ./
 docker build -t ail-framework .
 ```
 3. To start AIL on port 7000, type the following command below:
