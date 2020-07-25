@@ -497,7 +497,7 @@ function reset_password() {
 
 function launch_all {
     checking_configuration;
-    update;
+    #update;
     launch_redis;
     launch_ardb;
     launch_logs;
