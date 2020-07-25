@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
-ENV TZ=Europe/Rome
+ARG tz_buildtime=Europe/Rome
+ENV TZ=$tz_buildtime
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Make sure that all updates are in place
