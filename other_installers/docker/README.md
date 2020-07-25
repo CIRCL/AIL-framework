@@ -1,4 +1,4 @@
-Docker Quick Start (Ubuntu 16.04 LTS)
+Docker Quick Start (Ubuntu 18.04 LTS)
 ------------
 
 :warning:
