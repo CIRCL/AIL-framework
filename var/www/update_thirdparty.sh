@@ -90,6 +90,7 @@ wget -q https://raw.githubusercontent.com/flot/flot/958e5fd43c6dff4bab3e1fd5cb61
 wget -q http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js -O ./static/js/jquery.sparkline.min.js
 wget -q http://canvasjs.com/fdm/chart/ -O temp/canvasjs.zip
 unzip -qq temp/canvasjs.zip -d temp/
+cp -r temp/canvasjs-2.3.2/Chart\ 2.3.2\ GA\ -\ Stable/* temp/
 mv temp/canvasjs-2.3.2/Chart\ 2.3.2\ GA\ -\ Stable/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
 
 wget -q https://jqueryui.com/resources/download/jquery-ui-1.12.1.zip -O temp/jquery-ui.zip
