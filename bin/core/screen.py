@@ -53,6 +53,14 @@ def get_screen_pid(screen_name,  with_sudoer=False):
         return all_pids
     return []
 
+def detach_screen(screen_name):
+    cmd = ['screen', '-d', screen_name]
+    p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #if p.stdout:
+    #    print(p.stdout)
+    if p.stderr:
+        print(p.stderr)
+
 def create_screen(screen_name):
     if not exist_screen(screen_name):
         cmd = ['screen', '-dmS', screen_name]
@@ -79,15 +87,44 @@ def kill_screen(screen_name, with_sudoer=False):
 # # TODO: add check if len(window_name) == 20
 # use: screen -S 'pid.screen_name' -p %window_id% -Q title
 # if len(windows_name) > 20 (truncated by default)
-def get_screen_windows_list(screen_name):
+def get_screen_windows_list(screen_name, r_set=True):
+    # detach screen to avoid incomplete result
+    detach_screen(screen_name)
+    if r_set:
+        all_windows_name = set()
+    else:
+        all_windows_name = []
     cmd = ['screen', '-S', screen_name, '-Q', 'windows']
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if p.stdout:
         for window_row in p.stdout.split(b'  '):
             window_id, window_name = window_row.decode().split()
-            print(window_id)
-            print(window_name)
-            print('---')
+            #print(window_id)
+            #print(window_name)
+            #print('---')
+            if r_set:
+                all_windows_name.add(window_name)
+            else:
+                all_windows_name.append(window_name)
+    if p.stderr:
+        print(p.stderr)
+    return all_windows_name
+
+def get_screen_windows_id(screen_name):
+    # detach screen to avoid incomplete result
+    detach_screen(screen_name)
+    all_windows_id = {}
+    cmd = ['screen', '-S', screen_name, '-Q', 'windows']
+    p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if p.stdout:
+        for window_row in p.stdout.split(b'  '):
+            window_id, window_name = window_row.decode().split()
+            if window_name not in all_windows_id:
+                all_windows_id[window_name] = []
+            all_windows_id[window_name].append(window_id)
+    if p.stderr:
+        print(p.stderr)
+    return all_windows_id
 
 # script_location ${AIL_BIN}
 def launch_windows_script(screen_name, window_name, dir_project, script_location, script_name, script_options=''):
@@ -97,6 +134,16 @@ def launch_windows_script(screen_name, window_name, dir_project, script_location
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print(p.stdout)
     print(p.stderr)
+
+def launch_uniq_windows_script(screen_name, window_name, dir_project, script_location, script_name, script_options='', kill_previous_windows=False):
+    all_screen_name = get_screen_windows_id(screen_name)
+    if window_name in all_screen_name:
+        if kill_previous_windows:
+            kill_screen_window(screen_name, all_screen_name[window_name][0], force=True)
+        else:
+            print('Error: screen {} already contain a windows with this name {}'.format(screen_name, window_name))
+            return None
+    launch_windows_script(screen_name, window_name, dir_project, script_location, script_name, script_options=script_options)
 
 def kill_screen_window(screen_name, window_id, force=False):
     if force:# kill
@@ -108,5 +155,5 @@ def kill_screen_window(screen_name, window_id, force=False):
     print(p.stderr)
 
 if __name__ == '__main__':
-    res = kill_screen('Docker_Splash', with_sudoer=True)
+    res = get_screen_windows_list('Script_AIL')
     print(res)

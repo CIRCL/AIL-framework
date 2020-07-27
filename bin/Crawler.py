@@ -143,7 +143,7 @@ def get_crawler_config(redis_server, mode, service_type, domain, url=None):
 
 def load_crawler_config(service_type, domain, paste, url, date):
     crawler_config = {}
-    crawler_config['splash_url'] = splash_url
+    crawler_config['splash_url'] = f'http://{splash_url}'
     crawler_config['item'] = paste
     crawler_config['service_type'] = service_type
     crawler_config['domain'] = domain
@@ -197,7 +197,7 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
     nb_retry = 0
     while retry:
         try:
-            r = requests.get(splash_url , timeout=30.0)
+            r = requests.get(f'http://{splash_url}' , timeout=30.0)
             retry = False
         except Exception:
             # TODO: relaunch docker or send error message
@@ -244,6 +244,8 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
                 print('------------------------------------------------------------------------')
                 r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'Error')
                 exit(-2)
+            else:
+                crawlers.update_splash_manager_connection_status(True)
         else:
             print(process.stdout.read())
             exit(-1)

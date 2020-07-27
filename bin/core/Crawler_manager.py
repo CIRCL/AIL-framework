@@ -21,6 +21,9 @@ config_loader = None
 
 import screen
 
+# # TODO: lauch me in core screen
+# # TODO: check if already launched in tor screen
+
 def launch_crawlers():
     for crawler_splash in crawlers_to_launch:
         splash_name = crawler_splash[0]
@@ -41,21 +44,46 @@ def launch_crawlers():
 # # TODO: handle mutltiple splash_manager
 if __name__ == '__main__':
 
-    if not crawlers.ping_splash_manager():
-        print('Error, Can\'t cnnect to Splash manager')
-
-    crawlers.reload_splash_and_proxies_list()
-    launch_crawlers()
-    last_refresh = time.time()
+    is_manager_connected = crawlers.ping_splash_manager()
+    if not is_manager_connected:
+        print('Error, Can\'t connect to Splash manager')
+        session_uuid = None
+    else:
+        print('Splash manager connected')
+        session_uuid = crawlers.get_splash_manager_session_uuid()
+        is_manager_connected = crawlers.reload_splash_and_proxies_list()
+        print(is_manager_connected)
+        if is_manager_connected:
+            launch_crawlers()
+    last_check = int(time.time())
 
     while True:
 
+        # check if manager is connected
+        if int(time.time()) - last_check > 60:
+            is_manager_connected = crawlers.is_splash_manager_connected()
+            current_session_uuid = crawlers.get_splash_manager_session_uuid()
+            # reload proxy and splash list
+            if current_session_uuid and current_session_uuid != session_uuid:
+                is_manager_connected = crawlers.reload_splash_and_proxies_list()
+                if is_manager_connected:
+                    print('reload proxies and splash list')
+                    launch_crawlers()
+                    session_uuid = current_session_uuid
+            if not is_manager_connected:
+                print('Error, Can\'t connect to Splash manager')
+            last_check = int(time.time())
 
+            # # TODO: lauch crawlers if was never connected
         # refresh splash and proxy list
-        if False:
+        elif False:
             crawlers.reload_splash_and_proxies_list()
             print('list of splash and proxies refreshed')
         else:
-            time.sleep(10)
+            time.sleep(5)
+
+        # kill/launch new crawler / crawler manager check if already launched
+
 
     # # TODO: handle mutltiple splash_manager
+    # catch reload request

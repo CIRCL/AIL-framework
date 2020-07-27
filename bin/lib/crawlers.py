@@ -13,6 +13,7 @@ import os
 import re
 import redis
 import sys
+import time
 import uuid
 
 from datetime import datetime, timedelta
@@ -590,16 +591,16 @@ def get_elem_to_crawl_by_queue_type(l_queue_type):
 
 
 #### SPLASH MANAGER ####
-def get_splash_manager_url(reload=False): # TODO: add config reload
+def get_splash_manager_url(reload=False): # TODO: add in db config
     return splash_manager_url
 
-def get_splash_api_key(reload=False): # TODO: add config reload
+def get_splash_api_key(reload=False): # TODO: add in db config
     return splash_api_key
 
 def get_splash_url_from_manager_url(splash_manager_url, splash_port):
     url = urlparse(splash_manager_url)
     host = url.netloc.split(':', 1)[0]
-    return 'http://{}:{}'.format(host, splash_port)
+    return '{}:{}'.format(host, splash_port)
 
 def is_splash_used_in_discovery(splash_name):
     res = r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'discovery_queue')
@@ -612,14 +613,47 @@ def restart_splash_docker(splash_url):
     splash_port = splash_url.split(':')[-1]
     return _restart_splash_docker(splash_port)
 
+def is_splash_manager_connected(delta_check=30):
+    last_check = r_cache.hget('crawler:splash:manager', 'last_check')
+    if last_check:
+        if int(time.time()) - int(last_check) > delta_check:
+            ping_splash_manager()
+    else:
+        ping_splash_manager()
+    res = r_cache.hget('crawler:splash:manager', 'connected')
+    return res == 'True'
+
+def update_splash_manager_connection_status(is_connected):
+    r_cache.hset('crawler:splash:manager', 'connected', is_connected)
+    r_cache.hset('crawler:splash:manager', 'last_check', int(time.time()))
+
     ## API ##
 def ping_splash_manager():
-    req = requests.get('{}/api/v1/ping'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
-    if req.status_code == 200:
-        return True
-    else:
-        print(req.json())
-        return False
+    try:
+        req = requests.get('{}/api/v1/ping'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+        if req.status_code == 200:
+            update_splash_manager_connection_status(True)
+            return True
+        else:
+            print(req.json())
+    except requests.exceptions.ConnectionError:
+        pass
+    # splash manager unreachable
+    update_splash_manager_connection_status(False)
+    return False
+
+def get_splash_manager_session_uuid():
+    try:
+        req = requests.get('{}/api/v1/get/session_uuid'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+        if req.status_code == 200:
+            res = req.json()
+            if res:
+                return res['session_uuid']
+        else:
+            print(req.json())
+    except requests.exceptions.ConnectionError:
+        # splash manager unreachable
+        update_splash_manager_connection_status(False)
 
 def get_all_splash_manager_containers_name():
     req = requests.get('{}/api/v1/get/splash/name/all'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
@@ -764,6 +798,9 @@ def reload_splash_and_proxies_list():
         # LOAD PROXIES containers
         delete_all_proxies()
         load_all_proxy()
+        return True
+    else:
+        return False
     # # TODO: kill crawler screen ?
     ## -- ##
 
@@ -774,7 +811,7 @@ def launch_ail_splash_crawler(splash_url, script_options=''):
     script_location = os.path.join(os.environ['AIL_BIN'])
     script_name = 'Crawler.py'
     screen.create_screen(screen_name)
-    screen.launch_windows_script(screen_name, splash_url, dir_project, script_location, script_name, script_options=script_options)
+    screen.launch_uniq_windows_script(screen_name, splash_url, dir_project, script_location, script_name, script_options=script_options, kill_previous_windows=True)
 
 
     ## -- ##
