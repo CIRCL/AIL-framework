@@ -428,7 +428,7 @@ def save_crawler_config(crawler_mode, crawler_type, crawler_config, domain, url=
     if crawler_mode == 'manual':
         r_cache.set('crawler_config:{}:{}:{}'.format(crawler_mode, crawler_type, domain), json.dumps(crawler_config))
     elif crawler_mode == 'auto':
-        r_serv_onion.set('crawler_config:{}:{}:{}:{}'.format(crawler_type, crawler_type, domain, url), json.dumps(crawler_config))
+        r_serv_onion.set('crawler_config:{}:{}:{}:{}'.format(crawler_mode, crawler_type, domain, url), json.dumps(crawler_config))
 
 def send_url_to_crawl_in_queue(crawler_mode, crawler_type, url):
     r_serv_onion.sadd('{}_crawler_priority_queue'.format(crawler_type), '{};{}'.format(url, crawler_mode))
