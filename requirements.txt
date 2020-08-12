@@ -22,6 +22,8 @@ textblob
 #Tokeniser
 nltk
 
+yara-python
+
 #Crawler
 scrapy
 scrapy-splash

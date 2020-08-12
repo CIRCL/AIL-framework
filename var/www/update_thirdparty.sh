@@ -97,6 +97,14 @@ unzip -qq temp/jquery-ui.zip -d temp/
 mv temp/jquery-ui-1.12.1/jquery-ui.min.js ./static/js/jquery-ui.min.js
 mv temp/jquery-ui-1.12.1/jquery-ui.min.css ./static/css/jquery-ui.min.css
 
+# INSTALL YARA
+YARA_VERSION="4.0.2"
+wget -q https://github.com/VirusTotal/yara/archive/v${YARA_VERSION}.zip -O temp/yara.zip
+unzip -qq temp/yara.zip -d temp/
+pushd temp/yara-${YARA_VERSION}
+./bootstrap.sh
+popd
+
 
 rm -rf temp
 

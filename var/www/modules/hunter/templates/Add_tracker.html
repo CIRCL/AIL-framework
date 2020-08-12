@@ -74,11 +74,12 @@
 										<option value="word">Word</option>
 										<option value="set">Set</option>
 										<option value="regex">Regex</option>
+										<option value="yara">YARA rule</option>
 									</select>
 
 									<p id="tracker_desc">Terms to track (space separated)</p>
 
-									<div class="row">
+									<div class="row" id="simple_input">
 										<div class="col-12 col-lg-10">
 											<input id="term" name="term" class="form-control" placeholder="Terms to track (space separated)" type="text">
 										</div>
@@ -88,14 +89,30 @@
 									</div>
 
 
+									<div class="" id="yara_rule">
+										<div class="" id="yara_default_rules">
+
+											<select class="custom-select w-100 mb-3" name="yara_default_rule">
+											  <option selected>Select a default rule</option>
+												{% for yara_types in all_yara_files %}
+													{% for yara_file in all_yara_files[yara_types] %}
+													<option value="{{yara_types}}/{{yara_file}}">{{yara_types}} - {{yara_file}}</option>
+													{% endfor %}
+												{% endfor %}
+											</select>
+										</div>
+
+									<div class="row" id="textarea">
+										<textarea class="form-control" id="text_input" name="yara_custom_rule" rows="5"></textarea>
+									</div>
+								</div>
+
 									<br>
 									<button class="btn btn-success mt-2">
 										<i class="fas fa-plus"></i> Add Tracker
 									</button>
 
 								</form>
-
-
 
 
 
