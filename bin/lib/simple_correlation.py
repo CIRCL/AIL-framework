@@ -166,20 +166,20 @@ class SimpleCorrelation(object): #social_name
         else:
             return []
 
-    # def get_correlation_all_object(self, correlation_type, correlation_value, correlation_objects=[]):
-    #     if not correlation_objects:
-    #         correlation_objects = get_all_correlation_objects()
-    #     correlation_obj = {}
-    #     for correlation_object in correlation_objects:
-    #         if correlation_object == 'paste':
-    #             res = self._get_items(correlation_type, correlation_value)
-    #         elif correlation_object == 'domain':
-    #             res = self.get_correlation_obj_domain(correlation_value, correlation_type=correlation_type)
-    #         else:
-    #             res = None
-    #         if res:
-    #             correlation_obj[correlation_object] = res
-    #     return correlation_obj
+    def get_correlation_all_object(self, correlation_value, correlation_objects=[]):
+        if not correlation_objects:
+            correlation_objects = get_all_correlation_objects()
+        correlation_obj = {}
+        for correlation_object in correlation_objects:
+            if correlation_object == 'paste':
+                res = self._get_items(correlation_value)
+            elif correlation_object == 'domain':
+                res = self.get_correlation_obj_domain(correlation_value)
+            else:
+                res = None
+            if res:
+                correlation_obj[correlation_object] = res
+        return correlation_obj
 
     def update_correlation_daterange(self, obj_id, date):
         date = int(date)
