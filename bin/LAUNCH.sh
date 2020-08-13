@@ -184,6 +184,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "RegexTracker" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexTracker.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Tracker_Yara" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Yara.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Indexer.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Keys" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Keys.py; read x"

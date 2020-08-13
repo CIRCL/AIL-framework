@@ -231,6 +231,15 @@ def get_git_upper_tags_remote(current_tag, is_fork):
             aborting_update()
             sys.exit(0)
 
+def update_submodules():
+    print('{}git submodule update:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
+    process = subprocess.run(['git', 'submodule', 'update'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if process.returncode == 0:
+        print(process.stdout.decode())
+        print()
+    else:
+        print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
+
 def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork):
     print('{}git checkout master:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
     process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -238,6 +247,9 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
     if process.returncode == 0:
         print(process.stdout.decode())
         print()
+
+        update_submodules()
+
         print('{}git pull:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
         process = subprocess.run(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

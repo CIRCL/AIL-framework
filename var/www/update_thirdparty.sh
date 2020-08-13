@@ -2,6 +2,9 @@
 
 set -e
 
+# submodules
+git submodule update
+
 wget -q http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.js
 
 SBADMIN_VERSION='3.3.7'

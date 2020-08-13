@@ -71,7 +71,6 @@ if __name__ == "__main__":
     # Regex Frequency
     while True:
         item_id = p.get_from_set()
-        item_id = 'archive/pastebin.com_pro/2020/03/04/AnwFX3w2.gz'
         if item_id is not None:
             item_content = item_basic.get_item_content(item_id)
             yara_match = rules.match(data=item_content, callback=yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)

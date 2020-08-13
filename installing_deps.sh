@@ -39,6 +39,10 @@ sudo apt-get install build-essential libffi-dev automake autoconf libtool -qq
 # sflock, gz requirement
 sudo apt-get install p7zip-full -qq
 
+# SUBMODULES #
+git submodule init
+git submodule update
+
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/

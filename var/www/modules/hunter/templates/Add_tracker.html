@@ -32,7 +32,7 @@
 								<h5 class="card-title">Create a new tracker</h5>
 							</div>
 						  <div class="card-body">
-						    <p class="card-text">Enter a domain and choose what kind of data you want.</p>
+						    <p class="card-text">Select a tracker type.</p>
 
 								<form action="{{ url_for('hunter.add_tracked_menu') }}" method='post'>
 
@@ -103,7 +103,7 @@
 										</div>
 
 									<div class="row" id="textarea">
-										<textarea class="form-control" id="text_input" name="yara_custom_rule" rows="5"></textarea>
+										<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5"></textarea>
 									</div>
 								</div>
 
@@ -136,6 +136,7 @@ $(document).ready(function(){
 	$("#tracker_desc").hide();
 	$("#term").hide();
 	$("#nb_word").hide();
+	$("#yara_rule").hide();
 
 	$('#tracker_type').on('change', function() {
 		var tracker_type = this.value;
@@ -144,16 +145,25 @@ $(document).ready(function(){
 			$("#tracker_desc").show();
 			$("#term").show();
 			$("#nb_word").hide();
+			$("#yara_rule").hide();
 		} else if (tracker_type=="set") {
 			$("#tracker_desc").text("Set of Terms to track (space separated). This tracker is used to check if an item contain one or more terms specified in a set. If an item contain NB unique terms (by default NB of unique keywords = 1), this tracker is triggered. You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\ ");
 			$("#tracker_desc").show();
 			$("#term").show();
 			$("#nb_word").show();
-		} else {
+			$("#yara_rule").hide();
+		} else if (tracker_type=="regex") {
 			$("#tracker_desc").text("Enter a valid Python regex");
 			$("#tracker_desc").show();
 			$("#term").show();
 			$("#nb_word").hide();
+			$("#yara_rule").hide();
+		} else if (tracker_type=="yara") {
+			$("#tracker_desc").text("Select a default yara rule or create your own rule:");
+			$("#tracker_desc").show();
+			$("#term").hide();
+			$("#nb_word").hide();
+			$("#yara_rule").show();
 		}
 	});
 
