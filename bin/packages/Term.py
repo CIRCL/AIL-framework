@@ -16,6 +16,7 @@ from textblob import TextBlob
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import Tracker
 
 from flask import escape
 
@@ -219,7 +220,12 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
 
             if nb_words > len(words_set):
                 nb_words = len(words_set)
-
+    elif term_type=='yara_custom':
+        if not Tracker.is_valid_yara_rule(term):
+            return ({"status": "error", "reason": "Invalid custom Yara Rule"}, 400)
+    elif term_type=='yara_default':
+        if not Tracker.is_valid_default_yara_rule(term):
+            return ({"status": "error", "reason": "The Yara Rule doesn't exist"}, 400)
     else:
         return ({"status": "error", "reason": "Incorrect type"}, 400)
     return ({"status": "success", "term": term, "type": term_type}, 200)
@@ -228,8 +234,13 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, description,
 
     term_uuid =  str(uuid.uuid4())
 
+    # YARA
+    if term_type == 'yara_custom' or term_type == 'yara_default':
+        term = Tracker.save_yara_rule(term_type, term, tracker_uuid=term_uuid)
+        term_type = 'yara'
+
     # create metadata
-    r_serv_term.hset('tracker:{}'.format(term_uuid), 'tracked',term)
+    r_serv_term.hset('tracker:{}'.format(term_uuid), 'tracked',term) # # TODO: use hash
     r_serv_term.hset('tracker:{}'.format(term_uuid), 'type', term_type)
     r_serv_term.hset('tracker:{}'.format(term_uuid), 'date', datetime.date.today().strftime("%Y%m%d"))
     r_serv_term.hset('tracker:{}'.format(term_uuid), 'user_id', user_id)
@@ -309,6 +320,10 @@ def delete_term(term_uuid):
     for date in all_item_date:
         r_serv_term.delete('tracker:item:{}:{}'.format(term_uuid, date))
     r_serv_term.delete('tracker:stat:{}'.format(term_uuid))
+
+    if term_type == 'yara':
+        # # TODO: 
+        pass
 
 def replace_tracker_description(term_uuid, description):
     description = escape(description)

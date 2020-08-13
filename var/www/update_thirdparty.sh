@@ -2,6 +2,9 @@
 
 set -e
 
+# submodules
+git submodule update
+
 wget -q http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.js
 
 SBADMIN_VERSION='3.3.7'
@@ -90,12 +93,20 @@ wget -q https://raw.githubusercontent.com/flot/flot/958e5fd43c6dff4bab3e1fd5cb61
 wget -q http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js -O ./static/js/jquery.sparkline.min.js
 wget -q http://canvasjs.com/fdm/chart/ -O temp/canvasjs.zip
 unzip -qq temp/canvasjs.zip -d temp/
-mv temp/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
+mv temp/canvasjs-2.3.2/Chart\ 2.3.2\ GA\ -\ Stable/jquery.canvasjs.min.js ./static/js/jquery.canvasjs.min.js
 
 wget -q https://jqueryui.com/resources/download/jquery-ui-1.12.1.zip -O temp/jquery-ui.zip
 unzip -qq temp/jquery-ui.zip -d temp/
 mv temp/jquery-ui-1.12.1/jquery-ui.min.js ./static/js/jquery-ui.min.js
 mv temp/jquery-ui-1.12.1/jquery-ui.min.css ./static/css/jquery-ui.min.css
+
+# INSTALL YARA
+YARA_VERSION="4.0.2"
+wget -q https://github.com/VirusTotal/yara/archive/v${YARA_VERSION}.zip -O temp/yara.zip
+unzip -qq temp/yara.zip -d temp/
+pushd temp/yara-${YARA_VERSION}
+./bootstrap.sh
+popd
 
 
 rm -rf temp

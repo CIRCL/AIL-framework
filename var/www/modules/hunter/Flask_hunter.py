@@ -4,6 +4,8 @@
 '''
     Flask functions and routes for tracked items
 '''
+import os
+import sys
 import json
 import redis
 import datetime
@@ -14,14 +16,11 @@ from flask import Flask, render_template, jsonify, request, Blueprint, url_for, 
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required, current_user
 
-import re
-from pprint import pprint
-import Levenshtein
-
 # ---------------------------------------------------------------
 
-import Paste
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Term
+import Tracker
 
 # ============ VARIABLES ============
 import Flask_config
@@ -78,6 +77,16 @@ def tracked_menu_regex():
     global_term = Term.get_all_global_tracked_terms(filter_type=filter_type)
     return render_template("trackersManagement.html", user_term=user_term, global_term=global_term, bootstrap_label=bootstrap_label, filter_type=filter_type)
 
+@hunter.route("/trackers/yara")
+@login_required
+@login_read_only
+def tracked_menu_yara():
+    filter_type = 'yara'
+    user_id = current_user.get_id()
+    user_term = Term.get_all_user_tracked_terms(user_id, filter_type=filter_type)
+    global_term = Term.get_all_global_tracked_terms(filter_type=filter_type)
+    return render_template("trackersManagement.html", user_term=user_term, global_term=global_term, bootstrap_label=bootstrap_label, filter_type=filter_type)
+
 
 @hunter.route("/tracker/add", methods=['GET', 'POST'])
 @login_required
@@ -91,6 +100,18 @@ def add_tracked_menu():
         level = request.form.get("level", 0)
         tags = request.form.get("tags", [])
         mails = request.form.get("mails", [])
+
+        # YARA #
+        if term_type == 'yara':
+            yara_default_rule = request.form.get("yara_default_rule")
+            yara_custom_rule =  request.form.get("yara_custom_rule")
+            if yara_custom_rule:
+                term = yara_custom_rule
+                term_type='yara_custom'
+            else:
+                term = yara_default_rule
+                term_type='yara_default'
+        # #
 
         if level == 'on':
             level = 1
@@ -109,7 +130,8 @@ def add_tracked_menu():
             ## TODO: use modal
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
     else:
-        return render_template("Add_tracker.html")
+        all_yara_files = Tracker.get_all_default_yara_files()
+        return render_template("Add_tracker.html", all_yara_files=all_yara_files)
 
 @hunter.route("/tracker/show_tracker")
 @login_required
@@ -224,6 +246,13 @@ def get_json_tracker_stats():
     else:
         res = Term.get_list_tracked_term_stats_by_day([tracker_uuid])
     return jsonify(res)
+
+# @hunter.route("/tracker/get_all_default_yara_rules_by_type", methods=['GET'])
+# @login_required
+# @login_read_only
+# def get_all_default_yara_rules_by_type():
+#     yara_types = request.args.get('yara_types')
+#     get_all_default_yara_rules_by_types(yara_types)
 
 # ========= REGISTRATION =========
 app.register_blueprint(hunter, url_prefix=baseUrl)

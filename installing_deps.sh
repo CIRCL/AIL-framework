@@ -39,6 +39,10 @@ sudo apt-get install build-essential libffi-dev automake autoconf libtool -qq
 # sflock, gz requirement
 sudo apt-get install p7zip-full -qq
 
+# SUBMODULES #
+git submodule init
+git submodule update
+
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/
@@ -113,7 +117,7 @@ $AIL_HOME/doc/generate_modules_data_flow_graph.sh
 # init update version
 pushd ${AIL_HOME}
 # shallow clone
-git fetch --tags --prune --depth=10000
+git fetch --depth=500 --tags --prune
 git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
 echo "AIL current version:"
 git describe --abbrev=0 --tags

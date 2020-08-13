@@ -1,0 +1,3 @@
+[submodule "bin/trackers/yara/ail-yara-rules"]
+	path = bin/trackers/yara/ail-yara-rules
+	url = https://github.com/ail-project/ail-yara-rules.git
