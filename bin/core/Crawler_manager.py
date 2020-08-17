@@ -35,6 +35,8 @@ def launch_crawlers():
             print('Please launch {} additional {} Dockers'.format( nb_crawlers - len(all_crawler_urls), splash_name))
             nb_crawlers = len(all_crawler_urls)
 
+        crawlers.reset_all_spash_crawler_status()
+
         for i in range(0, int(nb_crawlers)):
             splash_url = all_crawler_urls[i]
             print(all_crawler_urls[i])
@@ -58,6 +60,8 @@ if __name__ == '__main__':
     last_check = int(time.time())
 
     while True:
+
+        # # TODO: avoid multiple ping
 
         # check if manager is connected
         if int(time.time()) - last_check > 60:

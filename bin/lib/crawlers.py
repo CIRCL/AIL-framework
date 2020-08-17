@@ -46,8 +46,19 @@ config_loader = None
 
 faup = Faup()
 
+# # # # # # # #
+#             #
+#   COMMON    #
+#             #
+# # # # # # # #
+
 def generate_uuid():
     return str(uuid.uuid4()).replace('-', '')
+
+def get_current_date():
+    return datetime.now().strftime("%Y%m%d")
+
+##-- COMMON --#
 
 ################################################################################
 
@@ -377,6 +388,55 @@ def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
 
 #### ####
 
+# # # # # # # #
+#             #
+#   CRAWLER   #
+#             #
+# # # # # # # #
+
+#### CRAWLER GLOBAL ####
+
+def get_all_spash_crawler_status():
+    crawler_metadata = []
+    all_crawlers = r_cache.smembers('all_splash_crawlers')
+    for crawler in all_crawlers:
+        crawler_metadata.append(get_splash_crawler_status(crawler))
+    return crawler_metadata
+
+def reset_all_spash_crawler_status():
+    r_cache.delete('all_splash_crawlers')
+
+def get_splash_crawler_status(spash_url):
+    crawler_type = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'type')
+    crawling_domain = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'crawling_domain')
+    started_time = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'started_time')
+    status_info = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'status')
+    crawler_info = '{}  - {}'.format(spash_url, started_time)
+    if status_info=='Waiting' or status_info=='Crawling':
+        status=True
+    else:
+        status=False
+    return {'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status, 'type': crawler_type}
+
+def get_stats_last_crawled_domains(crawler_types, date):
+    statDomains = {}
+    for crawler_type in crawler_types:
+        stat_type = {}
+        stat_type['domains_up'] = r_serv_onion.scard('{}_up:{}'.format(crawler_type, date))
+        stat_type['domains_down'] = r_serv_onion.scard('{}_down:{}'.format(crawler_type, date))
+        stat_type['total'] = stat_type['domains_up'] + stat_type['domains_down']
+        stat_type['domains_queue'] = get_nb_elem_to_crawl_by_type(crawler_type)
+        statDomains[crawler_type] = stat_type
+    return statDomains
+
+# # TODO: handle custom proxy
+def get_splash_crawler_latest_stats():
+    now = datetime.now()
+    date = now.strftime("%Y%m%d")
+    return get_stats_last_crawled_domains(['onion', 'regular'], date)
+
+##-- CRAWLER GLOBAL --##
+
 #### CRAWLER TASK ####
 def create_crawler_task(url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, cookiejar_uuid=None, user_agent=None):
 
@@ -587,10 +647,20 @@ def get_elem_to_crawl_by_queue_type(l_queue_type):
                 return {'url': url, 'paste': item_id, 'type_service': queue_type, 'original_message': message}
     return None
 
+def get_nb_elem_to_crawl_by_type(queue_type):
+    nb = r_serv_onion.scard('{}_crawler_priority_queue'.format(queue_type))
+    nb += r_serv_onion.scard('{}_crawler_discovery_queue'.format(queue_type))
+    nb += r_serv_onion.scard('{}_crawler_queue'.format(queue_type))
+    return nb
+
 #### ---- ####
 
+# # # # # # # # # # # #
+#                     #
+#   SPLASH MANAGER    #
+#                     #
+# # # # # # # # # # # #
 
-#### SPLASH MANAGER ####
 def get_splash_manager_url(reload=False): # TODO: add in db config
     return splash_manager_url
 
@@ -636,6 +706,8 @@ def ping_splash_manager():
             return True
         else:
             print(req.json())
+            update_splash_manager_connection_status(False)
+            return False
     except requests.exceptions.ConnectionError:
         pass
     # splash manager unreachable

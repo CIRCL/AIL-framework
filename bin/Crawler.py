@@ -349,7 +349,7 @@ if __name__ == '__main__':
                               'user_agent': p.config.get("Crawler", "default_crawler_user_agent")}
 
     # Track launched crawler
-    r_cache.sadd('all_crawler', splash_url)
+    r_cache.sadd('all_splash_crawlers', splash_url)
     r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', 'Waiting')
     r_cache.hset('metadata_crawler:{}'.format(splash_url), 'started_time', datetime.datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
@@ -385,7 +385,7 @@ if __name__ == '__main__':
                         'epoch': int(time.time())}
 
                 # Update crawler status type
-                r_cache.sadd('{}_crawlers'.format(to_crawl['type_service']), splash_url)
+                r_cache.hset('metadata_crawler:{}'.format(splash_url), 'type', to_crawl['type_service'])
 
                 crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'],  to_crawl['url'], date)
                 # check if default crawler
@@ -437,7 +437,7 @@ if __name__ == '__main__':
                 r_cache.hdel('metadata_crawler:{}'.format(splash_url), 'crawling_domain')
 
                 # Update crawler status type
-                r_cache.srem('{}_crawlers'.format(to_crawl['type_service']), splash_url)
+                r_cache.hdel('metadata_crawler:{}'.format(splash_url), 'type', to_crawl['type_service'])
 
                 # add next auto Crawling in queue:
                 if to_crawl['paste'] == 'auto':

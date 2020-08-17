@@ -48,6 +48,31 @@ def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 # ============= ROUTES ==============
+@crawler_splash.route("/crawlers/dashboard", methods=['GET'])
+@login_required
+@login_read_only
+def crawlers_dashboard():
+    # # TODO:  get splash manager status
+    crawler_enabled = crawlers.ping_splash_manager()
+    all_splash_crawler_status = crawlers.get_all_spash_crawler_status()
+    splash_crawlers_latest_stats = crawlers.get_splash_crawler_latest_stats()
+    date = crawlers.get_current_date()
+
+    return render_template("dashboard_splash_crawler.html", all_splash_crawler_status = all_splash_crawler_status,
+                                crawler_enabled=crawler_enabled, date=date,
+                                splash_crawlers_latest_stats=splash_crawlers_latest_stats)
+
+@crawler_splash.route("/crawlers/crawler_dashboard_json", methods=['GET'])
+@login_required
+@login_read_only
+def crawler_dashboard_json():
+
+    all_splash_crawler_status = crawlers.get_all_spash_crawler_status()
+    splash_crawlers_latest_stats = crawlers.get_splash_crawler_latest_stats()
+
+    return jsonify({'all_splash_crawler_status': all_splash_crawler_status,
+                        'splash_crawlers_latest_stats':splash_crawlers_latest_stats})
+
 @crawler_splash.route("/crawlers/manual", methods=['GET'])
 @login_required
 @login_read_only
@@ -402,5 +427,12 @@ def crawler_cookiejar_cookie_json_add_post():
             return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
 
     return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', cookiejar_uuid=cookiejar_uuid))
+
+@crawler_splash.route('/crawler/cookiejar/cookie/json_add_post', methods=['GET'])
+@login_required
+@login_analyst
+def crawler_splash_setings():
+    
+    return render_template("settings_splash_crawler.html", cookiejar_uuid=True, cookie_uuid=False)
 
 ##  - -  ##
