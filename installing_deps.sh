@@ -115,13 +115,14 @@ $AIL_HOME/doc/generate_modules_data_flow_graph.sh
 #### DB SETUP ####
 
 # init update version
-#pushd ${AIL_HOME}
+pushd ${AIL_HOME}
 # shallow clone
-#git fetch --depth=500 --tags --prune
-#git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
-#echo "AIL current version:"
-#git describe --abbrev=0 --tags
-#popd
+git fetch --depth=500 --tags --prune
+git fetch --unshallow
+git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
+echo "AIL current version:"
+git describe --abbrev=0 --tags
+popd
 
 # LAUNCH ARDB
 bash ${AIL_BIN}/LAUNCH.sh -lav &
