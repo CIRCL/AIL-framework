@@ -77,8 +77,6 @@ if __name__ == "__main__":
             if yara_match:
                 print(f'{item_id}: {yara_match}')
 
-            time.sleep(30)
-
         else:
             time.sleep(5)
 
