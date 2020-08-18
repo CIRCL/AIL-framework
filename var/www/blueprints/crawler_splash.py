@@ -428,11 +428,20 @@ def crawler_cookiejar_cookie_json_add_post():
 
     return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', cookiejar_uuid=cookiejar_uuid))
 
-@crawler_splash.route('/crawler/cookiejar/cookie/json_add_post', methods=['GET'])
+@crawler_splash.route('/crawler/settings', methods=['GET'])
 @login_required
 @login_analyst
 def crawler_splash_setings():
-    
-    return render_template("settings_splash_crawler.html", cookiejar_uuid=True, cookie_uuid=False)
+    all_proxies = crawlers.get_all_proxies_metadata()
+    all_splash = crawlers.get_all_splash_crawler_metadata()
+
+    splash_manager_url = crawlers.get_splash_manager_url()
+    api_key = crawlers.get_hidden_splash_api_key()
+    is_manager_connected = crawlers.ping_splash_manager()
+
+    return render_template("settings_splash_crawler.html",
+                                is_manager_connected=is_manager_connected,
+                                splash_manager_url=splash_manager_url, api_key=api_key,
+                                all_splash=all_splash, all_proxies=all_proxies)
 
 ##  - -  ##

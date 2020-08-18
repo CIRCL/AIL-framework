@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				{%if not is_manager_connected%}
+					{% include 'crawler/crawler_disabled.html' %}
+				{%endif%}
+
+				<div class="row">
+					<div class="col-xl-6">
+
+
+
+					</div>
+					<div class="col-xl-6">
+
+					</div>
+				</div>
+
+
+				<div class="card mb-3 mt-1">
+					<div class="card-header bg-dark text-white">
+						<span class="badge badge-pill badge-light flex-row-reverse float-right">
+							{% if is_manager_connected %}
+								<div style="color:Green;">
+									<i class="fas fa-check-circle fa-2x"></i>
+									Connected
+								</div>
+							{% else %}
+								<div style="color:Red;">
+									<i class="fas fa-times-circle fa-2x"></i>
+									Error
+								</div>
+							{% endif %}
+						</span>
+						<h4>Splash Crawler Manager</h4>
+					</div>
+					<div class="card-body">
+
+						<div class="row mb-3 justify-content-center">
+							<div class="col-xl-6">
+								<div class="card text-center border-secondary">
+									<div class="card-body px-1 py-0">
+										<table class="table table-sm">
+											<tbody>
+												<tr>
+													<td>Splash Manager URL</td>
+													<td>{{splash_manager_url}}</td>
+												</tr>
+												<tr>
+													<td>API Key</td>
+													<td>
+														{{api_key}}
+														<!-- <a class="ml-3" href="/settings/new_token"><i class="fa fa-random"></i></a> -->
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="card border-secondary mb-4">
+							<div class="card-body text-dark">
+								<h5 class="card-title">All Splash Crawlers:</h5>
+								<table class="table table-striped">
+									<thead class="bg-info text-white">
+										<th>
+											Splash name
+										</th>
+										<th>
+											Proxy
+										</th>
+										<th>
+											Crawler type
+										</th>
+										<th>
+											Description
+										</th>
+									</thead>
+									<tbody>
+										{% for splash_name in all_splash %}
+											<tr>
+												<td>
+													{{splash_name}}
+												</td>
+												<td>
+													{{all_splash[splash_name]['proxy']}}
+												</td>
+												<td>
+													{%if all_splash[splash_name]['type']=='tor'%}
+														<i class="fas fa-user-secret"></i>
+													{%else%}
+														<i class="fab fa-html5">
+													{%endif%}
+													{{all_splash[splash_name]['type']}}
+												</td>
+												<td>
+													{{all_splash[splash_name]['description']}}
+												</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="card border-secondary">
+							<div class="card-body text-dark">
+								<h5 class="card-title">All Proxies:</h5>
+								<table class="table table-striped">
+									<thead class="bg-info text-white">
+										<th>
+											Proxy name
+										</th>
+										<th>
+											Host
+										</th>
+										<th>
+											Port
+										</th>
+										<th>
+											Type
+										</th>
+										<th>
+											Crawler Type
+										</th>
+										<th>
+											Description
+										</th>
+									</thead>
+									<tbody>
+										{% for proxy_name in all_proxies %}
+											<tr>
+												<td>
+													{{proxy_name}}
+												</td>
+												<td>
+													{{all_proxies[proxy_name]['host']}}
+												</td>
+												<td>
+													{{all_proxies[proxy_name]['port']}}
+												</td>
+												<td>
+													{{all_proxies[proxy_name]['type']}}
+												</td>
+												<td>
+													{%if all_proxies[proxy_name]['crawler_type']=='tor'%}
+														<i class="fas fa-user-secret"></i>
+													{%else%}
+														<i class="fab fa-html5">
+													{%endif%}
+													{{all_proxies[proxy_name]['crawler_type']}}
+												</td>
+												<td>
+													{{all_proxies[proxy_name]['description']}}
+												</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+				<div class="card mb-3 mt-1">
+					<div class="card-header bg-dark text-white">
+						<h4>Crawlers Settings</h4>
+					</div>
+					<div class="card-body">
+
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var to_refresh = false
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_settings").addClass("active");
+});
+
+</script>

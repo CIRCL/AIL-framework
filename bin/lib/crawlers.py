@@ -667,6 +667,13 @@ def get_splash_manager_url(reload=False): # TODO: add in db config
 def get_splash_api_key(reload=False): # TODO: add in db config
     return splash_api_key
 
+def get_hidden_splash_api_key(): # TODO: add in db config
+    key = get_splash_api_key()
+    if len(key)==41:
+        return f'{key[:4]}*********************************{key[-4:]}'
+    else:
+        return None
+
 def get_splash_url_from_manager_url(splash_manager_url, splash_port):
     url = urlparse(splash_manager_url)
     host = url.netloc.split(':', 1)[0]
@@ -780,7 +787,23 @@ def get_splash_name_by_url(splash_url):
 def get_splash_crawler_type(splash_name):
     return r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'crawler_type')
 
-def get_all_splash_by_proxy(proxy_name):
+def get_splash_crawler_description(splash_name):
+    return r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'description')
+
+def get_splash_crawler_metadata(splash_name):
+    dict_splash = {}
+    dict_splash['proxy'] = get_splash_proxy(splash_name)
+    dict_splash['type'] = get_splash_crawler_type(splash_name)
+    dict_splash['description'] = get_splash_crawler_description(splash_name)
+    return dict_splash
+
+def get_all_splash_crawler_metadata():
+    dict_splash = {}
+    for splash_name in get_all_splash():
+        dict_splash[splash_name] = get_splash_crawler_metadata(splash_name)
+    return dict_splash
+
+def get_all_splash_by_proxy(proxy_name, r_list=False):
     res = r_serv_onion.smembers('proxy:splash:{}'.format(proxy_name))
     if res:
         if r_list:
@@ -815,6 +838,36 @@ def get_all_proxies(r_list=False):
 def delete_all_proxies():
     for proxy_name in get_all_proxies():
         delete_proxy(proxy_name)
+
+def get_proxy_host(proxy_name):
+    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'host')
+
+def get_proxy_port(proxy_name):
+    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'port')
+
+def get_proxy_type(proxy_name):
+    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'type')
+
+def get_proxy_crawler_type(proxy_name):
+    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'crawler_type')
+
+def get_proxy_description(proxy_name):
+    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'description')
+
+def get_proxy_metadata(proxy_name):
+    meta_dict = {}
+    meta_dict['host'] = get_proxy_host(proxy_name)
+    meta_dict['port'] = get_proxy_port(proxy_name)
+    meta_dict['type'] = get_proxy_type(proxy_name)
+    meta_dict['crawler_type'] = get_proxy_crawler_type(proxy_name)
+    meta_dict['description'] = get_proxy_description(proxy_name)
+    return meta_dict
+
+def get_all_proxies_metadata():
+    all_proxy_dict = {}
+    for proxy_name in get_all_proxies():
+        all_proxy_dict[proxy_name] = get_proxy_metadata(proxy_name)
+    return all_proxy_dict
 
 def set_proxy_used_in_discovery(proxy_name, value):
     r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'discovery_queue', value)
@@ -851,6 +904,7 @@ def load_all_splash_containers():
             r_serv_onion.set('splash:map:url:name:{}'.format(splash_url), splash_name)
 
 def load_all_proxy():
+    delete_all_proxies()
     all_proxies = get_all_splash_manager_proxies()
     for proxy_name in all_proxies:
         proxy_dict = all_proxies[proxy_name]
@@ -861,6 +915,7 @@ def load_all_proxy():
         description = all_proxies[proxy_name].get('description', None)
         if description:
             r_serv_onion.hset('proxy:metadata:{}'.format(proxy_name), 'description', description)
+        r_serv_onion.sadd('all_proxy', proxy_name)
 
 def reload_splash_and_proxies_list():
     if ping_splash_manager():
