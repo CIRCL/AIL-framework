@@ -41,7 +41,7 @@ def get_email_subject(tracker_uuid):
         return 'AIL framework: {}'.format(tracker_description)
 
 def get_tracker_last_updated_by_type(tracker_type):
-    epoch_update = r_serv_tracker.get('tracker:refresh:{}'.format(term_type))
+    epoch_update = r_serv_tracker.get('tracker:refresh:{}'.format(tracker_type))
     if not epoch_update:
         epoch_update = 0
     return float(epoch_update)
