@@ -175,6 +175,11 @@
 								<button class='btn btn-danger'><i class="fas fa-trash-alt"></i>
 								</button>
 							</a>
+
+							{%if yara_rule_content%}
+								<p class="my-0"></br></br><pre class="border bg-light">{{ yara_rule_content }}</pre></p>
+							{%endif%}
+
 						</div>
 					</div>
 
