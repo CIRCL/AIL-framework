@@ -1,4 +1,4 @@
-Docker Quick Start (Ubuntu 16.04 LTS)
+Docker Quick Start (Ubuntu 18.04 LTS)
 ------------
 
 :warning:
@@ -19,7 +19,10 @@ curl https://get.docker.com | /bin/bash
 ```bash
 git clone https://github.com/CIRCL/AIL-framework.git
 cd AIL-framework
-docker build -t ail-framework .
+cp -r ./other_installers/docker/Dockerfile ./other_installers/docker/docker_start.sh ./other_installers/docker/pystemon ./
+cp ./configs/update.cfg.sample ./configs/update.cfg
+vim/nano ./configs/update.cfg (set auto_update to False)
+docker build --build-arg tz_buildtime=YOUR_GEO_AREA/YOUR_CITY -t ail-framework .
 ```
 3. To start AIL on port 7000, type the following command below:
 ```

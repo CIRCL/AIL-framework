@@ -23,6 +23,10 @@ bash ${AIL_BIN}/LAUNCH.sh -ldbv &
 wait
 echo ""
 
+# SUBMODULES #
+git submodule init
+git submodule update
+
 echo -e $GREEN"Installing YARA ..."$DEFAULT
 pip3 install yara-python
 bash ${AIL_BIN}/LAUNCH.sh -t

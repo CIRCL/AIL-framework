@@ -153,6 +153,11 @@ def show_tracker():
 
     tracker_metadata = Term.get_term_metedata(term_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sparkline=True)
 
+    if tracker_metadata['type'] == 'yara':
+        yara_rule_content = Tracker.get_yara_rule_content(tracker_metadata['term'])
+    else:
+        yara_rule_content = None
+
     if date_from:
         res = Term.parse_get_tracker_term_item({'uuid': term_uuid, 'date_from': date_from, 'date_to': date_to}, user_id)
         if res[1] !=200:
@@ -165,7 +170,9 @@ def show_tracker():
         tracker_metadata['date_from'] = ''
         tracker_metadata['date_to'] = ''
 
-    return render_template("showTracker.html", tracker_metadata=tracker_metadata, bootstrap_label=bootstrap_label)
+    return render_template("showTracker.html", tracker_metadata=tracker_metadata,
+                                    yara_rule_content=yara_rule_content,
+                                    bootstrap_label=bootstrap_label)
 
 @hunter.route("/tracker/update_tracker_description", methods=['POST'])
 @login_required

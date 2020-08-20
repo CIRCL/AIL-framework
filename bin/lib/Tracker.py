@@ -41,7 +41,7 @@ def get_email_subject(tracker_uuid):
         return 'AIL framework: {}'.format(tracker_description)
 
 def get_tracker_last_updated_by_type(tracker_type):
-    epoch_update = r_serv_tracker.get('tracker:refresh:{}'.format(term_type))
+    epoch_update = r_serv_tracker.get('tracker:refresh:{}'.format(tracker_type))
     if not epoch_update:
         epoch_update = 0
     return float(epoch_update)
@@ -123,6 +123,20 @@ def save_yara_rule(yara_rule_type, yara_rule, tracker_uuid=None):
     if yara_rule_type == 'yara_default':
         filename = os.path.join('ail-yara-rules', 'rules', yara_rule)
     return filename
+
+def get_yara_rule_content(yara_rule):
+    yara_dir = get_yara_rules_dir()
+    filename = os.path.join(yara_dir, yara_rule)
+    filename = os.path.realpath(filename)
+
+    # incorrect filename
+    if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
+        return '' # # TODO: throw exception
+
+    with open(filename, 'r') as f:
+        rule_content = f.read()
+    return rule_content
+
 ##-- YARA --##
 
 
