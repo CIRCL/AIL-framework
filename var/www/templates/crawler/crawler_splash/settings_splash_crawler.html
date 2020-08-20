@@ -102,6 +102,7 @@
 										<th>
 											Description
 										</th>
+										<th></th>
 									</thead>
 									<tbody>
 										{% for splash_name in all_splash %}
@@ -122,6 +123,13 @@
 												</td>
 												<td>
 													{{all_splash[splash_name]['description']}}
+												</td>
+												<td>
+													<div class="d-flex justify-content-end">
+														<button class="btn btn-outline-dark px-1 py-0">
+															<i class="fas fa-pencil-alt"></i>
+														</button>
+													</div>
 												</td>
 											</tr>
 										{% endfor %}
@@ -153,6 +161,7 @@
 										<th>
 											Description
 										</th>
+										<th></th>
 									</thead>
 									<tbody>
 										{% for proxy_name in all_proxies %}
@@ -180,6 +189,13 @@
 												<td>
 													{{all_proxies[proxy_name]['description']}}
 												</td>
+												<td>
+													<div class="d-flex justify-content-end">
+														<button class="btn btn-outline-dark px-1 py-0">
+															<i class="fas fa-pencil-alt"></i>
+														</button>
+													</div>
+												</td>
 											</tr>
 										{% endfor %}
 									</tbody>
@@ -195,6 +211,43 @@
 						<h4>Crawlers Settings</h4>
 					</div>
 					<div class="card-body">
+
+						<table class="table table-striped table-hover">
+							<thead class="bg-info text-white">
+								<th>
+									Key
+								</th>
+								<th>
+									Description
+								</th>
+								<th>
+									Value
+								</th>
+								<th></th>
+							</thead>
+							<tbody>
+								{% for config_field in crawler_full_config %}
+									<tr>
+										<td>
+											{{config_field}}
+										</td>
+										<td>
+											{{crawler_full_config[config_field]['info']}}
+										</td>
+										<td>
+											{{crawler_full_config[config_field]['value']}}
+										</td>
+										<td>
+											<div class="d-flex justify-content-end">
+												<button class="btn btn-outline-dark px-1 py-0">
+													<i class="fas fa-pencil-alt"></i>
+												</button>
+											</div>
+										</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
 
 					</div>
 				</div>

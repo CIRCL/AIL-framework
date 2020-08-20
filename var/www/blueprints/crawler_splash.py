@@ -26,6 +26,7 @@ import Tag
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Domain
 import crawlers
+import Config_DB
 
 r_cache = Flask_config.r_cache
 r_serv_db = Flask_config.r_serv_db
@@ -438,10 +439,12 @@ def crawler_splash_setings():
     splash_manager_url = crawlers.get_splash_manager_url()
     api_key = crawlers.get_hidden_splash_api_key()
     is_manager_connected = crawlers.ping_splash_manager()
+    crawler_full_config = Config_DB.get_full_config_by_section('crawler')
 
     return render_template("settings_splash_crawler.html",
                                 is_manager_connected=is_manager_connected,
                                 splash_manager_url=splash_manager_url, api_key=api_key,
-                                all_splash=all_splash, all_proxies=all_proxies)
+                                all_splash=all_splash, all_proxies=all_proxies,
+                                crawler_full_config=crawler_full_config)
 
 ##  - -  ##
