@@ -118,7 +118,10 @@ $AIL_HOME/doc/generate_modules_data_flow_graph.sh
 pushd ${AIL_HOME}
 # shallow clone
 git fetch --depth=500 --tags --prune
-git fetch --unshallow
+if [ ! -z "$TRAVIS" ]; then
+    echo "Travis detected"
+    git fetch --unshallow
+fi
 git describe --abbrev=0 --tags | tr -d '\n' > ${AIL_HOME}/update/current_version
 echo "AIL current version:"
 git describe --abbrev=0 --tags
