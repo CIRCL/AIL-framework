@@ -55,8 +55,8 @@
 
                   <div class="modal-body">
 
-                    <div class="form-group input-group" >
-                      <input id="ltags" style="width:850%;" type="text" name="ltags">
+                    <div class="input-group" >
+                      <input id="ltags" type="text" class="form-control" autocomplete="off" style="width: 760px" name="ltags">
                     </div>
 
                     <div class="btn-group btn-block">
@@ -73,8 +73,8 @@
                     </div>
                      <br/><br/>
 
-                    <div class="form-group input-group" >
-                      <input id="ltagsgalaxies" style="width:850%;" type="text" name="ltagsgalaxies">
+                    <div class="input-group">
+                      <input id="ltagsgalaxies" type="text" class="form-control" autocomplete="off" style="width: 760px" name="ltagsgalaxies">
                     </div>
 
                     <div class="btn-group btn-block">
@@ -529,51 +529,53 @@
 {% endfor %}
 </script>
 
-<script>
-var ctx = canvas.getContext('2d'), img = new Image();
+{% if crawler_metadata['get_metadata'] %}
+  <script>
+  var ctx = canvas.getContext('2d'), img = new Image();
 
-/// turn off image smoothing
-ctx.webkitImageSmoothingEnabled = false;
-ctx.imageSmoothingEnabled = false;
+  /// turn off image smoothing
+  ctx.webkitImageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = false;
 
-img.onload = pixelate;
-img.addEventListener("error", img_error);
-var draw_img = false;
+  img.onload = pixelate;
+  img.addEventListener("error", img_error);
+  var draw_img = false;
 
-img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
+  img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
 
-function pixelate() {
+  function pixelate() {
 
-  /// use slider value
-  if( blocks.value == 50 ){
-      size = 1;
-  } else {
-      var size = (blocks.value) * 0.01;
+    /// use slider value
+    if( blocks.value == 50 ){
+        size = 1;
+    } else {
+        var size = (blocks.value) * 0.01;
+    }
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    /// cache scaled width and height
+    w = canvas.width * size;
+    h = canvas.height * size;
+
+    /// draw original image to the scaled size
+    ctx.drawImage(img, 0, 0, w, h);
+
+    /// pixelated
+    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
   }
 
-  canvas.width = img.width;
-  canvas.height = img.height;
+  function img_error() {
+    img.onerror=null;
+    img.src="{{ url_for('static', filename='image/AIL.png') }}";
+    blocks.value = 50;
+    pixelate;
+  }
 
-  /// cache scaled width and height
-  w = canvas.width * size;
-  h = canvas.height * size;
-
-  /// draw original image to the scaled size
-  ctx.drawImage(img, 0, 0, w, h);
-
-  /// pixelated
-  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
-
-}
-
-function img_error() {
-  img.onerror=null;
-  img.src="{{ url_for('static', filename='image/AIL.png') }}";
-  blocks.value = 50;
-  pixelate;
-}
-
-blocks.addEventListener('change', pixelate, false);
-</script>
+  blocks.addEventListener('change', pixelate, false);
+  </script>
+{% endif %}
 
 </html>

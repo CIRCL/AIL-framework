@@ -271,8 +271,10 @@ def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
         if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
             r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
         else:
-            tag_last_seen = Date.date_substract_day(tag_last_seen)
-            update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
+            # # TODO: # FIXME: 
+            #tag_last_seen = Date.date_substract_day(str(tag_last_seen))
+            #update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
+            pass
 
 def update_tag_metadata(tag, tag_date, object_type=None, add_tag=True):
     '''
