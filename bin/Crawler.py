@@ -141,13 +141,16 @@ def get_crawler_config(redis_server, mode, service_type, domain, url=None):
         redis_server.delete('crawler_config:{}:{}:{}'.format(mode, service_type, domain))
     return crawler_options
 
-def load_crawler_config(service_type, domain, paste, url, date):
+def load_crawler_config(queue_type, service_type, domain, paste, url, date):
     crawler_config = {}
     crawler_config['splash_url'] = f'http://{splash_url}'
     crawler_config['item'] = paste
     crawler_config['service_type'] = service_type
     crawler_config['domain'] = domain
     crawler_config['date'] = date
+
+    if queue_type and queue_type != 'tor':
+        service_type = queue_type
 
     # Auto and Manual Crawling
     # Auto ################################################# create new entry, next crawling => here or when ended ?
@@ -282,13 +285,15 @@ if __name__ == '__main__':
     splash_url = sys.argv[1]
 
     splash_name = crawlers.get_splash_name_by_url(splash_url)
-    crawler_type = crawlers.get_splash_crawler_type(splash_name)
+    proxy_type = crawlers.get_splash_proxy(splash_name)
 
     print(splash_name)
-    print(crawler_type)
+    print(proxy_type)
 
     #rotation_mode = deque(['onion', 'regular'])
-    rotation_mode = deque(crawlers.get_crawler_queue_type_by_proxy(splash_name, crawler_type))
+    all_crawler_queues = crawlers.get_crawler_queue_types_by_splash_name(splash_name)
+    rotation_mode = deque(all_crawler_queues)
+    print(rotation_mode)
 
     default_proto_map = {'http': 80, 'https': 443}
 ######################################################## add ftp ???
@@ -387,7 +392,7 @@ if __name__ == '__main__':
                 # Update crawler status type
                 r_cache.hset('metadata_crawler:{}'.format(splash_url), 'type', to_crawl['type_service'])
 
-                crawler_config = load_crawler_config(to_crawl['type_service'], url_data['domain'], to_crawl['paste'],  to_crawl['url'], date)
+                crawler_config = load_crawler_config(to_crawl['queue_type'], to_crawl['type_service'], url_data['domain'], to_crawl['paste'],  to_crawl['url'], date)
                 # check if default crawler
                 if not crawler_config['requested']:
                     # Auto crawl only if service not up this month

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<form action="{{ url_for('crawler_splash.crawler_splash_setings_crawlers_to_lauch') }}" method="post" enctype="multipart/form-data">
+					<h5 class="card-title">Number of Crawlers to Launch:</h5>
+					<table class="table table-sm">
+						<tbody>
+							{%for crawler_name in nb_crawlers_to_launch%}
+								<tr>
+									<td>{{crawler_name}}</td>
+									<td>
+										<input class="form-control" type="number" id="{{crawler_name}}" value="{{nb_crawlers_to_launch[crawler_name]}}" min="0" name="{{crawler_name}}" required>
+									</td>
+								</tr>
+							{%endfor%}
+						</tbody>
+					</table>
+				  <button type="submit" class="btn btn-primary">Edit <i class="fas fa-pencil-alt"></i></button>
+				</form>
+
+			</div>
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var to_refresh = false
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_settings").addClass("active");
+});
+
+</script>

@@ -38,12 +38,6 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
 config_loader = None
 
-# load crawler config
-config_loader = ConfigLoader.ConfigLoader(config_file='crawlers.cfg')
-splash_manager_url = config_loader.get_config_str('Splash_Manager', 'splash_url')
-splash_api_key = config_loader.get_config_str('Splash_Manager', 'api_key')
-config_loader = None
-
 faup = Faup()
 
 # # # # # # # #
@@ -435,10 +429,80 @@ def get_splash_crawler_latest_stats():
     date = now.strftime("%Y%m%d")
     return get_stats_last_crawled_domains(['onion', 'regular'], date)
 
+def get_nb_crawlers_to_launch_by_splash_name(splash_name):
+    res = r_serv_onion.hget('all_crawlers_to_launch', splash_name)
+    if res:
+        return int(res)
+    else:
+        return 0
+
+def get_all_crawlers_to_launch_splash_name():
+    return r_serv_onion.hkeys('all_crawlers_to_launch')
+
+def get_nb_crawlers_to_launch():
+    nb_crawlers_to_launch = r_serv_onion.hgetall('all_crawlers_to_launch')
+    for splash_name in nb_crawlers_to_launch:
+        nb_crawlers_to_launch[splash_name] = int(nb_crawlers_to_launch[splash_name])
+    return nb_crawlers_to_launch
+
+def get_nb_crawlers_to_launch_ui():
+    nb_crawlers_to_launch = get_nb_crawlers_to_launch()
+    for splash_name in get_all_splash():
+        if splash_name not in nb_crawlers_to_launch:
+            nb_crawlers_to_launch[splash_name] = 0
+    return nb_crawlers_to_launch
+
+def set_nb_crawlers_to_launch(dict_splash_name):
+    r_serv_onion.delete('all_crawlers_to_launch')
+    for splash_name in dict_splash_name:
+        r_serv_onion.hset('all_crawlers_to_launch', splash_name, int(dict_splash_name[splash_name]))
+    relaunch_crawlers()
+
+def relaunch_crawlers():
+    all_crawlers_to_launch = get_nb_crawlers_to_launch()
+    for splash_name in all_crawlers_to_launch:
+        nb_crawlers = int(all_crawlers_to_launch[splash_name])
+
+        all_crawler_urls = get_splash_all_url(splash_name, r_list=True)
+        if nb_crawlers > len(all_crawler_urls):
+            print('Error, can\'t launch all Splash Dockers')
+            print('Please launch {} additional {} Dockers'.format( nb_crawlers - len(all_crawler_urls), splash_name))
+            nb_crawlers = len(all_crawler_urls)
+
+        reset_all_spash_crawler_status()
+
+        for i in range(0, int(nb_crawlers)):
+            splash_url = all_crawler_urls[i]
+            print(all_crawler_urls[i])
+
+            launch_ail_splash_crawler(splash_url, script_options='{}'.format(splash_url))
+
+def api_set_nb_crawlers_to_launch(dict_splash_name):
+    # TODO: check if is dict
+    dict_crawlers_to_launch = {}
+    all_splash = get_all_splash()
+    crawlers_to_launch = list(all_splash & set(dict_splash_name.keys()))
+    for splash_name in crawlers_to_launch:
+        try:
+            nb_to_launch = int(dict_splash_name.get(splash_name, 0))
+            if nb_to_launch < 0:
+                return ({'error':'The number of crawlers to launch is negative'}, 400)
+        except:
+            return ({'error':'invalid number of crawlers to launch'}, 400)
+        if nb_to_launch > 0:
+            dict_crawlers_to_launch[splash_name] = nb_to_launch
+
+    if dict_crawlers_to_launch:
+        set_nb_crawlers_to_launch(dict_crawlers_to_launch)
+        return (dict_crawlers_to_launch, 200)
+    else:
+        return ({'error':'invalid input'}, 400)
+
+
 ##-- CRAWLER GLOBAL --##
 
 #### CRAWLER TASK ####
-def create_crawler_task(url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, cookiejar_uuid=None, user_agent=None):
+def create_crawler_task(url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):
 
     crawler_config = {}
     crawler_config['depth_limit'] = depth_limit
@@ -478,10 +542,18 @@ def create_crawler_task(url, screenshot=True, har=True, depth_limit=1, max_pages
         tld = unpack_url['tld'].decode()
     except:
         tld = unpack_url['tld']
-    if tld == 'onion':
-        crawler_type = 'onion'
+
+    if crawler_type=='None':
+        crawler_type = None
+
+    if crawler_type:
+        if crawler_type=='tor':
+            crawler_type = 'onion'
     else:
-        crawler_type = 'regular'
+        if tld == 'onion':
+            crawler_type = 'onion'
+        else:
+            crawler_type = 'regular'
 
     save_crawler_config(crawler_mode, crawler_type, crawler_config, domain, url=url)
     send_url_to_crawl_in_queue(crawler_mode, crawler_type, url)
@@ -493,6 +565,7 @@ def save_crawler_config(crawler_mode, crawler_type, crawler_config, domain, url=
         r_serv_onion.set('crawler_config:{}:{}:{}:{}'.format(crawler_mode, crawler_type, domain, url), json.dumps(crawler_config))
 
 def send_url_to_crawl_in_queue(crawler_mode, crawler_type, url):
+    print('{}_crawler_priority_queue'.format(crawler_type), '{};{}'.format(url, crawler_mode))
     r_serv_onion.sadd('{}_crawler_priority_queue'.format(crawler_type), '{};{}'.format(url, crawler_mode))
     # add auto crawled url for user UI
     if crawler_mode == 'auto':
@@ -500,7 +573,7 @@ def send_url_to_crawl_in_queue(crawler_mode, crawler_type, url):
 
 #### ####
 #### CRAWLER TASK API ####
-def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, cookiejar_uuid=None, user_agent=None):
+def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):
     # validate url
     if url is None or url=='' or url=='\n':
         return ({'error':'invalid depth limit'}, 400)
@@ -537,7 +610,10 @@ def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit
             if cookie_owner != user_id:
                 return ({'error': 'The access to this cookiejar is restricted'}, 403)
 
+    # # TODO: verify splash name/crawler type
+
     create_crawler_task(url, screenshot=screenshot, har=har, depth_limit=depth_limit, max_pages=max_pages,
+                        crawler_type=crawler_type,
                         auto_crawler=auto_crawler, crawler_delta=crawler_delta, cookiejar_uuid=cookiejar_uuid, user_agent=user_agent)
     return None
 #### ####
@@ -608,20 +684,40 @@ def save_har(har_dir, item_id, har_content):
         f.write(json.dumps(har_content))
 
 #### CRAWLER QUEUES ####
-def get_crawler_queue_type_by_proxy(splash_name, proxy_type):
-    all_domain_type = []
-    if splash_name != 'default_splash' and splash_name != 'default_splash_tor':
-        all_domain_type.append(splash_name)
-        # check if can be used for discovery
-        if not is_splash_used_in_discovery(splash_name):
-            return all_domain_type
-    if proxy_type == 'tor':
+def get_all_crawlers_queues_types():
+    all_queues_types = set()
+    all_splash_name = get_all_crawlers_to_launch_splash_name()
+    for splash_name in all_splash_name:
+        all_queues_types.add(get_splash_crawler_type(splash_name))
+    all_splash_name = list()
+    return all_queues_types
+
+def get_crawler_queue_types_by_splash_name(splash_name):
+    all_domain_type = [splash_name]
+    crawler_type = get_splash_crawler_type(splash_name)
+    #if not is_splash_used_in_discovery(splash_name)
+    if crawler_type == 'tor':
         all_domain_type.append('onion')
         all_domain_type.append('regular')
-    # proxy_type = web
     else:
         all_domain_type.append('regular')
     return all_domain_type
+
+def get_crawler_type_by_url(url):
+    faup.decode(url)
+    unpack_url = faup.get()
+    ## TODO: # FIXME: remove me
+    try:
+        tld = unpack_url['tld'].decode()
+    except:
+        tld = unpack_url['tld']
+
+    if tld == 'onion':
+        crawler_type = 'onion'
+    else:
+        crawler_type = 'regular'
+    return crawler_type
+
 
 def get_elem_to_crawl_by_queue_type(l_queue_type):
     ## queues priority:
@@ -644,7 +740,8 @@ def get_elem_to_crawl_by_queue_type(l_queue_type):
                 # # TODO: to check/refractor
                     item_id = None
                     url = message
-                return {'url': url, 'paste': item_id, 'type_service': queue_type, 'original_message': message}
+                crawler_type = get_crawler_type_by_url(url)
+                return {'url': url, 'paste': item_id, 'type_service': crawler_type, 'queue_type': queue_type, 'original_message': message}
     return None
 
 def get_nb_elem_to_crawl_by_type(queue_type):
@@ -662,29 +759,37 @@ def get_nb_elem_to_crawl_by_type(queue_type):
 # # # # # # # # # # # #
 
 def get_splash_manager_url(reload=False): # TODO: add in db config
-    return splash_manager_url
+    return r_serv_onion.get('crawler:splash:manager:url')
 
 def get_splash_api_key(reload=False): # TODO: add in db config
-    return splash_api_key
+    return r_serv_onion.get('crawler:splash:manager:key')
 
 def get_hidden_splash_api_key(): # TODO: add in db config
     key = get_splash_api_key()
-    if len(key)==41:
-        return f'{key[:4]}*********************************{key[-4:]}'
-    else:
-        return None
+    if key:
+        if len(key)==41:
+            return f'{key[:4]}*********************************{key[-4:]}'
+
+def is_valid_api_key(api_key, search=re.compile(r'[^a-zA-Z0-9_-]').search):
+    if len(api_key) != 41:
+        return False
+    return not bool(search(api_key))
+
+def save_splash_manager_url_api(url, api_key):
+    r_serv_onion.set('crawler:splash:manager:url', url)
+    r_serv_onion.set('crawler:splash:manager:key', api_key)
 
 def get_splash_url_from_manager_url(splash_manager_url, splash_port):
     url = urlparse(splash_manager_url)
     host = url.netloc.split(':', 1)[0]
     return '{}:{}'.format(host, splash_port)
 
-def is_splash_used_in_discovery(splash_name):
-    res = r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'discovery_queue')
-    if res == 'True':
-        return True
-    else:
-        return False
+# def is_splash_used_in_discovery(splash_name):
+#     res = r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'discovery_queue')
+#     if res == 'True':
+#         return True
+#     else:
+#         return False
 
 def restart_splash_docker(splash_url):
     splash_port = splash_url.split(':')[-1]
@@ -700,25 +805,50 @@ def is_splash_manager_connected(delta_check=30):
     res = r_cache.hget('crawler:splash:manager', 'connected')
     return res == 'True'
 
-def update_splash_manager_connection_status(is_connected):
+def update_splash_manager_connection_status(is_connected, req_error=None):
     r_cache.hset('crawler:splash:manager', 'connected', is_connected)
     r_cache.hset('crawler:splash:manager', 'last_check', int(time.time()))
+    if not req_error:
+        r_cache.hdel('crawler:splash:manager', 'error')
+    else:
+        r_cache.hset('crawler:splash:manager', 'status_code', req_error['status_code'])
+        r_cache.hset('crawler:splash:manager', 'error', req_error['error'])
+
+def get_splash_manager_connection_metadata(force_ping=False):
+    dict_manager={}
+    if force_ping:
+        dict_manager['status'] = ping_splash_manager()
+    else:
+        dict_manager['status'] = is_splash_manager_connected()
+    if not dict_manager['status']:
+        dict_manager['status_code'] = r_cache.hget('crawler:splash:manager', 'status_code')
+        dict_manager['error'] = r_cache.hget('crawler:splash:manager', 'error')
+    return dict_manager
 
     ## API ##
 def ping_splash_manager():
+    splash_manager_url = get_splash_manager_url()
+    if not splash_manager_url:
+        return False
     try:
-        req = requests.get('{}/api/v1/ping'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+        req = requests.get('{}/api/v1/ping'.format(splash_manager_url), headers={"Authorization": get_splash_api_key()}, verify=False)
         if req.status_code == 200:
             update_splash_manager_connection_status(True)
             return True
         else:
-            print(req.json())
-            update_splash_manager_connection_status(False)
+            res = req.json()
+            if 'reason' in res:
+                req_error = {'status_code': req.status_code, 'error': res['reason']}
+            else:
+                print(req.json())
+                req_error = {'status_code': req.status_code, 'error': json.dumps(req.json())}
+            update_splash_manager_connection_status(False, req_error=req_error)
             return False
     except requests.exceptions.ConnectionError:
         pass
     # splash manager unreachable
-    update_splash_manager_connection_status(False)
+    req_error = {'status_code': 500, 'error': 'splash manager unreachable'}
+    update_splash_manager_connection_status(False, req_error=req_error)
     return False
 
 def get_splash_manager_session_uuid():
@@ -733,6 +863,18 @@ def get_splash_manager_session_uuid():
     except requests.exceptions.ConnectionError:
         # splash manager unreachable
         update_splash_manager_connection_status(False)
+
+def get_splash_manager_version():
+    splash_manager_url = get_splash_manager_url()
+    if splash_manager_url:
+        try:
+            req = requests.get('{}/api/v1/version'.format(splash_manager_url), headers={"Authorization": get_splash_api_key()}, verify=False)
+            if req.status_code == 200:
+                return req.json()['message']
+            else:
+                print(req.json())
+        except requests.exceptions.ConnectionError:
+            pass
 
 def get_all_splash_manager_containers_name():
     req = requests.get('{}/api/v1/get/splash/name/all'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
@@ -755,6 +897,27 @@ def _restart_splash_docker(splash_port):
         return req.json()
     else:
         print(req.json())
+
+def api_save_splash_manager_url_api(data):
+    # unpack json
+    manager_url = data.get('url', None)
+    api_key = data.get('api_key', None)
+    if not manager_url or not api_key:
+        return ({'status': 'error', 'reason': 'No url or API key supplied'}, 400)
+    # check if is valid url
+    try:
+        result = urlparse(manager_url)
+        if not all([result.scheme, result.netloc]):
+            return ({'status': 'error', 'reason': 'Invalid url'}, 400)
+    except:
+        return ({'status': 'error', 'reason': 'Invalid url'}, 400)
+
+    # check if is valid key
+    if not is_valid_api_key(api_key):
+        return ({'status': 'error', 'reason': 'Invalid API key'}, 400)
+
+    save_splash_manager_url_api(manager_url, api_key)
+    return ({'url': manager_url, 'api_key': get_hidden_splash_api_key()}, 200)
     ## -- ##
 
     ## SPLASH ##
@@ -869,13 +1032,13 @@ def get_all_proxies_metadata():
         all_proxy_dict[proxy_name] = get_proxy_metadata(proxy_name)
     return all_proxy_dict
 
-def set_proxy_used_in_discovery(proxy_name, value):
-    r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'discovery_queue', value)
+# def set_proxy_used_in_discovery(proxy_name, value):
+#     r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'discovery_queue', value)
 
 def delete_proxy(proxy_name): # # TODO: force delete (delete all proxy)
     proxy_splash = get_all_splash_by_proxy(proxy_name)
-    if proxy_splash:
-        print('error, a splash container is using this proxy')
+    #if proxy_splash:
+    #    print('error, a splash container is using this proxy')
     r_serv_onion.delete('proxy:metadata:{}'.format(proxy_name))
     r_serv_onion.srem('all_proxy', proxy_name)
     ## -- ##
@@ -948,3 +1111,7 @@ def launch_ail_splash_crawler(splash_url, script_options=''):
 #### CRAWLER PROXY ####
 
 #### ---- ####
+
+if __name__ == '__main__':
+    res = get_splash_manager_version()
+    print(res)

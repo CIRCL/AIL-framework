@@ -44,7 +44,31 @@
 											<div class="input-group" id="date-range-from">
 												<input type="text" class="form-control" id="url_to_crawl" name="url_to_crawl" placeholder="Address or Domain">
 											</div>
-											<div class="d-flex mt-1">
+											<div class="d-flex mt-2">
+												<i class="fas fa-spider mt-1"></i> &nbsp;Crawler Type&nbsp;&nbsp;
+												<div class="custom-control custom-switch">
+													<input class="custom-control-input" type="checkbox" name="queue_type_selector" value="True" id="queue_type_selector">
+													<label class="custom-control-label" for="queue_type_selector">
+														<i class="fas fa-splotch"></i> &nbsp;Splash Name
+													</label>
+												</div>
+											</div>
+											<div id="div_crawler_queue_type">
+												<select class="custom-select form-control" name="crawler_queue_type" id="crawler_queue_type">
+													{%for crawler_type in all_crawlers_types%}
+														<option value="{{crawler_type}}" {%if crawler_type=='tor'%}selected{%endif%}>{{crawler_type}}</option>
+													{%endfor%}
+												</select>
+											</div>
+											<div id="div_splash_name">
+												<select class="custom-select form-control" name="splash_name" id="splash_name">
+													<option value="None" selected>Don't use a special splash crawler</option>
+													{%for splash_name in all_splash_name%}
+														<option value="{{splash_name}}">{{splash_name}}</option>
+													{%endfor%}
+												</select>
+											</div>
+											<div class="d-flex mt-3">
 												<i class="fas fa-user-ninja mt-1"></i> &nbsp;Manual&nbsp;&nbsp;
 												<div class="custom-control custom-switch">
 													<input class="custom-control-input" type="checkbox" name="crawler_type" value="True" id="crawler_type">
@@ -143,10 +167,15 @@ var chart = {};
 $(document).ready(function(){
 	$("#page-Crawler").addClass("active");
 	$("#nav_manual_crawler").addClass("active");
+	queue_type_selector_input_controler()
 	manual_crawler_input_controler();
 
 	$('#crawler_type').on("change", function () {
 		manual_crawler_input_controler();
+	});
+
+	$('#queue_type_selector').on("change", function () {
+		queue_type_selector_input_controler();
 	});
 });
 
@@ -169,6 +198,16 @@ function manual_crawler_input_controler() {
 		$("#crawler_epoch_input").show();
 	}else{
 		$("#crawler_epoch_input").hide();
+	}
+}
+
+function queue_type_selector_input_controler() {
+	if($('#queue_type_selector').is(':checked')){
+		$("#div_crawler_queue_type").hide();
+		$("#div_splash_name").show();
+	}else{
+		$("#div_crawler_queue_type").show();
+		$("#div_splash_name").hide();
 	}
 }
 

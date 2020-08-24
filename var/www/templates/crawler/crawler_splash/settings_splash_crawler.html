@@ -26,10 +26,6 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-				{%if not is_manager_connected%}
-					{% include 'crawler/crawler_disabled.html' %}
-				{%endif%}
-
 				<div class="row">
 					<div class="col-xl-6">
 
@@ -45,7 +41,7 @@
 				<div class="card mb-3 mt-1">
 					<div class="card-header bg-dark text-white">
 						<span class="badge badge-pill badge-light flex-row-reverse float-right">
-							{% if is_manager_connected %}
+							{% if is_manager_connected['status'] %}
 								<div style="color:Green;">
 									<i class="fas fa-check-circle fa-2x"></i>
 									Connected
@@ -60,6 +56,10 @@
 						<h4>Splash Crawler Manager</h4>
 					</div>
 					<div class="card-body">
+
+						{%if not is_manager_connected['status']%}
+							{% include 'crawler/crawler_disabled.html' %}
+						{%endif%}
 
 						<div class="row mb-3 justify-content-center">
 							<div class="col-xl-6">
@@ -77,11 +77,41 @@
 														{{api_key}}
 														<!-- <a class="ml-3" href="/settings/new_token"><i class="fa fa-random"></i></a> -->
 													</td>
+													<td>
+														<a href="{{ url_for('crawler_splash.crawler_splash_setings_crawler_manager') }}">
+															<button type="button" class="btn btn-info">
+																Edit <i class="fas fa-pencil-alt"></i>
+															</button>
+														</a>
+													</td>
 												</tr>
 											</tbody>
 										</table>
 									</div>
 								</div>
+							</div>
+					</div>
+
+					<div 	{%if not is_manager_connected%}class="hidden"{%endif%}>
+
+						<div class="card border-secondary mb-4">
+							<div class="card-body text-dark">
+								<h5 class="card-title">Number of Crawlers to Launch:</h5>
+								<table class="table table-sm">
+									<tbody>
+										{%for crawler in nb_crawlers_to_launch%}
+											<tr>
+												<td>{{crawler}}</td>
+												<td>{{nb_crawlers_to_launch[crawler]}}</td>
+											</tr>
+										{%endfor%}
+									</tbody>
+								</table>
+								<a href="{{ url_for('crawler_splash.crawler_splash_setings_crawlers_to_lauch') }}">
+									<button type="button" class="btn btn-info">
+										Edit number of crawlers to launch <i class="fas fa-pencil-alt"></i>
+									</button>
+								</a>
 							</div>
 						</div>
 
@@ -202,55 +232,55 @@
 								</table>
 							</div>
 						</div>
-
 					</div>
 				</div>
+			</div>
 
-				<div class="card mb-3 mt-1">
-					<div class="card-header bg-dark text-white">
-						<h4>Crawlers Settings</h4>
-					</div>
-					<div class="card-body">
-
-						<table class="table table-striped table-hover">
-							<thead class="bg-info text-white">
-								<th>
-									Key
-								</th>
-								<th>
-									Description
-								</th>
-								<th>
-									Value
-								</th>
-								<th></th>
-							</thead>
-							<tbody>
-								{% for config_field in crawler_full_config %}
-									<tr>
-										<td>
-											{{config_field}}
-										</td>
-										<td>
-											{{crawler_full_config[config_field]['info']}}
-										</td>
-										<td>
-											{{crawler_full_config[config_field]['value']}}
-										</td>
-										<td>
-											<div class="d-flex justify-content-end">
-												<button class="btn btn-outline-dark px-1 py-0">
-													<i class="fas fa-pencil-alt"></i>
-												</button>
-											</div>
-										</td>
-									</tr>
-								{% endfor %}
-							</tbody>
-						</table>
-
-					</div>
+			<div class="card mb-3 mt-1">
+				<div class="card-header bg-dark text-white">
+					<h4>Crawlers Settings</h4>
 				</div>
+				<div class="card-body">
+
+					<table class="table table-striped table-hover">
+						<thead class="bg-info text-white">
+							<th>
+								Key
+							</th>
+							<th>
+								Description
+							</th>
+							<th>
+								Value
+							</th>
+							<th></th>
+						</thead>
+						<tbody>
+							{% for config_field in crawler_full_config %}
+								<tr>
+									<td>
+										{{config_field}}
+									</td>
+									<td>
+										{{crawler_full_config[config_field]['info']}}
+									</td>
+									<td>
+										{{crawler_full_config[config_field]['value']}}
+									</td>
+									<td>
+										<div class="d-flex justify-content-end">
+											<button class="btn btn-outline-dark px-1 py-0">
+												<i class="fas fa-pencil-alt"></i>
+											</button>
+										</div>
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+
+				</div>
+			</div>
 
 			</div>
 		</div>
