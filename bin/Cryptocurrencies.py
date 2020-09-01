@@ -44,8 +44,9 @@ def search_crytocurrency(item_id, item_content):
 
     is_cryptocurrency_found = False
 
-    for crypto_name in cryptocurrency_dict:
-        crypto_dict = cryptocurrency_dict[crypto_name]
+    for dict_field in cryptocurrency_dict:
+        crypto_dict = cryptocurrency_dict[dict_field]
+        crypto_name = crypto_dict['name']
 
         signal.alarm(crypto_dict['max_execution_time'])
         try:
@@ -62,7 +63,7 @@ def search_crytocurrency(item_id, item_content):
             is_valid_crypto_addr = False
             # validate cryptocurrency address
             for address in crypto_addr:
-                if(Cryptocurrency.verify_cryptocurrency_address(crypto_name, address)):
+                if(Cryptocurrency.verify_cryptocurrency_address(dict_field, address)):
                     is_valid_crypto_addr = True
                     print('{} address found : {}'.format(crypto_name, address))
                     # build bitcoin correlation
@@ -119,6 +120,17 @@ cryptocurrency_dict = {
     'bitcoin': {
                     'name': 'bitcoin',      # e.g. 1NbEPRwbBZrFDsx1QW19iDs8jQLevzzcms
                     'regex': r'\b(?<![+/=])[13][A-Za-z0-9]{26,33}(?![+/=])\b',
+                    'max_execution_time': default_max_execution_time,
+                    'tag': 'infoleak:automatic-detection="bitcoin-address"',
+                    'private_key': {
+                        'regex': r'\b(?<![+/=])[5KL][1-9A-HJ-NP-Za-km-z]{50,51}(?![+/=])\b',
+                        'max_execution_time': default_max_execution_time,
+                        'tag': 'infoleak:automatic-detection="bitcoin-private-key"',
+                    },
+    },
+    'bitcoin-bech32': {
+                    'name': 'bitcoin',      # e.g. bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq
+                    'regex': r'\bbc(?:0(?:[ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})\b',
                     'max_execution_time': default_max_execution_time,
                     'tag': 'infoleak:automatic-detection="bitcoin-address"',
                     'private_key': {
