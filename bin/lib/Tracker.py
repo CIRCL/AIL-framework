@@ -103,13 +103,11 @@ def is_valid_default_yara_rule(yara_rule):
     yara_dir = get_yara_rules_default_dir()
     filename = os.path.join(yara_dir, yara_rule)
     filename = os.path.realpath(filename)
-
-    print(yara_dir)
-    print(filename)
-
     # incorrect filename
     if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
         print('error: file transversal')
+        print(yara_dir)
+        print(filename)
         return False
     else:
         if os.path.isfile(filename):
