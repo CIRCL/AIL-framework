@@ -254,12 +254,13 @@ def get_json_tracker_stats():
         res = Term.get_list_tracked_term_stats_by_day([tracker_uuid])
     return jsonify(res)
 
-# @hunter.route("/tracker/get_all_default_yara_rules_by_type", methods=['GET'])
-# @login_required
-# @login_read_only
-# def get_all_default_yara_rules_by_type():
-#     yara_types = request.args.get('yara_types')
-#     get_all_default_yara_rules_by_types(yara_types)
+@hunter.route("/tracker/yara/default_rule/content", methods=['GET'])
+@login_required
+@login_read_only
+def get_default_yara_rule_content():
+    default_yara_rule = request.args.get('rule_name')
+    res = Tracker.api_get_default_rule_content(default_yara_rule)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # ========= REGISTRATION =========
 app.register_blueprint(hunter, url_prefix=baseUrl)

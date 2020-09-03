@@ -139,6 +139,22 @@ def get_yara_rule_content(yara_rule):
         rule_content = f.read()
     return rule_content
 
+def api_get_default_rule_content(default_yara_rule):
+    yara_dir = get_yara_rules_default_dir()
+    filename = os.path.join(yara_dir, default_yara_rule)
+    filename = os.path.realpath(filename)
+
+    # incorrect filename
+    if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
+        return ({'status': 'error', 'reason': 'file transversal detected'}, 400)
+
+    if not os.path.isfile(filename):
+        return ({'status': 'error', 'reason': 'yara rule not found'}, 400)
+
+    with open(filename, 'r') as f:
+        rule_content = f.read()
+    return ({'rule_name': default_yara_rule, 'content': rule_content}, 200)
+
 ##-- YARA --##
 
 

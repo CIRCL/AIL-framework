@@ -89,10 +89,10 @@
 									</div>
 
 
-									<div class="" id="yara_rule">
+									<div class="mb-2" id="yara_rule">
 										<div class="" id="yara_default_rules">
 
-											<select class="custom-select w-100 mb-3" name="yara_default_rule">
+											<select class="custom-select w-100 mb-3" name="yara_default_rule" onchange="get_default_rule_content(this);">
 											  <option selected>Select a default rule</option>
 												{% for yara_types in all_yara_files %}
 													{% for yara_file in all_yara_files[yara_types] %}
@@ -100,12 +100,17 @@
 													{% endfor %}
 												{% endfor %}
 											</select>
+
+											<pre class="border bg-light" id="default_yara_rule_content"></pre>
+
 										</div>
 
-									<div class="row" id="textarea">
-										<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5"></textarea>
+										<hr>
+
+										<div class="row" id="textarea">
+											<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5"></textarea>
+										</div>
 									</div>
-								</div>
 
 									<br>
 									<button class="btn btn-success mt-2">
@@ -180,6 +185,20 @@ function toggle_sidebar(){
 		$('#side_menu').addClass('border-right')
 		$('#side_menu').addClass('col-lg-2')
 		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+
+
+function get_default_rule_content(selector){
+	var yara_name = selector.value
+	if (yara_name === "Select a default rule") {
+		jQuery("#default_yara_rule_content").text("")
+	} else {
+		$.getJSON("{{ url_for('hunter.get_default_yara_rule_content') }}?rule_name=" + yara_name,
+			function(data) {
+				jQuery("#default_yara_rule_content").text(data['content'])
+		});
 	}
 }
 
