@@ -12,7 +12,7 @@ env:
       AIL_FLASK=$TRAVIS_BUILD_DIR/var/www/ AIL_REDIS=$TRAVIS_BUILD_DIR/redis/src/ \
       AIL_LEVELDB=$TRAVIS_BUILD_DIR/redis-leveldb/ PATH=$AIL_HOME:$AIL_REDIS:$AIL_LEVELDB:$PATH
 
-dist: xenial
+dist: bionic
 
 install:
     - ./installing_deps.sh
