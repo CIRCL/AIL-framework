@@ -40,7 +40,7 @@ sender_user =
 #Proxying requests to the app
 baseUrl = /
 #Host to bind to
-host = 0.0.0.0
+host = 127.0.0.1
 #Flask server port
 port = 7000
 #Number of logs to display in the dashboard
