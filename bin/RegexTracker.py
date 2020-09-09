@@ -58,7 +58,7 @@ if __name__ == "__main__":
     p = Process(config_section)
     max_execution_time = p.config.getint(config_section, "max_execution_time")
 
-    ull_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
+    full_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
 
     redis_cache_key = regex_helper.generate_redis_cache_key(module_name)
 
