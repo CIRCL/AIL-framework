@@ -48,7 +48,7 @@ def yara_rules_match(data):
     mail_to_notify = Tracker.get_tracker_mails(tracker_uuid)
     if mail_to_notify:
         mail_subject = Tracker.get_email_subject(tracker_uuid)
-        mail_body = mail_body_template.format(term, item_id, full_item_url, item_id)
+        mail_body = mail_body_template.format(data['rule'], item_id, full_item_url, item_id)
     for mail in mail_to_notify:
         NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
