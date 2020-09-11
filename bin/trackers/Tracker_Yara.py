@@ -11,12 +11,10 @@ import time
 import yara
 
 from pubsublogger import publisher
-#
-# import NotificationHelper
-#
 
 sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
+import NotificationHelper # # TODO: refractor
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Term
