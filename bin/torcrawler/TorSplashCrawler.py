@@ -259,8 +259,8 @@ class TorSplashCrawler():
 
                 # Check if Splash restarted
                 if not crawlers.is_splash_reachable(self.splash_url):
-                    self.logger.error('Splash, ResponseNeverReceived for %s, retry in 20s ...', url)
-                    time.sleep(10)
+                    self.logger.error('Splash, ResponseNeverReceived for %s, retry in 30s ...', url)
+                    time.sleep(30)
 
                 yield SplashRequest(
                     url,
