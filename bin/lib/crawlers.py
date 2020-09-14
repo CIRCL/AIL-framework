@@ -478,6 +478,19 @@ def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit
     create_crawler_task(url, screenshot=screenshot, har=har, depth_limit=depth_limit, max_pages=max_pages,
                         auto_crawler=auto_crawler, crawler_delta=crawler_delta, cookiejar_uuid=cookiejar_uuid, user_agent=user_agent)
     return None
+
+#### ####
+
+#### SPLASH API ####
+def is_splash_reachable(splash_url, timeout=1.0):
+    try:
+        r = requests.get(splash_url , timeout=timeout)
+    except Exception:
+        return False
+    if r.status_code == 200:
+        return True
+    else:
+        return False
 #### ####
 
 def is_redirection(domain, last_url):
@@ -544,6 +557,14 @@ def save_har(har_dir, item_id, har_content):
     filename = os.path.join(har_dir, item_id + '.json')
     with open(filename, 'w') as f:
         f.write(json.dumps(har_content))
+
+def api_add_crawled_item(dict_crawled):
+
+    domain = None
+    # create item_id item_id =
+
+    save_crawled_item(item_id, response.data['html'])
+    create_item_metadata(item_id, domain, 'last_url', port, 'father')
 
 
 #### SPLASH MANAGER ####

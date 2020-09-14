@@ -105,14 +105,15 @@ class TorSplashCrawler():
             'SPLASH_COOKIES_DEBUG': False
             })
 
-    def crawl(self, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item):
-        self.process.crawl(self.crawler, type=type, crawler_options=crawler_options, date=date, requested_mode=requested_mode, url=url, domain=domain, port=port, cookies=cookies, original_item=original_item)
+    def crawl(self, splash_url, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item):
+        self.process.crawl(self.crawler, splash_url=splash_url, type=type, crawler_options=crawler_options, date=date, requested_mode=requested_mode, url=url, domain=domain, port=port, cookies=cookies, original_item=original_item)
         self.process.start()
 
     class TorSplashSpider(Spider):
         name = 'TorSplashSpider'
 
-        def __init__(self, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item, *args, **kwargs):
+        def __init__(self, splash_url, type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item, *args, **kwargs):
+            self.splash_url = splash_url
             self.domain_type = type
             self.requested_mode = requested_mode
             self.original_item = original_item
@@ -245,30 +246,34 @@ class TorSplashCrawler():
             self.logger.error(repr(failure))
 
             if failure.check(ResponseNeverReceived):
-                request = failure.request
-                url= request.meta['current_url']
-                father = request.meta['father']
+                ## DEBUG ##
+                self.logger.error(failure.request)
+                if failure.value.response:
+                    self.logger.error(failure.value.response)
+                ## ----- ##
 
-                self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
-                time.sleep(10)
-                if response:
-                    response_root_key = response.meta['root_key']
-                else:
-                    response_root_key = None
+                # Extract request metadata
+                url = failure.request.meta['current_url']
+                father = failure.request.meta['father']
+                l_cookies = self.build_request_arg(failure.request.meta['splash']['args']['cookies'])
+
+                # Check if Splash restarted
+                if not crawlers.is_splash_reachable(self.splash_url):
+                    self.logger.error('Splash, ResponseNeverReceived for %s, retry in 20s ...', url)
+                    time.sleep(10)
+
                 yield SplashRequest(
                     url,
                     self.parse,
                     errback=self.errback_catcher,
                     endpoint='execute',
-                    cache_args=['lua_source'],
                     meta={'father': father, 'current_url': url},
-                    args=self.build_request_arg(response.cookiejar)
+                    args=l_cookies
                 )
 
             else:
-                print('failure')
-                #print(failure)
-                print(failure.type)
+                self.logger.error(failure.type)
+                self.logger.error(failure.getErrorMessage())
 
         def save_crawled_item(self, item_id, item_content):
             gzip64encoded = crawlers.save_crawled_item(item_id, item_content)
