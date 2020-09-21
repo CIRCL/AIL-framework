@@ -131,11 +131,11 @@ def new_token():
     generate_new_token(current_user.get_id())
     return redirect(url_for('settings.edit_profile'))
 
-@settings.route("/settings/new_token_user", methods=['GET'])
+@settings.route("/settings/new_token_user", methods=['POST'])
 @login_required
 @login_admin
 def new_token_user():
-    user_id = request.args.get('user_id')
+    user_id = request.form.get('user_id')
     if r_serv_db.exists('user_metadata:{}'.format(user_id)):
         generate_new_token(user_id)
     return redirect(url_for('settings.users_list'))
@@ -215,18 +215,18 @@ def users_list():
         new_user_dict['password'] = request.args.get('new_user_password')
     return render_template("users_list.html", all_users=all_users, new_user=new_user_dict, admin_level=True)
 
-@settings.route("/settings/edit_user", methods=['GET'])
+@settings.route("/settings/edit_user", methods=['POST'])
 @login_required
 @login_admin
 def edit_user():
-    user_id = request.args.get('user_id')
+    user_id = request.form.get('user_id')
     return redirect(url_for('settings.create_user', user_id=user_id))
 
-@settings.route("/settings/delete_user", methods=['GET'])
+@settings.route("/settings/delete_user", methods=['POST'])
 @login_required
 @login_admin
 def delete_user():
-    user_id = request.args.get('user_id')
+    user_id = request.form.get('user_id')
     delete_user_db(user_id)
     return redirect(url_for('settings.users_list'))
 

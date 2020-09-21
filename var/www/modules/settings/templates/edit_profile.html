@@ -52,8 +52,16 @@
                         <tr>
                           <td>API Key</td>
                           <td>
-                            {{user_metadata['api_key']}}
+                            <span id="censored_key">
+                              {{user_metadata['api_key'][:4]}}*********************************{{user_metadata['api_key'][-4:]}}
+                            </span>
+                            <span id="uncensored_key" style="display: none;">
+                              {{user_metadata['api_key']}}
+                            </span>
                             <a class="ml-3" href="{{url_for('settings.new_token')}}"><i class="fa fa-random"></i></a>
+                            <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key" onclick="show_api_key();">
+                              <i class="fas fa-eye"></i>
+                            </span>
                           </td>
                         </tr>
                       </tbody>
@@ -91,6 +99,13 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
+
+function show_api_key() {
+    $('#censored_key').hide();
+    $('#btn_key').hide();
+    $('#uncensored_key').show();
+}
+
 </script>
 
 </html>
