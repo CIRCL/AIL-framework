@@ -474,6 +474,14 @@ def get_domain_last_origin(domain, domain_type):
     origin_item = r_serv_onion.hget('{}_metadata:{}'.format(domain_type, domain), 'paste_parent')
     return origin_item
 
+def get_domain_father(domain, domain_type):
+    dict_father = {}
+    dict_father['item_father'] = r_serv_onion.hget('{}_metadata:{}'.format(domain_type, domain), 'paste_parent')
+    if dict_father['item_father'] != 'auto' and dict_father['item_father'] != 'manual':
+        if Item.is_crawled(dict_father['item_father']):
+            dict_father['domain_father'] = Item.get_domain(dict_father['item_father'])
+    return dict_father
+
 def get_domain_tags(domain):
     '''
     Retun all tags of a given domain.
@@ -743,6 +751,9 @@ class Domain(object):
         :rtype: str
         '''
         return get_domain_last_origin(self.domain, self.type)
+
+    def get_domain_father(self):
+        return get_domain_father(self.domain, self.type)
 
     def domain_was_up(self):
         '''
