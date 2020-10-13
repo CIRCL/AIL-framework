@@ -24,7 +24,7 @@ import Tracker
 import item_basic
 
 
-full_item_url = "/showsavedpaste/?paste="
+full_item_url = "/object/item?id="
 mail_body_template = "AIL Framework,\nNew YARA match: {}\nitem id: {}\nurl: {}{}"
 
 last_refresh = time.time()

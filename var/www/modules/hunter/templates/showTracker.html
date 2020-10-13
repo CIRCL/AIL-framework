@@ -227,7 +227,7 @@
 												{{item['date'][0:4]}}/{{item['date'][4:6]}}/{{item['date'][6:8]}}
 											</td>
 											<td>
-												<a class="text-secondary" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item['id']}}">
+												<a class="text-secondary" target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item['id']}}">
 													<div style="line-height:0.9;">{{ item['id'] }}</div>
 												</a>
 												<div class="mb-2">

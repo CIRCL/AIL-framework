@@ -98,7 +98,7 @@
                           {% for path in r %}
                                 <tr>
                                   <td> {{ loop.index0 }}</td>
-                                  <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
+                                  <td><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{path}}">{{ path }}</a>
                                     <div>
                                       {% for tag in paste_tags[loop.index0] %}
                                       <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag[1] }}">
@@ -109,7 +109,7 @@
                                   </td>
                                   <td>{{ paste_date[loop.index0] }}</td>
                                   <td>{{ paste_size[loop.index0] }}</td>
-                                  <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+                                  <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ c[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('objects_item.showItem') }}?id={{ path }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
                                 </tr>
                           {% endfor %}
                               </tbody>
@@ -207,11 +207,11 @@
                 }
                 search_table.row.add( [
                     init_num_of_elements_in_table+((offset))+i+1,
-                   "<a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>"
+                   "<a target=\"_blank\" href=\"{{ url_for('objects_item.showItem') }}?id="+data.path_array[i]+"&num="+i+"\"> "+ data.path_array[i] +"</a>"
                    + "<div>" + tag + "</div>",
                     data.date_array[i],
                     data.size_array[i],
-                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+data.path_array[i]+"&num="+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
+                    "<p><span class=\"glyphicon glyphicon-info-sign\" data-toggle=\"tooltip\" data-placement=\"left\" title=\""+curr_preview+"\"></span> <button type=\"button\" class=\"btn-link\" data-num=\""+i+"\" data-toggle=\"modal\" data-target=\"#mymodal\" data-url=\"{{ url_for('objects_item.showItem') }}?id="+data.path_array[i]+"&num="+i+"\" data-path=\""+data.path_array[i]+"\"><span class=\"fa fa-search-plus\"></span></button></p>"
                 ] ).draw( false );
             }
             offset = offset + data.path_array.length;

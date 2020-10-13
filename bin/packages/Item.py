@@ -4,6 +4,7 @@
 import os
 import sys
 import redis
+import html2text
 
 from io import BytesIO
 
@@ -59,6 +60,9 @@ def get_item_basename(item_id):
 def get_item_size(item_id):
     return round(os.path.getsize(os.path.join(PASTES_FOLDER, item_id))/1024.0, 2)
 
+def get_item_encoding(item_id):
+    return None
+
 def get_lines_info(item_id, item_content=None):
     if not item_content:
         item_content = get_item_content(item_id)
@@ -73,8 +77,36 @@ def get_lines_info(item_id, item_content=None):
     return {'nb': nb_line, 'max_length': max_length}
 
 
+def get_item_metadata(item_id, item_content=None):
+    ## TODO: FIXME ##performance
+    # encoding
+    # language
+    # lines info
+
+    item_metadata = {}
+    item_metadata['date'] = get_item_date(item_id, add_separator=True)
+    item_metadata['source'] = get_source(item_id)
+    item_metadata['size'] = get_item_size(item_id)
+    item_metadata['encoding'] = get_item_encoding(item_id)
+    item_metadata['lines'] = get_lines_info(item_id, item_content=item_content)
+
+    return item_metadata
+
+def get_item_parent(item_id):
+    return item_basic.get_item_parent(item_id)
+
+def add_item_parent(item_parent, item_id):
+    return item_basic.add_item_parent(item_parent, item_id)
+
 def get_item_content(item_id):
     return item_basic.get_item_content(item_id)
+
+def get_item_content_html2text(item_id, item_content=None):
+    if not item_content:
+        item_content = get_item_content(item_id)
+    h = html2text.HTML2Text()
+    h.ignore_links = False
+    return h.handle(item_content)
 
 # API
 def get_item(request_dict):
@@ -257,6 +289,18 @@ def get_item_list_desc(list_item_id):
 def is_crawled(item_id):
     return item_basic.is_crawled(item_id)
 
+def get_crawler_matadata(item_id, ltags=None):
+    dict_crawler = {}
+    if is_crawled(item_id):
+        dict_crawler['domain'] = get_item_domain(item_id)
+        if not ltags:
+            ltags = Tag.get_obj_tag(item_id)
+        dict_crawler['is_tags_safe'] = Tag.is_tags_safe(ltags)
+        dict_crawler['url'] = get_item_link(item_id)
+        dict_crawler['screenshot'] = get_item_screenshot(item_id)
+        dict_crawler['har'] = get_item_har_name(item_id)
+    return dict_crawler
+
 def is_onion(item_id):
     is_onion = False
     if len(is_onion) > 62:
@@ -293,7 +337,7 @@ def get_item_screenshot(item_id):
     return ''
 
 def get_item_har_name(item_id):
-    os.path.join(screenshot_directory, item_id) + '.json'
+    har_path = os.path.join(screenshot_directory, item_id) + '.json'
     if os.path.isfile(har_path):
         return har_path
     else:
@@ -321,6 +365,24 @@ def get_item_duplicate(item_id, r_list=True):
         else:
             return []
     return res
+
+def get_item_nb_duplicates(item_id):
+    return r_serv_metadata.scard('dup:{}'.format(item_id))
+
+def get_item_duplicates_dict(item_id):
+    dict_duplicates = {}
+    for duplicate in get_item_duplicate(item_id):
+        duplicate = duplicate[1:-1].replace('\'', '').replace(' ', '').split(',')
+        duplicate_id = duplicate[1]
+        if not duplicate_id in dict_duplicates:
+            dict_duplicates[duplicate_id] = {'date': get_item_date(duplicate_id, add_separator=True), 'algo': {}}
+        algo = duplicate[0]
+        if algo == 'tlsh':
+            similarity = 100 - int(duplicate[2])
+        else:
+            similarity = int(duplicate[2])
+        dict_duplicates[duplicate_id]['algo'][algo] = similarity
+    return dict_duplicates
 
 def add_item_duplicate(item_id, l_dup):
     for item_dup in l_dup:

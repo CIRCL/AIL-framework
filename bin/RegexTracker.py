@@ -23,7 +23,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Tracker
 import regex_helper
 
-full_item_url = "/showsavedpaste/?paste="
+full_item_url = "/object/item?id="
 mail_body_template = "AIL Framework,\nNew occurrence for term tracked regex: {}\nitem id: {}\nurl: {}{}"
 
 dict_regex_tracked = Term.get_regex_tracked_words_dict()

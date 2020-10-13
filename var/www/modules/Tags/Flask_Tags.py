@@ -377,7 +377,7 @@ def remove_tag(): #TODO remove me , used by showpaste
     res = Tag.api_delete_obj_tags(tags=[tag], object_id=path, object_type="item")
     if res[1] != 200:
         return str(res[0])
-    return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+    return redirect(url_for('objects_item.showItem', id=path))
 
 @Tags.route("/Tags/confirm_tag")
 @login_required
@@ -395,7 +395,7 @@ def confirm_tag():
         #add analyst tag
         Tag.add_tag('item', tag, path)
 
-        return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+        return redirect(url_for('objects_item.showItem', id=path))
 
     return 'incompatible tag'
 
@@ -417,7 +417,7 @@ def tag_validation():
             r_serv_statistics.sadd('fp:'+tag, path)
             r_serv_statistics.srem('tp:'+tag, path)
 
-        return redirect(url_for('showsavedpastes.showsavedpaste', paste=path))
+        return redirect(url_for('objects_item.showItem', id=path))
     else:
         return 'input error'
 

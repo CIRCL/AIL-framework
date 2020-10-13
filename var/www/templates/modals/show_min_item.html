@@ -86,7 +86,7 @@ function get_html_and_update_modal(event, truemodal) {
             button.tooltip(button);
             $("#container-show-more").append(button);
 
-            $("#modal_show_min_item_button_show_item").attr('href', '{{ url_for('showsavedpastes.showsavedpaste')  }}?paste=' + $(modal).attr('data-path'));
+            $("#modal_show_min_item_button_show_item").attr('href', '{{ url_for('objects_item.showItem')  }}?id=' + $(modal).attr('data-path'));
             $("#modal_show_min_item_button_show_item").show('fast');
             $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
             if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed

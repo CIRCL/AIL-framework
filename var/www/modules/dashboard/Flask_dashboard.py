@@ -76,7 +76,7 @@ def dashboard_alert(log):
         log = log[46:].split(';')
         if len(log) == 6:
             time = datetime_from_utc_to_local(utc_str)
-            path = url_for('showsavedpastes.showsavedpaste',paste=log[5])
+            path = url_for('objects_item.showItem',id=log[5])
 
             res = {'date': date, 'time': time, 'script': log[0], 'domain': log[1], 'date_paste': log[2],
                   'paste': log[3], 'message': log[4], 'path': path}

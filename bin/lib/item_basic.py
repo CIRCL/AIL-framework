@@ -113,9 +113,6 @@ def get_item_parent(item_id):
 def get_item_children(item_id):
     return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))
 
-def add_item_parent(item_parent, item_id):
-    return item_basic.add_item_parent(item_parent, item_id)
-
 # # TODO:  handle domain last origin in domain lib
 def _delete_node(item_id):
     # only if item isn't deleted

@@ -404,13 +404,6 @@ def show_item_min(requested_path , content_range=0):
 
 # ============ ROUTES ============
 
-@showsavedpastes.route("/showsavedpaste/") #completely shows the paste in a new tab
-@login_required
-@login_read_only
-def showsavedpaste():
-    requested_path = request.args.get('paste', '')
-    return showpaste(0, requested_path)
-
 @showsavedpastes.route("/showsaveditem_min/") #completely shows the paste in a new tab
 @login_required
 @login_read_only

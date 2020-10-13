@@ -20,7 +20,7 @@ from packages import Term
 
 from lib import Tracker
 
-full_item_url = "/showsavedpaste/?paste="
+full_item_url = "/object/item/?id="
 
 mail_body_template = "AIL Framework,\nNew occurrence for term tracked term: {}\nitem id: {}\nurl: {}{}"
 

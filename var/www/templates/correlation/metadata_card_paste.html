@@ -38,7 +38,7 @@
 					{%  endfor %}
 				</div>
 				<div class="mb-2 float-right">
-					<a href="{{ url_for('showsavedpastes.showsavedpaste')}}?paste={{ dict_object["correlation_id"] }}" target="_blank" style="font-size: 15px">
+					<a href="{{ url_for('objects_item.showItem')}}?id={{ dict_object["correlation_id"] }}" target="_blank" style="font-size: 15px">
 						<button class="btn btn-info"><i class="fas fa-search"></i> Show Paste
 						</button>
 					</a>

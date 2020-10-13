@@ -460,7 +460,7 @@ function bindEventsForCurrentPage() {
                     html_to_add += "<td>"+curr_data.size+"</td>";
                     html_to_add += "<td>"+curr_data.lineinfo[0]+"</td>";
                     html_to_add += "<td>"+curr_data.lineinfo[1]+"</td>";
-                    html_to_add += "<td><div class=\"row\"><button class=\"btn btn-xs btn-default\" data-toggle=\"popover\" data-placement=\"left\" data-content=\""+curr_data.content.replace(/\"/g, "\'")+"\">Preview content</button><a target=\"_blank\" href=\"{{ url_for('showsavedpastes.showsavedpaste') }}?paste="+curr_data.path+"&num=0\">  <button type=\"button\" class=\"btn btn-xs btn-info\">Show Paste</button></a></div></td>";
+                    html_to_add += "<td><div class=\"row\"><button class=\"btn btn-xs btn-default\" data-toggle=\"popover\" data-placement=\"left\" data-content=\""+curr_data.content.replace(/\"/g, "\'")+"\">Preview content</button><a target=\"_blank\" href=\"{{ url_for('objects_item.showItem') }}?id="+curr_data.path+"&num=0\">  <button type=\"button\" class=\"btn btn-xs btn-info\">Show Paste</button></a></div></td>";
 
                     html_to_add += "</tr>";
                 }

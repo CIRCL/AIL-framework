@@ -109,7 +109,7 @@
                     <tr>
                       <td><i class="far fa-file"></i></td>
                       <td>
-                        <a class="badge" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=dict_domain['father']['item_father']) }}" />{{ dict_domain['father']['item_father'] }}</a>
+                        <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', id=dict_domain['father']['item_father']) }}" />{{ dict_domain['father']['item_father'] }}</a>
                       </td>
                     </tr>
                     {% if dict_domain['father']['domain_father'] %}
@@ -374,7 +374,7 @@
   					        {% for item in dict_domain["crawler_history"]["items"] %}
   					          <tr>
   				              <td>
-  												<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item["id"]}}" class="text-secondary">
+  												<a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item["id"]}}" class="text-secondary">
   													<div style="line-height:0.9;">{{ item["link"] }}</div>
   												</a>
   				                <div>
@@ -520,7 +520,7 @@ function toggle_sidebar(){
 <script>
 var ctx = canvas.getContext('2d'), img = new Image();
 var base_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}";
-var screenshot_href = "{{ url_for('showsavedpastes.showsavedpaste') }}?paste=";
+var screenshot_href = "{{ url_for('objects_item.showItem') }}?id=";
 
 /// turn off image smoothing
 ctx.webkitImageSmoothingEnabled = false;

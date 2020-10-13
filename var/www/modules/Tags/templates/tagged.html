@@ -103,7 +103,7 @@
         {% for path in all_path %}
           <tr>
               <td> {{ loop.index0 }}</td>
-              <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}">{{ path }}</a>
+              <td><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{path}}">{{ path }}</a>
                 <div>
                   {% for tag in paste_tags[loop.index0] %}
                   <a href="{{ url_for('Tags.get_tagged_paste') }}?ltags={{ tag[1] }}">
@@ -114,7 +114,7 @@
               </td>
               <td>{{ paste_date[loop.index0] }}</td>
               <td>{{ paste_linenum[loop.index0] }}</td>
-              <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
+              <td><p><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="{{ content[loop.index0] }} "></span> <button type="button" class="btn-link" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#mymodal" data-url="{{ url_for('objects_item.showItem') }}?id={{ path }}&num={{ loop.index0+1 }}" data-path="{{ path }}"><span class="fa fa-search-plus"></span></button></p></td>
           </tr>
         {%  endfor %}
 
