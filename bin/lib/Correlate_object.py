@@ -227,7 +227,7 @@ def get_item_url(correlation_name, value, correlation_type=None):
         url = url_for(endpoint, id=value)
     elif correlation_name == 'paste':                   ### # TODO:  remove me
         endpoint = 'objects_item.showItem'
-        url = url_for(endpoint, paste=value)
+        url = url_for(endpoint, id=value)
     return url
 
 def get_obj_tag_table_keys(object_type):
