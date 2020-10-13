@@ -226,7 +226,7 @@ def get_item_url(correlation_name, value, correlation_type=None):
         endpoint = 'objects_item.showItem'
         url = url_for(endpoint, id=value)
     elif correlation_name == 'paste':                   ### # TODO:  remove me
-        endpoint = 'showsavedpastes.showsavedpaste'
+        endpoint = 'objects_item.showItem'
         url = url_for(endpoint, paste=value)
     return url
 
