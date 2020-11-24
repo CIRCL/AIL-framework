@@ -71,10 +71,12 @@ if __name__ == "__main__":
         item_id = p.get_from_set()
         if item_id is not None:
             item_content = item_basic.get_item_content(item_id)
-            yara_match = rules.match(data=item_content, callback=yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
-            if yara_match:
-                print(f'{item_id}: {yara_match}')
-
+            try:
+                yara_match = rules.match(data=item_content, callback=yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
+                if yara_match:
+                    print(f'{item_id}: {yara_match}')
+            except yara.TimeoutError as e:
+                print(f'{item_id}: yara scanning timed out')
         else:
             time.sleep(5)
 
