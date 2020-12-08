@@ -93,8 +93,9 @@ def tracked_menu_yara():
 @login_analyst
 def add_tracked_menu():
     if request.method == 'POST':
-        term = request.form.get("term")
-        term_type  = request.form.get("tracker_type")
+        tracker = request.form.get("tracker")
+        tracker_uuid = request.form.get("tracker_uuid")
+        tracker_type  = request.form.get("tracker_type")
         nb_words = request.form.get("nb_word", 1)
         description = request.form.get("description", '')
         level = request.form.get("level", 0)
@@ -102,15 +103,15 @@ def add_tracked_menu():
         mails = request.form.get("mails", [])
 
         # YARA #
-        if term_type == 'yara':
+        if tracker_type == 'yara':
             yara_default_rule = request.form.get("yara_default_rule")
             yara_custom_rule =  request.form.get("yara_custom_rule")
             if yara_custom_rule:
-                term = yara_custom_rule
-                term_type='yara_custom'
+                tracker = yara_custom_rule
+                tracker_type='yara_custom'
             else:
-                term = yara_default_rule
-                term_type='yara_default'
+                tracker = yara_default_rule
+                tracker_type='yara_default'
         # #
 
         if level == 'on':
@@ -121,17 +122,58 @@ def add_tracked_menu():
         if tags:
             tags = tags.split()
 
-        input_dict = {"term": term, "type": term_type, "nb_words": nb_words, "tags": tags, "mails": mails, "level": level, "description": description}
+        input_dict = {"tracker": tracker, "type": tracker_type, "nb_words": nb_words, "tags": tags, "mails": mails, "level": level, "description": description}
         user_id = current_user.get_id()
-        res = Term.parse_json_term_to_add(input_dict, user_id)
+        # edit tracker
+        if tracker_uuid:
+            input_dict['uuid'] = tracker_uuid
+        res = Tracker.api_add_tracker(input_dict, user_id)
         if res[1] == 200:
             return redirect(url_for('hunter.tracked_menu'))
         else:
             ## TODO: use modal
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
     else:
-        all_yara_files = Tracker.get_all_default_yara_files()
-        return render_template("Add_tracker.html", all_yara_files=all_yara_files)
+        return render_template("edit_tracker.html", all_yara_files=Tracker.get_all_default_yara_files())
+
+@hunter.route("/tracker/edit", methods=['GET', 'POST'])
+@login_required
+@login_analyst
+def edit_tracked_menu():
+    user_id = current_user.get_id()
+    tracker_uuid = request.args.get('uuid', None)
+
+    res = Term.check_term_uuid_valid_access(tracker_uuid, user_id) # check if is author or admin
+    if res: # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+    dict_tracker = Tracker.get_tracker_metedata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True)
+    dict_tracker['tags'] = ' '.join(dict_tracker['tags'])
+    dict_tracker['mails'] = ' '.join(dict_tracker['mails'])
+
+    if dict_tracker['type'] == 'set':
+        dict_tracker['tracker'], dict_tracker['nb_words'] = dict_tracker['tracker'].split(';')
+        dict_tracker['tracker'] = dict_tracker['tracker'].replace(',', ' ')
+    elif dict_tracker['type'] == 'yara': #is_valid_default_yara_rule
+        if Tracker.is_default_yara_rule(dict_tracker['tracker']):
+            dict_tracker['yara_file'] = dict_tracker['tracker'].split('/')
+            dict_tracker['yara_file'] = dict_tracker['yara_file'][-2] + '/' + dict_tracker['yara_file'][-1]
+            dict_tracker['content'] = None
+        else:
+            dict_tracker['yara_file'] = None
+            dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracker'])
+
+    return render_template("edit_tracker.html", dict_tracker=dict_tracker,
+                                all_yara_files=Tracker.get_all_default_yara_files())
+
+    ## TO EDIT
+    # word
+    # set of word + nb words
+    # regex
+    # yara custum
+    # yara default ???? => allow edit ?
+
+    #### EDIT SHow Trackers ??????????????????????????????????????????????????
 
 @hunter.route("/tracker/show_tracker")
 @login_required

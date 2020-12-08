@@ -27,39 +27,41 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-						<div class="card mb-3 mt-1">
-						  <div class="card-header">
-								<h5 class="card-title">Create a new tracker</h5>
+						<div class="card my-3">
+						  <div class="card-header bg-dark text-white">
+								<h5 class="card-title">Edit a Tracker</h5>
 							</div>
 						  <div class="card-body">
-						    <p class="card-text">Select a tracker type.</p>
 
 								<form action="{{ url_for('hunter.add_tracked_menu') }}" method='post'>
+									{%if dict_tracker%}
+										<input id="tracker_uuid" name="tracker_uuid" class="form-control" type="text" value="{{dict_tracker['uuid']}}" hidden>
+									{%endif%}
 
 									<div class="row">
 										<div class="col-12 col-xl-9">
 										  <div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
-										      <div class="input-group-text"><i class="fas fa-tag"></i></div>
+										      <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
 										    </div>
-												<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text">
+												<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{{dict_tracker['tags']}}"{%endif%}{%endif%}>
 										  </div>
 											<div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
-										      <div class="input-group-text"><i class="fas fa-at"></i></div>
+										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
 										    </div>
-												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text">
+												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['mails']%}value="{{dict_tracker['mails']}}"{%endif%}{%endif%}>
 										  </div>
 											<div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
-										      <div class="input-group-text"><i class="fas fa-pencil-alt"></i></div>
+										      <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
 										    </div>
-												<input id="description" name="description" class="form-control" placeholder="Tracker Description (optional)" type="text">
+												<input id="description" name="description" class="form-control" placeholder="Tracker Description (optional)" type="text" {%if dict_tracker%}{%if dict_tracker['description']%}value="{{dict_tracker['description']}}"{%endif%}{%endif%}>
 										  </div>
 										</div>
 										<div class="col-12 col-xl-3">
 											<div class="custom-control custom-switch mt-1">
-												<input class="custom-control-input" type="checkbox" name="level" id="id_level" checked>
+												<input class="custom-control-input" type="checkbox" name="level" id="id_level" {%if dict_tracker%}{%if dict_tracker['level']==1%}checked{%endif%}{%else%}checked{%endif%}>
 												<label class="custom-control-label" for="id_level">
 													<i class="fas fa-users"></i>&nbsp;Show tracker to all Users
 												</label>
@@ -68,6 +70,7 @@
 									</div>
 
 									<hr>
+									<h4>Tracker Type:</h4>
 
 									<select id="tracker_type" name="tracker_type" class="custom-select w-25 mb-3">
 										<option disabled selected value> -- Select a tracker type -- </option>
@@ -81,10 +84,10 @@
 
 									<div class="row" id="simple_input">
 										<div class="col-12 col-lg-10">
-											<input id="term" name="term" class="form-control" placeholder="Terms to track (space separated)" type="text">
+											<input id="tracker" name="tracker" class="form-control" placeholder="Terms to track (space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tracker']!='yara'%}value="{{dict_tracker['tracker']}}"{%endif%}{%endif%}>
 										</div>
 										<div class="col-12 col-lg-2">
-											<input type="number" id="nb_word" name="nb_word" name="quantity" min="1" placeholder="Nb of keywords">
+											<input type="number" id="nb_word" name="nb_word" name="quantity" min="1" placeholder="Nb of keywords" {%if dict_tracker%}{%if dict_tracker['nb_words']%}value="{{dict_tracker['nb_words']}}"{%endif%}{%endif%}>
 										</div>
 									</div>
 
@@ -92,11 +95,12 @@
 									<div class="mb-2" id="yara_rule">
 										<div class="" id="yara_default_rules">
 
-											<select class="custom-select w-100 mb-3" name="yara_default_rule" onchange="get_default_rule_content(this);">
+											<h6>Default YARA rules:</h6>
+											<select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
 											  <option selected>Select a default rule</option>
 												{% for yara_types in all_yara_files %}
-													{% for yara_file in all_yara_files[yara_types] %}
-													<option value="{{yara_types}}/{{yara_file}}">{{yara_types}} - {{yara_file}}</option>
+													{% for yara_file_name in all_yara_files[yara_types] %}
+													<option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
 													{% endfor %}
 												{% endfor %}
 											</select>
@@ -107,14 +111,15 @@
 
 										<hr>
 
+										<h6>Custom YARA rules:</h6>
 										<div class="row" id="textarea">
-											<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5"></textarea>
+											<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
 										</div>
 									</div>
 
 									<br>
 									<button class="btn btn-success mt-2">
-										<i class="fas fa-plus"></i> Add Tracker
+										<i class="fas fa-plus"></i> {%if dict_tracker%}Edit{%else%}Create{%endif%} Tracker
 									</button>
 
 								</form>
@@ -139,7 +144,7 @@ $(document).ready(function(){
 	$("#page-Tracker").addClass("active");
 	$("#nav_manual_crawler").addClass("active");
 	$("#tracker_desc").hide();
-	$("#term").hide();
+	$("#tracker").hide();
 	$("#nb_word").hide();
 	$("#yara_rule").hide();
 
@@ -148,29 +153,37 @@ $(document).ready(function(){
 		if (tracker_type=="word") {
 			$("#tracker_desc").text("Token to track. You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\ ");
 			$("#tracker_desc").show();
-			$("#term").show();
+			$("#tracker").show();
 			$("#nb_word").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="set") {
 			$("#tracker_desc").text("Set of Terms to track (space separated). This tracker is used to check if an item contain one or more terms specified in a set. If an item contain NB unique terms (by default NB of unique keywords = 1), this tracker is triggered. You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\ ");
 			$("#tracker_desc").show();
-			$("#term").show();
+			$("#tracker").show();
 			$("#nb_word").show();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="regex") {
 			$("#tracker_desc").text("Enter a valid Python regex");
 			$("#tracker_desc").show();
-			$("#term").show();
+			$("#tracker").show();
 			$("#nb_word").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="yara") {
 			$("#tracker_desc").text("Select a default yara rule or create your own rule:");
 			$("#tracker_desc").show();
-			$("#term").hide();
+			$("#tracker").hide();
 			$("#nb_word").hide();
 			$("#yara_rule").show();
 		}
 	});
+
+	{%if dict_tracker%}
+		$('#tracker_type').val('{{dict_tracker['type']}}').change();
+
+		{%if dict_tracker['type']=='yara' and dict_tracker['yara_file']%}
+			$('#yara_default_rule').val('{{dict_tracker['yara_file']}}').change();
+		{%endif%}
+	{%endif%}
 
 });
 
