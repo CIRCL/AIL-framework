@@ -183,7 +183,7 @@ def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
     tracker_creator = r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
     if not tracker_creator:
         return ({"status": "error", "reason": "Unknown uuid"}, 404)
-    if not is_in_role(user_id, 'admin') or user_id != tracker_creator:
+    if not is_in_role(user_id, 'admin') and user_id != tracker_creator:
         return ({"status": "error", "reason": "Access Denied"}, 403)
     return ({"uuid": tracker_uuid}, 200)
 
