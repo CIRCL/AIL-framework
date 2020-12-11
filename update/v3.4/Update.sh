@@ -19,9 +19,9 @@ echo -e $GREEN"Shutting down AIL ..."$DEFAULT
 bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
-bash ${AIL_BIN}/LAUNCH.sh -ldbv &
-wait
-echo ""
+# bash ${AIL_BIN}/LAUNCH.sh -ldbv &
+# wait
+# echo ""
 
 # SUBMODULES #
 git submodule update
