@@ -92,6 +92,8 @@ dict_update_description = {'v1.5':{'nb_background_update': 5, 'update_warning_me
                            'v2.6':{'nb_background_update': 1, 'update_warning_message': 'An Update is running on the background. Some informations like Domain Tags/Correlation can be',
                                                            'update_warning_message_notice_me': 'missing from the UI.'},
                            'v2.7':{'nb_background_update': 1, 'update_warning_message': 'An Update is running on the background. Some informations like Domain Tags can be',
+                                                            'update_warning_message_notice_me': 'missing from the UI.'},
+                           'v3.4':{'nb_background_update': 1, 'update_warning_message': 'An Update is running on the background. Some informations like Domain Languages can be',
                                                             'update_warning_message_notice_me': 'missing from the UI.'}
                         }
 
