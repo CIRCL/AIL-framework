@@ -1,0 +1,73 @@
+<div class="card mb-3 mt-1">
+	<div class="card-header text-white bg-dark">
+		<h5 class="card-title mb-0">
+			<i class="fas fa-language" style="font-size: 1.8rem;"></i> Domains by Languages :
+		</h5>
+	</div>
+		<div class="card-body">
+
+			<div class="input-group">
+			  <div class="input-group-prepend">
+					<button class="btn btn-outline-danger" type="button" id="button-clear" style="z-index: 1;" onclick="emptySearch()">
+						<i class="fas fa-eraser"></i>
+					</button>
+			  </div>
+				<input id="llanguages" name="llanguages" type="text" class="form-control" aria-describedby="button-clear" autocomplete="off">
+			</div>
+
+			<div class="mb-3">
+				<div class="custom-control custom-switch">
+					<input class="custom-control-input" type="checkbox" name="domain_onion_switch" value="" id="domain_onion_switch" {%if 'onion' in domains_types%}checked{%endif%}>
+					<label class="custom-control-label" for="domain_onion_switch">
+						<span class="badge badge-danger"><i class="fas fa-user-secret"></i> Onion Domains</span>
+					</label>
+				</div>
+				<div class="custom-control custom-switch">
+					<input class="custom-control-input" type="checkbox" name="domain_regular_switch" value="True" id="domain_regular_switch"{%if 'regular' in domains_types%}checked{%endif%}>
+					<label class="custom-control-label" for="domain_regular_switch">
+						<span class="badge badge-warning"><i class="fab fa-html5"></i> Web Domains</span>
+					</label>
+				</div>
+			</div>
+
+			<button class="btn btn-primary" type="button" id="button-search" onclick="searchLanguages()">
+				<i class="fas fa-search"></i> Search
+			</button>
+
+			</div>
+	</div>
+
+
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+<script>
+  var llanguages;
+  $.getJSON("{{ url_for('crawler_splash.domains_all_languages_json') }}", //?object_type={{ object_type }}"
+    function(data) {
+      llanguages = $('#llanguages').tagSuggest({
+        data: data,
+				value: [{%if current_languages%}{% for language in current_languages %}'{{language|safe}}',{%endfor%}{%endif%}],
+        sortOrder: 'name',
+        maxDropHeight: 200,
+        name: 'llanguages'
+      });
+  });
+
+  function searchLanguages() {
+		var all_domain_types = ['onion', 'regular'] // TODO: load from flask
+		var l_domains_types = [];
+
+  	var data = llanguages.getValue();
+		for (var i = 0; i < all_domain_types.length; i++) {
+			if (document.getElementById('domain_'+ all_domain_types[i] +'_switch').checked) {
+				l_domains_types.push(all_domain_types[i])
+			}
+		}
+		var parameter = "?languages=" + data + "&domain_types=" + l_domains_types  +"{%if page%}&page={{ page }}{%endif%}";
+		window.location.href = "{{ url_for('crawler_splash.domains_search_languages_get') }}" + parameter;
+  }
+  function emptySearch() {
+  	llanguages.clear();
+  }
+
+</script>

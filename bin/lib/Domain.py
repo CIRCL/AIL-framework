@@ -9,6 +9,7 @@ The ``Domain``
 
 import os
 import sys
+import itertools
 import time
 import redis
 import random
@@ -24,6 +25,7 @@ import Tag
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Correlate_object
+import Language
 import Screenshot
 import Username
 
@@ -65,6 +67,15 @@ def sanitize_domain_type(domain_type):
         return domain_type
     else:
         return 'regular'
+
+def sanitize_domain_types(l_domain_type):
+    all_domain_types = get_all_domains_type()
+    if not l_domain_type:
+        return all_domain_types
+    for domain_type in l_domain_type:
+        if domain_type not in all_domain_types:
+            return all_domain_types
+    return l_domain_type
 
 ######## DOMAINS ########
 def get_all_domains_type():
@@ -210,6 +221,15 @@ def get_domains_up_by_filers(domain_type, date_from=None, date_to=None, tags=[],
     else:
         return None
 
+
+
+## TODO: filters:
+#                   - tags
+#                   - languages
+#                   - daterange UP
+def get_domains_by_filters():
+    pass
+
 def create_domains_metadata_list(list_domains, domain_type):
     l_domains = []
     for domain in list_domains:
@@ -218,8 +238,97 @@ def create_domains_metadata_list(list_domains, domain_type):
         else:
             dom_type = domain_type
         l_domains.append(get_domain_metadata(domain, dom_type, first_seen=True, last_ckeck=True, status=True,
-                            ports=True, tags=True, screenshot=True, tags_safe=True))
+                            ports=True, tags=True, languages=True, screenshot=True, tags_safe=True))
     return l_domains
+
+
+######## LANGUAGES ########
+def get_all_domains_languages():
+    return r_serv_onion.smembers('all_domains_languages')
+
+def get_domains_by_languages(languages, l_domain_type=[]):
+    l_domain_type = sanitize_domain_types(l_domain_type)
+    if not languages:
+        return []
+    elif len(languages) == 1:
+        return get_all_domains_by_language(languages[0], l_domain_type=l_domain_type)
+    else:
+        all_domains_t = []
+        for domain_type in l_domain_type:
+            l_keys_name = []
+            for language in languages:
+                l_keys_name.append('language:domains:{}:{}'.format(domain_type, language))
+            res = r_serv_onion.sinter(l_keys_name[0], *l_keys_name[1:])
+            if res:
+                all_domains_t.append(res)
+        return list(itertools.chain.from_iterable(all_domains_t))
+
+def get_all_domains_by_language(language, l_domain_type=[]):
+    l_domain_type = sanitize_domain_types(l_domain_type)
+    if len(l_domain_type) == 1:
+        return r_serv_onion.smembers('language:domains:{}:{}'.format(l_domain_type[0], language))
+    else:
+        l_keys_name = []
+        for domain_type in l_domain_type:
+            l_keys_name.append('language:domains:{}:{}'.format(domain_type, language))
+        return r_serv_onion.sunion(l_keys_name[0], *l_keys_name[1:])
+
+def get_domain_languages(domain, r_list=False):
+    res = r_serv_onion.smembers('domain:language:{}'.format(domain))
+    if r_list:
+        return list(res)
+    else:
+        return res
+
+def add_domain_language(domain, language):
+    language = language.split('-')[0]
+    domain_type = get_domain_type(domain)
+    r_serv_onion.sadd('all_domains_languages', language)
+    r_serv_onion.sadd('all_domains_languages:{}'.format(domain_type), language)
+    r_serv_onion.sadd('language:domains:{}:{}'.format(domain_type, language), domain)
+    r_serv_onion.sadd('domain:language:{}'.format(domain), language)
+
+def add_domain_languages_by_item_id(domain, item_id):
+    for lang in Item.get_item_languages(item_id, min_proportion=0.2, min_probability=0.8):
+        add_domain_language(domain, lang.language)
+
+def delete_domain_languages(domain):
+    domain_type = get_domain_type(domain)
+    for language in get_domain_languages(domain):
+        r_serv_onion.srem('language:domains:{}:{}'.format(domain_type, language), domain)
+        if not r_serv_onion.exists('language:domains:{}:{}'.format(domain_type, language)):
+            r_serv_onion.srem('all_domains_languages:{}'.format(domain_type), language)
+            exist_domain_type_lang = False
+            for domain_type in get_all_domains_type():
+                if r_serv_onion.sismembers('all_domains_languages:{}'.format(domain_type), language):
+                    exist_domain_type_lang = True
+                    continue
+            if not exist_domain_type_lang:
+                r_serv_onion.srem('all_domains_languages', language)
+    r_serv_onion.delete('domain:language:{}'.format(domain))
+
+def _delete_all_domains_languages():
+    for language in get_all_domains_languages():
+        for domain in get_all_domains_by_language(language):
+            delete_domain_languages(domain)
+
+## API ##
+## TODO: verify domains type + languages list
+## TODO: add pagination
+def api_get_domains_by_languages(domains_types, languages, domains_metadata=False, page=1):
+    l_domains = sorted(get_domains_by_languages(languages, l_domain_type=domains_types))
+    l_domains = paginate_iterator(l_domains, nb_obj=28, page=page)
+    if not domains_metadata:
+        return l_domains
+    else:
+        l_dict_domains = []
+        for domain in l_domains['list_elem']:
+            l_dict_domains.append(get_domain_metadata(domain, get_domain_type(domain), first_seen=True, last_ckeck=True,
+                                                        status=True, ports=True, tags=True, tags_safe=True,
+                                                        languages=True, screenshot=True))
+        l_domains['list_elem'] = l_dict_domains
+        return l_domains
+####---- ----####
 
 ######## DOMAIN ########
 
@@ -498,7 +607,7 @@ def get_domain_random_screenshot(domain):
     '''
     return Screenshot.get_randon_domain_screenshot(domain)
 
-def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False, tags_safe=False, screenshot=False):
+def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=True, tags=False, tags_safe=False, languages=False, screenshot=False):
     '''
     Get Domain basic metadata
 
@@ -516,6 +625,7 @@ def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, s
     '''
     dict_metadata = {}
     dict_metadata['id'] = domain
+    dict_metadata['type'] = domain_type
     if first_seen:
         res = get_domain_first_seen(domain, domain_type=domain_type)
         if res is not None:
@@ -535,6 +645,8 @@ def get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, s
             dict_metadata['is_tags_safe'] = Tag.is_tags_safe(dict_metadata['tags'])
         else:
             dict_metadata['is_tags_safe'] = Tag.is_tags_safe(get_domain_tags(domain))
+    if languages:
+        dict_metadata['languages'] = Language.get_languages_from_iso(get_domain_languages(domain, r_list=True), sort=True)
     if screenshot:
         dict_metadata['screenshot'] = get_domain_random_screenshot(domain)
     return dict_metadata
@@ -795,6 +907,14 @@ class Domain(object):
         :param domain: crawled domain
         '''
         return get_domain_tags(self.domain)
+
+    def get_domain_languages(self):
+        '''
+        Retun all languages of a given domain.
+
+        :param domain: domain name
+        '''
+        return get_domain_languages(self.domain)
 
     def get_domain_correlation(self):
         '''

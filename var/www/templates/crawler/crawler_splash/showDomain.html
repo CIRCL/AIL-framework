@@ -67,6 +67,7 @@
 											<th>First Seen</th>
 											<th>Last Check</th>
                       <th>Ports</th>
+                      <th>Languages</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -74,6 +75,11 @@
 											<td class="panelText">{%if "first_seen" in dict_domain%}{{ dict_domain['first_seen'] }}{%endif%}</td>
 											<td class="panelText">{%if "last_check" in dict_domain%}{{ dict_domain['last_check'] }}{%endif%}</td>
                       <td class="panelText">{%if dict_domain["ports"]%}{{ dict_domain["ports"] }}{%endif%}</td>
+                      <td class="panelText">
+                        {% for languages in dict_domain['languages'] %}
+                          {{languages}}
+      									{%  endfor %}
+                      </td>
 										</tr>
 									</tbody>
 								</table>

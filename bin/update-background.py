@@ -17,6 +17,25 @@ import subprocess
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
+def launch_background_upgrade(version, script_name):
+    if r_serv.sismember('ail:to_update', version):
+        r_serv.delete('ail:update_error')
+        r_serv.set('ail:update_in_progress', version)
+        r_serv.set('ail:current_background_update', version)
+        r_serv.set('ail:current_background_script', 'domain tags update')
+
+        update_file = os.path.join(os.environ['AIL_HOME'], 'update', version, script_name)
+        process = subprocess.run(['python' ,update_file])
+
+        update_progress = r_serv.get('ail:current_background_script_stat')
+        if update_progress:
+            if int(update_progress) == 100:
+                r_serv.delete('ail:update_in_progress')
+                r_serv.delete('ail:current_background_script')
+                r_serv.delete('ail:current_background_script_stat')
+                r_serv.delete('ail:current_background_update')
+                r_serv.srem('ail:to_update', new_version)
+
 if __name__ == "__main__":
 
     config_loader = ConfigLoader.ConfigLoader()
@@ -114,3 +133,8 @@ if __name__ == "__main__":
                 r_serv.delete('ail:current_background_script_stat')
                 r_serv.delete('ail:current_background_update')
                 r_serv.srem('ail:to_update', new_version)
+
+    launch_background_upgrade('v2.6', 'Update_screenshots.py')
+    launch_background_upgrade('v2.7', 'Update_domain_tags.py')
+
+    launch_background_upgrade('v3.4', 'Update_domain.py')

@@ -6,13 +6,10 @@
 	<!-- Core CSS -->
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
-  <script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
- 	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
   <style>
     .card-columns {
@@ -35,9 +32,8 @@
         <div class="row">
           	<div class="col-12 col-lg-6">
 
-              {% with domain_type=dict_data['domain_type'], date_from=dict_data['date_from'], date_to=dict_data['date_to'], domain_type=domain_type%}
-                {% include 'domains/filter_domains.html' %}
-              {% endwith %}
+              {% include 'domains/block_languages_search.html' %}
+
 
             </div>
             <div class="col-12 col-xl-6">
@@ -68,30 +64,22 @@
         </div>
 
 
-        {% with l_dict_domains=dict_data['list_elem'], bootstrap_label=bootstrap_label %}
+        {% with l_dict_domains=l_dict_domains['list_elem'], bootstrap_label=bootstrap_label %}
           {% include 'domains/card_img_domain.html' %}
         {% endwith %}
 
         <br>
         <br>
 
-        {%if 'list_elem' in dict_data%}
-          {% with page=dict_data['page'], nb_page_max=dict_data['nb_pages'],  nb_first_elem=dict_data['nb_first_elem'], nb_last_elem=dict_data['nb_last_elem'], nb_all_elem=dict_data['nb_all_elem'] %}
-            {% set object_name="domain" %}
-            {%if domain_type=='onion'%}
-              {% set target_url=url_for('crawler_splash.domains_explorer_onion') + "?domain_type=onion" %}
-            {%else%}
-              {% set target_url=url_for('crawler_splash.domains_explorer_web') + "?domain_type=regular" %}
-            {%endif%}
-            {%if 'date_from' in dict_data %}
-              {% set target_url = target_url + '&date_from=' + dict_data['date_from'] + '&date_to=' + dict_data['date_to'] %}
+        {%if l_dict_domains['list_elem']%}
+          {% with page=l_dict_domains['page'], nb_page_max=l_dict_domains['nb_pages'],  nb_first_elem=l_dict_domains['nb_first_elem'], nb_last_elem=l_dict_domains['nb_last_elem'], nb_all_elem=l_dict_domains['nb_all_elem'] %}
+            {% set target_url=url_for('crawler_splash.domains_search_languages_get') + "?languages=" + ','.join(current_languages)%}
+            {%if domains_types %}
+              {% set target_url = target_url + '&domain_types=' + ','.join(domains_types)%}
             {%endif%}
             {% include 'pagination.html' %}
   				{% endwith %}
         {%endif%}
-
-
-
 
 
 			</div>
@@ -104,32 +92,6 @@
   $(document).ready(function(){
     $('#nav_title_domains_explorer').removeClass("text-muted");
 
-    $('#date-range-from').dateRangePicker({
-  			separator : ' to ',
-  			getValue: function(){
-  					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-  							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-  					else
-  							return '';
-  					},
-  					setValue: function(s,s1,s2){
-  							$('#date-range-from-input').val(s1);
-  							$('#date-range-to-input').val(s2);
-  					}
-  	});
-  	$('#date-range-to').dateRangePicker({
-  			separator : ' to ',
-  			getValue: function(){
-  					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-  							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-  					else
-  							return '';
-  			},
-  			setValue: function(s,s1,s2){
-  					$('#date-range-from-input').val(s1);
-  					$('#date-range-to-input').val(s2);
-  			}
-  	});
   });
 
 function toggle_sidebar(){
@@ -214,7 +176,7 @@ function img_error(canevas_id) {
 
 blocks.addEventListener('change', pixelate_all, false);
 
-{% for dict_domain in dict_data['list_elem'] %}
+{% for dict_domain in l_dict_domains['list_elem'] %}
   {% if 'screenshot' in dict_domain %}
     {% if dict_domain['is_tags_safe'] %}
       var screenshot_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}{{dict_domain['screenshot']}}";

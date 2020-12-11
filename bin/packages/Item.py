@@ -2,8 +2,10 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import sys
 import redis
+import cld3
 import html2text
 
 from io import BytesIO
@@ -101,12 +103,61 @@ def add_item_parent(item_parent, item_id):
 def get_item_content(item_id):
     return item_basic.get_item_content(item_id)
 
-def get_item_content_html2text(item_id, item_content=None):
+def get_item_content_html2text(item_id, item_content=None, ignore_links=False):
     if not item_content:
         item_content = get_item_content(item_id)
     h = html2text.HTML2Text()
-    h.ignore_links = False
+    h.ignore_links = ignore_links
+    h.ignore_images = ignore_links
     return h.handle(item_content)
+
+def remove_all_urls_from_content(item_id, item_content=None):
+    if not item_content:
+        item_content = get_item_content(item_id)
+    regex = r'\b(?:http://|https://)?(?:[a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)(?:\:[0-9]+)*(?:/(?:$|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*\b'
+    url_regex = re.compile(regex)
+    urls = url_regex.findall(item_content)
+    urls = sorted(urls, key=len, reverse=True)
+    for url in urls:
+        item_content = item_content.replace(url, '')
+
+    regex_pgp_public_blocs = r'-----BEGIN PGP PUBLIC KEY BLOCK-----[\s\S]+?-----END PGP PUBLIC KEY BLOCK-----'
+    regex_pgp_signature = r'-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
+    regex_pgp_message = r'-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
+    re.compile(regex_pgp_public_blocs)
+    re.compile(regex_pgp_signature)
+    re.compile(regex_pgp_message)
+
+    res = re.findall(regex_pgp_public_blocs, item_content)
+    for it in res:
+        item_content = item_content.replace(it, '')
+    res = re.findall(regex_pgp_signature, item_content)
+    for it in res:
+        item_content = item_content.replace(it, '')
+    res = re.findall(regex_pgp_message, item_content)
+    for it in res:
+        item_content = item_content.replace(it, '')
+
+    return item_content
+
+def get_item_languages(item_id, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
+    all_languages = []
+
+    ## CLEAN CONTENT ##
+    content = get_item_content_html2text(item_id, ignore_links=True)
+    content = remove_all_urls_from_content(item_id, item_content=content)
+
+    # REMOVE USELESS SPACE
+    content = ' '.join(content.split())
+    #- CLEAN CONTENT -#
+
+    #print(content)
+    #print(len(content))
+    if len(content) >= min_len:
+        for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
+            if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
+                all_languages.append(lang)
+    return all_languages
 
 # API
 def get_item(request_dict):
@@ -496,3 +547,17 @@ def delete_domain_node(item_id):
         domain_basic.delete_domain_item_core(item_id, domain, port)
     for child_id in get_all_domain_node_by_item_id(item_id):
         delete_item(child_id)
+
+# if __name__ == '__main__':
+#     import Domain
+#     domain = Domain.Domain('domain.onion')
+#     for domain_history in domain.get_domain_history():
+#         domain_item = domain.get_domain_items_crawled(epoch=domain_history[1]) # item_tag
+#         if "items" in domain_item:
+#             for item_dict in domain_item['items']:
+#                 item_id = item_dict['id']
+#                 print(item_id)
+#                 for lang in get_item_languages(item_id, min_proportion=0.2, min_probability=0.8):
+#                     print(lang)
+#                 print()
+#     print(get_item_languages(item_id, min_proportion=0.2, min_probability=0.6)) # 0.7 ?

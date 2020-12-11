@@ -216,6 +216,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Languages" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Languages.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SentimentAnalysis.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "DbCleaner" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DbCleaner.py; read x"
