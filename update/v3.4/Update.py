@@ -30,6 +30,8 @@ if __name__ == '__main__':
     r_serv.set('update:nb_elem_to_convert', r_serv_onion.scard('domain_update_v3.4'))
     r_serv.set('update:nb_elem_converted',0)
 
+    r_serv.sadd('ail:to_update', new_version)
+
     #Set current ail version
     r_serv.set('ail:version', new_version)
 
