@@ -88,6 +88,13 @@ pushd ardb/
 make
 popd
 
+# KVROCKS #
+# test ! -d kvrocks/ && git clone https://github.com/bitleak/kvrocks.git
+# pushd kvrocks/
+# make -j4
+# popd
+
+# Config File
 if [ ! -f configs/core.cfg ]; then
     cp configs/core.cfg.sample configs/core.cfg
 fi

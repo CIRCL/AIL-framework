@@ -34,7 +34,7 @@ def launch_background_upgrade(version, script_name):
                 r_serv.delete('ail:current_background_script')
                 r_serv.delete('ail:current_background_script_stat')
                 r_serv.delete('ail:current_background_update')
-                r_serv.srem('ail:to_update', new_version)
+                r_serv.srem('ail:to_update', version)
 
 if __name__ == "__main__":
 
