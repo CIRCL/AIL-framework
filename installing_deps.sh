@@ -4,7 +4,7 @@
 set -e
 
 ## bash debug mode togle below
-#set -x
+# set -x
 
 sudo apt-get update
 
