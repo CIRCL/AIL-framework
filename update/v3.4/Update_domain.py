@@ -54,4 +54,5 @@ if __name__ == '__main__':
             update_update_stats()
 
         else:
+            r_serv_db.set('ail:current_background_script_stat', 100)
             sys.exit(0)
