@@ -4,7 +4,8 @@ dicofilters = Dicos
 pastes = PASTES
 hash = HASHS
 crawled = crawled
-crawled_screenshot = CRAWLED_SCREENSHOT
+har = CRAWLED_SCREENSHOT
+screenshot = CRAWLED_SCREENSHOT/screenshot
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile
@@ -221,6 +222,11 @@ host = localhost
 port = 6382
 db = 10
 
+[Kvrocks_Meta]
+host = localhost
+port = 6383
+db = 0
+
 [Url]
 cc_critical = DE
 
@@ -278,6 +284,7 @@ default_crawler_closespider_pagecount = 50
 default_crawler_user_agent = Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0
 splash_url = http://127.0.0.1
 splash_port = 8050-8052
+domain_proxy = onion.foundation
 
 [IP]
 # list of comma-separated CIDR that you wish to be alerted for. e.g:

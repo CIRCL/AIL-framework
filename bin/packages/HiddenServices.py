@@ -60,15 +60,14 @@ class HiddenServices(object):
             self.paste_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
             self.paste_crawled_directory = os.path.join(self.paste_directory, config_loader.get_config_str("Directories", "crawled"))
             self.paste_crawled_directory_name = config_loader.get_config_str("Directories", "crawled")
-            self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
-            self.screenshot_directory_screenshot = os.path.join(self.screenshot_directory, 'screenshot')
+            self.screenshot_directory = config_loader.get_files_directory('screenshot')
         elif type == 'i2p':
             self.paste_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
-            self.screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
+            self.screenshot_directory = config_loader.get_files_directory('screenshot')
         else:
             ## TODO: # FIXME: add error
             pass
-            
+
         config_loader = None
 
     #def remove_absolute_path_link(self, key, value):

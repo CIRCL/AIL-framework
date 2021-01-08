@@ -34,7 +34,8 @@ PASTES_FOLDER = os.path.join(os.path.realpath(PASTES_FOLDER), '')
 
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
-screenshot_directory = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
+screenshot_directory = config_loader.get_files_directory('screenshot')
+har_directory = config_loader.get_files_directory('har')
 
 config_loader = None
 
@@ -388,7 +389,7 @@ def get_item_screenshot(item_id):
     return ''
 
 def get_item_har_name(item_id):
-    har_path = os.path.join(screenshot_directory, item_id) + '.json'
+    har_path = os.path.join(har_directory, item_id) + '.json'
     if os.path.isfile(har_path):
         return har_path
     else:

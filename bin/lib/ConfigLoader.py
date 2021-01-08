@@ -41,6 +41,15 @@ class ConfigLoader(object):
                                   db=self.cfg.getint(redis_name, "db"),
                                   decode_responses=decode_responses )
 
+    def get_files_directory(self, key_name):
+        directory_path = self.cfg.get('Directories', key_name)
+        # full path
+        if directory_path[0] == '/':
+            return directory_path
+        else:
+            directory_path = os.path.join(os.environ['AIL_HOME'], directory_path)
+            return directory_path
+
     def get_config_str(self, section, key_name):
         return self.cfg.get(section, key_name)
 

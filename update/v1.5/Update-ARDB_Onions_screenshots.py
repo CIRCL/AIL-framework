@@ -33,7 +33,7 @@ if __name__ == '__main__':
     config_loader = ConfigLoader.ConfigLoader()
 
     SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
-    NEW_SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"), 'screenshot')
+    NEW_SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 

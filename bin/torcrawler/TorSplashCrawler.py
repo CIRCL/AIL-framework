@@ -26,7 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-#import ConfigLoader
+import ConfigLoader
 import Screenshot
 import crawlers
 
@@ -133,7 +133,11 @@ class TorSplashCrawler():
             config_section = 'Crawler'
             self.p = Process(config_section)
             self.item_dir = os.path.join(self.p.config.get("Directories", "crawled"), date_str )
-            self.har_dir = os.path.join(os.environ['AIL_HOME'], self.p.config.get("Directories", "crawled_screenshot"), date_str )
+
+            config_loader = ConfigLoader.ConfigLoader()
+            self.har_dir = os.path.join(config_loader.get_files_directory('har') , date_str )
+            config_loader = None
+
             self.r_serv_log_submit = redis.StrictRedis(
                 host=self.p.config.get("Redis_Log_submit", "host"),
                 port=self.p.config.getint("Redis_Log_submit", "port"),

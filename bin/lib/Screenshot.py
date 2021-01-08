@@ -20,7 +20,7 @@ import ConfigLoader
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
-SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"), 'screenshot')
+SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 config_loader = None
 
 # get screenshot relative path

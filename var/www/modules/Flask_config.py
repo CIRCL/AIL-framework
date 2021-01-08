@@ -100,7 +100,7 @@ dict_update_description = {'v1.5':{'nb_background_update': 5, 'update_warning_me
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
-SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"), 'screenshot')
+SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 
 REPO_ORIGIN = 'https://github.com/ail-project/ail-framework.git'
 
