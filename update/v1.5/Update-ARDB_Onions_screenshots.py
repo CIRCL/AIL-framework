@@ -111,4 +111,7 @@ if __name__ == '__main__':
     print()
     print('Done in {} s'.format(end - start_deb))
 
+    r_serv.set('ail:current_background_script_stat', 100)
     r_serv.sadd('ail:update_v1.5', 'crawled_screenshot')
+    if r_serv.scard('ail:update_v1.5') != 5:
+        r_serv.set('ail:update_error', 'Update v1.5 Failed, please relaunch the bin/update-background.py script')

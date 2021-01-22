@@ -116,9 +116,3 @@ if __name__ == '__main__':
 
     end = time.time()
     print('ALL domains tags updated in {} s'.format(end - start_deb))
-
-    r_serv_db.delete('ail:update_in_progress')
-    r_serv_db.delete('ail:current_background_script')
-    r_serv_db.delete('ail:current_background_script_stat')
-    r_serv_db.delete('ail:current_background_update')
-    r_serv_db.srem('ail:to_update', update_version)
