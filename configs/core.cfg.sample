@@ -142,11 +142,6 @@ host = localhost
 port = 6381
 db = 0
 
-[Redis_Data_Merging]
-host = localhost
-port = 6379
-db = 1
-
 [Redis_Mixer_Cache]
 host = localhost
 port = 6381

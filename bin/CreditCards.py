@@ -31,13 +31,9 @@ if __name__ == "__main__":
     p = Process(config_section)
 
     # FUNCTIONS #
-    publisher.info("Creditcard script subscribed to channel creditcard_categ")
-
+    publisher.info("CreditCards script started")
 
     creditcard_regex = "4[0-9]{12}(?:[0-9]{3})?"
-
-    # FIXME For retro compatibility
-    channel = 'creditcard_categ'
 
     # Source: http://www.richardsramblings.com/regex/credit-card-numbers/
     cards = [
@@ -68,9 +64,6 @@ if __name__ == "__main__":
                     if lib_refine.is_luhn_valid(clean_card):
                         print(clean_card, 'is valid')
                         creditcard_set.add(clean_card)
-
-                paste.__setattr__(channel, creditcard_set)
-                paste.save_attribute_redis(channel, creditcard_set)
 
                 pprint.pprint(creditcard_set)
                 to_print = 'CreditCard;{};{};{};'.format(
