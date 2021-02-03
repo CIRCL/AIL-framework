@@ -27,7 +27,6 @@ import Flask_config
 app = Flask_config.app
 config_loader = Flask_config.config_loader
 baseUrl = Flask_config.baseUrl
-r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
@@ -116,17 +115,7 @@ def search():
         selected_index = os.path.join(baseindexpath, index_name)
 
     ''' temporary disabled
-    # Search filename
-    for path in r_serv_pasteName.smembers(q[0]):
-        r.append(path)
-        paste = Paste.Paste(path)
-        content = paste.get_p_content()
-        content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
-        c.append(content[0:content_range])
-        curr_date = str(paste._get_p_date())
-        curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
-        paste_date.append(curr_date)
-        paste_size.append(paste._get_p_size())
+    # # TODO: search by filename/item id
     '''
 
     # Search full line

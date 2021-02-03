@@ -11,7 +11,11 @@
         <div class="card-body pb-0">
           <h5 class="card-title">
             <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["id"]}}">
-              {{dict_domain["id"]}}
+              {% if 'hl-start' in  dict_domain %}
+                {{dict_domain["id"][:dict_domain['hl-start']]}}<mark>{{dict_domain["id"][dict_domain['hl-start']:dict_domain['hl-end']]}}</mark>{{dict_domain["id"][dict_domain['hl-end']:]}}
+              {% else %}
+                {{dict_domain["id"]}}
+              {% endif %}
             </a>
 
             {% if dict_domain["status"] %}
