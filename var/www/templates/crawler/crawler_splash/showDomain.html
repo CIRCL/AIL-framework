@@ -106,26 +106,28 @@
                     <td>Last Origin:</td>
                   </thead>
                   <tbody>
-                    {% if dict_domain['father']=='manual' or dict_domain['father']=='auto' %}
+                    {% if dict_domain %}
+                      {% if dict_domain['father']=='manual' or dict_domain['father']=='auto' %}
+                        <tr>
+                          <td></td>
+        									<td><span class="badge badge-dark">{{ dict_domain['father'] }}</span></td>
+                        </tr>
+      								{%else%}
                       <tr>
-                        <td></td>
-      									<td><span class="badge badge-dark">{{ dict_domain['father'] }}</span></td>
+                        <td><i class="far fa-file"></i></td>
+                        <td>
+                          <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', id=dict_domain['father']['item_father']) }}" />{{ dict_domain['father']['item_father'] }}</a>
+                        </td>
                       </tr>
-    								{%else%}
-                    <tr>
-                      <td><i class="far fa-file"></i></td>
-                      <td>
-                        <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', id=dict_domain['father']['item_father']) }}" />{{ dict_domain['father']['item_father'] }}</a>
-                      </td>
-                    </tr>
-                    {% if dict_domain['father']['domain_father'] %}
-                      <td><i class="fab fa-html5"></i></td>
-                      <td>
-                        <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=dict_domain['father']['domain_father']) }}" />{{ dict_domain['father']['domain_father'] }}</a>
-                      </td>
+                        {% if dict_domain['father']['domain_father'] %}
+                          <td><i class="fab fa-html5"></i></td>
+                          <td>
+                            <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=dict_domain['father']['domain_father']) }}" />{{ dict_domain['father']['domain_father'] }}</a>
+                          </td>
+                        {%endif%}
+                      <p>
+      								{%endif%}
                     {%endif%}
-                    <p>
-    								{%endif%}
                   </tbody>
                 </table>
 
