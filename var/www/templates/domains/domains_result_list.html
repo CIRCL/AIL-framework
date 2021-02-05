@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Domain Search - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+
+  <style>
+    .card-columns {
+      column-count: 4;
+    }
+  </style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+        <div class="row">
+          	<div class="col-12 col-lg-6">
+
+              {% with page=l_dict_domains['page'], search=l_dict_domains['search'] %}
+                {% include 'domains/block_domains_name_search.html' %}
+              {% endwith %}
+
+
+            </div>
+            <div class="col-12 col-xl-6">
+
+              <div class="card my-2 border-secondary" >
+      					<div class="card-body py-2">
+      						<div class="row">
+                    <div class="col-md-3 text-center">
+      								<button class="btn btn-primary" onclick="blocks.value=0;pixelate_all();">
+      										<i class="fas fa-eye-slash"></i>
+      										<span class="label-icon">Hide</span>
+      								</button>
+      							</div>
+      							<div class="col-md-6">
+      								<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="5">
+      							</div>
+      							<div class="col-md-3 text-center">
+      								<button class="btn btn-primary" onclick="blocks.value=50;pixelate_all();">
+                          <i class="fas fa-plus-square"></i>
+      										<span class="label-icon">Full resolution</span>
+      								</button>
+      							</div>
+      						</div>
+      					</div>
+      				</div>
+
+            </div>
+        </div>
+
+
+        {% with l_dict_domains=l_dict_domains['list_elem'], bootstrap_label=bootstrap_label %}
+          {% include 'domains/card_img_domain.html' %}
+        {% endwith %}
+
+        <br>
+        <br>
+
+        {%if l_dict_domains['list_elem']%}
+          {% with page=l_dict_domains['page'], nb_page_max=l_dict_domains['nb_pages'],  nb_first_elem=l_dict_domains['nb_first_elem'], nb_last_elem=l_dict_domains['nb_last_elem'], nb_all_elem=l_dict_domains['nb_all_elem'] %}
+            {% set target_url=url_for('crawler_splash.domains_search_name') + "?name=" + l_dict_domains['search']%}
+            {%if domains_types %}
+              {% set target_url = target_url + '&domain_types=' + ','.join(domains_types)%}
+            {%endif%}
+            {% include 'pagination.html' %}
+  				{% endwith %}
+        {%endif%}
+
+
+			</div>
+		</div>
+	</div>
+</body>
+
+
+<script>
+  $(document).ready(function(){
+    $('#nav_title_domains_explorer').removeClass("text-muted");
+
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+
+<script>
+
+// img_url
+// ctx
+// canevas_id
+
+var dict_canevas_blurr_img = {}
+
+function init_canevas_blurr_img(canevas_id, img_url){
+
+  // ctx, turn off image smoothin
+  dict_canevas_blurr_img[canevas_id] = {}
+  var canvas_container = document.getElementById(canevas_id);
+  var ctx = canvas_container.getContext('2d');
+  ctx.webkitImageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = false;
+  dict_canevas_blurr_img[canevas_id]["ctx"] = ctx;
+
+  // img
+  dict_canevas_blurr_img[canevas_id]["img"] = new Image();
+  dict_canevas_blurr_img[canevas_id]["img"].onload = function() {pixelate_img(canevas_id);};
+  dict_canevas_blurr_img[canevas_id]["img"].addEventListener("error", function() {img_error(canevas_id);});
+  dict_canevas_blurr_img[canevas_id]["img"].src = img_url;
+}
+
+function pixelate_all(){
+  Object.entries(dict_canevas_blurr_img).forEach(([key, value]) => {
+   pixelate_img(key);
+  });
+}
+
+function pixelate_img(canevas_id) {
+
+  if (typeof canevas_id !== 'undefined') {
+    var canevas_to_blurr = document.getElementById(canevas_id);
+
+    /// use slider value
+    if( blocks.value == 50 ){
+        size = 1;
+    } else {
+        var size = (blocks.value) * 0.01;
+    }
+
+    canevas_to_blurr.width = dict_canevas_blurr_img[canevas_id]["img"].width;
+    canevas_to_blurr.height = dict_canevas_blurr_img[canevas_id]["img"].height;
+
+    /// cache scaled width and height
+    w = canevas_to_blurr.width * size;
+    h = canevas_to_blurr.height * size;
+
+    /// draw original image to the scaled size
+    dict_canevas_blurr_img[canevas_id]["ctx"].drawImage(dict_canevas_blurr_img[canevas_id]["img"], 0, 0, w, h);
+
+    /// pixelated
+    dict_canevas_blurr_img[canevas_id]["ctx"].drawImage(canevas_to_blurr, 0, 0, w, h, 0, 0, canevas_to_blurr.width, canevas_to_blurr.height);
+  }
+
+}
+
+function img_error(canevas_id) {
+  dict_canevas_blurr_img[canevas_id]["img"].onerror=null;
+  dict_canevas_blurr_img[canevas_id]["img"].src="{{ url_for('static', filename='image/AIL.png') }}";
+}
+
+blocks.addEventListener('change', pixelate_all, false);
+
+{% for dict_domain in l_dict_domains['list_elem'] %}
+  {% if 'screenshot' in dict_domain %}
+    {% if dict_domain['is_tags_safe'] %}
+      var screenshot_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}{{dict_domain['screenshot']}}";
+    {% else %}
+    var screenshot_url = "{{ url_for('static', filename='image/AIL.png') }}";
+    {% endif %}
+    init_canevas_blurr_img("canvas_{{loop.index0}}", screenshot_url);
+  {% endif %}
+{% endfor %}
+
+</script>
+
+</html>

@@ -47,6 +47,20 @@ faup = Faup()
 def generate_uuid():
     return str(uuid.uuid4()).replace('-', '')
 
+def is_valid_onion_domain(domain):
+    if not domain.endswith('.onion'):
+        return False
+    domain = domain.replace('.onion', '', 1)
+    if len(domain) == 16: # v2 address
+        r_onion = r'[a-z0-9]{16}'
+        if re.match(r_onion, domain):
+            return True
+    elif len(domain) == 56: # v3 address
+        r_onion = r'[a-z0-9]{56}'
+        if re.fullmatch(r_onion, domain):
+            return True
+    return False
+
 ################################################################################
 
 # # TODO: handle prefix cookies

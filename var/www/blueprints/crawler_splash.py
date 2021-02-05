@@ -232,6 +232,25 @@ def domains_search_languages_get():
                                 l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
                                 current_languages=languages, domains_types=domains_types)
 
+@crawler_splash.route('/domains/name/search', methods=['GET'])
+@login_required
+@login_analyst
+def domains_search_name():
+    name = request.args.get('name')
+    page = request.args.get('page')
+    try:
+        page = int(page)
+    except:
+        page = 1
+    domains_types = request.args.getlist('domain_types')
+    if domains_types:
+        domains_types = domains_types[0].split(',')
+
+    l_dict_domains = Domain.api_search_domains_by_name(name, domains_types, domains_metadata=True, page=page)
+    return render_template("domains/domains_result_list.html", template_folder='../../',
+                                l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
+                                domains_types=domains_types)
+
 ##--  --##
 
 

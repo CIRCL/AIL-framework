@@ -10,9 +10,10 @@ The ``Domain``
 import os
 import sys
 import itertools
-import time
+import re
 import redis
 import random
+import time
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Cryptocurrency
@@ -240,6 +241,52 @@ def create_domains_metadata_list(list_domains, domain_type):
         l_domains.append(get_domain_metadata(domain, dom_type, first_seen=True, last_ckeck=True, status=True,
                             ports=True, tags=True, languages=True, screenshot=True, tags_safe=True))
     return l_domains
+
+def sanithyse_domain_name_to_search(name_to_search, domain_type):
+    if domain_type == 'onion':
+        r_name = r'[a-z0-9\.]+'
+    else:
+        r_name = r'[a-zA-Z0-9\.-_]+'
+    # invalid domain name
+    if not re.fullmatch(r_name, name_to_search):
+        return None
+    return name_to_search.replace('.', '\.')
+
+
+def search_domains_by_name(name_to_search, domain_types, r_pos=False):
+    domains_dict = {}
+    for domain_type in domain_types:
+        r_name = sanithyse_domain_name_to_search(name_to_search, domain_type)
+        if not name_to_search:
+            break
+        r_name = re.compile(r_name)
+        for domain in get_all_domains_up(domain_type):
+            res = re.search(r_name, domain)
+            if res:
+                domains_dict[domain] = {}
+                if r_pos:
+                    domains_dict[domain]['hl-start'] = res.start()
+                    domains_dict[domain]['hl-end'] = res.end()
+    return domains_dict
+
+def api_search_domains_by_name(name_to_search, domains_types, domains_metadata=False, page=1):
+    domains_types = sanitize_domain_types(domains_types)
+    domains_dict = search_domains_by_name(name_to_search, domains_types, r_pos=True)
+    l_domains = sorted(domains_dict.keys())
+    l_domains = paginate_iterator(l_domains, nb_obj=28, page=page)
+    if not domains_metadata:
+        return l_domains
+    else:
+        l_dict_domains = []
+        for domain in l_domains['list_elem']:
+            dict_domain = get_domain_metadata(domain, get_domain_type(domain), first_seen=True, last_ckeck=True,
+                                                        status=True, ports=True, tags=True, tags_safe=True,
+                                                        languages=True, screenshot=True)
+            dict_domain = {**domains_dict[domain], **dict_domain}
+            l_dict_domains.append(dict_domain)
+        l_domains['list_elem'] = l_dict_domains
+        l_domains['search'] = name_to_search
+        return l_domains
 
 
 ######## LANGUAGES ########
@@ -940,3 +987,6 @@ class Domain(object):
         '''
         port = sanathyse_port(port, self.domain, self.type, strict=True, current_port=self.current_port)
         return get_domain_items_crawled(self.domain, self.type, port, epoch=epoch, items_link=items_link, item_screenshot=item_screenshot, item_tag=item_tag)
+
+if __name__ == '__main__':
+    search_domains_by_name('c', 'onion')
