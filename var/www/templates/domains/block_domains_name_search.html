@@ -1,0 +1,50 @@
+<div class="d-flex justify-content-center my-4">
+	<div class="card border-secondary" style="max-width: 40rem;">
+		<div class="card-body text-dark">
+			<h5 class="card-title">Search Domain by name:</h5>
+			<div class="input-group mb-3">
+				<input type="text" class="form-control" id="in_search_name" value="{{search}}" style="min-width: 30rem;" placeholder="Domain name" aria-label="Domain name" aria-describedby="btn_show_domain">
+				<div class="input-group-append">
+					<button class="btn btn-info" type="button" id="btn_search_name" onclick="searchDomainName()">
+						<i class="fas fa-search"></i>
+					</button>
+				</div>
+			</div>
+
+			<div class="mb-3">
+				<div class="custom-control custom-switch">
+					<input class="custom-control-input" type="checkbox" name="domain_onion_switch" value="" id="domain_onion_switch" {%if 'onion' in domains_types or not domains_types%}checked{%endif%}>
+					<label class="custom-control-label" for="domain_onion_switch">
+						<span class="badge badge-danger"><i class="fas fa-user-secret"></i> Onion Domains</span>
+					</label>
+				</div>
+				<div class="custom-control custom-switch">
+					<input class="custom-control-input" type="checkbox" name="domain_regular_switch" value="True" id="domain_regular_switch"{%if 'regular' in domains_types%}checked{%endif%}>
+					<label class="custom-control-label" for="domain_regular_switch">
+						<span class="badge badge-warning"><i class="fab fa-html5"></i> Web Domains</span>
+					</label>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<script>
+  function searchDomainName() {
+		var all_domain_types = ['onion', 'regular'] // TODO: load from flask
+		var l_domains_types = [];
+
+		console.log(document.getElementById('in_search_name'));
+
+  	var data = document.getElementById('in_search_name').value;
+		for (var i = 0; i < all_domain_types.length; i++) {
+			if (document.getElementById('domain_'+ all_domain_types[i] +'_switch').checked) {
+				l_domains_types.push(all_domain_types[i])
+			}
+		}
+
+		var parameter = "?name=" + data + "&domain_types=" + l_domains_types  +"{%if page%}&page={{ page }}{%endif%}";
+		window.location.href = "{{ url_for('crawler_splash.domains_search_name') }}" + parameter;
+  }
+</script>

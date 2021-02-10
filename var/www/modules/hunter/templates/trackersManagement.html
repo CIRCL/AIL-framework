@@ -67,10 +67,12 @@
                     <td>
                       <span>
                         <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
-                        {% if dict_uuid['term']|length > 256 %}
-                           {{ dict_uuid['term'][0:256]}}...
-                        {% else %}
-                           {{ dict_uuid['term']}}
+                        {% if dict_uuid['term']%}
+                          {% if dict_uuid['term']|length > 256 %}
+                             {{ dict_uuid['term'][0:256]}}...
+                          {% else %}
+                             {{ dict_uuid['term']}}
+                          {% endif %}
                         {% endif %}
                         </a>
                       </span>
@@ -128,10 +130,12 @@
 		    <td>
                       <span>
                         <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
-                        {% if dict_uuid['term']|length > 256 %}
-                           {{ dict_uuid['term'][0:256]}}...
-                        {% else %}
-                           {{ dict_uuid['term']}}
+                        {% if dict_uuid['term']%}
+                          {% if dict_uuid['term']|length > 256 %}
+                             {{ dict_uuid['term'][0:256]}}...
+                          {% else %}
+                             {{ dict_uuid['term']}}
+                          {% endif %}
                         {% endif %}
                         </a>
                       </span>

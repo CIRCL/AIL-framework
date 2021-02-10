@@ -24,8 +24,10 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Domain
 import crawlers
+import Domain
+import Language
+
 import Config_DB
 
 r_cache = Flask_config.r_cache
@@ -123,6 +125,9 @@ def send_to_spider():
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.manual'))
 
+
+#### Domains ####
+
 # add route : /crawlers/show_domain
 @crawler_splash.route('/crawlers/showDomain', methods=['GET', 'POST'])
 @login_required
@@ -148,7 +153,8 @@ def showDomain():
     if domain.domain_was_up():
         dict_domain = {**dict_domain, **domain.get_domain_correlation()}
         dict_domain['correlation_nb'] = Domain.get_domain_total_nb_correlation(dict_domain)
-        dict_domain['origin_item'] = domain.get_domain_last_origin()
+        dict_domain['father'] = domain.get_domain_father()
+        dict_domain['languages'] = Language.get_languages_from_iso(domain.get_domain_languages(), sort=True)
         dict_domain['tags'] = domain.get_domain_tags()
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])
         dict_domain['history'] = domain.get_domain_history_with_status()
@@ -235,6 +241,57 @@ def domains_explorer_web():
 
     dict_data = Domain.get_domains_up_by_filers('regular', page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='regular')
+
+@crawler_splash.route('/domains/languages/all/json', methods=['GET'])
+@login_required
+@login_read_only
+def domains_all_languages_json():
+    # # TODO: get domain type
+    iso = request.args.get('iso')
+    domain_types = request.args.getlist('domain_types')
+    return jsonify(Language.get_languages_from_iso(Domain.get_all_domains_languages(), sort=True))
+
+@crawler_splash.route('/domains/languages/search_get', methods=['GET'])
+@login_required
+@login_read_only
+def domains_search_languages_get():
+    page = request.args.get('page')
+    try:
+        page = int(page)
+    except:
+        page = 1
+    domains_types = request.args.getlist('domain_types')
+    if domains_types:
+        domains_types = domains_types[0].split(',')
+    languages = request.args.getlist('languages')
+    if languages:
+        languages = languages[0].split(',')
+    l_dict_domains = Domain.api_get_domains_by_languages(domains_types, Language.get_iso_from_languages(languages), domains_metadata=True, page=page)
+    return render_template("domains/domains_filter_languages.html", template_folder='../../',
+                                l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
+                                current_languages=languages, domains_types=domains_types)
+
+@crawler_splash.route('/domains/name/search', methods=['GET'])
+@login_required
+@login_analyst
+def domains_search_name():
+    name = request.args.get('name')
+    page = request.args.get('page')
+    try:
+        page = int(page)
+    except:
+        page = 1
+    domains_types = request.args.getlist('domain_types')
+    if domains_types:
+        domains_types = domains_types[0].split(',')
+
+    l_dict_domains = Domain.api_search_domains_by_name(name, domains_types, domains_metadata=True, page=page)
+    return render_template("domains/domains_result_list.html", template_folder='../../',
+                                l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
+                                domains_types=domains_types)
+
+##--  --##
+
 
 ## Cookiejar ##
 @crawler_splash.route('/crawler/cookiejar/add', methods=['GET'])

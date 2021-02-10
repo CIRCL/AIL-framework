@@ -22,11 +22,13 @@ textblob
 #Tokeniser
 nltk
 
+html2text
 yara-python
 
 #Crawler
 scrapy
 scrapy-splash
+pycld3
 
 #Graph
 numpy

@@ -1,36 +1,62 @@
-{% for dict_domain in dict_data['list_elem'] %}
+{% for dict_domain in l_dict_domains %}
 
   {% if loop.index0 % 4 == 0 %}
     <div class="card-deck mt-3">
   {% endif %}
 
-      <div class="card">
+      <div class="card {% if dict_domain["status"] %}border-success{% else %}border-danger{% endif %}">
         <div class="text-center">
           <canvas id="canvas_{{loop.index0}}" style="max-height: 400px; max-width: 100%;"></canvas>
         </div>
         <div class="card-body pb-0">
           <h5 class="card-title">
             <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["id"]}}">
-              {{dict_domain["id"]}}
+              {% if 'hl-start' in  dict_domain %}
+                {{dict_domain["id"][:dict_domain['hl-start']]}}<span class="hg-text">{{dict_domain["id"][dict_domain['hl-start']:dict_domain['hl-end']]}}</span>{{dict_domain["id"][dict_domain['hl-end']:]}}
+              {% else %}
+                {{dict_domain["id"]}}
+              {% endif %}
             </a>
+
+            {% if dict_domain["status"] %}
+      				<span style="color:Green;">
+      					<i class="fas fa-check-circle"></i> UP
+      				</span>
+      			{% else %}
+      				<span style="color:Red;">
+      					<i class="fas fa-times-circle"></i>	DOWN
+      				</span>
+      			{% endif %}
           </h5>
+          <div>
+            <span class="badge badge-dark">
+              <span data-toggle="tooltip" data-placement="top" title="Tooltip on top">
+                <span class="badge badge-info" style="font-size: 0.8rem;">
+                  <i class="fas fa-hourglass-start"></i>
+                </span>
+                {{dict_domain["first_seen"]}}
+              </span>
+            <span class="badge badge-light mx-1" style="font-size: 1rem;">
+              <i class="far fa-calendar-alt"></i>
+            </span>
+              {{dict_domain["first_seen"]}}
+              <span class="badge badge-secondary" style="font-size: 0.8rem;">
+                <i class="fas fa-hourglass-end"></i>
+              </span>
+            </span>
+          </div>
           <p class="card-text">
             <small class="text-muted">
-              First seen: {{dict_domain["first_seen"]}}<br>
-              Last_seen: {{dict_domain["first_seen"]}}<br>
-              Ports: {{dict_domain["ports"]}}
+              Ports: {{dict_domain["ports"]}}<br>
+              {% if dict_domain['languages'] %}
+              Languages:
+              {% for language in dict_domain['languages'] %}
+                <span class="badge badge-secondary" style="font-size: 0.75rem;">{{ language }}</span>
+              {%  endfor %}
+              {% endif %}
             </small>
           </p>
-          <small class="text-muted">Status: </small>
-          {% if dict_domain["status"] %}
-    				<span style="color:Green;">
-    					<i class="fas fa-check-circle"></i> UP
-    				</span>
-    			{% else %}
-    				<span style="color:Red;">
-    					<i class="fas fa-times-circle"></i>	DOWN
-    				</span>
-    			{% endif %}
+
           <div>
             {% for tag in dict_domain['tags'] %}
               <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
@@ -50,6 +76,6 @@
 
 {% endfor %}
 
-{% if dict_data['list_elem']|length % 4 != 0 %}
+{% if l_dict_domains|length % 4 != 0 %}
     </div>
 {% endif %}

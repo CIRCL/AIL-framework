@@ -46,4 +46,4 @@ if __name__ == '__main__':
     redis_cache.delete('crawler_request:{}'.format(uuid))
 
     crawler = TorSplashCrawler(splash_url, crawler_options)
-    crawler.crawl(service_type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item)
+    crawler.crawl(splash_url, service_type, crawler_options, date, requested_mode, url, domain, port, cookies, original_item)

@@ -23,7 +23,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Tracker
 import regex_helper
 
-full_item_url = "/showsavedpaste/?paste="
+full_item_url = "/object/item?id="
 mail_body_template = "AIL Framework,\nNew occurrence for term tracked regex: {}\nitem id: {}\nurl: {}{}"
 
 dict_regex_tracked = Term.get_regex_tracked_words_dict()
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     p = Process(config_section)
     max_execution_time = p.config.getint(config_section, "max_execution_time")
 
-    ull_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
+    full_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
 
     redis_cache_key = regex_helper.generate_redis_cache_key(module_name)
 

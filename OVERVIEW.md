@@ -16,7 +16,7 @@ Redis and ARDB overview
 
      DB 1 - Curve
      DB 2 - TermFreq
-     DB 3 - Trending
+     DB 3 - Trending/Trackers
      DB 4 - Sentiments
      DB 5 - TermCred
      DB 6 - Tags

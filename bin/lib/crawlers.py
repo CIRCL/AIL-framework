@@ -49,10 +49,23 @@ faup = Faup()
 def generate_uuid():
     return str(uuid.uuid4()).replace('-', '')
 
+# # TODO: remove me ?
 def get_current_date():
     return datetime.now().strftime("%Y%m%d")
 
-##-- COMMON --#
+def is_valid_onion_domain(domain):
+    if not domain.endswith('.onion'):
+        return False
+    domain = domain.replace('.onion', '', 1)
+    if len(domain) == 16: # v2 address
+        r_onion = r'[a-z0-9]{16}'
+        if re.match(r_onion, domain):
+            return True
+    elif len(domain) == 56: # v3 address
+        r_onion = r'[a-z0-9]{56}'
+        if re.fullmatch(r_onion, domain):
+            return True
+    return False
 
 ################################################################################
 
@@ -616,6 +629,19 @@ def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit
                         crawler_type=crawler_type,
                         auto_crawler=auto_crawler, crawler_delta=crawler_delta, cookiejar_uuid=cookiejar_uuid, user_agent=user_agent)
     return None
+
+#### ####
+
+#### SPLASH API ####
+def is_splash_reachable(splash_url, timeout=1.0):
+    try:
+        r = requests.get(splash_url , timeout=timeout)
+    except Exception:
+        return False
+    if r.status_code == 200:
+        return True
+    else:
+        return False
 #### ####
 
 def is_redirection(domain, last_url):
@@ -682,6 +708,15 @@ def save_har(har_dir, item_id, har_content):
     filename = os.path.join(har_dir, item_id + '.json')
     with open(filename, 'w') as f:
         f.write(json.dumps(har_content))
+
+# # TODO: FIXME
+def api_add_crawled_item(dict_crawled):
+
+    domain = None
+    # create item_id item_id =
+
+    save_crawled_item(item_id, response.data['html'])
+    create_item_metadata(item_id, domain, 'last_url', port, 'father')
 
 #### CRAWLER QUEUES ####
 def get_all_crawlers_queues_types():
@@ -757,7 +792,6 @@ def get_nb_elem_to_crawl_by_type(queue_type):
 #   SPLASH MANAGER    #
 #                     #
 # # # # # # # # # # # #
-
 def get_splash_manager_url(reload=False): # TODO: add in db config
     return r_serv_onion.get('crawler:splash:manager:url')
 

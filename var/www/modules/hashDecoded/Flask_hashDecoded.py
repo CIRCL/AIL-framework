@@ -489,7 +489,7 @@ def correlation_graph_node_json(correlation_type, type_id, key_id):
         for node in nodes_set_dump:
             nodes.append({"id": node[0], "group": node[1], "first_seen": node[3], "last_seen": node[4], "nb_seen_in_paste": node[5], 'icon': get_icon_text(correlation_type, node[2]),"url": url_for(get_show_key_id_endpoint(correlation_type), type_id=node[2], key_id=node[0]), 'hash': True})
         for node in nodes_set_paste:
-            nodes.append({"id": node[0], "group": node[1],"url": url_for('showsavedpastes.showsavedpaste', paste=node[0]), 'hash': False})
+            nodes.append({"id": node[0], "group": node[1],"url": url_for('objects_item.showItem', id=node[0]), 'hash': False})
         links = []
         for link in links_set:
             links.append({"source": link[0], "target": link[1]})
@@ -1060,7 +1060,7 @@ def hash_graph_node_json():
         for node in nodes_set_hash:
             nodes.append({"id": node[0], "group": node[1], "first_seen": node[2], "last_seen": node[3], 'estimated_type': node[4], "nb_seen_in_paste": node[5], "size": node[6], 'icon': get_file_icon_text(node[4]),"url": url_for('hashDecoded.showHash', hash=node[7]), 'hash': True})
         for node in nodes_set_paste:
-            nodes.append({"id": node[0], "group": node[1], "nb_seen_in_paste": node[2],"url": url_for('showsavedpastes.showsavedpaste', paste=node[3]), 'hash': False})
+            nodes.append({"id": node[0], "group": node[1], "nb_seen_in_paste": node[2],"url": url_for('objects_item.showItem', id=node[3]), 'hash': False})
         links = []
         for link in links_set:
             links.append({"source": link[0], "target": link[1]})

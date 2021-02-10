@@ -11,12 +11,10 @@ import time
 import yara
 
 from pubsublogger import publisher
-#
-# import NotificationHelper
-#
 
 sys.path.append(os.environ['AIL_BIN'])
 from Helper import Process
+import NotificationHelper # # TODO: refractor
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Term
@@ -26,7 +24,7 @@ import Tracker
 import item_basic
 
 
-full_item_url = "/showsavedpaste/?paste="
+full_item_url = "/object/item?id="
 mail_body_template = "AIL Framework,\nNew YARA match: {}\nitem id: {}\nurl: {}{}"
 
 last_refresh = time.time()
@@ -48,7 +46,7 @@ def yara_rules_match(data):
     mail_to_notify = Tracker.get_tracker_mails(tracker_uuid)
     if mail_to_notify:
         mail_subject = Tracker.get_email_subject(tracker_uuid)
-        mail_body = mail_body_template.format(term, item_id, full_item_url, item_id)
+        mail_body = mail_body_template.format(data['rule'], item_id, full_item_url, item_id)
     for mail in mail_to_notify:
         NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
@@ -73,10 +71,12 @@ if __name__ == "__main__":
         item_id = p.get_from_set()
         if item_id is not None:
             item_content = item_basic.get_item_content(item_id)
-            yara_match = rules.match(data=item_content, callback=yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
-            if yara_match:
-                print(f'{item_id}: {yara_match}')
-
+            try:
+                yara_match = rules.match(data=item_content, callback=yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
+                if yara_match:
+                    print(f'{item_id}: {yara_match}')
+            except yara.TimeoutError as e:
+                print(f'{item_id}: yara scanning timed out')
         else:
             time.sleep(5)
 

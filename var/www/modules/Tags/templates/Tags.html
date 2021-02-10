@@ -119,7 +119,7 @@
 				        {% for path in all_path %}
 				          <tr>
 										<td class="pb-0">{{ paste_date[loop.index0] }}</td>
-				            <td class="pb-0"><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{path}}" class="text-secondary">
+				            <td class="pb-0"><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{path}}" class="text-secondary">
 													<div style="line-height:0.9;">{{ path }}</div>
 												</a>
 				              <div class="mb-2">
@@ -375,7 +375,7 @@ function toggle_sidebar(){
 							button.tooltip(button);
               $("#container-show-more").append(button);
 
-							$("#button_show_path").attr('href', '{{ url_for('showsavedpastes.showsavedpaste')  }}?paste=' + $(modal).attr('data-path'));
+							$("#button_show_path").attr('href', '{{ url_for('objects_item.showItem')  }}?id=' + $(modal).attr('data-path'));
               $("#button_show_path").show('fast');
               $("#loading-gif-modal").css("visibility", "hidden"); // Hide the loading GIF
               if ($("[data-initsize]").attr('data-initsize') < char_to_display) { // All the content is displayed

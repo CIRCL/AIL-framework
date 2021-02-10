@@ -185,6 +185,8 @@ def delete_user_db(user_id):
         r_serv_db.hdel('user:tokens', user_token)
         r_serv_db.delete('user_metadata:{}'.format(user_id))
         r_serv_db.hdel('user:all', user_id)
+    else:
+        print('Error: user {} do not exist'.format(user_id))
 
 def hashing_password(bytes_password):
     hashed = bcrypt.hashpw(bytes_password, bcrypt.gensalt())

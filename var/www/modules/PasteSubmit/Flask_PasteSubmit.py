@@ -358,7 +358,7 @@ def submit_status():
             link = ''
             if paste_submit_link:
                 for paste in paste_submit_link:
-                    url = url_for('showsavedpastes.showsavedpaste') + '?paste=' + paste
+                    url = url_for('objects_item.showItem') + '?id=' + paste
                     link += '<a target="_blank" href="' + url + '" class="list-group-item">' + paste +'</a>'
 
             if nb_total == '-1':

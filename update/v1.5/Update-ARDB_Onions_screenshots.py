@@ -33,7 +33,7 @@ if __name__ == '__main__':
     config_loader = ConfigLoader.ConfigLoader()
 
     SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"))
-    NEW_SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"), 'screenshot')
+    NEW_SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 
@@ -111,4 +111,7 @@ if __name__ == '__main__':
     print()
     print('Done in {} s'.format(end - start_deb))
 
+    r_serv.set('ail:current_background_script_stat', 100)
     r_serv.sadd('ail:update_v1.5', 'crawled_screenshot')
+    if r_serv.scard('ail:update_v1.5') != 5:
+        r_serv.set('ail:update_error', 'Update v1.5 Failed, please relaunch the bin/update-background.py script')

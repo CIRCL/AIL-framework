@@ -42,6 +42,8 @@ from blueprints.crawler_splash import crawler_splash
 from blueprints.correlation import correlation
 from blueprints.tags_ui import tags_ui
 from blueprints.import_export import import_export
+from blueprints.objects_item import objects_item
+from blueprints.old_endpoints import old_endpoints
 
 
 Flask_dir = os.environ['AIL_FLASK']
@@ -97,6 +99,8 @@ app.register_blueprint(crawler_splash, url_prefix=baseUrl)
 app.register_blueprint(correlation, url_prefix=baseUrl)
 app.register_blueprint(tags_ui, url_prefix=baseUrl)
 app.register_blueprint(import_export, url_prefix=baseUrl)
+app.register_blueprint(objects_item, url_prefix=baseUrl)
+app.register_blueprint(old_endpoints, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========

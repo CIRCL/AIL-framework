@@ -21,10 +21,6 @@ if __name__ == '__main__':
     r_serv = config_loader.get_redis_conn("ARDB_DB")
     config_loader = None
 
-    #Set current update_in_progress
-    r_serv.set('ail:update_in_progress', new_version)
-    r_serv.set('ail:current_background_update', new_version)
-
     r_serv.sadd('ail:to_update', new_version)
 
     #Set current ail version

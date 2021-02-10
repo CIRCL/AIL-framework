@@ -193,9 +193,6 @@ if __name__ == "__main__":
                             r_onion.sadd('i2p_crawler_queue', msg)
                 '''
 
-                # Saving the list of extracted onion domains.
-                PST.__setattr__(channel, domains_list)
-                PST.save_attribute_redis(channel, domains_list)
                 to_print = 'Onion;{};{};{};'.format(PST.p_source, PST.p_date,
                                                     PST.p_name)
 

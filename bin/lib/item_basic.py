@@ -113,9 +113,6 @@ def get_item_parent(item_id):
 def get_item_children(item_id):
     return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))
 
-def add_item_parent(item_parent, item_id):
-    return item_basic.add_item_parent(item_parent, item_id)
-
 # # TODO:  handle domain last origin in domain lib
 def _delete_node(item_id):
     # only if item isn't deleted
@@ -169,3 +166,38 @@ def add_map_obj_id_item_id(obj_id, item_id, obj_type):
 # delete twitter id
 
 ##--  --##
+
+## COMMON ##
+def _get_dir_source_name(directory, source_name=None, l_sources_name=set()):
+    if source_name:
+        l_dir = os.listdir(os.path.join(directory, source_name))
+    else:
+        l_dir = os.listdir(directory)
+    # empty directory
+    if not l_dir:
+        return l_sources_name.add(source_name)
+        return l_sources_name
+    else:
+        for src_name in l_dir:
+            if len(src_name) == 4:
+                try:
+                    int(src_name)
+                    l_sources_name.add(os.path.join(source_name))
+                    return l_sources_name
+                except:
+                    pass
+            if source_name:
+                src_name = os.path.join(source_name, src_name)
+            l_sources_name = _get_dir_source_name(directory, source_name=src_name, l_sources_name=l_sources_name)
+    return l_sources_name
+
+
+def get_all_items_sources():
+    res = _get_dir_source_name(PASTES_FOLDER)
+    print(res)
+
+##--  --##
+
+
+if __name__ == '__main__':
+    get_all_items_sources()

@@ -19,6 +19,9 @@ DATA_ARDB
 indexdir/
 logs/
 old/
+pgpdump/
+temp/
+
 
 DEFAULT_PASSWORD
 
@@ -43,6 +46,9 @@ configs/core.cfg.backup
 configs/update.cfg
 update/current_version
 files
+
+# Trackers
+bin/trackers/yara/custom-rules/*
 
 # Helper
 bin/helper/gen_cert/rootCA.*

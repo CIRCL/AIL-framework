@@ -67,6 +67,7 @@
 											<th>First Seen</th>
 											<th>Last Check</th>
                       <th>Ports</th>
+                      <th>Languages</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -74,6 +75,11 @@
 											<td class="panelText">{%if "first_seen" in dict_domain%}{{ dict_domain['first_seen'] }}{%endif%}</td>
 											<td class="panelText">{%if "last_check" in dict_domain%}{{ dict_domain['last_check'] }}{%endif%}</td>
                       <td class="panelText">{%if dict_domain["ports"]%}{{ dict_domain["ports"] }}{%endif%}</td>
+                      <td class="panelText">
+                        {% for languages in dict_domain['languages'] %}
+                          {{languages}}
+      									{%  endfor %}
+                      </td>
 										</tr>
 									</tbody>
 								</table>
@@ -94,12 +100,36 @@
                   </button>
 								</div>
 
-                <hr>
-                {% if dict_domain['origin_item']=='manual' or dict_domain['origin_item']=='auto' %}
-									<span class="badge badge-dark">{{ dict_domain['origin_item'] }}</span>
-								{%else%}
-								Last Origin: <a class="badge" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste', paste=dict_domain['origin_item']) }}" />{{ dict_domain['origin_item'] }}</a>
-								{%endif%}
+                <table class="table table-sm table-responsive">
+                  <thead>
+                    <td></td>
+                    <td>Last Origin:</td>
+                  </thead>
+                  <tbody>
+                    {% if 'father' in dict_domain %}
+                      {% if dict_domain['father']=='manual' or dict_domain['father']=='auto' %}
+                        <tr>
+                          <td></td>
+        									<td><span class="badge badge-dark">{{ dict_domain['father'] }}</span></td>
+                        </tr>
+      								{%else%}
+                      <tr>
+                        <td><i class="far fa-file"></i></td>
+                        <td>
+                          <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', id=dict_domain['father']['item_father']) }}" />{{ dict_domain['father']['item_father'] }}</a>
+                        </td>
+                      </tr>
+                        {% if dict_domain['father']['domain_father'] %}
+                          <td><i class="fab fa-html5"></i></td>
+                          <td>
+                            <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=dict_domain['father']['domain_father']) }}" />{{ dict_domain['father']['domain_father'] }}</a>
+                          </td>
+                        {%endif%}
+                      <p>
+      								{%endif%}
+                    {%endif%}
+                  </tbody>
+                </table>
 
                 {% if 'correlation_nb' in dict_domain %}
                   {% if dict_domain["correlation_nb"] > 0 %}
@@ -352,7 +382,7 @@
   					        {% for item in dict_domain["crawler_history"]["items"] %}
   					          <tr>
   				              <td>
-  												<a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item["id"]}}" class="text-secondary">
+  												<a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item["id"]}}" class="text-secondary">
   													<div style="line-height:0.9;">{{ item["link"] }}</div>
   												</a>
   				                <div>
@@ -498,7 +528,7 @@ function toggle_sidebar(){
 <script>
 var ctx = canvas.getContext('2d'), img = new Image();
 var base_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}";
-var screenshot_href = "{{ url_for('showsavedpastes.showsavedpaste') }}?paste=";
+var screenshot_href = "{{ url_for('objects_item.showItem') }}?id=";
 
 /// turn off image smoothing
 ctx.webkitImageSmoothingEnabled = false;

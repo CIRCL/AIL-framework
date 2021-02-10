@@ -56,6 +56,8 @@ if __name__ == '__main__':
     r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
     config_loader = None
 
+    r_serv.set('ail:current_background_script', 'domain update')
+
     nb_elem_to_update = r_serv_db.get('update:nb_elem_to_convert')
     if not nb_elem_to_update:
         nb_elem_to_update = 0
@@ -78,4 +80,7 @@ if __name__ == '__main__':
             update_update_stats()
 
         else:
+            r_serv.delete('update:nb_elem_to_convert')
+            r_serv.delete('update:nb_elem_converted')
+            r_serv_db.set('ail:current_background_script_stat', 100)
             sys.exit(0)

@@ -223,11 +223,11 @@ def get_item_url(correlation_name, value, correlation_type=None):
         endpoint = 'crawler_splash.showDomain'
         url = url_for(endpoint, domain=value)
     elif correlation_name == 'item':
-        endpoint = 'showsavedpastes.showsavedpaste'
-        url = url_for(endpoint, paste=value)
+        endpoint = 'objects_item.showItem'
+        url = url_for(endpoint, id=value)
     elif correlation_name == 'paste':                   ### # TODO:  remove me
-        endpoint = 'showsavedpastes.showsavedpaste'
-        url = url_for(endpoint, paste=value)
+        endpoint = 'objects_item.showItem'
+        url = url_for(endpoint, id=value)
     return url
 
 def get_obj_tag_table_keys(object_type):

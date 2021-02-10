@@ -32,11 +32,9 @@ import Flask_config
 
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl
-r_serv_pasteName = Flask_config.r_serv_pasteName
 r_serv_metadata = Flask_config.r_serv_metadata
 r_serv_tags = Flask_config.r_serv_tags
 r_serv_statistics = Flask_config.r_serv_statistics
-r_serv_onion = Flask_config.r_serv_onion
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 DiffMaxLineLength = Flask_config.DiffMaxLineLength
@@ -403,13 +401,6 @@ def show_item_min(requested_path , content_range=0):
                             l_64=l_64, vt_enabled=vt_enabled, misp_eventid=misp_eventid, misp_url=misp_url, hive_caseid=hive_caseid, hive_url=hive_url)
 
 # ============ ROUTES ============
-
-@showsavedpastes.route("/showsavedpaste/") #completely shows the paste in a new tab
-@login_required
-@login_read_only
-def showsavedpaste():
-    requested_path = request.args.get('paste', '')
-    return showpaste(0, requested_path)
 
 @showsavedpastes.route("/showsaveditem_min/") #completely shows the paste in a new tab
 @login_required

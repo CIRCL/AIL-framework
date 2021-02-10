@@ -57,7 +57,7 @@ def compute_most_posted(server, message):
             print(redis_progression_name_set)
 
 
-def compute_provider_info(server_trend, server_pasteName, path):
+def compute_provider_info(server_trend, path):
     redis_all_provider = 'all_provider_set'
 
     paste = Paste.Paste(path)
@@ -71,7 +71,6 @@ def compute_provider_info(server_trend, server_pasteName, path):
     redis_providers_name_set = 'providers_set_' + paste_date
 
     # Add/Update in Redis
-    server_pasteName.sadd(paste_baseName, path)
     server_trend.sadd(redis_all_provider, paste_provider)
 
     num_paste = int(server_trend.hincrby(paste_provider+'_num', paste_date, 1))
@@ -137,12 +136,6 @@ if __name__ == '__main__':
         db=p.config.get("ARDB_Trending", "db"),
         decode_responses=True)
 
-    r_serv_pasteName = redis.StrictRedis(
-        host=p.config.get("Redis_Paste_Name", "host"),
-        port=p.config.get("Redis_Paste_Name", "port"),
-        db=p.config.get("Redis_Paste_Name", "db"),
-        decode_responses=True)
-
     # Endless loop getting messages from the input queue
     while True:
         # Get one message from the input queue
@@ -159,4 +152,4 @@ if __name__ == '__main__':
             if len(message.split(';')) > 1:
                 compute_most_posted(r_serv_trend, message)
             else:
-                compute_provider_info(r_serv_trend, r_serv_pasteName, message)
+                compute_provider_info(r_serv_trend, message)

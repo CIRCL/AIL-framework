@@ -38,6 +38,8 @@ tokenizer = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+
                                     gaps=True, discard_empty=True)
 
 def is_valid_uuid_v4(UUID):
+    if not UUID:
+        return False
     UUID = UUID.replace('-', '')
     try:
         uuid_test = uuid.UUID(hex=UUID, version=4)
@@ -215,11 +217,12 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
             words_set = set(words)
             words_set = sorted(words_set)
 
+            if nb_words > len(words_set):
+                nb_words = len(words_set)
+
             term = ",".join(words_set)
             term = "{};{}".format(term, nb_words)
 
-            if nb_words > len(words_set):
-                nb_words = len(words_set)
     elif term_type=='yara_custom':
         if not Tracker.is_valid_yara_rule(term):
             return ({"status": "error", "reason": "Invalid custom Yara Rule"}, 400)
@@ -322,8 +325,11 @@ def delete_term(term_uuid):
     r_serv_term.delete('tracker:stat:{}'.format(term_uuid))
 
     if term_type == 'yara':
-        # # TODO: 
-        pass
+        # delete custom rule
+        if not Tracker.is_default_yara_rule(term):
+            filepath = Tracker.get_yara_rule_file_by_tracker_name(term)
+            if filepath:
+                os.remove(filepath)
 
 def replace_tracker_description(term_uuid, description):
     description = escape(description)

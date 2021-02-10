@@ -171,10 +171,14 @@
 
 							</div>
 
-							<a href="{{ url_for('hunter.delete_tracker') }}?uuid={{tracker_metadata['uuid']}}" class="float-right" style="font-size: 15px">
-								<button class='btn btn-danger'><i class="fas fa-trash-alt"></i>
-								</button>
-							</a>
+							<div class="d-flex flex-row-reverse">
+								<a href="{{ url_for('hunter.delete_tracker') }}?uuid={{tracker_metadata['uuid']}}" style="font-size: 15px">
+									<button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
+								</a>
+								<a href="{{ url_for('hunter.edit_tracked_menu') }}?uuid={{tracker_metadata['uuid']}}"  class="mx-2" style="font-size: 15px">
+									<button class='btn btn-info'>Edit Tracker <i class="fas fa-pencil-alt"></i></button>
+								</a>
+							</div>
 
 							{%if yara_rule_content%}
 								<p class="my-0"></br></br><pre class="border bg-light">{{ yara_rule_content }}</pre></p>
@@ -227,7 +231,7 @@
 												{{item['date'][0:4]}}/{{item['date'][4:6]}}/{{item['date'][6:8]}}
 											</td>
 											<td>
-												<a class="text-secondary" target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{item['id']}}">
+												<a class="text-secondary" target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item['id']}}">
 													<div style="line-height:0.9;">{{ item['id'] }}</div>
 												</a>
 												<div class="mb-2">

@@ -73,7 +73,7 @@
 
   {% if item_parent %}
     <div class="list-group" id="item_parent">
-      <a href="{{ url_for('showsavedpastes.showsavedpaste')}}?paste={{item_parent}}" target="_blank">{{item_parent}}</a>
+      <a href="{{ url_for('objects_item.showItem')}}?id={{item_parent}}" target="_blank">{{item_parent}}</a>
     </div>
   {% endif %}
 
@@ -179,7 +179,7 @@
               </tr>
               <tr>
                 <td>Father</td>
-                <td><a target="_blank" href="{{ url_for('showsavedpastes.showsavedpaste') }}?paste={{ crawler_metadata['paste_father'] }}" id='paste_father'>{{ crawler_metadata['paste_father'] }}</a></td>
+                <td><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{ crawler_metadata['paste_father'] }}" id='paste_father'>{{ crawler_metadata['paste_father'] }}</a></td>
               </tr>
               <tr>
                 <td>Url</td>
@@ -220,7 +220,7 @@
         </div>
         <div class="col-2">
           <div class="mt-2">
-            <small><a class="text-info" href="{{ url_for('showsavedpastes.showsavedrawpaste') }}?paste={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a></small>
+            <small><a class="text-info" href="{{ url_for('objects_item.item_raw_content') }}?id={{ request.args.get('paste') }}" id='raw_paste' > [Raw content] </a></small>
           </div>
         </div>
       </div>

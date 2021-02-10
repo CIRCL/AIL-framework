@@ -26,7 +26,6 @@ r_serv_charts = config_loader.get_redis_conn("ARDB_Trending")
 r_serv_sentiment = config_loader.get_redis_conn("ARDB_Sentiment")
 r_serv_term = config_loader.get_redis_conn("ARDB_Tracker")
 r_serv_cred = config_loader.get_redis_conn("ARDB_TermCred")
-r_serv_pasteName = config_loader.get_redis_conn("Redis_Paste_Name")
 r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
@@ -92,13 +91,15 @@ dict_update_description = {'v1.5':{'nb_background_update': 5, 'update_warning_me
                            'v2.6':{'nb_background_update': 1, 'update_warning_message': 'An Update is running on the background. Some informations like Domain Tags/Correlation can be',
                                                            'update_warning_message_notice_me': 'missing from the UI.'},
                            'v2.7':{'nb_background_update': 1, 'update_warning_message': 'An Update is running on the background. Some informations like Domain Tags can be',
+                                                            'update_warning_message_notice_me': 'missing from the UI.'},
+                           'v3.4':{'nb_background_update': 1, 'update_warning_message': 'An Update is running on the background. Some informations like Domain Languages can be',
                                                             'update_warning_message_notice_me': 'missing from the UI.'}
                         }
 
 UPLOAD_FOLDER = os.path.join(os.environ['AIL_FLASK'], 'submitted')
 
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
-SCREENSHOT_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "crawled_screenshot"), 'screenshot')
+SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 
 REPO_ORIGIN = 'https://github.com/ail-project/ail-framework.git'
 

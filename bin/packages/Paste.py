@@ -62,7 +62,6 @@ class Paste(object):
 
         config_loader = ConfigLoader.ConfigLoader()
         self.cache = config_loader.get_redis_conn("Redis_Queues")
-        self.store = config_loader.get_redis_conn("Redis_Data_Merging")
         self.store_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 
         self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
@@ -327,50 +326,27 @@ class Paste(object):
     def get_p_date_path(self):
         return self.p_date_path
 
-    def save_all_attributes_redis(self, key=None):
-        """
-        Saving all the attributes in a "Redis-like" Database (Redis, LevelDB)
-
-        :param r_serv: -- Connexion to the Database.
-        :param key: -- Key of an additionnal set.
-
-        Example:
-        import redis
-
-        r_serv = redis.StrictRedis(host = 127.0.0.1, port = 6739, db = 0)
-
-        PST = Paste("/home/Zkopkmlk.gz")
-        PST.save_all_attributes_redis(r_serv)
-
-        """
-        # LevelDB Compatibility
-        p = self.store.pipeline(False)
-        p.hset(self.p_path, "p_name", self.p_name)
-        p.hset(self.p_path, "p_size", self.p_size)
-        p.hset(self.p_path, "p_mime", self.p_mime)
-        # p.hset(self.p_path, "p_encoding", self.p_encoding)
-        p.hset(self.p_path, "p_date", self._get_p_date())
-        p.hset(self.p_path, "p_hash_kind", self._get_p_hash_kind())
-        p.hset(self.p_path, "p_hash", self.p_hash)
-        # p.hset(self.p_path, "p_langage", self.p_langage)
-        # p.hset(self.p_path, "p_nb_lines", self.p_nb_lines)
-        # p.hset(self.p_path, "p_max_length_line", self.p_max_length_line)
-        # p.hset(self.p_path, "p_categories", self.p_categories)
-        p.hset(self.p_path, "p_source", self.p_source)
-        if key is not None:
-            p.sadd(key, self.p_path)
-        else:
-            pass
-        p.execute()
-
-    def save_attribute_redis(self, attr_name, value):
-        """
-        Save an attribute as a field
-        """
-        if type(value) == set:
-            self.store.hset(self.p_path, attr_name, json.dumps(list(value)))
-        else:
-            self.store.hset(self.p_path, attr_name, json.dumps(value))
+    # def save_all_attributes_redis(self, key=None):
+    #     """
+    #     Saving all the attributes in a "Redis-like" Database (Redis, LevelDB)
+    #
+    #     :param r_serv: -- Connexion to the Database.
+    #     :param key: -- Key of an additionnal set.
+    #
+    #     Example:
+    #     import redis
+    #
+    #     r_serv = redis.StrictRedis(host = 127.0.0.1, port = 6739, db = 0)
+    #
+    #     PST = Paste("/home/Zkopkmlk.gz")
+    #     PST.save_all_attributes_redis(r_serv)
+    #
+    #     """
+    #
+    # def save_attribute_redis(self, attr_name, value):
+    #     """
+    #     Save an attribute as a field
+    #     """
 
     def save_attribute_duplicate(self, value):
         """

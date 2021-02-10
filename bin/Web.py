@@ -58,10 +58,7 @@ if __name__ == "__main__":
     cc_critical = p.config.get("Url", "cc_critical")
 
     # FUNCTIONS #
-    publisher.info("Script URL subscribed to channel web_categ")
-
-    # FIXME For retro compatibility
-    channel = 'web_categ'
+    publisher.info("Script URL Started")
 
     message = p.get_from_set()
     prec_filename = None
@@ -150,11 +147,6 @@ if __name__ == "__main__":
                                                         domains_list)
 
                 if A_values[0] >= 1:
-                    PST.__setattr__(channel, A_values)
-                    PST.save_attribute_redis(channel, (A_values[0],
-                                             list(A_values[1])))
-
-
                     pprint.pprint(A_values)
                     publisher.info('Url;{};{};{};Checked {} URL;{}'.format(
                         PST.p_source, PST.p_date, PST.p_name, A_values[0], PST.p_rel_path))

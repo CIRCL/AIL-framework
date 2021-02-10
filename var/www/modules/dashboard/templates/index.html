@@ -87,7 +87,7 @@
                 <i class="far fa-chart-bar"></i> Feeder(s) Monitor:
               </div>
               <div class="card-body" id="panelbody" style="height:420px;">
-                <strong>Processed pastes</strong>
+                <strong>Processed items</strong>
                 <div id="Proc_feeder" style="height: 230px; padding: 0px; position: relative;"></div>
                 <hr style="border-top: 2px solid #eee; margin-top: 7px; margin-bottom: 7px;">
                 <strong>Filtered duplicates</strong>
@@ -165,7 +165,7 @@
 
 </body>
 
-<script> var url_showSavedPath = "{{ url_for('showsavedpastes.showsavedpaste') }}"; </script>
+<script> var url_showSavedPath = "{{ url_for('objects_item.showItem') }}"; </script>
 
     <script>
         $("#page-Dashboard").addClass("active");

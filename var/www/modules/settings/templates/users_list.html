@@ -17,17 +17,6 @@
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 
-  <style>
-	.edit_icon:hover{
-		cursor: pointer;
-		color: #17a2b8;
-	}
-  .trash_icon:hover{
-		cursor: pointer;
-		color: #c82333;
-	}
-	</style>
-
 </head>
 <body>
 
@@ -75,16 +64,37 @@
                     <td>{{user['email']}}</td>
                     <td>{{user['role']}}</td>
                     <td>
-                      {{user['api_key']}}
-                      <a class="ml-3" href="{{url_for('settings.new_token_user')}}?user_id={{user['email']}}"><i class="fa fa-random"></i></a>
+                      <form action="{{ url_for('settings.new_token_user') }}" id="post_new_token" method=POST>
+                        <span id="censored_key_{{loop.index0}}">
+                          {{user['api_key'][:4]}}*********************************{{user['api_key'][-4:]}}
+                        </span>
+                        <span id="uncensored_key_{{loop.index0}}" style="display: none;">
+                          {{user['api_key']}}
+                        </span>
+                        <input type="hidden" name="user_id" value="{{user['email']}}">
+                        <button class="btn btn-outline-info ml-3 px-1 py-0" type="submit">
+                          <i class="fas fa-random"></i>
+                        </button>
+                        <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key_{{loop.index0}}" onclick="show_api_key({{loop.index0}})">
+                          <i class="fas fa-eye"></i>
+                        </span>
+                      </form>
                     </td>
                     <td>
-                      <a href="{{ url_for('settings.edit_user')}}?user_id={{user['email']}}">
-                          <i class="fas fa-pencil-alt edit_icon"></i>
-											</a>
-                      <a href="{{ url_for('settings.delete_user')}}?user_id={{user['email']}}" class="ml-4">
-                          <i class="fas fa-trash-alt trash_icon"></i>
-											</a>
+                      <div class="d-flex justify-content-start">
+                        <form action="{{ url_for('settings.edit_user') }}" id="post_edit_user" method=POST>
+                          <input type="hidden" name="user_id" value="{{user['email']}}">
+                          <button class="btn btn-outline-primary ml-3 px-1 py-0" type="submit">
+                            <i class="fas fa-pencil-alt"></i>
+                          </button>
+                        </form>
+                        <form action="{{ url_for('settings.delete_user') }}" id="post_delete_user" method=POST>
+                          <input type="hidden" name="user_id" value="{{user['email']}}">
+                          <button class="btn btn-outline-danger ml-3 px-1 py-0" type="submit">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 {% endfor %}
@@ -117,6 +127,13 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
+
+function show_api_key(key_id) {
+    $('#censored_key_' + key_id).hide();
+    $('#btn_key_' + key_id).hide();
+    $('#uncensored_key_' + key_id).show();
+}
+
 </script>
 
 </html>

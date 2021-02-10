@@ -92,24 +92,7 @@
 					</tbody>
 				</table>
 
-				<div class="d-flex justify-content-center my-4">
-					<div class="card border-secondary" style="max-width: 40rem;">
-						<div class="card-body text-dark">
-							<h5 class="card-title">Show Domain:</h5>
-							<form class="" action="{{url_for('crawler_splash.showDomain')}}" method="post">
-								<div class="input-group mb-3">
-								  <input type="text" class="form-control" style="min-width: 30rem;" placeholder="Domain name" aria-label="Domain name" aria-describedby="btn_show_domain" id="in_show_domain" , name="in_show_domain">
-								  <div class="input-group-append">
-								    <button class="btn btn-info" type="submit" id="btn_show_domain">
-											<i class="fas fa-search"></i>
-										</button>
-								  </div>
-								</div>
-							</form>
-						</div>
-					</div>
-				</div>
-
+				{% include 'domains/block_domains_name_search.html' %}
 
 				<hr>
 				<div class="row mb-3">
@@ -133,6 +116,10 @@
 
 				{% with object_type='domain' %}
 					{% include 'tags/block_obj_tags_search.html' %}
+				{% endwith %}
+
+				{% with object_type='domain' %}
+					{% include 'domains/block_languages_search.html' %}
 				{% endwith %}
 
 			</div>
