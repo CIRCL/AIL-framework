@@ -19,6 +19,9 @@ DATA_ARDB
 indexdir/
 logs/
 old/
+pgpdump/
+temp/
+
 
 DEFAULT_PASSWORD
 
