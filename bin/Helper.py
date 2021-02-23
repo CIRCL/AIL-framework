@@ -150,8 +150,11 @@ class Process(object):
 
     def populate_set_in(self):
         # monoproc
-        src = self.modules.get(self.subscriber_name, 'subscribe')
-        if src != 'Redis':
+        try:
+            src = self.modules.get(self.subscriber_name, 'subscribe')
+        except configparser.NoOptionError: #NoSectionError
+            src = None
+        if src != 'Redis' and src:
             self.pubsub.setup_subscribe(src)
             for msg in self.pubsub.subscribe():
                 in_set = self.subscriber_name + 'in'
@@ -159,7 +162,7 @@ class Process(object):
                 self.r_temp.hset('queues', self.subscriber_name,
                                  int(self.r_temp.scard(in_set)))
         else:
-            print('{} has no suscriber'.format(self.subscriber_name))
+            print('{} has no subscriber'.format(self.subscriber_name))
 
     def get_from_set(self):
         # multiproc
