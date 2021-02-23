@@ -68,6 +68,10 @@ def get_user_from_token(token):
     return r_serv_db.hget('user:tokens', token)
 
 def verify_user_role(role, token):
+    # User without API
+    if role == 'user_no_api':
+        return False
+        
     user_id = get_user_from_token(token)
     if user_id:
         if is_in_role(user_id, role):
