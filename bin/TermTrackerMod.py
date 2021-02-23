@@ -81,7 +81,7 @@ if __name__ == "__main__":
             try:
                 dict_words_freq = Term.get_text_word_frequency(item_content)
             except TimeoutException:
-                print ("{0} processing timeout".format(paste.p_rel_path))
+                print ("{0} processing timeout".format(item_id))
                 continue
             else:
                 signal.alarm(0)
