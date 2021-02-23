@@ -62,9 +62,14 @@ if __name__ == '__main__':
     p = Process(config_section)
 
     ip_networks = []
+    networks = p.config.get("IP", "networks")
+    if not networks:
+        print('No IP ranges provided')
+        sys.exit(0)
     try:
-        for network in p.config.get("IP", "networks").split(","):
+        for network in networks.split(","):
             ip_networks.append(IPv4Network(network))
+            print(f'IP Range: {network}')
     except:
         print('Please provide a list of valid IP addresses')
         sys.exit(0)
