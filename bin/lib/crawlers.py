@@ -825,9 +825,9 @@ def get_splash_url_from_manager_url(splash_manager_url, splash_port):
 #     else:
 #         return False
 
-def restart_splash_docker(splash_url):
+def restart_splash_docker(splash_url, splash_name):
     splash_port = splash_url.split(':')[-1]
-    return _restart_splash_docker(splash_port)
+    return _restart_splash_docker(splash_port, splash_name)
 
 def is_splash_manager_connected(delta_check=30):
     last_check = r_cache.hget('crawler:splash:manager', 'last_check')
@@ -911,7 +911,7 @@ def get_splash_manager_version():
             pass
 
 def get_all_splash_manager_containers_name():
-    req = requests.get('{}/api/v1/get/splash/name/all'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
+    req = requests.get('{}/api/v1/get/splash/all'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False)
     if req.status_code == 200:
         return req.json()
     else:
@@ -924,8 +924,8 @@ def get_all_splash_manager_proxies():
     else:
         print(req.json())
 
-def _restart_splash_docker(splash_port):
-    dict_to_send = {'docker_port': splash_port}
+def _restart_splash_docker(splash_port, splash_name):
+    dict_to_send = {'port': splash_port, 'name': splash_name}
     req = requests.post('{}/api/v1/splash/restart'.format(get_splash_manager_url()), headers={"Authorization": get_splash_api_key()}, verify=False, json=dict_to_send)
     if req.status_code == 200:
         return req.json()
@@ -1079,6 +1079,7 @@ def delete_proxy(proxy_name): # # TODO: force delete (delete all proxy)
 
     ## LOADER ##
 def load_all_splash_containers():
+    delete_all_splash_containers()
     all_splash_containers_name = get_all_splash_manager_containers_name()
     for splash_name in all_splash_containers_name:
         r_serv_onion.sadd('all_splash', splash_name)
@@ -1116,12 +1117,10 @@ def load_all_proxy():
 
 def reload_splash_and_proxies_list():
     if ping_splash_manager():
-        # LOAD SPLASH containers
-        delete_all_splash_containers()
-        load_all_splash_containers()
         # LOAD PROXIES containers
-        delete_all_proxies()
         load_all_proxy()
+        # LOAD SPLASH containers
+        load_all_splash_containers()
         return True
     else:
         return False
@@ -1148,4 +1147,5 @@ def launch_ail_splash_crawler(splash_url, script_options=''):
 
 if __name__ == '__main__':
     res = get_splash_manager_version()
+    #res = restart_splash_docker('127.0.0.1:8050', 'default_splash_tor')
     print(res)

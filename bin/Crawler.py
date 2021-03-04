@@ -207,7 +207,7 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
             nb_retry += 1
 
             if nb_retry == 2:
-                crawlers.restart_splash_docker(splash_url)
+                crawlers.restart_splash_docker(splash_url, splash_name)
 
             if nb_retry == 6:
                 on_error_send_message_back_in_queue(type_service, domain, message)
@@ -285,10 +285,12 @@ if __name__ == '__main__':
     splash_url = sys.argv[1]
 
     splash_name = crawlers.get_splash_name_by_url(splash_url)
-    proxy_type = crawlers.get_splash_proxy(splash_name)
+    proxy_name = crawlers.get_splash_proxy(splash_name)
 
-    print(splash_name)
-    print(proxy_type)
+    print(f'SPLASH Name: {splash_name}')
+    print(f'Proxy Name:  {proxy_name}')
+
+    sys.exit(0)
 
     #rotation_mode = deque(['onion', 'regular'])
     all_crawler_queues = crawlers.get_crawler_queue_types_by_splash_name(splash_name)
