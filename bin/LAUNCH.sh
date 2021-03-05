@@ -150,6 +150,8 @@ function launching_scripts {
     # LAUNCH CORE MODULE
     screen -S "Script_AIL" -X screen -t "JSON_importer" bash -c "cd ${AIL_BIN}/import; ${ENV_PY} ./JSON_importer.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Crawler_manager" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Crawler_manager.py; read x"
+    sleep 0.1
 
 
     screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModulesInformationV2.py -k 0 -c 1; read x"
