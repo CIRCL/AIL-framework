@@ -898,7 +898,7 @@ def get_splash_manager_session_uuid():
                 return res['session_uuid']
         else:
             print(req.json())
-    except requests.exceptions.ConnectionError, requests.exceptions.MissingSchema:
+    except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
         # splash manager unreachable
         update_splash_manager_connection_status(False)
 
