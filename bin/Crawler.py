@@ -289,7 +289,7 @@ if __name__ == '__main__':
 
     print(f'SPLASH Name:   {splash_name}')
     print(f'Proxy Name:    {proxy_name}')
-    print(f'Crawler Type:  {get_splash_crawler_type(splash_name)})
+    print(f'Crawler Type:  {get_splash_crawler_type(splash_name)}')
 
     #time.sleep(10)
     #sys.exit(0)
