@@ -246,10 +246,11 @@ def sanithyse_domain_name_to_search(name_to_search, domain_type):
     if domain_type == 'onion':
         r_name = r'[a-z0-9\.]+'
     else:
-        r_name = r'[a-zA-Z0-9\.-_]+'
+        r_name = r'[a-zA-Z0-9-_\.]+'
     # invalid domain name
     if not re.fullmatch(r_name, name_to_search):
-        return None
+        res = re.match(r_name, name_to_search)
+        return {'search': name_to_search, 'error': res.string.replace( res[0], '')}
     return name_to_search.replace('.', '\.')
 
 
@@ -257,7 +258,7 @@ def search_domains_by_name(name_to_search, domain_types, r_pos=False):
     domains_dict = {}
     for domain_type in domain_types:
         r_name = sanithyse_domain_name_to_search(name_to_search, domain_type)
-        if not name_to_search:
+        if not name_to_search or isinstance(r_name, dict):
             break
         r_name = re.compile(r_name)
         for domain in get_all_domains_up(domain_type):
@@ -268,6 +269,14 @@ def search_domains_by_name(name_to_search, domain_types, r_pos=False):
                     domains_dict[domain]['hl-start'] = res.start()
                     domains_dict[domain]['hl-end'] = res.end()
     return domains_dict
+
+def api_sanithyse_domain_name_to_search(name_to_search, domains_types):
+    domains_types = sanitize_domain_types(domains_types)
+    for domain_type in domains_types:
+        r_name = sanithyse_domain_name_to_search(name_to_search, domain_type)
+        if isinstance(r_name, dict):
+            return ({'error': 'Invalid'}, 400)
+
 
 def api_search_domains_by_name(name_to_search, domains_types, domains_metadata=False, page=1):
     domains_types = sanitize_domain_types(domains_types)

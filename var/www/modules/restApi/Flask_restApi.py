@@ -68,6 +68,10 @@ def get_user_from_token(token):
     return r_serv_db.hget('user:tokens', token)
 
 def verify_user_role(role, token):
+    # User without API
+    if role == 'user_no_api':
+        return False
+        
     user_id = get_user_from_token(token)
     if user_id:
         if is_in_role(user_id, role):
@@ -188,14 +192,14 @@ def one():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/item", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_item_id():
     data = request.get_json()
     res = Item.get_item(data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/item/default", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_item_id_basic():
 
     data = request.get_json()
@@ -218,7 +222,7 @@ def get_item_id_basic():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/item/tag", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_item_tag():
 
     data = request.get_json()
@@ -299,7 +303,7 @@ def delete_item_tags():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/item/content", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_item_content():
 
     data = request.get_json()
@@ -314,7 +318,7 @@ def get_item_content():
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 @restApi.route("api/v1/get/tag/metadata", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_tag_metadata():
     data = request.get_json()
     tag = data.get('tag', None)
@@ -324,7 +328,7 @@ def get_tag_metadata():
     return Response(json.dumps(metadata, indent=2, sort_keys=True), mimetype='application/json'), 200
 
 @restApi.route("api/v1/get/tag/all", methods=['GET'])
-@token_required('user')
+@token_required('read_only')
 def get_all_tags():
     res = {'tags': Tag.get_all_tags()}
     return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
@@ -351,7 +355,7 @@ def delete_tracker_term():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/tracker/item", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_tracker_term_item():
     data = request.get_json()
     user_token = get_auth_from_header()
@@ -364,7 +368,7 @@ def get_tracker_term_item():
 # # # # # # # # # # # #        CRYPTOCURRENCY       # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/cryptocurrency/bitcoin/metadata", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_cryptocurrency_bitcoin_metadata():
     data = request.get_json()
     crypto_address = data.get('bitcoin', None)
@@ -373,7 +377,7 @@ def get_cryptocurrency_bitcoin_metadata():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/cryptocurrency/bitcoin/item", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_cryptocurrency_bitcoin_item():
     data = request.get_json()
     bitcoin_address = data.get('bitcoin', None)
@@ -385,7 +389,7 @@ def get_cryptocurrency_bitcoin_item():
 # # # # # # # # # # # # # # #       PGP       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/pgp/key/metadata", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_pgp_key_metadata():
     data = request.get_json()
     pgp_field = data.get('key', None)
@@ -394,7 +398,7 @@ def get_pgp_key_metadata():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/mail/metadata", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_pgp_mail_metadata():
     data = request.get_json()
     pgp_field = data.get('mail', None)
@@ -403,7 +407,7 @@ def get_pgp_mail_metadata():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/name/metadata", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_pgp_name_metadata():
     data = request.get_json()
     pgp_field = data.get('name', None)
@@ -412,7 +416,7 @@ def get_pgp_name_metadata():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/key/item", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_pgp_key_item():
     data = request.get_json()
     pgp_field = data.get('key', None)
@@ -421,7 +425,7 @@ def get_pgp_key_item():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/mail/item", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_pgp_mail_item():
     data = request.get_json()
     pgp_mail = data.get('mail', None)
@@ -430,7 +434,7 @@ def get_pgp_mail_item():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/name/item", methods=['POST'])
-@token_required('user')
+@token_required('read_only')
 def get_pgp_name_item():
     data = request.get_json()
     pgp_name = data.get('name', None)
@@ -609,7 +613,7 @@ def import_json_item():
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/ping", methods=['GET'])
-@token_required('user')
+@token_required('read_only')
 def v1_ping():
     return Response(json.dumps({'status': 'pong'}), mimetype='application/json'), 200
 
