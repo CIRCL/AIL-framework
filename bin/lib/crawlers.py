@@ -67,6 +67,10 @@ def is_valid_onion_domain(domain):
             return True
     return False
 
+# TEMP FIX
+def get_faup():
+    return faup
+
 ################################################################################
 
 # # TODO: handle prefix cookies
@@ -894,7 +898,7 @@ def get_splash_manager_session_uuid():
                 return res['session_uuid']
         else:
             print(req.json())
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.ConnectionError, requests.exceptions.MissingSchema:
         # splash manager unreachable
         update_splash_manager_connection_status(False)
 

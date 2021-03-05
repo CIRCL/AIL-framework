@@ -287,9 +287,11 @@ if __name__ == '__main__':
     splash_name = crawlers.get_splash_name_by_url(splash_url)
     proxy_name = crawlers.get_splash_proxy(splash_name)
 
-    print(f'SPLASH Name: {splash_name}')
-    print(f'Proxy Name:  {proxy_name}')
+    print(f'SPLASH Name:   {splash_name}')
+    print(f'Proxy Name:    {proxy_name}')
+    print(f'Crawler Type:  {get_splash_crawler_type(splash_name)})
 
+    #time.sleep(10)
     #sys.exit(0)
 
     #rotation_mode = deque(['onion', 'regular'])
@@ -330,7 +332,7 @@ if __name__ == '__main__':
         db=p.config.getint("ARDB_Onion", "db"),
         decode_responses=True)
 
-    faup = Faup()
+    faup = crawlers.get_faup()
 
     # get HAR files
     default_crawler_har = p.config.getboolean("Crawler", "default_crawler_har")
