@@ -286,10 +286,11 @@ if __name__ == '__main__':
 
     splash_name = crawlers.get_splash_name_by_url(splash_url)
     proxy_name = crawlers.get_splash_proxy(splash_name)
+    crawler_type = crawlers.get_splash_crawler_type(splash_name)
 
     print(f'SPLASH Name:   {splash_name}')
     print(f'Proxy Name:    {proxy_name}')
-    print(f'Crawler Type:  {get_splash_crawler_type(splash_name)}')
+    print(f'Crawler Type:  {crawler_type}')
 
     #time.sleep(10)
     #sys.exit(0)
