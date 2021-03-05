@@ -290,7 +290,7 @@ if __name__ == '__main__':
     print(f'SPLASH Name: {splash_name}')
     print(f'Proxy Name:  {proxy_name}')
 
-    sys.exit(0)
+    #sys.exit(0)
 
     #rotation_mode = deque(['onion', 'regular'])
     all_crawler_queues = crawlers.get_crawler_queue_types_by_splash_name(splash_name)
