@@ -28,15 +28,15 @@ def create_map_obj_event_uuid(event_uuid, global_id):
     r_serv_objects.sadd('object:map:id_event:{}'.format(global_id), event_uuid)
 
 def get_user_list_of_obj_to_export(user_id, add_uuid=False):
-    set_objs_to_export = []
+    objs_to_export = []
     res = r_serv_objects.hgetall('user:all_objs_to_export:{}'.format(user_id))
     for global_id in res:
         dict_obj = Correlate_object.get_global_id_from_id(global_id)
         dict_obj['lvl'] = int(res[global_id])
         if add_uuid:
             obj_dict['uuid'] = str(uuid.uuid4())
-        set_objs_to_export.append(dict_obj)
-    return set_objs_to_export
+        objs_to_export.append(dict_obj)
+    return objs_to_export
 
 def add_user_object_to_export(user_id, obj_type, obj_id, lvl, obj_subtype=None):
     ## TODO: check if user exist
