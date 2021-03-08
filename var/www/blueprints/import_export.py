@@ -83,7 +83,6 @@ def import_object_file():
 @login_analyst
 def export_object():
     user_id = current_user.get_id()
-    l_obj_to_export = set()
 
     # get user saved obj to export
     l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
