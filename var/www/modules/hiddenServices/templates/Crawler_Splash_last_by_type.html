@@ -92,30 +92,6 @@
 						<div id="barchart_type">
 		        </div>
 
-						<div class="card mt-1 mb-1">
-						  <div class="card-header text-white bg-dark">
-								Crawlers Status
-							</div>
-						  <div class="card-body px-0 py-0 ">
-								<table class="table">
-									<tbody id="tbody_crawler_info">
-										{% for crawler in crawler_metadata %}
-											<tr>
-												 <td>
-													<i class="fas fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['crawler_info']}}
-												</td>
-												<td>
-													{{crawler['crawling_domain']}}
-												</td>
-												<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
-													{{crawler['status_info']}}
-												</td>
-											</tr>
-										{% endfor %}
-									</tbody>
-								</table>
-							</div>
-						</div>
 					</div>
 				</div>
 
@@ -187,79 +163,6 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
-</script>
-
-
-
-<script>/*
-function refresh_list_crawled(){
-
-	$.getJSON("{{ url_for('hiddenServices.last_crawled_domains_with_stats_json') }}",
-		function(data) {
-
-			var tableRef = document.getElementById('tbody_last_crawled');
-			$("#tbody_last_crawled").empty()
-
-			for (var i = 0; i < data.last_domains.length; i++) {
-					var data_domain = data.last_domains[i]
-					var newRow   = tableRef.insertRow(tableRef.rows.length);
-
-			    var newCell  = newRow.insertCell(0);
-					newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('crawler_splash.showDomain') }}?onion_domain="+data_domain['domain']+"\">"+data_domain['domain']+"</a></td>";
-
-					newCell  = newRow.insertCell(1);
-					newCell.innerHTML = "<td>"+data_domain['first_seen'].substr(0, 4)+"/"+data_domain['first_seen'].substr(4, 2)+"/"+data_domain['first_seen'].substr(6, 2)+"</td>"
-
-					newCell  = newRow.insertCell(2);
-					newCell.innerHTML = "<td>"+data_domain['last_check'].substr(0, 4)+"/"+data_domain['last_check'].substr(4, 2)+"/"+data_domain['last_check'].substr(6, 2)+"</td>"
-
-					newCell  = newRow.insertCell(3);
-					newCell.innerHTML = "<td><div style=\"color:"+data_domain['status_color']+"; display:inline-block\"><i class=\"fa "+data_domain['status_icon']+" fa-2x\"></i>"+data_domain['status_text']+"</div></td>"
-
-			}
-			var statDomains = data.statDomains
-			document.getElementById('text_domain_up').innerHTML = statDomains['domains_up']
-			document.getElementById('text_domain_down').innerHTML = statDomains['domains_down']
-			document.getElementById('text_domain_queue').innerHTML = statDomains['domains_queue']
-			document.getElementById('text_total_domains').innerHTML = statDomains['total']
-
-			if(data.crawler_metadata.length!=0){
-				$("#tbody_crawler_info").empty();
-				var tableRef = document.getElementById('tbody_crawler_info');
-				for (var i = 0; i < data.crawler_metadata.length; i++) {
-						var crawler = data.crawler_metadata[i];
-						var newRow = tableRef.insertRow(tableRef.rows.length);
-						var text_color;
-						var icon;
-						if(crawler['status']){
-							text_color = 'Green';
-							icon = 'check';
-						} else {
-							text_color = 'Red';
-							icon = 'times';
-						}
-
-				    var newCell  = newRow.insertCell(0);
-						newCell.innerHTML = "<td><i class=\"fa fa-"+icon+"-circle\" style=\"color:"+text_color+";\"></i>"+crawler['crawler_info']+"</td>";
-
-						newCell  = newRow.insertCell(1);
-						newCell.innerHTML = "<td><a target=\"_blank\" href=\"{{ url_for('crawler_splash.showDomain') }}?onion_domain="+crawler['crawling_domain']+"\">"+crawler['crawling_domain']+"</a></td>";
-
-						newCell  = newRow.insertCell(2);
-						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status_info']+"</div></td>";
-
-						$("#panel_crawler").show();
-				}
-			} else {
-				$("#panel_crawler").hide();
-			}
-		}
-	);
-
-	if (to_refresh) {
-    setTimeout("refresh_list_crawled()", 10000);
-	}
-}*/
 </script>
 
 <script>
