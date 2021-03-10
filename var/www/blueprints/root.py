@@ -74,10 +74,13 @@ def login():
                 if user.request_password_change():
                     return redirect(url_for('root.change_password'))
                 else:
-                    if next_page and next_page!='None':
+                    # update note
+                    # next page
+                    if next_page and next_page!='None' and next_page!='/':
                         return redirect(next_page)
+                    # dashboard
                     else:
-                        return redirect(url_for('dashboard.index'))
+                        return redirect(url_for('dashboard.index', update_note=True))
             # login failed
             else:
                 # set brute force protection
@@ -113,7 +116,9 @@ def change_password():
             if check_password_strength(password1):
                 user_id = current_user.get_id()
                 create_user_db(user_id , password1, update=True)
-                return redirect(url_for('dashboard.index'))
+                # update Note
+                # dashboard
+                return redirect(url_for('dashboard.index', update_note=True))
             else:
                 error = 'Incorrect password'
                 return render_template("change_password.html", error=error)
