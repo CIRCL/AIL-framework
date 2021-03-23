@@ -162,7 +162,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DomClassifier.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Categ.py; read x"
+    screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./categ.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "CreditCards" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CreditCards.py; read x"
     sleep 0.1
@@ -174,19 +174,19 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "ApiKey" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ApiKey.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Web" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Web.py; read x"
+    screen -S "Script_AIL" -X screen -t "Web" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./web.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Credential" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Credential.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "TermTrackerMod" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./TermTrackerMod.py; read x"
+    screen -S "Script_AIL" -X screen -t "TermTrackerMod" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./term_tracker.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "RegexTracker" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexTracker.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tracker_Yara" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Yara.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Indexer.py; read x"
+    screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./indexer.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Keys" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Keys.py; read x"
+    screen -S "Script_AIL" -X screen -t "Keys" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./keys.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "PgpDump" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./PgpDump.py; read x"
     sleep 0.1
@@ -198,15 +198,15 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tools" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tools.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Phone.py; read x"
+    screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./phone.py; read x"
     sleep 0.1
     #screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
     #sleep 0.1
     screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cve.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "WebStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./WebStats.py; read x"
+    screen -S "Script_AIL" -X screen -t "WebStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./web_stats.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModuleStats.py; read x"
+    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./module_stats.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SQLInjectionDetection.py; read x"
     sleep 0.1
