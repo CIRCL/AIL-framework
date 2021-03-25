@@ -155,6 +155,8 @@ def stuff():
 @login_required
 @login_read_only
 def index():
+    update_note = request.args.get('update_note')
+
     default_minute = config_loader.get_config_str("Flask", "minute_processed_paste")
     threshold_stucked_module = config_loader.get_config_int("Module_ModuleInformation", "threshold_stucked_module")
     log_select = {10, 25, 50, 100}
@@ -176,6 +178,7 @@ def index():
     return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module,
                             log_select=log_select, selected=max_dashboard_logs,
                             update_warning_message=update_warning_message, update_in_progress=update_in_progress,
+                            update_note=update_note,
                             update_warning_message_notice_me=update_warning_message_notice_me)
 
 # ========= REGISTRATION =========

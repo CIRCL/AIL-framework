@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				{% include 'crawler/crawler_disabled.html' %}
+
+				<div class="row">
+					<div class="col-xl-6">
+
+						<div class="card mt-1 mb-1">
+						  <div class="card-header text-white bg-dark">
+								<h5><a class="text-info" href="{{ url_for('hiddenServices.Crawler_Splash_last_by_type')}}?type=onion"><i class="fas fa-user-secret"></i> Onions Crawlers</a></h5>
+								<div class="row">
+									<div class="col-6">
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=onion&domains_up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_domain_up">{{ splash_crawlers_latest_stats['onion']['domains_up'] }}</a> UP
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=onion&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_onion_domain_down">{{ splash_crawlers_latest_stats['onion']['domains_down'] }}</a> DOWN
+									</div>
+									<div class="col-6">
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=onion&domains_up=True&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_total">{{ splash_crawlers_latest_stats['onion']['total'] }}</a> Crawled
+										<span class="badge badge-warning ml-md-3" id="stat_onion_queue">{{ splash_crawlers_latest_stats['onion']['domains_queue'] }}</span> Queue
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+					<div class="col-xl-6">
+						<div class="card mt-1 mb-1">
+							<div class="card-header text-white bg-dark">
+								<h5><a class="text-info" href="{{ url_for('hiddenServices.Crawler_Splash_last_by_type')}}?type=regular"><i class="fab fa-html5"></i> Regular Crawlers</a></h5>
+								<div class="row">
+									<div class="col-6">
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=regular&domains_up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_regular_domain_up">{{ splash_crawlers_latest_stats['regular']['domains_up'] }}</a> UP
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=regular&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_regular_domain_down">{{ splash_crawlers_latest_stats['regular']['domains_down'] }}</a> DOWN
+									</div>
+									<div class="col-6">
+										<a href="{{ url_for('hiddenServices.show_domains_by_daterange') }}?service_type=regular&domains_up=True&domains_down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_regular_total">{{ splash_crawlers_latest_stats['regular']['total'] }}</a> Crawled
+										<span class="badge badge-warning ml-md-3" id="stat_regular_queue">{{ splash_crawlers_latest_stats['regular']['domains_queue'] }}</span> Queue
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<table class="table">
+					<tbody id="tbody_crawler_onion_info">
+						{% for splash_crawler in all_splash_crawler_status %}
+							<tr>
+								<td>
+									<i class="fas fa-{%if splash_crawler['status']%}check{%else%}times{%endif%}-circle" style="color:{%if splash_crawler['status']%}Green{%else%}Red{%endif%};"></i> {{splash_crawler['crawler_info']}}
+								</td>
+								<td>
+									{%if splash_crawler['type']=='onion'%}
+										<i class="fas fa-user-secret"></i>
+									{%else%}
+										<i class="fab fa-html5">
+									{%endif%}
+								</td>
+								<td>
+									{{splash_crawler['crawling_domain']}}
+								</td>
+								<td style="color:{%if splash_crawler['status']%}Green{%else%}Red{%endif%};">
+									{{splash_crawler['status_info']}}
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+
+				{% include 'domains/block_domains_name_search.html' %}
+
+				<hr>
+				<div class="row mb-3">
+					<div class="col-xl-6">
+						<div class="text-center">
+							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_onion')}}" role="button">
+								<i class="fas fa-user-secret"></i> Onion Domain Explorer
+							</a>
+						</div>
+					</div>
+					<div class="col-xl-6">
+						<div class="text-center">
+							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_web')}}" role="button">
+								<i class="fab fa-html5"></i> Web Domain Explorer
+							</a>
+						</div>
+					</div>
+				</div>
+
+
+
+				{% with object_type='domain' %}
+					{% include 'tags/block_obj_tags_search.html' %}
+				{% endwith %}
+
+				{% with object_type='domain' %}
+					{% include 'domains/block_languages_search.html' %}
+				{% endwith %}
+
+			</div>
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var to_refresh = false
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_dashboard").addClass("active");
+	$( window ).on("focus", function() {
+			to_refresh = true
+			refresh_crawler_status();
+	});
+	$( window ).on("blur", function() {
+			to_refresh = false
+	});
+
+	to_refresh = true
+	refresh_crawler_status();
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function refresh_crawler_status(){
+
+	$.getJSON("{{ url_for('crawler_splash.crawler_dashboard_json') }}",
+		function(data) {
+
+			$('#stat_onion_domain_up').text(data.splash_crawlers_latest_stats['onion']['domains_up']);
+			$('#stat_onion_domain_down').text(data.splash_crawlers_latest_stats['onion']['domains_down']);
+			$('#stat_onion_total').text(data.splash_crawlers_latest_stats['onion']['total']);
+			$('#stat_onion_queue').text(data.splash_crawlers_latest_stats['onion']['domains_queue']);
+
+			$('#stat_regular_domain_up').text(data.splash_crawlers_latest_stats['regular']['domains_up']);
+			$('#stat_regular_domain_down').text(data.splash_crawlers_latest_stats['regular']['domains_down']);
+			$('#stat_regular_total').text(data.splash_crawlers_latest_stats['regular']['total']);
+			$('#stat_regular_queue').text(data.splash_crawlers_latest_stats['regular']['domains_queue']);
+
+			if(data.all_splash_crawler_status.length!=0){
+				$("#tbody_crawler_onion_info").empty();
+				var tableRef = document.getElementById('tbody_crawler_onion_info');
+				for (var i = 0; i < data.all_splash_crawler_status.length; i++) {
+						var crawler = data.all_splash_crawler_status[i];
+						var newRow = tableRef.insertRow(tableRef.rows.length);
+						var text_color;
+						var icon;
+						if(crawler['status']){
+							text_color = 'Green';
+							icon = 'check';
+						} else {
+							text_color = 'Red';
+							icon = 'times';
+						}
+
+						if(crawler['type'] === 'onion'){
+							icon_t = 'fas fa-user-secret';
+						} else {
+							icon_t = 'fab fa-html5';
+						}
+
+				    var newCell  = newRow.insertCell(0);
+						newCell.innerHTML = "<td><i class=\"fas fa-"+icon+"-circle\" style=\"color:"+text_color+";\"></i> "+crawler['crawler_info']+"</td>";
+
+						var newCell  = newRow.insertCell(1);
+						newCell.innerHTML = "<td><i class=\""+icon_t+"\"></i></td>";
+
+						newCell  = newRow.insertCell(2);
+						newCell.innerHTML = "<td>"+crawler['crawling_domain']+"</td>";
+
+						newCell  = newRow.insertCell(3);
+						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status_info']+"</div></td>";
+
+						//$("#panel_crawler").show();
+				}
+			}
+		}
+	);
+
+	if (to_refresh) {
+    setTimeout("refresh_crawler_status()", 10000);
+	}
+}
+</script>

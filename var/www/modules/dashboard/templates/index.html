@@ -72,12 +72,10 @@
           </div>
         {%endif%}
 
-        <div class="alert alert-info alert-dismissible fade show mt-1" role="alert">
-            <strong>Bootstrap 4 migration!</strong> Some pages are still in bootstrap 3. You can check the migration progress <strong><a href="https://github.com/CIRCL/AIL-framework/issues/330" target="_blank">Here</a></strong>.
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
+        <!-- TODO: Add users messages -->
+        {%if update_note%}
+          {% include 'dashboard/update_modal.html' %}
+        {%endif%}
 
         <div class="row my-2">
 

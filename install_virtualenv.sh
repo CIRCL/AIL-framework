@@ -16,8 +16,10 @@ if [ -z "$VIRTUAL_ENV" ]; then
     echo export AIL_REDIS=$(pwd)/redis/src/ >> ./AILENV/bin/activate
     echo export AIL_ARDB=$(pwd)/ardb/src/ >> ./AILENV/bin/activate
 
-    . ./AILENV/bin/activate
 fi
+
+# activate virtual environment
+. ./AILENV/bin/activate
 
 pip3 install -U pip
 pip3 install 'git+https://github.com/D4-project/BGP-Ranking.git/@7e698f87366e6f99b4d0d11852737db28e3ddc62#egg=pybgpranking&subdirectory=client'

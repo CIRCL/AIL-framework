@@ -1,6 +1,14 @@
-{% if not crawler_enabled %}
+{%if not is_manager_connected['status']%}
   <div class="alert alert-secondary text-center my-2" role="alert">
     <h1><i class="fas fa-times-circle text-danger"></i> Crawler Disabled</h1>
-    <p>...</p>
+    <p>
+      {%if 'error' in is_manager_connected%}
+        <b>{{is_manager_connected['status_code']}}</b>
+        <br>
+        <b>Error:</b> {{is_manager_connected['error']}}
+      {%else%}
+        <b>Error:</b> core/Crawler_manager not launched
+      {%endif%}
+    </p>
   </div>
-{% endif %}
+{%endif%}

@@ -14,7 +14,7 @@
       		</h5>
       	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
       	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hiddenServices.dashboard')}}" id="nav_dashboard">
+      	      <a class="nav-link" href="{{url_for('crawler_splash.crawlers_dashboard')}}" id="nav_dashboard">
       	        <i class="fas fa-search"></i>
       	        <span>Dashboard</span>
       	      </a>
@@ -41,6 +41,12 @@
               <a class="nav-link" href="{{url_for('hiddenServices.auto_crawler')}}" id="nav_auto_crawler">
       					<i class="fas fa-sync"></i>
                 Automatic Crawler
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('crawler_splash.crawler_splash_setings')}}" id="nav_settings">
+      					<i class="fas fa-cog"></i>
+                Settings
               </a>
             </li>
           </ul>

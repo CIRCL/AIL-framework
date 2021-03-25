@@ -1,0 +1,42 @@
+<div class="modal fade" id="update_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-secondary text-white">
+        <h5 class="modal-title" id="exampleModalLabel">Update Note: v3.5 - Splash Manager</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <div class="alert alert-danger text-danger" role="alert">All Splash Crawlers have been removed from the core.</div>
+          AIL is using a new Crawler manager to start and launch dockers and tor/web crawlers
+
+        <ul class="list-group my-3">
+          <li class="list-group-item active">Splash Manager Features:</li>
+          <li class="list-group-item">Install and run Splash crawlers on another server</li>
+          <li class="list-group-item">Handle proxies (Web and tor)</li>
+          <li class="list-group-item">Launch/Kill Splash Dockers</li>
+          <li class="list-group-item">Restart crawlers on crash</li>
+        </ul>
+
+        <div class="d-flex justify-content-center">
+          <a class="btn btn-info" href="https://github.com/ail-project/ail-splash-manager" role="button">
+            <i class="fab fa-github"></i> Install and Configure AIL-Splash-Manager
+          </a>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+    $(window).on('load', function() {
+        $('#update_modal').modal('show');
+    });
+</script>

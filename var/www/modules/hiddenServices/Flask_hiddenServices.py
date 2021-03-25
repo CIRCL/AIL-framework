@@ -18,6 +18,7 @@ from flask_login import login_required
 
 from Date import Date
 from HiddenServices import HiddenServices
+import crawlers
 
 # ============ VARIABLES ============
 import Flask_config
@@ -27,7 +28,6 @@ baseUrl = Flask_config.baseUrl
 r_cache = Flask_config.r_cache
 r_serv_onion = Flask_config.r_serv_onion
 r_serv_metadata = Flask_config.r_serv_metadata
-crawler_enabled = Flask_config.crawler_enabled
 bootstrap_label = Flask_config.bootstrap_label
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
@@ -231,22 +231,22 @@ def delete_auto_crawler(url):
 
 # ============= ROUTES ==============
 
-@hiddenServices.route("/crawlers/", methods=['GET'])
-@login_required
-@login_read_only
-def dashboard():
-    crawler_metadata_onion = get_crawler_splash_status('onion')
-    crawler_metadata_regular = get_crawler_splash_status('regular')
-
-    now = datetime.datetime.now()
-    date = now.strftime("%Y%m%d")
-    statDomains_onion = get_stats_last_crawled_domains('onion', date)
-    statDomains_regular = get_stats_last_crawled_domains('regular', date)
-
-    return render_template("Crawler_dashboard.html", crawler_metadata_onion = crawler_metadata_onion,
-                                crawler_enabled=crawler_enabled, date=date,
-                                crawler_metadata_regular=crawler_metadata_regular,
-                                statDomains_onion=statDomains_onion, statDomains_regular=statDomains_regular)
+# @hiddenServices.route("/crawlers/", methods=['GET'])
+# @login_required
+# @login_read_only
+# def dashboard():
+#     crawler_metadata_onion = get_crawler_splash_status('onion')
+#     crawler_metadata_regular = get_crawler_splash_status('regular')
+#
+#     now = datetime.datetime.now()
+#     date = now.strftime("%Y%m%d")
+#     statDomains_onion = get_stats_last_crawled_domains('onion', date)
+#     statDomains_regular = get_stats_last_crawled_domains('regular', date)
+#
+#     return render_template("Crawler_dashboard.html", crawler_metadata_onion = crawler_metadata_onion,
+#                                 date=date,
+#                                 crawler_metadata_regular=crawler_metadata_regular,
+#                                 statDomains_onion=statDomains_onion, statDomains_regular=statDomains_regular)
 
 @hiddenServices.route("/crawlers/crawler_splash_onion", methods=['GET'])
 @login_required
@@ -288,7 +288,7 @@ def Crawler_Splash_last_by_type():
     crawler_metadata = get_crawler_splash_status(type)
 
     return render_template("Crawler_Splash_last_by_type.html", type=type, type_name=type_name,
-                            crawler_enabled=crawler_enabled,
+                            is_manager_connected=crawlers.get_splash_manager_connection_metadata(),
                             last_domains=list_domains, statDomains=statDomains,
                             crawler_metadata=crawler_metadata, date_from=date_string, date_to=date_string)
 
@@ -424,7 +424,7 @@ def auto_crawler():
 
     return render_template("Crawler_auto.html", page=page, nb_page_max=nb_page_max,
                                 last_domains=last_domains,
-                                crawler_enabled=crawler_enabled,
+                                is_manager_connected=crawlers.get_splash_manager_connection_metadata(),
                                 auto_crawler_domain_onions_metadata=auto_crawler_domain_onions_metadata,
                                 auto_crawler_domain_regular_metadata=auto_crawler_domain_regular_metadata)
 
@@ -438,23 +438,6 @@ def remove_auto_crawler():
     if url:
         delete_auto_crawler(url)
     return redirect(url_for('hiddenServices.auto_crawler', page=page))
-
-@hiddenServices.route("/crawlers/crawler_dashboard_json", methods=['GET'])
-@login_required
-@login_read_only
-def crawler_dashboard_json():
-
-    crawler_metadata_onion = get_crawler_splash_status('onion')
-    crawler_metadata_regular = get_crawler_splash_status('regular')
-
-    now = datetime.datetime.now()
-    date = now.strftime("%Y%m%d")
-
-    statDomains_onion = get_stats_last_crawled_domains('onion', date)
-    statDomains_regular = get_stats_last_crawled_domains('regular', date)
-
-    return jsonify({'statDomains_onion': statDomains_onion, 'statDomains_regular': statDomains_regular,
-                        'crawler_metadata_onion':crawler_metadata_onion, 'crawler_metadata_regular':crawler_metadata_regular})
 
 # # TODO: refractor
 @hiddenServices.route("/hiddenServices/last_crawled_domains_with_stats_json", methods=['GET'])
