@@ -48,6 +48,9 @@ function main(splash, args)
     splash.html5_media_enabled = true
     splash.http2_enabled = true
 
+    -- User Agent
+    splash:set_user_agent(args.user_agent)
+
     -- User defined
     splash.resource_timeout = args.resource_timeout
     splash.timeout = args.timeout
@@ -71,7 +74,7 @@ function main(splash, args)
     splash:wait{args.wait}
     -- Page instrumentation
     -- splash.scroll_position = {y=1000}
-    splash:wait{args.wait}
+    -- splash:wait{args.wait}
     -- Response
     return {
         har = splash:har(),
@@ -88,7 +91,7 @@ class TorSplashCrawler():
     def __init__(self, splash_url, crawler_options):
         self.process = CrawlerProcess({'LOG_ENABLED': True})
         self.crawler = Crawler(self.TorSplashSpider, {
-            'USER_AGENT': crawler_options['user_agent'],
+            'USER_AGENT': crawler_options['user_agent'], # /!\ overwritten by lua script
             'SPLASH_URL': splash_url,
             'ROBOTSTXT_OBEY': False,
             'DOWNLOADER_MIDDLEWARES': {'scrapy_splash.SplashCookiesMiddleware': 723,
@@ -126,6 +129,7 @@ class TorSplashCrawler():
             self.date_month = date['date_month']
             self.date_epoch = int(date['epoch'])
 
+            self.user_agent = crawler_options['user_agent']
             self.png = crawler_options['png']
             self.har = crawler_options['har']
             self.cookies = cookies
@@ -150,6 +154,7 @@ class TorSplashCrawler():
             return {'wait': 10,
                     'resource_timeout': 30, # /!\ Weird behaviour if timeout < resource_timeout /!\
                     'timeout': 30,
+                    'user_agent': self.user_agent,
                     'cookies': cookies,
                     'lua_source': script_cookie
                 }
