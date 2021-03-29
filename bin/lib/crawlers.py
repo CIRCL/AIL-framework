@@ -16,6 +16,8 @@ import sys
 import time
 import uuid
 
+import subprocess
+
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
@@ -24,6 +26,9 @@ from pyfaup.faup import Faup
 # interact with splash_crawler API
 import requests
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import git_status
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -428,6 +433,19 @@ def get_splash_crawler_status(spash_url):
     else:
         status=False
     return {'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status, 'type': crawler_type}
+
+def set_current_crawler_status(splash_url, status, started_time=False, crawled_domain=None, crawler_type=None):
+    # TODO: get crawler type if None
+    # Status: ['Waiting', 'Error', ...]
+    r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', status)
+    if started_time:
+        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'started_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
+    if crawler_type:
+        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'type', crawler_type)
+    if crawled_domain:
+        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'crawling_domain', crawled_domain)
+
+    #r_cache.sadd('all_splash_crawlers', splash_url) # # TODO: add me in fct: create_ail_crawler
 
 def get_stats_last_crawled_domains(crawler_types, date):
     statDomains = {}
@@ -1014,6 +1032,20 @@ def get_all_splash_by_proxy(proxy_name, r_list=False):
     else:
         return []
 
+def get_all_splash_name_by_crawler_type(crawler_type):
+    l_splash_name = []
+    for splash_name in get_all_splash():
+        if get_splash_crawler_type(splash_name) == crawler_type:
+            l_splash_name.append(splash_name)
+    return l_splash_name
+
+def get_all_splash_url_by_crawler_type(crawler_type):
+    l_splash_url = []
+    for splash_name in get_all_splash_name_by_crawler_type(crawler_type):
+        for splash_url in get_splash_all_url(splash_name, r_list=True):
+            l_splash_url.append(splash_url)
+    return l_splash_url
+
 def delete_all_splash_containers():
     for splash_name in get_all_splash():
         delete_splash_container(splash_name)
@@ -1140,7 +1172,106 @@ def launch_ail_splash_crawler(splash_url, script_options=''):
     screen.create_screen(screen_name)
     screen.launch_uniq_windows_script(screen_name, splash_url, dir_project, script_location, script_name, script_options=script_options, kill_previous_windows=True)
 
+def is_test_ail_crawlers_successful():
+    return r_serv_onion.hget('crawler:tor:test', 'success') == 'True'
 
+def get_test_ail_crawlers_message():
+    return r_serv_onion.hget('crawler:tor:test', 'message')
+
+def save_test_ail_crawlers_result(test_success, message):
+    r_serv_onion.hset('crawler:tor:test', 'success', bool(test_success))
+    r_serv_onion.hset('crawler:tor:test', 'message', message)
+
+def test_ail_crawlers():
+    # # TODO: test regular domain
+    if not ping_splash_manager():
+        manager_url = get_splash_manager_url()
+        error_message = f'Error: Can\'t connect to AIL Splash Manager, http://{manager_url}'
+        print(error_message)
+        save_test_ail_crawlers_result(False, error_message)
+        return False
+
+    splash_url = get_all_splash_url_by_crawler_type('tor')
+    if not splash_url:
+        error_message = f'Error: No Tor Splash Launched'
+        print(error_message)
+        save_test_ail_crawlers_result(False, error_message)
+        return False
+    splash_url = splash_url[0]
+    commit_id = git_status.get_last_commit_id_from_local()
+    crawler_options = {'html': True,
+                        'har': False,
+                        'png': False,
+                        'depth_limit': 0,
+                        'closespider_pagecount': 100,
+                        'cookiejar_uuid': None,
+                        'user_agent': commit_id + '-AIL SPLASH CRAWLER'}
+    date = {'date_day': datetime.now().strftime("%Y%m%d"),
+            'date_month': datetime.now().strftime("%Y%m"),
+            'epoch': int(time.time())}
+    crawler_config = {'splash_url': f'http://{splash_url}',
+                        'service_type': 'onion',
+                        'url': 'http://eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion',
+                        'domain': 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion',
+                        'port': 80,
+                        'original_item': None,
+                        'item': None,
+                        'crawler_options': crawler_options,
+                        'date': date,
+                        'requested': 'test'}
+
+    ## CHECK IF SPLASH AVAILABLE ##
+    try:
+        r = requests.get(f'http://{splash_url}' , timeout=30.0)
+        retry = False
+    except Exception as e:
+        error_message = f'Error: Can\'t connect to Splash Docker, http://{splash_url}'
+        print(error_message)
+        save_test_ail_crawlers_result(False, error_message)
+        return False
+    ## -- ##
+
+    ## LAUNCH CRAWLER, TEST MODE ##
+    set_current_crawler_status(splash_url, 'CRAWLER TEST', started_time=True, crawled_domain='TEST DOMAIN', crawler_type='onion')
+    UUID = str(uuid.uuid4())
+    r_cache.set('crawler_request:{}'.format(UUID), json.dumps(crawler_config))
+
+    ## LAUNCH CRAWLER, TEST MODE ##
+    tor_crawler_script = os.path.join(os.environ['AIL_BIN'], 'torcrawler/tor_crawler.py')
+    process = subprocess.Popen(["python", tor_crawler_script, UUID],
+                               stdout=subprocess.PIPE)
+    while process.poll() is None:
+        time.sleep(1)
+
+    if process.returncode == 0:
+        # Scrapy-Splash ERRORS
+        stderr = process.stdout.read().decode()
+        #print(stderr)
+        if stderr:
+            print(f'stderr: {stderr}')
+            save_test_ail_crawlers_result(False, f'Error: {stderr}')
+            set_current_crawler_status(splash_url, 'Error')
+
+        output = process.stdout.read().decode()
+        #print(output)
+        # error: splash:Connection to proxy refused
+        if 'Connection to proxy refused' in output:
+            print('{} SPASH, PROXY DOWN OR BAD CONFIGURATION'.format(splash_url))
+            save_test_ail_crawlers_result(False, 'SPASH, PROXY DOWN OR BAD CONFIGURATION')
+            set_current_crawler_status(splash_url, 'Error')
+            return False
+        else:
+            set_current_crawler_status(splash_url, 'Waiting')
+            return True
+    else:
+        # ERROR
+        stderr = process.stdout.read().decode()
+        output = process.stdout.read().decode()
+        error = f'-stderr-\n{stderr}\n-stdout-\n{output}'
+        print(error)
+        save_test_ail_crawlers_result(splash_url, error)
+        return False
+    return True
     ## -- ##
 
 #### ---- ####
@@ -1151,5 +1282,7 @@ def launch_ail_splash_crawler(splash_url, script_options=''):
 
 if __name__ == '__main__':
     res = get_splash_manager_version()
-    #res = restart_splash_docker('127.0.0.1:8050', 'default_splash_tor')
+    res = test_ail_crawlers()
+    res = is_test_ail_crawlers_successful()
     print(res)
+    print(get_test_ail_crawlers_message())

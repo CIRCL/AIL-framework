@@ -29,7 +29,8 @@ if __name__ == '__main__':
         is_manager_connected = crawlers.reload_splash_and_proxies_list()
         print(is_manager_connected)
         if is_manager_connected:
-            crawlers.relaunch_crawlers()
+            if crawlers.test_ail_crawlers():
+                crawlers.relaunch_crawlers()
     last_check = int(time.time())
 
     while True:
@@ -45,7 +46,8 @@ if __name__ == '__main__':
                 is_manager_connected = crawlers.reload_splash_and_proxies_list()
                 if is_manager_connected:
                     print('reload proxies and splash list')
-                    crawlers.relaunch_crawlers()
+                    if crawlers.test_ail_crawlers():
+                        crawlers.relaunch_crawlers()
                     session_uuid = current_session_uuid
             if not is_manager_connected:
                 print('Error, Can\'t connect to Splash manager')

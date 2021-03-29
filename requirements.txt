@@ -1,4 +1,5 @@
 pymisp
+d4-pyclient
 
 thehive4py
 

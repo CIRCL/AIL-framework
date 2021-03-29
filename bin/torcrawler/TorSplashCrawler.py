@@ -81,7 +81,7 @@ function main(splash, args)
         html = splash:html(),
         png = splash:png{render_all=true},
         cookies = splash:get_cookies(),
-        last_url = splash:url()
+        last_url = splash:url(),
     }
 end
 """
@@ -174,35 +174,54 @@ class TorSplashCrawler():
         def parse(self,response):
             #print(response.headers)
             #print(response.status)
+            #print(response.meta)
+            #print(response.data) # # TODO: handle lua script error
+            #{'type': 'ScriptError', 'info': {'error': "'}' expected (to close '{' at line 47) near 'error_retry'",
+            #'message': '[string "..."]:53: \'}\' expected (to close \'{\' at line 47) near \'error_retry\'',
+            #'type': 'LUA_INIT_ERROR', 'source': '[string "..."]', 'line_number': 53},
+            #'error': 400, 'description': 'Error happened while executing Lua script'}
             if response.status == 504:
                 # no response
                 #print('504 detected')
                 pass
 
-            # LUA ERROR # # TODO: print/display errors
+            # LUA ERROR # # TODO: logs errors
             elif 'error' in response.data:
                 if(response.data['error'] == 'network99'):
                     ## splash restart ##
-                    error_retry = request.meta.get('error_retry', 0)
+                    error_retry = response.meta.get('error_retry', 0)
                     if error_retry < 3:
                         error_retry += 1
-                        url= request.meta['current_url']
-                        father = request.meta['father']
+                        url = response.data['last_url']
+                        father = response.meta['father']
 
                         self.logger.error('Splash, ResponseNeverReceived for %s, retry in 10s ...', url)
                         time.sleep(10)
+                        if 'cookies' in response.data:
+                            all_cookies = response.data['cookies'] # # TODO:  use initial cookie ?????
+                        else:
+                            all_cookies = []
+                        l_cookies = self.build_request_arg(all_cookies)
                         yield SplashRequest(
                             url,
                             self.parse,
                             errback=self.errback_catcher,
                             endpoint='execute',
-                            cache_args=['lua_source'],
+                            dont_filter=True,
                             meta={'father': father, 'current_url': url, 'error_retry': error_retry},
-                            args=self.build_request_arg(response.cookiejar)
+                            args=l_cookies
                         )
                     else:
+                        if self.requested_mode == 'test':
+                            crawlers.save_test_ail_crawlers_result(False, 'Connection to proxy refused')
                         print('Connection to proxy refused')
+                elif response.data['error'] == 'network3':
+                    if self.requested_mode == 'test':
+                        crawlers.save_test_ail_crawlers_result(False, 'HostNotFoundError: the remote host name was not found (invalid hostname)')
+                    print('HostNotFoundError: the remote host name was not found (invalid hostname)')
                 else:
+                    if self.requested_mode == 'test':
+                        crawlers.save_test_ail_crawlers_result(False, response.data['error'])
                     print(response.data['error'])
 
             elif response.status != 200:
@@ -213,6 +232,17 @@ class TorSplashCrawler():
             #elif crawlers.is_redirection(self.domains[0], response.data['last_url']):
             #    pass # ignore response
             else:
+                ## TEST MODE ##
+                if self.requested_mode == 'test':
+                    if 'It works!' in response.data['html']:
+                        print(response.data['html'])
+                        #print('success')
+                        crawlers.save_test_ail_crawlers_result(True, 'It works!')
+                    else:
+                        print('TEST ERROR')
+                        crawlers.save_test_ail_crawlers_result(False, 'TEST ERROR')
+                    return
+                ## -- ##
 
                 item_id = crawlers.create_item_id(self.item_dir, self.domains[0])
                 self.save_crawled_item(item_id, response.data['html'])

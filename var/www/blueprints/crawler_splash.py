@@ -504,18 +504,22 @@ def crawler_cookiejar_cookie_json_add_post():
 def crawler_splash_setings():
     all_proxies = crawlers.get_all_proxies_metadata()
     all_splash = crawlers.get_all_splash_crawler_metadata()
-    nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch()
-
     splash_manager_url = crawlers.get_splash_manager_url()
     api_key = crawlers.get_hidden_splash_api_key()
     is_manager_connected = crawlers.get_splash_manager_connection_metadata(force_ping=True)
+
+    nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch()
     crawler_full_config = Config_DB.get_full_config_by_section('crawler')
+    is_crawler_working = crawlers.is_test_ail_crawlers_successful()
+    crawler_error_mess = crawlers.get_test_ail_crawlers_message()
 
     return render_template("settings_splash_crawler.html",
                                 is_manager_connected=is_manager_connected,
                                 splash_manager_url=splash_manager_url, api_key=api_key,
-                                nb_crawlers_to_launch=nb_crawlers_to_launch,
                                 all_splash=all_splash, all_proxies=all_proxies,
+                                nb_crawlers_to_launch=nb_crawlers_to_launch,
+                                is_crawler_working=is_crawler_working,
+                                crawler_error_mess=crawler_error_mess,
                                 crawler_full_config=crawler_full_config)
 
 @crawler_splash.route('/crawler/settings/crawler_manager', methods=['GET', 'POST'])
@@ -554,5 +558,19 @@ def crawler_splash_setings_crawlers_to_lauch():
         nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch_ui()
         return render_template("settings_edit_crawlers_to_launch.html",
                                     nb_crawlers_to_launch=nb_crawlers_to_launch)
+
+@crawler_splash.route('/crawler/settings/test_crawler', methods=['GET'])
+@login_required
+@login_admin
+def crawler_splash_setings_test_crawler():
+    crawlers.test_ail_crawlers()
+    return redirect(url_for('crawler_splash.crawler_splash_setings'))
+
+@crawler_splash.route('/crawler/settings/relaunch_crawler', methods=['GET'])
+@login_required
+@login_admin
+def crawler_splash_setings_relaunch_crawler():
+    crawlers.relaunch_crawlers()
+    return redirect(url_for('crawler_splash.crawler_splash_setings'))
 
 ##  - -  ##
