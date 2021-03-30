@@ -235,8 +235,6 @@ class TorSplashCrawler():
                 ## TEST MODE ##
                 if self.requested_mode == 'test':
                     if 'It works!' in response.data['html']:
-                        print(response.data['html'])
-                        #print('success')
                         crawlers.save_test_ail_crawlers_result(True, 'It works!')
                     else:
                         print('TEST ERROR')
