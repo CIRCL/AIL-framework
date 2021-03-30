@@ -509,7 +509,7 @@ def crawler_splash_setings():
     is_manager_connected = crawlers.get_splash_manager_connection_metadata(force_ping=True)
 
     nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch()
-    crawler_full_config = Config_DB.get_full_config_by_section('crawler')
+    #crawler_full_config = Config_DB.get_full_config_by_section('crawler')
     is_crawler_working = crawlers.is_test_ail_crawlers_successful()
     crawler_error_mess = crawlers.get_test_ail_crawlers_message()
 
@@ -520,7 +520,8 @@ def crawler_splash_setings():
                                 nb_crawlers_to_launch=nb_crawlers_to_launch,
                                 is_crawler_working=is_crawler_working,
                                 crawler_error_mess=crawler_error_mess,
-                                crawler_full_config=crawler_full_config)
+                                #crawler_full_config=crawler_full_config
+                                )
 
 @crawler_splash.route('/crawler/settings/crawler_manager', methods=['GET', 'POST'])
 @login_required
