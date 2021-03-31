@@ -5,6 +5,8 @@ import os
 import sys
 import gzip
 
+import magic
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
@@ -35,6 +37,9 @@ def get_item_date(item_id, add_separator=False):
     else:
         return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
 
+def get_basename(item_id):
+    return os.path.basename(item_id)
+
 def get_source(item_id):
     return item_id.split('/')[-5]
 
@@ -62,6 +67,9 @@ def get_item_content(item_id):
         except:
             item_content = ''
     return str(item_content)
+
+def get_item_mimetype(item_id):
+    return magic.from_buffer(get_item_content(item_id), mime=True)
 
 #### TREE CHILD/FATHER ####
 def is_father(item_id):

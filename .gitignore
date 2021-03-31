@@ -46,6 +46,7 @@ configs/core.cfg.backup
 configs/update.cfg
 update/current_version
 files
+configs/d4client_passiveDNS_conf/uuid
 
 # Trackers
 bin/trackers/yara/custom-rules/*

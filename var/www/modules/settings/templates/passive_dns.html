@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Passive DNS - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+        <div class="d-flex justify-content-center my-4">
+          <a href="https://d4-project.org/">
+            <img src="{{ url_for('static', filename='image/d4-logo.png')}}" alt="D4 project">
+          </a>
+        </div>
+
+        <p class="lead px-4">
+         Passive DNS or pDNS is a service which records domain name system server (DNS) answers to DNS client requests.<br>
+         In order to see the evolution of records over time, a history is recorded.<br>
+         Various sources can be used to build a large sensor network.<br>
+         <br>
+         Enabling the D4 passive DNS sensor in AIL will contribute resolved domains and host to the global Passive DNS community operated by
+         <a href="https://www.circl.lu/">
+            CIRCL.lu
+         </a>
+         <br>
+         <br>
+         (if you want to have access to the global Passive DNS community
+         <a href="https://www.circl.lu/services/passive-dns/">
+            https://www.circl.lu/services/passive-dns
+         </a>
+         )
+        </p>
+
+
+        {% if passivedns_enabled %}
+          <a href="{{ url_for('settings.passive_dns_change_state') }}?state=disable">
+            <button class="btn btn-danger mx-4 my-2">
+              Disable D4 Client
+            </button>
+          </a>
+        {% else %}
+          <a href="{{ url_for('settings.passive_dns_change_state') }}?state=enable">
+            <button class="btn btn-primary mx-4 my-2">
+              Enable D4 Client
+            </button>
+          </a>
+        {% endif %}
+    	</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+  $("#nav_settings").addClass("active");
+	$("#passive_dns").removeClass("text-muted");
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+</html>

@@ -14,6 +14,7 @@ import json
 import datetime
 
 import git_status
+import d4
 
 # ============ VARIABLES ============
 import Flask_config
@@ -21,8 +22,6 @@ import Flask_config
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl
 r_serv_db = Flask_config.r_serv_db
-max_preview_char = Flask_config.max_preview_char
-max_preview_modal = Flask_config.max_preview_modal
 REPO_ORIGIN = Flask_config.REPO_ORIGIN
 dict_update_description = Flask_config.dict_update_description
 email_regex = Flask_config.email_regex
@@ -273,6 +272,21 @@ def get_background_update_stats_json():
 
     else:
         return jsonify({})
+
+@settings.route("/settings/passivedns", methods=['GET'])
+@login_required
+@login_read_only
+def passive_dns():
+    passivedns_enabled = d4.is_passive_dns_enabled()
+    return render_template("passive_dns.html", passivedns_enabled=passivedns_enabled)
+
+@settings.route("/settings/passivedns/change_state", methods=['GET'])
+@login_required
+@login_admin
+def passive_dns_change_state():
+    new_state = request.args.get('state') == 'enable'
+    passivedns_enabled = d4.change_passive_dns_state(new_state)
+    return redirect(url_for('settings.passive_dns'))
 
 # ========= REGISTRATION =========
 app.register_blueprint(settings, url_prefix=baseUrl)

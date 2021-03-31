@@ -17,6 +17,17 @@
       	      </a>
       	    </li>
           </ul>
+          <h5 class="d-flex text-muted w-100" id="nav_settings">
+      		  <span>Settings</span>
+      		</h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+      	    <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('settings.passive_dns')}}" id="passive_dns">
+      	        <img src="{{ url_for('static', filename='image/d4-logo.png')}}" alt="D4 project" style="width:25px;">
+      	        <span>Passive DNS</span>
+      	      </a>
+      	    </li>
+          </ul>
           <h5 class="d-flex text-muted w-100 py-2" id="nav_my_profile">
             <span>My Profile</span>
           </h5>
