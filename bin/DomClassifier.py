@@ -56,7 +56,7 @@ def main():
             if mimetype.split('/')[0] == "text":
                 c.text(rawtext=item_content)
                 c.potentialdomain()
-                c.validdomain(rtype=['A'], passive_dns=True, extended=False)
+                c.validdomain(passive_dns=True, extended=False)
                 print(c.vdomain)
 
                 if c.vdomain and d4.is_passive_dns_enabled():
