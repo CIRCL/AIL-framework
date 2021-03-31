@@ -7,9 +7,6 @@ Base Class for AIL Modules
 # Import External packages
 ##################################
 from abc import ABC, abstractmethod
-from builtins import classmethod
-import logging
-from logging.handlers import TimedRotatingFileHandler
 import time
 
 ##################################
@@ -48,7 +45,7 @@ class AbstractModule(ABC):
         # Run module endlessly
         self.proceed = True
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in secondes between two proccessed messages
         self.pending_seconds = 10
 
         # Setup the I/O queues
@@ -69,7 +66,6 @@ class AbstractModule(ABC):
                 self.computeNone()
                 # Wait before next process
                 self.redis_logger.debug('%s, waiting for new message, Idling %ds'%(self.module_name, self.pending_seconds))
-                # self.file_logger.debug('%s, waiting for new message'%(self.module_name)
                 time.sleep(self.pending_seconds)
                 continue
 
@@ -78,7 +74,6 @@ class AbstractModule(ABC):
                 self.compute(message)
             except Exception as err:
                 self.redis_logger.error("Error in module %s: %s"%(self.module_name, err))
-                self.file_logger.error("Error in module %s: %s"%(self.module_name, err))
 
 
     def _module_name(self):
