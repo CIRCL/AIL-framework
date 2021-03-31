@@ -22,6 +22,9 @@ wait
 # SUBMODULES #
 git submodule update
 
+echo -e $GREEN"Installing PyAIL ..."$DEFAULT
+pip3 install -U pyail
+
 echo -e $GREEN"Installing D4 CLIENT ..."$DEFAULT
 pip3 install -U d4-pyclient
 
