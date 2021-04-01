@@ -208,7 +208,7 @@ def crawl_onion(url, domain, port, type_service, message, crawler_config):
 
             if nb_retry == 2:
                 crawlers.restart_splash_docker(splash_url, splash_name)
-                time.spleep(20)
+                time.sleep(20)
 
             if nb_retry == 6:
                 on_error_send_message_back_in_queue(type_service, domain, message)
