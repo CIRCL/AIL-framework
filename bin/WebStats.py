@@ -87,12 +87,12 @@ class WebStats(AbstractModule):
 
             self.redis_logger.debug('Building protocol graph')
             lib_words.create_curve_with_word_file(self.r_serv_trend, self.csv_path_proto,
-                                                    protocolsfile_path, year,
+                                                    self.protocolsfile_path, year,
                                                     month)
 
             self.redis_logger.debug('Building tld graph')
             lib_words.create_curve_with_word_file(self.r_serv_trend, self.csv_path_tld,
-                                                    tldsfile_path, year,
+                                                    self.tldsfile_path, year,
                                                     month)
 
             self.redis_logger.debug('Building domain graph')
