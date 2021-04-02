@@ -56,16 +56,16 @@ class AbstractModule(ABC):
         """
         Run Module endless process
         """
-        
+
         # Endless loop processing messages from the input queue
         while self.proceed:
             # Get one message (paste) from the QueueIn (copy of Redis_Global publish)
             message = self.process.get_from_set()
-            
+
             if message is None:
                 self.computeNone()
                 # Wait before next process
-                self.redis_logger.debug('%s, waiting for new message, Idling %ds'%(self.module_name, self.pending_seconds))
+                self.redis_logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
                 time.sleep(self.pending_seconds)
                 continue
 
@@ -73,7 +73,7 @@ class AbstractModule(ABC):
                 # Module processing with the message from the queue
                 self.compute(message)
             except Exception as err:
-                self.redis_logger.error("Error in module %s: %s"%(self.module_name, err))
+                self.redis_logger.critical(f"Error in module {self.module_name}: {err}")
 
 
     def _module_name(self):
