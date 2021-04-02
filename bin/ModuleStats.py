@@ -6,7 +6,7 @@
 """
 
 ##################################
-# Import External packages
+# Import External packages       #
 ##################################
 import time
 import datetime
@@ -15,7 +15,7 @@ import os
 
 
 ##################################
-# Import Project packages
+# Import Project packages        #
 ##################################
 from module.abstract_module import AbstractModule
 from packages.Date import Date
@@ -46,9 +46,6 @@ class ModuleStats(AbstractModule):
 
         # REDIS #
         self.r_serv_trend = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Trending")
-
-        self.r_serv_pasteName = ConfigLoader.ConfigLoader().get_redis_conn("Redis_Paste_Name")
-
 
     def compute(self, message):
 
@@ -112,7 +109,6 @@ class ModuleStats(AbstractModule):
         redis_providers_name_set = 'providers_set_' + paste_date
 
         # Add/Update in Redis
-        self.r_serv_pasteName.sadd(paste_baseName, message)
         self.r_serv_trend.sadd(redis_all_provider, paste_provider)
 
         num_paste = int(self.r_serv_trend.hincrby(paste_provider+'_num', paste_date, 1))

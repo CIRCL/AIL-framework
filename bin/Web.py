@@ -64,10 +64,6 @@ class Web(AbstractModule):
         self.cc_critical = self.process.config.get("Url", "cc_critical")
 
         # FUNCTIONS #
-        self.redis_logger.info("Script URL subscribed to channel web_categ")
-
-        # FIXME For retro compatibility
-        self.channel = 'web_categ'
 
         self.faup = Faup()
 
@@ -177,9 +173,6 @@ class Web(AbstractModule):
                                                     domains_list)
 
             if A_values[0] >= 1:
-                PST.__setattr__(self.channel, A_values)
-                PST.save_attribute_redis(self.channel, (A_values[0],
-                                                        list(A_values[1])))
 
                 pprint.pprint(A_values)
                 # self.redis_logger.info('Url;{};{};{};Checked {} URL;{}'.format(
