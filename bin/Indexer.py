@@ -101,14 +101,14 @@ class Indexer(AbstractModule):
             PST = Paste.Paste(message)
             docpath = message.split(" ", -1)[-1]
             paste = PST.get_p_content()
-            self.redis_logger.debug("Indexing - " + self.indexname + " :", docpath)
+            self.redis_logger.debug(f"Indexing - {self.indexname}: {docpath}")
 
             # Avoid calculating the index's size at each message
             if(time.time() - self.last_refresh > self.TIME_WAIT):
                 self.last_refresh = time.time()
                 if self.check_index_size() >= self.INDEX_SIZE_THRESHOLD*(1000*1000):
                     timestamp = int(time.time())
-                    self.redis_logger.debug("Creating new index", timestamp)
+                    self.redis_logger.debug(f"Creating new index {timestamp}")
                     self.indexpath = join(self.baseindexpath, str(timestamp))
                     self.indexname = str(timestamp)
                     # update all_index
@@ -127,7 +127,7 @@ class Indexer(AbstractModule):
                 indexwriter.commit()
 
         except IOError:
-            self.redis_logger.debug("CRC Checksum Failed on :", PST.p_path)
+            self.redis_logger.debug(f"CRC Checksum Failed on: {PST.p_path}")
             self.redis_logger.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
                 PST.p_source, PST.p_date, PST.p_name))
 
