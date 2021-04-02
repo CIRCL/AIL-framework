@@ -80,23 +80,23 @@ class WebStats(AbstractModule):
     def computeNone(self):
         if self.generate_new_graph:
             self.generate_new_graph = False
-            
+
             today = datetime.date.today()
             year = today.year
             month = today.month
 
             self.redis_logger.debug('Building protocol graph')
-            lib_words.create_curve_with_word_file(self.r_serv_trend, csv_path_proto,
+            lib_words.create_curve_with_word_file(self.r_serv_trend, self.csv_path_proto,
                                                     protocolsfile_path, year,
                                                     month)
 
             self.redis_logger.debug('Building tld graph')
-            lib_words.create_curve_with_word_file(self.r_serv_trend, csv_path_tld,
+            lib_words.create_curve_with_word_file(self.r_serv_trend, self.csv_path_tld,
                                                     tldsfile_path, year,
                                                     month)
 
             self.redis_logger.debug('Building domain graph')
-            lib_words.create_curve_from_redis_set(self.r_serv_trend, csv_path_domain,
+            lib_words.create_curve_from_redis_set(self.r_serv_trend, self.csv_path_domain,
                                                     "domain", year,
                                                     month)
             self.redis_logger.debug('end building')
@@ -202,6 +202,6 @@ class WebStats(AbstractModule):
 
 
 if __name__ == '__main__':
-    
+
     module = WebStats()
     module.run()
