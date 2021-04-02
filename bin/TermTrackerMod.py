@@ -48,7 +48,7 @@ class TermTrackerMod(AbstractModule):
         self.max_execution_time = self.process.config.getint('TermTrackerMod', "max_execution_time")
 
         self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
-       
+
         # loads tracked words
         self.list_tracked_words = Term.get_tracked_words_list()
         self.last_refresh_word = time.time()
@@ -60,6 +60,17 @@ class TermTrackerMod(AbstractModule):
 
 
     def compute(self, item_id):
+        # refresh Tracked term
+        if self.last_refresh_word < Term.get_tracked_term_last_updated_by_type('word'):
+            self.list_tracked_words = Term.get_tracked_words_list()
+            self.last_refresh_word = time.time()
+            self.redis_logger.debug('Tracked word refreshed')
+
+        if self.last_refresh_set < Term.get_tracked_term_last_updated_by_type('set'):
+            self.set_tracked_words_list = Term.get_set_tracked_words_list()
+            self.last_refresh_set = time.time()
+            self.redis_logger.debug('Tracked set refreshed')
+
         # Cast message as Item
         item_date = Item.get_item_date(item_id)
         item_content = Item.get_item_content(item_id)
@@ -97,18 +108,6 @@ class TermTrackerMod(AbstractModule):
                     if nb_uniq_word >= nb_words_threshold:
                         self.new_term_found(word_set, 'set', item_id, item_date)
 
-            # refresh Tracked term
-            if self.last_refresh_word < Term.get_tracked_term_last_updated_by_type('word'):
-                self.list_tracked_words = Term.get_tracked_words_list()
-                self.last_refresh_word = time.time()
-                self.redis_logger.debug('Tracked word refreshed')
-
-            if self.last_refresh_set < Term.get_tracked_term_last_updated_by_type('set'):
-                self.set_tracked_words_list = Term.get_set_tracked_words_list()
-                self.last_refresh_set = time.time()
-                self.redis_logger.debug('Tracked set refreshed')
-
-
     def new_term_found(self, term, term_type, item_id, item_date):
         uuid_list = Term.get_term_uuid_list(term, term_type)
         self.redis_logger.info('new tracked term found: {} in {}'.format(term, item_id))
@@ -131,6 +130,6 @@ class TermTrackerMod(AbstractModule):
 
 
 if __name__ == '__main__':
-    
+
     module = TermTrackerMod()
     module.run()
