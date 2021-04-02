@@ -36,68 +36,96 @@ Requirements
 *Need the ZMQ_PubSub_Tokenize_Q Module running to be able to work properly.
 
 """
+
+##################################
+# Import External packages
+##################################
 import os
 import argparse
 import time
 import re
+
+##################################
+# Import Project packages
+##################################
+from module.abstract_module import AbstractModule
 from pubsublogger import publisher
 from packages import Paste
-
 from Helper import Process
 
-if __name__ == "__main__":
-    publisher.port = 6380
-    publisher.channel = "Script"
 
-    config_section = 'Categ'
+class Categ(AbstractModule):
+    """
+    Categ module for AIL framework
+    """
 
-    p = Process(config_section)
-    matchingThreshold = p.config.getint("Categ", "matchingThreshold")
+    def __init__(self):
+        """
+        Init Categ
+        """
+        super(Categ, self).__init__()
 
-    # SCRIPT PARSER #
-    parser = argparse.ArgumentParser(description='Start Categ module on files.')
+        self.matchingThreshold = self.process.config.getint("Categ", "matchingThreshold")
 
-    parser.add_argument(
-        '-d', type=str, default="../files/",
-        help='Path to the directory containing the category files.',
-        action='store')
+        # SCRIPT PARSER #
+        parser = argparse.ArgumentParser(description='Start Categ module on files.')
 
-    args = parser.parse_args()
+        parser.add_argument(
+            '-d', type=str, default="../files/",
+            help='Path to the directory containing the category files.',
+            action='store')
 
-    # FUNCTIONS #
-    publisher.info("Script Categ started")
+        args = parser.parse_args()
 
-    categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve', 'ApiKey']
-    tmp_dict = {}
-    for filename in categories:
-        bname = os.path.basename(filename)
-        tmp_dict[bname] = []
-        with open(os.path.join(args.d, filename), 'r') as f:
-            patterns = [r'%s' % ( re.escape(s.strip()) ) for s in f]
-            tmp_dict[bname] = re.compile('|'.join(patterns), re.IGNORECASE)
+        self.redis_logger.info("Script Categ started")
 
-    prec_filename = None
+        categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve', 'ApiKey']
+        tmp_dict = {}
+        for filename in categories:
+            bname = os.path.basename(filename)
+            tmp_dict[bname] = []
+            with open(os.path.join(args.d, filename), 'r') as f:
+                patterns = [r'%s' % ( re.escape(s.strip()) ) for s in f]
+                tmp_dict[bname] = re.compile('|'.join(patterns), re.IGNORECASE)
 
-    while True:
-        filename = p.get_from_set()
-        if filename is None:
-            publisher.debug("Script Categ is Idling 10s")
-            print('Sleeping')
-            time.sleep(10)
-            continue
+        self.categ_items = tmp_dict.items()
 
-        paste = Paste.Paste(filename)
+        prec_filename = None
+
+
+    def compute(self, message):
+        # Cast message as paste
+        paste = Paste.Paste(message)
+        # Get paste content
         content = paste.get_p_content()
 
-        for categ, pattern in tmp_dict.items():
+        # init categories found
+        is_categ_found = False
+
+        # Search for pattern categories in paste content
+        for categ, pattern in self.categ_items:
+
             found = set(re.findall(pattern, content))
-            if len(found) >= matchingThreshold:
-                msg = '{} {}'.format(paste.p_rel_path, len(found))
+            lenfound = len(found)
+            if lenfound >= self.matchingThreshold:
+                is_categ_found = True
+                msg = '{} {}'.format(paste.p_rel_path, lenfound)
 
-                print(msg, categ)
-                p.populate_set_out(msg, categ)
+                self.redis_logger.debug('%s;%s %s'%(self.module_name, msg, categ))
+            
+                # Export message to categ queue
+                self.process.populate_set_out(msg, categ)
 
-                publisher.info(
+                self.redis_logger.info(
                     'Categ;{};{};{};Detected {} as {};{}'.format(
                         paste.p_source, paste.p_date, paste.p_name,
-                        len(found), categ, paste.p_rel_path))
+                        lenfound, categ, paste.p_rel_path))
+
+        if not is_categ_found:
+            self.redis_logger.debug('No %s found in this paste: %s'%(self.module_name, paste.p_name))
+
+
+if __name__ == '__main__':
+    
+    module = Categ()
+    module.run()

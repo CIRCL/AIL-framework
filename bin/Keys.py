@@ -12,160 +12,170 @@ RSA private key, certificate messages
 
 """
 
+##################################
+# Import External packages
+##################################
 import time
+from enum import Enum
 from pubsublogger import publisher
 
-#from bin.packages import Paste
-#from bin.Helper import Process
 
+##################################
+# Import Project packages
+##################################
+from module.abstract_module import AbstractModule
 from packages import Paste
 from Helper import Process
 
 
-def search_key(paste):
-    content = paste.get_p_content()
-    find = False
-    get_pgp_content = False
-    if '-----BEGIN PGP MESSAGE-----' in content:
-        publisher.warning('{} has a PGP enc message'.format(paste.p_name))
-
-        msg = 'infoleak:automatic-detection="pgp-message";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        get_pgp_content = True
-        find = True
-
-    if '-----BEGIN PGP PUBLIC KEY BLOCK-----' in content:
-        msg = 'infoleak:automatic-detection="pgp-public-key-block";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        get_pgp_content = True
-
-    if '-----BEGIN PGP SIGNATURE-----' in content:
-        msg = 'infoleak:automatic-detection="pgp-signature";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        get_pgp_content = True
+class KeyEnum(Enum):
+    PGP_MESSAGE = '-----BEGIN PGP MESSAGE-----'
+    PGP_PUBLIC_KEY_BLOCK = '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+    PGP_PRIVATE_KEY_BLOCK = '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+    PGP_SIGNATURE = '-----BEGIN PGP SIGNATURE-----'
+    CERTIFICATE = '-----BEGIN CERTIFICATE-----'
+    PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----'
+    PRIVATE_KEY = '-----BEGIN PRIVATE KEY-----'
+    ENCRYPTED_PRIVATE_KEY = '-----BEGIN ENCRYPTED PRIVATE KEY-----'
+    OPENSSH_PRIVATE_KEY = '-----BEGIN OPENSSH PRIVATE KEY-----'
+    SSH2_ENCRYPTED_PRIVATE_KEY = '---- BEGIN SSH2 ENCRYPTED PRIVATE KEY ----'
+    OPENVPN_STATIC_KEY_V1 = '-----BEGIN OpenVPN Static key V1-----'
+    RSA_PRIVATE_KEY = '-----BEGIN RSA PRIVATE KEY-----'
+    DSA_PRIVATE_KEY = '-----BEGIN DSA PRIVATE KEY-----'
+    EC_PRIVATE_KEY = '-----BEGIN EC PRIVATE KEY-----'
 
 
-    if '-----BEGIN CERTIFICATE-----' in content:
-        publisher.warning('{} has a certificate message'.format(paste.p_name))
+class Keys(AbstractModule):
+    """
+    Keys module for AIL framework
+    """
+    
+    def __init__(self):
+        super(Keys, self).__init__()
 
-        msg = 'infoleak:automatic-detection="certificate";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        # Waiting time in secondes between to message proccessed
+        self.pending_seconds = 1
 
-    if '-----BEGIN RSA PRIVATE KEY-----' in content:
-        publisher.warning('{} has a RSA private key message'.format(paste.p_name))
-        print('rsa private key message found')
 
-        msg = 'infoleak:automatic-detection="rsa-private-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+    def compute(self, message):
+        paste = Paste.Paste(message)
+        content = paste.get_p_content()
 
-    if '-----BEGIN PRIVATE KEY-----' in content:
-        publisher.warning('{} has a private key message'.format(paste.p_name))
-        print('private key message found')
+        find = False
+        get_pgp_content = False
 
-        msg = 'infoleak:automatic-detection="private-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.PGP_MESSAGE.value in content:
+            self.redis_logger.warning('{} has a PGP enc message'.format(paste.p_name))
 
-    if '-----BEGIN ENCRYPTED PRIVATE KEY-----' in content:
-        publisher.warning('{} has an encrypted private key message'.format(paste.p_name))
-        print('encrypted private key message found')
+            msg = 'infoleak:automatic-detection="pgp-message";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            get_pgp_content = True
+            find = True
 
-        msg = 'infoleak:automatic-detection="encrypted-private-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.PGP_PUBLIC_KEY_BLOCK.value in content:
+            msg = 'infoleak:automatic-detection="pgp-public-key-block";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            get_pgp_content = True
 
-    if '-----BEGIN OPENSSH PRIVATE KEY-----' in content:
-        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
-        print('openssh private key message found')
+        if KeyEnum.PGP_SIGNATURE.value in content:
+            msg = 'infoleak:automatic-detection="pgp-signature";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            get_pgp_content = True
 
-        msg = 'infoleak:automatic-detection="private-ssh-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.CERTIFICATE.value in content:
+            self.redis_logger.warning('{} has a certificate message'.format(paste.p_name))
 
-    if '---- BEGIN SSH2 ENCRYPTED PRIVATE KEY ----' in content:
-        publisher.warning('{} has an ssh2 private key message'.format(paste.p_name))
-        print('SSH2 private key message found')
+            msg = 'infoleak:automatic-detection="certificate";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
 
-        msg = 'infoleak:automatic-detection="private-ssh-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.RSA_PRIVATE_KEY.value in content:
+            self.redis_logger.warning('{} has a RSA private key message'.format(paste.p_name))
+            print('rsa private key message found')
 
-    if '-----BEGIN OpenVPN Static key V1-----' in content:
-        publisher.warning('{} has an openssh private key message'.format(paste.p_name))
-        print('OpenVPN Static key message found')
+            msg = 'infoleak:automatic-detection="rsa-private-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
 
-        msg = 'infoleak:automatic-detection="vpn-static-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.PRIVATE_KEY.value in content:
+            self.redis_logger.warning('{} has a private key message'.format(paste.p_name))
+            print('private key message found')
 
-    if '-----BEGIN DSA PRIVATE KEY-----' in content:
-        publisher.warning('{} has a dsa private key message'.format(paste.p_name))
+            msg = 'infoleak:automatic-detection="private-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
 
-        msg = 'infoleak:automatic-detection="dsa-private-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.ENCRYPTED_PRIVATE_KEY.value in content:
+            self.redis_logger.warning('{} has an encrypted private key message'.format(paste.p_name))
+            print('encrypted private key message found')
 
-    if '-----BEGIN EC PRIVATE KEY-----' in content:
-        publisher.warning('{} has an ec private key message'.format(paste.p_name))
+            msg = 'infoleak:automatic-detection="encrypted-private-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
 
-        msg = 'infoleak:automatic-detection="ec-private-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.OPENSSH_PRIVATE_KEY.value in content:
+            self.redis_logger.warning('{} has an openssh private key message'.format(paste.p_name))
+            print('openssh private key message found')
 
-    if '-----BEGIN PGP PRIVATE KEY BLOCK-----' in content:
-        publisher.warning('{} has a pgp private key block message'.format(paste.p_name))
+            msg = 'infoleak:automatic-detection="private-ssh-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
 
-        msg = 'infoleak:automatic-detection="pgp-private-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.SSH2_ENCRYPTED_PRIVATE_KEY.value in content:
+            self.redis_logger.warning('{} has an ssh2 private key message'.format(paste.p_name))
+            print('SSH2 private key message found')
 
-    if '-----BEGIN PUBLIC KEY-----' in content:
-        publisher.warning('{} has a public key message'.format(paste.p_name))
+            msg = 'infoleak:automatic-detection="private-ssh-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
 
-        msg = 'infoleak:automatic-detection="public-key";{}'.format(message)
-        p.populate_set_out(msg, 'Tags')
-        find = True
+        if KeyEnum.OPENVPN_STATIC_KEY_V1.value in content:
+            self.redis_logger.warning('{} has an openssh private key message'.format(paste.p_name))
+            print('OpenVPN Static key message found')
 
-    # pgp content
-    if get_pgp_content:
-        p.populate_set_out(message, 'PgpDump')
+            msg = 'infoleak:automatic-detection="vpn-static-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
 
-    if find :
+        if KeyEnum.DSA_PRIVATE_KEY.value in content:
+            self.redis_logger.warning('{} has a dsa private key message'.format(paste.p_name))
 
-        #Send to duplicate
-        p.populate_set_out(message, 'Duplicate')
-        print(message)
+            msg = 'infoleak:automatic-detection="dsa-private-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
+
+        if KeyEnum.EC_PRIVATE_KEY.value in content:
+            self.redis_logger.warning('{} has an ec private key message'.format(paste.p_name))
+
+            msg = 'infoleak:automatic-detection="ec-private-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
+
+        if KeyEnum.PGP_PRIVATE_KEY_BLOCK.value in content:
+            self.redis_logger.warning('{} has a pgp private key block message'.format(paste.p_name))
+
+            msg = 'infoleak:automatic-detection="pgp-private-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
+
+        if KeyEnum.PUBLIC_KEY.value in content:
+            self.redis_logger.warning('{} has a public key message'.format(paste.p_name))
+
+            msg = 'infoleak:automatic-detection="public-key";{}'.format(message)
+            self.process.populate_set_out(msg, 'Tags')
+            find = True
+
+        # pgp content
+        if get_pgp_content:
+            self.process.populate_set_out(message, 'PgpDump')
+
+        if find :
+            #Send to duplicate
+            self.process.populate_set_out(message, 'Duplicate')
+            self.redis_logger.debug(message)
 
 
 if __name__ == '__main__':
-    # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
-    # Port of the redis instance used by pubsublogger
-    publisher.port = 6380
-    # Script is the default channel used for the modules.
-    publisher.channel = 'Script'
-
-    # Section name in bin/packages/modules.cfg
-    config_section = 'Keys'
-
-    # Setup the I/O queues
-    p = Process(config_section)
-
-    # Sent to the logging a description of the module
-    publisher.info("Run Keys module ")
-
-    # Endless loop getting messages from the input queue
-    while True:
-        # Get one message from the input queue
-        message = p.get_from_set()
-        if message is None:
-            publisher.debug("{} queue is empty, waiting".format(config_section))
-            time.sleep(1)
-            continue
-
-        # Do something with the message from the queue
-        paste = Paste.Paste(message)
-        search_key(paste)
-
-        # (Optional) Send that thing to the next queue
+        
+    module = Keys()
+    module.run()
