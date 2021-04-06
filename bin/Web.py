@@ -31,7 +31,6 @@ import ipaddress
 from module.abstract_module import AbstractModule
 from packages import Paste
 from packages import lib_refine
-from pubsublogger import publisher
 from Helper import Process
 
 
@@ -143,12 +142,12 @@ class Web(AbstractModule):
                     # ASN/CC lookup is skip.
                     l = client.lookup(ip, qType='IP')
                 except ipaddress.AddressValueError:
-                    self.redis_logger.error(
-                        'ASN/CC lookup failed for IP {}'.format(ip))
+                    self.redis_logger.debug(
+                        f'ASN/CC lookup failed for IP {ip}')
                     continue
                 except:
-                    self.redis_logger.error(
-                        'Resolver IPv4 address failed for host {}'.format(hostl))
+                    self.redis_logger.debug(
+                        f'Resolver IPv4 address failed for host {hostl}')
                     continue
 
                 cc = getattr(l, 'cc')
