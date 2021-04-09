@@ -37,9 +37,19 @@ def check_if_files_modified():
     if process.returncode == 0:
         modified_files = process.stdout
         if modified_files:
-            print('Modified Files:')
-            print('{}{}{}'.format(TERMINAL_BLUE, modified_files.decode(), TERMINAL_DEFAULT))
-            return False
+            l_modified_files = []
+            for modified_file in modified_files.decode().split('\n'):
+                if modified_file:
+                    if modified_file.split('/')[0] != 'configs':
+                        l_modified_files.append(modified_file)
+            if l_modified_files:
+                print('Modified Files:')
+                for modified_file in l_modified_files:
+                    print('{}{}{}'.format(TERMINAL_BLUE, modified_file, TERMINAL_DEFAULT))
+                print()
+                return False
+            else:
+                return True
         else:
             return True
     else:
