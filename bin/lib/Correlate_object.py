@@ -22,6 +22,7 @@ import Item
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 def is_valid_object_type(object_type):
@@ -199,35 +200,55 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
 
     return {"icon_class": icon_class, "icon_text": icon_text, "node_color": node_color, "node_radius": node_radius}
 
-def get_item_url(correlation_name, value, correlation_type=None):
+# flask_context: if this function is used with a Flask app context
+def get_item_url(correlation_name, value, correlation_type=None, flask_context=True):
     '''
     Warning: use only in flask
     '''
     url = '#'
     if correlation_name == "pgp":
-        endpoint = 'correlation.show_correlation'
-        url = url_for(endpoint, object_type="pgp", type_id=correlation_type, correlation_id=value)
+        if flask_context:
+            endpoint = 'correlation.show_correlation'
+            url = url_for(endpoint, object_type="pgp", type_id=correlation_type, correlation_id=value)
+        else:
+            url = f'{baseurl}/correlation/show_correlation?object_type={correlation_name}&type_id={correlation_type}&correlation_id={value}'
     elif correlation_name == 'cryptocurrency':
-        endpoint = 'correlation.show_correlation'
-        url = url_for(endpoint, object_type="cryptocurrency", type_id=correlation_type, correlation_id=value)
+        if flask_context:
+            endpoint = 'correlation.show_correlation'
+            url = url_for(endpoint, object_type="cryptocurrency", type_id=correlation_type, correlation_id=value)
+        else:
+            url = f'{baseurl}/correlation/show_correlation?object_type={correlation_name}&type_id={correlation_type}&correlation_id={value}'
     elif correlation_name == 'username':
-        endpoint = 'correlation.show_correlation'
-        url = url_for(endpoint, object_type="username", type_id=correlation_type, correlation_id=value)
+        if flask_context:
+            endpoint = 'correlation.show_correlation'
+            url = url_for(endpoint, object_type="username", type_id=correlation_type, correlation_id=value)
+        else:
+            url = f'{baseurl}/correlation/show_correlation?object_type={correlation_name}&type_id={correlation_type}&correlation_id={value}'
     elif correlation_name == 'decoded':
-        endpoint = 'correlation.show_correlation'
-        url = url_for(endpoint, object_type="decoded", correlation_id=value)
+        if flask_context:
+            endpoint = 'correlation.show_correlation'
+            url = url_for(endpoint, object_type="decoded", correlation_id=value)
+        else:
+            url = f'{baseurl}/correlation/show_correlation?object_type={correlation_name}&correlation_id={value}'
     elif correlation_name == 'screenshot' or correlation_name == 'image':              ### # TODO:  rename me
-        endpoint = 'correlation.show_correlation'
-        url = url_for(endpoint, object_type="screenshot", correlation_id=value)
+        if flask_context:
+            endpoint = 'correlation.show_correlation'
+            url = url_for(endpoint, object_type="screenshot", correlation_id=value)
+        else:
+            url = f'{baseurl}/correlation/show_correlation?object_type={correlation_name}&correlation_id={value}'
     elif correlation_name == 'domain':
-        endpoint = 'crawler_splash.showDomain'
-        url = url_for(endpoint, domain=value)
-    elif correlation_name == 'item':
-        endpoint = 'objects_item.showItem'
-        url = url_for(endpoint, id=value)
-    elif correlation_name == 'paste':                   ### # TODO:  remove me
-        endpoint = 'objects_item.showItem'
-        url = url_for(endpoint, id=value)
+        if flask_context:
+            endpoint = 'crawler_splash.showDomain'
+            url = url_for(endpoint, domain=value)
+        else:
+            url = f'{baseurl}/crawlers/showDomain?domain={value}'
+    elif correlation_name == 'item' or correlation_name == 'paste':  ### # TODO:  remove paste
+        if flask_context:
+            endpoint = 'objects_item.showItem'
+            url = url_for(endpoint, id=value)
+        else:
+            url = f'{baseurl}/object/item?id={value}'
+    #print(url)
     return url
 
 def get_obj_tag_table_keys(object_type):
@@ -271,7 +292,7 @@ def create_graph_links(links_set):
         graph_links_list.append({"source": link[0], "target": link[1]})
     return graph_links_list
 
-def create_graph_nodes(nodes_set, root_node_id):
+def create_graph_nodes(nodes_set, root_node_id, flask_context=True):
     graph_nodes_list = []
     for node_id in nodes_set:
         correlation_name, correlation_type, value = node_id.split(';', 3)
@@ -281,7 +302,7 @@ def create_graph_nodes(nodes_set, root_node_id):
         if node_id == root_node_id:
             dict_node["style"]["node_color"] = 'orange'
             dict_node["style"]["node_radius"] = 7
-        dict_node['url'] = get_item_url(correlation_name, value, correlation_type)
+        dict_node['url'] = get_item_url(correlation_name, value, correlation_type, flask_context=flask_context)
         graph_nodes_list.append(dict_node)
     return graph_nodes_list
 
@@ -293,7 +314,7 @@ def create_node_id(correlation_name, value, correlation_type=''):
 
 
 # # TODO: filter by correlation type => bitcoin, mail, ...
-def get_graph_node_object_correlation(object_type, root_value, mode, correlation_names, correlation_objects, max_nodes=300, requested_correl_type=None):
+def get_graph_node_object_correlation(object_type, root_value, mode, correlation_names, correlation_objects, max_nodes=300, requested_correl_type=None, flask_context=True):
     links = set()
     nodes = set()
 
@@ -386,7 +407,7 @@ def get_graph_node_object_correlation(object_type, root_value, mode, correlation
                                         links.add((root_node_id, correl_node_id))
 
 
-    return {"nodes": create_graph_nodes(nodes, root_node_id), "links": create_graph_links(links)}
+    return {"nodes": create_graph_nodes(nodes, root_node_id, flask_context=flask_context), "links": create_graph_links(links)}
 
 
 def get_obj_global_id(obj_type, obj_id, obj_sub_type=None):
@@ -421,6 +442,40 @@ def get_obj_str_type_subtype(obj_type, obj_subtype):
         return '{};{}'.format(obj_type, obj_subtype)
     else:
         return obj_type
+
+def sanitise_correlation_names(correlation_names):
+    '''
+    correlation_names ex = 'pgp,crypto'
+    '''
+    all_correlation_names = get_all_correlation_names()
+    if correlation_names is None:
+        return all_correlation_names
+    else:
+        l_correlation_names = []
+        for correl in correlation_names.split(','):
+            if correl in all_correlation_names:
+                l_correlation_names.append(correl)
+        if l_correlation_names:
+            return l_correlation_names
+        else:
+            return all_correlation_names
+
+def sanitise_correlation_objects(correlation_objects):
+    '''
+    correlation_objects ex = 'domain,decoded'
+    '''
+    all_correlation_objects = get_all_correlation_objects()
+    if correlation_objects is None:
+        return all_correlation_objects
+    else:
+        l_correlation_objects = []
+        for correl in correlation_objects.split(','):
+            if correl in all_correlation_objects:
+                l_correlation_objects.append(correl)
+        if l_correlation_objects:
+            return l_correlation_objects
+        else:
+            return all_correlation_objects
 
 ######## API EXPOSED ########
 def sanitize_object_type(object_type):
