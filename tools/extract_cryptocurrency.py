@@ -37,8 +37,6 @@ def get_object_correlation_json(correlation_id, subtype, max_nodes):
     max_nodes = sanitise_nb_max_nodes(max_nodes)
 
     object_type = 'cryptocurrency'
-    type_id = 'bitcoin'
-
     max_nodes = sanitise_nb_max_nodes(max_nodes)
 
     # ALL correlations
@@ -46,7 +44,7 @@ def get_object_correlation_json(correlation_id, subtype, max_nodes):
     correlation_objects = Correlate_object.sanitise_correlation_objects('')
 
     res = Correlate_object.get_graph_node_object_correlation(object_type, correlation_id, mode, correlation_names,
-                                                    correlation_objects, requested_correl_type=type_id,
+                                                    correlation_objects, requested_correl_type=subtype,
                                                     max_nodes=max_nodes, flask_context=False)
     return res
 
