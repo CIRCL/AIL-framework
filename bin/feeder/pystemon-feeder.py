@@ -71,6 +71,7 @@ while True:
         with open(full_item_path, 'rb') as f: #.read()
             messagedata = f.read()
         path_to_send = os.path.join(pastes_directory, item_id)
+        path_to_send = 'pystemon>>' + path_to_send
 
         s = b' '.join( [ topic.encode(), path_to_send.encode(), base64.b64encode(messagedata) ] )
         socket.send(s)
