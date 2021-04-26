@@ -50,12 +50,18 @@ def is_tags_safe(ltags):
 #### Taxonomies - Galaxies ####
 
 def get_taxonomie_from_tag(tag):
-    return tag.split(':')[0]
+    try:
+        return tag.split(':')[0]
+    except IndexError:
+        return None
 
 def get_galaxy_from_tag(tag):
-    galaxy = tag.split(':')[1]
-    galaxy = galaxy.split('=')[0]
-    return galaxy
+    try:
+        galaxy = tag.split(':')[1]
+        galaxy = galaxy.split('=')[0]
+        return galaxy
+    except IndexError:
+        return None
 
 def get_active_taxonomies():
     return r_serv_tags.smembers('active_taxonomies')
@@ -110,6 +116,8 @@ def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
 
         for tag in list_tags:
             taxonomie = get_taxonomie_from_tag(tag)
+            if taxonomie is None:
+                return False
             if taxonomie not in active_taxonomies:
                 return False
             if not is_taxonomie_tag_enabled(taxonomie, tag):
@@ -120,6 +128,8 @@ def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
 
         for tag in list_tags_galaxy:
             galaxy = get_galaxy_from_tag(tag)
+            if galaxy is None:
+                return False
             if galaxy not in active_galaxies:
                 return False
             if not is_galaxy_tag_enabled(galaxy, tag):
@@ -271,7 +281,7 @@ def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
         if r_serv_tags.scard('{}:{}'.format(tag, tag_last_seen)) > 0:
             r_serv_tags.hset('tag_metadata:{}'.format(tag), 'last_seen', tag_last_seen)
         else:
-            # # TODO: # FIXME: 
+            # # TODO: # FIXME:
             #tag_last_seen = Date.date_substract_day(str(tag_last_seen))
             #update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
             pass
