@@ -34,8 +34,6 @@ def sanitise_nb_max_nodes(nb_max_nodes):
     return nb_max_nodes
 
 def get_object_correlation_json(correlation_id, subtype, max_nodes):
-    max_nodes = sanitise_nb_max_nodes(max_nodes)
-
     object_type = 'cryptocurrency'
     max_nodes = sanitise_nb_max_nodes(max_nodes)
 
@@ -51,7 +49,8 @@ def get_object_correlation_json(correlation_id, subtype, max_nodes):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Trigger backgroud update')
-    parser.add_argument('-t', '--type', help='Cryptocurrency type (bitcoin, bitcoin-cash, etherum, litecoin, monero, dash, zcash)', type=str, dest='type', required=True, default=None)
+    parser.add_argument('-t', '--type', help='Cryptocurrency type (bitcoin, bitcoin-cash, ethereum, litecoin, monero, dash, zcash)', type=str, dest='type', required=True, default=None)
+    parser.add_argument('-a', '--address', help='Cryptocurrency addresses', type=str, dest='address', required=True, default=None, nargs="*")
     parser.add_argument('-p', '--page',help='page number' , type=int, default=1, dest='page')
     parser.add_argument('-n', '--nb',help='number of addresses by page' , type=int, default=50, dest='nb_elem')
     parser.add_argument('--node' ,help='correlation graph: max number of nodes' , type=int, default=50, dest='max_nodes')
@@ -67,7 +66,11 @@ if __name__ == '__main__':
     max_nodes = sanitise_int(args.max_nodes, 300)
 
     dict_json = {}
-    for address in Cryptocurrency.cryptocurrency.get_all_correlations_by_subtype_pagination(subtype, nb_elem=nb_elem, page=page):
+    if args.address:
+        l_addresse = Cryptocurrency.cryptocurrency.paginate_list(args.address, nb_elem=nb_elem, page=page)
+    else:
+        l_addresse = Cryptocurrency.cryptocurrency.get_all_correlations_by_subtype_pagination(subtype, nb_elem=nb_elem, page=page)
+    for address in l_addresse:
         dict_json[address] = get_object_correlation_json(address, subtype, max_nodes)
 
     print(json.dumps(dict_json))
