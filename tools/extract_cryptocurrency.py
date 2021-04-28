@@ -50,10 +50,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Trigger backgroud update')
     parser.add_argument('-t', '--type', help='Cryptocurrency type (bitcoin, bitcoin-cash, ethereum, litecoin, monero, dash, zcash)', type=str, dest='type', required=True, default=None)
-    parser.add_argument('-a', '--address', help='Cryptocurrency addresses', type=str, dest='address', required=True, default=None, nargs="*")
-    parser.add_argument('-p', '--page',help='page number' , type=int, default=1, dest='page')
-    parser.add_argument('-n', '--nb',help='number of addresses by page' , type=int, default=50, dest='nb_elem')
-    parser.add_argument('--node' ,help='correlation graph: max number of nodes' , type=int, default=50, dest='max_nodes')
+    parser.add_argument('-a', '--address', help='Cryptocurrency addresses', type=str, dest='address', default=None, nargs="*")
+    parser.add_argument('-p', '--page',help='page number, default=1' , type=int, default=1, dest='page')
+    parser.add_argument('-n', '--nb',help='number of addresses by page, default=50' , type=int, default=50, dest='nb_elem')
+    parser.add_argument('--node' ,help='correlation graph: max number of nodes, default=50' , type=int, default=50, dest='max_nodes')
     args = parser.parse_args()
 
     subtype = args.type
