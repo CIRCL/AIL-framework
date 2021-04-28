@@ -21,10 +21,12 @@ class AbstractModule(ABC):
     Abstract Module class
     """
 
-    def __init__(self, module_name=None, queue_name=None):
+    def __init__(self, module_name=None, queue_name=None, logger_channel='Script'):
         """
         Init Module
         module_name: str; set the module name if different from the instance ClassName
+        queue_name: str; set the queue name if different from the instance ClassName
+        logger_channel: str; set the logger channel name, 'Script' by default
         """
         # Module name if provided else instance className
         self.module_name = module_name if module_name else self._module_name()
@@ -34,12 +36,13 @@ class AbstractModule(ABC):
 
         # Init Redis Logger
         self.redis_logger = publisher
+        
         # Port of the redis instance used by pubsublogger
         self.redis_logger.port = 6380
+
         # Channel name to publish logs
-        self.redis_logger.channel = 'Script'
-        # TODO modify generic channel Script to a namespaced channel like:
-        # publish module logs to script:<ModuleName> channel
+        # If provided could be a namespaced channel like script:<ModuleName>
+        self.redis_logger.channel = logger_channel
         # self.redis_logger.channel = 'script:%s'%(self.module_name)
 
         # Run module endlessly
@@ -62,18 +65,17 @@ class AbstractModule(ABC):
             # Get one message (paste) from the QueueIn (copy of Redis_Global publish)
             message = self.process.get_from_set()
 
-            if message is None:
+            if message:
+                try:
+                    # Module processing with the message from the queue
+                    self.compute(message)
+                except Exception as err:
+                    self.redis_logger.critical(f"Error in module {self.module_name}: {err}")
+            else:
                 self.computeNone()
                 # Wait before next process
                 self.redis_logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
                 time.sleep(self.pending_seconds)
-                continue
-
-            try:
-                # Module processing with the message from the queue
-                self.compute(message)
-            except Exception as err:
-                self.redis_logger.critical(f"Error in module {self.module_name}: {err}")
 
 
     def _module_name(self):

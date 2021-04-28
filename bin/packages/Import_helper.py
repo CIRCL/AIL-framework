@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+##################################
+# Import External packages
+##################################
 import os
 import sys
 import uuid
 import redis
 
+##################################
+# Import Project packages
+##################################
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
 config_loader = None
+
 
 def is_valid_uuid_v4(UUID):
     UUID = UUID.replace('-', '')
@@ -22,7 +30,8 @@ def is_valid_uuid_v4(UUID):
     except:
         return False
 
-def create_import_queue(tags, galaxy, paste_content, UUID,  password=None, isfile = False):
+
+def create_import_queue(tags, galaxy, paste_content, UUID, password=None, isfile=False, source=None):
 
     # save temp value on disk
     for tag in tags:
@@ -34,6 +43,9 @@ def create_import_queue(tags, galaxy, paste_content, UUID,  password=None, isfil
 
     if password:
         r_serv_db.set(UUID + ':password', password)
+    
+    if source:
+        r_serv_db.set(UUID + ':source', source)
 
     r_serv_db.set(UUID + ':isfile', isfile)
 
@@ -45,7 +57,9 @@ def create_import_queue(tags, galaxy, paste_content, UUID,  password=None, isfil
 
     # save UUID on disk
     r_serv_db.sadd('submitted:uuid', UUID)
+
     return UUID
+
 
 def check_import_status(UUID):
     if not is_valid_uuid_v4(UUID):

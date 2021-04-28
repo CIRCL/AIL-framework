@@ -4,12 +4,19 @@
 '''
     Flask global variables shared accross modules
 '''
+##################################
+# Import External packages
+##################################
 import os
 import re
 import sys
 
+##################################
+# Import Project packages
+##################################
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+from pubsublogger import publisher
 
 # FLASK #
 app = None
@@ -31,6 +38,15 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
+
+
+# Logger (Redis)
+redis_logger = publisher
+# Port of the redis instance used by pubsublogger
+redis_logger.port = 6380
+# Channel name to publish logs
+redis_logger.channel = 'front'
+
 
 sys.path.append('../../configs/keys')
 # MISP #
@@ -110,7 +126,11 @@ crawler_enabled = config_loader.get_config_boolean("Crawler", "activate_crawler"
 email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
 email_regex = re.compile(email_regex)
 
-IMPORT_MAX_TEXT_SIZE = 900000 # size in bytes
+# SubmitPaste vars
+SUBMIT_PASTE_TEXT_MAX_SIZE = int(config_loader.get_config_str("SubmitPaste", "TEXT_MAX_SIZE"))
+SUBMIT_PASTE_FILE_MAX_SIZE = int(config_loader.get_config_str("SubmitPaste", "FILE_MAX_SIZE"))
+SUBMIT_PASTE_FILE_ALLOWED_EXTENSIONS = [item.strip() for item in config_loader.get_config_str("SubmitPaste", "FILE_ALLOWED_EXTENSIONS").split(',')]
+
 
 # VT
 try:

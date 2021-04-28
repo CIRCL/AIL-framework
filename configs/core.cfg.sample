@@ -280,3 +280,12 @@ domain_proxy = onion.foundation
 # list of comma-separated CIDR that you wish to be alerted for. e.g:
 #networks = 192.168.34.0/24,10.0.0.0/8,192.168.33.0/24
 networks =
+
+[SubmitPaste]
+# 1 Mb Max text paste size for text submission
+TEXT_MAX_SIZE = 1000000
+# 1 Gb Max file size for file submission
+FILE_MAX_SIZE = 1000000000
+# Managed file extenions for file submission, comma separated
+# TODO add 'zip', 'gz' and 'tar.gz'
+FILE_ALLOWED_EXTENSIONS = 'txt','sh','pdf'
