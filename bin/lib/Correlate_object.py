@@ -31,6 +31,12 @@ def is_valid_object_type(object_type):
     else:
         return False
 
+def check_correlation_object(object):
+    if object in get_all_correlation_objects():
+        return True
+    else:
+        return False
+
 def is_valid_object_subtype(object_type, object_subtype):
     if object_type == 'pgp':
         return Pgp.pgp.is_valid_obj_subtype(object_subtype)
@@ -462,7 +468,7 @@ def sanitise_correlation_names(correlation_names):
 
 def sanitise_correlation_objects(correlation_objects):
     '''
-    correlation_objects ex = 'domain,decoded'
+    correlation_objects ex = 'domain,paste'
     '''
     all_correlation_objects = get_all_correlation_objects()
     if correlation_objects is None:
@@ -478,6 +484,11 @@ def sanitise_correlation_objects(correlation_objects):
             return all_correlation_objects
 
 ######## API EXPOSED ########
+def api_check_correlation_objects(l_object):
+    for object in l_object:
+        if not check_correlation_object(object):
+            return ({"error": f"Invalid Object: {object}"}, 400)
+
 def sanitize_object_type(object_type):
     if not is_valid_object_type(object_type):
         return ({'status': 'error', 'reason': 'Incorrect object_type'}, 400)

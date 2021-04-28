@@ -442,7 +442,10 @@ class Correlation(object):
 
         return True
 
-######## API EXPOSED ########
+    ######## API EXPOSED ########
+    def api_check_objs_type(self, l_types):
+        for obj_type in l_types:
+            if not self.is_valid_obj_subtype(obj_type):
+                return ({"error": f"Invalid Type: {obj_type}"}, 400)
 
-
-########  ########
+    ########  ########

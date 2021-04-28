@@ -39,7 +39,8 @@ def get_object_correlation_json(correlation_id, subtype, max_nodes):
 
     # ALL correlations
     correlation_names = Correlate_object.sanitise_correlation_names('')
-    correlation_objects = Correlate_object.sanitise_correlation_objects('')
+    #correlation_objects = Correlate_object.sanitise_correlation_objects('')
+    correlation_objects = ['domain']
 
     res = Correlate_object.get_graph_node_object_correlation(object_type, correlation_id, mode, correlation_names,
                                                     correlation_objects, requested_correl_type=subtype,
@@ -53,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--address', help='Cryptocurrency addresses', type=str, dest='address', default=None, nargs="*")
     parser.add_argument('-p', '--page',help='page number, default=1' , type=int, default=1, dest='page')
     parser.add_argument('-n', '--nb',help='number of addresses by page, default=50' , type=int, default=50, dest='nb_elem')
+    parser.add_argument('-fo', '--filter_objects',help='filter correlation by object : domain, paste/item' , type=str, default=[], dest='objects', nargs="*")
     parser.add_argument('--node' ,help='correlation graph: max number of nodes, default=50' , type=int, default=50, dest='max_nodes')
     args = parser.parse_args()
 
@@ -60,10 +62,20 @@ if __name__ == '__main__':
     if subtype is None:
         parser.print_help()
         sys.exit(0)
+    else:
+        res = Cryptocurrency.cryptocurrency.api_check_objs_type([args.type])
+        if res:
+            print(json.dumps(res[0]))
+            sys.exit(0)
 
     page = sanitise_int(args.page, 1)
     nb_elem = sanitise_int(args.nb_elem, 50)
     max_nodes = sanitise_int(args.max_nodes, 300)
+    if args.objects:
+        res = Correlate_object.api_check_correlation_objects(args.objects)
+        if res:
+            print(json.dumps(res[0]))
+            sys.exit(0)
 
     dict_json = {}
     if args.address:
