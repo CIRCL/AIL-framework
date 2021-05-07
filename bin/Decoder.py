@@ -5,6 +5,10 @@
 
     Dectect Binary and decode it
 """
+
+##################################
+# Import External packages
+##################################
 import time
 import os
 import redis
@@ -13,16 +17,19 @@ from hashlib import sha1
 import magic
 import json
 import datetime
-
 from pubsublogger import publisher
+import re
+import signal
+from lib import Decoded
 
+
+##################################
+# Import Project packages
+##################################
+from module.abstract_module import AbstractModule
 from Helper import Process
 from packages import Item
 
-from lib import Decoded
-
-import re
-import signal
 
 class TimeoutException(Exception):
     pass
@@ -32,128 +39,135 @@ def timeout_handler(signum, frame):
 
 signal.signal(signal.SIGALRM, timeout_handler)
 
-def hex_decoder(hexStr):
-    #hexStr = ''.join( hex_string.split(" ") )
-    return bytes(bytearray([int(hexStr[i:i+2], 16) for i in range(0, len(hexStr), 2)]))
 
-def binary_decoder(binary_string):
-    return bytes(bytearray([int(binary_string[i:i+8], 2) for i in range(0, len(binary_string), 8)]))
+class Decoder(AbstractModule):
+    """
+    Decoder module for AIL framework
+    """
 
-def base64_decoder(base64_string):
-    return base64.b64decode(base64_string)
-
-def decode_string(content, item_id, item_date, encoded_list, decoder_name, encoded_min_size):
-    find = False
-    for encoded in encoded_list:
-        if len(encoded) >=  encoded_min_size:
-            decoded_file = decoder_function[decoder_name](encoded)
-            find = True
-
-            sha1_string = sha1(decoded_file).hexdigest()
-            mimetype = Decoded.get_file_mimetype(decoded_file)
-            if not mimetype:
-                print(item_id)
-                print(sha1_string)
-                raise Exception('Invalid mimetype')
-            Decoded.save_decoded_file_content(sha1_string, decoded_file, item_date, mimetype=mimetype)
-            Decoded.save_item_relationship(sha1_string, item_id)
-            Decoded.create_decoder_matadata(sha1_string, item_id, decoder_name)
-
-            #remove encoded from item content
-            content = content.replace(encoded, '', 1)
-
-            print('{} : {} - {}'.format(item_id, decoder_name, mimetype))
-    if(find):
-        set_out_item(decoder_name, item_id)
-
-    return content
-
-def set_out_item(decoder_name, item_id):
-    publisher.warning(decoder_name+' decoded')
-    #Send to duplicate
-    p.populate_set_out(item_id, 'Duplicate')
-
-    msg = 'infoleak:automatic-detection="'+decoder_name+'";{}'.format(item_id)
-    p.populate_set_out(msg, 'Tags')
+    # TODO to lambda expr
+    def hex_decoder(self, hexStr):
+        #hexStr = ''.join( hex_string.split(" ") )
+        return bytes(bytearray([int(hexStr[i:i+2], 16) for i in range(0, len(hexStr), 2)]))
 
 
-if __name__ == '__main__':
-    # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
-    # Port of the redis instance used by pubsublogger
-    publisher.port = 6380
-    # Script is the default channel used for the modules.
-    publisher.channel = 'Script'
+    # TODO to lambda expr
+    def binary_decoder(self, binary_string):
+        return bytes(bytearray([int(binary_string[i:i+8], 2) for i in range(0, len(binary_string), 8)]))
 
-    # Section name in bin/packages/modules.cfg
-    config_section = 'Decoder'
 
-    # Setup the I/O queues
-    p = Process(config_section)
+    # TODO to lambda expr
+    def base64_decoder(self, base64_string):
+        return base64.b64decode(base64_string)
 
-    serv_metadata = redis.StrictRedis(
-        host=p.config.get("ARDB_Metadata", "host"),
-        port=p.config.getint("ARDB_Metadata", "port"),
-        db=p.config.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
 
-    # Sent to the logging a description of the module
-    publisher.info("Decoder started")
+    def __init__(self):
+        super(Decoder, self).__init__(logger_channel="script:decoder")
 
-    regex_binary = '[0-1]{40,}'
-    #regex_hex = '(0[xX])?[A-Fa-f0-9]{40,}'
-    regex_hex = '[A-Fa-f0-9]{40,}'
-    regex_base64 = '(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)'
+        serv_metadata = redis.StrictRedis(
+            host=self.process.config.get("ARDB_Metadata", "host"),
+            port=self.process.config.getint("ARDB_Metadata", "port"),
+            db=self.process.config.getint("ARDB_Metadata", "db"),
+            decode_responses=True)
 
-    re.compile(regex_binary)
-    re.compile(regex_hex)
-    re.compile(regex_base64)
+        regex_binary = '[0-1]{40,}'
+        #regex_hex = '(0[xX])?[A-Fa-f0-9]{40,}'
+        regex_hex = '[A-Fa-f0-9]{40,}'
+        regex_base64 = '(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)'
 
-    # map decoder function
-    decoder_function = {'binary':binary_decoder,'hexadecimal':hex_decoder, 'base64':base64_decoder}
+        cmp_regex_binary = re.compile(regex_binary)
+        cmp_regex_hex = re.compile(regex_hex)
+        cmp_regex_base64 = re.compile(regex_base64)
 
-    hex_max_execution_time = p.config.getint("Hex", "max_execution_time")
-    binary_max_execution_time = p.config.getint("Binary", "max_execution_time")
-    base64_max_execution_time = p.config.getint("Base64", "max_execution_time")
+        # map decoder function
+        self.decoder_function = {'binary':self.binary_decoder,'hexadecimal':self.hex_decoder, 'base64':self.base64_decoder}
 
-    # list all decoder yith regex,
-    decoder_binary = {'name': 'binary', 'regex': regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time}
-    decoder_hexadecimal = {'name': 'hexadecimal', 'regex': regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time}
-    decoder_base64 = {'name': 'base64', 'regex': regex_base64, 'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}
+        hex_max_execution_time = self.process.config.getint("Hex", "max_execution_time")
+        binary_max_execution_time = self.process.config.getint("Binary", "max_execution_time")
+        base64_max_execution_time = self.process.config.getint("Base64", "max_execution_time")
 
-    decoder_order = [ decoder_base64, decoder_binary, decoder_hexadecimal, decoder_base64]
+        # list all decoder with regex,
+        decoder_binary = {'name': 'binary', 'regex': cmp_regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time}
+        decoder_hexadecimal = {'name': 'hexadecimal', 'regex': cmp_regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time}
+        decoder_base64 = {'name': 'base64', 'regex': cmp_regex_base64, 'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}
 
-    for decoder in decoder_order:
-        serv_metadata.sadd('all_decoder', decoder['name'])
+        self.decoder_order = [ decoder_base64, decoder_binary, decoder_hexadecimal, decoder_base64]
 
-    # Endless loop getting messages from the input queue
-    while True:
-        # Get one message from the input queue
-        message = p.get_from_set()
-        if message is None:
+        for decoder in self.decoder_order:
+            serv_metadata.sadd('all_decoder', decoder['name'])
 
-            publisher.debug("{} queue is empty, waiting".format(config_section))
-            time.sleep(1)
-            continue
+        # Waiting time in secondes between to message proccessed
+        self.pending_seconds = 1
+
+        # Send module state to logs
+        self.redis_logger.info(f'Module {self.module_name} initialized')
+
+
+    def compute(self, message):
 
         obj_id = Item.get_item_id(message)
 
-        # Do something with the message from the queue
+        # Extract info from message
         content = Item.get_item_content(obj_id)
         date = Item.get_item_date(obj_id)
 
-        for decoder in decoder_order: # add threshold and size limit
-
+        for decoder in self.decoder_order: # add threshold and size limit
             # max execution time on regex
             signal.alarm(decoder['max_execution_time'])
+
             try:
-                encoded_list = re.findall(decoder['regex'], content)
+                encoded_list = decoder['regex'].findall(content)
             except TimeoutException:
                 encoded_list = []
-                p.incr_module_timeout_statistic() # add encoder type
-                print ("{0} processing timeout".format(obj_id))
+                self.process.incr_module_timeout_statistic() # add encoder type
+                self.redis_logger.debug(f"{obj_id} processing timeout")
                 continue
             else:
                 signal.alarm(0)
 
                 if(len(encoded_list) > 0):
-                    content = decode_string(content, message, date, encoded_list, decoder['name'], decoder['encoded_min_size'])
+                    content = self.decode_string(content, message, date, encoded_list, decoder['name'], decoder['encoded_min_size'])
+
+
+    def decode_string(self, content, item_id, item_date, encoded_list, decoder_name, encoded_min_size):
+        find = False
+        for encoded in encoded_list:
+            if len(encoded) >=  encoded_min_size:
+                decoded_file = self.decoder_function[decoder_name](encoded)
+                find = True
+
+                sha1_string = sha1(decoded_file).hexdigest()
+                mimetype = Decoded.get_file_mimetype(decoded_file)
+                if not mimetype:
+                    self.redis_logger.debug(item_id)
+                    self.redis_logger.debug(sha1_string)
+                    raise Exception('Invalid mimetype')
+                Decoded.save_decoded_file_content(sha1_string, decoded_file, item_date, mimetype=mimetype)
+                Decoded.save_item_relationship(sha1_string, item_id)
+                Decoded.create_decoder_matadata(sha1_string, item_id, decoder_name)
+
+                #remove encoded from item content
+                content = content.replace(encoded, '', 1)
+
+                self.redis_logger.debug(f'{item_id} : {decoder_name} - {mimetype}')
+        if(find):
+            self.set_out_item(decoder_name, item_id)
+
+        return content
+
+
+    def set_out_item(self, decoder_name, item_id):
+
+        self.redis_logger.warning(f'{decoder_name} decoded')
+        
+        # Send to duplicate
+        self.process.populate_set_out(item_id, 'Duplicate')
+
+        # Send to Tags
+        msg = f'infoleak:automatic-detection="{decoder_name}";{item_id}'
+        self.process.populate_set_out(msg, 'Tags')
+
+if __name__ == '__main__':
+    
+    module = Decoder()
+    module.run()
