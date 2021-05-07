@@ -29,6 +29,7 @@ from lib import Decoded
 from module.abstract_module import AbstractModule
 from Helper import Process
 from packages import Item
+import ConfigLoader
 
 
 class TimeoutException(Exception):
@@ -62,13 +63,9 @@ class Decoder(AbstractModule):
 
 
     def __init__(self):
-        super(Decoder, self).__init__(logger_channel="script:decoder")
+        super(Decoder, self).__init__()
 
-        serv_metadata = redis.StrictRedis(
-            host=self.process.config.get("ARDB_Metadata", "host"),
-            port=self.process.config.getint("ARDB_Metadata", "port"),
-            db=self.process.config.getint("ARDB_Metadata", "db"),
-            decode_responses=True)
+        serv_metadata = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Metadata")
 
         regex_binary = '[0-1]{40,}'
         #regex_hex = '(0[xX])?[A-Fa-f0-9]{40,}'
