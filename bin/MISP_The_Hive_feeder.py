@@ -14,6 +14,8 @@ import uuid
 import redis
 import time
 import json
+import binascii
+import gzip
 
 from pubsublogger import publisher
 from Helper import Process
@@ -56,7 +58,8 @@ import thehive4py.exceptions
 from thehive4py.models import Alert, AlertArtifact
 from thehive4py.models import Case, CaseTask, CustomFieldHelper
 
-
+def is_gzip_file(magic_nuber):
+     return binascii.hexlify(magic_nuber) == b'1f8b'
 
 def create_the_hive_alert(source, item_id, tag):
     # # TODO: check items status (processed by all modules)
@@ -64,9 +67,26 @@ def create_the_hive_alert(source, item_id, tag):
     # # # TODO: description, add AIL link:show items ?
     tags = list( r_serv_metadata.smembers('tag:{}'.format(item_id)) )
 
+    path = item_basic.get_item_filepath(item_id)
+    paste_handle = open(path, 'rb')
+    paste_data = paste_handle.read()
+    tmp_path = None
+
+    if is_gzip_file(paste_data[0:2]): # if gzip, create a new file to supply to TheHive
+      paste_handle.close()            # TheHive expects a file handle, that's why we create a new file
+      tmp_data = gzip.decompress(paste_data)
+      tmp_path = path + '.unzip'
+      with open(tmp_path, 'wb+') as f:
+        f.write(tmp_data)
+      paste_handle = open(tmp_path, 'rb')
+      if path.endswith(".gz"): # remove .gz from submitted path to TheHive beause we've decompressed it
+        path = path[:-3]
+
+    path = os.path.basename(os.path.normpath(path)) + ".txt" # get last part of path, add .txt so it's easier to open when downloaded from TheHive
+
     artifacts = [
         AlertArtifact( dataType='uuid-ail', data=r_serv_db.get('ail:uuid') ),
-        AlertArtifact( dataType='file', data=item_basic.get_item_filepath(item_id), tags=tags )
+        AlertArtifact( dataType='file', data=(paste_handle, path), tags=tags )
     ]
 
     # Prepare the sample Alert
@@ -94,6 +114,10 @@ def create_the_hive_alert(source, item_id, tag):
             return 0
     except:
         print('hive connection error')
+
+    paste_handle.close()
+    if tmp_path is not None: # this file has been send to TheHive, we won't ever need it again
+      os.remove(tmp_path)
 
 def feeder(message, count=0):
 
