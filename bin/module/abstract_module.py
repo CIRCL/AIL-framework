@@ -15,7 +15,6 @@ import time
 from pubsublogger import publisher
 from Helper import Process
 
-
 class AbstractModule(ABC):
     """
     Abstract Module class
@@ -38,6 +37,7 @@ class AbstractModule(ABC):
         self.redis_logger.port = 6380
         # Channel name to publish logs
         self.redis_logger.channel = 'Script'
+        # # TODO: refactor logging
         # TODO modify generic channel Script to a namespaced channel like:
         # publish module logs to script:<ModuleName> channel
         # self.redis_logger.channel = 'script:%s'%(self.module_name)
@@ -51,6 +51,23 @@ class AbstractModule(ABC):
         # Setup the I/O queues
         self.process = Process(self.queue_name)
 
+    def get_message(self):
+        """
+        Get message from the Redis Queue (QueueIn)
+        Input message can change between modules
+        ex: '<item id>'
+        """
+        return self.process.get_from_set()
+
+    def send_message_to_queue(self, queue_name, message):
+        """
+        Send message to queue
+        :param queue_name: queue or module name
+        :param message: message to send in queue
+
+        ex: send_to_queue(item_id, 'Global')
+        """
+        self.process.populate_set_out(message, queue_name)
 
     def run(self):
         """
@@ -59,8 +76,8 @@ class AbstractModule(ABC):
 
         # Endless loop processing messages from the input queue
         while self.proceed:
-            # Get one message (paste) from the QueueIn (copy of Redis_Global publish)
-            message = self.process.get_from_set()
+            # Get one message (ex:item id) from the Redis Queue (QueueIn)
+            message = self.get_message()
 
             if message is None:
                 self.computeNone()

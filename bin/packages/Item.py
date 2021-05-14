@@ -25,6 +25,7 @@ import Decoded
 import Screenshot
 import Username
 
+from ail_objects import AbstractObject
 from item_basic import *
 
 config_loader = ConfigLoader.ConfigLoader()
@@ -549,7 +550,42 @@ def delete_domain_node(item_id):
     for child_id in get_all_domain_node_by_item_id(item_id):
         delete_item(child_id)
 
+
+class Item(AbstractObject):
+    """
+    AIL Item Object. (strings)
+    """
+
+    def __init__(self, id):
+        super(Item, self).__init__('item', id)
+
+    def get_date(self, separator=False):
+        """
+        Returns Item date
+        """
+        return item_basic.get_item_date(self.id, add_separator=separator)
+
+    def get_source(self):
+        """
+        Returns Item source/feeder name
+        """
+        return item_basic.get_source(self.id)
+
+    def get_basename(self):
+        return os.path.basename(self.id)
+
+    def get_content(self):
+        """
+        Returns Item content
+        """
+        return item_basic.get_item_content(self.id)
+
 # if __name__ == '__main__':
+#
+#     item = Item('')
+#     res = item.get_date(separator=True)
+#     print(res)
+
 #     import Domain
 #     domain = Domain.Domain('domain.onion')
 #     for domain_history in domain.get_domain_history():
