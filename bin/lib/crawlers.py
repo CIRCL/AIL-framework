@@ -19,7 +19,8 @@ import uuid
 import subprocess
 
 from datetime import datetime, timedelta
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+from bs4 import BeautifulSoup
 
 from pyfaup.faup import Faup
 
@@ -41,6 +42,7 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes"))
+activate_crawler = config_loader.get_config_str("Crawler", "activate_crawler")
 config_loader = None
 
 faup = Faup()
@@ -75,6 +77,64 @@ def is_valid_onion_domain(domain):
 # TEMP FIX
 def get_faup():
     return faup
+
+# # # # # # # #
+#             #
+#   FAVICON   #
+#             #
+# # # # # # # #
+
+def get_favicon_from_html(html, domain, url):
+    favicon_urls = extract_favicon_from_html(html, url)
+    # add root favicom
+    if not favicon_urls:
+        favicon_urls.add(f'{urlparse(url).scheme}://{domain}/favicon.ico')
+    print(favicon_urls)
+    return favicon_urls
+
+def extract_favicon_from_html(html, url):
+    favicon_urls = set()
+    soup = BeautifulSoup(html, 'html.parser')
+    set_icons = set()
+    # If there are multiple <link rel="icon">s, the browser uses their media,
+    # type, and sizes attributes to select the most appropriate icon.
+    # If several icons are equally appropriate, the last one is used.
+    # If the most appropriate icon is later found to be inappropriate,
+    # for example because it uses an unsupported format,
+    # the browser proceeds to the next-most appropriate, and so on.
+    # # DEBUG: /!\ firefox load all favicon ???
+
+    # iOS Safari 'apple-touch-icon'
+    # Safari pinned tabs 'mask-icon'
+    # Android Chrome 'manifest'
+    # Edge and IE 12:
+    #   - <meta name="msapplication-TileColor" content="#aaaaaa"> <meta name="theme-color" content="#ffffff">
+    #   - <meta name="msapplication-config" content="/icons/browserconfig.xml">
+
+    # desktop browser 'shortcut icon' (older browser), 'icon'
+    for favicon_tag in ['icon', 'shortcut icon']:
+        if soup.head:
+            for icon in soup.head.find_all('link', attrs={'rel': lambda x : x and x.lower() == favicon_tag, 'href': True}):
+                set_icons.add(icon)
+
+    # # TODO: handle base64 favicon
+    for tag in set_icons:
+        icon_url = tag.get('href')
+        if icon_url:
+            if icon_url.startswith('//'):
+                icon_url = icon_url.replace('//', '/')
+            if icon_url.startswith('data:'):
+                # # TODO: handle base64 favicon
+                pass
+            else:
+                icon_url = urljoin(url, icon_url)
+                icon_url = urlparse(icon_url, scheme=urlparse(url).scheme).geturl()
+                favicon_urls.add(icon_url)
+    return favicon_urls
+
+
+# # # - - # # #
+
 
 ################################################################################
 
@@ -412,6 +472,13 @@ def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
 
 #### CRAWLER GLOBAL ####
 
+## TODO: # FIXME: config db, dynamic load
+def is_crawler_activated():
+    return activate_crawler == 'True'
+
+def get_crawler_all_types():
+    return ['onion', 'regular']
+
 def get_all_spash_crawler_status():
     crawler_metadata = []
     all_crawlers = r_cache.smembers('all_splash_crawlers')
@@ -741,6 +808,83 @@ def api_add_crawled_item(dict_crawled):
     create_item_metadata(item_id, domain, 'last_url', port, 'father')
 
 #### CRAWLER QUEUES ####
+
+## queues priority:
+# 1 - priority queue
+# 2 - discovery queue
+# 3 - default queue
+##
+def get_all_queues_names():
+    return ['priority', 'discovery', 'default']
+
+def get_all_queues_keys():
+    return ['{}_crawler_priority_queue', '{}_crawler_discovery_queue', '{}_crawler_queue']
+
+def get_queue_key_by_name(queue_name):
+    if queue_name == 'priority':
+        return '{}_crawler_priority_queue'
+    elif queue_name == 'discovery':
+        return '{}_crawler_discovery_queue'
+    else: # default
+        return '{}_crawler_queue'
+
+def get_stats_elem_to_crawl_by_queue_type(queue_type):
+    dict_stats = {}
+    for queue_name in get_all_queues_names():
+        dict_stats[queue_name] = r_serv_onion.scard(get_queue_key_by_name(queue_name).format(queue_type))
+    return dict_stats
+
+def get_all_queues_stats():
+    print(get_all_crawlers_queues_types())
+    dict_stats = {}
+    for queue_type in get_crawler_all_types():
+        dict_stats[queue_type] = get_stats_elem_to_crawl_by_queue_type(queue_type)
+    for queue_type in get_all_splash():
+        dict_stats[queue_type] = get_stats_elem_to_crawl_by_queue_type(queue_type)
+    return dict_stats
+
+def add_item_to_discovery_queue(queue_type, domain, subdomain, url, item_id):
+    date_month = datetime.now().strftime("%Y%m")
+    date = datetime.now().strftime("%Y%m%d")
+
+    # check blacklist
+    if r_serv_onion.sismember(f'blacklist_{queue_type}', domain):
+        return
+
+    # too many subdomain # # FIXME: move to crawler module ?
+    if len(subdomain.split('.')) > 3:
+        subdomain = f'{subdomain[-3]}.{subdomain[-2]}.{queue_type}'
+
+    if not r_serv_onion.sismember(f'month_{queue_type}_up:{date_month}', subdomain) and not r_serv_onion.sismember(f'{queue_type}_down:{date}' , subdomain):
+        if not r_serv_onion.sismember(f'{queue_type}_domain_crawler_queue', subdomain):
+            r_serv_onion.sadd(f'{queue_type}_domain_crawler_queue', subdomain)
+            msg = f'{url};{item_id}'
+            # First time we see this domain => Add to discovery queue (priority=2)
+            if not r_serv_onion.hexists(f'{queue_type}_metadata:{subdomain}', 'first_seen'):
+                r_serv_onion.sadd(f'{queue_type}_crawler_discovery_queue', msg)
+                print(f'sent to priority queue: {subdomain}')
+            # Add to default queue (priority=3)
+            else:
+                r_serv_onion.sadd(f'{queue_type}_crawler_queue', msg)
+                print(f'sent to queue: {subdomain}')
+
+def remove_task_from_crawler_queue(queue_name, queue_type, key_to_remove):
+    r_serv_onion.srem(queue_name.format(queue_type), key_to_remove)
+
+# # TODO: keep auto crawler ?
+def clear_crawler_queues():
+    for queue_key in get_all_queues_keys():
+        for queue_type in get_crawler_all_types():
+            r_serv_onion.delete(queue_key.format(queue_type))
+
+###################################################################################
+def get_nb_elem_to_crawl_by_type(queue_type): # # TODO: rename me
+    nb = r_serv_onion.scard('{}_crawler_priority_queue'.format(queue_type))
+    nb += r_serv_onion.scard('{}_crawler_discovery_queue'.format(queue_type))
+    nb += r_serv_onion.scard('{}_crawler_queue'.format(queue_type))
+    return nb
+###################################################################################
+
 def get_all_crawlers_queues_types():
     all_queues_types = set()
     all_splash_name = get_all_crawlers_to_launch_splash_name()
@@ -782,9 +926,8 @@ def get_elem_to_crawl_by_queue_type(l_queue_type):
     # 2 - discovery queue
     # 3 - normal queue
     ##
-    all_queue_key = ['{}_crawler_priority_queue', '{}_crawler_discovery_queue', '{}_crawler_queue']
 
-    for queue_key in all_queue_key:
+    for queue_key in get_all_queues_keys():
         for queue_type in l_queue_type:
             message = r_serv_onion.spop(queue_key.format(queue_type))
             if message:
@@ -800,12 +943,6 @@ def get_elem_to_crawl_by_queue_type(l_queue_type):
                 crawler_type = get_crawler_type_by_url(url)
                 return {'url': url, 'paste': item_id, 'type_service': crawler_type, 'queue_type': queue_type, 'original_message': message}
     return None
-
-def get_nb_elem_to_crawl_by_type(queue_type):
-    nb = r_serv_onion.scard('{}_crawler_priority_queue'.format(queue_type))
-    nb += r_serv_onion.scard('{}_crawler_discovery_queue'.format(queue_type))
-    nb += r_serv_onion.scard('{}_crawler_queue'.format(queue_type))
-    return nb
 
 #### ---- ####
 
@@ -1281,8 +1418,9 @@ def test_ail_crawlers():
 #### ---- ####
 
 if __name__ == '__main__':
-    res = get_splash_manager_version()
-    res = test_ail_crawlers()
-    res = is_test_ail_crawlers_successful()
-    print(res)
-    print(get_test_ail_crawlers_message())
+    # res = get_splash_manager_version()
+    # res = test_ail_crawlers()
+    # res = is_test_ail_crawlers_successful()
+    # print(res)
+    # print(get_test_ail_crawlers_message())
+    #print(get_all_queues_stats())
