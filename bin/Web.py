@@ -50,7 +50,7 @@ class Web(AbstractModule):
         """
         Init Web
         """
-        super(Web, self).__init__()
+        super(Web, self).__init__(logger_channel='script:web')
 
         # REDIS Cache
         self.r_serv2 = redis.StrictRedis(
@@ -82,7 +82,8 @@ class Web(AbstractModule):
         self.prec_filename = None
 
         # Send module state to logs
-        self.redis_logger.info("Module %s initialized" % (self.module_name))
+        self.redis_logger.info(f"Module {self.module_name} initialized")
+
 
     def compute(self, message):
         """
@@ -91,82 +92,79 @@ class Web(AbstractModule):
         # Extract item
         filename, score = message.split()
 
+        domains_list = set()
+        hosts_list = set()
+
         if self.prec_filename is None or filename != self.prec_filename:
-            domains_list = set()
+            domains_list.clear()
+            hosts_list.clear()
+
             PST = Paste.Paste(filename)
             client = ip2asn()
 
             detected_urls = PST.get_regex(self.url_regex)
             if len(detected_urls) > 0:
-                to_print = 'Web;{};{};{};'.format(
-                    PST.p_source, PST.p_date, PST.p_name)
-                self.redis_logger.info('{}Detected {} URL;{}'.format(
-                    to_print, len(detected_urls), PST.p_rel_path))
+                to_print = f'Web;{PST.p_source};{PST.p_date};{PST.p_name};'
+                self.redis_logger.info(f'{to_print}Detected {len(detected_urls)} URL;{PST.p_rel_path}')
 
             for url in detected_urls:
-                self.redis_logger.debug("match regex: %s" % (url))
+                
+                if url.endswith(".on"):
+                    # URL is an onion link skip
+                    # TODO send to TOR crawler ?
+                    # self.redis_logger.debug("Skip onion link")
+                    continue
 
-                # self.redis_logger.debug("match regex search: %s"%(url))
+                self.redis_logger.debug(f"match regex: {url}")
 
-                to_send = "{} {} {}".format(url, PST._get_p_date(), filename)
+                to_send = f"{url} {PST._get_p_date()} {filename}"
                 self.process.populate_set_out(to_send, 'Url')
-                self.redis_logger.debug("url_parsed: %s" % (to_send))
+                self.redis_logger.debug(f"url_parsed: {to_send}")
 
                 self.faup.decode(url)
                 domain = self.faup.get_domain()
                 subdomain = self.faup.get_subdomain()
 
-                self.redis_logger.debug('{} Published'.format(url))
+                self.redis_logger.debug(f'{url} Published')
 
-                if subdomain is not None:
-                    # TODO: # FIXME: remove me
+                domains_list.add(domain)
+
+                hostl = f'{subdomain}.{domain}' if subdomain else domain
+
+                if hostl not in hosts_list:
+                    # test host only once a host in a paste
+                    hosts_list.add(hostl)
+
                     try:
-                        subdomain = subdomain.decode()
+                        socket.setdefaulttimeout(1)
+                        ip = socket.gethostbyname(hostl)
+                        # If the resolver is not giving any IPv4 address,
+                        # ASN/CC lookup is skip.
+                        l = client.lookup(ip, qType='IP')
+                    except ipaddress.AddressValueError:
+                        self.redis_logger.debug(
+                            f'ASN/CC lookup failed for IP {ip}')
+                        continue
                     except:
-                        pass
+                        self.redis_logger.debug(
+                            f'Resolver IPv4 address failed for host {hostl}')
+                        continue
 
-                if domain is not None:
-                    # TODO: # FIXME: remove me
-                    try:
-                        domain = domain.decode()
-                    except:
-                        pass
-                    domains_list.add(domain)
+                    cc = getattr(l, 'cc')
+                    asn = ''
+                    if getattr(l, 'asn') is not None:
+                        asn = getattr(l, 'asn')[2:]  # remobe b'
 
-                hostl = self.avoidNone(subdomain) + self.avoidNone(domain)
-
-                try:
-                    socket.setdefaulttimeout(1)
-                    ip = socket.gethostbyname(hostl)
-                    # If the resolver is not giving any IPv4 address,
-                    # ASN/CC lookup is skip.
-                    l = client.lookup(ip, qType='IP')
-                except ipaddress.AddressValueError:
-                    self.redis_logger.debug(
-                        f'ASN/CC lookup failed for IP {ip}')
-                    continue
-                except:
-                    self.redis_logger.debug(
-                        f'Resolver IPv4 address failed for host {hostl}')
-                    continue
-
-                cc = getattr(l, 'cc')
-                asn = ''
-                if getattr(l, 'asn') is not None:
-                    asn = getattr(l, 'asn')[2:]  # remobe b'
-
-                # EU is not an official ISO 3166 code (but used by RIPE
-                # IP allocation)
-                if cc is not None and cc != "EU":
-                    self.redis_logger.debug('{};{};{};{}'.format(hostl, asn, cc,
-                                                                 pycountry.countries.get(alpha_2=cc).name))
-                    if cc == self.cc_critical:
-                        to_print = 'Url;{};{};{};Detected {} {}'.format(
-                            PST.p_source, PST.p_date, PST.p_name,
-                            hostl, cc)
-                        self.redis_logger.info(to_print)
-                else:
-                    self.redis_logger.debug('{};{};{}'.format(hostl, asn, cc))
+                    # EU is not an official ISO 3166 code (but used by RIPE
+                    # IP allocation)
+                    if cc is not None and cc != "EU":
+                        countryname = pycountry.countries.get(alpha_2=cc).name
+                        self.redis_logger.debug(f'{hostl};{asn};{cc};{countryname}')
+                        if cc == self.cc_critical:
+                            to_print = f'Url;{PST.p_source};{PST.p_date};{PST.p_name};Detected {hostl} {cc}'
+                            self.redis_logger.info(to_print)
+                    else:
+                        self.redis_logger.debug(f'{hostl};{asn};{cc}')
 
             A_values = lib_refine.checking_A_record(self.r_serv2,
                                                     domains_list)

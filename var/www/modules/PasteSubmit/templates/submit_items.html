@@ -17,68 +17,76 @@
 	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 </head>
+
 <body>
 
 	{% if UUID %}
-		<div id="modalsubmit" class="modal fade" role="dialog">
-			<div class="modal-dialog modal-lg">
+	<div id="modalsubmit" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-lg">
 
-				<div id="mymodalcontent" class="modal-content">
-					<div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
-						<p class="heading"><h1>Submitting Items ...</h1></p>
+			<div id="mymodalcontent" class="modal-content">
+				<div class="modal-header"
+					style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
+					<p class="heading">
+					<h1>Submitting Items ...</h1>
+					</p>
 
-					</div>
+				</div>
 
-					<div class="modal-body">
+				<div class="modal-body">
 
-						<div class="progress mt-1" id="pr" hidden>
-							<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+					<div class="progress mt-1" id="pr" hidden>
+						<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
 							aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%" id="progress-bar">
-								0%
-							</div>
+							0%
 						</div>
-						<span class="btn btn-info mt-2" id="files_submitted_btn" hidden>
-							Files Submitted <span class="badge badge-light" id="files_submitted">1 / 1</span>
-						</span>
+					</div>
+					<span class="btn btn-info mt-2" id="files_submitted_btn" hidden>
+						Files Submitted <span class="badge badge-light" id="files_submitted">1 / 1</span>
+					</span>
 
-						<button class="btn btn-lg btn-warning"  style="margin: auto;" id="loading_button">
-							<i class="fas fa-sync-alt fa-spin"></i>
-							&nbsp;&nbsp;&nbsp;&nbsp;Loading&nbsp;.&nbsp;.&nbsp;.
-						</button>
+					<button class="btn btn-lg btn-warning" style="margin: auto;" id="loading_button">
+						<i class="fas fa-sync-alt fa-spin"></i>
+						&nbsp;&nbsp;&nbsp;&nbsp;Loading&nbsp;.&nbsp;.&nbsp;.
+					</button>
 
-						<br></br>
+					<br></br>
 
-						<div class="card border-danger" id="panel_error" hidden>
-							<div class="card-header bg-danger text-white">ERROR</div>
-							<div class="card-body">
-								<p id="error_message">error</p>
-							</div>
+					<div class="card border-danger" id="panel_error" hidden>
+						<div class="card-header bg-danger text-white">ERROR</div>
+						<div class="card-body">
+							<p id="error_message">error</p>
 						</div>
-
-						<div class="list-group" id="submit_pastes" hidden>
-							<li class="list-group-item bg-dark text-white">Submitted Items</li>
-						</div>
-
 					</div>
 
-					<div class="modal-footer">
-						<a class="btn btn-light text-secondary" href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags=infoleak:submission=&quot;manual&quot;" target="_blank" id="submit_result" hidden>
-							<i class="fas fa-paper-plane fa-2x"></i>
-							<span class="label-icon">Submitted Items </span>
-						</a>
-						<button class="btn btn-success btn-tags ml-auto" data-dismiss="modal" id="success_submit_button" hidden>
-							<span class="label-icon">Success </span>
-							<i class="fas fa-check"></i>
-						</button>
-						<button class="btn btn-danger btn-tags ml-auto" data-dismiss="modal" id="error_submit_button" hidden>
-							<span class="label-icon">ERROR </span>
-							<i class="fas fa-times"></i>
-						</button>
-
+					<div class="list-group" id="submit_pastes" hidden>
+						<li class="list-group-item bg-dark text-white">Submitted Items</li>
 					</div>
+
+				</div>
+
+				<div class="modal-footer">
+					<a class="btn btn-light text-secondary"
+						href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags=infoleak:submission=&quot;manual&quot;"
+						target="_blank" id="submit_result" hidden>
+						<i class="fas fa-paper-plane fa-2x"></i>
+						<span class="label-icon">Submitted Items </span>
+					</a>
+					<button class="btn btn-success btn-tags ml-auto" data-dismiss="modal" id="success_submit_button"
+						hidden>
+						<span class="label-icon">Success </span>
+						<i class="fas fa-check"></i>
+					</button>
+					<button class="btn btn-danger btn-tags ml-auto" data-dismiss="modal" id="error_submit_button"
+						hidden>
+						<span class="label-icon">ERROR </span>
+						<i class="fas fa-times"></i>
+					</button>
+
 				</div>
 			</div>
 		</div>
+	</div>
 	{% endif %}
 
 
@@ -91,89 +99,129 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-				<form action="{{ url_for('PasteSubmit.submit') }}" id="pasteSubmitForm" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+				{% if message %}
+				<p>{{ message }}</p>
+				{% endif %}
+
+				<form action="{{ url_for('PasteSubmit.submit') }}" id="pasteSubmitForm" method="post"
+					enctype=multipart/form-data onsubmit="submitPaste()">
 
 					<input type="hidden" id="tags_taxonomies" name="tags_taxonomies" value="test">
 					<input type="hidden" id="tags_galaxies" name="tags_galaxies" value="test">
 
-					<div class="row">
-						<div class="col-xl-5">
 
-							<div class="card mt-2">
-								<div class="card-header text-white" style="background-color: #337ab7;">
-									Files submission
+					<div class="card mt-2 mb-4">
+						<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+							<h6 class="m-0 font-weight-bold text-primary">Submit Paste</h6>
+						</div>
+						<div class="card-body">
+
+							<div class="row mb-3">
+								<div class="form-check form-check-inline">
+									<input class="form-check-input" type="radio" id="radioimportfile" name="radioimport"
+										value="file" checked />
+									<label class="form-check-label" for="radioimportfile"> Submit a file </label>
 								</div>
-								<div class="card-body">
-
-									<div class="form-group">
-										<label for="file">Submit a file</label>
-										<input type="file" class="form-control-file" id="file" name="file">
-									</div>
-
-									<div class="form-group">
-										<label for="paste_name">Archive Password</label>
-										<input type="password" class="form-control" id="password" name="password" placeholder="Optional">
-									</div>
+								<div class="form-check form-check-inline">
+									<input class="form-check-input" type="radio" type="radio" id="radioimporttext"
+										name="radioimport" value="text" />
+									<label class="form-check-label" for="radioimporttext"> Submit a text </label>
 								</div>
 							</div>
 
-						</div>
-						<div class="col-xl-7">
-
-							<div class="card mt-2">
-								<div class="card-header text-white" style="background-color: #337ab7;">
-									Tags :
-								</div>
-								<div class="card-body">
-
-									<div class="input-group" >
+							<label for="ltagsgalaxies">Optional Tags:</label>
+							<div class="row mb-3">
+								<div class="col">
+									<div class="input-group">
 										<input id="ltags" type="text" class="form-control" autocomplete="off">
 									</div>
 
 									<div class="dropdown">
-										<button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-taxonomie">
-										   Taxonomie Selected
+										<button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3"
+											data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+											id="dropdown-taxonomie">
+											Taxonomie Selected
 										</button>
-										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie"> <!-- TODO: make dropdown-scrollable -->
+										<div class="dropdown-menu dropdown-menu-right"
+											aria-labelledby="dropdown-taxonomie">
+											<!-- TODO: make dropdown-scrollable -->
 											<h6 class="dropdown-header">Taxonomie Tags</h6>
-										  <button class="dropdown-item" type="button" id="all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
+											<button class="dropdown-item" type="button" id="all-tags-taxonomies">All
+												Tags <i class="fas fa-tags"></i></button>
 											<div class="dropdown-divider"></div>
 											{% for taxo in active_taxonomies %}
-													<button class="dropdown-item" type="button" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
+											<button class="dropdown-item" type="button"
+												id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
 											{% endfor %}
 										</div>
 									</div>
-
+								</div>
+								<div class="col">
 									<div class="input-group">
 										<input id="ltagsgalaxies" type="text" class="form-control" autocomplete="off">
 									</div>
-
 									<div class="dropdown">
-										<button type="button" class="btn btn-info dropdown-toggle mt-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-galaxy">
-										   Galaxy Selected
+										<button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3"
+											data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+											id="dropdown-galaxy">
+											Galaxy Selected
 										</button>
-										<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-galaxy"> <!-- TODO: make dropdown-scrollable -->
+										<div class="dropdown-menu dropdown-menu-right"
+											aria-labelledby="dropdown-galaxy">
+											<!-- TODO: make dropdown-scrollable -->
 											<h6 class="dropdown-header">Galaxy Tags</h6>
-										  <button class="dropdown-item" type="button" id="all-tags-galaxies">All Tags <i class="fas fa-tags"></i></button>
+											<button class="dropdown-item" type="button" id="all-tags-galaxies">All Tags
+												<i class="fas fa-tags"></i></button>
 											<div class="dropdown-divider"></div>
 											{% for galaxy in active_galaxies %}
-													<button class="dropdown-item" type="button" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
+											<button class="dropdown-item" type="button"
+												id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
 											{% endfor %}
 										</div>
 									</div>
-
 								</div>
 							</div>
-
 						</div>
-					</div>
 
-					<div class="form-group mt-3">
-						<textarea class="form-control" id="paste_content" name="paste_content" rows="25"></textarea>
-					</div>
 
-					<div class="form-group">
-						<button class="btn btn-primary " name="submit" type="submit">Submit Item</button>
+						<!-- Card Import File -->
+						<div class="input-group mt-2 mb-2" id="cardimportfile">
+							<div class="card-body">
+								<div class="form-group">
+									<label for="file">Submit a file, format allowed: {{allowed_extensions}}, max size
+										{{file_max_size}} Gb</label>
+									<input type="file" class="form-control-file" id="file" name="file">
+								</div>
+								<!-- TODO reactivate while zipped format are enabled -->
+								<div class="form-group d-none">
+									<label for="paste_name">Archive Password</label>
+									<input type="password" class="form-control" id="password" name="password"
+										placeholder="Optional">
+								</div>
+							</div>
+						</div>
+
+						<!-- Card Import Text -->
+						<div class="input-group mb-4 mb-2" id="cardimporttext">
+							<div class="card-body">
+								<div class="form-group">
+									<label for="paste_source">Submit a text, max size {{text_max_size}} Mb</label>
+									<input id="paste_source" type="text" name="paste_source"
+										class="form-control bg-light border-0 small" placeholder="Source"
+										aria-label="Source" aria-describedby="basic-addon2">
+								</div>
+								<div class="form-group mt-3">
+									<textarea class="form-control" id="paste_content" name="paste_content"
+										rows="20"></textarea>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<button class="btn btn-primary btn-lg btn-block" name="submit" type="submit">Submit
+								Item</button>
+						</div>
+
 					</div>
 
 				</form>
@@ -186,175 +234,187 @@
 
 </body>
 
+<!-- Toggle import div related to radio button selected -->
 <script>
-var ltags
-var ltagsgalaxies
+	$(document).ready(function () {
+		$("#cardimporttext").hide();
 
-$(document).ready(function(){
+		$('input[type="radio"]').click(function () {
+			var inputValue = $(this).attr("value");
+			$("#cardimportfile").hide();
+			$("#cardimporttext").hide();
+			var targetBox = $("#cardimport" + inputValue);
+			$(targetBox).show();
+		});
+	});
+</script>
+
+<script>
+	var ltags
+	var ltagsgalaxies
+
+	$(document).ready(function () {
 		$("#page-items-submit").addClass("active");
 
-    $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
-    function(data) {
+		$.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+			function (data) {
 
-      ltags = $('#ltags').tagSuggest({
-        data: data,
-        maxDropHeight: 200,
-        name: 'ltags'
-      });
-    });
+				ltags = $('#ltags').tagSuggest({
+					data: data,
+					maxDropHeight: 200,
+					name: 'ltags'
+				});
+			});
 
-    $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
-      function(data) {
+		$.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+			function (data) {
 
-        ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
-          data: data,
-          maxDropHeight: 200,
-          name: 'ltagsgalaxies'
-        });
-      });
+				ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
+					data: data,
+					maxDropHeight: 200,
+					name: 'ltagsgalaxies'
+				});
+			});
 
-		$('#modalsubmit').modal({backdrop: 'static'})
-    });
+		$('#modalsubmit').modal({ backdrop: 'static' })
+	});
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
+	function toggle_sidebar() {
+		if ($('#nav_menu').is(':visible')) {
+			$('#nav_menu').hide();
+			$('#side_menu').removeClass('border-right')
+			$('#side_menu').removeClass('col-lg-2')
+			$('#core_content').removeClass('col-lg-10')
+		} else {
+			$('#nav_menu').show();
+			$('#side_menu').addClass('border-right')
+			$('#side_menu').addClass('col-lg-2')
+			$('#core_content').addClass('col-lg-10')
+		}
 	}
-}
 </script>
 
 <script>
-function submitPaste(){
-	document.getElementById("tags_taxonomies").value = ltags.getValue();
-  document.getElementById("tags_galaxies").value = ltagsgalaxies.getValue();
-}
+	function submitPaste() {
+		document.getElementById("tags_taxonomies").value = ltags.getValue();
+		document.getElementById("tags_galaxies").value = ltagsgalaxies.getValue();
+	}
 </script>
 
 <script>
-    jQuery("#all-tags-taxonomies").on("click", function(e){
-      //change input tags list
-      $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
-        function(data) {
-          ltags.setData(data)
-      });
-    });
+	jQuery("#all-tags-taxonomies").on("click", function (e) {
+		//change input tags list
+		$.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+			function (data) {
+				ltags.setData(data)
+			});
+	});
 
 </script>
 <script>
-    jQuery("#all-tags-galaxies").on("click", function(e){
-      $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
-        function(data) {
-          ltagsgalaxies.setData(data)
-      });
-    });
+	jQuery("#all-tags-galaxies").on("click", function (e) {
+		$.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+			function (data) {
+				ltagsgalaxies.setData(data)
+			});
+	});
 
-{% for taxo in active_taxonomies %}
-    jQuery("#{{ taxo }}-id{{ loop.index0 }}").on("click", function(e){
-      $.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
-        function(data) {
-          ltags.setData(data)
-  });
-});
-{% endfor %}
+	{% for taxo in active_taxonomies %}
+	jQuery("#{{ taxo }}-id{{ loop.index0 }}").on("click", function (e) {
+		$.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
+			function (data) {
+				ltags.setData(data)
+			});
+	});
+	{% endfor %}
 </script>
 <script>
-{% for galaxy in active_galaxies %}
-    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").on("click", function(e){
-      $.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
-        function(data) {
-          ltagsgalaxies.setData(data)
-  });
-});
-{% endfor %}
+	{% for galaxy in active_galaxies %}
+	jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").on("click", function (e) {
+		$.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
+			function (data) {
+				ltagsgalaxies.setData(data)
+			});
+	});
+	{% endfor %}
 </script>
 
 <script type="text/javascript">
-		var i = 0;
-		var err = 0;
-		$(".progress-bar").css("width", i + "%").text(i + " %");
-		function makeProgress(){
+	var i = 0;
+	var err = 0;
+	$(".progress-bar").css("width", i + "%").text(i + " %");
+	function makeProgress() {
 
-			$.getJSON("{{ url_for('PasteSubmit.submit_status') }}?UUID={{ UUID }}",
-        function(data) {
+		$.getJSON("{{ url_for('PasteSubmit.submit_status') }}?UUID={{ UUID }}",
+			function (data) {
 
-					var end = data.end;
-					var prog = data.prog;
-					var in_progress = data.in_progress;
-					var processing = data.processing;
-					var isError = data.isError;
-					var error = data.error;
+				var end = data.end;
+				var prog = data.prog;
+				var in_progress = data.in_progress;
+				var processing = data.processing;
+				var isError = data.isError;
+				var error = data.error;
 
-					if(processing){
-						$("#loading_button").hide();
-						$("#pr").prop('hidden', false);
-						$("#files_submitted_btn").prop('hidden', false);
+				if (processing) {
+					$("#loading_button").hide();
+					$("#pr").prop('hidden', false);
+					$("#files_submitted_btn").prop('hidden', false);
+				}
+
+				if (i < 100) {
+					$(".progress-bar").css("width", prog + "%").text(prog + " %");
+				}
+
+				if (!end) {
+
+					document.getElementById('files_submitted').innerHTML = in_progress;
+
+					//error handler
+					if (isError) {
+						document.getElementById('error_message').innerHTML = error;
+						$("#panel_error").prop('hidden', false);
+						$("#error_submit_button").prop('hidden', false);
+						err = err + 1;
 					}
 
-					if(i < 100){
-						$(".progress-bar").css("width", prog + "%").text(prog + " %");
+					// Wait for sometime before running this script again
+					if (err < 100) {
+						setTimeout("makeProgress()", 100);
 					}
+				} else {
+					document.getElementById('files_submitted').innerHTML = in_progress;
+					$("#progress-bar").removeClass('progress-bar-animated');
+					$("#submit_result").prop('hidden', false);
 
-					if(!end){
+					if (isError) {
+						document.getElementById('error_message').innerHTML = error;
+						$("#panel_error").prop('hidden', false);
+						$("#error_submit_button").prop('hidden', false);
 
-						document.getElementById('files_submitted').innerHTML = in_progress;
-
-						//error handler
-						if(isError){
-							document.getElementById('error_message').innerHTML = error;
-							$("#panel_error").prop('hidden', false);
-							$("#error_submit_button").prop('hidden', false);
-							err = err + 1;
-						}
-
-						// Wait for sometime before running this script again
-						if(err < 100){
-							setTimeout("makeProgress()", 100);
-						}
 					} else {
-						document.getElementById('files_submitted').innerHTML = in_progress;
-						$("#progress-bar").removeClass('progress-bar-animated');
-						$("#submit_result").prop('hidden', false);
-
-						if(isError){
-							document.getElementById('error_message').innerHTML = error;
-							$("#panel_error").prop('hidden', false);
-							$("#error_submit_button").prop('hidden', false);
-
-						} else {
-							$("#success_submit_button").prop('hidden', false);
-						}
-
-						if(in_progress == '0 / '){
-							document.getElementById('files_submitted').innerHTML = '0 / 0'
-							$(".progress-bar").css("width", "100%").text("100 %");
-							$("#progress-bar").addClass('bg-danger')
-						} else {
-							var link = data.link;
-							$("#submit_pastes").append(link);
-							$("#submit_pastes").prop('hidden', false);
-						}
-
-
+						$("#success_submit_button").prop('hidden', false);
 					}
+
+					if (in_progress == '0 / ') {
+						document.getElementById('files_submitted').innerHTML = '0 / 0'
+						$(".progress-bar").css("width", "100%").text("100 %");
+						$("#progress-bar").addClass('bg-danger')
+					} else {
+						var link = data.link;
+						$("#submit_pastes").append(link);
+						$("#submit_pastes").prop('hidden', false);
+					}
+
 
 				}
 
-			);
+			}
 
-		}
-		makeProgress();
+		);
+
+	}
+	makeProgress();
 </script>
-
-
-
 
 
 </html>

@@ -8,42 +8,66 @@ The Tags Module
 This module create tags.
 
 """
-import time
 
+##################################
+# Import External packages
+##################################
+import time
 from pubsublogger import publisher
+
+
+##################################
+# Import Project packages
+##################################
+from module.abstract_module import AbstractModule
 from Helper import Process
 from packages import Tag
 
-if __name__ == '__main__':
 
-    # Port of the redis instance used by pubsublogger
-    publisher.port = 6380
-    # Script is the default channel used for the modules.
-    publisher.channel = 'Script'
+class Tags(AbstractModule):
+    """
+    Tags module for AIL framework
+    """
 
-    # Section name in bin/packages/modules.cfg
-    config_section = 'Tags'
+    # Channel name to forward message
+    out_channel_name = 'MISP_The_Hive_feeder'
 
-    # Setup the I/O queues
-    p = Process(config_section)
+    # Split char in incomming message 
+    msg_sep = ';'
 
-    # Sent to the logging a description of the module
-    publisher.info("Tags module started")
+    # Tag object type
+    # TODO could be an enum in Tag class
+    tag_type = 'item'
 
-    # Endless loop getting messages from the input queue
-    while True:
-        # Get one message from the input queue
-        message = p.get_from_set()
 
-        if message is None:
-            publisher.debug("{} queue is empty, waiting 10s".format(config_section))
-            time.sleep(10)
-            continue
+    def __init__(self):
+        super(Tags, self).__init__()
 
+        # Waiting time in secondes between to message proccessed
+        self.pending_seconds = 10
+
+        # Send module state to logs
+        self.redis_logger.info(f'Module {self.module_name} initialized')
+
+
+    def compute(self, message):
+        self.redis_logger.debug(message)
+
+        if len(message.split(Tags.msg_sep)) == 2:
+            #  Extract item ID and tag from message
+            tag, item_id = message.split(Tags.msg_sep)
+
+            # Create a new tag
+            Tag.add_tag(Tags.tag_type, tag, item_id)
+
+            # Forward message to channel
+            self.process.populate_set_out(message, Tags.out_channel_name)
         else:
-            print(message)
-            tag, item_id = message.split(';')
+            # Malformed message
+            raise Exception(f'too many values to unpack (expected 2) given {len(message.split(Tags.msg_sep))} with message {message}')
 
-            Tag.add_tag("item", tag, item_id)
 
-            p.populate_set_out(message, 'MISP_The_Hive_feeder')
+if __name__ == '__main__':
+    
+    module = Tags()
+    module.run()

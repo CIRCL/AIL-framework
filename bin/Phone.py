@@ -54,9 +54,9 @@ class Phone(AbstractModule):
         # If the list is greater than 4, we consider the Paste may contain a list of phone numbers
         if len(results) > 4:
             self.redis_logger.debug(results)
-            self.redis_logger.warning('{} contains PID (phone numbers)'.format(paste.p_name))
+            self.redis_logger.warning(f'{paste.p_name} contains PID (phone numbers)')
 
-            msg = 'infoleak:automatic-detection="phone-number";{}'.format(message)
+            msg = f'infoleak:automatic-detection="phone-number";{message}'
             self.process.populate_set_out(msg, 'Tags')
 
             # Send to duplicate
@@ -75,7 +75,7 @@ class Phone(AbstractModule):
                     pass
             for country_code in stats:
                 if stats[country_code] > 4:
-                    self.redis_logger.warning('{} contains Phone numbers with country code {}'.format(paste.p_name, country_code))
+                    self.redis_logger.warning(f'{paste.p_name} contains Phone numbers with country code {country_code}')
 
 
 if __name__ == '__main__':

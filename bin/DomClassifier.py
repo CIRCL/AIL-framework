@@ -9,12 +9,20 @@ The DomClassifier modules extract and classify Internet domains/hostnames/IP add
 the out output of the Global module.
 
 """
+
+##################################
+# Import External packages
+##################################
 import os
 import sys
 import time
 from pubsublogger import publisher
-
 import DomainClassifier.domainclassifier
+
+##################################
+# Import Project packages
+##################################
+from module.abstract_module import AbstractModule
 from Helper import Process
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
@@ -22,60 +30,63 @@ import d4
 import item_basic
 
 
-def main():
-    publisher.port = 6380
-    publisher.channel = "Script"
+class DomClassifier(AbstractModule):
+    """
+    DomClassifier module for AIL framework
+    """
 
-    config_section = 'DomClassifier'
+    def __init__(self):
+        super(DomClassifier, self).__init__()
 
-    p = Process(config_section)
-    addr_dns = p.config.get("DomClassifier", "dns")
+        # Waiting time in secondes between to message proccessed
+        self.pending_seconds = 1
 
-    publisher.info("""ZMQ DomainClassifier is Running""")
+        addr_dns = self.process.config.get("DomClassifier", "dns")
 
-    c = DomainClassifier.domainclassifier.Extract(rawtext="", nameservers=[addr_dns])
+        self.redis_logger.info("""ZMQ DomainClassifier is Running""")
 
-    cc = p.config.get("DomClassifier", "cc")
-    cc_tld = p.config.get("DomClassifier", "cc_tld")
+        self.c = DomainClassifier.domainclassifier.Extract(rawtext="", nameservers=[addr_dns])
 
-    while True:
+        self.cc = self.process.config.get("DomClassifier", "cc")
+        self.cc_tld = self.process.config.get("DomClassifier", "cc_tld")
+
+        # Send module state to logs
+        self.redis_logger.info("Module %s initialized" % (self.module_name))
+
+
+    def compute(self, message):
         try:
-            item_id = p.get_from_set()
-
-            if item_id is None:
-                publisher.debug("Script DomClassifier is idling 1s")
-                time.sleep(1)
-                continue
-
-            item_content = item_basic.get_item_content(item_id)
-            mimetype = item_basic.get_item_mimetype(item_id)
-            item_basename = item_basic.get_basename(item_id)
-            item_source = item_basic.get_source(item_id)
-            item_date = item_basic.get_item_date(item_id)
+            item_content = item_basic.get_item_content(message)
+            mimetype = item_basic.get_item_mimetype(message)
+            item_basename = item_basic.get_basename(message)
+            item_source = item_basic.get_source(message)
+            item_date = item_basic.get_item_date(message)
 
             if mimetype.split('/')[0] == "text":
-                c.text(rawtext=item_content)
-                c.potentialdomain()
-                c.validdomain(passive_dns=True, extended=False)
-                print(c.vdomain)
+                self.c.text(rawtext=item_content)
+                self.c.potentialdomain()
+                self.c.validdomain(passive_dns=True, extended=False)
+                self.redis_logger.debug(self.c.vdomain)
 
-                if c.vdomain and d4.is_passive_dns_enabled():
-                    for dns_record in c.vdomain:
-                        p.populate_set_out(dns_record)
+                if self.c.vdomain and d4.is_passive_dns_enabled():
+                    for dns_record in self.c.vdomain:
+                        self.process.populate_set_out(dns_record)
 
-                localizeddomains = c.include(expression=cc_tld)
+                localizeddomains = self.c.include(expression=self.cc_tld)
                 if localizeddomains:
-                    print(localizeddomains)
-                    publisher.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {cc_tld};{item_id}")
-                localizeddomains = c.localizedomain(cc=cc)
+                    self.redis_logger.debug(localizeddomains)
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{message}")
+                localizeddomains = self.c.localizedomain(cc=self.cc)
 
                 if localizeddomains:
-                    print(localizeddomains)
-                    publisher.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {cc};{item_id}")
+                    self.redis_logger.debug(localizeddomains)
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{message}")
 
-        except IOError:
-            print("CRC Checksum Failed on :", item_id)
-            publisher.error(f"Duplicate;{item_source};{item_date};{item_basename};CRC Checksum Failed")
+        except IOError as err:
+            self.redis_logger.error(f"Duplicate;{item_source};{item_date};{item_basename};CRC Checksum Failed")
+            raise Exception(f"CRC Checksum Failed on: {message}")
+
 
 if __name__ == "__main__":
-    main()
+    module = DomClassifier()
+    module.run()
