@@ -126,11 +126,9 @@ class Onion(AbstractModule):
         # list of tuples: (url, subdomains, domain)
         urls_to_crawl = []
 
-        print(message)
         id, score = message.split()
         item = Item(id)
         item_content = item.get_content()
-        item_content = 'http://33333333.kingdom7rv6wkfzn.onion?sdsd=ooooo http://2222222.kingdom7rv6wkfzn.onion'
 
         # max execution time on regex
         res = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.url_regex, item.get_id(), item_content)
@@ -145,10 +143,6 @@ class Onion(AbstractModule):
                 domain = url_unpack['domain'].decode().lower()
             except Exception as e:
                 domain = url_unpack['domain'].lower()
-            print('----')
-            print(url)
-            print(subdomain)
-            print(domain)
 
             if crawlers.is_valid_onion_domain(domain):
                 urls_to_crawl.append((url, subdomain, domain))
@@ -164,8 +158,10 @@ class Onion(AbstractModule):
 
         if crawlers.is_crawler_activated():
             for to_crawl in urls_to_crawl:
+                print(f'{to_crawl[2]} added to crawler queue: {to_crawl[0]}')
                 crawlers.add_item_to_discovery_queue('onion', to_crawl[2], to_crawl[1], to_crawl[0], item.get_id())
         else:
+            print(f'{to_print}Detected {len(urls_to_crawl)} .onion(s);{item.get_id()}')
             self.redis_logger.warning(f'{to_print}Detected {len(urls_to_crawl)} .onion(s);{item.get_id()}')
             # keep manual fetcher ????
             ## Manually fetch first page if crawler is disabled
@@ -176,11 +172,3 @@ if __name__ == "__main__":
 
     module = Onion()
     module.run()
-
-
-
-
-
-
-
-##########################

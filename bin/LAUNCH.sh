@@ -78,10 +78,10 @@ function helptext {
       [-k  | --killAll]            Kill DB + Scripts
       [-ks | --killscript]         Scripts
       [-u  | --update]             Update AIL
-      [-c  | --crawler]            LAUNCH Crawlers
-      [-f  | --launchFeeder]       LAUNCH Pystemon feeder
-      [-t  | --thirdpartyUpdate]   Update Web
+      [-ut | --thirdpartyUpdate]   Update Web
+      [-t  | --test]               Launch Tests
       [-rp | --resetPassword]      Reset Password
+      [-f  | --launchFeeder]       LAUNCH Pystemon feeder
       [-m  | --menu]               Display Advanced Menu
       [-h  | --help]               Help
     "
@@ -234,34 +234,34 @@ function launching_scripts {
 
 }
 
-function launching_crawler {
-    if [[ ! $iscrawler ]]; then
-        CONFIG=$AIL_HOME/configs/core.cfg
-        lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_port/{print $3;exit}' "${CONFIG}")
-
-        IFS='-' read -ra PORTS <<< "$lport"
-        if [ ${#PORTS[@]} -eq 1 ]
-        then
-            first_port=${PORTS[0]}
-            last_port=${PORTS[0]}
-        else
-            first_port=${PORTS[0]}
-            last_port=${PORTS[1]}
-        fi
-
-        screen -dmS "Crawler_AIL"
-        sleep 0.1
-
-        for ((i=first_port;i<=last_port;i++)); do
-            screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Crawler.py $i; read x"
-            sleep 0.1
-        done
-
-        echo -e $GREEN"\t* Launching Crawler_AIL scripts"$DEFAULT
-    else
-        echo -e $RED"\t* A screen is already launched"$DEFAULT
-    fi
-}
+# function launching_crawler {
+#     if [[ ! $iscrawler ]]; then
+#         CONFIG=$AIL_HOME/configs/core.cfg
+#         lport=$(awk '/^\[Crawler\]/{f=1} f==1&&/^splash_port/{print $3;exit}' "${CONFIG}")
+#
+#         IFS='-' read -ra PORTS <<< "$lport"
+#         if [ ${#PORTS[@]} -eq 1 ]
+#         then
+#             first_port=${PORTS[0]}
+#             last_port=${PORTS[0]}
+#         else
+#             first_port=${PORTS[0]}
+#             last_port=${PORTS[1]}
+#         fi
+#
+#         screen -dmS "Crawler_AIL"
+#         sleep 0.1
+#
+#         for ((i=first_port;i<=last_port;i++)); do
+#             screen -S "Crawler_AIL" -X screen -t "onion_crawler:$i" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Crawler.py $i; read x"
+#             sleep 0.1
+#         done
+#
+#         echo -e $GREEN"\t* Launching Crawler_AIL scripts"$DEFAULT
+#     else
+#         echo -e $RED"\t* A screen is already launched"$DEFAULT
+#     fi
+# }
 
 function shutting_down_redis {
     redis_dir=${AIL_HOME}/redis/src/
@@ -490,6 +490,12 @@ function update_thirdparty {
     fi
 }
 
+function launch_tests() {
+  tests_dir=${AIL_HOME}/tests
+  bin_dir=${AIL_BIN}
+  python3 `which nosetests` -w $tests_dir --with-coverage --cover-package=$bin_dir -d
+}
+
 function reset_password() {
   echo -e "\t* Reseting UI admin password..."
   if checking_ardb && checking_redis; then
@@ -557,9 +563,6 @@ function menu_display {
               Flask)
                   launch_flask;
                   ;;
-              Crawler)
-                  launching_crawler;
-                  ;;
               Killall)
                   killall;
                   ;;
@@ -614,11 +617,11 @@ while [ "$1" != "" ]; do
                                       ;;
         -u | --update )               update "--manual";
                                       ;;
-        -t | --thirdpartyUpdate )     update_thirdparty;
+        -t | --test )                 launch_tests;
+                                      ;;
+        -ut | --thirdpartyUpdate )    update_thirdparty;
                                       ;;
         -rp | --resetPassword )       reset_password;
-                                      ;;
-        -c | --crawler )              launching_crawler;
                                       ;;
         -f | --launchFeeder )         launch_feeder;
                                       ;;

@@ -843,6 +843,21 @@ def get_all_queues_stats():
         dict_stats[queue_type] = get_stats_elem_to_crawl_by_queue_type(queue_type)
     return dict_stats
 
+def is_domain_in_queue(queue_type, domain):
+    return r_serv_onion.sismember(f'{queue_type}_domain_crawler_queue', domain)
+
+def is_item_in_queue(queue_type, url, item_id, queue_name=None):
+    if queue_name is None:
+        queues = get_all_queues_keys()
+    else:
+        queues = get_queue_key_by_name(queue_name)
+
+    key = f'{url};{item_id}'
+    for queue in queues:
+        if r_serv_onion.sismember(queue.format(queue_type), key):
+            return True
+    return False
+
 def add_item_to_discovery_queue(queue_type, domain, subdomain, url, item_id):
     date_month = datetime.now().strftime("%Y%m")
     date = datetime.now().strftime("%Y%m%d")
@@ -867,6 +882,17 @@ def add_item_to_discovery_queue(queue_type, domain, subdomain, url, item_id):
             else:
                 r_serv_onion.sadd(f'{queue_type}_crawler_queue', msg)
                 print(f'sent to queue: {subdomain}')
+
+def queue_test_clean_up(queue_type, domain, item_id):
+    date_month = datetime.now().strftime("%Y%m")
+    r_serv_onion.srem(f'month_{queue_type}_up:{date_month}', domain)
+
+    # Clean up
+    r_serv_onion.srem(f'{queue_type}_domain_crawler_queue', domain)
+    msg = f'{domain};{item_id}'
+    r_serv_onion.srem(f'{queue_type}_crawler_discovery_queue', msg)
+    r_serv_onion.srem(f'{queue_type}_crawler_queue', msg)
+
 
 def remove_task_from_crawler_queue(queue_name, queue_type, key_to_remove):
     r_serv_onion.srem(queue_name.format(queue_type), key_to_remove)
@@ -1417,7 +1443,7 @@ def test_ail_crawlers():
 
 #### ---- ####
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     # res = get_splash_manager_version()
     # res = test_ail_crawlers()
     # res = is_test_ail_crawlers_successful()
