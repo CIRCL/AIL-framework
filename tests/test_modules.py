@@ -8,10 +8,27 @@ import unittest
 sys.path.append(os.environ['AIL_BIN'])
 
 # Modules Classes
+from ApiKey import ApiKey
 from Onion import Onion
 
-# projects packages
+# project packages
 import lib.crawlers as crawlers
+
+class Test_Module_ApiKey(unittest.TestCase):
+
+    def setUp(self):
+        self.module_obj = ApiKey()
+
+    def test_module(self):
+        item_id = 'tests/2021/01/01/api_keys.gz'
+        google_api_key = 'AIza00000000000000000000000_example-KEY'
+        aws_access_key = 'AKIAIOSFODNN7EXAMPLE'
+        aws_secret_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+
+        matches = self.module_obj.compute(f'{item_id} 3', r_match=True)
+        self.assertCountEqual(matches[0], [google_api_key])
+        self.assertCountEqual(matches[1], [aws_access_key])
+        self.assertCountEqual(matches[2], [aws_secret_key])
 
 class Test_Module_Onion(unittest.TestCase):
 
@@ -41,3 +58,6 @@ class Test_Module_Onion(unittest.TestCase):
         else:
             # # TODO: check warning logs
             pass
+
+if __name__ == '__main__':
+    unittest.main()
