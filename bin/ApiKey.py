@@ -43,7 +43,7 @@ class ApiKey(AbstractModule):
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
 
-    def compute(self, message, r_match=False):
+    def compute(self, message, r_result=False):
         id, score = message.split()
         item = Item(id)
         item_content = item.get_content()
@@ -82,7 +82,7 @@ class ApiKey(AbstractModule):
             # Send to duplicate
             self.send_message_to_queue('Duplicate', item.get_id())
 
-            if r_match:
+            if r_result:
                 return (google_api_key, aws_access_key, aws_secret_key)
 
 if __name__ == "__main__":

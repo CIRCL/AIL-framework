@@ -9,6 +9,7 @@ sys.path.append(os.environ['AIL_BIN'])
 
 # Modules Classes
 from ApiKey import ApiKey
+from Categ import Categ
 from Onion import Onion
 
 # project packages
@@ -25,10 +26,22 @@ class Test_Module_ApiKey(unittest.TestCase):
         aws_access_key = 'AKIAIOSFODNN7EXAMPLE'
         aws_secret_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
 
-        matches = self.module_obj.compute(f'{item_id} 3', r_match=True)
+        matches = self.module_obj.compute(f'{item_id} 3', r_result=True)
         self.assertCountEqual(matches[0], [google_api_key])
         self.assertCountEqual(matches[1], [aws_access_key])
         self.assertCountEqual(matches[2], [aws_secret_key])
+
+class Test_Module_Categ(unittest.TestCase):
+
+    def setUp(self):
+        self.module_obj = Categ()
+
+    def test_module(self):
+        item_id = 'tests/2021/01/01/categ.gz'
+        test_categ = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve']
+
+        result = self.module_obj.compute(item_id, r_result=True)
+        self.assertCountEqual(result, test_categ)
 
 class Test_Module_Onion(unittest.TestCase):
 
