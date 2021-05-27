@@ -7,27 +7,23 @@ The CreditCards Module
 
 This module is consuming the Redis-list created by the Categ module.
 
-It apply credit card regexes on paste content and warn if above a threshold.
+It apply credit card regexes on item content and warn if a valid card number is found.
 
 """
 
 ##################################
 # Import External packages
 ##################################
-import pprint
-import time
-from pubsublogger import publisher
 import re
 import sys
+import time
 
 ##################################
 # Import Project packages
 ##################################
 from module.abstract_module import AbstractModule
-from packages import Paste
+from packages.Item import Item
 from packages import lib_refine
-from Helper import Process
-
 
 class CreditCards(AbstractModule):
     """
@@ -56,39 +52,39 @@ class CreditCards(AbstractModule):
         self.redis_logger.info(f"Module {self.module_name} initialized")
 
 
-    def compute(self, message):
-        filename, score = message.split()
-        paste = Paste.Paste(filename)
-        content = paste.get_p_content()
+    def compute(self, message, r_result=False):
+        id, score = message.split()
+        item = Item(id)
+        content = item.get_content()
         all_cards = re.findall(self.regex, content)
 
         if len(all_cards) > 0:
-            self.redis_logger.debug(f'All matching {all_cards}')
+            #self.redis_logger.debug(f'All matching {all_cards}')
             creditcard_set = set([])
 
             for card in all_cards:
                 clean_card = re.sub('[^0-9]', '', card)
-                # TODO purpose of this assignation ?
-                clean_card = clean_card
                 if lib_refine.is_luhn_valid(clean_card):
                     self.redis_logger.debug(f'{clean_card} is valid')
                     creditcard_set.add(clean_card)
 
-            pprint.pprint(creditcard_set)
-            to_print = f'CreditCard;{paste.p_source};{paste.p_date};{paste.p_name};'
-
+            #pprint.pprint(creditcard_set)
+            to_print = f'CreditCard;{item.get_source()};{item.get_date()};{item.get_basename()};'
             if (len(creditcard_set) > 0):
-                self.redis_logger.warning(f'{to_print}Checked {len(creditcard_set)} valid number(s);{paste.p_rel_path}')
+                self.redis_logger.warning(f'{to_print}Checked {len(creditcard_set)} valid number(s);{item.get_id()}')
 
                 #Send to duplicate
-                self.process.populate_set_out(filename, 'Duplicate')
+                self.send_message_to_queue(item.get_id(), 'Duplicate')
 
-                msg = f'infoleak:automatic-detection="credit-card";{filename}'
-                self.process.populate_set_out(msg, 'Tags')
+                msg = f'infoleak:automatic-detection="credit-card";{item.get_id()}'
+                self.send_message_to_queue(msg, 'Tags')
+
+                if r_result:
+                    return creditcard_set
             else:
-                self.redis_logger.info(f'{to_print}CreditCard related;{paste.p_rel_path}')
+                self.redis_logger.info(f'{to_print}CreditCard related;{item.get_id()}')
 
 if __name__ == '__main__':
-    
+
     module = CreditCards()
     module.run()

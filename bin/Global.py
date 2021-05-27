@@ -5,10 +5,9 @@ The ZMQ_Feed_Q Module
 =====================
 
 This module is consuming the Redis-list created by the ZMQ_Feed_Q Module,
-And save the paste on disk to allow others modules to work on them.
+And save the item on disk to allow others modules to work on them.
 
-..todo:: Be able to choose to delete or not the saved paste after processing.
-..todo:: Store the empty paste (unprocessed) somewhere in Redis.
+..todo:: Be able to choose to delete or not the saved item after processing.
 
 ..note:: Module ZMQ_Something_Q and ZMQ_Something are closely bound, always put
 the same Subscriber name in both of them.
@@ -17,7 +16,7 @@ Requirements
 ------------
 
 *Need running Redis instances.
-*Need the ZMQ_Feed_Q Module running to be able to work properly.
+*Need the Mixer or the Importer Module running to be able to work properly.
 
 """
 
@@ -31,36 +30,34 @@ import gzip
 import os
 import sys
 import time
-import uuid
 import datetime
 import redis
-from pubsublogger import publisher
 
+from hashlib import md5
+from uuid import uuid4
 
 ##################################
 # Import Project packages
 ##################################
 from module.abstract_module import AbstractModule
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-from Helper import Process
+from lib.ConfigLoader import ConfigLoader
 
 
 class Global(AbstractModule):
     """
     Global module for AIL framework
     """
-    
+
     def __init__(self):
         super(Global, self).__init__()
 
-        self.r_stats = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Statistics")
-        
-        self.processed_paste = 0
-        #  TODO rename time_1 explicitely
-        self.time_1 = time.time()
+        self.r_stats = ConfigLoader().get_redis_conn("ARDB_Statistics")
 
-        # Get and sanityze PASTE DIRECTORY
+        self.processed_item = 0
+        self.time_last_stats = time.time()
+
+        # Get and sanityze ITEM DIRECTORY
+        # # TODO: rename PASTE => ITEM
         self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], self.process.config.get("Directories", "pastes"))
         self.PASTES_FOLDERS = self.PASTES_FOLDER + '/'
         self.PASTES_FOLDERS = os.path.join(os.path.realpath(self.PASTES_FOLDERS), '')
@@ -73,50 +70,49 @@ class Global(AbstractModule):
 
 
     def computeNone(self):
-        difftime = time.time() - self.time_1
+        difftime = time.time() - self.time_last_stats
         if int(difftime) > 30:
-            to_print = f'Global; ; ; ;glob Processed {self.processed_paste} paste(s) in {difftime} s'
+            to_print = f'Global; ; ; ;glob Processed {self.processed_item} item(s) in {difftime} s'
+            print(to_print)
             self.redis_logger.debug(to_print)
 
-            self.time_1 = time.time()
-            self.processed_paste = 0
+            self.time_last_stats = time.time()
+            self.processed_item = 0
 
 
-    def compute(self, message):
+    def compute(self, message, r_result=False):
         # Recovering the streamed message informations
         splitted = message.split()
 
         if len(splitted) == 2:
-            paste, gzip64encoded = splitted
+            item, gzip64encoded = splitted
 
             # Remove PASTES_FOLDER from item path (crawled item + submited)
-            if self.PASTES_FOLDERS in paste:
-                paste = paste.replace(self.PASTES_FOLDERS, '', 1)
+            if self.PASTES_FOLDERS in item:
+                item = item.replace(self.PASTES_FOLDERS, '', 1)
 
-            file_name_paste = paste.split('/')[-1]
-            if len(file_name_paste) > 255:
-                new_file_name_paste = '{}{}.gz'.format(file_name_paste[:215], str(uuid.uuid4()))
-                paste = self.rreplace(paste, file_name_paste, new_file_name_paste, 1)
+            file_name_item = item.split('/')[-1]
+            if len(file_name_item) > 255:
+                new_file_name_item = '{}{}.gz'.format(file_name_item[:215], str(uuid4()))
+                item = self.rreplace(item, file_name_item, new_file_name_item, 1)
 
             # Creating the full filepath
-            filename = os.path.join(self.PASTES_FOLDER, paste)
+            filename = os.path.join(self.PASTES_FOLDER, item)
             filename = os.path.realpath(filename)
 
             # Incorrect filename
             if not os.path.commonprefix([filename, self.PASTES_FOLDER]) == self.PASTES_FOLDER:
                 self.redis_logger.warning(f'Global; Path traversal detected {filename}')
-            
+
             else:
                 # Decode compressed base64
                 decoded = base64.standard_b64decode(gzip64encoded)
                 new_file_content = self.gunzip_bytes_obj(decoded)
 
                 if new_file_content:
-
                     filename = self.check_filename(filename, new_file_content)
 
                     if filename:
-
                         # create subdir
                         dirname = os.path.dirname(filename)
                         if not os.path.exists(dirname):
@@ -125,17 +121,18 @@ class Global(AbstractModule):
                         with open(filename, 'wb') as f:
                             f.write(decoded)
 
-                        paste = filename
+                        item_id = filename
                         # remove self.PASTES_FOLDER from
-                        if self.PASTES_FOLDERS in paste:
-                            paste = paste.replace(self.PASTES_FOLDERS, '', 1)
+                        if self.PASTES_FOLDERS in item_id:
+                            item_id = item_id.replace(self.PASTES_FOLDERS, '', 1)
 
-                        self.process.populate_set_out(paste)
-                        self.processed_paste+=1
+                        self.send_message_to_queue(item_id)
+                        self.processed_item+=1
+                        if r_result:
+                            return item_id
 
         else:
-            # TODO Store the name of the empty paste inside a Redis-list
-            self.redis_logger.debug(f"Empty Paste: {message} not processed")
+            self.redis_logger.debug(f"Empty Item: {message} not processed")
 
 
     def check_filename(self, filename, new_file_content):
@@ -153,8 +150,8 @@ class Global(AbstractModule):
 
             if curr_file_content:
                 # Compare file content with message content with MD5 checksums
-                curr_file_md5 = hashlib.md5(curr_file_content).hexdigest()
-                new_file_md5 = hashlib.md5(new_file_content).hexdigest()
+                curr_file_md5 = md5(curr_file_content).hexdigest()
+                new_file_md5 = md5(new_file_content).hexdigest()
 
                 if new_file_md5 != curr_file_md5:
                     # MD5 are not equals, verify filename
@@ -162,7 +159,6 @@ class Global(AbstractModule):
                         filename = f'{filename[:-3]}_{new_file_md5}.gz'
                     else:
                         filename = f'{filename}_{new_file_md5}'
-
                     self.redis_logger.debug(f'new file to check: {filename}')
 
                     if os.path.isfile(filename):
@@ -174,12 +170,12 @@ class Global(AbstractModule):
                     # Ignore duplicate checksum equals
                     self.redis_logger.debug(f'ignore duplicated file {filename}')
                     filename = None
-            
+
             else:
                 # File not unzipped
                 filename = None
-                
-        
+
+
         return filename
 
 
@@ -207,15 +203,13 @@ class Global(AbstractModule):
 
     def gunzip_bytes_obj(self, bytes_obj):
         gunzipped_bytes_obj = None
-
         try:
             in_ = io.BytesIO()
             in_.write(bytes_obj)
             in_.seek(0)
-            
+
             with gzip.GzipFile(fileobj=in_, mode='rb') as fo:
                 gunzipped_bytes_obj = fo.read()
-
         except Exception as e:
             self.redis_logger.warning(f'Global; Invalid Gzip file: {filename}, {e}')
 
@@ -224,11 +218,10 @@ class Global(AbstractModule):
 
     def rreplace(self, s, old, new, occurrence):
         li = s.rsplit(old, occurrence)
-
         return new.join(li)
 
 
 if __name__ == '__main__':
-    
+
     module = Global()
     module.run()

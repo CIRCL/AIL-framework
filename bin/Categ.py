@@ -93,7 +93,7 @@ class Categ(AbstractModule):
 
                 # Export message to categ queue
                 print(msg, categ)
-                self.send_message_to_queue(categ, msg)
+                self.send_message_to_queue(msg, categ)
 
                 self.redis_logger.info(
                     f'Categ;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {lenfound} as {categ};{item.get_id()}')

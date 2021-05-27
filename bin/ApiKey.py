@@ -62,7 +62,7 @@ class ApiKey(AbstractModule):
                 self.redis_logger.warning(f'{to_print}Checked {len(google_api_key)} found Google API Key;{item.get_id()}')
 
                 msg = f'infoleak:automatic-detection="google-api-key";{item.get_id()}'
-                self.send_message_to_queue('Tags', msg)
+                self.send_message_to_queue(msg, 'Tags')
 
             # # TODO: # FIXME: AWS regex/validate/sanityze KEY + SECRET KEY
             if aws_access_key:
@@ -73,14 +73,14 @@ class ApiKey(AbstractModule):
                     self.redis_logger.warning(f'{to_print}Checked {len(aws_secret_key)} found AWS secret Key;{item.get_id()}')
 
                 msg = 'infoleak:automatic-detection="aws-key";{}'.format(item.get_id())
-                self.send_message_to_queue('Tags', msg)
+                self.send_message_to_queue(msg, 'Tags')
 
             # Tags
             msg = f'infoleak:automatic-detection="api-key";{item.get_id()}'
-            self.send_message_to_queue('Tags', msg)
+            self.send_message_to_queue(msg, 'Tags')
 
             # Send to duplicate
-            self.send_message_to_queue('Duplicate', item.get_id())
+            self.send_message_to_queue(item.get_id(), 'Duplicate')
 
             if r_result:
                 return (google_api_key, aws_access_key, aws_secret_key)

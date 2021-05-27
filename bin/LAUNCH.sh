@@ -154,6 +154,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "DbCleaner" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./DbCleaner.py; read x"
+    sleep 0.1
 
 
     screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModulesInformationV2.py -k 0 -c 1; read x"
@@ -223,8 +225,6 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "Languages" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Languages.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./SentimentAnalysis.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "DbCleaner" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./DbCleaner.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
     sleep 0.1

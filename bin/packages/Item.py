@@ -30,6 +30,7 @@ from item_basic import *
 
 config_loader = ConfigLoader.ConfigLoader()
 # get and sanityze PASTE DIRECTORY
+# # TODO: rename PASTES_FOLDER
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 PASTES_FOLDER = os.path.join(os.path.realpath(PASTES_FOLDER), '')
 
@@ -574,11 +575,31 @@ class Item(AbstractObject):
     def get_basename(self):
         return os.path.basename(self.id)
 
+    def get_filename(self):
+        # Creating the full filepath
+        filename = os.path.join(PASTES_FOLDER, self.id)
+        filename = os.path.realpath(filename)
+
+        # incorrect filename
+        if not os.path.commonprefix([filename, PASTES_FOLDER]) == PASTES_FOLDER:
+            return None
+        else:
+            return filename
+
     def get_content(self):
         """
         Returns Item content
         """
         return item_basic.get_item_content(self.id)
+
+    # # TODO:
+    def create(self):
+        pass
+
+    # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
+    # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
+    def delete(self):
+        os.remove(self.get_filename())
 
 # if __name__ == '__main__':
 #

@@ -147,7 +147,7 @@ class Onion(AbstractModule):
 
         # TAG Item
         msg = f'infoleak:automatic-detection="onion";{item.get_id()}'
-        self.send_message_to_queue('Tags', msg)
+        self.send_message_to_queue(msg, 'Tags')
 
         if crawlers.is_crawler_activated():
             for to_crawl in urls_to_crawl:

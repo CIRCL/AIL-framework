@@ -16,14 +16,13 @@ the out output of the Global module.
 import os
 import sys
 import time
-from pubsublogger import publisher
 import DomainClassifier.domainclassifier
 
 ##################################
 # Import Project packages
 ##################################
 from module.abstract_module import AbstractModule
-from Helper import Process
+from packages.Item import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import d4
@@ -43,48 +42,51 @@ class DomClassifier(AbstractModule):
 
         addr_dns = self.process.config.get("DomClassifier", "dns")
 
-        self.redis_logger.info("""ZMQ DomainClassifier is Running""")
-
         self.c = DomainClassifier.domainclassifier.Extract(rawtext="", nameservers=[addr_dns])
 
         self.cc = self.process.config.get("DomClassifier", "cc")
         self.cc_tld = self.process.config.get("DomClassifier", "cc_tld")
 
         # Send module state to logs
-        self.redis_logger.info("Module %s initialized" % (self.module_name))
+        self.redis_logger.info(f"Module: {self.module_name} Launched")
 
 
-    def compute(self, message):
+    def compute(self, message, r_result=False):
+        item = Item(message)
+
+        item_content = item.get_content()
+        item_basename = item.get_basename()
+        item_date = item.get_date()
+        item_source = item.get_source()
         try:
-            item_content = item_basic.get_item_content(message)
-            mimetype = item_basic.get_item_mimetype(message)
-            item_basename = item_basic.get_basename(message)
-            item_source = item_basic.get_source(message)
-            item_date = item_basic.get_item_date(message)
+            mimetype = item_basic.get_item_mimetype(item.get_id())
 
             if mimetype.split('/')[0] == "text":
                 self.c.text(rawtext=item_content)
                 self.c.potentialdomain()
                 self.c.validdomain(passive_dns=True, extended=False)
-                self.redis_logger.debug(self.c.vdomain)
+                #self.redis_logger.debug(self.c.vdomain)
 
                 if self.c.vdomain and d4.is_passive_dns_enabled():
                     for dns_record in self.c.vdomain:
-                        self.process.populate_set_out(dns_record)
+                        self.send_message_to_queue(dns_record)
 
                 localizeddomains = self.c.include(expression=self.cc_tld)
                 if localizeddomains:
-                    self.redis_logger.debug(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{message}")
-                localizeddomains = self.c.localizedomain(cc=self.cc)
+                    print(localizeddomains)
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{item.get_id()}")
 
+                localizeddomains = self.c.localizedomain(cc=self.cc)
                 if localizeddomains:
-                    self.redis_logger.debug(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{message}")
+                    print(localizeddomains)
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{item.get_id()}")
+
+                if r_result:
+                    return self.c.vdomain
 
         except IOError as err:
             self.redis_logger.error(f"Duplicate;{item_source};{item_date};{item_basename};CRC Checksum Failed")
-            raise Exception(f"CRC Checksum Failed on: {message}")
+            raise Exception(f"CRC Checksum Failed on: {item.get_id()}")
 
 
 if __name__ == "__main__":

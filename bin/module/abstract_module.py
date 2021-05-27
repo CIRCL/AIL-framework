@@ -35,7 +35,7 @@ class AbstractModule(ABC):
 
         # Init Redis Logger
         self.redis_logger = publisher
-        
+
         # Port of the redis instance used by pubsublogger
         self.redis_logger.port = 6380
 
@@ -62,11 +62,11 @@ class AbstractModule(ABC):
         """
         return self.process.get_from_set()
 
-    def send_message_to_queue(self, queue_name, message):
+    def send_message_to_queue(self, message, queue_name=None):
         """
         Send message to queue
-        :param queue_name: queue or module name
         :param message: message to send in queue
+        :param queue_name: queue or module name
 
         ex: send_to_queue(item_id, 'Global')
         """

@@ -11,7 +11,6 @@ It apply IBAN regexes on item content and warn if above a threshold.
 
 import redis
 import time
-import redis
 import datetime
 import re
 import string
