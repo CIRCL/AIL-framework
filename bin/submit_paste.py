@@ -79,6 +79,9 @@ class SubmitPaste(AbstractModule):
         password = self.r_serv_db.get(f'{uuid}:password')
         source = self.r_serv_db.get(f'{uuid}:source')
 
+        if source in ['crawled', 'tests']:
+            source = 'submitted'
+
         self.redis_logger.debug(f'isfile UUID {isfile}')
         self.redis_logger.debug(f'source UUID {source}')
         self.redis_logger.debug(f'paste_content UUID {paste_content}')
@@ -100,7 +103,7 @@ class SubmitPaste(AbstractModule):
             # textarea input paste
             self._manage_text(uuid, paste_content, ltags, ltagsgalaxies, source)
 
-        # new paste created from file, remove uuid ref 
+        # new paste created from file, remove uuid ref
         self.remove_submit_uuid(uuid)
 
 
@@ -108,12 +111,12 @@ class SubmitPaste(AbstractModule):
         """
         Run Module endless process
         """
-        
+
         # Endless loop processing messages from the input queue
         while self.proceed:
             # Get one message (paste) from the QueueIn (copy of Redis_Global publish)
             nb_submit = self.r_serv_db.scard('submitted:uuid')
-            
+
             if nb_submit > 0:
                 try:
                     uuid = self.r_serv_db.srandmember('submitted:uuid')
@@ -122,7 +125,7 @@ class SubmitPaste(AbstractModule):
                     self.compute(uuid)
                 except Exception as err:
                     self.redis_logger.error(f'Error in module {self.module_name}: {err}')
-                    # Remove uuid ref 
+                    # Remove uuid ref
                     self.remove_submit_uuid(uuid)
             else:
                 # Wait before next process
@@ -150,7 +153,7 @@ class SubmitPaste(AbstractModule):
 
         if os.path.exists(file_full_path):
             self.redis_logger.debug(f'file exists {file_full_path}')
-            
+
             file_size = os.stat(file_full_path).st_size
             self.redis_logger.debug(f'file size {file_size}')
             # Verify file length
@@ -168,7 +171,6 @@ class SubmitPaste(AbstractModule):
                             content = f.read()
                             self.r_serv_log_submit.set(uuid + ':nb_total', 1)
                             self.create_paste(uuid, content.encode(), ltags, ltagsgalaxies, uuid, source)
-                            self.remove_submit_uuid(uuid)
                     except:
                         self.abord_file_submission(uuid, "file error")
 
@@ -261,15 +263,17 @@ class SubmitPaste(AbstractModule):
         # delete uuid
         self.r_serv_db.srem('submitted:uuid', uuid)
         self.redis_logger.debug(f'{uuid} all file submitted')
+        print(f'{uuid} all file submitted')
 
 
     def create_paste(self, uuid, paste_content, ltags, ltagsgalaxies, name, source=None):
-        
+        # # TODO: Use Item create
+
         result = False
 
         now = datetime.datetime.now()
         source = source if source else 'submitted'
-        save_path = source + '/' + now.strftime("%Y") + '/' + now.strftime("%m") + '/' + now.strftime("%d") + '/' + name + '.gz'
+        save_path = source + '/' + now.strftime("%Y") + '/' + now.strftime("%m") + '/' + now.strftime("%d") + '/submitted_' + name + '.gz'
 
         full_path = filename = os.path.join(os.environ['AIL_HOME'],
                                 self.process.config.get("Directories", "pastes"), save_path)
@@ -309,6 +313,7 @@ class SubmitPaste(AbstractModule):
                     self.r_serv_log_submit.set(f'{uuid}:end', 1)
 
                 self.redis_logger.debug(f'    {rel_item_path} send to Global')
+                print(f'    {rel_item_path} send to Global')
                 self.r_serv_log_submit.sadd(f'{uuid}:paste_submit_link', rel_item_path)
 
                 curr_date = datetime.date.today()
@@ -328,13 +333,13 @@ class SubmitPaste(AbstractModule):
             gzip64encoded = base64.standard_b64encode(gzipencoded).decode()
         except:
             self.abord_file_submission(uuid, "file error")
-        
+
         return gzip64encoded
 
 
     def addError(self, uuid, errorMessage):
         self.redis_logger.debug(errorMessage)
-
+        print(errorMessage)
         error = self.r_serv_log_submit.get(f'{uuid}:error')
         if error != None:
             self.r_serv_log_submit.set(f'{uuid}:error', error + '<br></br>' + errorMessage)
@@ -351,7 +356,7 @@ class SubmitPaste(AbstractModule):
         self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'submit_abord', 1)
         self.remove_submit_uuid(uuid)
 
-
+    # # TODO: use Item function
     def get_item_date(self, item_filename):
         l_directory = item_filename.split('/')
         return f'{l_directory[-4]}{l_directory[-3]}{l_directory[-2]}'
@@ -371,6 +376,6 @@ class SubmitPaste(AbstractModule):
 
 
 if __name__ == '__main__':
-    
+
     module = SubmitPaste()
     module.run()

@@ -11,7 +11,6 @@ import os
 import sys
 import json
 import string
-import subprocess
 import datetime
 import redis
 import unicodedata
@@ -19,8 +18,10 @@ import uuid
 from io import BytesIO
 from Date import Date
 
-from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, abort
 from functools import wraps
+
+# Flask
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, abort
 from Role_Manager import login_admin, login_analyst
 from flask_login import login_required
 
@@ -257,7 +258,7 @@ def PasteSubmit_page():
 
     return render_template("submit_items.html",
                             active_taxonomies = active_taxonomies,
-                            active_galaxies = active_galaxies, 
+                            active_galaxies = active_galaxies,
                             text_max_size = text_max_size,
                             file_max_size = file_max_size,
                             allowed_extensions = allowed_extensions)
@@ -276,6 +277,13 @@ def submit():
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
     paste_source = request.form['paste_source']
+
+    # limit source length
+    paste_source = paste_source.replace('/', '')[:80]
+    if paste_source in ['crawled', 'tests']:
+        content = f'Invalid source'
+        logger.info(paste_source)
+        return content, 400
 
     is_file = False
     if 'file' in request.files:
@@ -343,7 +351,7 @@ def submit():
             #Flask verify the file size
             file_import.save(full_path)
             logger.debug('file saved')
-            
+
             Import_helper.create_import_queue(ltags, ltagsgalaxies, full_path, UUID, password, True)
 
             return render_template("submit_items.html",

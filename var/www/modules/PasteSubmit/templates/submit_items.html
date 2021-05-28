@@ -100,7 +100,7 @@
 			<div class="col-12 col-lg-10" id="core_content">
 
 				{% if message %}
-				<p>{{ message }}</p>
+					<p>{{ message }}</p>
 				{% endif %}
 
 				<form action="{{ url_for('PasteSubmit.submit') }}" id="pasteSubmitForm" method="post"
@@ -112,7 +112,7 @@
 
 					<div class="card mt-2 mb-4">
 						<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-							<h6 class="m-0 font-weight-bold text-primary">Submit Paste</h6>
+							<h6 class="m-0 font-weight-bold text-primary">Submit Item</h6>
 						</div>
 						<div class="card-body">
 
@@ -150,8 +150,8 @@
 												Tags <i class="fas fa-tags"></i></button>
 											<div class="dropdown-divider"></div>
 											{% for taxo in active_taxonomies %}
-											<button class="dropdown-item" type="button"
-												id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
+												<button class="dropdown-item" type="button"
+													id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
 											{% endfor %}
 										</div>
 									</div>
@@ -174,8 +174,8 @@
 												<i class="fas fa-tags"></i></button>
 											<div class="dropdown-divider"></div>
 											{% for galaxy in active_galaxies %}
-											<button class="dropdown-item" type="button"
-												id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
+												<button class="dropdown-item" type="button"
+													id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
 											{% endfor %}
 										</div>
 									</div>
@@ -320,22 +320,22 @@
 	});
 
 	{% for taxo in active_taxonomies %}
-	jQuery("#{{ taxo }}-id{{ loop.index0 }}").on("click", function (e) {
-		$.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
-			function (data) {
-				ltags.setData(data)
-			});
-	});
+		jQuery("#{{ taxo }}-id{{ loop.index0 }}").on("click", function (e) {
+			$.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
+				function (data) {
+					ltags.setData(data)
+				});
+		});
 	{% endfor %}
 </script>
 <script>
 	{% for galaxy in active_galaxies %}
-	jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").on("click", function (e) {
-		$.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
-			function (data) {
-				ltagsgalaxies.setData(data)
-			});
-	});
+		jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").on("click", function (e) {
+			$.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
+				function (data) {
+					ltagsgalaxies.setData(data)
+				});
+		});
 	{% endfor %}
 </script>
 

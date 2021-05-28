@@ -45,7 +45,7 @@ redis_logger = publisher
 # Port of the redis instance used by pubsublogger
 redis_logger.port = 6380
 # Channel name to publish logs
-redis_logger.channel = 'front'
+redis_logger.channel = 'Flask'
 
 
 sys.path.append('../../configs/keys')
