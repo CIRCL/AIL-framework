@@ -599,7 +599,11 @@ class Item(AbstractObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
     def delete(self):
-        os.remove(self.get_filename())
+        try:
+            os.remove(self.get_filename())
+            return True
+        except FileNotFoundError:
+            return False
 
 # if __name__ == '__main__':
 #

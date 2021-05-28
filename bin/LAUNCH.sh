@@ -493,7 +493,7 @@ function update_thirdparty {
 function launch_tests() {
   tests_dir=${AIL_HOME}/tests
   bin_dir=${AIL_BIN}
-  python3 `which nosetests` -w $tests_dir --with-coverage --cover-package=$bin_dir -d
+  python3 `which nosetests` -w $tests_dir --with-coverage --cover-package=$bin_dir -d #--cover-erase
 }
 
 function reset_password() {

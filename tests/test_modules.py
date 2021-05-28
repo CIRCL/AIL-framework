@@ -16,6 +16,7 @@ from Categ import Categ
 from CreditCards import CreditCards
 from DomClassifier import DomClassifier
 from Global import Global
+from Keys import Keys
 from Onion import Onion
 
 # project packages
@@ -107,13 +108,23 @@ class Test_Module_Global(unittest.TestCase):
         message = f'{item_id} {item_content_2}'
         result = self.module_obj.compute(message, r_result=True)
         print(result)
-        self.assertIn(result, item_id)
+        self.assertIn(item_id[:-3], result)
         self.assertNotEqual(result, item_id)
 
         # cleanup
         item = Item.Item(result)
         item.delete()
         # # TODO: remove from queue
+
+class Test_Module_Keys(unittest.TestCase):
+
+    def setUp(self):
+        self.module_obj = Keys()
+
+    def test_module(self):
+        item_id = 'tests/2021/01/01/keys.gz'
+        # # TODO: check results
+        result = self.module_obj.compute(item_id)
 
 class Test_Module_Onion(unittest.TestCase):
 
