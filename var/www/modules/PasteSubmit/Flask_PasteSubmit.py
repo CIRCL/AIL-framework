@@ -7,6 +7,7 @@
 ##################################
 # Import External packages
 ##################################
+import re
 import os
 import sys
 import json
@@ -278,12 +279,18 @@ def submit():
     paste_content = request.form['paste_content']
     paste_source = request.form['paste_source']
 
+    if paste_source:
     # limit source length
-    paste_source = paste_source.replace('/', '')[:80]
-    if paste_source in ['crawled', 'tests']:
-        content = f'Invalid source'
-        logger.info(paste_source)
-        return content, 400
+        paste_source = paste_source.replace('/', '')[:80]
+        if paste_source in ['crawled', 'tests']:
+            content = f'Invalid source'
+            logger.info(paste_source)
+            return content, 400
+
+        if not re.match('^[0-9a-zA-Z-_\+@#&\.;=:!]*$', paste_source):
+            content = f'Invalid source name: Forbidden character(s)'
+            logger.info(content)
+            return content, 400
 
     is_file = False
     if 'file' in request.files:
