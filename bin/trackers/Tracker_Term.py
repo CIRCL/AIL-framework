@@ -63,11 +63,13 @@ class Tracker_Term(AbstractModule):
             self.list_tracked_words = Term.get_tracked_words_list()
             self.last_refresh_word = time.time()
             self.redis_logger.debug('Tracked word refreshed')
+            print('Tracked word refreshed')
 
         if self.last_refresh_set < Term.get_tracked_term_last_updated_by_type('set'):
             self.set_tracked_words_list = Term.get_set_tracked_words_list()
             self.last_refresh_set = time.time()
             self.redis_logger.debug('Tracked set refreshed')
+            print('Tracked set refreshed')
 
         # Cast message as Item
         item = Item(item_id)

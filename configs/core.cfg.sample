@@ -119,7 +119,7 @@ default_unnamed_feed_name = unnamed_feeder
 [Tracker_Term]
 max_execution_time = 120
 
-[RegexTracker]
+[Tracker_Regex]
 max_execution_time = 60
 
 ##### Redis #####

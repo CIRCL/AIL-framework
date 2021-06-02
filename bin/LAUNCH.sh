@@ -193,7 +193,8 @@ function launching_scripts {
     ##################################
     screen -S "Script_AIL" -X screen -t "Tracker_Term" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Term.py; read x"
     sleep 0.1
-
+    screen -S "Script_AIL" -X screen -t "Tracker_Regex" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Regex.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tracker_Yara" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Yara.py; read x"
     sleep 0.1
 
@@ -212,15 +213,11 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Duplicates" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Duplicates.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "CreditCards" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./CreditCards.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "BankAccount" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./BankAccount.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Mail.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Urls" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Urls.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "RegexTracker" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./RegexTracker.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "PgpDump" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./PgpDump.py; read x"
     sleep 0.1
