@@ -14,14 +14,16 @@ It apply credit card regexes on item content and warn if a valid card number is 
 ##################################
 # Import External packages
 ##################################
+import os
 import re
 import sys
 import time
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from packages.Item import Item
 from packages import lib_refine
 

@@ -78,7 +78,7 @@ function helptext {
       [-k  | --killAll]            Kill DB + Scripts
       [-ks | --killscript]         Scripts
       [-u  | --update]             Update AIL
-      [-ut | --thirdpartyUpdate]   Update Web
+      [-ut | --thirdpartyUpdate]   Update UI/Frontend
       [-t  | --test]               Launch Tests
       [-rp | --resetPassword]      Reset Password
       [-f  | --launchFeeder]       LAUNCH Pystemon feeder
@@ -180,7 +180,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "ApiKey" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ApiKey.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Web" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Web.py; read x"
+    screen -S "Script_AIL" -X screen -t "Urls" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Urls.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Credential" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Credential.py; read x"
     sleep 0.1
@@ -209,8 +209,6 @@ function launching_scripts {
     #screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
     #sleep 0.1
     screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cve.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "WebStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./WebStats.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModuleStats.py; read x"
     sleep 0.1

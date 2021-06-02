@@ -17,21 +17,21 @@ from hashlib import sha1
 import magic
 import json
 import datetime
-from pubsublogger import publisher
 import re
 import signal
-from lib import Decoded
+import sys
 
-
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from Helper import Process
 from packages import Item
-import ConfigLoader
+from lib import ConfigLoader
+from lib import Decoded
 
-
+# # TODO: use regex_helper
 class TimeoutException(Exception):
     pass
 
@@ -138,6 +138,8 @@ class Decoder(AbstractModule):
                 if not mimetype:
                     self.redis_logger.debug(item_id)
                     self.redis_logger.debug(sha1_string)
+                    print(item_id)
+                    print(sha1_string)
                     raise Exception('Invalid mimetype')
                 Decoded.save_decoded_file_content(sha1_string, decoded_file, item_date, mimetype=mimetype)
                 Decoded.save_item_relationship(sha1_string, item_id)
@@ -147,6 +149,7 @@ class Decoder(AbstractModule):
                 content = content.replace(encoded, '', 1)
 
                 self.redis_logger.debug(f'{item_id} : {decoder_name} - {mimetype}')
+                print(f'{item_id} : {decoder_name} - {mimetype}')
         if(find):
             self.set_out_item(decoder_name, item_id)
 
@@ -156,15 +159,15 @@ class Decoder(AbstractModule):
     def set_out_item(self, decoder_name, item_id):
 
         self.redis_logger.warning(f'{decoder_name} decoded')
-        
+
         # Send to duplicate
-        self.process.populate_set_out(item_id, 'Duplicate')
+        self.send_message_to_queue(item_id, 'Duplicate')
 
         # Send to Tags
         msg = f'infoleak:automatic-detection="{decoder_name}";{item_id}'
-        self.process.populate_set_out(msg, 'Tags')
+        self.send_message_to_queue(msg, 'Tags')
 
 if __name__ == '__main__':
-    
+
     module = Decoder()
     module.run()

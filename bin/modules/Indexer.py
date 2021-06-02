@@ -15,17 +15,18 @@ and index each file with a full-text indexer (Whoosh until now).
 import time
 import shutil
 import os
+import sys
 from os.path import join, getsize
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
 
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from packages import Paste
-from Helper import Process
 
 
 class Indexer(AbstractModule):
@@ -102,6 +103,7 @@ class Indexer(AbstractModule):
             docpath = message.split(" ", -1)[-1]
             paste = PST.get_p_content()
             self.redis_logger.debug(f"Indexing - {self.indexname}: {docpath}")
+            print(f"Indexing - {self.indexname}: {docpath}")
 
             # Avoid calculating the index's size at each message
             if(time.time() - self.last_refresh > self.TIME_WAIT):

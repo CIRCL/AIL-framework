@@ -11,13 +11,13 @@ from base64 import b64encode
 sys.path.append(os.environ['AIL_BIN'])
 
 # Modules Classes
-from ApiKey import ApiKey
-from Categ import Categ
-from CreditCards import CreditCards
-from DomClassifier import DomClassifier
-from Global import Global
-from Keys import Keys
-from Onion import Onion
+from modules.ApiKey import ApiKey
+from modules.Categ import Categ
+from modules.CreditCards import CreditCards
+from modules.DomClassifier import DomClassifier
+from modules.Global import Global
+from modules.Keys import Keys
+from modules.Onion import Onion
 
 # project packages
 import lib.crawlers as crawlers

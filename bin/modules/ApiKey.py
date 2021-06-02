@@ -12,9 +12,13 @@ Search for API keys on an item content.
 """
 
 import re
+import os
+import sys
+
+sys.path.append(os.path.join(os.environ['AIL_BIN']))
 
 # project packages
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from packages.Item import Item
 from lib import regex_helper
 

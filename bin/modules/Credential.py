@@ -26,35 +26,28 @@ Redis organization:
 ##################################
 # Import External packages
 ##################################
-import time
 import os
 import sys
-import datetime
+import time
 import re
 import redis
+from datetime import datetime
 from pyfaup.faup import Faup
-from pubsublogger import publisher
-import lib.regex_helper as regex_helper
-import signal
 
-
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
-from Helper import Process
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Item
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+from modules.abstract_module import AbstractModule
+from packages.Item import Item
+from lib import ConfigLoader
+from lib import regex_helper
 
 
 class Credential(AbstractModule):
     """
     Credential module for AIL framework
     """
-
-    max_execution_time = 30
 
     # Split username with spec. char or with upper case, distinguish start with upper
     REGEX_CRED = "[a-z]+|[A-Z]{3,}|[A-Z]{1,2}[a-z]+|[0-9]+"
@@ -79,12 +72,15 @@ class Credential(AbstractModule):
         self.redis_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
 
         # Database
-        self.server_cred = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_TermCred")
-        self.server_statistics = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Statistics")
+        config_loader = ConfigLoader.ConfigLoader()
+        self.server_cred = config_loader.get_redis_conn("ARDB_TermCred")
+        self.server_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 
         # Config values
-        self.minimumLengthThreshold = ConfigLoader.ConfigLoader().get_config_int("Credential", "minimumLengthThreshold")
-        self.criticalNumberToAlert = ConfigLoader.ConfigLoader().get_config_int("Credential", "criticalNumberToAlert")
+        self.minimumLengthThreshold = config_loader.get_config_int("Credential", "minimumLengthThreshold")
+        self.criticalNumberToAlert = config_loader.get_config_int("Credential", "criticalNumberToAlert")
+
+        self.max_execution_time = 30
 
         # Waiting time in secondes between to message proccessed
         self.pending_seconds = 10
@@ -95,38 +91,39 @@ class Credential(AbstractModule):
 
     def compute(self, message):
 
-        item_id, count = message.split()
+        id, count = message.split()
+        item = Item(id)
 
-        item_content = Item.get_item_content(item_id)
+        item_content = item.get_content()
 
         # Extract all credentials
-        all_credentials = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_cred, item_id, item_content, max_time=Credential.max_execution_time)
+        all_credentials = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_cred, item.get_id(), item_content, max_time=self.max_execution_time)
 
-        if all_credentials: 
+        if all_credentials:
             nb_cred = len(all_credentials)
             message = f'Checked {nb_cred} credentials found.'
-            
-            all_sites = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_web, item_id, item_content, max_time=Credential.max_execution_time)
+
+            all_sites = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_web, item.get_id(), item_content, max_time=self.max_execution_time)
             if all_sites:
                 discovered_sites = ', '.join(all_sites)
                 message += f' Related websites: {discovered_sites}'
-            
-            self.redis_logger.debug(message)
 
-            to_print = f'Credential;{Item.get_source(item_id)};{Item.get_item_date(item_id)};{Item.get_item_basename(item_id)};{message};{item_id}'
+            print(message)
+
+            to_print = f'Credential;{item.get_source()};{item.get_date()};{item.get_basename()};{message};{item.get_id()}'
 
             #num of creds above tresh, publish an alert
             if nb_cred > self.criticalNumberToAlert:
-                self.redis_logger.debug(f"========> Found more than 10 credentials in this file : {item_id}")
+                print(f"========> Found more than 10 credentials in this file : {item.get_id()}")
                 self.redis_logger.warning(to_print)
-                
+
                 # Send to duplicate
-                self.process.populate_set_out(item_id, 'Duplicate')
+                self.send_message_to_queue(item.get_id(), 'Duplicate')
 
-                msg = f'infoleak:automatic-detection="credential";{item_id}'
-                self.process.populate_set_out(msg, 'Tags')
+                msg = f'infoleak:automatic-detection="credential";{item.get_id()}'
+                self.send_message_to_queue(msg, 'Tags')
 
-                site_occurence = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_site_for_stats, item_id, item_content, max_time=Credential.max_execution_time, r_set=False)
+                site_occurence = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_site_for_stats, item.get_id(), item_content, max_time=self.max_execution_time, r_set=False)
 
                 creds_sites = {}
 
@@ -140,7 +137,7 @@ class Credential(AbstractModule):
                 for url in all_sites:
                     self.faup.decode(url)
                     domain = self.faup.get()['domain']
-                    ## TODO: # FIXME: remove me
+                    ## TODO: # FIXME: remove me, check faup versionb
                     try:
                         domain = domain.decode()
                     except:
@@ -153,14 +150,14 @@ class Credential(AbstractModule):
                 for site, num in creds_sites.items(): # Send for each different site to moduleStats
 
                     mssg = f'credential;{num};{site};{Item.get_item_date(item_id)}'
-                    self.redis_logger.debug(mssg)
-                    self.process.populate_set_out(mssg, 'ModuleStats')
+                    print(mssg)
+                    self.send_message_to_queue(msg, 'ModuleStats')
 
                 if all_sites:
                     discovered_sites = ', '.join(all_sites)
-                    self.redis_logger.debug(f"=======> Probably on : {discovered_sites}")
+                    print(f"=======> Probably on : {discovered_sites}")
 
-                date = datetime.datetime.now().strftime("%Y%m")
+                date = datetime.now().strftime("%Y%m")
                 for cred in all_credentials:
                     maildomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
                     self.faup.decode(maildomains)
@@ -173,7 +170,7 @@ class Credential(AbstractModule):
                     self.server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
             else:
                 self.redis_logger.info(to_print)
-                self.redis_logger.debug(f'found {nb_cred} credentials')
+                print(f'found {nb_cred} credentials')
 
             # For searching credential in termFreq
             for cred in all_credentials:
@@ -181,8 +178,8 @@ class Credential(AbstractModule):
 
                 # unique number attached to unique path
                 uniq_num_path = self.server_cred.incr(Credential.REDIS_KEY_NUM_PATH)
-                self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET, {item_id: uniq_num_path})
-                self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET_REV, {uniq_num_path: item_id})
+                self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET, {item.get_id(): uniq_num_path})
+                self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET_REV, {uniq_num_path: item.get_id()})
 
                 # unique number attached to unique username
                 uniq_num_cred = self.server_cred.hget(Credential.REDIS_KEY_ALL_CRED_SET, cred)
@@ -204,6 +201,6 @@ class Credential(AbstractModule):
 
 
 if __name__ == '__main__':
-    
+
     module = Credential()
     module.run()

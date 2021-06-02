@@ -19,8 +19,11 @@ import os
 import sys
 import re
 
-# project packages
-from module.abstract_module import AbstractModule
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib import crawlers
 from lib import regex_helper

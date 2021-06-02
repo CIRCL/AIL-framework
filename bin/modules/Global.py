@@ -36,10 +36,11 @@ import redis
 from hashlib import md5
 from uuid import uuid4
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 
 

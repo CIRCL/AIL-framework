@@ -15,13 +15,16 @@ RSA private key, certificate messages
 ##################################
 # Import External packages
 ##################################
+import os
+import sys
 import time
 from enum import Enum
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from packages.Item import Item
 
 
