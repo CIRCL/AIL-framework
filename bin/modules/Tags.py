@@ -12,11 +12,14 @@ This module add tags to an item.
 ##################################
 # Import External packages
 ##################################
+import os
+import sys
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from packages.Item import Item
 from packages import Tag
 

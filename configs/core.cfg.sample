@@ -116,7 +116,7 @@ operation_mode = 3
 ttl_duplicate = 86400
 default_unnamed_feed_name = unnamed_feeder
 
-[TermTrackerMod]
+[Tracker_Term]
 max_execution_time = 120
 
 [RegexTracker]
@@ -252,10 +252,6 @@ maxDuplicateToPushToMISP=10
 address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
 channel = 102
 bind = tcp://127.0.0.1:5556
-
-[ZMQ_Url]
-address = tcp://127.0.0.1:5004
-channel = urls
 
 [ZMQ_FetchedOnion]
 address = tcp://127.0.0.1:5005

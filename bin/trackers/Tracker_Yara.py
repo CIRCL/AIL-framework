@@ -1,87 +1,99 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
-Yara trackers
+The Tracker_Yara trackers module
+===================
 
 """
+
+##################################
+# Import External packages
+##################################
 import os
 import re
 import sys
 import time
 import yara
 
-from pubsublogger import publisher
-
 sys.path.append(os.environ['AIL_BIN'])
-from Helper import Process
+##################################
+# Import Project packages
+##################################
+from modules.abstract_module import AbstractModule
+from packages import Term
+from packages.Item import Item
+from lib import Tracker
+
 import NotificationHelper # # TODO: refractor
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Term
+class Tracker_Yara(AbstractModule):
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Tracker
-import item_basic
+    mail_body_template = "AIL Framework,\nNew YARA match: {}\nitem id: {}\nurl: {}{}"
+
+    """
+    Tracker_Yara module for AIL framework
+    """
+    def __init__(self):
+        super(Tracker_Yara, self).__init__()
+        self.pending_seconds = 5
+
+        self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
+
+        # Load Yara rules
+        self.rules = Tracker.reload_yara_rules()
+        self.last_refresh = time.time()
+
+        self.item = None
+
+        self.redis_logger.info(f"Module: {self.module_name} Launched")
 
 
-full_item_url = "/object/item?id="
-mail_body_template = "AIL Framework,\nNew YARA match: {}\nitem id: {}\nurl: {}{}"
-
-last_refresh = time.time()
-
-def yara_rules_match(data):
-    #print(data)
-    tracker_uuid = data['namespace']
-
-    item_date = item_basic.get_item_date(item_id)
-    Tracker.add_tracked_item(tracker_uuid, item_id, item_date)
-
-    # Tags
-    tags_to_add = Tracker.get_tracker_tags(tracker_uuid)
-    for tag in tags_to_add:
-        msg = '{};{}'.format(tag, item_id)
-        p.populate_set_out(msg, 'Tags')
-
-    # Mails
-    mail_to_notify = Tracker.get_tracker_mails(tracker_uuid)
-    if mail_to_notify:
-        mail_subject = Tracker.get_email_subject(tracker_uuid)
-        mail_body = mail_body_template.format(data['rule'], item_id, full_item_url, item_id)
-    for mail in mail_to_notify:
-        NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
-
-    return yara.CALLBACK_CONTINUE
-
-if __name__ == "__main__":
-    publisher.port = 6380
-    publisher.channel = "Script"
-    publisher.info("Script Tracker_Yara started")
-
-    config_section = 'Tracker_Yara'
-    module_name = "Tracker_Yara"
-    p = Process(config_section)
-
-    full_item_url = p.config.get("Notifications", "ail_domain") + full_item_url
-
-    # Load Yara rules
-    rules = Tracker.reload_yara_rules()
-
-    # Regex Frequency
-    while True:
-        item_id = p.get_from_set()
-        if item_id is not None:
-            item_content = item_basic.get_item_content(item_id)
-            try:
-                yara_match = rules.match(data=item_content, callback=yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
-                if yara_match:
-                    print(f'{item_id}: {yara_match}')
-            except yara.TimeoutError as e:
-                print(f'{item_id}: yara scanning timed out')
-        else:
-            time.sleep(5)
-
+    def compute(self, item_id):
         # refresh YARA list
-        if last_refresh < Tracker.get_tracker_last_updated_by_type('yara'):
-            rules = Tracker.reload_yara_rules()
-            last_refresh = time.time()
+        if self.last_refresh < Tracker.get_tracker_last_updated_by_type('yara'):
+            self.rules = Tracker.reload_yara_rules()
+            self.last_refresh = time.time()
+            self.redis_logger.debug('Tracked set refreshed')
             print('Tracked set refreshed')
+
+        self.item = Item(item_id)
+        item_content = self.item.get_content()
+        try:
+            yara_match = self.rules.match(data=item_content, callback=self.yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
+            if yara_match:
+                self.redis_logger.info(f'{self.item.get_id()}: {yara_match}')
+                print(f'{self.item.get_id()}: {yara_match}')
+        except yara.TimeoutError as e:
+            print(f'{self.item.get_id()}: yara scanning timed out')
+            self.redis_logger.info(f'{self.item.get_id()}: yara scanning timed out')
+
+    def yara_rules_match(self, data):
+        tracker_uuid = data['namespace']
+
+        item_id = self.item.get_id()
+        item_date = self.item.get_date()
+        Tracker.add_tracked_item(tracker_uuid, item_id, item_date)
+
+        # Tags
+        tags_to_add = Tracker.get_tracker_tags(tracker_uuid)
+        for tag in tags_to_add:
+            msg = '{};{}'.format(tag, item_id)
+            self.send_message_to_queue(msg, 'Tags')
+
+        # Mails
+        mail_to_notify = Tracker.get_tracker_mails(tracker_uuid)
+        if mail_to_notify:
+            mail_subject = Tracker.get_email_subject(tracker_uuid)
+            mail_body = Tracker_Yara.mail_body_template.format(data['rule'], item_id, self.full_item_url, item_id)
+        for mail in mail_to_notify:
+            self.redis_logger.debug(f'Send Mail {mail_subject}')
+            print(f'Send Mail {mail_subject}')
+            NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
+
+        return yara.CALLBACK_CONTINUE
+
+
+if __name__ == '__main__':
+
+    module = Tracker_Yara()
+    module.run()

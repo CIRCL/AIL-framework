@@ -7,27 +7,27 @@ The Phone Module
 
 This module is consuming the Redis-list created by the Categ module.
 
-It apply phone number regexes on paste content and warn if above a threshold.
+It apply phone number regexes on item content and warn if above a threshold.
 
 """
 
 ##################################
 # Import External packages
 ##################################
-import time
+import os
 import re
+import sys
+import time
 import phonenumbers
 
-
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
-from packages import Paste
-from pubsublogger import publisher
-from Helper import Process
+from modules.abstract_module import AbstractModule
+from packages.Item import Item
 
-
+# # TODO: # FIXME:  improve regex / filter false positives
 class Phone(AbstractModule):
     """
     Phone module for AIL framework
@@ -46,21 +46,21 @@ class Phone(AbstractModule):
 
 
     def compute(self, message):
-        paste = Paste.Paste(message)
-        content = paste.get_p_content()
-        # List of the regex results in the Paste, may be null
+        item = Item(message)
+        content = item.get_content()
+        # List of the regex results in the Item, may be null
         results = self.REG_PHONE.findall(content)
 
-        # If the list is greater than 4, we consider the Paste may contain a list of phone numbers
+        # If the list is greater than 4, we consider the Item may contain a list of phone numbers
         if len(results) > 4:
             self.redis_logger.debug(results)
-            self.redis_logger.warning(f'{paste.p_name} contains PID (phone numbers)')
+            self.redis_logger.warning(f'{item.get_id()} contains PID (phone numbers)')
 
-            msg = f'infoleak:automatic-detection="phone-number";{message}'
-            self.process.populate_set_out(msg, 'Tags')
+            msg = f'infoleak:automatic-detection="phone-number";{item.get_id()}'
+            self.send_message_to_queue(msg, 'Tags')
 
             # Send to duplicate
-            self.process.populate_set_out(message, 'Duplicate')
+            self.send_message_to_queue(item.get_id(), 'Duplicate')
 
             stats = {}
             for phone_number in results:
@@ -75,10 +75,10 @@ class Phone(AbstractModule):
                     pass
             for country_code in stats:
                 if stats[country_code] > 4:
-                    self.redis_logger.warning(f'{paste.p_name} contains Phone numbers with country code {country_code}')
+                    self.redis_logger.warning(f'{item.get_id()} contains Phone numbers with country code {country_code}')
 
 
 if __name__ == '__main__':
-    
+
     module = Phone()
     module.run()

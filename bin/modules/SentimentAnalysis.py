@@ -26,16 +26,14 @@ import calendar
 import redis
 import json
 import signal
-from pubsublogger import publisher
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk import tokenize, download
 
-
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
-from Helper import Process
+from modules.abstract_module import AbstractModule
 from packages import Paste
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -49,13 +47,13 @@ def timeout_handler(signum, frame):
 
 signal.signal(signal.SIGALRM, timeout_handler)
 
-
+## TODO: REFACTOR MODULE + CLEAN HISTORY
 class SentimentAnalysis(AbstractModule):
     """
     SentimentAnalysis module for AIL framework
     """
 
-    
+
     # Config Variables
     accepted_Mime_type = ['text/plain']
     line_max_length_threshold = 1000

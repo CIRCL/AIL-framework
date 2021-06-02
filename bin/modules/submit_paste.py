@@ -23,21 +23,18 @@ import time
 # from sflock.main import unpack
 # import sflock
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
-from Helper import Process
-from pubsublogger import publisher
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Tag
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+from modules.abstract_module import AbstractModule
+from packages import Tag
+from lib import ConfigLoader
 
 
 class SubmitPaste(AbstractModule):
     """
-    Company Credentials module for AIL framework
+    SubmitPaste module for AIL framework
     """
 
     expire_time = 120

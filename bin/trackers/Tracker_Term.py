@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
-The TermTracker Module
+The Tracker_Term Module
 ===================
 
 """
@@ -14,12 +14,11 @@ import sys
 import time
 import signal
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from Helper import Process
-from pubsublogger import publisher
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 import NotificationHelper
 from packages import Item
 from packages import Term
@@ -33,19 +32,19 @@ def timeout_handler(signum, frame):
 signal.signal(signal.SIGALRM, timeout_handler)
 
 
-class TermTrackerMod(AbstractModule):
+class Tracker_Term(AbstractModule):
 
-    mail_body_template = "AIL Framework,\nNew occurrence for term tracked term: {}\nitem id: {}\nurl: {}{}"
+    mail_body_template = "AIL Framework,\nNew occurrence for tracked term: {}\nitem id: {}\nurl: {}{}"
 
     """
-    TermTrackerMod module for AIL framework
+    Tracker_Term module for AIL framework
     """
     def __init__(self):
-        super(TermTrackerMod, self).__init__()
+        super(Tracker_Term, self).__init__()
 
         self.pending_seconds = 5
 
-        self.max_execution_time = self.process.config.getint('TermTrackerMod', "max_execution_time")
+        self.max_execution_time = self.process.config.getint('Tracker_Term', "max_execution_time")
 
         self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
 
@@ -55,8 +54,7 @@ class TermTrackerMod(AbstractModule):
         self.set_tracked_words_list = Term.get_set_tracked_words_list()
         self.last_refresh_set = time.time()
 
-        # Send module state to logs
-        self.redis_logger.info("Module %s initialized"%(self._module_name()))
+        self.redis_logger.info(f"Module: {self.module_name} Launched")
 
 
     def compute(self, item_id):
@@ -72,8 +70,9 @@ class TermTrackerMod(AbstractModule):
             self.redis_logger.debug('Tracked set refreshed')
 
         # Cast message as Item
-        item_date = Item.get_item_date(item_id)
-        item_content = Item.get_item_content(item_id)
+        item = Item(item_id)
+        item_date = item.get_date()
+        item_content = item.get_content()
 
         signal.alarm(self.max_execution_time)
 
@@ -81,7 +80,7 @@ class TermTrackerMod(AbstractModule):
         try:
             dict_words_freq = Term.get_text_word_frequency(item_content)
         except TimeoutException:
-            self.redis_logger.warning("{0} processing timeout".format(item_id))
+            self.redis_logger.warning(f"{item.get_id()} processing timeout")
         else:
             signal.alarm(0)
 
@@ -93,7 +92,7 @@ class TermTrackerMod(AbstractModule):
             # check solo words
             for word in self.list_tracked_words:
                 if word in dict_words_freq:
-                    self.new_term_found(word, 'word', item_id, item_date)
+                    self.new_term_found(word, 'word', item.get_id(), item_date)
 
                 # check words set
                 for elem in self.set_tracked_words_list:
@@ -106,11 +105,12 @@ class TermTrackerMod(AbstractModule):
                         if word in dict_words_freq:
                             nb_uniq_word += 1
                     if nb_uniq_word >= nb_words_threshold:
-                        self.new_term_found(word_set, 'set', item_id, item_date)
+                        self.new_term_found(word_set, 'set', item.get_id(), item_date)
 
     def new_term_found(self, term, term_type, item_id, item_date):
         uuid_list = Term.get_term_uuid_list(term, term_type)
-        self.redis_logger.info('new tracked term found: {} in {}'.format(term, item_id))
+        self.redis_logger.info(f'new tracked term found: {term} in {item_id}')
+        print(f'new tracked term found: {term} in {item_id}')
 
         for term_uuid in uuid_list:
             Term.add_tracked_item(term_uuid, item_id, item_date)
@@ -118,18 +118,19 @@ class TermTrackerMod(AbstractModule):
             tags_to_add = Term.get_term_tags(term_uuid)
             for tag in tags_to_add:
                 msg = '{};{}'.format(tag, item_id)
-                self.process.populate_set_out(msg, 'Tags')
+                self.send_message_to_queue(msg, 'Tags')
 
             mail_to_notify = Term.get_term_mails(term_uuid)
             if mail_to_notify:
                 mail_subject = Tracker.get_email_subject(term_uuid)
-                mail_body = TermTrackerMod.mail_body_template.format(term, item_id, self.full_item_url, item_id)
+                mail_body = Tracker_Term.mail_body_template.format(term, item_id, self.full_item_url, item_id)
             for mail in mail_to_notify:
-                self.redis_logger.debug('Send Mail {}'.format(mail_subject))
+                self.redis_logger.debug(f'Send Mail {mail_subject}')
+                print(f'Send Mail {mail_subject}')
                 NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
 
 if __name__ == '__main__':
 
-    module = TermTrackerMod()
+    module = Tracker_Term()
     module.run()

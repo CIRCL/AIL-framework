@@ -20,6 +20,7 @@ import Tracker
 
 from flask import escape
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
 import Item
 
