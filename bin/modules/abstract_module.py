@@ -8,6 +8,7 @@ Base Class for AIL Modules
 ##################################
 from abc import ABC, abstractmethod
 import time
+import traceback
 
 ##################################
 # Import Project packages
@@ -87,7 +88,16 @@ class AbstractModule(ABC):
                     # Module processing with the message from the queue
                     self.compute(message)
                 except Exception as err:
+                    trace = traceback.format_tb(err.__traceback__)
                     self.redis_logger.critical(f"Error in module {self.module_name}: {err}")
+                    self.redis_logger.critical(trace)
+                    print()
+                    print(f"ERROR: {err}")
+                    print(f'MESSAGE: {message}')
+                    print('TRACEBACK:')
+                    for line in trace:
+                        print(line)
+
             else:
                 self.computeNone()
                 # Wait before next process
