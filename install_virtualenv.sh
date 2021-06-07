@@ -18,8 +18,22 @@ if [ -z "$VIRTUAL_ENV" ]; then
 
 fi
 
-# activate virtual environment
-. ./AILENV/bin/activate
+if [ ! -z "$TRAVIS" ]; then
+    echo "Travis detected"
+    ENV_PY="~/virtualenv/python3.6/bin/python"
+    export AIL_VENV="~/virtualenv/python3.6/"
+
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd |sed 's/bin//' )"
+    export AIL_HOME="${DIR}"
+
+    export AIL_BIN=${AIL_HOME}/bin/
+    export AIL_FLASK=${AIL_HOME}/var/www/
+    export AIL_REDIS=${AIL_HOME}/redis/src/
+    export AIL_ARDB=${AIL_HOME}/ardb/src/
+else
+    # activate virtual environment
+    . ./AILENV/bin/activate
+fi
 
 pip3 install -U pip
 pip3 install 'git+https://github.com/D4-project/BGP-Ranking.git/@7e698f87366e6f99b4d0d11852737db28e3ddc62#egg=pybgpranking&subdirectory=client'

@@ -88,3 +88,7 @@ pylibinjection
 
 # Graph
 matplotlib
+
+# Test
+nose
+coverage
