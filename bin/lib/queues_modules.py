@@ -51,6 +51,26 @@ def get_all_modules_queues_stats():
             all_modules_queues_stats.append((queue_name, nb_elem_queue, seconds, module_pid))
     return all_modules_queues_stats
 
+
+def _get_all_messages_from_queue(queue_name):
+    queue_in = f'{queue_name}in'
+    #self.r_temp.hset('queues', self.subscriber_name, int(self.r_temp.scard(in_set)))
+    return r_serv_queues.smembers(queue_in)
+
+# def is_message_in queue(queue_name):
+#     pass
+
+def remove_message_from_queue(queue_name, message, out=False):
+    if out:
+        queue_key = f'{queue_name}out'
+    else:
+        queue_key = f'{queue_name}in'
+    r_serv_queues.srem(queue_in, message)
+    if not out:
+        r_serv_queues.hset('queues', queue_name, int(r_serv_queues.scard(queue_key)) )
+
 if __name__ == '__main__':
-    res = get_all_modules_queues_stats()
+    print(get_all_queues_with_sorted_nb_elem())
+    queue_name = 'Tags'
+    res = _get_all_messages_from_queue(queue_name)
     print(res)
