@@ -104,6 +104,7 @@ class Global(AbstractModule):
             # Incorrect filename
             if not os.path.commonprefix([filename, self.PASTES_FOLDER]) == self.PASTES_FOLDER:
                 self.redis_logger.warning(f'Global; Path traversal detected {filename}')
+                print(f'Global; Path traversal detected {filename}')
 
             else:
                 # Decode compressed base64
@@ -134,6 +135,7 @@ class Global(AbstractModule):
 
         else:
             self.redis_logger.debug(f"Empty Item: {message} not processed")
+            print(f"Empty Item: {message} not processed")
 
 
     def check_filename(self, filename, new_file_content):
@@ -145,6 +147,7 @@ class Global(AbstractModule):
         # check if file exist
         if os.path.isfile(filename):
             self.redis_logger.warning(f'File already exist {filename}')
+            print(f'File already exist {filename}')
 
             # Check that file already exists but content differs
             curr_file_content = self.gunzip_file(filename)
@@ -165,11 +168,13 @@ class Global(AbstractModule):
                     if os.path.isfile(filename):
                         # Ignore duplicate
                         self.redis_logger.debug(f'ignore duplicated file {filename}')
+                        print(f'ignore duplicated file {filename}')
                         filename = None
 
                 else:
                     # Ignore duplicate checksum equals
                     self.redis_logger.debug(f'ignore duplicated file {filename}')
+                    print(f'ignore duplicated file {filename}')
                     filename = None
 
             else:
@@ -192,10 +197,12 @@ class Global(AbstractModule):
                 curr_file_content = f.read()
         except EOFError:
             self.redis_logger.warning(f'Global; Incomplete file: {filename}')
+            print(f'Global; Incomplete file: {filename}')
             # save daily stats
             self.r_stats.zincrby('module:Global:incomplete_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
         except OSError:
             self.redis_logger.warning(f'Global; Not a gzipped file: {filename}')
+            print(f'Global; Not a gzipped file: {filename}')
             # save daily stats
             self.r_stats.zincrby('module:Global:invalid_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
 
@@ -213,6 +220,7 @@ class Global(AbstractModule):
                 gunzipped_bytes_obj = fo.read()
         except Exception as e:
             self.redis_logger.warning(f'Global; Invalid Gzip file: {filename}, {e}')
+            print(f'Global; Invalid Gzip file: {filename}, {e}')
 
         return gunzipped_bytes_obj
 

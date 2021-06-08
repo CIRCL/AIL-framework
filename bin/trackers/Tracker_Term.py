@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 import NotificationHelper
-from packages import Item
+from packages.Item import Item
 from packages import Term
 from lib import Tracker
 

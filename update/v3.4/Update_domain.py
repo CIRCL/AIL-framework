@@ -31,7 +31,7 @@ if __name__ == '__main__':
     r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
     config_loader = None
 
-    r_serv.set('ail:current_background_script', 'domain languages update')
+    r_serv_db.set('ail:current_background_script', 'domain languages update')
 
     nb_elem_to_update = r_serv_db.get('update:nb_elem_to_convert')
     if not nb_elem_to_update:

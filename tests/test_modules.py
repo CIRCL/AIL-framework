@@ -7,6 +7,7 @@ import unittest
 
 import gzip
 from base64 import b64encode
+from distutils.dir_util import copy_tree
 
 sys.path.append(os.environ['AIL_BIN'])
 
@@ -20,8 +21,19 @@ from modules.Keys import Keys
 from modules.Onion import Onion
 
 # project packages
+from lib.ConfigLoader import ConfigLoader
 import lib.crawlers as crawlers
 import packages.Item as Item
+
+#### COPY SAMPLES ####
+config_loader = ConfigLoader()
+# # TODO:move me in new Item package
+ITEMS_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+ITEMS_FOLDER = os.path.join(os.path.realpath(ITEMS_FOLDER), '')
+TESTS_ITEMS_FOLDER = os.path.join(ITEMS_FOLDER, 'tests')
+sample_dir = os.path.join(os.environ['AIL_HOME'], 'samples')
+copy_tree(sample_dir, TESTS_ITEMS_FOLDER)
+#### ---- ####
 
 class Test_Module_ApiKey(unittest.TestCase):
 
@@ -91,29 +103,31 @@ class Test_Module_Global(unittest.TestCase):
 
         item_content = b'Lorem ipsum dolor sit amet, consectetur adipiscing elit'
         item_content_1 = b64encode(gzip.compress(item_content)).decode()
-        item_content_2 = b64encode(gzip.compress(item_content + b' more text')).decode()
+        item_content_2 = b64encode(gzip.compress(item_content + b' more text ...')).decode()
         message = f'{item_id} {item_content_1}'
 
         # Test new item
         result = self.module_obj.compute(message, r_result=True)
-        print(result)
+        print(f'test new item: {result}')
         self.assertEqual(result, item_id)
 
         # Test duplicate
         result = self.module_obj.compute(message, r_result=True)
-        print(result)
+        print(f'test duplicate {result}')
         self.assertIsNone(result)
 
         # Test same id with != content
+        item = Item.Item('tests/2021/01/01/global_831875da824fc86ab5cc0e835755b520.gz')
+        item.delete()
         message = f'{item_id} {item_content_2}'
         result = self.module_obj.compute(message, r_result=True)
-        print(result)
+        print(f'test same id with != content: {result}')
         self.assertIn(item_id[:-3], result)
         self.assertNotEqual(result, item_id)
 
         # cleanup
-        item = Item.Item(result)
-        item.delete()
+        # item = Item.Item(result)
+        # item.delete()
         # # TODO: remove from queue
 
 class Test_Module_Keys(unittest.TestCase):

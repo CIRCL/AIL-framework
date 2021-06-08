@@ -10,13 +10,15 @@ import sys
 import time
 import datetime
 
-from pubsublogger import publisher
-
-import NotificationHelper
-
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
 from packages import Date
 from packages import Item
 from packages import Term
+
+from pubsublogger import publisher
 
 def clean_term_db_stat_token():
     all_stat_date = Term.get_all_token_stat_history()

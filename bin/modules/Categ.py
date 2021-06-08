@@ -51,7 +51,7 @@ class Categ(AbstractModule):
     Categ module for AIL framework
     """
 
-    def __init__(self, categ_files_dir='../files/'):
+    def __init__(self, categ_files_dir=os.path.join(os.environ['AIL_HOME'], 'files')):
         """
         Init Categ
         """
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     # SCRIPT PARSER #
     parser = argparse.ArgumentParser(description='Start Categ module on files.')
     parser.add_argument(
-        '-d', type=str, default="../files/",
+        '-d', type=str, default=os.path.join(os.environ['AIL_HOME'], 'files'),
         help='Path to the directory containing the category files.',
         action='store')
     args = parser.parse_args()

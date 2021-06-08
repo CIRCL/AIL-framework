@@ -5,21 +5,21 @@ The Template Module
 ======================
 
 This module is a template for Template for new modules
-    
+
 """
 
 ##################################
 # Import External packages
 ##################################
+import os
+import sys
 import time
-from pubsublogger import publisher
 
-
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from module.abstract_module import AbstractModule
-from Helper import Process
+from modules.abstract_module import AbstractModule
 
 
 class Template(AbstractModule):
@@ -30,11 +30,11 @@ class Template(AbstractModule):
     def __init__(self):
         super(Template, self).__init__()
 
-        # Send module state to logs
-        self.redis_logger.info("Module %s initialized"%(self.module_name))
-
-        # Pending time between two computation in seconds
+        # Pending time between two computation (computeNone) in seconds
         self.pending_seconds = 10
+
+        # Send module state to logs
+        self.redis_logger.info(f'Module {self.module_name} initialized')
 
 
     def computeNone(self):
@@ -52,6 +52,6 @@ class Template(AbstractModule):
 
 
 if __name__ == '__main__':
-    
+
     module = Template()
     module.run()

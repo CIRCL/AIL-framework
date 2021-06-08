@@ -12,15 +12,14 @@ import time
 import datetime
 import redis
 import os
+import sys
 
-
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages        #
 ##################################
-from module.abstract_module import AbstractModule
+from modules.abstract_module import AbstractModule
 from packages.Date import Date
-from pubsublogger import publisher
-from Helper import Process
 from packages import Paste
 import ConfigLoader
 

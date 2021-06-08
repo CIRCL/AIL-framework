@@ -26,7 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages import Paste
+from packages.Item import Item
 
 
 class Indexer(AbstractModule):
@@ -98,19 +98,23 @@ class Indexer(AbstractModule):
 
 
     def compute(self, message):
-        try:
-            PST = Paste.Paste(message)
-            docpath = message.split(" ", -1)[-1]
-            paste = PST.get_p_content()
-            self.redis_logger.debug(f"Indexing - {self.indexname}: {docpath}")
-            print(f"Indexing - {self.indexname}: {docpath}")
+        docpath = message.split(" ", -1)[-1]
 
+        item = Item(message)
+        item_id = item.get_id()
+        item_content = item.get_content()
+
+        self.redis_logger.debug(f"Indexing - {self.indexname}: {docpath}")
+        print(f"Indexing - {self.indexname}: {docpath}")
+
+        try:
             # Avoid calculating the index's size at each message
             if(time.time() - self.last_refresh > self.TIME_WAIT):
                 self.last_refresh = time.time()
                 if self.check_index_size() >= self.INDEX_SIZE_THRESHOLD*(1000*1000):
                     timestamp = int(time.time())
                     self.redis_logger.debug(f"Creating new index {timestamp}")
+                    print(f"Creating new index {timestamp}")
                     self.indexpath = join(self.baseindexpath, str(timestamp))
                     self.indexname = str(timestamp)
                     # update all_index
@@ -125,13 +129,13 @@ class Indexer(AbstractModule):
                 indexwriter.update_document(
                     title=docpath,
                     path=docpath,
-                    content=paste)
+                    content=item_content)
                 indexwriter.commit()
 
         except IOError:
-            self.redis_logger.debug(f"CRC Checksum Failed on: {PST.p_path}")
-            self.redis_logger.error('Duplicate;{};{};{};CRC Checksum Failed'.format(
-                PST.p_source, PST.p_date, PST.p_name))
+            self.redis_logger.debug(f"CRC Checksum Failed on: {item_id}")
+            print(f"CRC Checksum Failed on: {item_id}")
+            self.redis_logger.error(f'Duplicate;{item.get_source()};{item.get_date()};{item.get_basename()};CRC Checksum Failed')
 
     def check_index_size(self):
         """

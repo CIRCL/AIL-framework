@@ -123,7 +123,7 @@ class SentimentAnalysis(AbstractModule):
                 avg_score = {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compoundPos': 0.0, 'compoundNeg': 0.0}
                 neg_line = 0
                 pos_line = 0
-                sid = SentimentIntensityAnalyzer(sentiment_lexicon_file)
+                sid = SentimentIntensityAnalyzer(self.sentiment_lexicon_file)
                 for sentence in sentences:
                     ss = sid.polarity_scores(sentence)
                     for k in sorted(ss):
