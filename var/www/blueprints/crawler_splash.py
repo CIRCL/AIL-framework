@@ -260,9 +260,12 @@ def domains_search_languages_get():
         page = int(page)
     except:
         page = 1
+
     domains_types = request.args.getlist('domain_types')
     if domains_types:
         domains_types = domains_types[0].split(',')
+    domains_types = Domain.sanitize_domain_types(domains_types)
+
     languages = request.args.getlist('languages')
     if languages:
         languages = languages[0].split(',')
@@ -281,7 +284,7 @@ def domains_search_name():
         page = int(page)
     except:
         page = 1
-        
+
     domains_types = request.args.getlist('domain_types')
     if domains_types:
         domains_types = domains_types[0].split(',')
