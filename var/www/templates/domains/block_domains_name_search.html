@@ -13,13 +13,13 @@
 
 			<div class="mb-3">
 				<div class="custom-control custom-switch">
-					<input class="custom-control-input" type="checkbox" name="domain_onion_switch" value="" id="domain_onion_switch" {%if 'onion' in domains_types or not domains_types%}checked{%endif%}>
+					<input class="custom-control-input" type="checkbox" name="domain_onion_switch" value="" id="domain_onion_switch" {%if not domains_types%}checked{%elif 'onion' in domains_types%}checked{%endif%}>
 					<label class="custom-control-label" for="domain_onion_switch">
 						<span class="badge badge-danger"><i class="fas fa-user-secret"></i> Onion Domains</span>
 					</label>
 				</div>
 				<div class="custom-control custom-switch">
-					<input class="custom-control-input" type="checkbox" name="domain_regular_switch" value="True" id="domain_regular_switch"{%if 'regular' in domains_types%}checked{%endif%}>
+					<input class="custom-control-input" type="checkbox" name="domain_regular_switch" value="True" id="domain_regular_switch"{%if domains_types%}{%if 'regular' in domains_types%}checked{%endif%}{%endif%}>
 					<label class="custom-control-label" for="domain_regular_switch">
 						<span class="badge badge-warning"><i class="fab fa-html5"></i> Web Domains</span>
 					</label>
