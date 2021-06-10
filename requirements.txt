@@ -1,94 +1,87 @@
 pyail
-pymisp
-d4-pyclient
+pymisp>=2.4.144
+d4-pyclient>=0.1.6
 
 thehive4py
 
+# Core
 redis==2.10.6
-#filemagic conflict with magic
-crcmod
-mmh3
-ssdeep
-
-pubsublogger
-zmq
-langid
-
-#Essential
-pyzmq
-dnspython
-logbook
-pubsublogger
-textblob
-
-#Tokeniser
-nltk
-
-html2text
-yara-python
-
-#Crawler
-scrapy
-scrapy-splash
-pycld3
-
-#Graph
-numpy
-matplotlib
-networkx
-terminaltables
-colorama
-asciimatics
+python-magic>0.4.15
+yara-python>4.0.2
 
 # Hashlib
 crcmod
-mmh3
-ssdeep
-python-Levenshtein
+mmh3>2.5
+ssdeep>3.3
 
-#Others
-python-magic
-pybloomfiltermmap
-psutil
-phonenumbers
+# ZMQ
+zmq
+pyzmq>19.0.0
 
-ipython
-texttable
+# Logging
+logbook
+pubsublogger
 
-flask
-flask-login
-bcrypt
+# Tokeniser
+nltk>3.4.5
+textblob>=0.15.3
 
-#DomainClassifier
+# HTML
+html2text>=2020.1.16
+beautifulsoup4>4.8.2
+
+#Crawler
+scrapy>2.0.0
+scrapy-splash>=0.7.2
+
+# Languages
+pycld3>0.20
+
+#Graph
+numpy>1.18.1
+matplotlib>3.2.1
+networkx>2.4
+
+# ModuleInformation
+asciimatics>=1.11.0
+psutil>=5.7.0
+
+colorama>=0.4.4
+python-Levenshtein>=0.12.2
+
+# DomainClassifier
 git+https://github.com/D4-project/BGP-Ranking.git/#egg=pybgpranking&subdirectory=client
 DomainClassifier
-#Indexer requirements
-whoosh
 
-beautifulsoup4
+# Indexer
+whoosh>=2.7.4
 
-ipaddress
-pycountry==18.12.8
+# LibInjection bindings
+pylibinjection>=0.2.4
 
-# To fetch Onion urls
-PySocks
+#Others
+phonenumbers>8.12.1
 
-# decompress files
-sflock
+# Web
+flask>1.1.2,<=1.1.4
+flask-login
+bcrypt>3.1.6
 
-#ASN lookup requirements
-#https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/adns-python/adns-python-1.2.1.tar.gz
-https://github.com/trolldbois/python3-adns/archive/master.zip
-https://github.com/trolldbois/python-cymru-services/archive/master.zip
 
+# Tests
+nose>=1.3.7
+coverage>=5.5
+
+# # # #
+PySocks>=1.7.1
+pycountry>=20.7.3
 https://github.com/saffsd/langid.py/archive/master.zip
 
-#LibInjection bindings
-pylibinjection
 
-# Graph
-matplotlib
 
-# Test
-nose
-coverage
+##### Old packages
+# texttable
+#ASN lookup requirements
+#https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/adns-python/adns-python-1.2.1.tar.gz
+#https://github.com/trolldbois/python3-adns/archive/master.zip
+#https://github.com/trolldbois/python-cymru-services/archive/master.zip
