@@ -65,7 +65,7 @@ sudo ldconfig
 popd
 # Pyfaup
 pushd faup/src/lib/bindings/python/
-python3 setup.py install
+sudo python3 setup.py install
 popd
 
 # tlsh
