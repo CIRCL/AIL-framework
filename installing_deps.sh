@@ -63,10 +63,6 @@ sudo make install
 echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/faup.conf
 sudo ldconfig
 popd
-# Pyfaup
-pushd faup/src/lib/bindings/python/
-sudo python3 setup.py install
-popd
 
 # tlsh
 test ! -d tlsh && git clone https://github.com/trendmicro/tlsh.git
