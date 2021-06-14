@@ -319,6 +319,9 @@ def delete_term(term_uuid):
     # remove mails
     r_serv_term.delete('tracker:mail:{}'.format(term_uuid))
 
+    # remove sources
+    r_serv_term.delete('tracker:sources:{}'.format(term_uuid))
+
     # remove item set
     all_item_date = r_serv_term.zrange('tracker:stat:{}'.format(term_uuid), 0, -1)
     for date in all_item_date:

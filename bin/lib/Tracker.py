@@ -74,7 +74,7 @@ def get_tracker_level(tracker_uuid):
 def get_tracker_user_id(tracker_uuid):
     return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
 
-def get_tracker_uuid_list(tracker, tracker_type):
+def get_tracker_uuid_list(tracker, tracker_type):  ######################################################### USE ME
     return list(r_serv_tracker.smembers('all:tracker_uuid:{}:{}'.format(tracker_type, tracker)))
 
 def get_tracker_tags(tracker_uuid):
@@ -82,6 +82,9 @@ def get_tracker_tags(tracker_uuid):
 
 def get_tracker_mails(tracker_uuid):
     return list(r_serv_tracker.smembers('tracker:mail:{}'.format(tracker_uuid)))
+
+def get_tracker_uuid_sources(tracker_uuid):
+    return list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}'))
 
 def get_tracker_description(tracker_uuid):
     return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'description')
@@ -133,10 +136,11 @@ def get_tracker_sparkline(tracker_uuid, num_day=6):
 
 def add_tracked_item(tracker_uuid, item_id, item_date):
     # track item
-    r_serv_tracker.sadd('tracker:item:{}:{}'.format(tracker_uuid, item_date), item_id)
+    res = r_serv_tracker.sadd(f'tracker:item:{tracker_uuid}:{item_date}', item_id)
     # track nb item by date
-    r_serv_tracker.zadd('tracker:stat:{}'.format(tracker_uuid), item_date, int(item_date))
-
+    if res == 1:
+        r_serv_tracker.zadd('tracker:stat:{}'.format(tracker_uuid), item_date, int(item_date))
+bin/lib/Tracker.py
 def get_email_subject(tracker_uuid):
     tracker_description = get_tracker_description(tracker_uuid)
     if not tracker_description:
@@ -149,6 +153,10 @@ def get_tracker_last_updated_by_type(tracker_type):
     if not epoch_update:
         epoch_update = 0
     return float(epoch_update)
+
+# # TODO: check type API
+def trigger_trackers_refresh(tracker_type):
+    r_serv_tracker.set(f'tracker:refresh:{tracker_type}', time.time())
 
 ######################
 #### TRACKERS ACL ####
@@ -235,7 +243,7 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
         return ({"status": "error", "reason": "Incorrect type"}, 400)
     return ({"status": "success", "tracker": tracker, "type": tracker_type}, 200)
 
-def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, dashboard=0, tracker_uuid=None):
+def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, dashboard=0, tracker_uuid=None, sources=[]):
     # edit tracker
     if tracker_uuid:
         edit_tracker = True
@@ -255,7 +263,7 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
 
     # YARA
     if tracker_type == 'yara_custom' or tracker_type == 'yara_default':
-        # delete yara rule
+        # create yara rule
         if tracker_type == 'yara_default' and old_type == 'yara':
             if not is_default_yara_rule(old_tracker):
                 filepath = get_yara_rule_file_by_tracker_name(old_tracker)
@@ -318,6 +326,11 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
     for mail in mails:
         r_serv_tracker.sadd('tracker:mail:{}'.format(tracker_uuid), escape(mail) )
 
+    # create tracker sources filter
+    for source in sources:
+        # escape source ?
+        r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source) )
+
     # toggle refresh module tracker list/set
     r_serv_tracker.set('tracker:refresh:{}'.format(tracker_type), time.time())
     if tracker_type != old_type: # toggle old type refresh
@@ -346,6 +359,7 @@ def api_add_tracker(dict_input, user_id):
     res = verify_mail_list(mails)
     if res:
         return res
+    sources = dict_input.get('sources', [])
 
     ## TODO: add dashboard key
     level = dict_input.get('level', 1)
@@ -371,7 +385,7 @@ def api_add_tracker(dict_input, user_id):
             if is_tracker_in_user_level(tracker, tracker_type, user_id) and not tracker_uuid:
                 return ({"status": "error", "reason": "Tracker already exist"}, 409)
 
-    tracker_uuid = create_tracker(tracker , tracker_type, user_id, level, tags, mails, description, tracker_uuid=tracker_uuid)
+    tracker_uuid = create_tracker(tracker , tracker_type, user_id, level, tags, mails, description, tracker_uuid=tracker_uuid, sources=sources)
 
     return ({'tracker': tracker, 'type': tracker_type, 'uuid': tracker_uuid}, 200)
 
@@ -407,10 +421,12 @@ def get_all_default_yara_rules_by_type(yara_types):
     else:
         return []
 
-def get_all_tracked_yara_files():
+def get_all_tracked_yara_files(filter_disabled=False):
     yara_files = r_serv_tracker.smembers('all:tracker:yara')
     if not yara_files:
         yara_files = []
+    if filter_disabled:
+        pass
     return yara_files
 
 def reload_yara_rules():
@@ -423,6 +439,22 @@ def reload_yara_rules():
             rule_dict[tracker_uuid] = os.path.join(get_yara_rules_dir(), yar_path)
     rules = yara.compile(filepaths=rule_dict)
     return rules
+
+# # TODO:
+# Avoid useless CHECK
+# Empty list == ALL SOURCES
+# FIXME MOOVE ME
+def get_tracker_sources(tracker, tracker_type):
+    l_sources = set()
+    for tracker_uuid in get_tracker_uuid_list(tracker, tracker_type):
+        sources = get_tracker_uuid_sources(tracker_uuid)
+        if sources:
+            for source in get_tracker_uuid_sources(tracker_uuid):
+                l_sources.add(source)
+        else:
+            l_sources = []
+            break
+    return l_sources
 
 def is_valid_yara_rule(yara_rule):
     try:
@@ -518,5 +550,14 @@ def api_get_default_rule_content(default_yara_rule):
 ##-- YARA --##
 
 if __name__ == '__main__':
-    res = is_valid_yara_rule('rule dummy {  }')
+    #res = is_valid_yara_rule('rule dummy {  }')
+
+    # res = create_tracker('test', 'word', 'admin@admin.test', 1, [], [], None, sources=['crawled', 'pastebin.com', 'rt/pastebin.com'])
+    res = create_tracker('test', 'word', 'admin@admin.test', 1, [], [], None)
+    # print(res)
+
+    t_uuid = '1c2d35b0-9330-4feb-b454-da13007aa9f7'
+    res = get_tracker_sources('test', 'word')
+
+
     print(res)

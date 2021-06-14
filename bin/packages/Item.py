@@ -570,7 +570,9 @@ class Item(AbstractObject):
         """
         Returns Item source/feeder name
         """
-        return item_basic.get_source(self.id)
+        #return self.id.split('/')[-5]
+        l_source = self.id.split('/')[:-4]
+        return os.path.join(*l_source)
 
     def get_basename(self):
         return os.path.basename(self.id)
@@ -605,11 +607,8 @@ class Item(AbstractObject):
         except FileNotFoundError:
             return False
 
-# if __name__ == '__main__':
-#
-#     item = Item('')
-#     res = item.get_date(separator=True)
-#     print(res)
+#if __name__ == '__main__':
+
 
 #     import Domain
 #     domain = Domain.Domain('domain.onion')

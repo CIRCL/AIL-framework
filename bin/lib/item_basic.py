@@ -64,7 +64,8 @@ def get_item_content(item_id):
                 item_content = f.read().decode()
                 r_cache.set(item_full_path, item_content)
                 r_cache.expire(item_full_path, 300)
-        except:
+        except Exception as e:
+            print(e)
             item_content = ''
     return str(item_content)
 
@@ -176,7 +177,7 @@ def add_map_obj_id_item_id(obj_id, item_id, obj_type):
 ##--  --##
 
 ## COMMON ##
-def _get_dir_source_name(directory, source_name=None, l_sources_name=set()):
+def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filter_dir=False):
     if source_name:
         l_dir = os.listdir(os.path.join(directory, source_name))
     else:
@@ -188,12 +189,16 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set()):
     else:
         for src_name in l_dir:
             if len(src_name) == 4:
-                try:
-                    int(src_name)
-                    l_sources_name.add(os.path.join(source_name))
-                    return l_sources_name
-                except:
-                    pass
+                #try:
+                int(src_name)
+                to_add = os.path.join(source_name)
+                # filter sources, remove first directory
+                if filter_dir:
+                    to_add = to_add.replace('archive/', '').replace('alerts/', '')
+                l_sources_name.add(to_add)
+                return l_sources_name
+                #except:
+                #    pass
             if source_name:
                 src_name = os.path.join(source_name, src_name)
             l_sources_name = _get_dir_source_name(directory, source_name=src_name, l_sources_name=l_sources_name)

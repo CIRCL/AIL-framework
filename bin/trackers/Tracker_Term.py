@@ -90,46 +90,51 @@ class Tracker_Term(AbstractModule):
             # create token statistics
             #for word in dict_words_freq:
             #    Term.create_token_statistics(item_date, word, dict_words_freq[word])
+            item_source = item.get_source()
 
             # check solo words
+            ####### # TODO: check if source needed #######
             for word in self.list_tracked_words:
                 if word in dict_words_freq:
-                    self.new_term_found(word, 'word', item.get_id(), item_date)
+                    self.new_term_found(word, 'word', item.get_id(), item_date, item_source)
 
-                # check words set
-                for elem in self.set_tracked_words_list:
-                    list_words = elem[0]
-                    nb_words_threshold = elem[1]
-                    word_set = elem[2]
-                    nb_uniq_word = 0
+            # check words set
+            for elem in self.set_tracked_words_list:
+                list_words = elem[0]
+                nb_words_threshold = elem[1]
+                word_set = elem[2]
+                nb_uniq_word = 0
 
-                    for word in list_words:
-                        if word in dict_words_freq:
-                            nb_uniq_word += 1
-                    if nb_uniq_word >= nb_words_threshold:
-                        self.new_term_found(word_set, 'set', item.get_id(), item_date)
+                for word in list_words:
+                    if word in dict_words_freq:
+                        nb_uniq_word += 1
+                if nb_uniq_word >= nb_words_threshold:
+                    self.new_term_found(word_set, 'set', item.get_id(), item_date, item_source)
 
-    def new_term_found(self, term, term_type, item_id, item_date):
+    def new_term_found(self, term, term_type, item_id, item_date, item_source):
         uuid_list = Term.get_term_uuid_list(term, term_type)
         self.redis_logger.info(f'new tracked term found: {term} in {item_id}')
         print(f'new tracked term found: {term} in {item_id}')
 
         for term_uuid in uuid_list:
-            Term.add_tracked_item(term_uuid, item_id, item_date)
+            tracker_sources = Tracker.get_tracker_uuid_sources(term_uuid)
+            if not tracker_sources or item_source in tracker_sources:
+                print(not tracker_sources or item_source in tracker_sources)
+                Tracker.add_tracked_item(term_uuid, item_id, item_date)
 
-            tags_to_add = Term.get_term_tags(term_uuid)
-            for tag in tags_to_add:
-                msg = '{};{}'.format(tag, item_id)
-                self.send_message_to_queue(msg, 'Tags')
+                tags_to_add = Term.get_term_tags(term_uuid)
+                for tag in tags_to_add:
+                    msg = '{};{}'.format(tag, item_id)
+                    self.send_message_to_queue(msg, 'Tags')
 
-            mail_to_notify = Term.get_term_mails(term_uuid)
-            if mail_to_notify:
-                mail_subject = Tracker.get_email_subject(term_uuid)
-                mail_body = Tracker_Term.mail_body_template.format(term, item_id, self.full_item_url, item_id)
-            for mail in mail_to_notify:
-                self.redis_logger.debug(f'Send Mail {mail_subject}')
-                print(f'Send Mail {mail_subject}')
-                NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
+                mail_to_notify = Term.get_term_mails(term_uuid)
+                if mail_to_notify:
+                    mail_subject = Tracker.get_email_subject(term_uuid)
+                    mail_body = Tracker_Term.mail_body_template.format(term, item_id, self.full_item_url, item_id)
+                for mail in mail_to_notify:
+                    self.redis_logger.debug(f'Send Mail {mail_subject}')
+                    print(f'S        print(item_content)end Mail {mail_subject}')
+                    NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
 
 if __name__ == '__main__':
