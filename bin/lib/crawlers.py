@@ -892,12 +892,17 @@ def ping_splash_manager():
             update_splash_manager_connection_status(True)
             return True
         else:
-            res = req.json()
-            if 'reason' in res:
-                req_error = {'status_code': req.status_code, 'error': res['reason']}
-            else:
-                print(req.json())
-                req_error = {'status_code': req.status_code, 'error': json.dumps(req.json())}
+            try:
+                res = req.json()
+                if 'reason' in res:
+                    req_error = {'status_code': req.status_code, 'error': res['reason']}
+                else:
+                    print(req.json())
+                    req_error = {'status_code': req.status_code, 'error': json.dumps(req.json())}
+            except json.decoder.JSONDecodeError:
+                print(req.status_code)
+                print(req.headers)
+                req_error = {'status_code': req.status_code, 'error': 'Invalid response'}
             update_splash_manager_connection_status(False, req_error=req_error)
             return False
     except requests.exceptions.ConnectionError:
