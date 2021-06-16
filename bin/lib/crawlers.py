@@ -516,7 +516,7 @@ def api_set_nb_crawlers_to_launch(dict_splash_name):
     # TODO: check if is dict
     dict_crawlers_to_launch = {}
     all_splash = get_all_splash()
-    crawlers_to_launch = list(all_splash & set(dict_splash_name.keys()))
+    crawlers_to_launch = list(set(all_splash) & set(dict_splash_name.keys()))
     for splash_name in crawlers_to_launch:
         try:
             nb_to_launch = int(dict_splash_name.get(splash_name, 0))
@@ -984,26 +984,24 @@ def api_save_splash_manager_url_api(data):
     ## SPLASH ##
 def get_all_splash(r_list=False):
     res = r_serv_onion.smembers('all_splash')
-    if res:
-        if r_list:
-            return list(res)
-        else:
-            return res
+    if not res:
+        res = set()
+    if r_list:
+        return list(res)
     else:
-        return []
+        return res
 
 def get_splash_proxy(splash_name):
     return r_serv_onion.hget('splash:metadata:{}'.format(splash_name), 'proxy')
 
 def get_splash_all_url(splash_name, r_list=False):
     res = r_serv_onion.smembers('splash:url:{}'.format(splash_name))
-    if res:
-        if r_list:
-            return list(res)
-        else:
-            return res
+    if not res:
+        res = set()
+    if r_list:
+        return list(res)
     else:
-        return []
+        return res
 
 def get_splash_name_by_url(splash_url):
     return r_serv_onion.get('splash:map:url:name:{}'.format(splash_url))
