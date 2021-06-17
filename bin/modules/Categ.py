@@ -67,7 +67,7 @@ class Categ(AbstractModule):
 
     # # TODO: trigger reload on change ( save last reload time, ...)
     def reload_categ_words(self):
-        categories = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve', 'ApiKey']
+        categories = ['CreditCards', 'Mail', 'Onion', 'Urls', 'Credential', 'Cve', 'ApiKey']
         tmp_dict = {}
         for filename in categories:
             bname = os.path.basename(filename)
