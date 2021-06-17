@@ -69,8 +69,15 @@ class Tracker_Yara(AbstractModule):
 
     def yara_rules_match(self, data):
         tracker_uuid = data['namespace']
-
         item_id = self.item.get_id()
+        item_source = self.item.get_source()
+
+        # Source Filtering
+        tracker_sources = Tracker.get_tracker_uuid_sources(tracker_uuid)
+        if tracker_sources and item_source not in tracker_sources:
+            print(f'Source Filtering: {data["rule"]}')
+            return yara.CALLBACK_CONTINUE
+
         item_date = self.item.get_date()
         Tracker.add_tracked_item(tracker_uuid, item_id, item_date)
 
@@ -96,4 +103,7 @@ class Tracker_Yara(AbstractModule):
 if __name__ == '__main__':
 
     module = Tracker_Yara()
-    module.run()
+    #module.run()
+
+    id = 'crawled/2020/09/14/circl.lu9bde82e5-a4de-487c-bc29-7601f0922b46'
+    module.compute(id)

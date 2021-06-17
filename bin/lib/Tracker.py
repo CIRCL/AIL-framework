@@ -140,7 +140,7 @@ def add_tracked_item(tracker_uuid, item_id, item_date):
     # track nb item by date
     if res == 1:
         r_serv_tracker.zadd('tracker:stat:{}'.format(tracker_uuid), item_date, int(item_date))
-bin/lib/Tracker.py
+
 def get_email_subject(tracker_uuid):
     tracker_description = get_tracker_description(tracker_uuid)
     if not tracker_description:
@@ -553,11 +553,15 @@ if __name__ == '__main__':
     #res = is_valid_yara_rule('rule dummy {  }')
 
     # res = create_tracker('test', 'word', 'admin@admin.test', 1, [], [], None, sources=['crawled', 'pastebin.com', 'rt/pastebin.com'])
-    res = create_tracker('test', 'word', 'admin@admin.test', 1, [], [], None)
-    # print(res)
-
-    t_uuid = '1c2d35b0-9330-4feb-b454-da13007aa9f7'
-    res = get_tracker_sources('test', 'word')
-
-
+    res = create_tracker('circl\.lu', 'regex', 'admin@admin.test', 1, [], [], None, sources=['crawled','pastebin.com'])
     print(res)
+
+    #t_uuid = '1c2d35b0-9330-4feb-b454-da13007aa9f7'
+    #res = get_tracker_sources('ail-yara-rules/rules/crypto/certificate.yar', 'yara')
+
+    # sys.path.append(os.environ['AIL_BIN'])
+    # from packages import Term
+    # Term.delete_term('074ab4be-6049-45b5-a20e-8125a4e4f500')
+
+
+    #print(res)
