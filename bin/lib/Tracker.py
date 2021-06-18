@@ -12,9 +12,12 @@ import datetime
 
 from flask import escape
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Date
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-#import item_basic
+import item_basic
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
@@ -103,7 +106,7 @@ def get_tracker_last_seen(tracker_uuid):
     else:
         return None
 
-def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sparkline=False):
+def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sources=True, sparkline=False):
     dict_uuid = {}
     dict_uuid['tracker'] = get_tracker_by_uuid(tracker_uuid)
     dict_uuid['type'] = get_tracker_type(tracker_uuid)
@@ -117,6 +120,8 @@ def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=F
         dict_uuid['level'] = get_tracker_level(tracker_uuid)
     if mails:
         dict_uuid['mails'] = get_tracker_mails(tracker_uuid)
+    if sources:
+        dict_uuid['sources'] = get_tracker_uuid_sources(tracker_uuid)
     if tags:
         dict_uuid['tags'] = get_tracker_tags(tracker_uuid)
     if sparkline:
@@ -318,18 +323,23 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
         r_serv_tracker.sadd('global:tracker', tracker_uuid)
         r_serv_tracker.sadd('global:tracker:{}'.format(tracker_type), tracker_uuid)
 
+    if edit_tracker:
+        r_serv_tracker.delete(f'tracker:tags:{tracker_uuid}')
+        r_serv_tracker.delete(f'tracker:mail:{tracker_uuid}')
+        r_serv_tracker.delete(f'tracker:sources:{tracker_uuid}')
+
     # create tracker tags list
     for tag in tags:
-        r_serv_tracker.sadd('tracker:tags:{}'.format(tracker_uuid), escape(tag) )
+        r_serv_tracker.sadd(f'tracker:tags:{tracker_uuid}', escape(tag))
 
     # create tracker tags mail notification list
     for mail in mails:
-        r_serv_tracker.sadd('tracker:mail:{}'.format(tracker_uuid), escape(mail) )
+        r_serv_tracker.sadd(f'tracker:mail:{tracker_uuid}', escape(mail))
 
     # create tracker sources filter
     for source in sources:
         # escape source ?
-        r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source) )
+        r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source))
 
     # toggle refresh module tracker list/set
     r_serv_tracker.set('tracker:refresh:{}'.format(tracker_type), time.time())
@@ -359,7 +369,11 @@ def api_add_tracker(dict_input, user_id):
     res = verify_mail_list(mails)
     if res:
         return res
+
     sources = dict_input.get('sources', [])
+    res = item_basic.verify_sources_list(sources)
+    if res:
+        return res
 
     ## TODO: add dashboard key
     level = dict_input.get('level', 1)

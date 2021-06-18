@@ -185,7 +185,6 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
     # empty directory
     if not l_dir:
         return l_sources_name.add(source_name)
-        return l_sources_name
     else:
         for src_name in l_dir:
             if len(src_name) == 4:
@@ -201,13 +200,22 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
                 #    pass
             if source_name:
                 src_name = os.path.join(source_name, src_name)
-            l_sources_name = _get_dir_source_name(directory, source_name=src_name, l_sources_name=l_sources_name)
+            l_sources_name = _get_dir_source_name(directory, source_name=src_name, l_sources_name=l_sources_name, filter_dir=filter_dir)
     return l_sources_name
 
 
-def get_all_items_sources():
-    res = _get_dir_source_name(PASTES_FOLDER)
-    print(res)
+def get_all_items_sources(filter_dir=True, r_list=False):
+    res = _get_dir_source_name(PASTES_FOLDER, filter_dir=filter_dir)
+    if r_list:
+        res = list(res)
+    return res
+
+def verify_sources_list(sources):
+    all_sources = get_all_items_sources()
+    for source in sources:
+        if source not in all_sources:
+            return ({'status': 'error', 'reason': 'Invalid source', 'value': source}, 400)
+    return None
 
 ##--  --##
 

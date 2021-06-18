@@ -27,8 +27,11 @@
 
 		<style>
 	    .btn-link {
-	      color: #000000
+	      color: #17a2b8
 	    }
+			.btn-link:hover {
+			  color: blue;
+			}
 	    .mouse_pointer{
 				cursor: pointer;
 			}
@@ -48,12 +51,14 @@
 
 					<div class="card my-3">
 						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-							<h4 class="text-secondary">{{ tracker_metadata['uuid'] }} </h4>
-							<div class="text-info">
+							<h4 class="text-secondary">
 								{%if tracker_metadata['description']%}
 									{{ tracker_metadata['description'] }}
 								{%endif%}
-								<span class="btn-link btn-interaction mouse_pointer" title="Edit Tracker description" onclick="edit_description();"><i class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
+								<span class="btn-interaction btn-link h6 mouse_pointer" title="Edit Tracker description" onclick="edit_description();"><i class="fas fa-pencil-alt"></i></span>
+							</h4>
+							<div class="text-info">
+								{{ tracker_metadata['uuid'] }}
 							</div>
 							<ul class="list-group mb-2">
 								<li class="list-group-item py-0">
@@ -111,6 +116,14 @@
 											<div id="sparkline"></div>
 										</div>
 									</div>
+									<h6>Sources:</h6>
+									{% if tracker_metadata['sources'] %}
+										{% for sources in tracker_metadata['sources'] %}
+											<span class="badge badge-secondary">{{ sources }}</span><br>
+										{% endfor %}
+									{% else %}
+										<span class="badge badge-secondary">All Souces</span><br>
+									{% endif %}
 								</li>
 							</ul>
 

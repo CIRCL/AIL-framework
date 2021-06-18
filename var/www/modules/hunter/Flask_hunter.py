@@ -21,6 +21,7 @@ from flask_login import login_required, current_user
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Term
 import Tracker
+import item_basic
 
 # ============ VARIABLES ============
 import Flask_config
@@ -101,6 +102,7 @@ def add_tracked_menu():
         level = request.form.get("level", 0)
         tags = request.form.get("tags", [])
         mails = request.form.get("mails", [])
+        sources = request.form.get("sources", [])
 
         # YARA #
         if tracker_type == 'yara':
@@ -121,20 +123,29 @@ def add_tracked_menu():
             mails = mails.split()
         if tags:
             tags = tags.split()
+        if sources:
+            sources = json.loads(sources)
 
-        input_dict = {"tracker": tracker, "type": tracker_type, "nb_words": nb_words, "tags": tags, "mails": mails, "level": level, "description": description}
+        input_dict = {"tracker": tracker, "type": tracker_type, "nb_words": nb_words,
+                        "tags": tags, "mails": mails, "sources": sources,
+                        "level": level, "description": description}
         user_id = current_user.get_id()
         # edit tracker
         if tracker_uuid:
             input_dict['uuid'] = tracker_uuid
         res = Tracker.api_add_tracker(input_dict, user_id)
         if res[1] == 200:
-            return redirect(url_for('hunter.tracked_menu'))
+            if 'uuid' in res[0]:
+                return redirect(url_for('hunter.show_tracker', uuid=res[0]['uuid']))
+            else:
+                return redirect(url_for('hunter.tracked_menu'))
         else:
             ## TODO: use modal
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
     else:
-        return render_template("edit_tracker.html", all_yara_files=Tracker.get_all_default_yara_files())
+        return render_template("edit_tracker.html",
+                                all_sources=item_basic.get_all_items_sources(r_list=True),
+                                all_yara_files=Tracker.get_all_default_yara_files())
 
 @hunter.route("/tracker/edit", methods=['GET', 'POST'])
 @login_required
@@ -147,7 +158,7 @@ def edit_tracked_menu():
     if res: # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
-    dict_tracker = Tracker.get_tracker_metedata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True)
+    dict_tracker = Tracker.get_tracker_metedata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True)
     dict_tracker['tags'] = ' '.join(dict_tracker['tags'])
     dict_tracker['mails'] = ' '.join(dict_tracker['mails'])
 
@@ -164,6 +175,7 @@ def edit_tracked_menu():
             dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracker'])
 
     return render_template("edit_tracker.html", dict_tracker=dict_tracker,
+                                all_sources=item_basic.get_all_items_sources(r_list=True),
                                 all_yara_files=Tracker.get_all_default_yara_files())
 
     ## TO EDIT
@@ -193,7 +205,7 @@ def show_tracker():
     if date_to:
         date_to = date_to.replace('-', '')
 
-    tracker_metadata = Term.get_term_metedata(term_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sparkline=True)
+    tracker_metadata = Tracker.get_tracker_metedata(term_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True, sparkline=True)
 
     if tracker_metadata['type'] == 'yara':
         yara_rule_content = Tracker.get_yara_rule_content(tracker_metadata['term'])
@@ -211,6 +223,8 @@ def show_tracker():
         tracker_metadata['items'] = []
         tracker_metadata['date_from'] = ''
         tracker_metadata['date_to'] = ''
+
+    tracker_metadata['sources'] = sorted(tracker_metadata['sources'])
 
     return render_template("showTracker.html", tracker_metadata=tracker_metadata,
                                     yara_rule_content=yara_rule_content,
