@@ -192,8 +192,8 @@ def edit_tracked_menu():
 @login_read_only
 def show_tracker():
     user_id = current_user.get_id()
-    term_uuid = request.args.get('uuid', None)
-    res = Term.check_term_uuid_valid_access(term_uuid, user_id)
+    tracker_uuid = request.args.get('uuid', None)
+    res = Term.check_term_uuid_valid_access(tracker_uuid, user_id)
     if res: # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -205,15 +205,15 @@ def show_tracker():
     if date_to:
         date_to = date_to.replace('-', '')
 
-    tracker_metadata = Tracker.get_tracker_metedata(term_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True, sparkline=True)
+    tracker_metadata = Tracker.get_tracker_metedata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True, sparkline=True)
 
     if tracker_metadata['type'] == 'yara':
-        yara_rule_content = Tracker.get_yara_rule_content(tracker_metadata['term'])
+        yara_rule_content = Tracker.get_yara_rule_content(tracker_metadata['tracker'])
     else:
         yara_rule_content = None
 
     if date_from:
-        res = Term.parse_get_tracker_term_item({'uuid': term_uuid, 'date_from': date_from, 'date_to': date_to}, user_id)
+        res = Term.parse_get_tracker_term_item({'uuid': tracker_uuid, 'date_from': date_from, 'date_to': date_to}, user_id)
         if res[1] !=200:
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
         tracker_metadata['items'] = res[0]['items']

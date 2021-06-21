@@ -61,7 +61,13 @@
 												<input id="description" name="description" class="form-control" placeholder="Tracker Description (optional)" type="text" {%if dict_tracker%}{%if dict_tracker['description']%}value="{{dict_tracker['description']}}"{%endif%}{%endif%}>
 										  </div>
 
-											<input id="sources" style="width:100%;" type="text" name="sources" placeholder="Sources to track (ALL IF EMPTY)" autocomplete="off">
+											<div class="input-group mb-2 mr-sm-2">
+												<div class="input-group-prepend">
+										      <div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
+										    </div>
+												<input id="sources" class="form-control" type="text" name="sources" placeholder="Sources to track (ALL IF EMPTY)" autocomplete="off">
+											</div>
+
 										</div>
 										<div class="col-12 col-xl-3">
 											<div class="custom-control custom-switch mt-1">
