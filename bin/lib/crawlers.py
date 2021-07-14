@@ -775,6 +775,8 @@ def create_item_metadata(item_id, domain, url, port, item_father):
     r_serv_metadata.sadd('paste_children:{}'.format(item_father), item_id)
 
 def create_item_id(item_dir, domain):
+    # remove /
+    domain = domain.replace('/', '_')
     if len(domain) > 215:
         UUID = domain[-215:]+str(uuid.uuid4())
     else:
