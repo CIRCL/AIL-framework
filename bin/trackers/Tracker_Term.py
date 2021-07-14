@@ -96,7 +96,7 @@ class Tracker_Term(AbstractModule):
             ####### # TODO: check if source needed #######
             for word in self.list_tracked_words:
                 if word in dict_words_freq:
-                    self.new_term_found(word, 'word', item.get_id(), item_date, item_source)
+                    self.new_term_found(word, 'word', item.get_id(), item_source)
 
             # check words set
             for elem in self.set_tracked_words_list:
@@ -109,7 +109,7 @@ class Tracker_Term(AbstractModule):
                     if word in dict_words_freq:
                         nb_uniq_word += 1
                 if nb_uniq_word >= nb_words_threshold:
-                    self.new_term_found(word_set, 'set', item.get_id(), item_date, item_source)
+                    self.new_term_found(word_set, 'set', item.get_id(), item_source)
 
     def new_term_found(self, term, term_type, item_id, item_source):
         uuid_list = Term.get_term_uuid_list(term, term_type)
