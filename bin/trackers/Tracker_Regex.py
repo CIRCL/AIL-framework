@@ -79,9 +79,7 @@ class Tracker_Regex(AbstractModule):
             if tracker_sources and item_source not in tracker_sources:
                 continue
 
-            item_date = item.get_date()
-
-            Tracker.add_tracked_item(tracker_uuid, item_id, item_date)
+            Tracker.add_tracked_item(tracker_uuid, item_id)
 
             tags_to_add = Tracker.get_tracker_tags(tracker_uuid)
             for tag in tags_to_add:

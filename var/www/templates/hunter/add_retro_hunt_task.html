@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'hunter/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+						<div class="card my-3">
+						  <div class="card-header bg-dark text-white">
+								<h5 class="card-title">Create a new Retro Hunt task</h5>
+							</div>
+						  <div class="card-body">
+
+								<form action="{{ url_for('hunters.retro_hunt_add_task') }}" method='post'>
+
+									<div class="row">
+										<div class="col-12 col-xl-9">
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-quote-right"></i></div>
+										    </div>
+												<input id="name" name="name" class="form-control" placeholder="Retro Hunt Name" type="text" required>
+										  </div>
+
+											<!-- <div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
+										    </div>
+												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text"}>
+										  </div> -->
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
+										    </div>
+												<textarea id="description" name="description" class="form-control" placeholder="Retro Hunt Description (optional)" rows="3"></textarea>
+										  </div>
+
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+										    </div>
+												<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text">
+										  </div>
+
+											<div class="input-group mb-2 mr-sm-2">
+												<div class="input-group-prepend">
+										      <div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
+										    </div>
+												<input id="sources" class="form-control" type="text" name="sources" placeholder="Sources to track (ALL IF EMPTY)" autocomplete="off">
+											</div>
+
+											<h6>Date range:</h6>
+											<div class="row mb-2">
+												<div class="col-lg-6">
+													<div class="input-group" id="date-range-from">
+														<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+														<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from" autocomplete="off" required>
+													</div>
+												</div>
+												<div class="col-lg-6">
+													<div class="input-group" id="date-range-to">
+														<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+														<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to" autocomplete="off" required>
+													</div>
+												</div>
+											</div>
+
+										</div>
+										<div class="col-12 col-xl-3">
+
+										</div>
+									</div>
+
+
+
+
+									<div class="mb-2" id="yara_rule">
+										<div class="" id="yara_default_rules">
+
+											<h6>Default YARA rules:</h6>
+											<select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
+											  <option selected>Select a default rule</option>
+												{% for yara_types in all_yara_files %}
+													{% for yara_file_name in all_yara_files[yara_types] %}
+													<option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
+													{% endfor %}
+												{% endfor %}
+											</select>
+
+											<pre class="border bg-light" id="default_yara_rule_content"></pre>
+
+										</div>
+
+										<hr>
+
+										<h6>Custom YARA rules:</h6>
+										<div class="row" id="textarea">
+											<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
+										</div>
+									</div>
+
+									<br>
+									<button class="btn btn-primary mt-2">
+										<i class="fas fa-plus"></i> Create Retro Hunt Task
+									</button>
+
+								</form>
+
+
+
+						  </div>
+						</div>
+
+
+			</div>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+var ltags;
+var chart = {};
+$(document).ready(function(){
+	$('#nav_title_retro_hunt').removeClass("text-muted");
+
+	$('#date-range-from').dateRangePicker({
+		separator : ' to ',
+		getValue: function(){
+				if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+						return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+				else
+						return '';
+				},
+				setValue: function(s,s1,s2){
+						$('#date-range-from-input').val(s1);
+						$('#date-range-to-input').val(s2);
+				}
+	});
+	$('#date-range-to').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+			},
+			setValue: function(s,s1,s2){
+					$('#date-range-from-input').val(s1);
+					$('#date-range-to-input').val(s2);
+			}
+	});
+
+	sources = $('#sources').tagSuggest({
+		data: {{all_sources|safe}},
+		{%if dict_tracker%}{%if dict_tracker['sources']%}value: {{dict_tracker['sources']|safe}},{%endif%}{%endif%}
+		sortOrder: 'name',
+		maxDropHeight: 200,
+		name: 'sources',
+		emptyText: 'Sources to track (ALL IF EMPTY)',
+		});
+
+	{%if dict_tracker%}
+		$('#tracker_type').val('{{dict_tracker['type']}}').change();
+
+		{%if dict_tracker['type']=='yara' and dict_tracker['yara_file']%}
+			$('#yara_default_rule').val('{{dict_tracker['yara_file']}}').change();
+		{%endif%}
+	{%endif%}
+
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+
+
+function get_default_rule_content(selector){
+	var yara_name = selector.value
+	if (yara_name === "Select a default rule") {
+		jQuery("#default_yara_rule_content").text("")
+	} else {
+		$.getJSON("{{ url_for('hunter.get_default_yara_rule_content') }}?rule_name=" + yara_name,
+			function(data) {
+				jQuery("#default_yara_rule_content").text(data['content'])
+		});
+	}
+}
+
+</script>

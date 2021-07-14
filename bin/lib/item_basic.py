@@ -7,6 +7,9 @@ import gzip
 
 import magic
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Tag
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
@@ -41,7 +44,8 @@ def get_basename(item_id):
     return os.path.basename(item_id)
 
 def get_source(item_id):
-    return item_id.split('/')[-5]
+    l_source = item_id.split('/')[:-4]
+    return os.path.join(*l_source)
 
 # # TODO: add an option to check the tag
 def is_crawled(item_id):
@@ -204,7 +208,7 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
     return l_sources_name
 
 
-def get_all_items_sources(filter_dir=True, r_list=False):
+def get_all_items_sources(filter_dir=False, r_list=False):
     res = _get_dir_source_name(PASTES_FOLDER, filter_dir=filter_dir)
     if r_list:
         res = list(res)
@@ -216,6 +220,12 @@ def verify_sources_list(sources):
         if source not in all_sources:
             return ({'status': 'error', 'reason': 'Invalid source', 'value': source}, 400)
     return None
+
+def get_all_items_metadata_dict(list_id):
+    list_meta = []
+    for item_id in list_id:
+        list_meta.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_obj_tag(item_id)} )
+    return list_meta
 
 ##--  --##
 

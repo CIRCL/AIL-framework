@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8">
+
+	  <title>AIL Framework - AIL</title>
+		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+	  <!-- Core CSS -->
+		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	  <!-- JS -->
+		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/d3/graphlinesgroup.js')}}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+
+		<style>
+	    .btn-link {
+	      color: #17a2b8
+	    }
+			.btn-link:hover {
+			  color: blue;
+			}
+	    .mouse_pointer{
+				cursor: pointer;
+			}
+	  </style>
+
+	</head>
+	<body>
+
+		{% include 'nav_bar.html' %}
+
+		<div class="container-fluid">
+			<div class="row">
+
+				{% include 'hunter/menu_sidebar.html' %}
+
+				<div class="col-12 col-lg-10" id="core_content">
+
+					<div class="row">
+					  <div class="col-lg-4">
+					    <div class="card my-2">
+								<div class="card-header bg-dark text-white">
+									<div class="">
+										<span class="badge badge-pill badge-light lex-row-reverse float-right">
+											{%if dict_task['state']=='pending'%}
+												<span class="text-secondary"><i class="fas fa-ellipsis-h fa-3x"></i>pending</span>
+											{%elif dict_task['state']=='completed'%}
+												<span class="text-success"><i class="fas fa-check-square fa-3x"></i>&nbsp;completed</span>
+											{%elif dict_task['state']=='paused'%}
+												<span class="text-secondary"><i class="fas fa-pause fa-3x"></i>&nbsp;paused</span>
+											{%elif dict_task['state']=='running'%}
+												<span class="text-secondary"><i class="fas fa-sync-alt fa-3x fa-spin"></i>running</span>
+											{%endif%}
+										</span>
+
+										<h3 class="card-title">
+											{{dict_task['name']}}
+											{%if dict_task['state']!='completed'%}
+												<span class="text-info">[{{ dict_task['progress']}}%]<span>
+											{%endif%}
+										</h3>
+
+									</div>
+								</div>
+					      <div class="card-body bg-light pt-2">
+									<div class="d-flex justify-content-end">
+										{%if dict_task['state']=='paused'%}
+											<a href="{{ url_for('hunters.retro_hunt_resume_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
+												<button class='btn btn-info'><i class="fas fa-play"></i></button>
+											</a>
+										{%endif%}
+										{%if dict_task['state']=='running' or dict_task['state']=='pending'%}
+											<!-- <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
+												<button class='btn btn-secondary'><i class="fas fa-stop"></i></button>
+											</a> -->
+											<a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
+												<button class='btn btn-info'><i class="fas fa-pause"></i></button>
+											</a>
+										{%endif%}
+										<a href="{{ url_for('hunters.retro_hunt_delete_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
+											<button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
+										</a>
+									</div>
+									<hr>
+					        	<table class="table table-borderless">
+											<tbody>
+												<tr>
+													<td class="text-right"><b>Date</b></td>
+													<td>
+														{{dict_task['date'][0:4]}}/{{dict_task['date'][4:6]}}/{{dict_task['date'][6:8]}}
+													</td>
+												</tr>
+												<tr>
+													<td class="text-right"><b>Search date</b></td>
+													<td>
+														{{dict_task['date_from'][0:4]}}/{{dict_task['date_from'][4:6]}}/{{dict_task['date_from'][6:8]}} -
+														{{dict_task['date_to'][0:4]}}/{{dict_task['date_to'][4:6]}}/{{dict_task['date_to'][6:8]}}
+													</td>
+												</tr>
+												<tr>
+													<td class="text-right"><b>Description</b></td>
+													<td>{{dict_task['description']}}</td>
+												</tr>
+												<tr>
+													<td class="text-right"><b>Tags</b></td>
+													<td>
+														{%for tag in dict_task['tags']%}
+															<a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+																<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+															</a>
+														{%endfor%}
+													</td>
+												</tr>
+												<tr>
+													<td class="text-right"><b>Creator</b></td>
+													<td>{{dict_task['creator']}}</td>
+												</tr>
+												<tr>
+													<td class="text-right"><b>Sources</b></td>
+													<td>
+														<div class="">
+															{%if not dict_task['sources']%}
+																<span class="badge badge-secondary">All Souces</span>
+															{%else%}
+																{%for source in dict_task['sources']%}
+																	<span class="badge badge-secondary">{{source}}</span>
+																{%endfor%}
+															{%endif%}
+														</div>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+					      </div>
+					    </div>
+					  </div>
+
+					  <div class="col-lg-8">
+
+							<div class="card border-dark my-2">
+								<div class="card-body">
+
+									<div class="row mb-2">
+										<div class="col-lg-6">
+											<div class="input-group" id="date-range-from">
+												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+												<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from" autocomplete="off"
+													value="{{ dict_task['date_from_input'][0:4] }}-{{ dict_task['date_from_input'][4:6] }}-{{ dict_task['date_from_input'][6:8] }}">
+											</div>
+										</div>
+										<div class="col-lg-6">
+											<div class="input-group" id="date-range-to">
+												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+												<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to" autocomplete="off"
+													value="{{ dict_task['date_to_input'][0:4] }}-{{ dict_task['date_to_input'][4:6] }}-{{ dict_task['date_to_input'][6:8] }}">
+											</div>
+										</div>
+									</div>
+
+									<button class="btn btn-info" type="button" id="button-search-tags" onclick="getItems();">
+										<i class="fas fa-search"></i> Show Items
+									</button>
+
+								</div>
+							</div>
+
+							<p class="my-0"><pre class="border bg-light">{{ rule_content }}</pre></p>
+
+					  </div>
+					</div>
+
+					{%if dict_task['items']%}
+						<div class="mt-4">
+							<table class="table table-bordered table-hover" id="items_table">
+								<thead class="thead-dark">
+									<tr>
+										<th>Date</th>
+										<th>Item Id</th>
+									</tr>
+								</thead>
+								<tbody>
+
+									{% for item in dict_task['items'] %}
+										<tr>
+											<td>
+												{{item['date'][0:4]}}/{{item['date'][4:6]}}/{{item['date'][6:8]}}
+											</td>
+											<td>
+												<a class="text-secondary" target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item['id']}}">
+													<div style="line-height:0.9;">{{ item['id'] }}</div>
+												</a>
+												<div class="mb-2">
+					                {% for tag in item['tags'] %}
+						                <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+						                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+						                </a>
+					                {%  endfor %}
+					              </div>
+											</td>
+										</tr>
+									{%  endfor %}
+
+								</tbody>
+							</table>
+						</div>
+
+						<hr>
+					{% endif %}
+
+
+					<div id="graphline" class="text-center"></div>
+					<br>
+					<br>
+					<br>
+
+
+				</div>
+			</div>
+		</div>
+
+<script>
+$(document).ready(function(){
+		$('#nav_title_retro_hunt').removeClass("text-muted");
+
+		$('#date-range-from').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+					},
+					setValue: function(s,s1,s2){
+							$('#date-range-from-input').val(s1);
+							$('#date-range-to-input').val(s2);
+					}
+		});
+		$('#date-range-to').dateRangePicker({
+				separator : ' to ',
+				getValue: function(){
+						if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+								return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+						else
+								return '';
+				},
+				setValue: function(s,s1,s2){
+						$('#date-range-from-input').val(s1);
+						$('#date-range-to-input').val(s2);
+				}
+		});
+
+		$('#items_table').DataTable({
+	        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+	        "iDisplayLength": 10,
+	        "order": [[ 0, "asc" ]]
+	  });
+
+		let div_width = $("#graphline").width();
+		$.getJSON( "{{ url_for('hunters.get_json_retro_hunt_nb_items_by_date') }}?uuid={{ dict_task['uuid'] }}&date_from={{ dict_task['date_from_input'] }}&date_to={{ dict_task['date_to_input'] }}",
+			function( data ) {multilines_group("graphline", data, {"width": div_width});}
+		);
+
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function getItems() {
+	var date_from = $('#date-range-from-input').val();
+	var date_to =$('#date-range-to-input').val();
+	window.location.replace("{{ url_for('hunters.retro_hunt_show_task') }}?uuid={{ dict_task['uuid'] }}&date_from="+date_from+"&date_to="+date_to);
+}
+
+</script>
+
+
+</body>
+
+</html>

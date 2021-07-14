@@ -78,8 +78,7 @@ class Tracker_Yara(AbstractModule):
             print(f'Source Filtering: {data["rule"]}')
             return yara.CALLBACK_CONTINUE
 
-        item_date = self.item.get_date()
-        Tracker.add_tracked_item(tracker_uuid, item_id, item_date)
+        Tracker.add_tracked_item(tracker_uuid, item_id)
 
         # Tags
         tags_to_add = Tracker.get_tracker_tags(tracker_uuid)

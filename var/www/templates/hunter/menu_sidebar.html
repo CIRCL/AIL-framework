@@ -6,7 +6,7 @@
       	</button>
 
       	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
-      		<h5 class="d-flex text-muted w-100">
+      		<h5 class="d-flex text-muted w-100" id="nav_title_trackers">
       		  <span>Trackers </span>
       			<a class="ml-auto" href="{{url_for('hunter.add_tracked_menu')}}">
       				<i class="fas fa-plus-circle ml-auto"></i>
@@ -41,6 +41,20 @@
       	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_yara')}}" id="nav_tracker_yara">
                 <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>
                 <span>&nbsp;YARA</span>
+      	      </a>
+      	    </li>
+          </ul>
+          <h5 class="d-flex text-muted w-100" id="nav_title_retro_hunt">
+      		  <span>Retro Hunt </span>
+      			<a class="ml-auto" href="{{url_for('hunters.retro_hunt_add_task')}}">
+      				<i class="fas fa-plus-circle ml-auto"></i>
+      			</a>
+      		</h5>
+      	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+            <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('hunters.retro_hunt_all_tasks')}}" id="nav_retro_hunts">
+                <i class="fas fa-meteor"></i>
+      	        <span>Retro Hunt</span>
       	      </a>
       	    </li>
           </ul>

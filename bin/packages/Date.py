@@ -110,6 +110,13 @@ def get_previous_date_list(num_day):
         date_list.append(date.substract_day(i))
     return list(reversed(date_list))
 
+def get_nb_days_by_daterange(date_from, date_to):
+    date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))
+    date_to = datetime.date(int(date_to[0:4]), int(date_to[4:6]), int(date_to[6:8]))
+    delta = date_to - date_from # timedelta
+    return len(range(delta.days + 1))
+
+
 def substract_date(date_from, date_to):
     date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))
     date_to = datetime.date(int(date_to[0:4]), int(date_to[4:6]), int(date_to[6:8]))
@@ -128,6 +135,13 @@ def validate_str_date(str_date, separator=''):
         return False
     except TypeError:
         return False
+
+def api_validate_str_date_range(date_from, date_to, separator=''):
+    is_date = validate_str_date(date_from, separator=separator) and validate_str_date(date_from, separator=separator)
+    if not is_date:
+        return ({"status": "error", "reason": "Invalid Date"}, 400)
+    if int(date_from) > int(date_to):
+        return ({"status": "error", "reason": "Invalid Date range, Date from > Date to"}, 400)
 
 def sanitise_date_range(date_from, date_to, separator='', date_type='str'):
     '''

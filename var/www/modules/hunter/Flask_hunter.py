@@ -28,9 +28,6 @@ import Flask_config
 
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl
-r_serv_term = Flask_config.r_serv_term
-r_serv_cred = Flask_config.r_serv_cred
-r_serv_db = Flask_config.r_serv_db
 bootstrap_label = Flask_config.bootstrap_label
 
 hunter = Blueprint('hunter', __name__, template_folder='templates')
