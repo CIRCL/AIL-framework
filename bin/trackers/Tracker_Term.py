@@ -119,7 +119,6 @@ class Tracker_Term(AbstractModule):
         for term_uuid in uuid_list:
             tracker_sources = Tracker.get_tracker_uuid_sources(term_uuid)
             if not tracker_sources or item_source in tracker_sources:
-                print(not tracker_sources or item_source in tracker_sources)
                 Tracker.add_tracked_item(term_uuid, item_id)
 
                 tags_to_add = Term.get_term_tags(term_uuid)

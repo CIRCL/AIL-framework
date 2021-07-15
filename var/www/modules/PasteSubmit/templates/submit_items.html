@@ -129,7 +129,7 @@
 								</div>
 							</div>
 
-							<label for="ltagsgalaxies">Optional Tags:</label>
+							<label for="ltags">Optional Tags:</label>
 							<div class="row mb-3">
 								<div class="col">
 									<div class="input-group">
@@ -195,7 +195,7 @@
 								<!-- TODO reactivate while zipped format are enabled -->
 								<div class="form-group d-none">
 									<label for="paste_name">Archive Password</label>
-									<input type="password" class="form-control" id="password" name="password"
+									<input type="text" class="form-control" id="archive_pass" name="archive_pass"
 										placeholder="Optional">
 								</div>
 							</div>
@@ -262,7 +262,8 @@
 				ltags = $('#ltags').tagSuggest({
 					data: data,
 					maxDropHeight: 200,
-					name: 'ltags'
+					name: 'ltags',
+					emptyText: 'Add Taxonomies Tags',
 				});
 			});
 
@@ -272,7 +273,8 @@
 				ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
 					data: data,
 					maxDropHeight: 200,
-					name: 'ltagsgalaxies'
+					name: 'ltagsgalaxies',
+					emptyText: 'Add Galaxies Tags',
 				});
 			});
 

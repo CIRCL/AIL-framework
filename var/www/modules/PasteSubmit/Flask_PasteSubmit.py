@@ -273,7 +273,7 @@ def submit():
     #paste_name = request.form['paste_name']
     logger.debug('submit')
 
-    password = request.form['password']
+    password = request.form['archive_pass']
     ltags = request.form['tags_taxonomies']
     ltagsgalaxies = request.form['tags_galaxies']
     paste_content = request.form['paste_content']
