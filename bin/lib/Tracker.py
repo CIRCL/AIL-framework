@@ -142,7 +142,7 @@ def get_tracker_sparkline(tracker_uuid, num_day=6):
     return sparklines_value
 
 def add_tracked_item(tracker_uuid, item_id):
-    item_date = item_basic.get_item_date(id)
+    item_date = item_basic.get_item_date(item_id)
     # track item
     res = r_serv_tracker.sadd(f'tracker:item:{tracker_uuid}:{item_date}', item_id)
     # track nb item by date
