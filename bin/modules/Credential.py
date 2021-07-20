@@ -149,7 +149,7 @@ class Credential(AbstractModule):
 
                 for site, num in creds_sites.items(): # Send for each different site to moduleStats
 
-                    mssg = f'credential;{num};{site};{Item.get_item_date(item_id)}'
+                    mssg = f'credential;{num};{site};{Item.get_date(item_id)}'
                     print(mssg)
                     self.send_message_to_queue(msg, 'ModuleStats')
 
