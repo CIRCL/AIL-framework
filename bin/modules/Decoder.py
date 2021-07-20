@@ -158,7 +158,8 @@ class Decoder(AbstractModule):
 
     def set_out_item(self, decoder_name, item_id):
 
-        self.redis_logger.warning(f'{decoder_name} decoded')
+        self.redis_logger.info(f'{decoder_name} decoded')
+        print(f'{decoder_name} decoded')
 
         # Send to duplicate
         self.send_message_to_queue(item_id, 'Duplicate')
