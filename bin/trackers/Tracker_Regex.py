@@ -96,7 +96,4 @@ class Tracker_Regex(AbstractModule):
 if __name__ == "__main__":
 
     module = Tracker_Regex()
-    #module.run()
-
-    id = 'submitted/2020/06/29/516c4161-e305-4a89-978f-729f2ec05df8.gz'
-    module.compute(id)
+    module.run()

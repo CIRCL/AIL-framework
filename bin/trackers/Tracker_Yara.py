@@ -102,7 +102,4 @@ class Tracker_Yara(AbstractModule):
 if __name__ == '__main__':
 
     module = Tracker_Yara()
-    #module.run()
-
-    id = 'crawled/2020/09/14/circl.lu9bde82e5-a4de-487c-bc29-7601f0922b46'
-    module.compute(id)
+    module.run()
