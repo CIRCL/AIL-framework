@@ -90,6 +90,7 @@ class AbstractModule(ABC):
                 except Exception as err:
                     trace = traceback.format_tb(err.__traceback__)
                     self.redis_logger.critical(f"Error in module {self.module_name}: {err}")
+                    self.redis_logger.critical(f"Module {self.module_name} input message: {message}")
                     self.redis_logger.critical(trace)
                     print()
                     print(f"ERROR: {err}")

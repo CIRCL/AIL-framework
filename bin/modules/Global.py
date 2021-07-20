@@ -109,7 +109,7 @@ class Global(AbstractModule):
             else:
                 # Decode compressed base64
                 decoded = base64.standard_b64decode(gzip64encoded)
-                new_file_content = self.gunzip_bytes_obj(decoded)
+                new_file_content = self.gunzip_bytes_obj(filename, decoded)
 
                 if new_file_content:
                     filename = self.check_filename(filename, new_file_content)
@@ -208,8 +208,8 @@ class Global(AbstractModule):
 
         return curr_file_content
 
-
-    def gunzip_bytes_obj(self, bytes_obj):
+    # # TODO: add stats incomplete_file/Not a gzipped file 
+    def gunzip_bytes_obj(self, filename, bytes_obj):
         gunzipped_bytes_obj = None
         try:
             in_ = io.BytesIO()
