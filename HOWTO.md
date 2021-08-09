@@ -1,3 +1,4 @@
+
 Feeding, adding new features and contributing
 =============================================
 
@@ -8,7 +9,7 @@ For the moment, there are three different ways to feed AIL with data:
 
 1. Be a collaborator of CIRCL and ask to access our feed. It will be sent to the static IP you are using for AIL.
 
-2. You can setup [pystemon](https://github.com/CIRCL/pystemon) and use the custom feeder provided by AIL (see below).
+2. You can setup [pystemon](https://github.com/cvandeplas/pystemon) and use the custom feeder provided by AIL (see below).
 
 3. You can feed your own data using the [./bin/import_dir.py](./bin/import_dir.py) script.
 
@@ -19,16 +20,53 @@ However, if you want to collect some pastes and feed them to AIL, the procedure 
 
 Feed data to AIL:
 
-1. Clone the [pystemon's git repository](https://github.com/CIRCL/pystemon)
+1. Clone the [pystemon's git repository](https://github.com/cvandeplas/pystemon):
+``` git clone https://github.com/cvandeplas/pystemon.git ```
 
-2. Install its python dependencies inside your virtual environment
+2. Edit configuration file for pystemon ```pystemon/pystemon.yaml```: 
+	* Configuration of storage section (adapt to your needs):
+		```
+		storage:  
+			archive:  
+				storage-classname:  FileStorage  
+				save: yes  
+				save-all: yes  
+				dir: "alerts"  
+				dir-all: "archive"  
+				compress: yes
+			
+			redis:  
+				storage-classname:  RedisStorage  
+				save: yes  
+				save-all: yes  
+				server: "localhost"  
+				port: 6379  
+				database: 10  
+				lookup: no
+		```
+	* Change configuration for paste-sites according to your needs (don't forget to throttle download time and/or update time).
+3. Install python dependencies inside the virtual environment:
+	``` 
+	cd ail-framework/
+	. ./AILENV/bin/activate
+	cd pystemon/ #cd to pystemon folder
+	pip3 install -U -r requirements.txt
+	``` 
+4. Edit configuration file ```ail-framework/configs/core.cfg```:
+	* Modify the "pystemonpath" path accordingly
 
-3. Launch pystemon ``` ./pystemon ```
-
-4. Edit your configuration file ```configs/core.cfg``` and modify the pystemonpath path accordingly
-
-5. Launch pystemon-feeder ``` ./bin/feeder/pystemon-feeder.py ```
-
+5. Launch ail-framework, pystemon and pystemon-feeder.py (still inside virtual environment):
+	 * Option 1 (recommended): 
+		 ``` 
+		 ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
+		 ./ail-framework/bin/LAUNCH.py -f #starts pystemon and the pystemon-feeder.py
+		```
+	* Option 2 (you may need two terminal windows): 
+		 ``` 
+		 ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
+		 ./pystemon/pystemon.py
+		 ./ail-framework/bin/feeder/pystemon-feeder.py
+		 ```
 
 How to create a new module
 --------------------------
