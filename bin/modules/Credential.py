@@ -151,7 +151,7 @@ class Credential(AbstractModule):
 
                     mssg = f'credential;{num};{site};{item.get_date()}'
                     print(mssg)
-                    self.send_message_to_queue(msg, 'ModuleStats')
+                    self.send_message_to_queue(mssg, 'ModuleStats')
 
                 if all_sites:
                     discovered_sites = ', '.join(all_sites)
