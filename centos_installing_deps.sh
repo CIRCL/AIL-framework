@@ -2,9 +2,10 @@
 # halt on errors
 set -e
 sudo yum update
-sudo yum -y -q install epel-release python3-pip virtualenv python3-devel python3-tkinter freetype-devel screen
-yum -y -q install freetype-devel gcc gcc-c++ gcc-toolset-9-toolchain tk-devel unzip cmake
-yum -y -q --enablerepo=powertools install snappy-devel
+sudo yum -y -q install epel-release python3-pip virtualenv python3-devel python3-tkinter freetype-devel
+sudo yum -y -q install screen
+sudo yum -y -q install freetype-devel gcc gcc-c++ gcc-toolset-9-toolchain tk-devel unzip cmake
+sudo yum -y -q --enablerepo=powertools install snappy-devel
 
 #Needed for downloading jemalloc
 sudo yum -y -q install wget

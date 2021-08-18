@@ -81,10 +81,18 @@ Installation
 
 Type these command lines for a fully automated installation and start AIL framework:
 ```bash
+# Clone the repo first
 git clone https://github.com/ail-project/ail-framework.git
 cd ail-framework
+
+# For Debian and Ubuntu based distributions
 ./installing_deps.sh
 
+# For Centos based distributions (Tested: Centos 8)
+chmod u+x centos_installing_deps.sh
+./centos_installing_deps.sh
+
+# Launch ail
 cd ~/ail-framework/
 cd bin/
 ./LAUNCH.sh -l
