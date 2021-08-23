@@ -1026,7 +1026,7 @@ def api_create_retro_hunt_task(dict_input, creator):
     # timeout=30
     rule = dict_input.get('rule', None)
     if not rule:
-        return ({"status": "error", "reason": "Retro Hunt Rile not provided"}, 400)
+        return ({"status": "error", "reason": "Retro Hunt Rule not provided"}, 400)
     task_type = dict_input.get('type', None)
     if not task_type:
         return ({"status": "error", "reason": "type not provided"}, 400)
