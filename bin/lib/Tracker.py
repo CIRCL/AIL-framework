@@ -131,6 +131,10 @@ def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=F
     dict_uuid['uuid'] = tracker_uuid
     return dict_uuid
 
+################################################################################
+################################################################################
+################################################################################
+# # TODO: FIXME
 def get_tracker_sparkline(tracker_uuid, num_day=6):
     date_range_sparkline = Date.get_date_range(num_day)
     sparklines_value = []
@@ -141,13 +145,37 @@ def get_tracker_sparkline(tracker_uuid, num_day=6):
         sparklines_value.append(int(nb_seen_this_day))
     return sparklines_value
 
+def get_tracker_items_by_daterange(tracker_uuid, date_from, date_to):
+    all_item_id = set()
+    if date_from and date_to:
+        l_date_match = r_serv_tracker.zrange(f'tracker:stat:{tracker_uuid}', 0, -1, withscores=True)
+        if l_date_match:
+            dict_date_match = dict(l_date_match)
+            for date_day in Date.substract_date(date_from, date_to):
+                if date_day in dict_date_match:
+                    all_item_id |= r_serv_tracker.smembers(f'tracker:item:{tracker_uuid}:{date_day}')
+    return all_item_id
+
 def add_tracked_item(tracker_uuid, item_id):
     item_date = item_basic.get_item_date(item_id)
     # track item
+    # r_serv_tracker.sadd(f'obj:trackers:item:{item_id}', tracker_uuid)
     res = r_serv_tracker.sadd(f'tracker:item:{tracker_uuid}:{item_date}', item_id)
     # track nb item by date
     if res == 1:
         r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(item_date), 1)
+
+def remove_tracked_item(item_id):
+    item_date = item_basic.get_item_date(item_id)
+    for tracker_uuid in get_item_all_trackers_uuid(item_id):
+        r_serv_tracker.srem(f'obj:trackers:item:{item_id}', tracker_uuid)
+        res = r_serv_tracker.srem(f'tracker:item:{tracker_uuid}:{item_date}', item_id)
+        if res:
+            r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(item_date), -1)
+
+def get_item_all_trackers_uuid(obj_id):
+    #obj_type = 'item'
+    return r_serv_tracker.smembers(f'obj:trackers:item:{obj_id}')
 
 
 def get_email_subject(tracker_uuid):
@@ -206,6 +234,18 @@ def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
 
 
 ##-- ACL --##
+
+#### FIX DB ####
+def fix_tracker_stats_per_day(tracker_uuid):
+    date_from = get_tracker_first_seen(tracker_uuid)
+    date_to = get_tracker_last_seen(tracker_uuid)
+    # delete stats
+    r_serv_tracker.delete(f'tracker:stat:{tracker_uuid}')
+    # create new stats
+    for date_day in Date.substract_date(date_from, date_to):
+        pass
+
+##-- FIX DB --##
 
 #### CREATE TRACKER ####
 def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):

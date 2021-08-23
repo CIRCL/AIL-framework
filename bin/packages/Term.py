@@ -410,7 +410,7 @@ def parse_get_tracker_term_item(dict_input, user_id):
     if date_from > date_to:
         date_from = date_to
 
-    all_item_id = get_tracked_term_list_item(term_uuid, date_from, date_to)
+    all_item_id = Tracker.get_tracker_items_by_daterange(term_uuid, date_from, date_to)
     all_item_id = Item.get_item_list_desc(all_item_id)
 
     res_dict = {}
