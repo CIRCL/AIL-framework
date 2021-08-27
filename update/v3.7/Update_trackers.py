@@ -35,7 +35,7 @@ if __name__ == '__main__':
         nb_elem_to_update = int(nb_elem_to_update)
 
     while True:
-        tracker_uuid = r_serv_onion.spop('trackers_update_v3.7')
+        tracker_uuid = r_serv_db.spop('trackers_update_v3.7')
         if tracker_uuid is not None:
             print(tracker_uuid)
             # FIX STATS

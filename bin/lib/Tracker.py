@@ -288,6 +288,8 @@ def fix_tracker_stats_per_day(tracker_uuid):
     date_to = Date.get_today_date_str()
     # delete stats
     r_serv_tracker.delete(f'tracker:stat:{tracker_uuid}')
+    r_serv_tracker.hdel(f'tracker:{tracker_uuid}', 'first_seen')
+    r_serv_tracker.hdel(f'tracker:{tracker_uuid}', 'last_seen')
     # create new stats
     for date_day in Date.substract_date(date_from, date_to):
         date_day = int(date_day)
@@ -296,22 +298,23 @@ def fix_tracker_stats_per_day(tracker_uuid):
         if nb_items:
             r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(date_day), nb_items)
 
-        # update first_seen/last_seen
-        update_tracker_daterange(tracker_uuid, date_day)
+            # update first_seen/last_seen
+            update_tracker_daterange(tracker_uuid, date_day)
 
 def fix_tracker_item_link(tracker_uuid):
     date_from = get_tracker_first_seen(tracker_uuid)
     date_to = get_tracker_last_seen(tracker_uuid)
 
-    for date_day in Date.substract_date(date_from, date_to):
-        l_items = r_serv_tracker.smembers(f'tracker:item:{tracker_uuid}:{date_day}')
-        for item_id in l_items:
-            r_serv_tracker.sadd(f'obj:trackers:item:{item_id}', tracker_uuid)
+    if date_from and date_to:
+        for date_day in Date.substract_date(date_from, date_to):
+            l_items = r_serv_tracker.smembers(f'tracker:item:{tracker_uuid}:{date_day}')
+            for item_id in l_items:
+                r_serv_tracker.sadd(f'obj:trackers:item:{item_id}', tracker_uuid)
 
 def fix_all_tracker_uuid_list():
     r_serv_tracker.delete(f'trackers:all')
-    r_serv_tracker.delete(f'trackers:all:{tracker_type}')
     for tracker_type in get_all_tracker_type():
+        r_serv_tracker.delete(f'trackers:all:{tracker_type}')
         l_tracker = get_all_tracker_by_type(tracker_type)
         for tracker in l_tracker:
             l_tracker_uuid = get_tracker_uuid_list(tracker, tracker_type)

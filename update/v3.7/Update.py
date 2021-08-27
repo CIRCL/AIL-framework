@@ -28,7 +28,7 @@ class Updater(AIL_Updater):
         print('Fixing Tracker_uuid list ...')
         Tracker.fix_all_tracker_uuid_list()
         nb = 0
-        for tracker_uuid in get_all_tracker_uuid:
+        for tracker_uuid in Tracker.get_all_tracker_uuid():
             self.r_serv.sadd('trackers_update_v3.7', tracker_uuid)
             nb += 1
 

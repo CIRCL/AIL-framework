@@ -431,19 +431,10 @@ def parse_get_tracker_term_item(dict_input, user_id):
     return (res_dict, 200)
 
 def get_tracked_term_first_seen(term_uuid):
-    res = r_serv_term.zrange('tracker:stat:{}'.format(term_uuid), 0, 0)
-    if res:
-        return res[0]
-    else:
-        return None
-
+    return Tracker.get_tracker_first_seen(term_uuid)
 
 def get_tracked_term_last_seen(term_uuid):
-    res = r_serv_term.zrevrange('tracker:stat:{}'.format(term_uuid), 0, 0)
-    if res:
-        return res[0]
-    else:
-        return None
+    return Tracker.get_tracker_last_seen(term_uuid)
 
 def get_term_metedata(term_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sparkline=False):
     dict_uuid = {}
