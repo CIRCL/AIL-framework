@@ -10,7 +10,7 @@ import datetime
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-import Domain
+import Tracker
 
 def update_update_stats():
     nb_updated = int(r_serv_db.get('update:nb_elem_converted'))
@@ -18,17 +18,12 @@ def update_update_stats():
     print('{}/{}    updated    {}%'.format(nb_updated, nb_elem_to_update, progress))
     r_serv_db.set('ail:current_background_script_stat', progress)
 
-def update_domain_language(domain_obj, item_id):
-    domain_name = domain_obj.get_domain_name()
-    Domain.add_domain_languages_by_item_id(domain_name, item_id)
-
 if __name__ == '__main__':
 
     start_deb = time.time()
 
     config_loader = ConfigLoader.ConfigLoader()
     r_serv_db = config_loader.get_redis_conn("ARDB_DB")
-    r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
     config_loader = None
 
     r_serv_db.set('ail:current_background_script', 'trackers update')
@@ -39,28 +34,15 @@ if __name__ == '__main__':
     else:
         nb_elem_to_update = int(nb_elem_to_update)
 
-
-
     while True:
         tracker_uuid = r_serv_onion.spop('trackers_update_v3.7')
         if tracker_uuid is not None:
-            date_from =
-            date_to =
-            
-            # FIX STATS
-
             print(tracker_uuid)
-            # get all dates
+            # FIX STATS
+            Tracker.fix_tracker_stats_per_day(tracker_uuid)
+            # MAP TRACKER - ITEM_ID
+            Tracker.fix_tracker_item_link(tracker_uuid)
 
-            # get items id
-
-            # convert
-            domain = Domain.Domain(domain)
-            for domain_history in domain.get_domain_history():
-                domain_item = domain.get_domain_items_crawled(epoch=domain_history[1]) # item_tag
-                if "items" in domain_item:
-                    for item_dict in domain_item['items']:
-                        update_domain_language(domain, item_dict['id'])
 
             r_serv_db.incr('update:nb_elem_converted')
             update_update_stats()
