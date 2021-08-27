@@ -65,3 +65,4 @@ if __name__ == "__main__":
     launch_background_upgrade('v2.6', ['Update_screenshots.py'])
     launch_background_upgrade('v2.7', ['Update_domain_tags.py'])
     launch_background_upgrade('v3.4', ['Update_domain.py'])
+    launch_background_upgrade('v3.7', ['Update_trackers.py'])

@@ -290,11 +290,16 @@ def parse_tracked_term_to_delete(dict_input, user_id):
     delete_term(term_uuid)
     return ({"uuid": term_uuid}, 200)
 
+# # TODO: MOVE IN TRACKER
 def delete_term(term_uuid):
     term = r_serv_term.hget('tracker:{}'.format(term_uuid), 'tracked')
     term_type = r_serv_term.hget('tracker:{}'.format(term_uuid), 'type')
     level = r_serv_term.hget('tracker:{}'.format(term_uuid), 'level')
     r_serv_term.srem('all:tracker_uuid:{}:{}'.format(term_type, term), term_uuid)
+
+    r_serv_term.srem(f'trackers:all', term_uuid)
+    r_serv_term.srem(f'trackers:all:{term_type}', term_uuid)
+
     # Term not tracked by other users
     if not r_serv_term.exists('all:tracker_uuid:{}:{}'.format(term_type, term)):
         r_serv_term.srem('all:tracker:{}'.format(term_type), term)
@@ -323,10 +328,15 @@ def delete_term(term_uuid):
     r_serv_term.delete('tracker:sources:{}'.format(term_uuid))
 
     # remove item set
-    all_item_date = r_serv_term.zrange('tracker:stat:{}'.format(term_uuid), 0, -1)
-    for date in all_item_date:
-        r_serv_term.delete('tracker:item:{}:{}'.format(term_uuid, date))
-    r_serv_term.delete('tracker:stat:{}'.format(term_uuid))
+    #########################3
+    all_item_date = r_serv_term.zrange(f'tracker:stat:{term_uuid}', 0, -1, withscores=True)
+    if all_item_date:
+        all_item_date = dict(all_item_date)
+        for date in all_item_date:
+            for item_id in r_serv_term.smembers(f'tracker:item:{term_uuid}:{date}'):
+                r_serv_term.srem(f'obj:trackers:item:{item_id}', term_uuid)
+            r_serv_term.delete(f'tracker:item:{term_uuid}:{date}')
+        r_serv_term.delete('tracker:stat:{}'.format(term_uuid))
 
     if term_type == 'yara':
         # delete custom rule

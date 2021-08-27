@@ -67,6 +67,24 @@ def verify_mail_list(mail_list):
 ##-- UTILS --##
 ###############
 
+def get_all_tracker_type():
+    return ['word', 'set', 'regex', 'yara']
+
+def get_all_tracker_uuid():
+    return r_serv_tracker.smembers(f'trackers:all')
+
+def get_all_tracker_by_type(tracker_type):
+    r_serv_tracker.smembers(f'trackers:all:{tracker_type}')
+
+# def get_all_tracker():
+#     l_keys_name = []
+#     for tracker_type in get_all_tracker_type():
+#         l_keys_name.append(f'all:tracker:{tracker_type}')
+#     return r_serv_tracker.sunion(l_keys_name[0], *l_keys_name[1:])
+
+def get_all_tracker_by_type(tracker_type):
+    return r_serv_tracker.smembers(f'all:tracker:{tracker_type}')
+
 def get_tracker_by_uuid(tracker_uuid):
     return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'tracked')
 
@@ -94,17 +112,20 @@ def get_tracker_uuid_sources(tracker_uuid):
 def get_tracker_description(tracker_uuid):
     return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'description')
 
+def get_tracker_date(tracker_uuid):
+    return r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'date')
+
 def get_tracker_first_seen(tracker_uuid):
-    res = r_serv_tracker.zrange('tracker:stat:{}'.format(tracker_uuid), 0, 0)
+    res = r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'first_seen')
     if res:
-        return res[0]
+        return res
     else:
         return None
 
 def get_tracker_last_seen(tracker_uuid):
-    res = r_serv_tracker.zrevrange('tracker:stat:{}'.format(tracker_uuid), 0, 0)
+    res = r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'last_seen')
     if res:
-        return res[0]
+        return res
     else:
         return None
 
@@ -112,7 +133,7 @@ def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=F
     dict_uuid = {}
     dict_uuid['tracker'] = get_tracker_by_uuid(tracker_uuid)
     dict_uuid['type'] = get_tracker_type(tracker_uuid)
-    dict_uuid['date'] = r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'date')
+    dict_uuid['date'] = get_tracker_date(tracker_uuid)
     dict_uuid['description'] = get_tracker_description(tracker_uuid)
     dict_uuid['first_seen'] = get_tracker_first_seen(tracker_uuid)
     dict_uuid['last_seen'] = get_tracker_last_seen(tracker_uuid)
@@ -131,15 +152,12 @@ def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=F
     dict_uuid['uuid'] = tracker_uuid
     return dict_uuid
 
-################################################################################
-################################################################################
-################################################################################
-# # TODO: FIXME
+# tracker sparkline
 def get_tracker_sparkline(tracker_uuid, num_day=6):
     date_range_sparkline = Date.get_date_range(num_day)
     sparklines_value = []
     for date_day in date_range_sparkline:
-        nb_seen_this_day = r_serv_tracker.scard('tracker:item:{}:{}'.format(tracker_uuid, date_day))
+        nb_seen_this_day = r_serv_tracker.zscore(f'tracker:stat:{tracker_uuid}', int(date_day))
         if nb_seen_this_day is None:
             nb_seen_this_day = 0
         sparklines_value.append(int(nb_seen_this_day))
@@ -159,11 +177,40 @@ def get_tracker_items_by_daterange(tracker_uuid, date_from, date_to):
 def add_tracked_item(tracker_uuid, item_id):
     item_date = item_basic.get_item_date(item_id)
     # track item
-    # r_serv_tracker.sadd(f'obj:trackers:item:{item_id}', tracker_uuid)
+    r_serv_tracker.sadd(f'obj:trackers:item:{item_id}', tracker_uuid)
     res = r_serv_tracker.sadd(f'tracker:item:{tracker_uuid}:{item_date}', item_id)
     # track nb item by date
     if res == 1:
-        r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(item_date), 1)
+        nb_items = r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(item_date), 1)
+        if nb_items == 1:
+            update_tracker_daterange(tracker_uuid, item_date)
+
+def set_tracker_first_seen(tracker_uuid, date):
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'first_seen', int(date))
+
+def set_tracker_last_seen(tracker_uuid, date):
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'last_seen', int(date))
+
+# # TODO: ADD CACHE ???
+def update_tracker_daterange(tracker_uuid, date, op='add'):
+    date = int(date)
+    first_seen = get_tracker_first_seen(tracker_uuid)
+
+    if op == 'add':
+        if not first_seen:
+            set_tracker_first_seen(tracker_uuid, date)
+            set_tracker_last_seen(tracker_uuid, date)
+        else:
+            first_seen = int(first_seen)
+            last_seen = int(get_tracker_last_seen(tracker_uuid))
+            if date < first_seen:
+                set_tracker_first_seen(tracker_uuid, date)
+            if date > last_seen:
+                set_tracker_last_seen(tracker_uuid, date)
+
+    if op == 'del':
+        pass
+
 
 def remove_tracked_item(item_id):
     item_date = item_basic.get_item_date(item_id)
@@ -237,13 +284,40 @@ def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
 
 #### FIX DB ####
 def fix_tracker_stats_per_day(tracker_uuid):
-    date_from = get_tracker_first_seen(tracker_uuid)
-    date_to = get_tracker_last_seen(tracker_uuid)
+    date_from = get_tracker_date(tracker_uuid)
+    date_to = Date.get_today_date_str()
     # delete stats
     r_serv_tracker.delete(f'tracker:stat:{tracker_uuid}')
     # create new stats
     for date_day in Date.substract_date(date_from, date_to):
-        pass
+        date_day = int(date_day)
+
+        nb_items = r_serv_tracker.scard(f'tracker:item:{tracker_uuid}:{date_day}')
+        if nb_items:
+            r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(date_day), nb_items)
+
+        # update first_seen/last_seen
+        update_tracker_daterange(tracker_uuid, date_day)
+
+def fix_tracker_item_link(tracker_uuid):
+    date_from = get_tracker_first_seen(tracker_uuid)
+    date_to = get_tracker_last_seen(tracker_uuid)
+
+    for date_day in Date.substract_date(date_from, date_to):
+        l_items = r_serv_tracker.smembers(f'tracker:item:{tracker_uuid}:{date_day}')
+        for item_id in l_items:
+            r_serv_tracker.sadd(f'obj:trackers:item:{item_id}', tracker_uuid)
+
+def fix_all_tracker_uuid_list():
+    r_serv_tracker.delete(f'trackers:all')
+    r_serv_tracker.delete(f'trackers:all:{tracker_type}')
+    for tracker_type in get_all_tracker_type():
+        l_tracker = get_all_tracker_by_type(tracker_type)
+        for tracker in l_tracker:
+            l_tracker_uuid = get_tracker_uuid_list(tracker, tracker_type)
+            for tracker_uuid in l_tracker_uuid:
+                r_serv_tracker.sadd(f'trackers:all', tracker_uuid)
+                r_serv_tracker.sadd(f'trackers:all:{tracker_type}', tracker_uuid)
 
 ##-- FIX DB --##
 
@@ -358,6 +432,9 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
 
     # create tracker - uuid map
     r_serv_tracker.sadd('all:tracker_uuid:{}:{}'.format(tracker_type, tracker), tracker_uuid)
+
+    r_serv_tracker.sadd(f'trackers:all', tracker_uuid)
+    r_serv_tracker.sadd(f'trackers:all:{tracker_type}', tracker_uuid)
 
     # add display level set
     if level == 0: # user only
@@ -1121,7 +1198,21 @@ def api_delete_retro_hunt_task(task_uuid):
     else:
         return (delete_retro_hunt_task(task_uuid), 200)
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
+    # fix_all_tracker_uuid_list()
+    # res = get_all_tracker_uuid()
+    # print(len(res))
+
+    # import Term
+    # Term.delete_term('5262ab6c-8784-4a55-b0ff-a471018414b4')
+
+    #fix_tracker_stats_per_day('5262ab6c-8784-4a55-b0ff-a471018414b4')
+
+    # tracker_uuid = '5262ab6c-8784-4a55-b0ff-a471018414b4'
+    # fix_tracker_item_link(tracker_uuid)
+    # res = get_item_all_trackers_uuid('archive/')
+    # print(res)
+
     #res = is_valid_yara_rule('rule dummy {  }')
 
     # res = create_tracker('test', 'word', 'admin@admin.test', 1, [], [], None, sources=['crawled', 'pastebin.com', 'rt/pastebin.com'])

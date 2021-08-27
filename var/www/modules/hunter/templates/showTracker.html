@@ -209,13 +209,15 @@
 								<div class="col-md-6">
 									<div class="input-group" id="date-range-from">
 										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-										<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ tracker_metadata['date_from'] }}" name="date_from" autocomplete="off">
+										<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from" autocomplete="off"
+										{%if tracker_metadata['date_from']%}value="{{ tracker_metadata['date_from'] }}"{%else%}value="{{tracker_metadata['first_seen']}}"{%endif%}>
 									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="input-group" id="date-range-to">
 										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-										<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ tracker_metadata['date_to'] }}" name="date_to" autocomplete="off">
+										<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to" autocomplete="off"
+										{%if tracker_metadata['date_to']%}value="{{ tracker_metadata['date_to'] }}"{%else%}value="{{tracker_metadata['last_seen']}}"{%endif%}>
 									</div>
 								</div>
 							</div>
@@ -270,7 +272,7 @@
 <script>
 $(document).ready(function(){
 		$('#div_edit_mails').hide();
-		$('#div_edit_tags').hide();edit_description
+		$('#div_edit_tags').hide();
 		$('#div_edit_description').hide();
 		$("#page-Decoded").addClass("active");
 
