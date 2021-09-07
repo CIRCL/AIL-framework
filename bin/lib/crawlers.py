@@ -1354,7 +1354,7 @@ def test_ail_crawlers():
     # # TODO: test regular domain
     if not ping_splash_manager():
         manager_url = get_splash_manager_url()
-        error_message = f'Error: Can\'t connect to AIL Splash Manager, http://{manager_url}'
+        error_message = f'Error: Can\'t connect to AIL Splash Manager, {manager_url}'
         print(error_message)
         save_test_ail_crawlers_result(False, error_message)
         return False
