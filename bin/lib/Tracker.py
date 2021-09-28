@@ -374,7 +374,7 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
         return ({"status": "error", "reason": "Incorrect type"}, 400)
     return ({"status": "success", "tracker": tracker, "type": tracker_type}, 200)
 
-def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, dashboard=0, tracker_uuid=None, sources=[]):
+def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, webhook, dashboard=0, tracker_uuid=None, sources=[]):
     # edit tracker
     if tracker_uuid:
         edit_tracker = True
@@ -414,6 +414,9 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
 
     if description:
         r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'description', description)
+
+    if webhook:
+        r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'webhook', webhook)
 
     # type change
     if edit_tracker:
@@ -486,7 +489,8 @@ def api_add_tracker(dict_input, user_id):
     nb_words = dict_input.get('nb_words', 1)
     description = dict_input.get('description', '')
     description = escape(description)
-
+    webhook = dict_input.get('webhook', '')
+    webhook = escape(webhook)
     res = api_validate_tracker_to_add(tracker , tracker_type, nb_words=nb_words)
     if res[1]!=200:
         return res
@@ -528,7 +532,7 @@ def api_add_tracker(dict_input, user_id):
             if is_tracker_in_user_level(tracker, tracker_type, user_id) and not tracker_uuid:
                 return ({"status": "error", "reason": "Tracker already exist"}, 409)
 
-    tracker_uuid = create_tracker(tracker , tracker_type, user_id, level, tags, mails, description, tracker_uuid=tracker_uuid, sources=sources)
+    tracker_uuid = create_tracker(tracker , tracker_type, user_id, level, tags, mails, description, webhook, tracker_uuid=tracker_uuid, sources=sources)
 
     return ({'tracker': tracker, 'type': tracker_type, 'uuid': tracker_uuid}, 200)
 
