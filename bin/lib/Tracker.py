@@ -107,7 +107,7 @@ def get_tracker_mails(tracker_uuid):
     return list(r_serv_tracker.smembers('tracker:mail:{}'.format(tracker_uuid)))
 
 def get_tracker_webhook(tracker_uuid):
-    return r_serv_tracker.hget('tracker:webhook:{}'.format(tracker_uuid))
+    return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'webhook')
 
 def get_tracker_uuid_sources(tracker_uuid):
     return list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}'))

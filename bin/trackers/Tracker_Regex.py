@@ -12,6 +12,7 @@ import os
 import re
 import sys
 import time
+import requests
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -92,7 +93,12 @@ class Tracker_Regex(AbstractModule):
                 mail_body = Tracker_Regex.mail_body_template.format(tracker, item_id, self.full_item_url, item_id)
             for mail in mail_to_notify:
                 NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
-
+            webhook_to_post = Term.get_term_webhook(tracker_uuid)
+            if webhook_to_post:
+                request_body = dict({"itemId": item_id, "url": self.full_item_url, "type": "REGEX"})
+                r = requests.post(webhook_to_post, data=request_body)
+                if (r.status_code >= 400):
+                    raise Exception(f"Webhook request failed for {webhook_to_post}\nReason: {r.reason}")
 if __name__ == "__main__":
 
     module = Tracker_Regex()
