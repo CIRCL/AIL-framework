@@ -13,6 +13,8 @@ import os
 import sys
 import time
 import signal
+import requests
+
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -24,21 +26,24 @@ from packages.Item import Item
 from packages import Term
 from lib import Tracker
 
-
 class TimeoutException(Exception):
     pass
+
+
 def timeout_handler(signum, frame):
     raise TimeoutException
+
+
 signal.signal(signal.SIGALRM, timeout_handler)
 
 
 class Tracker_Term(AbstractModule):
-
     mail_body_template = "AIL Framework,\nNew occurrence for tracked term: {}\nitem id: {}\nurl: {}{}"
 
     """
     Tracker_Term module for AIL framework
     """
+
     def __init__(self):
         super(Tracker_Term, self).__init__()
 
@@ -55,7 +60,6 @@ class Tracker_Term(AbstractModule):
         self.last_refresh_set = time.time()
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
-
 
     def compute(self, item_id):
         # refresh Tracked term
@@ -88,7 +92,7 @@ class Tracker_Term(AbstractModule):
 
         if dict_words_freq:
             # create token statistics
-            #for word in dict_words_freq:
+            # for word in dict_words_freq:
             #    Term.create_token_statistics(item_date, word, dict_words_freq[word])
             item_source = item.get_source()
 
@@ -135,8 +139,14 @@ class Tracker_Term(AbstractModule):
                     print(f'S        print(item_content)end Mail {mail_subject}')
                     NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
+                webhook_to_post = Term.get_term_webhook(term_uuid)
+                if webhook_to_post:
+                    request_body = dict({"itemId": item_id, "url": self.full_item_url, "type": "Term", "term": term})
+                    r = requests.post(webhook_to_post, data=request_body)
+                    if (r.status_code >= 400):
+                        raise Exception(f"Webhook request failed for {webhook_to_post}\nReason: {r.reason}")
+
 
 if __name__ == '__main__':
-
     module = Tracker_Term()
     module.run()
