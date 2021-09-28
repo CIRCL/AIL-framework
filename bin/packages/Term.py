@@ -375,7 +375,7 @@ def get_term_mails(term_uuid):
     return list(r_serv_term.smembers('tracker:mail:{}'.format(term_uuid)))
 
 def get_term_webhook(term_uuid):
-    return list(r_serv_term.hget('tracker:webhook:{}'.format(term_uuid)))
+    return r_serv_term.hget('tracker:webhook:{}'.format(term_uuid))
 
 def add_tracked_item(term_uuid, item_id, item_date):
     # track item

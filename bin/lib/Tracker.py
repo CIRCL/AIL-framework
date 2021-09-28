@@ -107,7 +107,7 @@ def get_tracker_mails(tracker_uuid):
     return list(r_serv_tracker.smembers('tracker:mail:{}'.format(tracker_uuid)))
 
 def get_tracker_webhook(tracker_uuid):
-    return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'webhook')
+    return r_serv_tracker.hget('tracker:webhook:{}'.format(tracker_uuid))
 
 def get_tracker_uuid_sources(tracker_uuid):
     return list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}'))
@@ -472,7 +472,7 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
     for source in sources:
         # escape source ?
         r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source))
-
+    r_serv_tracker.sadd(f'tracker:webhook:{tracker_uuid}', webhook)
     # toggle refresh module tracker list/set
     r_serv_tracker.set('tracker:refresh:{}'.format(tracker_type), time.time())
     if tracker_type != old_type: # toggle old type refresh
