@@ -106,6 +106,9 @@ def get_tracker_tags(tracker_uuid):
 def get_tracker_mails(tracker_uuid):
     return list(r_serv_tracker.smembers('tracker:mail:{}'.format(tracker_uuid)))
 
+def get_tracker_webhook(tracker_uuid):
+    return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'webhook')
+
 def get_tracker_uuid_sources(tracker_uuid):
     return list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}'))
 
@@ -129,7 +132,7 @@ def get_tracker_last_seen(tracker_uuid):
     else:
         return None
 
-def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sources=True, sparkline=False):
+def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sources=True, sparkline=False, webhook=False):
     dict_uuid = {}
     dict_uuid['tracker'] = get_tracker_by_uuid(tracker_uuid)
     dict_uuid['type'] = get_tracker_type(tracker_uuid)
@@ -149,6 +152,8 @@ def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=F
         dict_uuid['tags'] = get_tracker_tags(tracker_uuid)
     if sparkline:
         dict_uuid['sparkline'] = get_tracker_sparkline(tracker_uuid)
+    if webhook:
+        dict_uuid['webhook'] = get_tracker_webhook(tracker_uuid)
     dict_uuid['uuid'] = tracker_uuid
     return dict_uuid
 

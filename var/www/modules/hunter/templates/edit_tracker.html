@@ -43,7 +43,7 @@
 									<div class="row">
 										<div class="col-12 col-xl-9">
 										  <div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
+										    <div class="input-group-prepend"-->
 										      <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
 										    </div>
 												<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{{dict_tracker['tags']}}"{%endif%}{%endif%}>
@@ -53,6 +53,12 @@
 										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
 										    </div>
 												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['mails']%}value="{{dict_tracker['mails']}}"{%endif%}{%endif%}>
+										  </div>
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
+										    </div>
+												<input id="webhook" name="webhook" class="form-control" placeholder="Webhook URL" type="text" {%if dict_tracker%}{%if dict_tracker['webhook']%}value="{{dict_tracker['webhook']}}"{%endif%}{%endif%}>
 										  </div>
 											<div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
