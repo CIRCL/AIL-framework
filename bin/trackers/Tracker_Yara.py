@@ -98,7 +98,7 @@ class Tracker_Yara(AbstractModule):
             NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
         webhook_to_post = Term.get_term_webhook(tracker_uuid)
         if webhook_to_post:
-            request_body = dict({"itemId": item_id, "url": self.full_item_url, "type": "YARA"})
+            request_body = {"itemId": item_id, "url": self.full_item_url, "type": "YARA"}
             r = requests.post(webhook_to_post, data=request_body)
             if (r.status_code >= 400):
                 raise Exception(f"Webhook request failed for {webhook_to_post}\nReason: {r.reason}")
