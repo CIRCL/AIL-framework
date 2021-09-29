@@ -58,7 +58,6 @@
                             <th>Tracker</th>
                             <th>First seen</th>
                             <th>Last seen</th>
-                            <th>Webhook URL</th>
                             <th>Email notification</th>
                             <th>sparkline</th>
                         </tr>
@@ -100,11 +99,6 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if dict_uuid['webhook'] %}
-                                        {{ dict_uuid['webhook'] }}
-                                    {% endif %}
-                                </td>
-                                <td>
                                     {% for mail in dict_uuid['mails'] %}
                                         {{ mail }}<br>
                                     {% endfor %}
@@ -129,7 +123,6 @@
                             <th>Tracker</th>
                             <th>First seen</th>
                             <th>Last seen</th>
-                            <th>Webhook URL</th>
                             <th>Email notification</th>
                             <th>sparkline</th>
                         </tr>
@@ -170,11 +163,7 @@
                                         {{ dict_uuid['last_seen'][6:8] }}
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {% if dict_uuid['webhook'] %}
-                                        {{ dict_uuid['webhook'] }}
-                                    {% endif %}
-                                </td>
+
                                 <td>
                                     {% for mail in dict_uuid['mails'] %}
                                         {{ mail }}<br>
