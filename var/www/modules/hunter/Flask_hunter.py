@@ -156,7 +156,7 @@ def edit_tracked_menu():
     if res: # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
-    dict_tracker = Tracker.get_tracker_metedata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True, webhook=True)
+    dict_tracker = Tracker.get_tracker_metadata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True, webhook=True)
     dict_tracker['tags'] = ' '.join(dict_tracker['tags'])
     dict_tracker['mails'] = ' '.join(dict_tracker['mails'])
 
@@ -203,7 +203,7 @@ def show_tracker():
     if date_to:
         date_to = date_to.replace('-', '')
 
-    tracker_metadata = Tracker.get_tracker_metedata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True, sparkline=True, webhook=True)
+    tracker_metadata = Tracker.get_tracker_metadata(tracker_uuid, user_id=True, level=True, description=True, tags=True, mails=True, sources=True, sparkline=True, webhook=True)
 
     if tracker_metadata['type'] == 'yara':
         yara_rule_content = Tracker.get_yara_rule_content(tracker_metadata['tracker'])
