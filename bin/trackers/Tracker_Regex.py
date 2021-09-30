@@ -5,7 +5,7 @@ The Tracker_Regex trackers module
 ===================
 
 This Module is used for regex tracking.
-It processes every item coming from the global module and test the regexs
+It processes every item coming from the global module and test the regex
 
 """
 import os
@@ -76,6 +76,8 @@ class Tracker_Regex(AbstractModule):
         for tracker_uuid in uuid_list:
             # Source Filtering
             item_source =  item.get_source()
+            item_date =    item.get_date()
+
             tracker_sources = Tracker.get_tracker_uuid_sources(tracker_uuid)
             if tracker_sources and item_source not in tracker_sources:
                 continue
@@ -93,13 +95,25 @@ class Tracker_Regex(AbstractModule):
                 mail_body = Tracker_Regex.mail_body_template.format(tracker, item_id, self.full_item_url, item_id)
             for mail in mail_to_notify:
                 NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
+
+            # Webhook
             webhook_to_post = Term.get_term_webhook(tracker_uuid)
             if webhook_to_post:
-                request_body = {"itemId": item_id, "url": self.full_item_url, "type": "REGEX"}
-                r = requests.post(webhook_to_post, data=request_body)
-                if (r.status_code >= 400):
-                    raise Exception(f"Webhook request failed for {webhook_to_post}\nReason: {r.reason}")
-if __name__ == "__main__":
+                json_request = {"trackerId": tracker_uuid,
+                                "itemId": item_id,
+                                "itemURL": self.full_item_url + item_id,
+                                "tracker": tracker,
+                                "itemSource": item_source,
+                                "itemDate": item_date,
+                                "tags": tags_to_add,
+                                "emailNotification": f'{mail_to_notify}',
+                                "trackerType": tracker_type
+                                }
+                response = requests.post(webhook_to_post, json=json_request)
+                if response.status_code >= 400:
+                    raise Exception(f"Webhook request failed for {webhook_to_post}\nReason: {response.reason}")
 
+
+if __name__ == "__main__":
     module = Tracker_Regex()
     module.run()
