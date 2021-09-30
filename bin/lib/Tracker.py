@@ -132,12 +132,12 @@ def get_tracker_last_seen(tracker_uuid):
     else:
         return None
 
-def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sources=True, sparkline=False, webhook=False):
+def get_tracker_metadata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sources=True, sparkline=False, webhook=False):
     dict_uuid = {}
+    dict_uuid['uuid'] = tracker_uuid
     dict_uuid['tracker'] = get_tracker_by_uuid(tracker_uuid)
     dict_uuid['type'] = get_tracker_type(tracker_uuid)
     dict_uuid['date'] = get_tracker_date(tracker_uuid)
-    dict_uuid['description'] = get_tracker_description(tracker_uuid)
     dict_uuid['first_seen'] = get_tracker_first_seen(tracker_uuid)
     dict_uuid['last_seen'] = get_tracker_last_seen(tracker_uuid)
     if user_id:
@@ -152,9 +152,11 @@ def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=F
         dict_uuid['tags'] = get_tracker_tags(tracker_uuid)
     if sparkline:
         dict_uuid['sparkline'] = get_tracker_sparkline(tracker_uuid)
+    if description:
+        dict_uuid['description'] = get_tracker_description(tracker_uuid)
     if webhook:
         dict_uuid['webhook'] = get_tracker_webhook(tracker_uuid)
-    dict_uuid['uuid'] = tracker_uuid
+
     return dict_uuid
 
 # tracker sparkline
