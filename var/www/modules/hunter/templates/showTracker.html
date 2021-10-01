@@ -94,7 +94,7 @@
                                             <td>{{ tracker_metadata['tracker'] }}</td>
                                             <td>{{ tracker_metadata['date'][0:4] }}/{{ tracker_metadata['date'][4:6] }}/{{ tracker_metadata['date'][6:8] }}</td>
                                             <td>
-                                                {% if tracker_metadata['level'] == "0" %}
+                                                {% if tracker_metadata['level'] == 0 %}
                                                     Private
                                                 {% else %}
                                                     Global
