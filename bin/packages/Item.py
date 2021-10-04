@@ -236,7 +236,7 @@ def get_item_as_txt(request_dict):
         return {'status': 'error', 'reason': 'Item not found'}, 404
 
     item_content = get_item_content(item_id)
-    base64_output = base64.b64encode(item_content)
+    base64_output = base64.b64encode(item_content.encode())
     dict_item = {'id': item_id, 'content': base64_output}
 
     return dict_item, 200
