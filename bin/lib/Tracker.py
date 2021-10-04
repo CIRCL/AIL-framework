@@ -474,7 +474,6 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
     for source in sources:
         # escape source ?
         r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source))
-    r_serv_tracker.sadd(f'tracker:webhook:{tracker_uuid}', webhook)
     # toggle refresh module tracker list/set
     r_serv_tracker.set('tracker:refresh:{}'.format(tracker_type), time.time())
     if tracker_type != old_type: # toggle old type refresh
@@ -484,10 +483,10 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
 def api_add_tracker(dict_input, user_id):
     tracker = dict_input.get('tracker', None)
     if not tracker:
-        return ({"status": "error", "reason": "Tracker not provided"}, 400)
+        return {"status": "error", "reason": "Tracker not provided"}, 400
     tracker_type = dict_input.get('type', None)
     if not tracker_type:
-        return ({"status": "error", "reason": "Tracker type not provided"}, 400)
+        return {"status": "error", "reason": "Tracker type not provided"}, 400
     nb_words = dict_input.get('nb_words', 1)
     description = dict_input.get('description', '')
     description = escape(description)
@@ -529,14 +528,14 @@ def api_add_tracker(dict_input, user_id):
         # check if tracker already tracked in global
         if level==1:
             if is_tracker_in_global_level(tracker, tracker_type) and not tracker_uuid:
-                return ({"status": "error", "reason": "Tracker already exist"}, 409)
+                return {"status": "error", "reason": "Tracker already exist"}, 409
         else:
             if is_tracker_in_user_level(tracker, tracker_type, user_id) and not tracker_uuid:
-                return ({"status": "error", "reason": "Tracker already exist"}, 409)
+                return {"status": "error", "reason": "Tracker already exist"}, 409
 
     tracker_uuid = create_tracker(tracker , tracker_type, user_id, level, tags, mails, description, webhook, tracker_uuid=tracker_uuid, sources=sources)
 
-    return ({'tracker': tracker, 'type': tracker_type, 'uuid': tracker_uuid}, 200)
+    return {'tracker': tracker, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 ##-- CREATE TRACKER --##
 
