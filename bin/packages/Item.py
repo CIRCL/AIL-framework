@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-
+import base64
 import os
 import re
 import sys
@@ -165,13 +165,13 @@ def get_item_languages(item_id, min_len=600, num_langs=3, min_proportion=0.2, mi
 # API
 def get_item(request_dict):
     if not request_dict:
-        return Response({'status': 'error', 'reason': 'Malformed JSON'}, 400)
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
 
     item_id = request_dict.get('id', None)
     if not item_id:
-        return ( {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400 )
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
     if not exist_item(item_id):
-        return ( {'status': 'error', 'reason': 'Item not found'}, 404 )
+        return {'status': 'error', 'reason': 'Item not found'}, 404
 
     dict_item = {}
     dict_item['id'] = item_id
@@ -216,7 +216,51 @@ def get_item(request_dict):
         if request_dict['cryptocurrency'].get('bitcoin'):
             dict_item['cryptocurrency']['bitcoin'] = get_item_bitcoin(item_id)
 
-    return (dict_item, 200)
+    return dict_item, 200
+
+
+
+
+
+
+
+# API as txt
+def get_item_as_txt(request_dict):
+    if not request_dict:
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+    item_id = request_dict.get('id', None)
+    if not item_id:
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+    if not exist_item(item_id):
+        return {'status': 'error', 'reason': 'Item not found'}, 404
+
+    item_content = get_item_content(item_id)
+    encoded_item_content = item_content.encode("UTF-8")
+    base64_output = base64.b64encode(encoded_item_content)
+    dict_item = {'id': item_id, 'content': base64_output}
+
+    return dict_item, 200
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ###
