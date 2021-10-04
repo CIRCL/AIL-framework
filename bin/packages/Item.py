@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-import base64
 import os
 import re
 import sys
@@ -235,9 +234,9 @@ def get_item_as_txt(request_dict):
         return {'status': 'error', 'reason': 'Item not found'}, 404
 
     item_content = get_item_content(item_id)
-    encoded_item_content = item_content.encode("UTF-8")
-    base64_output = base64.b64encode(encoded_item_content)
-    dict_item = {'id': item_id, 'content': base64_output}
+    #encoded_item_content = item_content.encode("UTF-8")
+    #base64_output = base64.b64encode(encoded_item_content)
+    dict_item = {'id': item_id, 'content': item_content}
 
     return dict_item, 200
 

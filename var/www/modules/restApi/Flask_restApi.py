@@ -321,7 +321,7 @@ def get_item_content():
     item_id = data.get('id', None)
     req_data = {'id': item_id}
     res = Item.get_item_as_txt(req_data)
-    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='text/plain'), res[1]
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
