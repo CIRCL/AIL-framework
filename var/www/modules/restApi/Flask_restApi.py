@@ -315,7 +315,7 @@ def get_item_content():
 
 @restApi.route("api/v1/get/item/content/text", methods=['POST'])
 @token_required('read_only')
-def get_item_content():
+def get_item_content_text():
 
     data = request.get_json()
     item_id = data.get('id', None)
