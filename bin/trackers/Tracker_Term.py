@@ -152,9 +152,13 @@ class Tracker_Term(AbstractModule):
                                     "emailNotification": f'{mail_to_notify}',
                                     "trackerType": term_type
                                     }
-                    response = requests.post(webhook_to_post, json=json_request)
-                    if response.status_code >= 400:
-                        raise Exception(f"Webhook request failed for {webhook_to_post}\nReason: {response.reason}")
+                    try:
+                        response = requests.post(webhook_to_post, json=json_request)
+                        if response.status_code >= 400:
+                            self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: {response.reason}")
+                    except:
+                        self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: Something went wrong")
+
 
 
 if __name__ == '__main__':
