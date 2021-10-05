@@ -220,24 +220,19 @@ def get_item(request_dict):
 
 
 
-
-
-def get_item_as_txt(request_dict):
+def get_item_content_encoded_text(request_dict):
     item_id = request_dict.get('id', None)
-
     if not request_dict:
-        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400, 1
     if not item_id:
-        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400, 1
     if not exist_item(item_id):
-        return {'status': 'error', 'reason': 'Item not found'}, 404
+        return {'status': 'error', 'reason': 'Item not found'}, 404, 1
 
     item_content = get_item_content(item_id)
-    base64_output = base64.b64encode((item_content.encode('utf-8')).decode())
-    dict_item = {'id': item_id, 'content': base64_output}
+    base64_output = base64.b64encode((item_content.encode('utf-8')))
 
-    return dict_item, 200
-
+    return base64_output, 200, 0
 
 
 ###

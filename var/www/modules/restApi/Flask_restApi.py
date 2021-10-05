@@ -312,14 +312,17 @@ def get_item_content():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 
-@restApi.route("api/v1/get/item/content/text", methods=['POST'])
+@restApi.route("api/v1/get/item/content/encoded/text", methods=['POST'])
 @token_required('read_only')
-def get_item_content_text():
+def get_item_content_encoded_text():
     data = request.get_json()
     item_id = data.get('id', None)
     req_data = {'id': item_id}
-    res = Item.get_item_as_txt(req_data)
-    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    res = Item.get_item_content_encoded_text(req_data)
+    if res[2] == 1:
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+    else:
+        return res[0], res[1]
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
