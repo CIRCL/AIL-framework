@@ -9,6 +9,7 @@ import redis
 import uuid
 import yara
 import datetime
+import base64
 
 from flask import escape
 
@@ -683,17 +684,36 @@ def api_get_default_rule_content(default_yara_rule):
     yara_dir = get_yara_rules_default_dir()
     filename = os.path.join(yara_dir, default_yara_rule)
     filename = os.path.realpath(filename)
-
-    # incorrect filename
     if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
-        return ({'status': 'error', 'reason': 'file transversal detected'}, 400)
+        return {'status': 'error', 'reason': 'file traversal detected'}, 400
 
     if not os.path.isfile(filename):
-        return ({'status': 'error', 'reason': 'yara rule not found'}, 400)
+        return {'status': 'error', 'reason': 'yara rule not found'}, 400
 
     with open(filename, 'r') as f:
         rule_content = f.read()
-    return ({'rule_name': default_yara_rule, 'content': rule_content}, 200)
+    return {'rule_name': default_yara_rule, 'content': rule_content}, 200
+
+
+def get_yara_rule_content_restapi(request_dict):
+    rule_name = request_dict.get('rule_name', None)
+    if not request_dict:
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+    if not rule_name:
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+    yara_dir = get_yara_rules_dir()
+    filename = os.path.join(yara_dir, rule_name)
+    filename = os.path.realpath(filename)
+    if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
+        return {'status': 'error', 'reason': 'File Path Traversal'}, 400
+    if not os.path.isfile(filename):
+        return {'status': 'error', 'reason': 'yara rule not found'}, 400
+    with open(filename, 'r') as f:
+        rule_content = f.read()
+    rule_content = base64.b64encode((rule_content.encode('utf-8'))).decode('UTF-8')
+    return {'status': 'success', 'content': rule_content}, 200
+
+
 
 ##-- YARA --##
 

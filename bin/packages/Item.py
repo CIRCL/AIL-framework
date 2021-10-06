@@ -59,6 +59,9 @@ def get_item_date(item_id, add_separator=False):
 def get_source(item_id):
     return item_basic.get_source(item_id)
 
+def get_all_sources():
+    return item_basic.get_all_items_sources(r_list=True)
+
 def get_item_basename(item_id):
     return os.path.basename(item_id)
 
@@ -87,14 +90,12 @@ def get_item_metadata(item_id, item_content=None):
     # encoding
     # language
     # lines info
-
-    item_metadata = {}
-    item_metadata['date'] = get_item_date(item_id, add_separator=True)
-    item_metadata['source'] = get_source(item_id)
-    item_metadata['size'] = get_item_size(item_id)
-    item_metadata['encoding'] = get_item_encoding(item_id)
-    item_metadata['lines'] = get_lines_info(item_id, item_content=item_content)
-
+    item_metadata = {'date': get_item_date(item_id, add_separator=True),
+                     'source': get_source(item_id),
+                     'size': get_item_size(item_id),
+                     'encoding': get_item_encoding(item_id),
+                     'lines': get_lines_info(item_id, item_content=item_content)
+                     }
     return item_metadata
 
 def get_item_parent(item_id):
@@ -223,18 +224,33 @@ def get_item(request_dict):
 def get_item_content_encoded_text(request_dict):
     item_id = request_dict.get('id', None)
     if not request_dict:
-        return {'status': 'error', 'reason': 'Malformed JSON'}, 400, 1
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
     if not item_id:
-        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400, 1
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
     if not exist_item(item_id):
-        return {'status': 'error', 'reason': 'Item not found'}, 404, 1
+        return {'status': 'error', 'reason': 'Item not found'}, 404
 
     item_content = get_item_content(item_id)
-    base64_output = base64.b64encode((item_content.encode('utf-8')))
+    item_content = base64.b64encode((item_content.encode('utf-8'))).decode('UTF-8')
+    return {'status': 'success', 'content': item_content}, 200
 
-    return base64_output, 200, 0
 
+def get_item_sources():
+    item_content = {'sources': get_all_sources()}
+    return item_content, 200
 
+def check_item_source(request_dict):
+    source = request_dict.get('source', None)
+    if not request_dict:
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+    if not source:
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+
+    all_sources = item_basic.get_all_items_sources()
+
+    if source not in all_sources:
+        return {'status': 'error', 'reason': 'Invalid source', 'provide': source}, 400
+    return {'status': 'success', 'reason': 'Valid source', 'provide': source}, 200
 ###
 ### correlation
 ###
