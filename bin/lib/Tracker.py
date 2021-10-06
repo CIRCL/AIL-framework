@@ -11,6 +11,7 @@ import yara
 import datetime
 import base64
 
+
 from flask import escape
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
@@ -160,6 +161,34 @@ def get_tracker_metadata(tracker_uuid, user_id=False, description=False, level=F
 
     return dict_uuid
 
+def get_tracker_metadata_api(request_dict):
+    tracker_uuid = request_dict.get('tracker_uuid', None)
+    if not request_dict:
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+    if not tracker_uuid:
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+    if not is_valid_uuid_v4(tracker_uuid):
+        return {"status": "error", "reason": "Invalid Tracker UUID"}, 400
+    if not r_serv_tracker.exists(f'tracker:{tracker_uuid}'):
+        return {'status': 'error', 'reason': 'Tracker not found'}, 404
+
+    dict_tracker = {'status': 'success',
+                    'uuid': tracker_uuid,
+                    'user_id': get_tracker_user_id(tracker_uuid),
+                    'tracker': get_tracker_by_uuid(tracker_uuid),
+                    'type': get_tracker_type(tracker_uuid),
+                    'date': get_tracker_date(tracker_uuid),
+                    'first_seen': get_tracker_first_seen(tracker_uuid),
+                    'last_seen': get_tracker_last_seen(tracker_uuid),
+                    'level': get_tracker_level(tracker_uuid),
+                    'mails': get_tracker_mails(tracker_uuid),
+                    'tags': get_tracker_tags(tracker_uuid),
+                    'description': get_tracker_description(tracker_uuid),
+                    'webhook': get_tracker_webhook(tracker_uuid)
+                    }
+
+    return dict_tracker, 200
+
 # tracker sparkline
 def get_tracker_sparkline(tracker_uuid, num_day=6):
     date_range_sparkline = Date.get_date_range(num_day)
@@ -279,13 +308,13 @@ def is_tracker_in_user_level(tracker, tracker_type, user_id):
 
 def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
     if not is_valid_uuid_v4(tracker_uuid):
-        return ({"status": "error", "reason": "Invalid uuid"}, 400)
+        return {"status": "error", "reason": "Invalid uuid"}, 400
     tracker_creator = r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
     if not tracker_creator:
-        return ({"status": "error", "reason": "Unknown uuid"}, 404)
+        return {"status": "error", "reason": "Unknown uuid"}, 404
     if not is_in_role(user_id, 'admin') and user_id != tracker_creator:
-        return ({"status": "error", "reason": "Access Denied"}, 403)
-    return ({"uuid": tracker_uuid}, 200)
+        return {"status": "error", "reason": "Access Denied"}, 403
+    return {"uuid": tracker_uuid}, 200
 
 
 ##-- ACL --##
@@ -336,14 +365,14 @@ def fix_all_tracker_uuid_list():
 def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
     if tracker_type=='regex':
         if not is_valid_regex(tracker):
-            return ({"status": "error", "reason": "Invalid regex"}, 400)
+            return {"status": "error", "reason": "Invalid regex"}, 400
     elif tracker_type=='word' or tracker_type=='set':
         # force lowercase
         tracker = tracker.lower()
         word_set = set(tracker)
         set_inter = word_set.intersection(special_characters)
         if set_inter:
-            return ({"status": "error", "reason": f'special character(s) not allowed: {set_inter}', "message": "Please use a python regex or remove all special characters"}, 400)
+            return {"status": "error", "reason": f'special character(s) not allowed: {set_inter}', "message": "Please use a python regex or remove all special characters"}, 400
         words = tracker.split()
         # not a word
         if tracker_type=='word' and len(words)>1:
@@ -369,13 +398,13 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
 
     elif tracker_type=='yara_custom':
         if not is_valid_yara_rule(tracker):
-            return ({"status": "error", "reason": "Invalid custom Yara Rule"}, 400)
+            return {"status": "error", "reason": "Invalid custom Yara Rule"}, 400
     elif tracker_type=='yara_default':
         if not is_valid_default_yara_rule(tracker):
-            return ({"status": "error", "reason": "The Yara Rule doesn't exist"}, 400)
+            return {"status": "error", "reason": "The Yara Rule doesn't exist"}, 400
     else:
-        return ({"status": "error", "reason": "Incorrect type"}, 400)
-    return ({"status": "success", "tracker": tracker, "type": tracker_type}, 200)
+        return {"status": "error", "reason": "Incorrect type"}, 400
+    return {"status": "success", "tracker": tracker, "type": tracker_type}, 200
 
 def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, webhook, dashboard=0, tracker_uuid=None, sources=[]):
     # edit tracker
@@ -1106,9 +1135,9 @@ def get_retro_hunt_nb_item_by_day(l_task_uuid, date_from=None, date_to=None):
 ## API ##
 def api_check_retro_hunt_task_uuid(task_uuid):
     if not is_valid_uuid_v4(task_uuid):
-        return ({"status": "error", "reason": "Invalid uuid"}, 400)
+        return {"status": "error", "reason": "Invalid uuid"}, 400
     if not r_serv_tracker.exists(f'tracker:retro_hunt:task:{task_uuid}'):
-        return ({"status": "error", "reason": "Unknown uuid"}, 404)
+        return {"status": "error", "reason": "Unknown uuid"}, 404
     return None
 
 def api_get_retro_hunt_items(dict_input):
@@ -1136,7 +1165,7 @@ def api_get_retro_hunt_items(dict_input):
     res_dict['date_from'] = date_from
     res_dict['date_to'] = date_to
     res_dict['items'] = all_items_id
-    return (res_dict, 200)
+    return res_dict, 200
 
 def api_pause_retro_hunt_task(task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
@@ -1144,9 +1173,9 @@ def api_pause_retro_hunt_task(task_uuid):
         return res
     task_state = get_retro_hunt_task_state(task_uuid)
     if task_state not in ['pending', 'running']:
-        return ({"status": "error", "reason": f"Task {task_uuid} not paused, current state: {task_state}"}, 400)
+        return {"status": "error", "reason": f"Task {task_uuid} not paused, current state: {task_state}"}, 400
     pause_retro_hunt_task(task_uuid)
-    return (task_uuid, 200)
+    return task_uuid, 200
 
 def api_resume_retro_hunt_task(task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
@@ -1154,9 +1183,9 @@ def api_resume_retro_hunt_task(task_uuid):
         return res
     task_state = get_retro_hunt_task_state(task_uuid)
     if not r_serv_tracker.sismember('tracker:retro_hunt:task:paused', task_uuid):
-        return ({"status": "error", "reason": f"Task {task_uuid} not paused, current state: {get_retro_hunt_task_state(task_uuid)}"}, 400)
+        return {"status": "error", "reason": f"Task {task_uuid} not paused, current state: {get_retro_hunt_task_state(task_uuid)}"}, 400
     resume_retro_hunt_task(task_uuid)
-    return (task_uuid, 200)
+    return task_uuid, 200
 
 def api_validate_rule_to_add(rule, rule_type):
     if rule_type=='yara_custom':

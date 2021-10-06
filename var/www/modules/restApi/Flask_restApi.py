@@ -398,6 +398,16 @@ def get_default_yara_rule_content():
     req_data = {'rule_name': rule_name}
     res = Tracker.get_yara_rule_content_restapi(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+
+@restApi.route("api/v1/get/tracker/metadata", methods=['POST'])
+@token_required('read_only')
+def get_tracker_metadata_api():
+    data = request.get_json()
+    tracker_uuid = data.get('tracker_uuid', None)
+    req_data = {'tracker_uuid': tracker_uuid}
+    res = Tracker.get_tracker_metadata_api(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=False), mimetype='application/json'), res[1]
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # #        CRYPTOCURRENCY       # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
