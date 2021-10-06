@@ -221,7 +221,7 @@ def verify_sources_list(sources):
     all_sources = get_all_items_sources()
     for source in sources:
         if source not in all_sources:
-            return ({'status': 'error', 'reason': 'Invalid source', 'value': source}, 400)
+            return {'status': 'error', 'reason': 'Invalid source', 'value': source}, 400
     return None
 
 def get_all_items_metadata_dict(list_id):
