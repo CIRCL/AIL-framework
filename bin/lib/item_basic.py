@@ -83,7 +83,7 @@ def is_father(item_id):
 def is_children(item_id):
     return r_serv_metadata.hexists('paste_metadata:{}'.format(item_id), 'father')
 
-def is_root_node():
+def is_root_node(item_id):
     if is_father(item_id) and not is_children(item_id):
         return True
     else:
@@ -131,8 +131,8 @@ def _delete_node(item_id):
     # only if item isn't deleted
     #if is_crawled(item_id):
     #    r_serv_metadata.hrem('paste_metadata:{}'.format(item_id), 'real_link')
-    for chidren_id in get_item_children(item_id):
-        r_serv_metadata.hdel('paste_metadata:{}'.format(chidren_id), 'father')
+    for children_id in get_item_children(item_id):
+        r_serv_metadata.hdel('paste_metadata:{}'.format(children_id), 'father')
     r_serv_metadata.delete('paste_children:{}'.format(item_id))
 
     # delete regular
@@ -210,9 +210,12 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
 
 def get_all_items_sources(filter_dir=False, r_list=False):
     res = _get_dir_source_name(PASTES_FOLDER, filter_dir=filter_dir)
-    if r_list:
-        res = list(res)
-    return res
+    if res:
+        if r_list:
+            res = list(res)
+        return res
+    else:
+        return []
 
 def verify_sources_list(sources):
     all_sources = get_all_items_sources()

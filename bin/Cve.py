@@ -10,56 +10,61 @@ It apply CVE regexes on paste content and warn if a reference to a CVE is spotte
 
 """
 
+##################################
+# Import External packages
+##################################
 import time
 import re
-from pubsublogger import publisher
+
+##################################
+# Import Project packages
+##################################
+from modules.abstract_module import AbstractModule
 from packages import Paste
-from Helper import Process
 
 
-def search_cve(message):
-    filepath, count = message.split()
-    paste = Paste.Paste(filepath)
-    content = paste.get_p_content()
-    # regex to find CVE
-    reg_cve = re.compile(r'(CVE-)[1-2]\d{1,4}-\d{1,5}')
-    # list of the regex results in the Paste, may be null
-    results = set(reg_cve.findall(content))
+class Cve(AbstractModule):
+    """
+    Cve module for AIL framework
+    """
 
-    # if the list is greater than 2, we consider the Paste may contain a list of cve
-    if len(results) > 0:
-        print('{} contains CVEs'.format(paste.p_name))
-        publisher.warning('{} contains CVEs'.format(paste.p_name))
+    def __init__(self):
+        super(Cve, self).__init__()
 
-        msg = 'infoleak:automatic-detection="cve";{}'.format(filepath)
-        p.populate_set_out(msg, 'Tags')
-        #Send to duplicate
-        p.populate_set_out(filepath, 'Duplicate')
+        # regex to find CVE
+        self.reg_cve = re.compile(r'(CVE-)[1-2]\d{1,4}-\d{1,5}')
+
+        # Waiting time in secondes between to message proccessed
+        self.pending_seconds = 1
+
+        # Send module state to logs
+        self.redis_logger.info(f'Module {self.module_name} initialized')
+
+
+    def compute(self, message):
+
+        filepath, count = message.split()
+        paste = Paste.Paste(filepath)
+        content = paste.get_p_content()
+        
+        # list of the regex results in the Paste, may be null
+        results = set(self.reg_cve.findall(content))
+
+        # if the list is positive, we consider the Paste may contain a list of cve
+        if len(results) > 0:
+            warning = f'{paste.p_name} contains CVEs'
+            print(warning)
+            self.redis_logger.warning(warning)
+
+            msg = f'infoleak:automatic-detection="cve";{filepath}'
+            # Send to Tags Queue
+            self.send_message_to_queue(msg, 'Tags')
+            # Send to Duplicate Queue
+            self.send_message_to_queue(filepath, 'Duplicate')
+
 
 if __name__ == '__main__':
-    # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
-    # Port of the redis instance used by pubsublogger
-    publisher.port = 6380
-    # Script is the default channel used for the modules.
-    publisher.channel = 'Script'
 
-    # Section name in bin/packages/modules.cfg
-    config_section = 'Cve'
+    module = Cve()
+    module.run()
 
-    # Setup the I/O queues
-    p = Process(config_section)
-
-    # Sent to the logging a description of the module
-    publisher.info("Run CVE module")
-
-    # Endless loop getting messages from the input queue
-    while True:
-        # Get one message from the input queue
-        message = p.get_from_set()
-        if message is None:
-            publisher.debug("{} queue is empty, waiting".format(config_section))
-            time.sleep(1)
-            continue
-
-        # Do something with the message from the queue
-        search_cve(message)

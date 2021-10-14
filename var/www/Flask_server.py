@@ -70,7 +70,7 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 # logs
 log_dir = os.path.join(os.environ['AIL_HOME'], 'logs')
 if not os.path.isdir(log_dir):
-    os.makedirs(logs_dir)
+    os.makedirs(log_dir)
 
 # log_filename = os.path.join(log_dir, 'flask_server.logs')
 # logger = logging.getLogger()
