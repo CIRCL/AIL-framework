@@ -11,6 +11,9 @@ import ConfigLoader
 
 from flask_login import UserMixin
 
+def get_all_users():
+    return r_serv_db.hkeys('user:all')
+
 class User(UserMixin):
 
     def __init__(self, id):

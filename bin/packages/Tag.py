@@ -421,7 +421,7 @@ def add_tag(object_type, tag, object_id, obj_date=None):
     r_serv_tags.hincrby('daily_tags:{}'.format(datetime.date.today().strftime("%Y%m%d")), tag, 1)
 
 def delete_obj_tag(object_type, object_id, tag, obj_date):
-    if object_type=="item": # # TODO: # FIXME: # REVIEW: rename me !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if object_type=="item": # # TODO: # FIXME: # REVIEW: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         obj_date = get_obj_date(object_type, object_id)
         r_serv_metadata.srem('tag:{}'.format(object_id), tag)
         r_serv_tags.srem('{}:{}'.format(tag, obj_date), object_id)
@@ -455,7 +455,7 @@ def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
     if not tags:
         return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
 
-    res = delete_obj_tags(object_id, object_type, tags=tags)
+    res = delete_obj_tags(object_id, object_type, tags)
     if res:
         return res
 
@@ -464,12 +464,15 @@ def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
     dict_res['id'] = object_id
     return (dict_res, 200)
 
-def delete_obj_tags(object_id, object_type, tags=[]):
+def delete_obj_tags(object_id, object_type, tags):
     obj_date = get_obj_date(object_type, object_id)
     for tag in tags:
         res = delete_tag(object_type, tag, object_id, obj_date=obj_date)
         if res:
             return res
+
+def delete_obj_all_tags(obj_id, obj_type):
+    delete_obj_tags(obj_id, obj_type, get_obj_tag(obj_id))
 
 def sanitise_tags_date_range(l_tags, date_from=None, date_to=None):
     if date_from is None or date_to is None:

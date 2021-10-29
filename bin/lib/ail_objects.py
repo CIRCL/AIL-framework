@@ -9,8 +9,15 @@ import redis
 from abc import ABC
 from flask import url_for
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+import Tag
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+
+config_loader = ConfigLoader.ConfigLoader()
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+config_loader = None
 
 class AbstractObject(ABC):
     """
@@ -22,7 +29,7 @@ class AbstractObject(ABC):
     #         - handle + refactor coorelations
     #         - creates others objects
 
-    def __init__(self, obj_type, id):
+    def __init__(self, obj_type, id, subtype=None):
         """ Abstract for all the AIL object
 
         :param obj_type: object type (item, ...)
@@ -30,17 +37,43 @@ class AbstractObject(ABC):
         """
         self.id = id
         self.type = obj_type
-
-    def get_type(self):
-        return self.type
+        self.subtype = None
 
     def get_id(self):
         return self.id
 
+    def get_type(self):
+        return self.type
 
-config_loader = ConfigLoader.ConfigLoader()
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
-config_loader = None
+    def get_subtype(self, r_str=False):
+        if not self.subtype:
+            if r_str:
+                return ''
+        return self.subtype
+
+    def get_default_meta(self):
+        dict_meta = {'id': self.get_id(),
+                     'type': self.get_type()}
+        if self.subtype:
+            dict_meta['subtype'] = self.subtype
+        return dict_meta
+
+    def get_tags(self, r_set=False):
+        tags = Tag.get_obj_tag(self.id)
+        if r_set:
+            tags = set(tags)
+        return tags
+
+    ## ADD TAGS ????
+    #def add_tags(self):
+
+    def _delete(self):
+        # DELETE TAGS
+        Tag.delete_obj_all_tags(self.id, self.type)
+        if self.type == 'item':
+            # delete tracker
+            pass
+
 
 def is_valid_object_type(object_type):
     if object_type in ['domain', 'item', 'image', 'decoded']:

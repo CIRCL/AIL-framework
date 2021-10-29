@@ -72,6 +72,7 @@ class AbstractModule(ABC):
         ex: send_to_queue(item_id, 'Global')
         """
         self.process.populate_set_out(message, queue_name)
+        # add to new set_module
 
     def run(self):
         """
@@ -98,6 +99,8 @@ class AbstractModule(ABC):
                     print('TRACEBACK:')
                     for line in trace:
                         print(line)
+                # remove from set_module
+                ## check if item process == completed
 
             else:
                 self.computeNone()

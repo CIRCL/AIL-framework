@@ -102,6 +102,13 @@ class Categ(AbstractModule):
         if r_result:
             return categ_found
 
+        # DIRTY FIX AIL SYNC
+        # # FIXME:  DIRTY FIX
+        message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
+        print(message)
+        self.send_message_to_queue(message, 'SyncModule')
+
+
 if __name__ == '__main__':
 
     # SCRIPT PARSER #

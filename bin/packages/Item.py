@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import base64
 import os
 import re
 import sys
@@ -502,7 +503,6 @@ def delete_item(obj_id):
     if not exist_item(obj_id):
         return False
     else:
-        Tag.delete_obj_tags(obj_id, 'item', Tag.get_obj_tag(obj_id))
         delete_item_duplicate(obj_id)
         # delete MISP event
         r_serv_metadata.delete('misp_events:{}'.format(obj_id))
@@ -532,6 +532,8 @@ def delete_item(obj_id):
 
     ### TODO in inport V2
     # delete from tracked items
+
+    # # # TODO: # FIXME: LATER
     # delete from queue
     ###
     return False
@@ -594,6 +596,18 @@ class Item(AbstractObject):
         """
         return item_basic.get_item_content(self.id)
 
+    def get_gzip_content(self, b64=False):
+        with open(self.get_filename(), 'rb') as f:
+            content = f.read()
+        if b64:
+            content = base64.b64encode(content)
+        return content.decode()
+
+    def get_ail_2_ail_payload(self):
+        payload = {'raw': self.get_gzip_content(b64=True),
+                    'compress': 'gzip'}
+        return payload
+
     # # TODO:
     def create(self):
         pass
@@ -606,6 +620,22 @@ class Item(AbstractObject):
             return True
         except FileNotFoundError:
             return False
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
+
+    def exist_correlation(self):
+        pass
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
+    ############################################################################
+    ############################################################################
+    ############################################################################
+    ############################################################################
+    ############################################################################
 
 #if __name__ == '__main__':
 
