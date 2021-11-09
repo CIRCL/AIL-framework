@@ -10,8 +10,9 @@ AIL
   <td>Latest Release</td>
   <td><a href="https://github.com/ail-project/ail-framework/releases/latest"><img src="https://img.shields.io/github/release/ail-project/ail-framework/all.svg"></a></td>
 </tr>
-  <td>Travis</td>
-  <td><a href="https://travis-ci.com/ail-project/ail-framework"><img src="https://travis-ci.com/ail-project/ail-framework.svg?branch=master" /></a></td>
+<tr>
+  <td>CI</td>
+  <td><a href="https://github.com/CIRCL/AIL-framework/actions/workflows/ail_framework_test.yml"><img src="https://github.com/CIRCL/AIL-framework/actions/workflows/ail_framework_test.yml/badge.svg"></a></td>
 </tr>
 <tr>
   <td>Gitter</td>
