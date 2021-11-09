@@ -9,6 +9,11 @@ AIL
 <tr>
   <td>Latest Release</td>
   <td><a href="https://github.com/ail-project/ail-framework/releases/latest"><img src="https://img.shields.io/github/release/ail-project/ail-framework/all.svg"></a></td>
+</tr>
+<tr>
+  <td>CI</td>
+  <td><a href="https://github.com/CIRCL/AIL-framework/actions/workflows/ail_framework_test.yml"><img src="https://github.com/CIRCL/AIL-framework/actions/workflows/ail_framework_test.yml/badge.svg"></a></td>
+</tr>
 <tr>
   <td>Gitter</td>
   <td><a href="https://gitter.im/ail-project/?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/ail-project.svg" /></a></td>
