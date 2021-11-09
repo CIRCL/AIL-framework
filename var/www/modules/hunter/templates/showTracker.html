@@ -1,359 +1,400 @@
 <!DOCTYPE html>
 <html>
 
-	<head>
-	  <meta charset="utf-8">
+<head>
+    <meta charset="utf-8">
 
-	  <title>AIL Framework - AIL</title>
-		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <title>AIL Framework - AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
-	  <!-- Core CSS -->
-		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
 
-	  <!-- JS -->
-		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
-		<script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/d3/graphlinesgroup.js')}}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/graphlinesgroup.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
-		<style>
-	    .btn-link {
-	      color: #17a2b8
-	    }
-			.btn-link:hover {
-			  color: blue;
-			}
-	    .mouse_pointer{
-				cursor: pointer;
-			}
-	  </style>
+    <style>
+        .btn-link {
+            color: #17a2b8
+        }
 
-	</head>
-	<body>
+        .btn-link:hover {
+            color: blue;
+        }
 
-		{% include 'nav_bar.html' %}
+        .mouse_pointer {
+            cursor: pointer;
+        }
+    </style>
 
-		<div class="container-fluid">
-			<div class="row">
+</head>
+<body>
 
-				{% include 'hunter/menu_sidebar.html' %}
+{% include 'nav_bar.html' %}
 
-				<div class="col-12 col-lg-10" id="core_content">
+<div class="container-fluid">
+    <div class="row">
 
-					<div class="card my-3">
-						<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-							<h4 class="text-secondary">
-								{%if tracker_metadata['description']%}
-									{{ tracker_metadata['description'] }}
-								{%endif%}
-								<span class="btn-interaction btn-link h6 mouse_pointer" title="Edit Tracker description" onclick="edit_description();"><i class="fas fa-pencil-alt"></i></span>
-							</h4>
-							<div class="text-info">
-								{{ tracker_metadata['uuid'] }}
-							</div>
-							<ul class="list-group mb-2">
-								<li class="list-group-item py-0">
-									<div class="row">
-										<div class="col-md-10">
-											<table class="table">
-												<thead>
-													<tr>
-														<th>Type</th>
-														<th>Tracker</th>
-														<th>Date added</th>
-														<th>Level</th>
-														<th>Created by</th>
-														<th>First seen</th>
-														<th>Last seen</th>
-														<th>Tags <span class="btn-link btn-interaction mouse_pointer" title="Edit Tags List" onclick="edit_tags();"><i class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
-														<th>Email <span class="btn-link btn-interaction mouse_pointer" title="Edit Email List" onclick="edit_mails();"><i class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td>{{ tracker_metadata['type'] }}</td>
-														<td>{{ tracker_metadata['tracker'] }}</td>
-														<td>{{ tracker_metadata['date'][0:4] }}/{{ tracker_metadata['date'][4:6] }}/{{ tracker_metadata['date'][6:8] }}</td>
-														<td>{{ tracker_metadata['level'] }}</td>
-														<td>{{ tracker_metadata['user_id'] }}</td>
-														<td>
-															{% if tracker_metadata['first_seen'] %}
-																{{ tracker_metadata['first_seen'][0:4] }}/{{ tracker_metadata['first_seen'][4:6] }}/{{ tracker_metadata['first_seen'][6:8] }}
-															{% endif %}
-														</td>
-														<td>
-															{% if tracker_metadata['last_seen'] %}
-																{{ tracker_metadata['last_seen'][0:4] }}/{{ tracker_metadata['last_seen'][4:6] }}/{{ tracker_metadata['last_seen'][6:8] }}
-															{% endif %}
-														</td>
-														<td>
-															{% for tag in tracker_metadata['tags'] %}
-				                        <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
-				                          <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
-				                        </a>
-			                        {%  endfor %}
+        {% include 'hunter/menu_sidebar.html' %}
 
-														</td>
-														<td>
-															{% for mail in tracker_metadata['mails'] %}
-				                        {{ mail }}<br>
-				                      {%  endfor %}
-														</td>
-													</tr>
-												</tbody>
-											</table>
-										</div>
-										<div class="col-md-1">
-											<div id="sparkline"></div>
-										</div>
-									</div>
-									<h6>Sources:</h6>
-									{% if tracker_metadata['sources'] %}
-										{% for sources in tracker_metadata['sources'] %}
-											<span class="badge badge-secondary">{{ sources }}</span><br>
-										{% endfor %}
-									{% else %}
-										<span class="badge badge-secondary">All Souces</span><br>
-									{% endif %}
-								</li>
-							</ul>
+        <div class="col-12 col-lg-10" id="core_content">
 
-							<div id="div_edit_description">
-								<form action="{{ url_for('hunter.update_tracker_description') }}" method='post'>
-									<input name="uuid" type="text" value="{{tracker_metadata['uuid']}}" hidden>
-									<div>Update this tracker description: </div>
-									<div class="input-group mb-2 mr-sm-2">
-										<div class="input-group-prepend">
-											<div class="input-group-text"><i class="fas fa-pencil-alt"></i></div>
-										</div>
-										<input id="description" name="description" class="form-control" placeholder="Tracker Description" type="text"
-										value="{%if tracker_metadata['description']%}{{tracker_metadata['description']}}{%endif%}">
-									</div>
+            <div class="card my-3">
+                <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+                    <h4 class="text-secondary">
+                        {% if tracker_metadata['description'] %}
+                            {{ tracker_metadata['description'] }}
+                        {% endif %}
+                        <span class="btn-interaction btn-link h6 mouse_pointer" title="Edit Tracker description"
+                              onclick="edit_description();"><i class="fas fa-pencil-alt"></i></span>
+                    </h4>
+                    <div class="text-info">
+                        {{ tracker_metadata['uuid'] }}
+                    </div>
+                    <ul class="list-group mb-2">
+                        <li class="list-group-item py-0">
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Tracker</th>
+                                            <th>Date added</th>
+                                            <th>Access Level</th>
+                                            <th>Created by</th>
+                                            <th>First seen</th>
+                                            <th>Last seen</th>
+                                            {% if tracker_metadata['webhook'] %}
+                                            <th>Webhook</th>
+                                            {% endif %}
+                                            <th>Tags <span class="btn-link btn-interaction mouse_pointer"
+                                                           title="Edit Tags List" onclick="edit_tags();"><i
+                                                    class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
+                                            <th>Email <span class="btn-link btn-interaction mouse_pointer"
+                                                            title="Edit Email List" onclick="edit_mails();"><i
+                                                    class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{{ tracker_metadata['type'] }}</td>
+                                            <td>{{ tracker_metadata['tracker'] }}</td>
+                                            <td>{{ tracker_metadata['date'][0:4] }}/{{ tracker_metadata['date'][4:6] }}/{{ tracker_metadata['date'][6:8] }}</td>
+                                            <td>
+                                                {% if tracker_metadata['level'] == 0 %}
+                                                    Private
+                                                {% else %}
+                                                    Global
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ tracker_metadata['user_id'] }}</td>
+                                            <td>
+                                                {% if tracker_metadata['first_seen'] %}
+                                                    {{ tracker_metadata['first_seen'][0:4] }}/
+                                                    {{ tracker_metadata['first_seen'][4:6] }}/
+                                                    {{ tracker_metadata['first_seen'][6:8] }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if tracker_metadata['last_seen'] %}
+                                                    {{ tracker_metadata['last_seen'][0:4] }}/
+                                                    {{ tracker_metadata['last_seen'][4:6] }}/
+                                                    {{ tracker_metadata['last_seen'][6:8] }}
+                                                {% endif %}
+                                            </td>
+                                            {% if tracker_metadata['webhook'] %}
+                                                <td>
+                                                    Turned ON
+                                                </td>
+                                            {% endif %}
+                                            <td>
+                                                {% for tag in tracker_metadata['tags'] %}
+                                                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+                                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                                    </a>
+                                                {% endfor %}
 
-									<button class="btn btn-info">
-										<i class="fas fa-pencil-alt"></i> Edit Description
-									</button>
-								</form>
+                                            </td>
+                                            <td>
+                                                {% for mail in tracker_metadata['mails'] %}
+                                                    {{ mail }}<br>
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-1">
+                                    <div id="sparkline"></div>
+                                </div>
+                            </div>
+                            <h6>Sources:</h6>
+                            {% if tracker_metadata['sources'] %}
+                                {% for sources in tracker_metadata['sources'] %}
+                                    <span class="badge badge-secondary">{{ sources }}</span><br>
+                                {% endfor %}
+                            {% else %}
+                                <span class="badge badge-secondary">All Souces</span><br>
+                            {% endif %}
+                        </li>
+                    </ul>
 
-							</div>
+                    <div id="div_edit_description">
+                        <form action="{{ url_for('hunter.update_tracker_description') }}" method='post'>
+                            <input name="uuid" type="text" value="{{ tracker_metadata['uuid'] }}" hidden>
+                            <div>Update this tracker description:</div>
+                            <div class="input-group mb-2 mr-sm-2">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text"><i class="fas fa-pencil-alt"></i></div>
+                                </div>
+                                <input id="description" name="description" class="form-control"
+                                       placeholder="Tracker Description" type="text"
+                                       value="
+                                               {% if tracker_metadata['description'] %}{{ tracker_metadata['description'] }}{% endif %}">
+                            </div>
 
-							<div id="div_edit_tags">
-								<form action="{{ url_for('hunter.update_tracker_tags') }}" method='post'>
-									<input name="uuid" type="text" value="{{tracker_metadata['uuid']}}" hidden>
-									<div>All Tags added for this tracker, space separated: </div>
-									<div class="input-group mb-2 mr-sm-2">
-										<div class="input-group-prepend">
-											<div class="input-group-text"><i class="fas fa-tag"></i></div>
-										</div>
-										<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text"
-										value="{% for tag in tracker_metadata['tags'] %}{{tag}} {%  endfor %}">
-									</div>
+                            <button class="btn btn-info">
+                                <i class="fas fa-pencil-alt"></i> Edit Description
+                            </button>
+                        </form>
 
-									<button class="btn btn-info">
-										<i class="fas fa-pencil-alt"></i> Edit Tags
-									</button>
-								</form>
+                    </div>
 
-							</div>
+                    <div id="div_edit_tags">
+                        <form action="{{ url_for('hunter.update_tracker_tags') }}" method='post'>
+                            <input name="uuid" type="text" value="{{ tracker_metadata['uuid'] }}" hidden>
+                            <div>All Tags added for this tracker, space separated:</div>
+                            <div class="input-group mb-2 mr-sm-2">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text"><i class="fas fa-tag"></i></div>
+                                </div>
+                                <input id="tags" name="tags" class="form-control"
+                                       placeholder="Tags (optional, space separated)" type="text"
+                                       value="{% for tag in tracker_metadata['tags'] %}{{ tag }} {% endfor %}">
+                            </div>
 
-							<div id="div_edit_mails">
-								<form action="{{ url_for('hunter.update_tracker_mails') }}" method='post'>
-									<input name="uuid" type="text" value="{{tracker_metadata['uuid']}}" hidden>
-									<div>All E-Mails to Notify for this tracker, space separated: </div>
-									<div class="input-group mb-2 mr-sm-2">
-										<div class="input-group-prepend">
-											<div class="input-group-text"><i class="fas fa-at"></i></div>
-										</div>
-										<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text"
-										value="{% for mail in tracker_metadata['mails'] %}{{mail}} {%  endfor %}">
-									</div>
+                            <button class="btn btn-info">
+                                <i class="fas fa-pencil-alt"></i> Edit Tags
+                            </button>
+                        </form>
 
-									<button class="btn btn-info">
-										<i class="fas fa-pencil-alt"></i> Edit Email Notification
-									</button>
-								</form>
+                    </div>
 
-							</div>
+                    <div id="div_edit_mails">
+                        <form action="{{ url_for('hunter.update_tracker_mails') }}" method='post'>
+                            <input name="uuid" type="text" value="{{ tracker_metadata['uuid'] }}" hidden>
+                            <div>All E-Mails to Notify for this tracker, space separated:</div>
+                            <div class="input-group mb-2 mr-sm-2">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text"><i class="fas fa-at"></i></div>
+                                </div>
+                                <input id="mails" name="mails" class="form-control"
+                                       placeholder="E-Mails Notification (optional, space separated)" type="text"
+                                       value="{% for mail in tracker_metadata['mails'] %}{{ mail }} {% endfor %}">
+                            </div>
 
-							<div class="d-flex flex-row-reverse">
-								<a href="{{ url_for('hunter.delete_tracker') }}?uuid={{tracker_metadata['uuid']}}" style="font-size: 15px">
-									<button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
-								</a>
-								<a href="{{ url_for('hunter.edit_tracked_menu') }}?uuid={{tracker_metadata['uuid']}}"  class="mx-2" style="font-size: 15px">
-									<button class='btn btn-info'>Edit Tracker <i class="fas fa-pencil-alt"></i></button>
-								</a>
-							</div>
+                            <button class="btn btn-info">
+                                <i class="fas fa-pencil-alt"></i> Edit Email Notification
+                            </button>
+                        </form>
 
-							{%if yara_rule_content%}
-								<p class="my-0"></br></br><pre class="border bg-light">{{ yara_rule_content }}</pre></p>
-							{%endif%}
+                    </div>
 
-						</div>
-					</div>
+                    <div class="d-flex flex-row-reverse">
+                        <a href="{{ url_for('hunter.delete_tracker') }}?uuid={{ tracker_metadata['uuid'] }}"
+                           style="font-size: 15px">
+                            <button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
+                        </a>
+                        <a href="{{ url_for('hunter.edit_tracked_menu') }}?uuid={{ tracker_metadata['uuid'] }}"
+                           class="mx-2" style="font-size: 15px">
+                            <button class='btn btn-info'>Edit Tracker <i class="fas fa-pencil-alt"></i></button>
+                        </a>
+                    </div>
 
-					<div id="graphline" class="text-center"></div>
+                    {% if yara_rule_content %}
+                        <p class="my-0"></br></br>
+                        <pre class="border bg-light">{{ yara_rule_content }}</pre></p>
+                    {% endif %}
 
-					<div class="card mb-5 mt-1">
-						<div class="card-body">
+                </div>
+            </div>
 
-							<div class="row mb-3">
-								<div class="col-md-6">
-									<div class="input-group" id="date-range-from">
-										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-										<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from" autocomplete="off"
-										{%if tracker_metadata['date_from']%}value="{{ tracker_metadata['date_from'] }}"{%else%}value="{{tracker_metadata['first_seen']}}"{%endif%}>
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="input-group" id="date-range-to">
-										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-										<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to" autocomplete="off"
-										{%if tracker_metadata['date_to']%}value="{{ tracker_metadata['date_to'] }}"{%else%}value="{{tracker_metadata['last_seen']}}"{%endif%}>
-									</div>
-								</div>
-							</div>
+            <div id="graphline" class="text-center"></div>
 
-							<button class="btn btn-info" type="button" id="button-search-tags" onclick="getItems();">
-								<i class="fas fa-search"></i> Search Tracked Items
-							</button>
+            <div class="card mb-5 mt-1">
+                <div class="card-body">
 
-						</div>
-					</div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group" id="date-range-from">
+                                <div class="input-group-prepend"><span class="input-group-text"><i
+                                        class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd"
+                                       name="date_from" autocomplete="off"
+                                       {% if tracker_metadata['date_from'] %}value="{{ tracker_metadata['date_from'] }}"
+                                       {% else %}value="{{ tracker_metadata['first_seen'] }}"{% endif %}>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group" id="date-range-to">
+                                <div class="input-group-prepend"><span class="input-group-text"><i
+                                        class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd"
+                                       name="date_to" autocomplete="off"
+                                       {% if tracker_metadata['date_to'] %}value="{{ tracker_metadata['date_to'] }}"
+                                       {% else %}value="{{ tracker_metadata['last_seen'] }}"{% endif %}>
+                            </div>
+                        </div>
+                    </div>
 
-					{%if tracker_metadata['items']%}
-						<div class="mt-4">
-							<table class="table table-bordered table-hover" id="myTable_">
-								<thead class="thead-dark">
-									<tr>
-										<th>Date</th>
-										<th>Item Id</th>
-									</tr>
-								</thead>
-								<tbody>
+                    <button class="btn btn-info" type="button" id="button-search-tags" onclick="getItems();">
+                        <i class="fas fa-search"></i> Search Tracked Items
+                    </button>
 
-									{% for item in tracker_metadata['items'] %}
-										<tr>
-											<td>
-												{{item['date'][0:4]}}/{{item['date'][4:6]}}/{{item['date'][6:8]}}
-											</td>
-											<td>
-												<a class="text-secondary" target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item['id']}}">
-													<div style="line-height:0.9;">{{ item['id'] }}</div>
-												</a>
-												<div class="mb-2">
-					                {% for tag in item['tags'] %}
-						                <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
-						                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-						                </a>
-					                {%  endfor %}
-					              </div>
-											</td>
-										</tr>
-									{%  endfor %}
+                </div>
+            </div>
 
-								</tbody>
-							</table>
-						</div>
-					{% endif %}
+            {% if tracker_metadata['items'] %}
+                <div class="mt-4">
+                    <table class="table table-bordered table-hover" id="myTable_">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Item Id</th>
+                        </tr>
+                        </thead>
+                        <tbody>
 
-				</div>
-			</div>
-		</div>
+                        {% for item in tracker_metadata['items'] %}
+                            <tr>
+                                <td>
+                                    {{ item['date'][0:4] }}/{{ item['date'][4:6] }}/{{ item['date'][6:8] }}
+                                </td>
+                                <td>
+                                    <a class="text-secondary" target="_blank"
+                                       href="{{ url_for('objects_item.showItem') }}?id={{ item['id'] }}">
+                                        <div style="line-height:0.9;">{{ item['id'] }}</div>
+                                    </a>
+                                    <div class="mb-2">
+                                        {% for tag in item['tags'] %}
+                                            <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
 
 <script>
-$(document).ready(function(){
-		$('#div_edit_mails').hide();
-		$('#div_edit_tags').hide();
-		$('#div_edit_description').hide();
-		$("#page-Decoded").addClass("active");
+    $(document).ready(function () {
+        $('#div_edit_mails').hide();
+        $('#div_edit_tags').hide();
+        $('#div_edit_description').hide();
+        $("#page-Decoded").addClass("active");
 
-		$('#date-range-from').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-					},
-					setValue: function(s,s1,s2){
-							$('#date-range-from-input').val(s1);
-							$('#date-range-to-input').val(s2);
-					}
-		});
-		$('#date-range-to').dateRangePicker({
-				separator : ' to ',
-				getValue: function(){
-						if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-								return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-						else
-								return '';
-				},
-				setValue: function(s,s1,s2){
-						$('#date-range-from-input').val(s1);
-						$('#date-range-to-input').val(s2);
-				}
-		});
+        $('#date-range-from').dateRangePicker({
+            separator: ' to ',
+            getValue: function () {
+                if ($('#date-range-from-input').val() && $('#date-range-to-input').val())
+                    return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+                else
+                    return '';
+            },
+            setValue: function (s, s1, s2) {
+                $('#date-range-from-input').val(s1);
+                $('#date-range-to-input').val(s2);
+            }
+        });
+        $('#date-range-to').dateRangePicker({
+            separator: ' to ',
+            getValue: function () {
+                if ($('#date-range-from-input').val() && $('#date-range-to-input').val())
+                    return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+                else
+                    return '';
+            },
+            setValue: function (s, s1, s2) {
+                $('#date-range-from-input').val(s1);
+                $('#date-range-to-input').val(s2);
+            }
+        });
 
-		$('#myTable_').DataTable({
-	        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-	        "iDisplayLength": 10,
-	        "order": [[ 0, "asc" ]]
-	  });
+        $('#myTable_').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[0, "asc"]]
+        });
 
-		sparkline("sparkline", {{ tracker_metadata['sparkline'] }}, {});
-		let div_width = $("#graphline").width();
-		$.getJSON( "{{ url_for('hunter.get_json_tracker_stats') }}?uuid={{ tracker_metadata['uuid'] }}{%if tracker_metadata['date_from']%}&date_from={{ tracker_metadata['date_from'] }}{%endif%}{%if tracker_metadata['date_to']%}&date_to={{ tracker_metadata['date_to'] }}{%endif%}",
-			function( data ) {multilines_group("graphline", data, {"width": div_width});}
-		);
+        sparkline("sparkline", {{ tracker_metadata['sparkline'] }}, {});
+        let div_width = $("#graphline").width();
+        $.getJSON("{{ url_for('hunter.get_json_tracker_stats') }}?uuid={{ tracker_metadata['uuid'] }}{%if tracker_metadata['date_from']%}&date_from={{ tracker_metadata['date_from'] }}{%endif%}{%if tracker_metadata['date_to']%}&date_to={{ tracker_metadata['date_to'] }}{%endif%}",
+            function (data) {
+                multilines_group("graphline", data, {"width": div_width});
+            }
+        );
 
-});
+    });
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
+    function toggle_sidebar() {
+        if ($('#nav_menu').is(':visible')) {
+            $('#nav_menu').hide();
+            $('#side_menu').removeClass('border-right')
+            $('#side_menu').removeClass('col-lg-2')
+            $('#core_content').removeClass('col-lg-10')
+        } else {
+            $('#nav_menu').show();
+            $('#side_menu').addClass('border-right')
+            $('#side_menu').addClass('col-lg-2')
+            $('#core_content').addClass('col-lg-10')
+        }
+    }
 
-function edit_tags(){
-	$('#div_edit_mails').hide();
-	$('#div_edit_description').hide();
-	$('#div_edit_tags').show();
-}
+    function edit_tags() {
+        $('#div_edit_mails').hide();
+        $('#div_edit_description').hide();
+        $('#div_edit_tags').show();
+    }
 
-function edit_mails(){
-	$('#div_edit_tags').hide();
-	$('#div_edit_description').hide();
-	$('#div_edit_mails').show();
-}
+    function edit_mails() {
+        $('#div_edit_tags').hide();
+        $('#div_edit_description').hide();
+        $('#div_edit_mails').show();
+    }
 
-function edit_description(){
-	$('#div_edit_tags').hide();
-	$('#div_edit_mails').hide();
-	$('#div_edit_description').show();
-}
+    function edit_description() {
+        $('#div_edit_tags').hide();
+        $('#div_edit_mails').hide();
+        $('#div_edit_description').show();
+    }
 
-function getItems() {
-	var date_from = $('#date-range-from-input').val();
-	var date_to =$('#date-range-to-input').val();
-	window.location.replace("{{ url_for('hunter.show_tracker') }}?uuid={{ tracker_metadata['uuid'] }}&date_from="+date_from+"&date_to="+date_to);
-}
+    function getItems() {
+        var date_from = $('#date-range-from-input').val();
+        var date_to = $('#date-range-to-input').val();
+        window.location.replace("{{ url_for('hunter.show_tracker') }}?uuid={{ tracker_metadata['uuid'] }}&date_from=" + date_from + "&date_to=" + date_to);
+    }
 
 </script>
 

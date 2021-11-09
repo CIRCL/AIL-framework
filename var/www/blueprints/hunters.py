@@ -192,7 +192,7 @@ def get_json_retro_hunt_nb_items_by_date():
     if date_from and date_to:
         res = Tracker.get_retro_hunt_nb_item_by_day([task_uuid], date_from=date_from, date_to=date_to)
     else:
-        res = Term.get_retro_hunt_nb_item_by_day([task_uuid])
+        res = Tracker.get_retro_hunt_nb_item_by_day([task_uuid])
     return jsonify(res)
 
 

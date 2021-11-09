@@ -106,6 +106,9 @@ def get_tracker_tags(tracker_uuid):
 def get_tracker_mails(tracker_uuid):
     return list(r_serv_tracker.smembers('tracker:mail:{}'.format(tracker_uuid)))
 
+def get_tracker_webhook(tracker_uuid):
+    return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'webhook')
+
 def get_tracker_uuid_sources(tracker_uuid):
     return list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}'))
 
@@ -129,12 +132,12 @@ def get_tracker_last_seen(tracker_uuid):
     else:
         return None
 
-def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sources=True, sparkline=False):
+def get_tracker_metadata(tracker_uuid, user_id=False, description=False, level=False, tags=False, mails=False, sources=True, sparkline=False, webhook=False):
     dict_uuid = {}
+    dict_uuid['uuid'] = tracker_uuid
     dict_uuid['tracker'] = get_tracker_by_uuid(tracker_uuid)
     dict_uuid['type'] = get_tracker_type(tracker_uuid)
     dict_uuid['date'] = get_tracker_date(tracker_uuid)
-    dict_uuid['description'] = get_tracker_description(tracker_uuid)
     dict_uuid['first_seen'] = get_tracker_first_seen(tracker_uuid)
     dict_uuid['last_seen'] = get_tracker_last_seen(tracker_uuid)
     if user_id:
@@ -149,7 +152,11 @@ def get_tracker_metedata(tracker_uuid, user_id=False, description=False, level=F
         dict_uuid['tags'] = get_tracker_tags(tracker_uuid)
     if sparkline:
         dict_uuid['sparkline'] = get_tracker_sparkline(tracker_uuid)
-    dict_uuid['uuid'] = tracker_uuid
+    if description:
+        dict_uuid['description'] = get_tracker_description(tracker_uuid)
+    if webhook:
+        dict_uuid['webhook'] = get_tracker_webhook(tracker_uuid)
+
     return dict_uuid
 
 # tracker sparkline
@@ -369,7 +376,7 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
         return ({"status": "error", "reason": "Incorrect type"}, 400)
     return ({"status": "success", "tracker": tracker, "type": tracker_type}, 200)
 
-def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, dashboard=0, tracker_uuid=None, sources=[]):
+def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, webhook, dashboard=0, tracker_uuid=None, sources=[]):
     # edit tracker
     if tracker_uuid:
         edit_tracker = True
@@ -409,6 +416,9 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
 
     if description:
         r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'description', description)
+
+    if webhook:
+        r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'webhook', webhook)
 
     # type change
     if edit_tracker:
@@ -464,7 +474,6 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
     for source in sources:
         # escape source ?
         r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source))
-
     # toggle refresh module tracker list/set
     r_serv_tracker.set('tracker:refresh:{}'.format(tracker_type), time.time())
     if tracker_type != old_type: # toggle old type refresh
@@ -474,14 +483,15 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
 def api_add_tracker(dict_input, user_id):
     tracker = dict_input.get('tracker', None)
     if not tracker:
-        return ({"status": "error", "reason": "Tracker not provided"}, 400)
+        return {"status": "error", "reason": "Tracker not provided"}, 400
     tracker_type = dict_input.get('type', None)
     if not tracker_type:
-        return ({"status": "error", "reason": "Tracker type not provided"}, 400)
+        return {"status": "error", "reason": "Tracker type not provided"}, 400
     nb_words = dict_input.get('nb_words', 1)
     description = dict_input.get('description', '')
     description = escape(description)
-
+    webhook = dict_input.get('webhook', '')
+    webhook = escape(webhook)
     res = api_validate_tracker_to_add(tracker , tracker_type, nb_words=nb_words)
     if res[1]!=200:
         return res
@@ -518,14 +528,14 @@ def api_add_tracker(dict_input, user_id):
         # check if tracker already tracked in global
         if level==1:
             if is_tracker_in_global_level(tracker, tracker_type) and not tracker_uuid:
-                return ({"status": "error", "reason": "Tracker already exist"}, 409)
+                return {"status": "error", "reason": "Tracker already exist"}, 409
         else:
             if is_tracker_in_user_level(tracker, tracker_type, user_id) and not tracker_uuid:
-                return ({"status": "error", "reason": "Tracker already exist"}, 409)
+                return {"status": "error", "reason": "Tracker already exist"}, 409
 
-    tracker_uuid = create_tracker(tracker , tracker_type, user_id, level, tags, mails, description, tracker_uuid=tracker_uuid, sources=sources)
+    tracker_uuid = create_tracker(tracker , tracker_type, user_id, level, tags, mails, description, webhook, tracker_uuid=tracker_uuid, sources=sources)
 
-    return ({'tracker': tracker, 'type': tracker_type, 'uuid': tracker_uuid}, 200)
+    return {'tracker': tracker, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 ##-- CREATE TRACKER --##
 
