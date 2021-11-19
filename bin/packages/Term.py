@@ -152,9 +152,14 @@ def parse_json_term_to_add(dict_input, user_id):
     term_type = dict_input.get('type', None)
     if not term_type:
         return {"status": "error", "reason": "Term type not provided"}, 400
+
     nb_words = dict_input.get('nb_words', 1)
+
     description = dict_input.get('description', '')
     description = escape(description)
+
+    webhook = dict_input.get('webhook', '')
+    webhook = escape(webhook)
 
     res = parse_tracked_term_to_add(term , term_type, nb_words=nb_words)
     if res[1]!=200:
@@ -168,7 +173,6 @@ def parse_json_term_to_add(dict_input, user_id):
     if res:
         return res
 
-    ## TODO: add dashboard key
     level = dict_input.get('level', 1)
     try:
         level = int(level)
@@ -185,7 +189,7 @@ def parse_json_term_to_add(dict_input, user_id):
         if is_term_tracked_in_user_level(term, term_type, user_id):
             return {"status": "error", "reason": "Term already tracked"}, 409
 
-    term_uuid = add_tracked_term(term , term_type, user_id, level, tags, mails, description)
+    term_uuid = add_tracked_term(term , term_type, user_id, level, tags, mails, description,webhook)
 
     return {'term': term, 'type': term_type, 'uuid': term_uuid}, 200
 
@@ -234,7 +238,7 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
         return {"status": "error", "reason": "Incorrect type"}, 400
     return {"status": "success", "term": term, "type": term_type}, 200
 
-def add_tracked_term(term , term_type, user_id, level, tags, mails, description, dashboard=0):
+def add_tracked_term(term , term_type, user_id, level, tags, mails, description,webhook, dashboard=0):
 
     term_uuid =  str(uuid.uuid4())
 
@@ -253,6 +257,9 @@ def add_tracked_term(term , term_type, user_id, level, tags, mails, description,
 
     if description:
         r_serv_term.hset('tracker:{}'.format(term_uuid), 'description', description)
+
+    if webhook:
+        r_serv_term.hset('tracker:{}'.format(term_uuid), 'webhook', webhook)
 
     # create all term set
     r_serv_term.sadd('all:tracker:{}'.format(term_type), term)
