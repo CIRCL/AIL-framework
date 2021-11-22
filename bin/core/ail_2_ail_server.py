@@ -15,23 +15,14 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from pubsublogger import publisher
 from core import ail_2_ail
 
-
-obj_test = {
-    "format": "ail",
-    "version": 1,
-    "type": "item",
-    "meta": {
-       "ail:uuid": "03c51929-eeab-4d47-9dc0-c667f94c7d2c",
-       "ail:uuid_org": "28bc3db3-16da-461c-b20b-b944f4058708",
-    },
-    "payload": {
-        "raw" : "MjhiYzNkYjMtMTZkYS00NjFjLWIyMGItYjk0NGY0MDU4NzA4Cg==",
-        "compress": "gzip",
-        "encoding": "base64"
-    }
-}
+# # TODO: refactor logging
+#### LOGS ####
+redis_logger = publisher
+redis_logger.port = 6380
+redis_logger.channel = 'AIL_SYNC'
 
 #############################
 
@@ -92,7 +83,7 @@ async def pull(websocket, ail_uuid):
             if Obj:
                 obj_ail_stream = ail_2_ail.create_ail_stream(Obj)
                 Obj = json.dumps(obj_ail_stream)
-                print(Obj)
+                #print(Obj)
 
                 # send objects
                 await websocket.send(Obj)
@@ -107,27 +98,29 @@ async def pull(websocket, ail_uuid):
 # PUSH: receive data from client
 # # TODO: optional queue_uuid
 async def push(websocket, ail_uuid):
-    print(ail_uuid)
+    #print(ail_uuid)
     while True:
         ail_stream = await websocket.recv()
 
         # # TODO: CHECK ail_stream
         ail_stream = json.loads(ail_stream)
-        print(ail_stream)
+        #print(ail_stream)
 
         ail_2_ail.add_ail_stream_to_sync_importer(ail_stream)
 
 async def ail_to_ail_serv(websocket, path):
 
+    # # TODO: save in class
+    ail_uuid = websocket.ail_uuid
+    remote_address = websocket.remote_address
+    path = unpack_path(path)
+    sync_mode = path['sync_mode']
 
     # # TODO: check if it works
     # # DEBUG:
     print(websocket.ail_key)
     print(websocket.ail_uuid)
-
     print(websocket.remote_address)
-    path = unpack_path(path)
-    sync_mode = path['sync_mode']
     print(f'sync mode: {sync_mode}')
 
     await register(websocket)
@@ -135,7 +128,8 @@ async def ail_to_ail_serv(websocket, path):
         if sync_mode == 'pull':
             await pull(websocket, websocket.ail_uuid)
             await websocket.close()
-            print('closed')
+            redis_logger.info(f'Connection closed: {ail_uuid} {remote_address}')
+            print(f'Connection closed: {ail_uuid} {remote_address}')
 
         elif sync_mode == 'push':
             await push(websocket, websocket.ail_uuid)
@@ -163,29 +157,34 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
         api_key = request_headers.get('Authorization', '')
         print(api_key)
         if api_key is None:
-            print('Missing token')
+            redis_logger.warning(f'Missing token: {self.remote_address}')
+            print(f'Missing token: {self.remote_address}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Missing token\n"
 
         if not ail_2_ail.is_allowed_ail_instance_key(api_key):
-            print('Invalid token')
+            redis_logger.warning(f'Invalid token: {self.remote_address}')
+            print(f'Invalid token: {self.remote_address}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Invalid token\n"
 
         # PATH
         try:
             dict_path = unpack_path(path)
         except Exception as e:
-            print('Invalid path')
+            redis_logger.warning(f'Invalid path: {self.remote_address}')
+            print(f'Invalid path: {self.remote_address}')
             return http.HTTPStatus.BAD_REQUEST, [], b"Invalid path\n"
 
 
         ail_uuid = ail_2_ail.get_ail_instance_by_key(api_key)
         if ail_uuid != dict_path['ail_uuid']:
-            print('Invalid token')
+            redis_logger.warning(f'Invalid token: {self.remote_address} {ail_uuid}')
+            print(f'Invalid token: {self.remote_address} {ail_uuid}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Invalid token\n"
 
 
         if not api_key != ail_2_ail.get_ail_instance_key(api_key):
-            print('Invalid token')
+            redis_logger.warning(f'Invalid token: {self.remote_address} {ail_uuid}')
+            print(f'Invalid token: {self.remote_address} {ail_uuid}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Invalid token\n"
 
         self.ail_key = api_key
@@ -210,7 +209,9 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
 
             # SYNC MODE
             if not ail_2_ail.is_ail_instance_sync_enabled(self.ail_uuid, sync_mode=dict_path['sync_mode']):
-                print('SYNC mode disabled')
+                sync_mode = dict_path['sync_mode']
+                redis_logger.warning(f'SYNC mode disabled: {self.remote_address} {ail_uuid} {sync_mode}')
+                print(f'SYNC mode disabled: {self.remote_address} {ail_uuid} {sync_mode}')
                 return http.HTTPStatus.FORBIDDEN, [], b"SYNC mode disabled\n"
 
         # # TODO: CHECK API
@@ -218,17 +219,16 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
             pass
 
         else:
-            print('Invalid path')
+            print(f'Invalid path: {self.remote_address}')
+            redis_logger.info(f'Invalid path: {self.remote_address}')
             return http.HTTPStatus.BAD_REQUEST, [], b"Invalid path\n"
 
 
 ###########################################
 
-# # TODO: logging
 # # TODO: clean shutdown / kill all connections
 # # TODO: API
 # # TODO: Filter object
-# # TODO: process_request check
 # # TODO: IP/uuid to block
 
 if __name__ == '__main__':
@@ -237,6 +237,7 @@ if __name__ == '__main__':
     port = 4443
 
     print('Launching Server...')
+    redis_logger.info('Launching Server...')
 
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     cert_dir = os.environ['AIL_FLASK']
@@ -245,6 +246,7 @@ if __name__ == '__main__':
     start_server = websockets.serve(ail_to_ail_serv, "localhost", 4443, ssl=ssl_context, create_protocol=AIL_2_AIL_Protocol)
 
     print(f'Server Launched:    wss://{host}:{port}')
+    redis_logger.info(f'Server Launched:    wss://{host}:{port}')
 
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()

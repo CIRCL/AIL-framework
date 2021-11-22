@@ -59,6 +59,13 @@ for name, tags in clusters.items(): #galaxie name + tags
 def one():
     return 1
 
+# TODO:
+# TODO:
+# TODO:
+# TODO:
+# TODO:
+# TODO:
+# # TODO: replace me with get_tag_selector_dict()
 def get_tags_with_synonyms(tag):
     str_synonyms = ' - synonyms: '
     synonyms = r_serv_tags.smembers('synonym_tag_' + tag)

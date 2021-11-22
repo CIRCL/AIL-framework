@@ -45,6 +45,7 @@ from blueprints.import_export import import_export
 from blueprints.objects_item import objects_item
 from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
+from blueprints.ail_2_ail_sync import ail_2_ail_sync
 
 
 Flask_dir = os.environ['AIL_FLASK']
@@ -103,6 +104,7 @@ app.register_blueprint(import_export, url_prefix=baseUrl)
 app.register_blueprint(objects_item, url_prefix=baseUrl)
 app.register_blueprint(hunters, url_prefix=baseUrl)
 app.register_blueprint(old_endpoints, url_prefix=baseUrl)
+app.register_blueprint(ail_2_ail_sync, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========

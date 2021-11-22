@@ -51,9 +51,11 @@ class Sync_module(AbstractModule):
         print(message)
 
         ### REFRESH DICT
-        if self.last_refresh < ail_2_ail.get_last_updated_ail_instance():
-            self.dict_sync_queues = ail_2_ail.get_all_sync_queue_dict()
+        if self.last_refresh < ail_2_ail.get_last_updated_sync_config():
             self.last_refresh = time.time()
+            self.dict_sync_queues = ail_2_ail.get_all_sync_queue_dict()
+            print('sync queues refreshed')
+            print(self.dict_sync_queues)
 
         #  Extract object from message
         # # TODO: USE JSON DICT ????
