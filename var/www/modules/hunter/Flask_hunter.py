@@ -112,11 +112,9 @@ def add_tracked_menu():
             else:
                 tracker = yara_default_rule
                 tracker_type='yara_default'
-        # #
 
         if level == 'on':
             level = 1
-
         if mails:
             mails = mails.split()
         if tags:

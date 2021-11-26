@@ -23,6 +23,7 @@ import Item
 import Paste
 import Tag
 import Term
+import Tracker
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import'))
 import importer
@@ -305,7 +306,6 @@ def delete_item_tags():
 @restApi.route("api/v1/get/item/content", methods=['POST'])
 @token_required('read_only')
 def get_item_content():
-
     data = request.get_json()
     item_id = data.get('id', None)
     req_data = {'id': item_id, 'date': False, 'content': True, 'tags': False}
@@ -313,6 +313,32 @@ def get_item_content():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 
+@restApi.route("api/v1/get/item/content/encoded/text", methods=['POST'])
+@token_required('read_only')
+def get_item_content_encoded_text():
+    data = request.get_json()
+    item_id = data.get('id', None)
+    req_data = {'id': item_id}
+    res = Item.get_item_content_encoded_text(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+
+@restApi.route("api/v1/get/item/sources", methods=['GET'])
+@token_required('read_only')
+def get_item_sources():
+    res = Item.get_item_sources()
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+
+
+@restApi.route("api/v1/get/item/source/check", methods=['POST'])
+@token_required('read_only')
+def get_check_item_source():
+    data = request.get_json()
+    source = data.get('source', None)
+    req_data = {'source': source}
+    res = Item.check_item_source(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -342,7 +368,7 @@ def add_tracker_term():
     data = request.get_json()
     user_token = get_auth_from_header()
     user_id = get_user_from_token(user_token)
-    res = Term.parse_json_term_to_add(data, user_id)
+    res = Tracker.api_add_tracker(data, user_id)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/delete/tracker", methods=['DELETE'])
@@ -364,6 +390,24 @@ def get_tracker_term_item():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 
+@restApi.route("api/v1/get/tracker/yara/content", methods=['POST'])
+@token_required('read_only')
+def get_default_yara_rule_content():
+    data = request.get_json()
+    rule_name = data.get('rule_name', None)
+    req_data = {'rule_name': rule_name}
+    res = Tracker.get_yara_rule_content_restapi(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+
+@restApi.route("api/v1/get/tracker/metadata", methods=['POST'])
+@token_required('read_only')
+def get_tracker_metadata_api():
+    data = request.get_json()
+    tracker_uuid = data.get('tracker_uuid', None)
+    req_data = {'tracker_uuid': tracker_uuid}
+    res = Tracker.get_tracker_metadata_api(req_data)
+    return Response(json.dumps(res[0], indent=2, sort_keys=False), mimetype='application/json'), res[1]
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # #        CRYPTOCURRENCY       # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
