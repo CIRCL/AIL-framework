@@ -30,6 +30,19 @@
 
 				<div class="card">
 					<div class="card-header bg-dark text-white">
+						<span class="badge badge-pill badge-light flex-row-reverse float-right">
+							{% if server_metadata['ping'] %}
+								<div style="color:Green;">
+									<i class="fas fa-check-circle fa-2x"></i>
+									PING
+								</div>
+							{% else %}
+								<div style="color:Red;">
+									<i class="fas fa-times-circle fa-2x"></i>
+									ERROR
+								</div>
+							{% endif %}
+						</span>
 						<h5 class="card-title">{{server_metadata['uuid']}}</h5>
 					</div>
 					<div class="card-body">
@@ -39,6 +52,22 @@
 									<td class="text-right"><b>URL</b></td>
 									<td>
 										{{server_metadata['url']}}
+										{% if server_metadata['ping'] %}
+											<span style="color:Green;">
+												<i class="fas fa-check-circle"></i>
+											</span>
+										{% else %}
+											<span style="color:Red;">
+												<i class="fas fa-times-circle"></i>
+											</span>
+										{% endif %}
+										<div>
+											<a href="{{ url_for('ail_2_ail_sync.ail_server_api_ping') }}?uuid={{server_metadata['uuid']}}">
+												<button type="button" class="btn btn-primary px-1 py-0">
+													<i class="fas fa-redo-alt"></i> ping
+												</button>
+											</a>
+										</div>
 									</td>
 								</tr>
 								<tr>
@@ -65,8 +94,28 @@
 										{{server_metadata['push']}}
 									</td>
 								</tr>
+								<tr>
+									<td class="text-right"><b>Version</b></td>
+									<td>
+										{{server_metadata['version']}}
+										<a href="{{ url_for('ail_2_ail_sync.ail_server_api_version') }}?uuid={{server_metadata['uuid']}}">
+											<button type="button" class="btn btn-info px-1 py-0">
+												<i class="fas fa-redo-alt"></i>
+											</button>
+										</a>
+									</td>
+								</tr>
 							</tbody>
 						</table>
+
+						{% if server_metadata['error']%}
+							<pre class="bg-dark text-white">
+								----------------------------
+								-          ERROR           -
+								----------------------------
+								{{server_metadata['error']}}
+							</pre>
+						{% endif %}
 
 						<div class="my-4">
 							<a href="{{ url_for('ail_2_ail_sync.ail_server_delete') }}?uuid={{server_metadata['uuid']}}">

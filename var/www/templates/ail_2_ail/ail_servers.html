@@ -41,8 +41,9 @@
 				<table id="table_servers" class="table table-striped border-primary">
           <thead class="bg-dark text-white">
             <tr>
-                <th>uuid</th>
                 <th>url</th>
+								<th></th>
+								<th>uuid</th>
                 <th>description</th>
                 <th>sync queues</th>
             </tr>
@@ -50,12 +51,23 @@
           <tbody style="font-size: 15px;">
             {% for dict_server in l_servers %}
               <tr class="border-color: blue;">
-                <td>
+                <td>{{ dict_server['url']}}</td>
+								<td>
+									{% if dict_server['ping'] %}
+										<div style="color:Green;">
+											<i class="fas fa-check-circle fa-2x"></i>
+										</div>
+									{% else %}
+										<div style="color:Red;">
+											<i class="fas fa-times-circle fa-2x"></i>
+										</div>
+									{% endif %}
+								</td>
+								<td>
 									<a href="{{ url_for('ail_2_ail_sync.ail_server_view') }}?uuid={{ dict_server['uuid'] }}">
 										{{ dict_server['uuid']}}
 									</a>
 								</td>
-                <td>{{ dict_server['url']}}</td>
                 <td>{{ dict_server['description']}}</td>
                 <td class="text-center">
 									{% for queue_uuid in dict_server['sync_queues'] %}

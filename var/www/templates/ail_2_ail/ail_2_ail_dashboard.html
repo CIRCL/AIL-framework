@@ -30,6 +30,20 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
+				<div class="d-flex justify-content-center my-4">
+					<div class="card border-secondary" style="max-width: 40rem;">
+						<div class="card-header bg-inf">
+							<h5 class="card-title">AIL UUID:</h5>
+						</div>
+						<div class="card-body text-dark">
+							<div class="">
+								{{ ail_uuid }}
+							</div>
+						</div>
+					</div>
+				</div>
+
+
 				<h1>Connected Servers:</h3>
 
 				<table id="table_servers" class="table table-striped border-primary">
@@ -73,7 +87,7 @@
 <script>
 $(document).ready(function(){
 	$('#nav_sync').removeClass("text-muted");
-	$("#nav_ail_servers").addClass("active");
+	$("#nav_ail_servers").addClass("nav_ail_sync");
 
   $('#table_servers').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],

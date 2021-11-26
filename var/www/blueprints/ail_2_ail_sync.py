@@ -53,9 +53,11 @@ def create_json_response(data, status_code):
 @login_required
 @login_admin
 def ail_2_ail_dashboard():
+    ail_uuid = ail_2_ail.get_ail_uuid()
     l_servers = ail_2_ail.get_all_running_sync_servers()
     l_servers = ail_2_ail.get_ail_instances_metadata(l_servers)
-    return render_template("ail_2_ail_dashboard.html", l_servers=l_servers)
+    return render_template("ail_2_ail_dashboard.html", ail_uuid=ail_uuid,
+                                l_servers=l_servers)
 
 ######################
 #                    #
@@ -79,6 +81,28 @@ def ail_server_view():
 
     return render_template("view_ail_server.html", server_metadata=server_metadata,
                                 bootstrap_label=bootstrap_label)
+
+@ail_2_ail_sync.route('/settings/ail_2_ail/server/api/ping', methods=['GET'])
+@login_required
+@login_admin
+def ail_server_api_ping():
+    ail_uuid = request.args.get('uuid')
+    input_dict = {"uuid": ail_uuid}
+    res = ail_2_ail.api_ping_remote_ail_server(input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('ail_2_ail_sync.ail_server_view', uuid=ail_uuid))
+
+@ail_2_ail_sync.route('/settings/ail_2_ail/server/api/version', methods=['GET'])
+@login_required
+@login_admin
+def ail_server_api_version():
+    ail_uuid = request.args.get('uuid')
+    input_dict = {"uuid": ail_uuid}
+    res = ail_2_ail.api_get_remote_ail_server_version(input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('ail_2_ail_sync.ail_server_view', uuid=ail_uuid))
 
 @ail_2_ail_sync.route('/settings/ail_2_ail/server/add', methods=['GET', 'POST'])
 @login_required

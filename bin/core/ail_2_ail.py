@@ -9,7 +9,10 @@ import sys
 import time
 import uuid
 
+import subprocess
+
 from flask import escape
+from pubsublogger import publisher
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -26,6 +29,12 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_sync = config_loader.get_redis_conn("ARDB_DB")
 config_loader = None
+
+#### LOGS ####
+# redis_logger = publisher
+# redis_logger.port = 6380
+# redis_logger.channel = 'AIL_SYNC'
+##-- LOGS --##
 
 def is_valid_uuid_v4(UUID):
     if not UUID:
@@ -49,6 +58,9 @@ def generate_sync_api_key():
 
 def get_ail_uuid():
     return r_serv_db.get('ail:uuid')
+
+def get_sync_server_version():
+    return '0.1'
 
 def is_valid_websocket_url(websocket_url):
     regex_websocket_url = r'^(wss:\/\/)([0-9]{1,3}(?:\.[0-9]{1,3}){3}|(?=[^\/]{1,254}(?![^\/]))(?:(?=[a-zA-Z0-9-]{1,63}\.?)(?:xn--+)?[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*\.?)+[a-zA-Z]{2,63}):([0-9]{1,5})$'
@@ -134,9 +146,6 @@ def refresh_ail_instance_connection(ail_uuid):
     client_id = get_client_id_by_ail_uuid(ail_uuid)
     launch_required = is_ail_instance_push_enabled(ail_uuid)
 
-    print(client_id)
-    print(launch_required)
-
     # relaunch
     if client_id and launch_required:
         send_command_to_manager('relaunch', client_id=client_id)
@@ -193,7 +202,7 @@ class AIL2AILClientManager(object):
     def launch_sync_client(self, ail_uuid):
         dir_project = os.environ['AIL_HOME']
         client_id = self.get_new_sync_client_id()
-        script_options = f'-a {ail_uuid} -m push -i {client_id}'
+        script_options = f'-u {ail_uuid} -m push -i {client_id}'
         screen.create_screen(AIL2AILClientManager.SCREEN_NAME)
         screen.launch_uniq_windows_script(AIL2AILClientManager.SCREEN_NAME,
                                             client_id, dir_project,
@@ -226,14 +235,11 @@ class AIL2AILClientManager(object):
     def get_manager_command(self):
         res = r_cache.spop('ail_2_ail:client_manager:command')
         if res:
-            print(res)
-            print(type(res))
             return json.loads(res)
         else:
             return None
 
     def execute_manager_command(self, command_dict):
-        print(command_dict)
         command = command_dict.get('command')
         if command == 'launch':
             ail_uuid = command_dict.get('ail_uuid')
@@ -357,6 +363,16 @@ def change_pull_push_state(ail_uuid, pull=False, push=False):
     set_last_updated_sync_config()
     refresh_ail_instance_connection(ail_uuid)
 
+def get_ail_server_version(ail_uuid):
+    return r_serv_sync.hget(f'ail:instance:{ail_uuid}', 'version')
+
+def get_ail_server_ping(ail_uuid):
+    res = r_serv_sync.hget(f'ail:instance:{ail_uuid}', 'ping')
+    return res == 'True'
+
+def get_ail_server_error(ail_uuid):
+    return r_cache.hget(f'ail_2_ail:all_servers:metadata:{ail_uuid}', 'error')
+
 # # TODO: HIDE ADD GLOBAL FILTER (ON BOTH SIDE)
 def get_ail_instance_metadata(ail_uuid, sync_queues=False):
     dict_meta = {}
@@ -365,6 +381,9 @@ def get_ail_instance_metadata(ail_uuid, sync_queues=False):
     dict_meta['description'] = get_ail_instance_description(ail_uuid)
     dict_meta['pull'] = is_ail_instance_pull_enabled(ail_uuid)
     dict_meta['push'] = is_ail_instance_pull_enabled(ail_uuid)
+    dict_meta['ping'] = get_ail_server_ping(ail_uuid)
+    dict_meta['version'] = get_ail_server_version(ail_uuid)
+    dict_meta['error'] = get_ail_server_error(ail_uuid)
 
     # # TODO: HIDE
     dict_meta['api_key'] = get_ail_instance_key(ail_uuid)
@@ -421,7 +440,104 @@ def delete_ail_instance(ail_uuid):
     refresh_ail_instance_connection(ail_uuid)
     return ail_uuid
 
+## WEBSOCKET API - ERRORS ##
+
+def set_ail_server_version(ail_uuid, version):
+    r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'version', version)
+
+def set_ail_server_ping(ail_uuid, pong):
+    r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'ping', bool(pong))
+
+def save_ail_server_error(ail_uuid, error_message):
+    r_cache.hset(f'ail_2_ail:all_servers:metadata:{ail_uuid}', 'error', error_message)
+
+def clear_save_ail_server_error(ail_uuid):
+    r_cache.hdel(f'ail_2_ail:all_servers:metadata:{ail_uuid}', 'error')
+
+def _get_remote_ail_server_response(ail_uuid, api_request):
+    websocket_client = os.path.join(os.environ['AIL_BIN'], 'core', 'ail_2_ail_client.py')
+    l_command = ['python', websocket_client, '-u', ail_uuid, '-m', 'api', '-a', api_request]
+    process = subprocess.Popen(l_command, stdout=subprocess.PIPE)
+    while process.poll() is None:
+        time.sleep(1)
+
+    if process.returncode == 0:
+        # Scrapy-Splash ERRORS
+        if process.stderr:
+            stderr = process.stderr.read().decode()
+            if stderr:
+                print(f'stderr: {stderr}')
+
+        if process.stdout:
+            output = process.stdout.read().decode()
+            #print(output)
+            if output:
+                try:
+                    message = json.loads(output)
+                    return message
+                except Exception as e:
+                    print(e)
+                    error = f'Error: {e}'
+                    save_ail_server_error(ail_uuid, error)
+                    return
+    # ERROR
+    else:
+        if process.stderr:
+            stderr = process.stderr.read().decode()
+        else:
+            stderr = ''
+        if process.stdout:
+            stdout = process.stdout.read().decode()
+        else:
+            stdout =''
+        if stderr or stdout:
+            error = f'-stderr-\n{stderr}\n-stdout-\n{stdout}'
+            print(error)
+            save_ail_server_error(ail_uuid, error)
+            return
+
+def get_remote_ail_server_version(ail_uuid):
+    response = _get_remote_ail_server_response(ail_uuid, 'version')
+    if response:
+        version = response.get('version')
+        if version:
+            version = float(version)
+            if version >= 0.1:
+                set_ail_server_version(ail_uuid, version)
+                return version
+
+# # TODO: CATCH WEBSOCKETS RESPONSE CODE
+def ping_remote_ail_server(ail_uuid):
+    response = _get_remote_ail_server_response(ail_uuid, 'ping')
+    if response:
+        response = response.get('message', False)
+        pong = response == 'pong'
+        set_ail_server_ping(ail_uuid, pong)
+        return pong
+
 ## API ##
+
+def api_ping_remote_ail_server(json_dict):
+    ail_uuid = json_dict.get('uuid').replace(' ', '')
+    if not is_valid_uuid_v4(ail_uuid):
+        return {"status": "error", "reason": "Invalid ail uuid"}, 400
+    ail_uuid = sanityze_uuid(ail_uuid)
+    if not exists_ail_instance(ail_uuid):
+        return {"status": "error", "reason": "AIL server not found"}, 404
+
+    res = ping_remote_ail_server(ail_uuid)
+    return res, 200
+
+def api_get_remote_ail_server_version(json_dict):
+    ail_uuid = json_dict.get('uuid').replace(' ', '')
+    if not is_valid_uuid_v4(ail_uuid):
+        return {"status": "error", "reason": "Invalid ail uuid"}, 400
+    ail_uuid = sanityze_uuid(ail_uuid)
+    if not exists_ail_instance(ail_uuid):
+        return {"status": "error", "reason": "AIL server not found"}, 404
+
+    res = get_remote_ail_server_version(ail_uuid)
+    return res, 200
 
 def api_create_ail_instance(json_dict):
     ail_uuid = json_dict.get('uuid').replace(' ', '')
@@ -755,7 +871,13 @@ if __name__ == '__main__':
     # print(get_all_sync_queue())
     # res = get_all_unregistred_queue_by_ail_instance(ail_uuid)
 
-    ail_uuid = 'd82d3e61-2438-4ede-93bf-37b6fd9d7510'
-    res = get_client_id_by_ail_uuid(ail_uuid)
+    ail_uuid = 'c3c2f3ef-ca53-4ff6-8317-51169b73f731'
+    ail_uuid = '03c51929-eeab-4d47-9dc0-c667f94c7d2d'
 
+    # res = ping_remote_ail_server(ail_uuid)
+    # print(res)
+    #
+    res = get_remote_ail_server_version(ail_uuid)
+
+    #res = _get_remote_ail_server_response(ail_uuid, 'pin')
     print(res)

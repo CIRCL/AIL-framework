@@ -22,7 +22,7 @@ from core import ail_2_ail
 #### LOGS ####
 redis_logger = publisher
 redis_logger.port = 6380
-redis_logger.channel = 'AIL_SYNC'
+redis_logger.channel = 'AIL_SYNC_Server'
 
 #############################
 
@@ -52,8 +52,13 @@ def unpack_path(path):
     path = path.split('/')
     if len(path) < 3:
         raise Exception('Invalid url path')
+    if not len(path[-1]):
+        path = path[:-1]
+
     dict_path['sync_mode'] = path[1]
-    dict_path['ail_uuid'] = path[2]
+    dict_path['ail_uuid'] = path[-1]
+    dict_path['api'] = path[2:-1]
+
     return dict_path
 
 # # # # # # #
@@ -66,8 +71,12 @@ def unpack_path(path):
 
 
 async def register(websocket):
+    ail_uuid = websocket.ail_uuid
+    remote_address = websocket.remote_address
+    redis_logger.info(f'Client Connected: {ail_uuid} {remote_address}')
+    print(f'Client Connected: {ail_uuid} {remote_address}')
     CONNECTED_CLIENT.add(websocket)
-    print(CONNECTED_CLIENT)
+    #print(CONNECTED_CLIENT)
 
 async def unregister(websocket):
     CONNECTED_CLIENT.remove(websocket)
@@ -108,6 +117,23 @@ async def push(websocket, ail_uuid):
 
         ail_2_ail.add_ail_stream_to_sync_importer(ail_stream)
 
+# API: server API
+# # TODO: ADD TIMEOUT ???
+async def api(websocket, ail_uuid, api):
+    api = api[0]
+    if api == 'ping':
+        message = {'message':'pong'}
+        message = json.dumps(message)
+        await websocket.send(message)
+    elif api == 'version':
+        sync_version = ail_2_ail.get_sync_server_version()
+        message = {'version': sync_version}
+        message = json.dumps(message)
+        await websocket.send(message)
+
+    # END API
+    return
+
 async def ail_to_ail_serv(websocket, path):
 
     # # TODO: save in class
@@ -118,10 +144,9 @@ async def ail_to_ail_serv(websocket, path):
 
     # # TODO: check if it works
     # # DEBUG:
-    print(websocket.ail_key)
-    print(websocket.ail_uuid)
-    print(websocket.remote_address)
-    print(f'sync mode: {sync_mode}')
+    # print(websocket.ail_uuid)
+    # print(websocket.remote_address)
+    # print(f'sync mode: {sync_mode}')
 
     await register(websocket)
     try:
@@ -135,7 +160,10 @@ async def ail_to_ail_serv(websocket, path):
             await push(websocket, websocket.ail_uuid)
 
         elif sync_mode == 'api':
+            await api(websocket, websocket.ail_uuid, path['api'])
             await websocket.close()
+            redis_logger.info(f'Connection closed: {ail_uuid} {remote_address}')
+            print(f'Connection closed: {ail_uuid} {remote_address}')
 
     finally:
         await unregister(websocket)
@@ -151,11 +179,12 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
 
     async def process_request(self, path, request_headers):
 
-        print(self.remote_address)
-        print(request_headers)
+        # DEBUG:
+        # print(self.remote_address)
+        # print(request_headers)
+
         # API TOKEN
         api_key = request_headers.get('Authorization', '')
-        print(api_key)
         if api_key is None:
             redis_logger.warning(f'Missing token: {self.remote_address}')
             print(f'Missing token: {self.remote_address}')
@@ -215,7 +244,7 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
                 return http.HTTPStatus.FORBIDDEN, [], b"SYNC mode disabled\n"
 
         # # TODO: CHECK API
-        elif dict_path[sync_mode] == 'api':
+        elif dict_path['sync_mode'] == 'api':
             pass
 
         else:
