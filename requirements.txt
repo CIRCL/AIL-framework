@@ -9,6 +9,9 @@ redis==2.10.6
 python-magic>0.4.15
 yara-python>4.0.2
 
+# AIL Sync
+websockets>9.0
+
 # Hashlib
 crcmod
 mmh3>2.5

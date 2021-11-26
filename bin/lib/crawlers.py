@@ -479,6 +479,15 @@ def is_crawler_activated():
 def get_crawler_all_types():
     return ['onion', 'regular']
 
+def sanitize_crawler_types(l_crawler_types):
+    all_crawler_types = get_crawler_all_types()
+    if not l_crawler_types:
+        return all_crawler_types
+    for crawler_type in l_crawler_types:
+        if crawler_type not in all_crawler_types:
+            return all_crawler_types
+    return l_crawler_types
+
 def get_all_spash_crawler_status():
     crawler_metadata = []
     all_crawlers = r_cache.smembers('all_splash_crawlers')
@@ -600,8 +609,39 @@ def api_set_nb_crawlers_to_launch(dict_splash_name):
     else:
         return ({'error':'invalid input'}, 400)
 
-
 ##-- CRAWLER GLOBAL --##
+
+#### AUTOMATIC CRAWLER ####
+
+def get_auto_crawler_all_domain(l_crawler_types=[]):
+    l_crawler_types = sanitize_crawler_types(l_crawler_types)
+    if len(l_crawler_types) == 1:
+        return r_serv_onion.smembers(f'auto_crawler_url:{crawler_type[0]}')
+    else:
+        l_keys_name = []
+        for crawler_type in l_crawler_types:
+            l_keys_name.append(f'auto_crawler_url:{crawler_type}')
+        return r_serv_onion.sunion(l_keys_name[0], *l_keys_name[1:])
+
+def add_auto_crawler_in_queue(domain, domain_type, port, epoch, delta, message):
+    r_serv_onion.zadd('crawler_auto_queue', int(time.time() + delta) , f'{message};{domain_type}')
+    # update list, last auto crawled domains
+    r_serv_onion.lpush('last_auto_crawled', f'{domain}:{port};{epoch}')
+    r_serv_onion.ltrim('last_auto_crawled', 0, 9)
+
+def update_auto_crawler_queue():
+    current_epoch = int(time.time())
+    current_epoch = 1631096842
+    # check if current_epoch > domain_next_epoch
+    l_queue = r_serv_onion.zrangebyscore('crawler_auto_queue', 0, current_epoch)
+    for elem in l_queue:
+        mess, domain_type = elem.rsplit(';', 1)
+        print(domain_type)
+        print(mess)
+        r_serv_onion.sadd(f'{domain_type}_crawler_priority_queue', mess)
+
+
+##-- AUTOMATIC CRAWLER --##
 
 #### CRAWLER TASK ####
 def create_crawler_task(url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):
@@ -1350,6 +1390,7 @@ def save_test_ail_crawlers_result(test_success, message):
     r_serv_onion.hset('crawler:tor:test', 'success', bool(test_success))
     r_serv_onion.hset('crawler:tor:test', 'message', message)
 
+# # FIXME: # TODO: stderr CATCH ?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 def test_ail_crawlers():
     # # TODO: test regular domain
     if not ping_splash_manager():
@@ -1448,10 +1489,14 @@ def test_ail_crawlers():
 
 #### ---- ####
 
-#if __name__ == '__main__':
+if __name__ == '__main__':
     # res = get_splash_manager_version()
     # res = test_ail_crawlers()
     # res = is_test_ail_crawlers_successful()
     # print(res)
     # print(get_test_ail_crawlers_message())
     #print(get_all_queues_stats())
+
+    #res = get_auto_crawler_all_domain()
+    res = update_auto_crawler_queue()
+    print(res)

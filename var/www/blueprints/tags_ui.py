@@ -94,6 +94,34 @@ def get_all_obj_tags():
         return jsonify(res)
     return jsonify(Tag.get_all_obj_tags(object_type))
 
+@tags_ui.route('/tag/taxonomies/tags/enabled/json')
+@login_required
+@login_read_only
+def tag_taxonomies_tags_enabled_json():
+    return jsonify(Tag.get_taxonomies_enabled_tags(r_list=True))
+
+@tags_ui.route('/tag/galaxies/tags/enabled/json')
+@login_required
+@login_read_only
+def tag_galaxies_tags_enabled_json():
+    tags = Tag.get_galaxies_enabled_tags()
+    return jsonify(Tag.get_tags_selector_dict(tags))
+
+@tags_ui.route('/tag/taxonomie/tags/enabled/json')
+@login_required
+@login_read_only
+def tag_taxonomie_tags_enabled_json():
+    taxonomie = request.args.get('taxonomie')
+    return jsonify(Tag.get_taxonomie_enabled_tags(taxonomie, r_list=True))
+
+@tags_ui.route('/tag/galaxy/tags/enabled/json')
+@login_required
+@login_read_only
+def tag_galaxy_tags_enabled_json():
+    galaxy = request.args.get('galaxy')
+    tags = Tag.get_galaxy_enabled_tags(galaxy, r_list=True)
+    return jsonify(Tag.get_tags_selector_dict(tags))
+
 @tags_ui.route('/tag/search/item')
 @login_required
 @login_read_only

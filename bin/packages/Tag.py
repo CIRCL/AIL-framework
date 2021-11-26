@@ -63,17 +63,61 @@ def get_galaxy_from_tag(tag):
     except IndexError:
         return None
 
-def get_active_taxonomies():
-    return r_serv_tags.smembers('active_taxonomies')
+def get_active_taxonomies(r_set=False):
+    res = r_serv_tags.smembers('active_taxonomies')
+    if r_set:
+        return set(res)
+    return res
 
-def get_active_galaxies():
-    return r_serv_tags.smembers('active_galaxies')
+def get_active_galaxies(r_set=False):
+    res = r_serv_tags.smembers('active_galaxies')
+    if r_set:
+        return set(res)
+    return res
 
 def get_all_taxonomies_tags(): # # TODO: add + REMOVE + Update
     return r_serv_tags.smembers('active_taxonomies_tags')
 
 def get_all_galaxies_tags(): # # TODO: add + REMOVE + Update
     return r_serv_tags.smembers('active_galaxies_tags')
+
+def get_taxonomies_enabled_tags(r_list=False):
+    l_tag_keys = []
+    for taxonomie in get_active_taxonomies():
+        l_tag_keys.append(f'active_tag_{taxonomie}')
+    if len(l_tag_keys) > 1:
+        res = r_serv_tags.sunion(l_tag_keys[0], *l_tag_keys[1:])
+    elif l_tag_keys:
+        res = r_serv_tags.smembers(l_tag_keys[0])
+    if r_list:
+        return list(res)
+    else:
+        return res
+
+def get_galaxies_enabled_tags():
+    l_tag_keys = []
+    for galaxy in get_active_galaxies():
+        l_tag_keys.append(f'active_tag_galaxies_{galaxy}')
+    if len(l_tag_keys) > 1:
+        return r_serv_tags.sunion(l_tag_keys[0], *l_tag_keys[1:])
+    elif l_tag_keys:
+        return r_serv_tags.smembers(l_tag_keys[0])
+    else:
+        return []
+
+def get_taxonomie_enabled_tags(taxonomie, r_list=False):
+    res = r_serv_tags.smembers(f'active_tag_{taxonomie}')
+    if r_list:
+        return list(res)
+    else:
+        return res
+
+def get_galaxy_enabled_tags(galaxy, r_list=False):
+    res = r_serv_tags.smembers(f'active_tag_galaxies_{galaxy}')
+    if r_list:
+        return list(res)
+    else:
+        return res
 
 def is_taxonomie_tag_enabled(taxonomie, tag):
     if tag in r_serv_tags.smembers('active_tag_' + taxonomie):
@@ -136,6 +180,67 @@ def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
                 return False
     return True
 
+def is_taxonomie_tag(tag, namespace=None):
+    if not namespace:
+        namespace = tag.split(':')[0]
+    if namespace != 'misp-galaxy':
+        return True
+    else:
+        return False
+
+def is_galaxy_tag(tag, namespace=None):
+    if not namespace:
+        namespace = tag.split(':')[0]
+    if namespace == 'misp-galaxy':
+        return True
+    else:
+        return False
+
+# # TODO:
+# def is_valid_tag(tag):
+#     pass
+
+def is_enabled_tag(tag, enabled_namespace=None):
+    if is_taxonomie_tag(tag):
+        return is_enabled_taxonomie_tag(tag, enabled_taxonomies=enabled_namespace)
+    else:
+        return is_enabled_galaxy_tag(tag, enabled_galaxies=enabled_namespace)
+
+def are_enabled_tags(tags):
+    enabled_taxonomies = get_active_taxonomies(r_set=True)
+    enabled_galaxies = get_active_galaxies(r_set=True)
+    for tag in tags:
+        if is_taxonomie_tag(tag):
+            res = is_enabled_taxonomie_tag(tag, enabled_taxonomies=enabled_taxonomies)
+        else:
+            res = is_enabled_galaxy_tag(tag, enabled_galaxies=enabled_galaxies)
+        if not res:
+            return False
+    return True
+
+def is_enabled_taxonomie_tag(tag, enabled_taxonomies=None):
+    if not enabled_taxonomies:
+        enabled_taxonomies = get_active_taxonomies()
+    taxonomie = get_taxonomie_from_tag(tag)
+    if taxonomie is None:
+        return False
+    if taxonomie not in enabled_taxonomies:
+        return False
+    if not is_taxonomie_tag_enabled(taxonomie, tag):
+        return False
+
+def is_enabled_galaxy_tag(tag, enabled_galaxies=None):
+    if not enabled_galaxies:
+        enabled_galaxies = get_active_galaxies()
+    galaxy = get_galaxy_from_tag(tag)
+    if galaxy is None:
+        return False
+    if galaxy not in enabled_galaxies:
+        return False
+    if not is_galaxy_tag_enabled(galaxy, tag):
+        return False
+    return True
+
 ####  ####
 
 def is_tag_in_all_tag(tag):
@@ -143,6 +248,31 @@ def is_tag_in_all_tag(tag):
         return True
     else:
         return False
+
+def get_tag_synonyms(tag):
+    return r_serv_tags.smembers(f'synonym_tag_{tag}')
+
+def get_tag_dislay_name(tag):
+    tag_synonyms = get_tag_synonyms(tag)
+    if not tag_synonyms:
+        return tag
+    else:
+        return tag + ', '.join(tag_synonyms)
+
+def get_tags_selector_dict(tags):
+    list_tags = []
+    for tag in tags:
+        list_tags.append(get_tag_selector_dict(tag))
+    return list_tags
+
+def get_tag_selector_dict(tag):
+    return {'name':get_tag_dislay_name(tag),'id':tag}
+
+def get_tags_selector_data():
+    dict_selector = {}
+    dict_selector['active_taxonomies'] = get_active_taxonomies()
+    dict_selector['active_galaxies'] = get_active_galaxies()
+    return dict_selector
 
 def get_min_tag(tag):
     tag = tag.split('=')
@@ -421,7 +551,7 @@ def add_tag(object_type, tag, object_id, obj_date=None):
     r_serv_tags.hincrby('daily_tags:{}'.format(datetime.date.today().strftime("%Y%m%d")), tag, 1)
 
 def delete_obj_tag(object_type, object_id, tag, obj_date):
-    if object_type=="item": # # TODO: # FIXME: # REVIEW: rename me !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if object_type=="item": # # TODO: # FIXME: # REVIEW: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         obj_date = get_obj_date(object_type, object_id)
         r_serv_metadata.srem('tag:{}'.format(object_id), tag)
         r_serv_tags.srem('{}:{}'.format(tag, obj_date), object_id)
@@ -455,7 +585,7 @@ def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
     if not tags:
         return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
 
-    res = delete_obj_tags(object_id, object_type, tags=tags)
+    res = delete_obj_tags(object_id, object_type, tags)
     if res:
         return res
 
@@ -464,12 +594,15 @@ def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
     dict_res['id'] = object_id
     return (dict_res, 200)
 
-def delete_obj_tags(object_id, object_type, tags=[]):
+def delete_obj_tags(object_id, object_type, tags):
     obj_date = get_obj_date(object_type, object_id)
     for tag in tags:
         res = delete_tag(object_type, tag, object_id, obj_date=obj_date)
         if res:
             return res
+
+def delete_obj_all_tags(obj_id, obj_type):
+    delete_obj_tags(obj_id, obj_type, get_obj_tag(obj_id))
 
 def sanitise_tags_date_range(l_tags, date_from=None, date_to=None):
     if date_from is None or date_to is None:

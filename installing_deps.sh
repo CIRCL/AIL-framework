@@ -18,7 +18,7 @@ sudo apt-get install wget -qq
 sudo apt-get install tor -qq
 
 #Needed for bloom filters
-sudo apt-get install libssl-dev libfreetype6-dev python-numpy -qq
+sudo apt-get install libssl-dev libfreetype6-dev python3-numpy -qq
 
 #pyMISP
 #sudo apt-get -y install python3-pip
@@ -43,8 +43,7 @@ sudo apt-get install build-essential libffi-dev automake autoconf libtool -qq
 sudo apt-get install p7zip-full -qq
 
 # SUBMODULES #
-git submodule init
-git submodule update
+git submodule update --init
 
 # REDIS #
 test ! -d redis/ && git clone https://github.com/antirez/redis.git

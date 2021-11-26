@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+						<div class="card my-3">
+						  <div class="card-header bg-dark text-white">
+								<h5 class="card-title">Create AIL Server</h5>
+							</div>
+						  <div class="card-body">
+
+								<form action="{{ url_for('ail_2_ail_sync.ail_server_add') }}" method='post'>
+
+									<div class="row">
+										<div class="col-12 col-xl-9">
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
+										    </div>
+												<input id="ail_uuid" name="ail_uuid" class="form-control" placeholder="AIL Server UUID" type="text" required>
+										  </div>
+
+											<div class="input-group mb-2 mr-sm-2">
+												<div class="input-group-prepend">
+										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-server"></i></div>
+										    </div>
+												<input id="ail_url" class="form-control" type="text" name="ail_url" placeholder="AIL Server URL">
+											</div>
+
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
+										    </div>
+												<textarea id="ail_description" name="ail_description" class="form-control" placeholder="AIL Server Description (optional)" rows="3"></textarea>
+										  </div>
+
+											<h5 class="mt-2 text-secondary">
+												SYNC Modes:
+											</h5>
+											<div class="row">
+												<div class="col-12 col-xl-6">
+													<div class="custom-control custom-checkbox">
+												  	<input class="custom-control-input" type="checkbox" value="True" id="pull" name="ail_pull" checked>
+												  	<label class="custom-control-label" for="ail_pull"><h5>PULL</h5></label>
+													</div>
+												</div>
+												<div class="col-12 col-xl-6">
+													<div class="custom-control custom-checkbox">
+														<input class="custom-control-input" type="checkbox" value="True" id="ail_push" name="ail_push" checked>
+														<label class="custom-control-label" for="ail_push"><h5 class="">PUSH</h5></label>
+													</div>
+												</div>
+											</div>
+
+											<h5 class="mt-2 text-secondary">
+												Server Key <i class="fas fa-key"></i>:
+											</h5>
+
+											<div class="d-flex mt-2">
+												&nbsp;Generate Server Key&nbsp;&nbsp;
+												<div class="custom-control custom-switch">
+													<input class="custom-control-input" type="checkbox" name="register_key" value="True" id="register_key">
+													<label class="custom-control-label" for="register_key">
+														 &nbsp;Register Server Key
+													</label>
+												</div>
+											</div>
+
+											<div class="mt-3" id="div_generate_key">
+												<b>A new key will be generated for this AIL Server</b>
+											</div>
+											<div id="div_register_key">
+												<div class="input-group mb-2 mr-sm-2">
+													<div class="input-group-prepend">
+											      <div class="input-group-text bg-danger text-white"><i class="fas fa-key"></i></div>
+											    </div>
+													<input id="ail_key" class="form-control" type="text" minlength="56" maxlength="56" name="ail_key" placeholder="AIL key">
+												</div>
+											</div>
+
+
+										</div>
+										<div class="col-12 col-xl-3">
+											SYNC: create a new AIL Server
+										</div>
+									</div>
+
+
+									<br>
+									<button class="btn btn-primary mt-2">
+										<i class="fas fa-plus"></i> Create AIL Server
+									</button>
+
+								</form>
+
+
+
+						  </div>
+						</div>
+
+
+			</div>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_sync').removeClass("text-muted");
+	$("#nav_ail_servers").addClass("active");
+	$("#div_register_key").hide();
+
+
+	$('#register_key').on("change", function () {
+		register_key_input_controler();
+	});
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function register_key_input_controler() {
+	if($('#register_key').is(':checked')){
+		$("#div_generate_key").hide();
+		$("#div_register_key").show();
+	}else{
+		$("#div_generate_key").show();
+		$("#div_register_key").hide();
+	}
+}
+
+</script>

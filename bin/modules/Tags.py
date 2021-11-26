@@ -45,14 +45,17 @@ class Tags(AbstractModule):
         if len(mess_split) == 2:
             tag = mess_split[0]
             item = Item(mess_split[1])
-            item_id = item.get_id()
 
             # Create a new tag
             Tag.add_tag('item', tag, item.get_id())
-            print(f'{item_id}: Tagged {tag}')
+            print(f'{item.get_id()}: Tagged {tag}')
 
             # Forward message to channel
             self.send_message_to_queue(message, 'MISP_The_Hive_feeder')
+
+            message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
+            self.send_message_to_queue(message, 'Sync_module')
+
         else:
             # Malformed message
             raise Exception(f'too many values to unpack (expected 2) given {len(mess_split)} with message {message}')

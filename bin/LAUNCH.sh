@@ -44,6 +44,8 @@ isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
 isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
 islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
 isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
+is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
+is_ail_2_ail=`screen -ls | egrep '[0-9]+.AIL_2_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
 iscrawler=`screen -ls | egrep '[0-9]+.Crawler_AIL' | cut -d. -f1`
@@ -145,11 +147,25 @@ function launching_scripts {
 
     screen -dmS "Script_AIL"
     sleep 0.1
-    echo -e $GREEN"\t* Launching scripts"$DEFAULT
 
     ##################################
     #         CORE MODULES           #
     ##################################
+    # screen -dmS "Core_AIL"
+    # sleep 0.1
+    echo -e $GREEN"\t* Launching core scripts ..."$DEFAULT
+
+    # TODO: MOOVE IMPORTER ????  => multiple scripts
+
+    #### SYNC ####
+    screen -S "Script_AIL" -X screen -t "Sync_importer" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_importer.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "ail_2_ail_server" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./ail_2_ail_server.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Sync_manager" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_manager.py; read x"
+    sleep 0.1
+    ##-- SYNC --##
+
     screen -S "Script_AIL" -X screen -t "JSON_importer" bash -c "cd ${AIL_BIN}/import; ${ENV_PY} ./JSON_importer.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Crawler_manager" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Crawler_manager.py; read x"
@@ -165,6 +181,10 @@ function launching_scripts {
     ##################################
     #           MODULES              #
     ##################################
+    # screen -dmS "Script_AIL"
+    # sleep 0.1
+    echo -e $GREEN"\t* Launching scripts"$DEFAULT
+
     screen -S "Script_AIL" -X screen -t "Global" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Global.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Categ.py; read x"
@@ -174,6 +194,9 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./submit_paste.py; read x"
+    sleep 0.1
+
+    screen -S "Script_AIL" -X screen -t "Sync_module" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_module.py; read x"
     sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "ApiKey" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ApiKey.py; read x"
@@ -366,7 +389,7 @@ function launch_queues {
 }
 
 function launch_scripts {
-    if [[ ! $isscripted ]]; then
+    if [[ ! $isscripted ]]; then ############################# is core
       sleep 1
         if checking_ardb && checking_redis; then
             launching_scripts;
@@ -414,19 +437,19 @@ function launch_feeder {
 }
 
 function killscript {
-    if [[ $islogged || $isqueued || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
+    if [[ $islogged || $isqueued || $is_ail_core || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
         echo -e $GREEN"Killing Script"$DEFAULT
-        kill $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler
+        kill $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler killed."$DEFAULT
+        echo -e $GREEN"\t* $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler killed."$DEFAULT
     else
         echo -e $RED"\t* No script to kill"$DEFAULT
     fi
 }
 
 function killall {
-    if [[ $isredis || $isardb || $islogged || $isqueued || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
+    if [[ $isredis || $isardb || $islogged || $isqueued || $is_ail_2_ail || $isscripted || $isflasked || $isfeeded || $iscrawler || $is_ail_core ]]; then
         if [[ $isredis ]]; then
             echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
             shutting_down_redis;
@@ -437,10 +460,10 @@ function killall {
             shutting_down_ardb;
         fi
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler
+        kill $isredis $isardb $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted $isflasked $isfeeded $iscrawler killed."$DEFAULT
+        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted $is_ail_2_ail $isflasked $isfeeded $iscrawler $is_ail_core killed."$DEFAULT
     else
         echo -e $RED"\t* No screen to kill"$DEFAULT
     fi

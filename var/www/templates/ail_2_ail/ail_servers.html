@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-SYNC</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="my-4">
+					<a href="{{ url_for('ail_2_ail_sync.ail_server_add') }}">
+						<button type="button" class="btn btn-primary">
+							<i class="fas fa-plus"></i> Add AIL Server
+						</button>
+					</a>
+				</div>
+
+				<table id="table_servers" class="table table-striped border-primary">
+          <thead class="bg-dark text-white">
+            <tr>
+                <th>url</th>
+								<th></th>
+								<th>uuid</th>
+                <th>description</th>
+                <th>sync queues</th>
+            </tr>
+          </thead>
+          <tbody style="font-size: 15px;">
+            {% for dict_server in l_servers %}
+              <tr class="border-color: blue;">
+                <td>{{ dict_server['url']}}</td>
+								<td>
+									{% if dict_server['ping'] %}
+										<div style="color:Green;">
+											<i class="fas fa-check-circle fa-2x"></i>
+										</div>
+									{% else %}
+										<div style="color:Red;">
+											<i class="fas fa-times-circle fa-2x"></i>
+										</div>
+									{% endif %}
+								</td>
+								<td>
+									<a href="{{ url_for('ail_2_ail_sync.ail_server_view') }}?uuid={{ dict_server['uuid'] }}">
+										{{ dict_server['uuid']}}
+									</a>
+								</td>
+                <td>{{ dict_server['description']}}</td>
+                <td class="text-center">
+									{% for queue_uuid in dict_server['sync_queues'] %}
+                  	<a href="{{ url_for('ail_2_ail_sync.sync_queue_view') }}?uuid={{queue_uuid}}">
+                      {{queue_uuid}}</br>
+                    </a>
+                  {%  endfor %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+			</div>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_sync').removeClass("text-muted");
+	$("#nav_ail_servers").addClass("active");
+
+  $('#table_servers').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 1, "desc" ]]
+  });
+
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>

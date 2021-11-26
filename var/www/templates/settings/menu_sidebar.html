@@ -17,6 +17,29 @@
       	      </a>
       	    </li>
           </ul>
+          <h5 class="d-flex text-muted w-100" id="nav_sync">
+      		  <span>AIL SYNC</span>
+      		</h5>
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+            <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('ail_2_ail_sync.ail_2_ail_dashboard')}}" id="nav_ail_sync">
+      	        <img src="{{ url_for('static', filename='image/ail.png')}}" alt="AIL servers" style="width:25px;">
+      	        <span>AIL SYNC</span>
+      	      </a>
+      	    </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('ail_2_ail_sync.ail_servers')}}" id="nav_ail_servers">
+                <i class="fas fa-server"></i>
+                <span>Servers</span>
+              </a>
+            </li>
+            <li class="nav-item">
+             <a class="nav-link" href="{{url_for('ail_2_ail_sync.sync_queues')}}" id="navsync_queues">
+               <i class="fas fa-stream"></i>
+               <span>Sync queues</span>
+             </a>
+           </li>
+          </ul>
           <h5 class="d-flex text-muted w-100" id="nav_settings">
       		  <span>Settings</span>
       		</h5>

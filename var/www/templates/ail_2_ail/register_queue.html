@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card">
+					<div class="card-header bg-dark text-white">
+						<h5 class="card-title">{{ail_uuid}} Register a SYNC Queue</h5>
+					</div>
+					<div class="card-body">
+
+						<table id="table_sync_queues" class="table table-striped border-primary">
+							<thead class="bg-dark text-white">
+								<tr>
+										<th>name</th>
+										<th>uuid</th>
+										<th>description</th>
+										<th>max size</th>
+										<th>Register Sync Queue</th>
+								</tr>
+							</thead>
+							<tbody style="font-size: 15px;">
+								{% for dict_queue in sync_queues %}
+									<tr class="border-color: blue;">
+										<td>{{ dict_queue['name']}}</td>
+										<td>
+											<a href="{{ url_for('ail_2_ail_sync.sync_queue_view') }}?uuid={{ dict_queue['uuid'] }}">
+												{{ dict_queue['uuid']}}
+											</a>
+											<div>
+												{% for tag in dict_queue['tags'] %}
+													<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+												{% endfor %}
+											</div>
+										</td>
+										<td>{{ dict_queue['description']}}</td>
+										<td>{{ dict_queue['max_size']}}</td>
+										<td class="text-right">
+											<a href="{{ url_for('ail_2_ail_sync.ail_server_sync_queues_register') }}?ail_uuid={{ ail_uuid }}&queue_uuid={{ dict_queue['uuid'] }}">
+												<button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+											</a>
+										</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_sync').removeClass("text-muted");
+
+  $('#table_sync_queues').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "desc" ]]
+  });
+
+});
+
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
