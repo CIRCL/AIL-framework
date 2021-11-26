@@ -222,7 +222,7 @@ def get_item(request_dict):
 
 
 
-def get_item_content_encoded_text(request_dict):
+def api_get_item_content_base64_utf8(request_dict):
     item_id = request_dict.get('id', None)
     if not request_dict:
         return {'status': 'error', 'reason': 'Malformed JSON'}, 400
@@ -236,22 +236,23 @@ def get_item_content_encoded_text(request_dict):
     return {'status': 'success', 'content': item_content}, 200
 
 
-def get_item_sources():
+def api_get_items_sources():
     item_content = {'sources': get_all_sources()}
     return item_content, 200
 
-def check_item_source(request_dict):
-    source = request_dict.get('source', None)
-    if not request_dict:
-        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
-    if not source:
-        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+# def check_item_source(request_dict):
+#     source = request_dict.get('source', None)
+#     if not request_dict:
+#         return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+#     if not source:
+#         return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+#
+#     all_sources = item_basic.get_all_items_sources()
+#
+#     if source not in all_sources:
+#         return {'status': 'error', 'reason': 'Invalid source', 'provide': source}, 400
+#     return {'status': 'success', 'reason': 'Valid source', 'provide': source}, 200
 
-    all_sources = item_basic.get_all_items_sources()
-
-    if source not in all_sources:
-        return {'status': 'error', 'reason': 'Invalid source', 'provide': source}, 400
-    return {'status': 'success', 'reason': 'Valid source', 'provide': source}, 200
 ###
 ### correlation
 ###

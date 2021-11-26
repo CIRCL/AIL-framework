@@ -29,7 +29,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import'))
 import importer
 
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, escape
 from flask_login import login_required
 
 from functools import wraps
@@ -72,7 +72,7 @@ def verify_user_role(role, token):
     # User without API
     if role == 'user_no_api':
         return False
-        
+
     user_id = get_user_from_token(token)
     if user_id:
         if is_in_role(user_id, role):
@@ -313,32 +313,33 @@ def get_item_content():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 
-@restApi.route("api/v1/get/item/content/encoded/text", methods=['POST'])
+@restApi.route("api/v1/get/item/content/utf8/base64", methods=['POST'])
 @token_required('read_only')
 def get_item_content_encoded_text():
     data = request.get_json()
     item_id = data.get('id', None)
     req_data = {'id': item_id}
-    res = Item.get_item_content_encoded_text(req_data)
+    res = Item.api_get_item_content_base64_utf8(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 
-@restApi.route("api/v1/get/item/sources", methods=['GET'])
+@restApi.route("api/v1/get/items/sources", methods=['GET'])
 @token_required('read_only')
 def get_item_sources():
-    res = Item.get_item_sources()
+    res = Item.api_get_items_sources()
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 
 
-@restApi.route("api/v1/get/item/source/check", methods=['POST'])
-@token_required('read_only')
-def get_check_item_source():
-    data = request.get_json()
-    source = data.get('source', None)
-    req_data = {'source': source}
-    res = Item.check_item_source(req_data)
-    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+# @restApi.route("api/v1/get/item/source/check", methods=['POST'])
+# @token_required('read_only')
+# def get_check_item_source():
+#     data = request.get_json()
+#     source = data.get('source', None)
+#     req_data = {'source': source}
+#     res = Item.check_item_source(req_data)
+#     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -395,10 +396,10 @@ def get_tracker_term_item():
 def get_default_yara_rule_content():
     data = request.get_json()
     rule_name = data.get('rule_name', None)
+    rule_name = escape(rule_name)
     req_data = {'rule_name': rule_name}
     res = Tracker.get_yara_rule_content_restapi(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
-
 
 @restApi.route("api/v1/get/tracker/metadata", methods=['POST'])
 @token_required('read_only')
@@ -408,6 +409,7 @@ def get_tracker_metadata_api():
     req_data = {'tracker_uuid': tracker_uuid}
     res = Tracker.get_tracker_metadata_api(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=False), mimetype='application/json'), res[1]
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # #        CRYPTOCURRENCY       # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
