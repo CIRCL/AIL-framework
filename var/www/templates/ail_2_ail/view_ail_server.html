@@ -74,6 +74,10 @@
 									<td class="text-right"><b>Api Key</b></td>
 									<td>
 										{{server_metadata['api_key']}}
+										<input id="api_key" name="api_key" type="text" value="{{ server_metadata['api_key'] }}" hidden>
+										<button type="button" class="btn btn-secondary px-2 py-0" onclick="copy_api_key()">
+											<i class="fas fa-clipboard"></i>
+										</button>
 									</td>
 								</tr>
 								<tr>
@@ -220,6 +224,10 @@ $(document).ready(function(){
 
 });
 
+function copy_api_key() {
+	api_key = $('#api_key').val();
+	navigator.clipboard.writeText(api_key);
+}
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){

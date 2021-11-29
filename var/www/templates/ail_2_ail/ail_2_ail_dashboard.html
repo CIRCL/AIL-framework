@@ -31,16 +31,23 @@
 			<div class="col-12 col-lg-10" id="core_content">
 
 				<div class="d-flex justify-content-center my-4">
-					<div class="card border-secondary" style="max-width: 40rem;">
-						<div class="card-header bg-inf">
-							<h5 class="card-title">AIL UUID:</h5>
-						</div>
-						<div class="card-body text-dark">
-							<div class="">
-								{{ ail_uuid }}
+					<div class="input-group mb-2 mr-sm-2" style="max-width: 30rem;">
+						<div class="input-group-prepend">
+							<div class="input-group-text bg-dark text-white">
+								<b>AIL UUID</b>
 							</div>
 						</div>
+						<div class="form-control">
+							{{ ail_uuid }}
+							<input id="ail_uuid" name="ail_uuid" type="text" value="{{ ail_uuid }}" hidden>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary" onclick="copy_ail_uuid()">
+								<i class="fas fa-clipboard"></i>
+							</button>
+						</div>
 					</div>
+
 				</div>
 
 
@@ -96,6 +103,11 @@ $(document).ready(function(){
   });
 
 });
+
+function copy_ail_uuid() {
+	ail_uuid = $('#ail_uuid').val();
+	navigator.clipboard.writeText(ail_uuid);
+}
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){
