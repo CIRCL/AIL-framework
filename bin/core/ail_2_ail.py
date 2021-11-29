@@ -89,9 +89,61 @@ def set_last_updated_sync_config():
 
 # # TODO: get connection status
 # # TODO: get connection METADATA
+# # TODO: client => reconnect on fails (with timeout)
+
+# # TODO: API KEY change => trigger kill connection
 #############################
 #                           #
 #### SYNC CLIENT MANAGER ####
+
+#### ail servers connected clients ####
+#
+#   ail_uuid => WEBSOCKETS => ail_uuid
+#   AIL: clients:
+#               - 1 push
+#               - 1 pull
+#               - N api
+
+def get_server_all_connected_clients():
+    return r_cache.smembers('ail_2_ail:server:all_clients')
+
+def add_server_connected_client(ail_uuid, sync_mode):
+    r_cache.sadd('ail_2_ail:server:all_clients', ail_uuid)
+    r_cache.hset(f'ail_2_ail:server:client:{ail_uuid}', sync_mode, True)
+
+def remove_server_connected_client(ail_uuid, sync_mode=None, is_connected=False):
+    if sync_mode:
+        r_cache.hdel(f'ail_2_ail:server:client:{ail_uuid}', sync_mode)
+    if not is_connected:
+        r_cache.srem('ail_2_ail:server:all_clients', ail_uuid)
+
+def is_server_client_sync_mode_connected(ail_uuid, sync_mode):
+    res = r_cache.hexists(f'ail_2_ail:server:client:{ail_uuid}', sync_mode)
+    return res == 1
+
+def clear_server_connected_clients():
+    for ail_uuid in get_server_all_connected_clients():
+        r_cache.delete(f'ail_2_ail:server:client:{ail_uuid}')
+    r_cache.delete('ail_2_ail:server:all_clients')
+
+def get_server_controller_command():
+    res = r_cache.spop('ail_2_ail:server_controller:command')
+    if res:
+        return json.loads(res)
+    else:
+        return None
+
+# command: -kill
+#          -killall or shutdown / restart ?
+## TODO: ADD command
+def send_command_to_server_controller(command, ail_uuid=None):
+    dict_action = {'command': command, 'ail_uuid': ail_uuid}
+    if ail_uuid:
+        dict_action['ail_uuid'] = ail_uuid
+    str_command = json.dumps(dict_action)
+    r_cache.sadd('ail_2_ail:server_controller:command', str_command)
+
+##-- --##
 
 def get_all_sync_clients(r_set=False):
     res = r_cache.smembers('ail_2_ail:all_sync_clients')
@@ -387,7 +439,7 @@ def get_ail_server_error(ail_uuid):
     return r_cache.hget(f'ail_2_ail:all_servers:metadata:{ail_uuid}', 'error')
 
 # # TODO: HIDE ADD GLOBAL FILTER (ON BOTH SIDE)
-def get_ail_instance_metadata(ail_uuid, sync_queues=False):
+def get_ail_instance_metadata(ail_uuid, client_sync_mode=False, sync_queues=False):
     dict_meta = {}
     dict_meta['uuid'] = ail_uuid
     dict_meta['url'] = get_ail_instance_url(ail_uuid)
@@ -404,8 +456,11 @@ def get_ail_instance_metadata(ail_uuid, sync_queues=False):
     if sync_queues:
         dict_meta['sync_queues'] = get_ail_instance_all_sync_queue(ail_uuid)
 
-    # # TODO:
-    # - set UUID sync_queue
+    if client_sync_mode:
+        dict_meta['client_sync_mode'] = {}
+        dict_meta['client_sync_mode']['pull'] = is_server_client_sync_mode_connected(ail_uuid, 'pull')
+        dict_meta['client_sync_mode']['push'] = is_server_client_sync_mode_connected(ail_uuid, 'push')
+        dict_meta['client_sync_mode']['api'] = is_server_client_sync_mode_connected(ail_uuid, 'api')
 
     return dict_meta
 
@@ -415,10 +470,11 @@ def get_all_ail_instances_metadata():
         l_servers.append(get_ail_instance_metadata(ail_uuid, sync_queues=True))
     return l_servers
 
-def get_ail_instances_metadata(l_ail_servers):
+def get_ail_instances_metadata(l_ail_servers, sync_queues=True, client_sync_mode=False):
     l_servers = []
     for ail_uuid in l_ail_servers:
-        l_servers.append(get_ail_instance_metadata(ail_uuid, sync_queues=True))
+        server_metadata = get_ail_instance_metadata(ail_uuid, sync_queues=sync_queues, client_sync_mode=client_sync_mode)
+        l_servers.append(server_metadata)
     return l_servers
 
 def edit_ail_instance_key(ail_uuid, new_key):
@@ -1022,12 +1078,12 @@ if __name__ == '__main__':
     # res = get_all_unregistred_queue_by_ail_instance(ail_uuid)
 
     ail_uuid = 'c3c2f3ef-ca53-4ff6-8317-51169b73f731'
-    ail_uuid = '2dfeff47-777d-4e70-8c30-07c059307e6a'
+    #ail_uuid = '2dfeff47-777d-4e70-8c30-07c059307e6a'
 
     # res = ping_remote_ail_server(ail_uuid)
     # print(res)
     #
-    res = ping_remote_ail_server(ail_uuid)
+    res = send_command_to_server_controller('kill', ail_uuid=ail_uuid)
 
     #res = _get_remote_ail_server_response(ail_uuid, 'pin')
     print(res)

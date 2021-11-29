@@ -26,7 +26,7 @@ redis_logger.channel = 'Sync'
 
 #############################
 
-CONNECTED_CLIENT = set()
+CONNECTED_CLIENTS = {}
 # # TODO: Store in redis
 
 #############################
@@ -63,23 +63,59 @@ def unpack_path(path):
 
 # # # # # # #
 
+# # TODO: ADD more commands
+async def server_controller():
+    while True:
+        command_dict = ail_2_ail.get_server_controller_command()
+        if command_dict:
+            command = command_dict.get('command')
+            if command == 'kill':
+                ail_uuid = command_dict.get('ail_uuid')
+                connected_clients = CONNECTED_CLIENTS[ail_uuid].copy()
+                for c_websocket in connected_clients:
+                    await c_websocket.close()
+                    redis_logger.info(f'Server Command Connection closed: {ail_uuid}')
+                    print(f'Server Command Connection closed: {ail_uuid}')
 
-# async def send_object():
-#     if CONNECTED_CLIENT:
-#         message = 'new json object {"id": "test01"}'
-#         await asyncio.wait([user.send(message) for user in USERS])
+        await asyncio.sleep(10)
 
+# # # # # # #
 
 async def register(websocket):
     ail_uuid = websocket.ail_uuid
     remote_address = websocket.remote_address
+    sync_mode = websocket.sync_mode
     redis_logger.info(f'Client Connected: {ail_uuid} {remote_address}')
     print(f'Client Connected: {ail_uuid} {remote_address}')
-    CONNECTED_CLIENT.add(websocket)
-    #print(CONNECTED_CLIENT)
+
+    if not ail_uuid in CONNECTED_CLIENTS:
+        CONNECTED_CLIENTS[ail_uuid] = set()
+    CONNECTED_CLIENTS[ail_uuid].add(websocket)
+    ail_2_ail.add_server_connected_client(ail_uuid, sync_mode)
+
+    print('Register client')
+    print(CONNECTED_CLIENTS)
+    print()
 
 async def unregister(websocket):
-    CONNECTED_CLIENT.remove(websocket)
+    ail_uuid = websocket.ail_uuid
+    sync_mode = websocket.sync_mode
+    CONNECTED_CLIENTS[ail_uuid].remove(websocket)
+    connected_clients = CONNECTED_CLIENTS[ail_uuid].copy()
+    for c_websocket in connected_clients:
+        if c_websocket.sync_mode == sync_mode:
+            sync_mode = None
+            break
+    if not CONNECTED_CLIENTS[ail_uuid]:
+        is_connected = False
+        CONNECTED_CLIENTS.pop(ail_uuid)
+    else:
+        is_connected = True
+    ail_2_ail.remove_server_connected_client(ail_uuid, sync_mode=sync_mode, is_connected=is_connected)
+
+    print('Unregister client')
+    print(CONNECTED_CLIENTS)
+    print()
 
 # PULL: Send data to client
 # # TODO: ADD TIMEOUT ???
@@ -218,8 +254,9 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
 
         self.ail_key = api_key
         self.ail_uuid = ail_uuid
+        self.sync_mode = dict_path['sync_mode']
 
-        if dict_path['sync_mode'] == 'pull' or dict_path['sync_mode'] == 'push':
+        if self.sync_mode == 'pull' or self.sync_mode == 'push':
 
             # QUEUE UUID
             # if dict_path['queue_uuid']:
@@ -237,14 +274,14 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
             #     return http.HTTPStatus.FORBIDDEN, [], b"UUID not found\n"
 
             # SYNC MODE
-            if not ail_2_ail.is_ail_instance_sync_enabled(self.ail_uuid, sync_mode=dict_path['sync_mode']):
-                sync_mode = dict_path['sync_mode']
+            if not ail_2_ail.is_ail_instance_sync_enabled(self.ail_uuid, sync_mode=self.sync_mode):
+                sync_mode = self.sync_mode
                 redis_logger.warning(f'SYNC mode disabled: {self.remote_address} {ail_uuid} {sync_mode}')
                 print(f'SYNC mode disabled: {self.remote_address} {ail_uuid} {sync_mode}')
                 return http.HTTPStatus.FORBIDDEN, [], b"SYNC mode disabled\n"
 
         # # TODO: CHECK API
-        elif dict_path['sync_mode'] == 'api':
+        elif self.sync_mode == 'api':
             pass
 
         else:
@@ -252,11 +289,9 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
             redis_logger.info(f'Invalid path: {self.remote_address}')
             return http.HTTPStatus.BAD_REQUEST, [], b"Invalid path\n"
 
-
 ###########################################
 
 # # TODO: clean shutdown / kill all connections
-# # TODO: API
 # # TODO: Filter object
 # # TODO: IP/uuid to block
 
@@ -268,6 +303,8 @@ if __name__ == '__main__':
     print('Launching Server...')
     redis_logger.info('Launching Server...')
 
+    ail_2_ail.clear_server_connected_clients()
+
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     cert_dir = os.environ['AIL_FLASK']
     ssl_context.load_cert_chain(certfile=os.path.join(cert_dir, 'server.crt'), keyfile=os.path.join(cert_dir, 'server.key'))
@@ -277,5 +314,9 @@ if __name__ == '__main__':
     print(f'Server Launched:    wss://{host}:{port}')
     redis_logger.info(f'Server Launched:    wss://{host}:{port}')
 
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
+    loop = asyncio.get_event_loop()
+    # server command
+    loop.create_task(server_controller())
+    # websockets server
+    loop.run_until_complete(start_server)
+    loop.run_forever()

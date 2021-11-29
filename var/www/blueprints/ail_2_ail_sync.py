@@ -56,8 +56,11 @@ def ail_2_ail_dashboard():
     ail_uuid = ail_2_ail.get_ail_uuid()
     l_servers = ail_2_ail.get_all_running_sync_servers()
     l_servers = ail_2_ail.get_ail_instances_metadata(l_servers)
+    l_clients = ail_2_ail.get_server_all_connected_clients()
+    l_clients = ail_2_ail.get_ail_instances_metadata(l_clients, sync_queues=False, client_sync_mode=True)
     return render_template("ail_2_ail_dashboard.html", ail_uuid=ail_uuid,
-                                l_servers=l_servers)
+                                l_servers=l_servers,
+                                l_clients=l_clients)
 
 ######################
 #                    #
