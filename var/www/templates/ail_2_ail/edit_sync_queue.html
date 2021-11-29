@@ -33,26 +33,37 @@
 
 						<div class="card my-3">
 						  <div class="card-header bg-dark text-white">
-								<h5 class="card-title">Create SYNC Queue</h5>
+								<h5 class="card-title">Edit SYNC Queue</h5>
 							</div>
 						  <div class="card-body">
 
-								<form action="{{ url_for('ail_2_ail_sync.sync_queue_add') }}" method='post' onsubmit="SubmitCreateQueue();">
+								<form action="{{ url_for('ail_2_ail_sync.sync_queue_edit') }}" method='post' onsubmit="SubmitCreateQueue();">
 
 									<div class="row">
 										<div class="col-12 col-xl-9">
+
+											<div class="input-group mb-2 mr-sm-2">
+												<div class="input-group-prepend">
+											  	<div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
+												</div>
+												<div class="form-control">
+													{{ queue_metadata['uuid'] }}
+													<input id="queue_uuid" name="queue_uuid" type="text" value="{{ queue_metadata['uuid'] }}" hidden>
+												</div>
+											</div>
+
 											<div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
 										      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
 										    </div>
-												<input id="queue_name" name="queue_name" class="form-control" placeholder="Queue Name" type="text" required>
+												<input id="queue_name" name="queue_name" class="form-control" value="{{ queue_metadata['name'] }}" placeholder="Queue Name" type="text" required>
 										  </div>
 
 											<div class="input-group form-group mb-2">
 												<div class="input-group-prepend">
 													<span class="input-group-text bg-success"><i class="fas fa-water"></i></span>
 												</div>
-												<input class="form-control" type="number" id="queue_max_size" name="queue_max_size" min="1" value="100" required>
+												<input class="form-control" type="number" id="queue_max_size" name="queue_max_size" min="1" value="{{ queue_metadata['max_size'] }}" required>
 												<div class="input-group-append">
 													<span class="input-group-text">Queue Max Size</span>
 											  </div>
@@ -62,7 +73,7 @@
 										    <div class="input-group-prepend">
 										      <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
 										    </div>
-												<textarea id="queue_description" name="queue_description" class="form-control" placeholder="Sync Queue Description (optional)" rows="3"></textarea>
+												<textarea id="queue_description" name="queue_description" class="form-control" placeholder="Sync Queue Description (optional)" rows="3">{{ queue_metadata['description'] }}</textarea>
 										  </div>
 
 											<div class="card my-4">
@@ -76,13 +87,13 @@
 
 										</div>
 										<div class="col-12 col-xl-3">
-											SYNC: create a new Sync Queue
+											SYNC: Edit Sync Queue
 										</div>
 									</div>
 
 									<br>
 									<button class="btn btn-primary mt-2">
-										<i class="fas fa-plus"></i> Create Sync Queue
+										<i class="fas fa-plus"></i> Edit Sync Queue
 									</button>
 
 								</form>
@@ -104,6 +115,7 @@
 $(document).ready(function(){
 	$('#nav_sync').removeClass("text-muted");
 	$("#navsync_queues").addClass("active");
+
 
 });
 

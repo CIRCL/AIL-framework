@@ -49,9 +49,20 @@ var ltagsgalaxies;
 
 $.getJSON("{{ url_for('tags_ui.tag_taxonomies_tags_enabled_json') }}",
     function(data) {
+      {% if 'taxonomies_tags' in tags_selector_data %}
+        var valueData = [
+          {% for tag in tags_selector_data['taxonomies_tags'] %}
+            '{{tag|safe}}',
+          {%  endfor %}
+        ];
+      {% else %}
+        var valueData = [];
+      {% endif %}
+
 
       ltags = $('#ltags').tagSuggest({
         data: data,
+        value: valueData,
         maxDropHeight: 200,
         name: 'ltags'
       });
@@ -59,9 +70,19 @@ $.getJSON("{{ url_for('tags_ui.tag_taxonomies_tags_enabled_json') }}",
 
 $.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
   function(data) {
+    {% if 'galaxies_tags' in tags_selector_data %}
+      var valueData = [
+        {% for tag in tags_selector_data['galaxies_tags'] %}
+          '{{tag|safe}}',
+        {%  endfor %}
+      ];
+    {% else %}
+      var valueData = [];
+    {% endif %}
 
     ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
       data: data,
+      value: valueData,
       maxDropHeight: 200,
       name: 'ltagsgalaxies'
     });

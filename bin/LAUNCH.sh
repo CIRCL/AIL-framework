@@ -120,6 +120,8 @@ function launching_logs {
     screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Queuing -l ../logs/; read x"
     sleep 0.1
     screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Script -l ../logs/; read x"
+    sleep 0.1
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Sync -l ../logs/; read x"
 }
 
 function launching_queues {

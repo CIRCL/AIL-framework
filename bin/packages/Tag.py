@@ -228,6 +228,7 @@ def is_enabled_taxonomie_tag(tag, enabled_taxonomies=None):
         return False
     if not is_taxonomie_tag_enabled(taxonomie, tag):
         return False
+    return True
 
 def is_enabled_galaxy_tag(tag, enabled_galaxies=None):
     if not enabled_galaxies:
@@ -240,6 +241,16 @@ def is_enabled_galaxy_tag(tag, enabled_galaxies=None):
     if not is_galaxy_tag_enabled(galaxy, tag):
         return False
     return True
+
+def sort_tags_taxonomies_galaxies(tags):
+    taxonomies_tags = []
+    galaxies_tags = []
+    for tag in tags:
+        if is_taxonomie_tag(tag):
+            taxonomies_tags.append(tag)
+        else:
+            galaxies_tags.append(tag)
+    return taxonomies_tags, galaxies_tags
 
 ####  ####
 

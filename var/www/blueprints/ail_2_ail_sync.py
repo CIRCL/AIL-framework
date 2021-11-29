@@ -123,13 +123,11 @@ def ail_server_add():
         if register_key:
             input_dict['key'] = request.form.get("ail_key")
 
-        print(input_dict)
-
         res = ail_2_ail.api_create_ail_instance(input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
 
-        return redirect(url_for('ail_2_ail_sync.ail_server_view', uuid=res))
+        return redirect(url_for('ail_2_ail_sync.ail_server_view', uuid=res[0]))
     else:
 
         return render_template("add_ail_server.html")
@@ -138,7 +136,29 @@ def ail_server_add():
 @login_required
 @login_admin
 def ail_server_edit():
-    ail_uuid = request.args.get('ail_uuid')
+    ail_uuid = request.args.get('uuid')
+    if request.method == 'POST':
+        ail_uuid = request.form.get("ail_uuid")
+        ail_key = request.form.get("ail_key")
+        url = request.form.get("ail_url")
+        description = request.form.get("ail_description")
+        pull = request.form.get("ail_pull", False)
+        push = request.form.get("ail_push", False)
+        if pull:
+            pull = True
+        if push:
+            push = True
+
+        input_dict = {"uuid": ail_uuid, "url": url,
+                        "description": description,
+                        "key": ail_key,
+                        "pull": pull, "push": push}
+        res = ail_2_ail.api_edit_ail_instance(input_dict)
+        return redirect(url_for('ail_2_ail_sync.ail_server_view', uuid=res[0]))
+    else:
+        server_metadata = ail_2_ail.get_ail_instance_metadata(ail_uuid)
+        return render_template("edit_ail_server.html", server_metadata=server_metadata)
+
 
 @ail_2_ail_sync.route('/settings/ail_2_ail/server/delete', methods=['GET'])
 @login_required
@@ -193,8 +213,8 @@ def ail_server_sync_queues_unregister():
 #### SYNC QUEUE ####
 
 @ail_2_ail_sync.route('/settings/ail_2_ail/sync_queues', methods=['GET'])
-# @login_required
-# @login_admin
+@login_required
+@login_admin
 def sync_queues():
     ail_uuid = request.args.get('ail_uuid')
     l_queues = ail_2_ail.get_all_queues_metadata()
@@ -202,8 +222,8 @@ def sync_queues():
                                 ail_uuid=ail_uuid, l_queues=l_queues)
 
 @ail_2_ail_sync.route('/settings/ail_2_ail/sync_queue/view', methods=['GET'])
-# @login_required
-# @login_admin
+@login_required
+@login_admin
 def sync_queue_view():
     queue_uuid = request.args.get('uuid')
     queue_metadata = ail_2_ail.get_sync_queue_metadata(queue_uuid)
@@ -245,19 +265,61 @@ def sync_queue_add():
         if res[1] != 200:
             return create_json_response(res[0], res[1])
 
-        return redirect(url_for('ail_2_ail_sync.sync_queue_view', uuid=res))
+        return redirect(url_for('ail_2_ail_sync.sync_queue_view', uuid=res[0]))
     else:
         return render_template("add_sync_queue.html", tags_selector_data=Tag.get_tags_selector_data())
 
 @ail_2_ail_sync.route('/settings/ail_2_ail/sync_queue/edit', methods=['GET', 'POST'])
-# @login_required
-# @login_admin
+@login_required
+@login_admin
 def sync_queue_edit():
-    return ''
+    if request.method == 'POST':
+        queue_uuid = request.form.get("queue_uuid")
+        queue_name = request.form.get("queue_name")
+        description = request.form.get("queue_description")
+        max_size = request.form.get("queue_max_size")
+
+        taxonomies_tags = request.form.get('taxonomies_tags')
+        if taxonomies_tags:
+            try:
+                taxonomies_tags = json.loads(taxonomies_tags)
+            except Exception:
+                taxonomies_tags = []
+        else:
+            taxonomies_tags = []
+        galaxies_tags = request.form.get('galaxies_tags')
+        if galaxies_tags:
+            try:
+                galaxies_tags = json.loads(galaxies_tags)
+            except Exception:
+                galaxies_tags = []
+
+        tags = taxonomies_tags + galaxies_tags
+        input_dict = {"uuid": queue_uuid,
+                        "name": queue_name,
+                        "tags": tags,
+                        "description": description,
+                        "max_size": max_size}
+
+        res = ail_2_ail.api_edit_sync_queue(input_dict)
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
+
+        return redirect(url_for('ail_2_ail_sync.sync_queue_view', uuid=res[0]))
+    else:
+        queue_uuid = request.args.get('uuid')
+        queue_metadata = ail_2_ail.get_sync_queue_metadata(queue_uuid)
+        taxonomies_tags, galaxies_tags = Tag.sort_tags_taxonomies_galaxies(queue_metadata['tags'])
+        tags_selector_data = Tag.get_tags_selector_data()
+        tags_selector_data['taxonomies_tags'] = taxonomies_tags
+        tags_selector_data['galaxies_tags'] = galaxies_tags
+        return render_template("edit_sync_queue.html", queue_metadata=queue_metadata,
+                                bootstrap_label=bootstrap_label,
+                                tags_selector_data=tags_selector_data)
 
 @ail_2_ail_sync.route('/settings/ail_2_ail/sync_queue/delete', methods=['GET'])
-# @login_required
-# @login_admin
+@login_required
+@login_admin
 def sync_queue_delete():
     queue_uuid = request.args.get('uuid')
     input_dict = {"uuid": queue_uuid}

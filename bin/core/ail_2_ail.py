@@ -33,7 +33,7 @@ config_loader = None
 #### LOGS ####
 # redis_logger = publisher
 # redis_logger.port = 6380
-# redis_logger.channel = 'AIL_SYNC'
+# redis_logger.channel = 'Sync'
 ##-- LOGS --##
 
 def is_valid_uuid_v4(UUID):
@@ -298,14 +298,14 @@ def get_ail_instance_by_key(key):
 # def check_acl_sync_queue_ail(ail_uuid, queue_uuid, key):
 #     return is_ail_instance_queue(ail_uuid, queue_uuid)
 
-def update_ail_instance_key(ail_uuid, new_key):
-    old_key = get_ail_instance_key(ail_uuid)
-    r_serv_sync.srem(f'ail:instance:key:all', old_key)
-    r_serv_sync.delete(f'ail:instance:key:{old_key}')
-
-    r_serv_sync.sadd(f'ail:instance:key:all', new_key)
-    r_serv_sync.delete(f'ail:instance:key:{new_key}', ail_uuid)
-    r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'api_key', new_key)
+# def update_ail_instance_key(ail_uuid, new_key):
+#     old_key = get_ail_instance_key(ail_uuid)
+#     r_serv_sync.srem(f'ail:instance:key:all', old_key)
+#     r_serv_sync.delete(f'ail:instance:key:{old_key}')
+#
+#     r_serv_sync.sadd(f'ail:instance:key:all', new_key)
+#     r_serv_sync.delete(f'ail:instance:key:{new_key}', ail_uuid)
+#     r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'api_key', new_key)
 
 #- AIL KEYS -#
 
@@ -348,20 +348,33 @@ def is_ail_instance_sync_enabled(ail_uuid, sync_mode=None):
     else:
         return False
 
-def change_pull_push_state(ail_uuid, pull=False, push=False):
-    # sanityze pull/push
-    if pull:
-        pull = True
-    else:
-        pull = False
-    if push:
-        push = True
-    else:
-        push = False
-    r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'push', push)
-    r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'pull', pull)
-    set_last_updated_sync_config()
-    refresh_ail_instance_connection(ail_uuid)
+def change_pull_push_state(ail_uuid, pull=None, push=None):
+    edited = False
+    curr_pull = is_ail_instance_pull_enabled(ail_uuid)
+    curr_push = is_ail_instance_push_enabled(ail_uuid)
+    if pull is not None:
+        # sanityze pull
+        if pull:
+            pull = True
+        else:
+            pull = False
+        if curr_pull != pull:
+            print('pull hset')
+            r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'pull', pull)
+            edited = True
+    if push is not None:
+        # sanityze push
+        if push:
+            push = True
+        else:
+            push = False
+        if curr_push != push:
+            print('push hset')
+            r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'push', push)
+            edited = True
+    if edited:
+        set_last_updated_sync_config()
+        refresh_ail_instance_connection(ail_uuid)
 
 def get_ail_server_version(ail_uuid):
     return r_serv_sync.hget(f'ail:instance:{ail_uuid}', 'version')
@@ -380,7 +393,7 @@ def get_ail_instance_metadata(ail_uuid, sync_queues=False):
     dict_meta['url'] = get_ail_instance_url(ail_uuid)
     dict_meta['description'] = get_ail_instance_description(ail_uuid)
     dict_meta['pull'] = is_ail_instance_pull_enabled(ail_uuid)
-    dict_meta['push'] = is_ail_instance_pull_enabled(ail_uuid)
+    dict_meta['push'] = is_ail_instance_push_enabled(ail_uuid)
     dict_meta['ping'] = get_ail_server_ping(ail_uuid)
     dict_meta['version'] = get_ail_server_version(ail_uuid)
     dict_meta['error'] = get_ail_server_error(ail_uuid)
@@ -407,6 +420,39 @@ def get_ail_instances_metadata(l_ail_servers):
     for ail_uuid in l_ail_servers:
         l_servers.append(get_ail_instance_metadata(ail_uuid, sync_queues=True))
     return l_servers
+
+def edit_ail_instance_key(ail_uuid, new_key):
+    key = get_ail_instance_key(ail_uuid)
+    if new_key and key != new_key:
+        r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'api_key', new_key)
+        r_serv_sync.srem('ail:instance:key:all', key)
+        r_serv_sync.srem('ail:instance:key:all', new_key)
+        r_serv_sync.delete(f'ail:instance:key:{key}')
+        r_serv_sync.set(f'ail:instance:key:{new_key}', ail_uuid)
+        refresh_ail_instance_connection(ail_uuid)
+
+def edit_ail_instance_url(ail_uuid, new_url):
+    url = get_ail_instance_url(ail_uuid)
+    if new_url and new_url != url:
+        r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'url', new_url)
+        refresh_ail_instance_connection(ail_uuid)
+
+def edit_ail_instance_pull_push(ail_uuid, new_pull, new_push):
+    pull = is_ail_instance_pull_enabled(ail_uuid)
+    push = is_ail_instance_push_enabled(ail_uuid)
+    if new_pull == pull:
+        new_pull = None
+    if new_push == push:
+        new_push = None
+    change_pull_push_state(ail_uuid, pull=new_pull, push=new_push)
+
+def edit_ail_instance_description(ail_uuid, new_description):
+    description = get_ail_instance_description(ail_uuid)
+    if new_description is not None and description != new_description:
+        if not new_description:
+            r_serv_sync.hdel(f'ail:instance:{ail_uuid}', 'description')
+        else:
+            r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'description', new_description)
 
 # # TODO: VALIDATE URL
 #                  API KEY
@@ -438,6 +484,7 @@ def delete_ail_instance(ail_uuid):
     r_serv_sync.srem('ail:instance:all', ail_uuid)
     set_last_updated_sync_config()
     refresh_ail_instance_connection(ail_uuid)
+    clear_save_ail_server_error(ail_uuid)
     return ail_uuid
 
 ## WEBSOCKET API - ERRORS ##
@@ -512,8 +559,10 @@ def ping_remote_ail_server(ail_uuid):
     if response:
         response = response.get('message', False)
         pong = response == 'pong'
-        set_ail_server_ping(ail_uuid, pong)
-        return pong
+    else:
+        pong = False
+    set_ail_server_ping(ail_uuid, pong)
+    return pong
 
 ## API ##
 
@@ -570,6 +619,47 @@ def api_create_ail_instance(json_dict):
     res = create_ail_instance(ail_uuid, ail_url, api_key=ail_key, description=description,
                                 pull=pull, push=push)
     return res, 200
+
+def api_edit_ail_instance(json_dict):
+    ail_uuid = json_dict.get('uuid').replace(' ', '')
+    if not is_valid_uuid_v4(ail_uuid):
+        return {"status": "error", "reason": "Invalid ail uuid"}, 400
+    ail_uuid = sanityze_uuid(ail_uuid)
+    if not exists_ail_instance(ail_uuid):
+        return {"status": "error", "reason": "AIL server not found"}, 404
+
+    pull = json_dict.get('pull')
+    push = json_dict.get('push')
+    if pull is not None:
+        if pull:
+            pull = True
+        else:
+            pull = False
+    if push is not None:
+        if push:
+            push = True
+        else:
+            push = False
+    edit_ail_instance_pull_push(ail_uuid, pull, push)
+
+    description = json_dict.get('description')
+    edit_ail_instance_description(ail_uuid, description)
+
+    ail_url = json_dict.get('url')
+    if ail_url:
+        ail_url = ail_url.replace(' ', '')
+        if not is_valid_websocket_url(ail_url):
+            return {"status": "error", "reason": "Invalid websocket url"}, 400
+        edit_ail_instance_url(ail_uuid, ail_url)
+
+    ail_key = json_dict.get('key')
+    if ail_key:
+        ail_key = ail_key.replace(' ', '')
+        if not is_valid_websocket_key(ail_key):
+            return {"status": "error", "reason": "Invalid websocket key"}, 400
+        edit_ail_instance_key(ail_uuid, ail_key)
+
+    return ail_uuid, 200
 
 def api_delete_ail_instance(json_dict):
     ail_uuid = json_dict.get('uuid', '').replace(' ', '')
@@ -680,6 +770,31 @@ def unregister_ail_to_sync_queue(ail_uuid, queue_uuid):
 def get_all_unregistred_queue_by_ail_instance(ail_uuid):
     return r_serv_sync.sdiff('ail2ail:sync_queue:all', f'ail:instance:sync_queue:{ail_uuid}')
 
+def edit_sync_queue_name(queue_uuid, new_name):
+    name = get_sync_queue_name(queue_uuid)
+    if new_name and new_name != name:
+        r_serv_sync.hset(f'ail2ail:sync_queue:{queue_uuid}', 'name', new_name)
+
+def edit_sync_queue_description(queue_uuid, new_description):
+    description = get_sync_queue_description(queue_uuid)
+    if new_description is not None and new_description != description:
+        r_serv_sync.hset(f'ail2ail:sync_queue:{queue_uuid}', 'description', new_description)
+
+# # TODO: trigger update
+def edit_sync_queue_max_size(queue_uuid, new_max_size):
+    max_size = get_sync_queue_max_size(queue_uuid)
+    if new_max_size > 0 and new_max_size != max_size:
+        r_serv_sync.hset(f'ail2ail:sync_queue:{queue_uuid}', 'max_size', new_max_size)
+
+def edit_sync_queue_filter_tags(queue_uuid, new_tags):
+    tags = set(get_sync_queue_filter(queue_uuid))
+    new_tags = set(new_tags)
+    if new_tags and new_tags != tags:
+        r_serv_sync.delete(f'ail2ail:sync_queue:filter:tags:{queue_uuid}')
+        for tag in new_tags:
+            r_serv_sync.sadd(f'ail2ail:sync_queue:filter:tags:{queue_uuid}', tag)
+    set_last_updated_sync_config()
+
 # # TODO: optionnal name ???
 # # TODO: SANITYZE TAGS
 def create_sync_queue(name, tags=[], description=None, max_size=100):
@@ -718,9 +833,9 @@ def api_create_sync_queue(json_dict):
 
     tags = json_dict.get('tags')
     if not tags:
-        {"status": "error", "reason": "no tags provided"}, 400
+        return {"status": "error", "reason": "no tags provided"}, 400
     if not Tag.are_enabled_tags(tags):
-        {"status": "error", "reason": "Invalid/Disabled tags"}, 400
+        return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
 
     max_size = json_dict.get('max_size')
     if not max_size:
@@ -728,12 +843,47 @@ def api_create_sync_queue(json_dict):
     try:
         max_size = int(max_size)
     except ValueError:
-        {"status": "error", "reason": "Invalid queue size value"}, 400
+        return {"status": "error", "reason": "Invalid queue size value"}, 400
     if not max_size > 0:
         return {"status": "error", "reason": "Invalid queue size value"}, 400
 
     queue_uuid = create_sync_queue(queue_name, tags=tags, description=description,
                                     max_size=max_size)
+    return queue_uuid, 200
+
+def api_edit_sync_queue(json_dict):
+    queue_uuid = json_dict.get('uuid', '').replace(' ', '').replace('-', '')
+    if not is_valid_uuid_v4(queue_uuid):
+        return {"status": "error", "reason": "Invalid Queue uuid"}, 400
+    if not exists_sync_queue(queue_uuid):
+        return {"status": "error", "reason": "Queue Sync not found"}, 404
+
+    description = json_dict.get('description')
+    description = escape(description)
+    if description is not None:
+        edit_sync_queue_description(queue_uuid, description)
+
+    queue_name = json_dict.get('name')
+    if queue_name:
+        queue_name = escape(queue_name)
+        edit_sync_queue_name(queue_uuid, queue_name)
+
+    tags = json_dict.get('tags')
+    if tags:
+        if not Tag.are_enabled_tags(tags):
+            return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
+        edit_sync_queue_filter_tags(queue_uuid, tags)
+
+    max_size = json_dict.get('max_size')
+    if max_size:
+        try:
+            max_size = int(max_size)
+        except ValueError:
+            return {"status": "error", "reason": "Invalid queue size value"}, 400
+        if not max_size > 0:
+            return {"status": "error", "reason": "Invalid queue size value"}, 400
+        edit_sync_queue_max_size(queue_uuid, max_size)
+
     return queue_uuid, 200
 
 def api_delete_sync_queue(json_dict):
@@ -872,12 +1022,12 @@ if __name__ == '__main__':
     # res = get_all_unregistred_queue_by_ail_instance(ail_uuid)
 
     ail_uuid = 'c3c2f3ef-ca53-4ff6-8317-51169b73f731'
-    ail_uuid = '03c51929-eeab-4d47-9dc0-c667f94c7d2d'
+    ail_uuid = '2dfeff47-777d-4e70-8c30-07c059307e6a'
 
     # res = ping_remote_ail_server(ail_uuid)
     # print(res)
     #
-    res = get_remote_ail_server_version(ail_uuid)
+    res = ping_remote_ail_server(ail_uuid)
 
     #res = _get_remote_ail_server_response(ail_uuid, 'pin')
     print(res)

@@ -22,7 +22,7 @@ from core import ail_2_ail
 #### LOGS ####
 redis_logger = publisher
 redis_logger.port = 6380
-redis_logger.channel = 'AIL_SYNC_Server'
+redis_logger.channel = 'Sync'
 
 #############################
 

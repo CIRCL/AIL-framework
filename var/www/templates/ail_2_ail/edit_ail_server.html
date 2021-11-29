@@ -8,15 +8,12 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
 
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 </head>
 
@@ -33,11 +30,11 @@
 
 						<div class="card my-3">
 						  <div class="card-header bg-dark text-white">
-								<h5 class="card-title">Create SYNC Queue</h5>
+								<h5 class="card-title">Edit AIL Server</h5>
 							</div>
 						  <div class="card-body">
 
-								<form action="{{ url_for('ail_2_ail_sync.sync_queue_add') }}" method='post' onsubmit="SubmitCreateQueue();">
+								<form action="{{ url_for('ail_2_ail_sync.ail_server_edit') }}" method='post'>
 
 									<div class="row">
 										<div class="col-12 col-xl-9">
@@ -45,44 +42,68 @@
 										    <div class="input-group-prepend">
 										      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
 										    </div>
-												<input id="queue_name" name="queue_name" class="form-control" placeholder="Queue Name" type="text" required>
+												<div class="form-control">
+													{{ server_metadata['uuid'] }}
+													<input id="ail_uuid" name="ail_uuid" type="text" value="{{ server_metadata['uuid'] }}" hidden>
+												</div>
 										  </div>
 
-											<div class="input-group form-group mb-2">
+											<div class="input-group mb-2 mr-sm-2">
 												<div class="input-group-prepend">
-													<span class="input-group-text bg-success"><i class="fas fa-water"></i></span>
-												</div>
-												<input class="form-control" type="number" id="queue_max_size" name="queue_max_size" min="1" value="100" required>
-												<div class="input-group-append">
-													<span class="input-group-text">Queue Max Size</span>
-											  </div>
+										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-server"></i></div>
+										    </div>
+												<input id="ail_url" class="form-control" type="text" name="ail_url" value="{{ server_metadata['url'] }}" placeholder="AIL Server URL">
 											</div>
 
 											<div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
 										      <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
 										    </div>
-												<textarea id="queue_description" name="queue_description" class="form-control" placeholder="Sync Queue Description (optional)" rows="3"></textarea>
+												<textarea id="ail_description" name="ail_description" class="form-control" placeholder="AIL Server Description (optional)" rows="3">{{ server_metadata['description'] }}</textarea>
 										  </div>
 
-											<div class="card my-4">
-											  <div class="card-header bg-secondary text-white">
-													<b>Tags Filter</b>
+											<h5 class="mt-2 text-secondary">
+												SYNC Modes:
+											</h5>
+											<div class="row">
+												<div class="col-12 col-xl-6">
+													<div class="custom-control custom-checkbox">
+												  	<input class="custom-control-input" type="checkbox" value="True" id="pull" name="ail_pull" {%if server_metadata['pull']%}checked{%endif%}>
+												  	<label class="custom-control-label" for="ail_pull"><h5>PULL</h5></label>
+													</div>
 												</div>
-											  <div class="card-body">
-													{% include 'tags/block_tags_selector.html' %}
+												<div class="col-12 col-xl-6">
+													<div class="custom-control custom-checkbox">
+														<input class="custom-control-input" type="checkbox" value="True" id="ail_push" name="ail_push" {%if server_metadata['push']%}checked{%endif%}>
+														<label class="custom-control-label" for="ail_push"><h5 class="">PUSH</h5></label>
+													</div>
 												</div>
 											</div>
 
+											<h5 class="mt-2 text-secondary">
+												Server Key <i class="fas fa-key"></i>:
+											</h5>
+
+											<div id="div_register_key">
+												<div class="input-group mb-2 mr-sm-2">
+													<div class="input-group-prepend">
+											      <div class="input-group-text bg-danger text-white"><i class="fas fa-key"></i></div>
+											    </div>
+													<input id="ail_key" class="form-control" type="text" minlength="56" maxlength="56" name="ail_key" value="{{ server_metadata['api_key'] }}" placeholder="AIL key">
+												</div>
+											</div>
+
+
 										</div>
 										<div class="col-12 col-xl-3">
-											SYNC: create a new Sync Queue
+											Edit AIL Server
 										</div>
 									</div>
 
+
 									<br>
 									<button class="btn btn-primary mt-2">
-										<i class="fas fa-plus"></i> Create Sync Queue
+										<i class="fas fa-plus"></i> Edit AIL Server
 									</button>
 
 								</form>
@@ -103,7 +124,7 @@
 <script>
 $(document).ready(function(){
 	$('#nav_sync').removeClass("text-muted");
-	$("#navsync_queues").addClass("active");
+	$("#nav_ail_servers").addClass("active");
 
 });
 
@@ -119,14 +140,6 @@ function toggle_sidebar(){
 		$('#side_menu').addClass('col-lg-2')
 		$('#core_content').addClass('col-lg-10')
 	}
-}
-
-function SubmitCreateQueue() {
-	var tags = ltags.getValue();
-	var tagsgalaxy = ltagsgalaxies.getValue();
-	$('#ltags').val(tags);
-	$('#ltagsgalaxies').val(tagsgalaxy);
-	return true;
 }
 
 </script>

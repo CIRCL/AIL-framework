@@ -85,13 +85,29 @@
 								<tr>
 									<td class="text-right"><b>Pull</b></td>
 									<td>
-										{{server_metadata['pull']}}
+										{% if server_metadata['pull'] %}
+											<span style="color:Green;">
+												<i class="fas fa-check-circle"></i> Enabled
+											</span>
+										{% else %}
+											<span class="text-secondary">
+												<i class="fas fa-times-circle"></i> Disabled
+											</span>
+										{% endif %}
 									</td>
 								</tr>
 								<tr>
 									<td class="text-right"><b>Push</b></td>
 									<td>
-										{{server_metadata['push']}}
+										{% if server_metadata['push'] %}
+											<span style="color:Green;">
+												<i class="fas fa-check-circle"></i> Enabled
+											</span>
+										{% else %}
+											<span class="text-secondary">
+												<i class="fas fa-times-circle"></i> Disabled
+											</span>
+										{% endif %}
 									</td>
 								</tr>
 								<tr>
@@ -121,7 +137,12 @@
 							<a href="{{ url_for('ail_2_ail_sync.ail_server_delete') }}?uuid={{server_metadata['uuid']}}">
 								<button type="button" class="btn btn-danger">
 									<i class="fas fa-trash-alt"></i> <b>Delete AIL Server</b>
-									</button>
+								</button>
+							</a>
+							<a href="{{ url_for('ail_2_ail_sync.ail_server_edit') }}?uuid={{server_metadata['uuid']}}">
+								<button type="button" class="btn btn-info">
+									<i class="fas fa-pencil-alt"></i> <b>Edit</b>
+								</button>
 							</a>
 						</div>
 

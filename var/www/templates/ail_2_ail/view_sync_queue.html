@@ -72,6 +72,11 @@
 									<i class="fas fa-trash-alt"></i> <b>Delete Sync Queue</b>
 									</button>
 							</a>
+							<a href="{{ url_for('ail_2_ail_sync.sync_queue_edit') }}?uuid={{queue_metadata['uuid']}}">
+								<button type="button" class="btn btn-info">
+									<i class="fas fa-pencil-alt"></i> <b>Edit</b>
+								</button>
+							</a>
 						</div>
 
 						<div class="card">
