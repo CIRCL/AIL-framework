@@ -51,7 +51,7 @@
 				</div>
 
 
-				<h1>Connected Servers:</h3>
+				<h1>Connected - AIL Sync:</h3>
 
 				<table id="table_servers" class="table table-striped border-primary">
           <thead class="bg-dark text-white">
@@ -60,6 +60,8 @@
                 <th>url</th>
                 <th>description</th>
                 <th>sync queues</th>
+								<th>sync mode</th>
+								<th></th>
             </tr>
           </thead>
           <tbody style="font-size: 15px;">
@@ -77,15 +79,40 @@
                   	<a href="{{ url_for('ail_2_ail_sync.sync_queue_view') }}?uuid={{queue_uuid}}">
                       {{queue_uuid}}</br>
                     </a>
-                  {%  endfor %}
+                  {% endfor %}
                 </td>
+								<td>
+									{% if dict_server['server_sync_mode']['api'] %}
+                  	API
+                  {% endif %}
+									{% if dict_server['server_sync_mode']['pull'] %}
+                  	PULL
+                  {% endif %}
+									{% if dict_server['server_sync_mode']['push'] %}
+                  	PUSH
+                  {% endif %}
+								</td>
+								<td>
+									{% if dict_server['server_sync_mode']['push'] %}
+										<a href="{{ url_for('ail_2_ail_sync.ail_server_sync_client_kill') }}?uuid={{ dict_server['uuid'] }}">
+											<button type="button" class="btn btn-danger px-1 py-0">
+												<i class="fas fa-times"></i> kill
+											</button>
+											<a href="{{ url_for('ail_2_ail_sync.ail_server_sync_client_relaunch') }}?uuid={{ dict_server['uuid'] }}">
+												<button type="button" class="btn btn-info px-1 py-0">
+													<i class="fas fa-redo-alt"></i> reLaunch
+												</button>
+											</a>
+										</a>
+                  {% endif %}
+								</td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
 
 
-				<h1>Connected Clients:</h3>
+				<h1>Connected - Remote Sync:</h3>
 
 				<table id="table_servers" class="table table-striped border-primary">
           <thead class="bg-dark text-white">
@@ -94,6 +121,7 @@
                 <th>url</th>
                 <th>description</th>
                 <th>sync mode</th>
+								<th></th>
             </tr>
           </thead>
           <tbody style="font-size: 15px;">
@@ -109,14 +137,21 @@
                 <td class="text-center">
 									{% if dict_server['client_sync_mode']['api'] %}
                   	API
-                  {%  endif %}
+                  {% endif %}
 									{% if dict_server['client_sync_mode']['pull'] %}
                   	PULL
-                  {%  endif %}
+                  {% endif %}
 									{% if dict_server['client_sync_mode']['push'] %}
                   	PUSH
-                  {%  endif %}
+                  {% endif %}
                 </td>
+								 <td>
+									 <a href="{{ url_for('ail_2_ail_sync.ail_server_client_kill') }}?uuid={{ dict_server['uuid'] }}">
+										 <button type="button" class="btn btn-danger px-1 py-0">
+											 <i class="fas fa-times"></i> kill
+										 </button>
+									 </a>
+								 </td>
               </tr>
             {% endfor %}
           </tbody>

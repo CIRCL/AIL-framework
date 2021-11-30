@@ -70,7 +70,7 @@ async def push(websocket, ail_uuid):
         else:
             await asyncio.sleep(10)
 
-async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None):
+async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=None):
     if not ail_2_ail.exists_ail_instance(ail_uuid):
         print('AIL server not found')
         return
@@ -88,7 +88,8 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None):
         uri = f"{ail_url}/{sync_mode}/{local_ail_uuid}"
     #print(uri)
 
-    ail_2_ail.clear_save_ail_server_error(ail_uuid)
+    if client_id is None:
+        client_id = ail_2_ail.create_sync_client_cache(ail_uuid, sync_mode)
 
     try:
         async with websockets.client.connect(
@@ -97,6 +98,8 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None):
             #open_timeout=10, websockers 10.0 /!\ python>=3.7
             extra_headers={"Authorization": f"{ail_key}"}
         ) as websocket:
+            # success
+            ail_2_ail.clear_save_ail_server_error(ail_uuid)
 
             if sync_mode == 'pull':
                 await pull(websocket, ail_uuid)
@@ -155,6 +158,8 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None):
         redis_logger.critical(f'{ail_uuid}: {error_message}')
         ail_2_ail.save_ail_server_error(ail_uuid, error_message)
 
+    ail_2_ail.delete_sync_client_cache(client_id)
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Websocket SYNC Client')
@@ -168,6 +173,7 @@ if __name__ == '__main__':
     ail_uuid = args.ail_uuid
     sync_mode = args.sync_mode
     api = args.api
+    client_id = args.client_id
 
     if ail_uuid is None or sync_mode not in ['api', 'pull', 'push']:
         parser.print_help()
@@ -184,4 +190,4 @@ if __name__ == '__main__':
     ssl_context.verify_mode = ssl.CERT_NONE
     # SELF SIGNED CERTIFICATES
 
-    asyncio.get_event_loop().run_until_complete(ail_to_ail_client(ail_uuid, sync_mode, api))
+    asyncio.get_event_loop().run_until_complete(ail_to_ail_client(ail_uuid, sync_mode, api, client_id=client_id))

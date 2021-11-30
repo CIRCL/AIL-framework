@@ -55,7 +55,7 @@ def create_json_response(data, status_code):
 def ail_2_ail_dashboard():
     ail_uuid = ail_2_ail.get_ail_uuid()
     l_servers = ail_2_ail.get_all_running_sync_servers()
-    l_servers = ail_2_ail.get_ail_instances_metadata(l_servers)
+    l_servers = ail_2_ail.get_ail_instances_metadata(l_servers, server_sync_mode= True)
     l_clients = ail_2_ail.get_server_all_connected_clients()
     l_clients = ail_2_ail.get_ail_instances_metadata(l_clients, sync_queues=False, client_sync_mode=True)
     return render_template("ail_2_ail_dashboard.html", ail_uuid=ail_uuid,
@@ -79,7 +79,7 @@ def ail_servers():
 @login_admin
 def ail_server_view():
     ail_uuid = request.args.get('uuid')
-    server_metadata = ail_2_ail.get_ail_instance_metadata(ail_uuid,sync_queues=True)
+    server_metadata = ail_2_ail.get_ail_instance_metadata(ail_uuid, client_sync_mode=True, server_sync_mode=True, sync_queues=True)
     server_metadata['sync_queues'] = ail_2_ail.get_queues_metadata(server_metadata['sync_queues'])
 
     return render_template("view_ail_server.html", server_metadata=server_metadata,
@@ -106,6 +106,50 @@ def ail_server_api_version():
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('ail_2_ail_sync.ail_server_view', uuid=ail_uuid))
+
+@ail_2_ail_sync.route('/settings/ail_2_ail/server/client/kill', methods=['GET'])
+@login_required
+@login_admin
+def ail_server_client_kill():
+    ail_uuid = request.args.get('uuid')
+    input_dict = {"uuid": ail_uuid}
+    res = ail_2_ail.api_kill_server_connected_clients(input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('ail_2_ail_sync.ail_2_ail_dashboard'))
+
+@ail_2_ail_sync.route('/settings/ail_2_ail/server/sync_client/kill', methods=['GET'])
+@login_required
+@login_admin
+def ail_server_sync_client_kill():
+    ail_uuid = request.args.get('uuid')
+    input_dict = {"uuid": ail_uuid}
+    res = ail_2_ail.api_kill_sync_client(input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('ail_2_ail_sync.ail_2_ail_dashboard'))
+
+@ail_2_ail_sync.route('/settings/ail_2_ail/server/sync_client/relaunch', methods=['GET'])
+@login_required
+@login_admin
+def ail_server_sync_client_relaunch():
+    ail_uuid = request.args.get('uuid')
+    input_dict = {"uuid": ail_uuid}
+    res = ail_2_ail.api_relaunch_sync_client(input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('ail_2_ail_sync.ail_2_ail_dashboard'))
+
+@ail_2_ail_sync.route('/settings/ail_2_ail/server/sync_client/launch', methods=['GET'])
+@login_required
+@login_admin
+def ail_server_sync_client_launch():
+    ail_uuid = request.args.get('uuid')
+    input_dict = {"uuid": ail_uuid}
+    res = ail_2_ail.api_launch_sync_client(input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('ail_2_ail_sync.ail_2_ail_dashboard'))
 
 @ail_2_ail_sync.route('/settings/ail_2_ail/server/add', methods=['GET', 'POST'])
 @login_required

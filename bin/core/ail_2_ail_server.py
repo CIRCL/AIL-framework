@@ -73,7 +73,7 @@ async def server_controller():
                 ail_uuid = command_dict.get('ail_uuid')
                 connected_clients = CONNECTED_CLIENTS[ail_uuid].copy()
                 for c_websocket in connected_clients:
-                    await c_websocket.close()
+                    await c_websocket.close(code=1000)
                     redis_logger.info(f'Server Command Connection closed: {ail_uuid}')
                     print(f'Server Command Connection closed: {ail_uuid}')
 

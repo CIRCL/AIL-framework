@@ -125,6 +125,61 @@
 										</a>
 									</td>
 								</tr>
+								<tr>
+									<td class="text-right"><b>AIL Sync</b></td>
+									<td>
+										{% if server_metadata['server_sync_mode']['api'] %}
+	                  	API
+	                  {% endif %}
+										{% if server_metadata['server_sync_mode']['pull'] %}
+	                  	PULL
+	                  {% endif %}
+										{% if server_metadata['server_sync_mode']['push'] %}
+	                  	PUSH
+
+											<a href="{{ url_for('ail_2_ail_sync.ail_server_sync_client_kill') }}?uuid={{ server_metadata['uuid'] }}">
+												<button type="button" class="btn btn-danger px-1 py-0">
+													<i class="fas fa-times"></i> Kill
+												</button>
+											</a>
+											<a href="{{ url_for('ail_2_ail_sync.ail_server_sync_client_relaunch') }}?uuid={{ server_metadata['uuid'] }}">
+												<button type="button" class="btn btn-info px-1 py-0">
+													<i class="fas fa-redo-alt"></i> reLaunch
+												</button>
+											</a>
+										{% else %}
+											{% if (server_metadata['pull'] or server_metadata['push']) and server_metadata['sync_queues']%}
+												<a href="{{ url_for('ail_2_ail_sync.ail_server_sync_client_launch') }}?uuid={{ server_metadata['uuid'] }}">
+													<button type="button" class="btn btn-primary px-1 py-0">
+														<i class="fas fa-play"></i> Launch
+													</button>
+												</a>
+											{% endif %}
+	                  {% endif %}
+									</td>
+								</tr>
+								<tr>
+									<td class="text-right"><b>Remote Sync</b></td>
+									<td>
+										{% if server_metadata['client_sync_mode']['api'] %}
+	                  	API
+	                  {% endif %}
+										{% if server_metadata['client_sync_mode']['pull'] %}
+	                  	PULL
+	                  {% endif %}
+										{% if server_metadata['client_sync_mode']['push'] %}
+	                  	PUSH
+	                  {% endif %}
+
+										{% if server_metadata['client_sync_mode']['api'] or server_metadata['client_sync_mode']['pull'] or server_metadata['client_sync_mode']['push'] %}
+											<a href="{{ url_for('ail_2_ail_sync.ail_server_client_kill') }}?uuid={{ server_metadata['uuid'] }}">
+		 										 <button type="button" class="btn btn-danger px-1 py-0">
+		 											 <i class="fas fa-times"></i> kill
+		 										 </button>
+		 									 </a>
+									 	{% endif %}
+									</td>
+								</tr>
 							</tbody>
 						</table>
 
