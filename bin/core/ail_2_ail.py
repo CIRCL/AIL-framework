@@ -264,7 +264,7 @@ def send_command_to_manager(command, client_id=-1, ail_uuid=None):
 def refresh_ail_instance_connection(ail_uuid):
     clients_id = get_client_id_by_ail_uuid(ail_uuid)
     if clients_id:
-        clients_id = clients_id[0]
+        client_id = clients_id[0]
     else:
         client_id = None
     launch_required = is_ail_instance_push_enabled(ail_uuid)
