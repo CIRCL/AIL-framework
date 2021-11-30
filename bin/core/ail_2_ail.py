@@ -267,7 +267,7 @@ def refresh_ail_instance_connection(ail_uuid):
         client_id = clients_id[0]
     else:
         client_id = None
-    launch_required = is_ail_instance_push_enabled(ail_uuid)
+    launch_required = is_ail_instance_push_enabled(ail_uuid) and is_ail_instance_linked_to_sync_queue(ail_uuid)
 
     # relaunch
     if client_id and launch_required:
@@ -312,7 +312,7 @@ class AIL2AILClientManager(object):
     def get_all_sync_clients_to_launch(self):
         ail_instances_to_launch = []
         for ail_uuid in get_all_ail_instance():
-            if is_ail_instance_push_enabled(ail_uuid):
+            if is_ail_instance_push_enabled(ail_uuid) and is_ail_instance_linked_to_sync_queue(ail_uuid):
                 ail_instances_to_launch.append(ail_uuid)
         return ail_instances_to_launch
 
@@ -465,6 +465,9 @@ def is_ail_instance_sync_enabled(ail_uuid, sync_mode=None):
         return is_ail_instance_push_enabled(ail_uuid)
     else:
         return False
+
+def is_ail_instance_linked_to_sync_queue(ail_uuid):
+    return r_serv_sync.exists(f'ail:instance:sync_queue:{ail_uuid}')
 
 def change_pull_push_state(ail_uuid, pull=None, push=None):
     edited = False
