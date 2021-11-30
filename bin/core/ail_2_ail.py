@@ -30,10 +30,36 @@ r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_sync = config_loader.get_redis_conn("ARDB_DB")
 config_loader = None
 
+WEBSOCKETS_CLOSE_CODES = {
+                            1000: 'Normal Closure',
+                            1001: 'Going Away',
+                            1002: 'Protocol Error',
+                            1003: 'Unsupported Data',
+                            1005: 'No Status Received',
+                            1006: 'Abnormal Closure',
+                            1007: 'Invalid frame payload data',
+                            1008: 'Policy Violation',
+                            1009: 'Message too big',
+                            1010: 'Missing Extension',
+                            1011: 'Internal Error',
+                            1012: 'Service Restart',
+                            1013: 'Try Again Later',
+                            1014: 'Bad Gateway',
+                            1015: 'TLS Handshake',
+                        }
+
 #### LOGS ####
 # redis_logger = publisher
 # redis_logger.port = 6380
 # redis_logger.channel = 'Sync'
+
+def get_websockets_close_message(code):
+    if code in WEBSOCKETS_CLOSE_CODES:
+        msg = f'{code} {WEBSOCKETS_CLOSE_CODES[code]}'
+    else:
+        msg = f'{code} Unknow websockets code'
+    return msg
+
 ##-- LOGS --##
 
 def is_valid_uuid_v4(UUID):
@@ -1095,12 +1121,16 @@ def api_unregister_ail_to_sync_queue(json_dict):
 #                           #
 #### SYNC REDIS QUEUE #######
 
-def get_sync_queue_object(ail_uuid, push=True):
+def get_sync_queue_object_and_queue_uuid(ail_uuid, push=True):
     for queue_uuid in get_ail_instance_all_sync_queue(ail_uuid):
         obj_dict = get_sync_queue_object_by_queue_uuid(queue_uuid, ail_uuid, push=push)
         if obj_dict:
-            return obj_dict
-    return None
+            return obj_dict, queue_uuid
+    return None, None
+
+def get_sync_queue_object(ail_uuid, push=True):
+    obj_dict, queue_uuid = get_sync_queue_object_and_queue_uuid(ail_uuid, push=push)[0]
+    return obj_dict
 
 def get_sync_queue_object_by_queue_uuid(queue_uuid, ail_uuid, push=True):
     if push:
@@ -1124,6 +1154,15 @@ def add_object_to_sync_queue(queue_uuid, ail_uuid, obj_dict, push=True, pull=Tru
     if pull:
         r_serv_sync.lpush(f'sync:queue:pull:{queue_uuid}:{ail_uuid}', obj)
         r_serv_sync.ltrim(f'sync:queue:pull:{queue_uuid}:{ail_uuid}', 0, 200)
+
+def resend_object_to_sync_queue(ail_uuid, queue_uuid, Obj, push=True):
+    if queue_uuid is not None and Obj is not None:
+        obj_dict = Obj.get_default_meta()
+        if push:
+            pull = False
+        else:
+            pull = True
+        add_object_to_sync_queue(queue_uuid, ail_uuid, obj_dict, push=push, pull=pull)
 
 # # TODO: # REVIEW: USE CACHE ????? USE QUEUE FACTORY ?????
 def get_sync_importer_ail_stream():

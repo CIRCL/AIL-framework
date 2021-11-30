@@ -51,24 +51,42 @@ async def api_request(websocket, ail_uuid):
 async def pull(websocket, ail_uuid):
     while True:
         obj = await websocket.recv()
-        sys.stdout.write(res)
+        sys.stdout.write(obj)
 
 async def push(websocket, ail_uuid):
+    ## DEBUG:
+    # try:
+    #     while True:
+    #         await websocket.send('test')
+    #         await asyncio.sleep(10)
+    # except websockets.exceptions.ConnectionClosedError as err:
+    #     print(err.code)
+    #     raise err
 
-    while True:
-        # get elem to send
-        Obj = ail_2_ail.get_sync_queue_object(ail_uuid)
-        if Obj:
-            obj_ail_stream = ail_2_ail.create_ail_stream(Obj)
-            obj_ail_stream = json.dumps(obj_ail_stream)
-            print(obj_ail_stream)
+    try:
+        while True:
+            # get elem to send
+            Obj, queue_uuid = ail_2_ail.get_sync_queue_object_and_queue_uuid(ail_uuid)
+            if Obj:
+                obj_ail_stream = ail_2_ail.create_ail_stream(Obj)
+                obj_ail_stream = json.dumps(obj_ail_stream)
 
-            # send objects
-            await websocket.send(obj_ail_stream)
-             # DEBUG:
-            await asyncio.sleep(0.1)
-        else:
-            await asyncio.sleep(10)
+                sys.stdout.write(obj_ail_stream)
+
+                # send objects
+                await websocket.send(obj_ail_stream)
+                await asyncio.sleep(0.1)
+            else:
+                await asyncio.sleep(10)
+                # check if connection open
+                if not websocket.open:
+                    # raise websocket internal exceptions
+                    await websocket.send('')
+
+    except websockets.exceptions.ConnectionClosedError as err:
+        # resend object in queue on Connection Error
+        ail_2_ail.resend_object_to_sync_queue(ail_uuid, queue_uuid, Obj, push=True)
+        raise err
 
 async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=None):
     if not ail_2_ail.exists_ail_instance(ail_uuid):
@@ -118,17 +136,22 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=No
         if status_code == 1000:
             print('connection closed')
         elif status_code == 400:
-            error_message = 'BAD_REQUEST: Invalid path'
+            error_message = '400 BAD_REQUEST: Invalid path'
         elif status_code == 401:
-            error_message = 'UNAUTHORIZED: Invalid Key'
+            error_message = '401 UNAUTHORIZED: Invalid Key'
         elif status_code == 403:
-            error_message = 'FORBIDDEN: SYNC mode disabled'
+            error_message = '403 FORBIDDEN: SYNC mode disabled'
         else:
             error_message = str(e)
         if error_message:
             sys.stderr.write(error_message)
             redis_logger.warning(f'{ail_uuid}: {error_message}')
             ail_2_ail.save_ail_server_error(ail_uuid, error_message)
+    except websockets.exceptions.ConnectionClosedError as e:
+        error_message = ail_2_ail.get_websockets_close_message(e.code)
+        sys.stderr.write(error_message)
+        redis_logger.info(f'{ail_uuid}: {error_message}')
+        ail_2_ail.save_ail_server_error(ail_uuid, error_message)
 
     except websockets.exceptions.InvalidURI as e:
         error_message = f'Invalid AIL url: {e.uri}'
@@ -150,8 +173,7 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=No
         print('connection closed')
     except Exception as err:
         trace = traceback.format_tb(err.__traceback__)
-        if len(trace) == 1:
-            trace = trace[0]
+        trace = ''.join(trace)
         trace = str(trace)
         error_message = f'{trace}\n{str(err)}'
         sys.stderr.write(error_message)

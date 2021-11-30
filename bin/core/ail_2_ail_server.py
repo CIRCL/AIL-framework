@@ -120,21 +120,26 @@ async def unregister(websocket):
 # PULL: Send data to client
 # # TODO: ADD TIMEOUT ???
 async def pull(websocket, ail_uuid):
+    try:
+        for queue_uuid in ail_2_ail.get_ail_instance_all_sync_queue(ail_uuid):
+            while True:
+                # get elem to send
+                Obj = ail_2_ail.get_sync_queue_object_by_queue_uuid(queue_uuid, ail_uuid, push=False)
+                if Obj:
+                    obj_ail_stream = ail_2_ail.create_ail_stream(Obj)
+                    Obj = json.dumps(obj_ail_stream)
+                    #print(Obj)
 
-    for queue_uuid in ail_2_ail.get_ail_instance_all_sync_queue(ail_uuid):
-        while True:
-            # get elem to send
-            Obj = ail_2_ail.get_sync_queue_object_by_queue_uuid(queue_uuid, ail_uuid, push=False)
-            if Obj:
-                obj_ail_stream = ail_2_ail.create_ail_stream(Obj)
-                Obj = json.dumps(obj_ail_stream)
-                #print(Obj)
-
-                # send objects
-                await websocket.send(Obj)
-            # END PULL
-            else:
-                break
+                    # send objects
+                    await websocket.send(Obj)
+                    await asyncio.sleep(0.1)
+                # END PULL
+                else:
+                    break
+    except websockets.exceptions.ConnectionClosedError as err:
+        # resend object in queue on Connection Error
+        ail_2_ail.resend_object_to_sync_queue(ail_uuid, queue_uuid, Obj, push=False)
+        raise err
 
     # END PULL
     return None
@@ -151,6 +156,7 @@ async def push(websocket, ail_uuid):
         ail_stream = json.loads(ail_stream)
         #print(ail_stream)
 
+        # # TODO: Close connection on junk
         ail_2_ail.add_ail_stream_to_sync_importer(ail_stream)
 
 # API: server API
