@@ -265,6 +265,8 @@ def refresh_ail_instance_connection(ail_uuid):
     clients_id = get_client_id_by_ail_uuid(ail_uuid)
     if clients_id:
         clients_id = clients_id[0]
+    else:
+        client_id = None
     launch_required = is_ail_instance_push_enabled(ail_uuid)
 
     # relaunch
@@ -1175,6 +1177,16 @@ def add_ail_stream_to_sync_importer(ail_stream):
 #############################
 #                           #
 #### AIL EXCHANGE FORMAT ####
+
+def is_valid_ail_exchange_format_json(json_obj):
+    try:
+        ail_stream = json.dumps(ail_stream)
+    except ValueError:
+        return False
+    return is_valid_ail_exchange_format(ail_stream)
+
+def is_valid_ail_exchange_format(ail_stream):
+    pass
 
 def create_ail_stream(Object):
     ail_stream = {'format': 'ail',
