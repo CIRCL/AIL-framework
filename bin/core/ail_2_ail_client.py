@@ -54,13 +54,12 @@ async def pull(websocket, ail_uuid):
         sys.stdout.write(obj)
 
 async def push(websocket, ail_uuid):
-    ## DEBUG:
+    # ## DEBUG:
     # try:
     #     while True:
     #         await websocket.send('test')
     #         await asyncio.sleep(10)
     # except websockets.exceptions.ConnectionClosedError as err:
-    #     print(err.code)
     #     raise err
 
     try:
@@ -110,7 +109,7 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=No
         client_id = ail_2_ail.create_sync_client_cache(ail_uuid, sync_mode)
 
     try:
-        async with websockets.client.connect(
+        async with websockets.connect(
             uri,
             ssl=ssl_context,
             #open_timeout=10, websockers 10.0 /!\ python>=3.7
