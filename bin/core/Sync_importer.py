@@ -22,10 +22,16 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from core import ail_2_ail
+from lib.ConfigLoader import ConfigLoader
 from modules.abstract_module import AbstractModule
 from packages.Item import Item
 from packages import Tag
 
+#### CONFIG ####
+config_loader = ConfigLoader()
+server_cache = config_loader.get_redis_conn("Redis_Log_submit")
+config_loader = None
+#### ------ ####
 
 class Sync_importer(AbstractModule):
     """
@@ -79,8 +85,8 @@ class Sync_importer(AbstractModule):
         print(message)
         self.send_message_to_queue(message, 'Mixer')
 
-        # # increase nb of paste by feeder name
-        # server_cache.hincrby("mixer_cache:list_feeder", Sync, 1)
+        # increase nb of item by ail sync
+        server_cache.hincrby("mixer_cache:list_feeder", 'AIL_Sync', 1)
 
 
 if __name__ == '__main__':

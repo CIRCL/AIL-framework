@@ -945,15 +945,21 @@ def is_queue_registred_by_ail_instance(queue_uuid, ail_uuid):
     return r_serv_sync.sismember(f'ail:instance:sync_queue:{ail_uuid}', queue_uuid)
 
 def register_ail_to_sync_queue(ail_uuid, queue_uuid):
+    is_linked = is_ail_instance_linked_to_sync_queue(ail_uuid)
     r_serv_sync.sadd(f'ail2ail:sync_queue:ail_instance:{queue_uuid}', ail_uuid)
     r_serv_sync.sadd(f'ail:instance:sync_queue:{ail_uuid}', queue_uuid)
     set_last_updated_sync_config()
+    if not is_linked:
+        refresh_ail_instance_connection(ail_uuid)
 
 # # # FIXME: TODO: delete sync queue ????????????????????????????????????????????????????
 def unregister_ail_to_sync_queue(ail_uuid, queue_uuid):
     r_serv_sync.srem(f'ail2ail:sync_queue:ail_instance:{queue_uuid}', ail_uuid)
     r_serv_sync.srem(f'ail:instance:sync_queue:{ail_uuid}', queue_uuid)
     set_last_updated_sync_config()
+    is_linked = is_ail_instance_linked_to_sync_queue(ail_uuid)
+    if not is_linked:
+        refresh_ail_instance_connection(ail_uuid)
 
 def get_all_unregistred_queue_by_ail_instance(ail_uuid):
     return r_serv_sync.sdiff('ail2ail:sync_queue:all', f'ail:instance:sync_queue:{ail_uuid}')
