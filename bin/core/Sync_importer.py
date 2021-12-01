@@ -82,7 +82,7 @@ class Sync_importer(AbstractModule):
         item_id = ail_stream['meta']['ail:id'] + 'test'
 
         message = f'{item_id} {b64_gzip_content}'
-        print(message)
+        print(item_id)
         self.send_message_to_queue(message, 'Mixer')
 
         # increase nb of item by ail sync
