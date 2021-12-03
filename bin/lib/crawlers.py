@@ -1067,7 +1067,7 @@ def is_splash_manager_connected(delta_check=30):
     return res == 'True'
 
 def update_splash_manager_connection_status(is_connected, req_error=None):
-    r_cache.hset('crawler:splash:manager', 'connected', is_connected)
+    r_cache.hset('crawler:splash:manager', 'connected', str(is_connected))
     r_cache.hset('crawler:splash:manager', 'last_check', int(time.time()))
     if not req_error:
         r_cache.hdel('crawler:splash:manager', 'error')
