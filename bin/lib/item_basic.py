@@ -182,6 +182,8 @@ def add_map_obj_id_item_id(obj_id, item_id, obj_type):
 
 ## COMMON ##
 def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filter_dir=False):
+    if not l_sources_name:
+        l_sources_name = set()
     if source_name:
         l_dir = os.listdir(os.path.join(directory, source_name))
     else:
