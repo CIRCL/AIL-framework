@@ -178,7 +178,7 @@ def index():
     return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module,
                             log_select=log_select, selected=max_dashboard_logs,
                             update_warning_message=update_warning_message, update_in_progress=update_in_progress,
-                            update_note=update_note,
+                            #update_note=update_note,
                             update_warning_message_notice_me=update_warning_message_notice_me)
 
 # ========= REGISTRATION =========

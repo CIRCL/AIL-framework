@@ -80,7 +80,7 @@ def login():
                         return redirect(next_page)
                     # dashboard
                     else:
-                        return redirect(url_for('dashboard.index', update_note=True))
+                        return redirect(url_for('dashboard.index'))
             # login failed
             else:
                 # set brute force protection
