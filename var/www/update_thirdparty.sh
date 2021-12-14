@@ -80,8 +80,8 @@ wget -q https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js -O ./
 POPPER_VERSION="1.16.1"
 wget -q https://github.com/FezVrasta/popper.js/archive/v${POPPER_VERSION}.zip -O temp/popper.zip
 unzip -qq temp/popper.zip -d temp/
-mv temp/popper-core-${POPPER_VERSION}/dist/umd/popper.min.js ./static/js/
-mv temp/popper-core-${POPPER_VERSION}/dist/umd/popper.min.js.map ./static/js/
+mv temp/floating-ui-${POPPER_VERSION}/dist/umd/popper.min.js ./static/js/
+mv temp/floating-ui-${POPPER_VERSION}/dist/umd/popper.min.js.map ./static/js/
 
 #Ressource for graph
 wget -q https://raw.githubusercontent.com/flot/flot/958e5fd43c6dff4bab3e1fd5cb6109df5c1e8003/jquery.flot.js -O ./static/js/jquery.flot.js
