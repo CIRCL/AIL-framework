@@ -53,7 +53,7 @@ colorama>=0.4.4
 python-Levenshtein>=0.12.2
 
 # DomainClassifier
-git+https://github.com/D4-project/BGP-Ranking.git/#egg=pybgpranking&subdirectory=client
+pybgpranking
 DomainClassifier
 
 # Indexer
