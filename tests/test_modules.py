@@ -19,6 +19,7 @@ from modules.DomClassifier import DomClassifier
 from modules.Global import Global
 from modules.Keys import Keys
 from modules.Onion import Onion
+from modules.Telegram import Telegram
 
 # project packages
 from lib.ConfigLoader import ConfigLoader
@@ -168,6 +169,16 @@ class Test_Module_Onion(unittest.TestCase):
         else:
             # # TODO: check warning logs
             pass
+
+class Test_Module_Telegram(unittest.TestCase):
+
+    def setUp(self):
+        self.module_obj = Telegram()
+
+    def test_module(self):
+        item_id = 'tests/2021/01/01/keys.gz'
+        # # TODO: check results
+        result = self.module_obj.compute(item_id)
 
 if __name__ == '__main__':
     unittest.main()

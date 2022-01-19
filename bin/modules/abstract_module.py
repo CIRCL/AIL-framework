@@ -15,6 +15,7 @@ import traceback
 ##################################
 from pubsublogger import publisher
 from Helper import Process
+from lib import regex_helper
 
 class AbstractModule(ABC):
     """
@@ -73,6 +74,17 @@ class AbstractModule(ABC):
         """
         self.process.populate_set_out(message, queue_name)
         # add to new set_module
+
+    def regex_findall(self, regex, id, content):
+        """
+        regex findall helper (force timeout)
+        :param regex: compiled regex
+        :param id: object id
+        :param content: object content
+
+        ex: send_to_queue(item_id, 'Global')
+        """
+        return regex_helper.regex_findall(self.module_name, self.redis_cache_key, regex, id, content, max_time=self.max_execution_time)
 
     def run(self):
         """

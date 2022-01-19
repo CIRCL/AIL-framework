@@ -29,7 +29,8 @@ publisher.port = 6380
 publisher.channel = "Script"
 
 def generate_redis_cache_key(module_name):
-    return '{}_extracted:{}'.format(module_name, str(uuid.uuid4()))
+    new_uuid = str(uuid.uuid4())
+    return f'{module_name}_extracted:{new_uuid}'
 
 def _regex_findall(redis_key, regex, item_content, r_set):
     all_items = re.findall(regex, item_content)
@@ -57,7 +58,7 @@ def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time
         if proc.is_alive():
             proc.terminate()
             Statistics.incr_module_timeout_statistic(module_name)
-            err_mess = "{}: processing timeout: {}".format(module_name, item_id)
+            err_mess = f"{module_name}: processing timeout: {item_id}"
             print(err_mess)
             publisher.info(err_mess)
             return []
@@ -87,7 +88,7 @@ def regex_search(module_name, redis_key, regex, item_id, item_content, max_time=
         if proc.is_alive():
             proc.terminate()
             Statistics.incr_module_timeout_statistic(module_name)
-            err_mess = "{}: processing timeout: {}".format(module_name, item_id)
+            err_mess = f"{module_name}: processing timeout: {item_id}"
             print(err_mess)
             publisher.info(err_mess)
             return None
