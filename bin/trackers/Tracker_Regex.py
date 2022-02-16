@@ -71,13 +71,12 @@ class Tracker_Regex(AbstractModule):
         uuid_list = Tracker.get_tracker_uuid_list(tracker, tracker_type)
 
         item_id = item.get_id()
+        item_date = item.get_date()
+        item_source = item.get_source()
         print(f'new tracked regex found: {tracker} in {item_id}')
 
         for tracker_uuid in uuid_list:
             # Source Filtering
-            item_source =  item.get_source()
-            item_date =    item.get_date()
-
             tracker_sources = Tracker.get_tracker_uuid_sources(tracker_uuid)
             if tracker_sources and item_source not in tracker_sources:
                 continue

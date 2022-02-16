@@ -94,13 +94,12 @@ class Tracker_Term(AbstractModule):
             # create token statistics
             # for word in dict_words_freq:
             #    Term.create_token_statistics(item_date, word, dict_words_freq[word])
-            item_source = item.get_source()
 
             # check solo words
             ####### # TODO: check if source needed #######
             for word in self.list_tracked_words:
                 if word in dict_words_freq:
-                    self.new_term_found(word, 'word', item.get_id(), item_source)
+                    self.new_term_found(word, 'word', item)
 
             # check words set
             for elem in self.set_tracked_words_list:
@@ -113,13 +112,16 @@ class Tracker_Term(AbstractModule):
                     if word in dict_words_freq:
                         nb_uniq_word += 1
                 if nb_uniq_word >= nb_words_threshold:
-                    self.new_term_found(word_set, 'set', item.get_id(), item_source)
+                    self.new_term_found(word_set, 'set', item)
 
-    def new_term_found(self, term, term_type, item_id, item_source):
+    def new_term_found(self, term, term_type, item):
         uuid_list = Term.get_term_uuid_list(term, term_type)
+
+        item_id = item.get_id()
+        item_date = item.get_date()
+        item_source = item.get_source()
         self.redis_logger.info(f'new tracked term found: {term} in {item_id}')
         print(f'new tracked term found: {term} in {item_id}')
-        item_date = Item.get_date()
         for term_uuid in uuid_list:
             tracker_sources = Tracker.get_tracker_uuid_sources(term_uuid)
             if not tracker_sources or item_source in tracker_sources:
