@@ -15,7 +15,7 @@ config_loader = ConfigLoader.ConfigLoader()
 r_serv_crawler = config_loader.get_redis_conn("ARDB_Onion")
 config_loader = None
 
-correlation = Correlation.Correlation('username', ['telegram', 'twitter'])
+correlation = Correlation.Correlation('username', ['telegram', 'twitter', 'jabber'])
 
 def save_item_correlation(subtype, username, item_id, item_date):
     correlation.save_item_correlation(subtype, username, item_id, item_date)
