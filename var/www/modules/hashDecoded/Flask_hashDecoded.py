@@ -131,7 +131,7 @@ def get_icon(correlation_type, type_id):
         elif type_id == 'twitter':
             icon_text = 'fab fa-twitter'
         elif type_id == 'jabber':
-            icon_text = 'fa fa-user'
+            icon_text = 'fas fa-user'
     return icon_text
 
 def get_icon_text(correlation_type, type_id):
