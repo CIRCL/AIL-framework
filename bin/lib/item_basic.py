@@ -166,15 +166,17 @@ def add_item_parent(parent_item_id, item_id):
 #### UNKNOW SECTION ####
 
 def get_obj_id_item_id(parent_type, parent_id):
-    all_parents_type = ['twitter_id']
+    all_parents_type = ['twitter_id', 'jabber_id']
     if parent_type in all_parents_type:
-        return r_serv_metadata.hget('map:twitter_id:item_id', parent_id)
+        return r_serv_metadata.hget('map:{}:item_id'.format(parent_type), parent_id)
     else:
         return None
 
 def add_map_obj_id_item_id(obj_id, item_id, obj_type):
     if obj_type == 'twitter_id':
         r_serv_metadata.hset('map:twitter_id:item_id', obj_id, item_id)
+    if obj_type == 'jabber_id':
+        r_serv_metadata.hset('map:jabber_id:item_id', obj_id, item_id)
 
 # delete twitter id
 

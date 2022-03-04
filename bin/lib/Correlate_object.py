@@ -167,7 +167,11 @@ def get_correlation_node_icon(correlation_name, correlation_type=None, value=Non
         elif correlation_type == 'twitter':
             icon_class = 'fab'
             icon_text = '\uf099'
+        elif correlation_type == 'jabber':
+            icon_class = 'fa'
+            icon_text = '\uf007'
         else:
+            icon_class = 'fa'
             icon_text = '\uf007'
 
     elif correlation_name == 'decoded':
