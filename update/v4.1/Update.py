@@ -21,8 +21,8 @@ class Updater(AIL_Updater):
         super(Updater, self).__init__(version)
 
     def update(self):
-        r_tracking = redis.StrictRedis( host=localhost,
-                                  port=6382),
+        r_tracking = redis.StrictRedis( host='localhost',
+                                  port=6382,
                                   db=2,
                                   decode_responses=True )
 
