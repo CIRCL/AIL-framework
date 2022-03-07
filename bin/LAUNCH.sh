@@ -589,6 +589,7 @@ function menu_display {
                   shutdown;
                   ;;
               Update)
+                  checking_configuration;
                   update;
                   ;;
               Update-config)
@@ -634,7 +635,8 @@ while [ "$1" != "" ]; do
                                       ;;
         -m | --menu )                 menu_display;
                                       ;;
-        -u | --update )               update "--manual";
+        -u | --update )               checking_configuration;
+                                      update "--manual";
                                       ;;
         -t | --test )                 launch_tests;
                                       ;;

@@ -155,7 +155,7 @@ db = 0
 [DB_Tracking]
 host = localhost
 port = 6382
-db = 3
+db = 2
 
 [ARDB_Sentiment]
 host = localhost
