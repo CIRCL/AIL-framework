@@ -28,7 +28,7 @@ import crawlers
 import Domain
 import Language
 
-import Config_DB
+#import Config_DB
 
 r_cache = Flask_config.r_cache
 r_serv_db = Flask_config.r_serv_db
@@ -295,6 +295,15 @@ def domains_search_name():
                                 l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
                                 domains_types=domains_types)
 
+@crawler_splash.route('/domains/TODO', methods=['GET'])
+@login_required
+@login_analyst
+def domains_todo():
+    domain_type = request.args.get('type')
+    last_domains = Domain.get_last_crawled_domains(domain_type)
+
+
+
 ##--  --##
 
 
@@ -349,8 +358,8 @@ def crawler_cookiejar_add_post():
     return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
 
 @crawler_splash.route('/crawler/cookiejar/all', methods=['GET'])
-#@login_required
-#@login_read_only
+@login_required
+@login_read_only
 def crawler_cookiejar_all():
     user_id = current_user.get_id()
     user_cookiejar = crawlers.get_cookiejar_metadata_by_iterator(crawlers.get_user_cookiejar(user_id))
@@ -358,8 +367,8 @@ def crawler_cookiejar_all():
     return render_template("all_cookiejar.html", user_cookiejar=user_cookiejar, global_cookiejar=global_cookiejar)
 
 @crawler_splash.route('/crawler/cookiejar/show', methods=['GET'])
-#@login_required
-#@login_read_only
+@login_required
+@login_read_only
 def crawler_cookiejar_show():
     user_id = current_user.get_id()
     cookiejar_uuid = request.args.get('cookiejar_uuid')
@@ -379,8 +388,8 @@ def crawler_cookiejar_show():
                                         l_cookies=l_cookies, l_cookie_uuid=l_cookie_uuid)
 
 @crawler_splash.route('/crawler/cookiejar/cookie/delete', methods=['GET'])
-#@login_required
-#@login_read_only
+@login_required
+@login_read_only
 def crawler_cookiejar_cookie_delete():
     user_id = current_user.get_id()
     cookiejar_uuid = request.args.get('cookiejar_uuid')
@@ -392,8 +401,8 @@ def crawler_cookiejar_cookie_delete():
     return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
 
 @crawler_splash.route('/crawler/cookiejar/delete', methods=['GET'])
-#@login_required
-#@login_read_only
+@login_required
+@login_read_only
 def crawler_cookiejar_delete():
     user_id = current_user.get_id()
     cookiejar_uuid = request.args.get('cookiejar_uuid')

@@ -97,6 +97,16 @@
 						</button>
 					</a>
         </div>
+        <div>
+          {% with obj_type='item', obj_id=dict_item['id'], obj_subtype=''%}
+            {% include 'modals/investigations_register_obj.html' %}
+          {% endwith %}
+          <div class="mr-2">
+            <button type="button" class="btn btn-lg btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+              <i class="fas fa-microscope"></i> Investigations
+            </button>
+          </div>
+        </div>
         <div class="mx-2">
           {% with obj_type='item', obj_id=dict_item['id'], obj_lvl=0%}
             {% include 'import_export/block_add_user_object_to_export.html' %}

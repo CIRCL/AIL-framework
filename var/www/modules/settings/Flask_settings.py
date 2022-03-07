@@ -288,5 +288,11 @@ def passive_dns_change_state():
     passivedns_enabled = d4.change_passive_dns_state(new_state)
     return redirect(url_for('settings.passive_dns'))
 
+@settings.route("/settings/ail", methods=['GET'])
+@login_required
+@login_admin
+def ail_configs():
+    return render_template("ail_configs.html", passivedns_enabled=None)
+
 # ========= REGISTRATION =========
 app.register_blueprint(settings, url_prefix=baseUrl)

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card my-1">
+					<div class="card-header bg-dark text-white">
+						<h4 class="card-title">{{metadata['info']}}</h4>
+					</div>
+					<div class="card-body">
+						<div class="container-fluid">
+							<div class="row">
+								<div class="col-12 col-lg-6">
+
+									<table class="table table-hover">
+				            <tr>
+				              <th style="width:30%">UUID</th>
+				              <td>{{metadata['uuid']}}</td>
+				            </tr>
+				            <tr>
+				              <th>Creator</th>
+				              <td>{{metadata['user_creator']}}</td>
+				            </tr>
+				            <tr>
+				              <th>Tags</th>
+				              <td>
+												{% for tag in metadata['tags'] %}
+													<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+												{% endfor %}
+											</td>
+				            </tr>
+				            <tr>
+				              <th>Date</th>
+				              <td>{{metadata['date']}}</td>
+				            </tr>
+				            <tr>
+				              <th>Threat Level</th>
+				              <td>{{metadata['threat_level']}}</td>
+				            </tr>
+				            <tr>
+				              <th>Analysis</th>
+				              <td>{{metadata['analysis']}}</td>
+				            </tr>
+				            <tr>
+				              <th>Info</th>
+				              <td>{{metadata['info']}}</td>
+				            </tr>
+										<tr>
+				              <th># Objects</th>
+				              <td>{{metadata['nb_objects']}}</td>
+				            </tr>
+				            <tr>
+				              <th>Timestamp</th>
+				              <td>{{metadata['timestamp']}}</td>
+				            </tr>
+										<tr>
+				              <th>Last change</th>
+				              <td>{{metadata['last_change']}}</td>
+				            </tr>
+				          </table>
+
+								</div>
+								<div class="col-12 col-lg-6">
+
+									<div class="my-4">
+										<a href="{{ url_for('investigations_b.delete_investigation') }}?uuid={{metadata['uuid']}}">
+											<button type="button" class="btn btn-danger">
+												<i class="fas fa-trash-alt"></i> <b>Delete</b>
+												</button>
+										</a>
+										<a href="{{ url_for('investigations_b.edit_investigation') }}?uuid={{metadata['uuid']}}">
+											<button type="button" class="btn btn-info">
+												<i class="fas fa-pencil-alt"></i> <b>Edit</b>
+											</button>
+										</a>
+										<a class="btn btn-outline-dark" target="_blank" href="{{ url_for('import_export.export_investigation')}}?uuid={{metadata['uuid']}}">
+											<img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="25">
+											Export as Event
+										</a>
+									</div>
+
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+				<h3>Objects</h3>
+
+				<table id="table_sync_queues" class="table table-striped border-primary">
+			  	<thead class="bg-dark text-white">
+			    	<tr>
+							<th>Type</th>
+			      	<th></th>
+							<th>Id</th>
+				     	<th>Tags</th>
+							<th></th>
+				   	</tr>
+					</thead>
+					<tbody style="font-size: 15px;">
+						{% for object in investigation_objs %}
+							<tr class="border-color: blue;">
+								<td>
+									{% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
+										{% include 'objects/obj_svg_block.html' %}
+									{% endwith %}
+									{{ object['type']}}
+								</td>
+								<td>
+									{% if object['subtype'] %}
+										{{ object['subtype']}}
+									{% endif %}
+								</td>
+								<td>{{ object['id']}}</td>
+								<td>
+									{% for tag in object['tags'] %}
+										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+									{% endfor %}
+								</td>
+								<td class="text-right">
+									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ metadata['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">
+										<button type="button" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+									</a>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+
+
+
+		</div>
+
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_sync').removeClass("text-muted");
+
+  $('#table_sync_queues').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "asc" ]]
+  });
+
+});
+
+
+</script>

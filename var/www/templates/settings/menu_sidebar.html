@@ -44,7 +44,13 @@
       		  <span>Settings</span>
       		</h5>
           <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
-      	    <li class="nav-item">
+            <!-- <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('settings.ail_configs')}}" id="nav_ail_configs">
+      	        <img src="{{ url_for('static', filename='image/ail.png')}}" alt="AIL servers" style="width:25px;">
+      	        <span>AIL Configs</span>
+      	      </a>
+      	    </li> -->
+            <li class="nav-item">
       	      <a class="nav-link" href="{{url_for('settings.passive_dns')}}" id="passive_dns">
       	        <img src="{{ url_for('static', filename='image/d4-logo.png')}}" alt="D4 project" style="width:25px;">
       	        <span>Passive DNS</span>

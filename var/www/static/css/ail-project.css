@@ -5,3 +5,16 @@
     padding-left: 0.15em;
     background-color: #2e5;
 }
+
+.blue {
+    color: #0088cc !important;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.object_node_icon {
+    font-size: 16px;
+    pointer-events: none;
+}

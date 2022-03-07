@@ -78,6 +78,14 @@
 				<a class="btn btn-secondary" href="{{ url_for('correlation.show_correlation') }}?object_type=cryptocurrency&type_id=bitcoin&correlation_id={{ dict_object['correlation_id'] }}&expand_card=True&correlation_objects=paste">Expand Bitcoin address</a>
 			{% endif %}
 		{% endif %}
+
+		{% with obj_type='cryptocurrency', obj_id=dict_object['correlation_id'], obj_subtype=dict_object["metadata"]["type_id"] %}
+			{% include 'modals/investigations_register_obj.html' %}
+		{% endwith %}
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+			<i class="fas fa-microscope"></i> Investigations
+		</button>
+
 	</div>
 </div>
 

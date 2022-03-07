@@ -1,0 +1,62 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+<div id="investigations_register_obj_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog modal-lg">
+
+    <div id="investigations_register_obj_content" class="modal-content">
+      <div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
+        <h4>Add to Investigations</h4>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="input-group" >
+          <input id="linvestigations" type="text" class="form-control" autocomplete="off" style="width: 760px">
+        </div>
+
+
+      </div>
+
+      <div class="modal-footer">
+        <a class="btn btn-info" href="{{ url_for('investigations_b.add_investigation') }}" target="_blank">
+            <i class="fas fa-microscope"></i>
+            <span class="label-icon">Create Investigation </span>
+        </a>
+        <button class="btn btn-primary" onclick="Register_Obj()">
+            <i class="fas fa-plus"></i>
+            Add to Investigations
+        </button>
+        <button type="button" class="btn btn-outline-dark" data-dismiss="modal" >Close</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var linvestigations;
+
+$('#investigations_register_obj_modal').on('shown.bs.modal', function () {
+
+  $.getJSON("{{ url_for('investigations_b.get_investigations_selector_json') }}",
+      function(data) {
+        console.log(data);
+
+        linvestigations = $('#linvestigations').tagSuggest({
+          data: data,
+          maxDropHeight: 200,
+          name: 'linvestigations',
+          emptyText: 'Select Investigations'
+        });
+      }
+  );
+
+});
+
+function Register_Obj() {
+  var uuids = linvestigations.getValue();
+  // TODO: REQUEST
+  window.location.replace("{{ url_for('investigations_b.register_investigation') }}?uuids=" + uuids + "&type={{ obj_type }}&subtype={{ obj_subtype }}&id={{ obj_id }}");
+}
+</script>

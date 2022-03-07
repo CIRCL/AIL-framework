@@ -24,15 +24,88 @@ config_loader = None
 ## data retention
 #########################
 
-default_config = {
+
+ail_config = {
     "crawler": {
-        "enable_har_by_default": False,
-        "enable_screenshot_by_default": True,
-        "default_depth_limit": 1,
-        "default_closespider_pagecount": 50,
-        "default_user_agent": "Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101 Firefox/68.0",
-        "default_timeout": 30
+        "enable_har_by_default": {
+            "default": False,
+            "type": bool,
+            "info": "Enable HAR by default"
+        },
+        "enable_screenshot_by_default": {
+            "default": True,
+            "type": bool,
+            "info": "Enable screenshot by default"
+        },
+        "depth_limit": {
+            "default": 1,
+            "type": int,
+            "info": "Maximum number of url depth"
+        },
+        "closespider_pagecount": {
+            "default": 50,
+            "type": int,
+            "info": "Maximum number of pages"
+        },
+        "user_agent": {
+            "default": 50,
+            "type": str,
+            "info": "User agent used by default"
+        },
+        "timeout": {
+            "default": 30,
+            "type": int,
+            "info": "Crawler connection timeout"
+        },
+    },
+    "misp": {
+        "url": {
+            "default": "https://localhost:8443/",
+            "type": str,
+            "info": "Crawler connection timeout"
+        },
+        "key": {
+            "default": "",
+            "type": str,
+            "info": "Crawler connection timeout"
+        },
+        "verifycert": {
+            "default": True,
+            "type": bool,
+            "info": "Crawler connection timeout"
+        },
     }
+}
+
+# The MISP auth key can be found on the MISP web interface under the automation section
+
+def get_config_value(section, field, value):
+    return r_serv_db.hget(f'ail:config:global:{section}', field, value)
+
+def get_config_default_value(section, field, value):
+    return ail_config[section][field]['default']
+
+def get_config_type(section, field, value):
+    return ail_config[section][field]['type']
+
+def get_config_info(section, field, value):
+    return ail_config[section][field]['info']
+
+def save_config(section, field, value):
+    if section in ail_config:
+        if is_valid_type(value, section, field, value_type=value_type):
+            # if value_type in ['list', 'set', 'dict']:
+            #     pass
+            # else:
+            r_serv_db.hset(f'ail:config:global:{section}', field, value)
+
+
+config_documentation = {
+
+}
+
+default_config = {
+
 }
 
 def get_default_config():
@@ -41,27 +114,26 @@ def get_default_config():
 def get_default_config_value(section, field):
     return default_config[section][field]
 
-config_type = {
-    # crawler config
-    "crawler": {
-        "enable_har_by_default": bool,
-        "enable_screenshot_by_default": bool,
-        "default_depth_limit": int,
-        "default_closespider_pagecount": int,
-        "default_user_agent": str,
-        "default_timeout": int
-    }
-}
 
-def get_config_type(section, field):
-    return config_type[section][field]
+
+
+#### DEFAULT CONFIG ####
+
+#### CONFIG TYPE ####
+# CONFIG DOC
+config_type = {
+
+}
 
 # # TODO: add set, dict, list and select_(multiple_)value
 def is_valid_type(obj, section, field, value_type=None):
     res = isinstance(obj, get_config_type(section, field))
     return res
 
+# # TODO: ###########################################################
 def reset_default_config():
+    for section in config_type:
+
     pass
 
 def set_default_config(section, field):
@@ -92,44 +164,11 @@ def get_config_dict_by_section(section):
         config_dict[field] = get_config(section, field)
     return config_dict
 
-def save_config(section, field, value, value_type=None): ###########################################
-    if section in default_config:
-        if is_valid_type(value, section, field, value_type=value_type):
-            if value_type in ['list', 'set', 'dict']:
-                pass
-            else:
-                r_serv_db.hset(f'config:global:{section}', field, value)
-                # used by check_integrity
-                r_serv_db.sadd('config:all_global_section', field, value)
 
 # check config value + type
 def check_integrity():
     pass
 
-
-config_documentation = {
-    "crawler": {
-        "enable_har_by_default": 'Enable HAR by default',
-        "enable_screenshot_by_default": 'Enable screenshot by default',
-        "default_depth_limit": 'Maximum number of url depth',
-        "default_closespider_pagecount": 'Maximum number of pages',
-        "default_user_agent": "User agent used by default",
-        "default_timeout": "Crawler connection timeout"
-    }
-}
-
-def get_config_documentation(section, field):
-    return config_documentation[section][field]
-
-# def conf_view():
-#     class F(MyBaseForm):
-#         pass
-#
-#     F.username = TextField('username')
-#     for name in iterate_some_model_dynamically():
-#         setattr(F, name, TextField(name.title()))
-#
-#     form = F(request.POST, ...)
 
 def get_field_full_config(section, field):
     dict_config = {}

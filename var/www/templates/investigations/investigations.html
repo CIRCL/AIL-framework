@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>Investigations</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<h3 class="mt-2 text-secondary">
+					<i class="fas fa-microscope"></i> Investigations:
+				</h3>
+
+				<table id="table_investigation" class="table table-striped border-primary">
+          <thead class="bg-dark text-white">
+            <tr>
+								<th>Name</th>
+                <th>Date</th>
+								<th>last modified</th>
+								<td>Info</td>
+                <th>Nb Objects</th>
+            </tr>
+          </thead>
+          <tbody style="font-size: 15px;">
+            {% for dict_investigation in investigations %}
+              <tr class="border-color: blue;">
+								<td>
+									<a href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
+										{{ dict_investigation['info']}}
+										<div>
+											{% for tag in dict_investigation['tags'] %}
+												<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+											{% endfor %}
+										</div>
+									</a>
+								</td>
+								<td>{{ dict_investigation['date']}}</td>
+								<td>{{ dict_investigation['last_change']}}</td>
+								<td>{{ dict_investigation['info']}}</td>
+								<td>{{ dict_investigation['nb_objects']}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+			</div>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_sync').removeClass("text-muted");
+	$("#navsync_queues").addClass("active");
+
+  $('#table_investigation').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 2, "desc" ]]
+  });
+
+});
+
+
+</script>

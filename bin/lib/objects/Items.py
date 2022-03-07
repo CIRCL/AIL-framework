@@ -12,7 +12,6 @@ import html2text
 from io import BytesIO
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Date
 import Tag
 import Cryptocurrency
 import Pgp
@@ -26,7 +25,7 @@ import Decoded
 import Screenshot
 import Username
 
-from objects.abstract_object import AbstractObject
+from abstract_object import AbstractObject
 from item_basic import *
 
 config_loader = ConfigLoader.ConfigLoader()
@@ -39,8 +38,109 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 screenshot_directory = config_loader.get_files_directory('screenshot')
 har_directory = config_loader.get_files_directory('har')
-
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
+
+
+################################################################################
+################################################################################
+################################################################################
+
+class Item(AbstractObject):
+    """
+    AIL Item Object. (strings)
+    """
+
+    def __init__(self, id):
+        super(Item, self).__init__('item', id)
+
+    def get_date(self, separator=False):
+        """
+        Returns Item date
+        """
+        return item_basic.get_item_date(self.id, add_separator=separator)
+
+    def get_source(self):
+        """
+        Returns Item source/feeder name
+        """
+        #return self.id.split('/')[-5]
+        l_source = self.id.split('/')[:-4]
+        return os.path.join(*l_source)
+
+    def get_basename(self):
+        return os.path.basename(self.id)
+
+    def get_filename(self):
+        # Creating the full filepath
+        filename = os.path.join(PASTES_FOLDER, self.id)
+        filename = os.path.realpath(filename)
+
+        # incorrect filename
+        if not os.path.commonprefix([filename, PASTES_FOLDER]) == PASTES_FOLDER:
+            return None
+        else:
+            return filename
+
+    def get_content(self):
+        """
+        Returns Item content
+        """
+        return item_basic.get_item_content(self.id)
+
+    def get_gzip_content(self, b64=False):
+        with open(self.get_filename(), 'rb') as f:
+            content = f.read()
+        if b64:
+            content = base64.b64encode(content)
+        return content.decode()
+
+    def get_ail_2_ail_payload(self):
+        payload = {'raw': self.get_gzip_content(b64=True),
+                    'compress': 'gzip'}
+        return payload
+
+    # # TODO:
+    def create(self):
+        pass
+
+    # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
+    # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
+    def delete(self):
+        try:
+            os.remove(self.get_filename())
+            return True
+        except FileNotFoundError:
+            return False
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_item.showItem', id=value)
+        else:
+            url = f'{baseurl}/object/item?id={self.id}'
+        return url
+
+    def get_svg_icon(self):
+        if is_crawled(self.id):
+            color = 'red'
+        else:
+            color = '#332288'
+        return {'style': '', 'icon': '', 'color': color, 'radius':5}
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
+
+    def exist_correlation(self):
+        pass
+
+    ############################################################################
+    ############################################################################
+
+
+################################################################################
+################################################################################
+################################################################################
 
 def exist_item(item_id):
     return item_basic.exist_item(item_id)
@@ -587,101 +687,4 @@ def delete_domain_node(item_id):
         delete_item(child_id)
 
 
-class Item(AbstractObject):
-    """
-    AIL Item Object. (strings)
-    """
-
-    def __init__(self, id):
-        super(Item, self).__init__('item', id)
-
-    def get_date(self, separator=False):
-        """
-        Returns Item date
-        """
-        return item_basic.get_item_date(self.id, add_separator=separator)
-
-    def get_source(self):
-        """
-        Returns Item source/feeder name
-        """
-        #return self.id.split('/')[-5]
-        l_source = self.id.split('/')[:-4]
-        return os.path.join(*l_source)
-
-    def get_basename(self):
-        return os.path.basename(self.id)
-
-    def get_filename(self):
-        # Creating the full filepath
-        filename = os.path.join(PASTES_FOLDER, self.id)
-        filename = os.path.realpath(filename)
-
-        # incorrect filename
-        if not os.path.commonprefix([filename, PASTES_FOLDER]) == PASTES_FOLDER:
-            return None
-        else:
-            return filename
-
-    def get_content(self):
-        """
-        Returns Item content
-        """
-        return item_basic.get_item_content(self.id)
-
-    def get_gzip_content(self, b64=False):
-        with open(self.get_filename(), 'rb') as f:
-            content = f.read()
-        if b64:
-            content = base64.b64encode(content)
-        return content.decode()
-
-    def get_ail_2_ail_payload(self):
-        payload = {'raw': self.get_gzip_content(b64=True),
-                    'compress': 'gzip'}
-        return payload
-
-    # # TODO:
-    def create(self):
-        pass
-
-    # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
-    # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
-    def delete(self):
-        try:
-            os.remove(self.get_filename())
-            return True
-        except FileNotFoundError:
-            return False
-
-    ############################################################################
-    ############################################################################
-    ############################################################################
-
-    def exist_correlation(self):
-        pass
-
-    ############################################################################
-    ############################################################################
-    ############################################################################
-    ############################################################################
-    ############################################################################
-    ############################################################################
-    ############################################################################
-    ############################################################################
-
 #if __name__ == '__main__':
-
-
-#     import Domain
-#     domain = Domain.Domain('domain.onion')
-#     for domain_history in domain.get_domain_history():
-#         domain_item = domain.get_domain_items_crawled(epoch=domain_history[1]) # item_tag
-#         if "items" in domain_item:
-#             for item_dict in domain_item['items']:
-#                 item_id = item_dict['id']
-#                 print(item_id)
-#                 for lang in get_item_languages(item_id, min_proportion=0.2, min_probability=0.8):
-#                     print(lang)
-#                 print()
-#     print(get_item_languages(item_id, min_proportion=0.2, min_probability=0.6)) # 0.7 ?

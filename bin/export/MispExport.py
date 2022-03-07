@@ -22,6 +22,10 @@ import Correlate_object
 import AILObjects
 import Export
 
+
+from Investigations import Investigation
+import Tag
+
 # # TODO: # FIXME: REFRACTOR ME => use UI/Global config
 sys.path.append('../../configs/keys')
 try:
@@ -390,6 +394,7 @@ def create_misp_event(event, distribution=0, threat_level_id=4, publish=False, a
     # # TODO: handle multiple MISP instance
     misp = PyMISP(misp_url, misp_key, misp_verifycert)
     #print(event.to_json())
+
     misp_event = misp.add_event(event)
      #print(misp_event)
     # # TODO: handle error
@@ -414,9 +419,50 @@ def extract_event_metadata(event):
 # LVL 1 => DETAILED   Also add correlated_items correlation
 ######
 
-if __name__ == '__main__':
+# # TODO: # create object relationships
+def create_investigation_event(investigation_uuid):
+    investigation = Investigation(investigation_uuid)
 
-    l_obj = [{'id': 'bfd5f1d89e55b10a8b122a9d7ce31667ec1d086a', 'type': 'decoded', 'lvl': 2}]
-    create_list_of_objs_to_export(l_obj)
+    event = MISPEvent()
+    event.info = investigation.get_info()
+    event.uuid = investigation.get_uuid()
+    event.date = investigation.get_date()
+    event.analysis = investigation.get_analysis()
+    event.threat_level_id = investigation.get_threat_level()
+
+    taxonomies_tags, galaxies_tags = Tag.sort_tags_taxonomies_galaxies(investigation.get_tags())
+    event.Tag = taxonomies_tags
+    event.Galaxy = galaxies_tags
+    #event.add_galaxy(galaxies_tags)
+
+    investigation_objs = investigation.get_objects()
+    for obj in investigation_objs:
+        # if subtype -> obj_id = 'subtype:type'
+        if obj['subtype']:
+            obj_id = f"{obj['subtype']}:{obj['id']}"
+        else:
+            obj_id = obj['id']
+        misp_obj = create_misp_obj(obj['type'], obj_id)
+        if misp_obj:
+            event.add_object(misp_obj)
+
+    # if publish:
+    #     event.publish()
+
+    # res = event.to_json()
+    # print(event.to_json())
+
+    misp = PyMISP(misp_url, misp_key, misp_verifycert)
+    misp_event = misp.add_event(event)
+    # print(misp_event)
+
+    # # TODO: handle error
+    event_metadata = extract_event_metadata(misp_event)
+    return event_metadata
+
+# if __name__ == '__main__':
+
+    # l_obj = [{'id': 'bfd5f1d89e55b10a8b122a9d7ce31667ec1d086a', 'type': 'decoded', 'lvl': 2}]
+    # create_list_of_objs_to_export(l_obj)
 
     #print(event.to_json())

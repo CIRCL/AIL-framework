@@ -64,5 +64,13 @@
 
 			</li>
 		</ul>
+
+		{% with obj_type='domain', obj_id=dict_object['correlation_id'], obj_subtype='' %}
+			{% include 'modals/investigations_register_obj.html' %}
+		{% endwith %}
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+			<i class="fas fa-microscope"></i> Investigations
+		</button>
+
 	</div>
 </div>

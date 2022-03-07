@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/ail-project.css') }}" />
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+						<div class="card my-3">
+						  <div class="card-header bg-dark text-white">
+								<h5 class="card-title">
+									{% if edit %}
+										Edit Investigation
+									{% else %}
+										Create Investigation
+									{% endif %}
+								</h5>
+							</div>
+						  <div class="card-body">
+
+								<form action="{% if edit %}{{ url_for('investigations_b.edit_investigation') }}{% else %}{{ url_for('investigations_b.add_investigation') }}{% endif %}" method='post' onsubmit="SubmitCreateInvestigation();">
+
+									{% if edit %}
+										<input id="investigation_uuid" name="investigation_uuid" type="text" value="{{ metadata['uuid'] }}" hidden>
+									{% endif %}
+
+									<div class="row">
+										<div class="col-12 col-xl-9">
+											<div class="input-group mb-2 mr-sm-2">
+										    <div class="input-group-prepend">
+										      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
+										    </div>
+												<input id="investigation_info" name="investigation_info" class="form-control" placeholder="Quick Investigation Info" type="text" {% if edit %}value="{{metadata['info']}}"{% endif %} required>
+										  </div>
+
+											<div class="row">
+												<div class="col-12 col-xl-6">
+													<div class="form-group">
+													 <label for="threat_level">Threat Level:
+														 <span id="threat_level_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
+														 <script type="text/javascript">
+														 		$(function() {
+																 		$('#threat_level_idInfoPopover').popover({
+																				html: true,
+																				content: function() {
+																				 		var tempSelector = '#threat_level';
+																						return $('<div>').append(
+												                        $('<span>').attr('class', 'blue bold').text($(tempSelector +" option:selected").text())
+												                    ).append(
+												                        $('<span>').text(': ' + fieldDesc[$(tempSelector).val()])
+												                    );
+																				}
+																		});
+																		var fieldDesc = {"1":"*high* means sophisticated APT malware or 0-day attack","2":"*medium* means APT malware","3":"*low* means mass-malware","4":"*undefined* no risk"};
+																});
+														 </script>
+													 </label>
+													 <select class="form-control" id="threat_level" name="threat_level" required>
+														 <option value="1">High</option>
+														 <option value="2">Medium</option>
+														 <option value="3">Low</option>
+														 <option value="4">Undefined</option>
+													 </select>
+													</div>
+												</div>
+												<div class="col-12 col-xl-6">
+													<div class="form-group">
+													 <label for="analysis">Analysis:
+														 <span id="analysis_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
+														 <script type="text/javascript">
+														 		$(function() {
+																		$('#analysis_idInfoPopover').popover({
+																				html: true,
+																				content: function() {
+																						var tempSelector = '#analysis';
+																						return $('<div>').append(
+													                  		$('<span>').attr('class', 'blue bold').text($(tempSelector +" option:selected").text())
+													                  ).append(
+													                  		$('<span>').text(': ' + fieldDesc[$(tempSelector).val()])
+													                  );
+																				}
+																		});
+																		var fieldDesc = {"0":"Investigation has just been created and is in an initial state","1":"The analysis is still ongoing","2":"The Investigation creator considers the analysis complete"};
+																});
+														 </script>
+														</label>
+													 <select class="form-control" id="analysis" name="analysis" required>
+														 <option value="0">Initial</option>
+														 <option value="1">Ongoing</option>
+														 <option value="2">Completed</option>
+													 </select>
+													</div>
+												</div>
+											</div>
+
+											<div class="input-group" id="ivestigation-date">
+												<div class="input-group-prepend"><span class="input-group-text bg-secondary text-white"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+												<input class="form-control" id="ivestigation-date-input" placeholder="yyyy-mm-dd" name="investigation_date" autocomplete="off" required>
+											</div>
+
+											<div class="card my-4">
+											  <div class="card-header bg-secondary text-white">
+													<b>Tags</b>
+												</div>
+											  <div class="card-body">
+													{% include 'tags/block_tags_selector.html' %}
+												</div>
+											</div>
+
+										</div>
+
+										<div class="col-12 col-xl-3">
+											{% if edit %}
+												Edit Investigation
+											{% else %}
+												Create a new Investigation
+											{% endif %}
+										</div>
+									</div>
+
+
+									<br>
+									<button class="btn btn-primary mt-2">
+										{% if edit %}
+											<i class="fas fa-pencil-alt"></i> Edit Investigation
+										{% else %}
+											<i class="fas fa-plus"></i> Create Investigation
+										{% endif %}
+									</button>
+
+								</form>
+
+						  </div>
+						</div>
+
+
+			</div>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_investigation').removeClass("text-muted");
+	$("#nav_add_investigation").addClass("active");
+
+	{% if edit %}
+		var investigation_date = "{{metadata['date']}}";
+	{% else %}
+		var investigation_date = getTodayDate();
+	{% endif %}
+	$('#ivestigation-date-input').val(investigation_date);
+	$('#ivestigation-date-input').dateRangePicker({
+			autoClose: true,
+			singleDate : true,
+			showShortcuts: false,
+			startDate: false,
+	});
+
+	{% if edit %}
+		$('#threat_level').val({{metadata['threat_level']}});
+		$('#analysis').val({{metadata['analysis']}});
+	{% endif %}
+
+});
+
+function SubmitCreateInvestigation() {
+	var tags = ltags.getValue();
+	var tagsgalaxy = ltagsgalaxies.getValue();
+	$('#ltags').val(tags);
+	$('#ltagsgalaxies').val(tagsgalaxy);
+	return true;
+}
+
+function getTodayDate() {
+	var date = new Date();
+	var month = date.getMonth()+1;
+	var day = date.getDate();
+	return date.getFullYear() +'-'+ (month<10 ? '0' : '') + month +'-'+ (day<10 ? '0' : '') + day;
+}
+
+
+</script>

@@ -73,9 +73,6 @@ criticalNumberToAlert=8
 #Will be considered as false positive if less that X matches from the top password list
 minTopPassList=5
 
-[Curve]
-max_execution_time = 90
-
 [Onion]
 save_i2p = False
 max_execution_time = 180
@@ -149,30 +146,26 @@ port = 6381
 db = 1
 
 ##### ARDB #####
-[ARDB_Curve]
+
+[ARDB_DB]
 host = localhost
 port = 6382
-db = 1
+db = 0
+
+[DB_Tracking]
+host = localhost
+port = 6382
+db = 3
 
 [ARDB_Sentiment]
 host = localhost
 port = 6382
 db = 4
 
-[ARDB_TermFreq]
-host = localhost
-port = 6382
-db = 2
-
 [ARDB_TermCred]
 host = localhost
 port = 6382
 db = 5
-
-[ARDB_DB]
-host = localhost
-port = 6382
-db = 0
 
 [ARDB_Trending]
 host = localhost

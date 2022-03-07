@@ -182,6 +182,20 @@ def add_object_id_to_export():
     # redirect
     return redirect(url_for('import_export.export_object'))
 
+@import_export.route("/import_export/investigation", methods=['GET'])
+@login_required
+@login_analyst
+def export_investigation():
+    investigation_uuid = request.args.get("uuid")
+
+    if MispExport.ping_misp():
+        event_metadata = MispExport.create_investigation_event(investigation_uuid)
+    else:
+        return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True), mimetype='application/json'), 400 
+
+    return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid))
+
+
 # @import_export.route("/import_export/delete_object_id_to_export", methods=['GET'])
 # @login_required
 # @login_analyst

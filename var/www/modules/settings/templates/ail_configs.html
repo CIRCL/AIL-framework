@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Passive DNS - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+        <div class="card my-3">
+          <div class="card-body">
+
+            <div class="container-fluid">
+          		<div class="row">
+                <div class="col-12 col-lg-4">
+                  <a href="https://www.misp-project.org/">
+                    <img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP project">
+                  </a>
+                </div>
+                <div class="col-12 col-lg-8">
+                  <form>
+                    <div class="form-group">
+                      <label for="misp_url">Url</label>
+                      <input class="form-control" type="text" id="misp_url" name="misp_url" placeholder="URL of the MISP instance">
+                    </div>
+                    <div class="form-group">
+                      <label for="misp_key">Key</label>
+                      <input class="form-control" type="text" id="misp_key" name="misp_key" placeholder="API key of the user you want to use">
+                    </div>
+                    <div class="form-group">
+                      <label for="misp_key">Org UUID</label>
+                      <input class="form-control" type="text" id="org_uuid" name="org_uuid" placeholder="Org UUID">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+    	</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#nav_settings").removeClass("text-muted");
+  $("#nav_ail_configs").addClass("active");
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+</html>
