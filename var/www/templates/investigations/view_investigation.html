@@ -138,7 +138,11 @@
 										{{ object['subtype']}}
 									{% endif %}
 								</td>
-								<td>{{ object['id']}}</td>
+								<td>
+									<a href="{{ object['link'] }}">
+										{{ object['id']}}
+									</a>
+								</td>
 								<td>
 									{% for tag in object['tags'] %}
 										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>

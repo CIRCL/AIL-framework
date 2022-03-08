@@ -53,7 +53,7 @@ def show_investigation():
     investigation_uuid = request.args.get("uuid")
     investigation = Investigations.Investigation(investigation_uuid)
     metadata = investigation.get_metadata(r_str=True)
-    objs = ail_objects.get_objects_meta(investigation.get_objects(), icon=True)
+    objs = ail_objects.get_objects_meta(investigation.get_objects(), icon=True, url=True, flask_context=True)
     return render_template("view_investigation.html", bootstrap_label=bootstrap_label,
                                 metadata=metadata, investigation_objs=objs)
 

@@ -27,6 +27,7 @@ import Username
 
 from abstract_object import AbstractObject
 from item_basic import *
+from flask import url_for
 
 config_loader = ConfigLoader.ConfigLoader()
 # get and sanityze PASTE DIRECTORY

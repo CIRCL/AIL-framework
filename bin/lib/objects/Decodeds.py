@@ -11,6 +11,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
 from abstract_object import AbstractObject
+from flask import url_for
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
