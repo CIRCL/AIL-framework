@@ -116,7 +116,7 @@ class Item(AbstractObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('objects_item.showItem', id=value)
+            url = url_for('objects_item.showItem', id=self.id)
         else:
             url = f'{baseurl}/object/item?id={self.id}'
         return url
