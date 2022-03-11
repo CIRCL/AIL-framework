@@ -94,8 +94,7 @@ class Investigation(object):
 
     def get_uuid(self, separator=False):
         if separator:
-            res = str(uuid.uuid4())
-            return uuid.UUID(hex=res, version=4)
+            return uuid.UUID(hex=self.uuid, version=4)
         else:
             return self.uuid
 
@@ -146,6 +145,9 @@ class Investigation(object):
             last_change = datetime.datetime.fromtimestamp(float(last_change)).strftime('%Y-%m-%d %H:%M:%S')
         return last_change
 
+    def get_misp_events(self):
+        return r_tracking.smembers(f'investigations:misp:{self.uuid}')
+
     # # TODO: DATE FORMAT
     def get_metadata(self, r_str=False):
         if r_str:
@@ -164,7 +166,8 @@ class Investigation(object):
                 'timestamp': self.get_timestamp(r_str=r_str),
                 'last_change': self.get_last_change(r_str=r_str),
                 'info': self.get_info(),
-                'nb_objects': self.get_nb_objects()}
+                'nb_objects': self.get_nb_objects(),
+                'misp_events': self.get_misp_events()}
 
     def set_name(self, name):
         r_tracking.hset(f'investigations:data:{self.uuid}', 'name', name)
@@ -197,6 +200,9 @@ class Investigation(object):
             r_tracking.hset(f'investigations:data:{self.uuid}', 'analysis', analysis)
         else:
             raise UpdateInvestigationError(f'Invalid analysis: {analysis}')
+
+    def add_misp_events(self, misp_url):
+        r_tracking.sadd(f'investigations:misp:{self.uuid}', misp_url)
 
     def set_tags(self, tags):
         # delete previous tags
@@ -252,6 +258,7 @@ class Investigation(object):
         # metadata
         r_tracking.delete(f'investigations:data:{self.uuid}')
         r_tracking.delete(f'investigations:tags:{self.uuid}')
+        r_tracking.delete(f'investigations:misp:{self.uuid}')
 
 ##--  Class  --##
 

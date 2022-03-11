@@ -99,11 +99,19 @@
 												<i class="fas fa-pencil-alt"></i> <b>Edit</b>
 											</button>
 										</a>
-										<a class="btn btn-outline-dark" target="_blank" href="{{ url_for('import_export.export_investigation')}}?uuid={{metadata['uuid']}}">
+										<a class="btn btn-outline-dark" href="{{ url_for('import_export.export_investigation')}}?uuid={{metadata['uuid']}}">
 											<img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="25">
 											Export as Event
 										</a>
 									</div>
+
+									{% if metadata['misp_events'] %}
+										{% for misp_url in metadata['misp_events'] %}
+											<a target="_blank" href="{{misp_url}}/events/view/{{metadata['uuid'][:8]}}-{{metadata['uuid'][8:12]}}-{{metadata['uuid'][12:16]}}-{{metadata['uuid'][16:20]}}-{{metadata['uuid'][20:]}}">
+												{{misp_url}}/events/view/{{metadata['uuid'][:8]}}-{{metadata['uuid'][8:12]}}-{{metadata['uuid'][12:16]}}-{{metadata['uuid'][16:20]}}-{{metadata['uuid'][20:]}}</br>
+											</a>
+										{% endfor %}
+									{% endif %}
 
 								</div>
 							</div>

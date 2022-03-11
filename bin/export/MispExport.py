@@ -447,25 +447,24 @@ def create_investigation_event(investigation_uuid):
         if misp_obj:
             event.add_object(misp_obj)
 
-    #taxonomies_tags, galaxies_tags = Tag.sort_tags_taxonomies_galaxies(investigation.get_tags())
-    #event.Tag = taxonomies_tags
-    #event.Galaxy = galaxies_tags
-    #print(galaxies_tags)
-    #event.add_galaxy(galaxies_tags)
-
     # if publish:
     #     event.publish()
 
-    # res = event.to_json()
-
     # print(event.to_json())
     misp = PyMISP(misp_url, misp_key, misp_verifycert)
-    misp_event = misp.add_event(event)
-    #print(misp_event)
+    if misp.event_exists(event.uuid):
+        misp_event = misp.update_event(event)
+    else:
+        misp_event = misp.add_event(event)
 
     # # TODO: handle error
     event_metadata = extract_event_metadata(misp_event)
-    print(event_metadata)
+    if event_metadata.get('uuid'):
+        if misp_url[-1] == '/':
+            url =  misp_url[:-1]
+        else:
+            url =  misp_url
+        investigation.add_misp_events(url)
     return event_metadata
 
 # if __name__ == '__main__':
