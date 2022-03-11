@@ -92,8 +92,12 @@ class Investigation(object):
     def __init__(self, investigation_uuid):
         self.uuid = investigation_uuid
 
-    def get_uuid(self):
-        return self.uuid
+    def get_uuid(self, separator=False):
+        if separator:
+            res = str(uuid.uuid4())
+            return uuid.UUID(hex=res, version=4)
+        else:
+            return self.uuid
 
     # # TODO: Replace by title ??????
     def get_name(self):

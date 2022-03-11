@@ -131,18 +131,30 @@
                   </tbody>
                 </table>
 
-                {% if 'correlation_nb' in dict_domain %}
-                  {% if dict_domain["correlation_nb"] > 0 %}
-                    <hr>
-                    <div class="mt-2">
-            					<a href="{{ url_for('correlation.show_correlation')}}?object_type=domain&correlation_id={{ dict_domain['domain'] }}&correlation_objects=domain" target="_blank" style="font-size: 15px">
-            						<button class="btn btn-info"><i class="fas fa-search"></i> Show Domain Correlations &nbsp;
-                          <div class="badge badge-warning">{{dict_domain['correlation_nb']}}</div>
-            						</button>
-            					</a>
-            				</div>
+                <div class="d-flex flex-row-reverse bd-highlight mt-2">
+                  {% if 'correlation_nb' in dict_domain %}
+                    {% if dict_domain["correlation_nb"] > 0 %}
+                      <hr>
+                      <div>
+              					<a href="{{ url_for('correlation.show_correlation')}}?object_type=domain&correlation_id={{ dict_domain['domain'] }}&correlation_objects=domain" target="_blank" style="font-size: 15px">
+              						<button class="btn btn-info"><i class="fas fa-search"></i> Show Domain Correlations &nbsp;
+                            <div class="badge badge-warning">{{dict_domain['correlation_nb']}}</div>
+              						</button>
+              					</a>
+              				</div>
+                    {%endif%}
                   {%endif%}
-                {%endif%}
+
+                  {% with obj_type='domain', obj_id=dict_domain['domain'], obj_subtype=''%}
+                    {% include 'modals/investigations_register_obj.html' %}
+                  {% endwith %}
+                  <div class="mr-2">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+                      <i class="fas fa-microscope"></i> Investigations
+                    </button>
+                  </div>
+
+                </div>
 
                 <div class="mt-2">
                   {% with obj_type='domain', obj_id=dict_domain['domain'], obj_lvl=0%}

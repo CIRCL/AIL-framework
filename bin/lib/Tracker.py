@@ -261,6 +261,11 @@ def get_item_all_trackers_uuid(obj_id):
     #obj_type = 'item'
     return r_serv_tracker.smembers(f'obj:trackers:item:{obj_id}')
 
+def is_obj_tracked(obj_type, subtype, id):
+    return r_serv_tracker.exists(f'obj:trackers:{obj_type}:{obj_id}')
+
+def get_obj_all_trackers(obj_type, subtype, id):
+    return r_serv_tracker.smembers(f'obj:trackers:{obj_type}:{obj_id}')
 
 def get_email_subject(tracker_uuid):
     tracker_description = get_tracker_description(tracker_uuid)

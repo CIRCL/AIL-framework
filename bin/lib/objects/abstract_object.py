@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from packages import Tag
 from lib.Investigations import is_object_investigated, get_obj_investigations
+from lib.Tracker import is_obj_tracked, get_obj_all_trackers
 
 # # TODO: ADD CORRELATION ENGINE
 
@@ -89,6 +90,16 @@ class AbstractObject(ABC):
         else:
             investigations = get_obj_investigations(self.id, self.type, self.subtype)
         return investigations
+    #- Investigations -#
+
+    ## Trackers ##
+
+    def is_tracked(self):
+        return is_obj_tracked(self.type, self.subtype, self.id)
+
+    def get_trackers(self):
+        return get_obj_all_trackers(self.type, self.subtype, self.id)
+
     #- Investigations -#
 
     def _delete(self):
