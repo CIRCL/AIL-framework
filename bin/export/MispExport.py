@@ -17,6 +17,8 @@ import Decoded
 import Domain
 import Screenshot
 
+import Username
+
 import Correlate_object
 
 import AILObjects
@@ -181,6 +183,28 @@ def export_pgp(pgp_type, pgp_value):
         l_obj_attr.append( obj.add_attribute('user-id-email', value=pgp_value) )
     return obj
 
+def export_username(username_type, username):
+    dict_metadata = Username.correlation.get_metadata(username_type, username)
+
+    obj_attrs = []
+    if username_type == 'telegram':
+        obj = MISPObject('telegram-account', standalone=True)
+        obj_attrs.append( obj.add_attribute('username', value=username) )
+
+    elif username_type == 'twitter':
+        obj = MISPObject('twitter-account', standalone=True)
+        obj_attrs.append( obj.add_attribute('name', value=username) )
+
+    else:
+        obj = MISPObject('user-account', standalone=True)
+        obj_attrs.append( obj.add_attribute('username', value=username) )
+
+    obj.first_seen = dict_metadata['first_seen']
+    obj.last_seen = dict_metadata['last_seen']
+    # for obj_attr in obj_attrs:
+    #     for tag in self.get_tags():
+    #         obj_attr.add_tag(tag)
+    return obj
 
 # filter objects to export, export only object who correlect which each other
 def filter_obj_linked(l_obj):
@@ -214,7 +238,7 @@ def add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl)
         obj_correlations = Correlate_object.get_object_correlation(dict_obj['type'], dict_obj['id'], requested_correl_type=dict_obj.get('subtype', None))
         for obj_type in obj_correlations:
             dict_new_obj = {'type': obj_type}
-            if obj_type=='pgp' or obj_type=='cryptocurrency':
+            if obj_type=='pgp' or obj_type=='cryptocurrency' or obj_type=='username':
                 for subtype in obj_correlations[obj_type]:
                     dict_new_obj['subtype'] = subtype
                     for obj_id in obj_correlations[obj_type][subtype]:
@@ -283,6 +307,9 @@ def create_misp_obj(obj_type, obj_id):
     elif obj_type == 'pgp':
         obj_subtype, obj_id = obj_id.split(':', 1)
         return export_pgp(obj_subtype, obj_id)
+    elif obj_type == 'username':
+        obj_subtype, obj_id = obj_id.split(':', 1)
+        return export_username(obj_subtype, obj_id)
     elif obj_type == 'domain':
         return export_domain(obj_id)
 

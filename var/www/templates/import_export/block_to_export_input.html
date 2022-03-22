@@ -19,6 +19,11 @@
 		<option value="cryptocurrency;litecoin" {%if obj_type=="cryptocurrency" and obj_subtype=="litecoin"%}selected{%endif%}>Cryptocurrency - Litecoin</option>
 		<option value="cryptocurrency;monero" {%if obj_type=="cryptocurrency" and obj_subtype=="monero"%}selected{%endif%}>Cryptocurrency - Monero</option>
 		<option value="cryptocurrency;zcash" {%if obj_type=="cryptocurrency" and obj_subtype=="zcash"%}selected{%endif%}>Cryptocurrency - Zcash</option>
+
+		<option value="username;telegram" {%if obj_type=="username" and obj_subtype=="telegram"%}selected{%endif%}>Username - telegram</option>
+		<option value="username;twitter" {%if obj_type=="username" and obj_subtype=="twitter"%}selected{%endif%}>Username - twitter</option>
+		<option value="username;jabber" {%if obj_type=="username" and obj_subtype=="jabber"%}selected{%endif%}>Username - jabber</option>
+
 	</select>
 	<input type="text" class="form-control col-8 {%if obj_error%}is-invalid{%else%}is-valid{%endif%}" name="{{input_uuid}}" value="{{obj_id}}">
 	<input class="form-control col-1" type="number" min="0" name="{{input_uuid}}" {%if obj_lvl%}value="{{obj_lvl}}"{%else%}value="0"{%endif%}>

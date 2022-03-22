@@ -114,7 +114,7 @@
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 									<span class="float-right">
-										{% if dict_object["object_type"] != "username" %}
+										{% if dict_object["object_type"] != "" %}
 											{% with obj_type=dict_object["object_type"], obj_id=dict_object["correlation_id"], obj_subtype=dict_object["metadata"]["type_id"],obj_lvl=1%}
 					              {% include 'import_export/block_add_user_object_to_export.html' %}
 					            {% endwith %}
