@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-misp_url = 'http://10.1.0.143'
+misp_url = 'https://10.1.0.143'
 misp_key = 'c5VRXJahYVux3rkPULbbILTNmAwlXU8Eas9zvl36' # The MISP auth key can be found on the MISP web interface under the automation section
 misp_verifycert = True
