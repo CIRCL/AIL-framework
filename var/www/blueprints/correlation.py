@@ -261,3 +261,12 @@ def graph_node_json():
 
     res = Correlate_object.get_graph_node_object_correlation(object_type, correlation_id, mode, correlation_names, correlation_objects, requested_correl_type=type_id, max_nodes=max_nodes)
     return jsonify(res)
+
+@correlation.route('/correlation/subtype_search', methods=['POST'])
+@login_required
+@login_read_only
+def subtype_search():
+    obj_type = request.form.get('object_type')
+    obj_subtype = request.form.get('object_subtype')
+    obj_id = request.form.get('object_id')
+    return redirect(url_for('correlation.show_correlation', object_type=obj_type, type_id=obj_subtype, correlation_id=obj_id))
