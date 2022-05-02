@@ -14,6 +14,9 @@ from collections import defaultdict
 from nltk.tokenize import RegexpTokenizer
 from textblob import TextBlob
 
+from ail_typo_squatting import runAll
+import math
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Tracker
@@ -106,6 +109,16 @@ def get_tracked_words_list():
 
 def get_set_tracked_words_list():
     set_list = r_serv_term.smembers('all:tracker:set')
+    all_set_list = []
+    for elem in set_list:
+        res = elem.split(';')
+        num_words = int(res[1])
+        ter_set = res[0].split(',')
+        all_set_list.append((ter_set, num_words, elem))
+    return all_set_list
+
+def get_typosquat_tracked_words_list():
+    set_list = r_serv_term.smembers('all:tracker:typosquat')
     all_set_list = []
     for elem in set_list:
         res = elem.split(';')
@@ -227,6 +240,16 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
 
             term = ",".join(words_set)
             term = "{};{}".format(term, nb_words)
+    elif term_type == 'typosquat':
+        term = term.lower()
+        # Take only the first term
+        domain = term.split(" ")[0]
+        
+        typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False)
+        #typo_generation = domain
+            
+        term = ",".join(typo_generation)
+        term = "{};{}".format(term, len(typo_generation))
 
     elif term_type=='yara_custom':
         if not Tracker.is_valid_yara_rule(term):

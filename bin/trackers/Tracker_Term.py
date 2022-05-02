@@ -58,6 +58,8 @@ class Tracker_Term(AbstractModule):
         self.last_refresh_word = time.time()
         self.set_tracked_words_list = Term.get_set_tracked_words_list()
         self.last_refresh_set = time.time()
+        self.typosquat_tracked_words_list = Term.get_set_tracked_words_list()
+        self.last_refresh_typosquat = time.time()
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
@@ -72,6 +74,12 @@ class Tracker_Term(AbstractModule):
         if self.last_refresh_set < Term.get_tracked_term_last_updated_by_type('set'):
             self.set_tracked_words_list = Term.get_set_tracked_words_list()
             self.last_refresh_set = time.time()
+            self.redis_logger.debug('Tracked set refreshed')
+            print('Tracked set refreshed')
+
+        if self.last_refresh_typosquat < Term.get_tracked_term_last_updated_by_type('set'):
+            self.typosquat_tracked_words_list = Term.get_typosquat_tracked_words_list()
+            self.last_refresh_typosquat = time.time()
             self.redis_logger.debug('Tracked set refreshed')
             print('Tracked set refreshed')
 
@@ -113,6 +121,18 @@ class Tracker_Term(AbstractModule):
                         nb_uniq_word += 1
                 if nb_uniq_word >= nb_words_threshold:
                     self.new_term_found(word_set, 'set', item)
+            
+            for elem in self.typosquat_tracked_words_list:
+                list_words = elem[0]
+                nb_words_threshold = elem[1]
+                word_set = elem[2]
+                nb_uniq_word = 0
+
+                for word in list_words:
+                    if word in dict_words_freq:
+                        nb_uniq_word += 1
+                if nb_uniq_word >= nb_words_threshold:
+                    self.new_term_found(word_set, 'typosquat', item)
 
     def new_term_found(self, term, term_type, item):
         uuid_list = Term.get_term_uuid_list(term, term_type)

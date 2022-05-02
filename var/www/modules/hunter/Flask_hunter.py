@@ -85,6 +85,16 @@ def tracked_menu_yara():
     global_term = Term.get_all_global_tracked_terms(filter_type=filter_type)
     return render_template("trackersManagement.html", user_term=user_term, global_term=global_term, bootstrap_label=bootstrap_label, filter_type=filter_type)
 
+@hunter.route("/trackers/typosquat")
+@login_required
+@login_read_only
+def tracked_menu_typosquat():
+    filter_type = 'typosquat'
+    user_id = current_user.get_id()
+    user_term = Term.get_all_user_tracked_terms(user_id, filter_type=filter_type)
+    global_term = Term.get_all_global_tracked_terms(filter_type=filter_type)
+    return render_template("trackersManagement.html", user_term=user_term, global_term=global_term, bootstrap_label=bootstrap_label, filter_type=filter_type)
+
 
 @hunter.route("/tracker/add", methods=['GET', 'POST'])
 @login_required

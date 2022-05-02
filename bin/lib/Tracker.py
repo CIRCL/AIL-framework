@@ -11,6 +11,9 @@ import yara
 import datetime
 import base64
 
+from ail_typo_squatting import runAll
+import math
+
 
 from flask import escape
 
@@ -400,6 +403,16 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
 
             tracker = ",".join(words_set)
             tracker = "{};{}".format(tracker, nb_words)
+    elif tracker_type == 'typosquat':
+        tracker = tracker.lower()
+        # Take only the first term
+        domain = tracker.split(" ")[0]
+        
+        typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False)
+        #typo_generation = domain
+            
+        tracker = ",".join(typo_generation)
+        tracker = "{};{}".format(tracker, len(typo_generation))
 
     elif tracker_type=='yara_custom':
         if not is_valid_yara_rule(tracker):
