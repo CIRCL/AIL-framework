@@ -67,7 +67,7 @@
                         <li class="list-group-item py-0">
                             <div class="row">
                                 <div class="col-md-10">
-                                    <table class="table">
+                                    <table class="table" style="word-wrap: break-word;">
                                         <thead>
                                         <tr>
                                             <th>Type</th>
@@ -91,7 +91,16 @@
                                         <tbody>
                                         <tr>
                                             <td>{{ tracker_metadata['type'] }}</td>
-                                            <td>{{ tracker_metadata['tracker'] }}</td>
+                                            <td style="word-break: break-word;">
+                                                <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                                    {{ tracker_metadata['tracker'].split(",")[0] }}
+                                                </a>
+                                                <div class="collapse" id="collapseExample">
+                                                    <div class="card card-body">
+                                                        {{ tracker_metadata['tracker'] }}
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td>{{ tracker_metadata['date'][0:4] }}/{{ tracker_metadata['date'][4:6] }}/{{ tracker_metadata['date'][6:8] }}</td>
                                             <td>
                                                 {% if tracker_metadata['level'] == 0 %}
