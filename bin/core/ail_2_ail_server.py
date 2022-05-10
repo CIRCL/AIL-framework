@@ -315,7 +315,7 @@ if __name__ == '__main__':
     cert_dir = os.environ['AIL_FLASK']
     ssl_context.load_cert_chain(certfile=os.path.join(cert_dir, 'server.crt'), keyfile=os.path.join(cert_dir, 'server.key'))
 
-    start_server = websockets.serve(ail_to_ail_serv, host, port, ssl=ssl_context, create_protocol=AIL_2_AIL_Protocol)
+    start_server = websockets.serve(ail_to_ail_serv, host, port, ssl=ssl_context, create_protocol=AIL_2_AIL_Protocol, max_size=None)
 
     print(f'Server Launched:    wss://{host}:{port}')
     redis_logger.info(f'Server Launched:    wss://{host}:{port}')
