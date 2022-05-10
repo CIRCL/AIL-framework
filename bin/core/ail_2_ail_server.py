@@ -17,6 +17,12 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from pubsublogger import publisher
 from core import ail_2_ail
+from lib.ConfigLoader import ConfigLoader
+
+config_loader = ConfigLoader()
+host = config_loader.get_config_str('AIL_2_AIL', 'server_host')
+port = config_loader.get_config_int('AIL_2_AIL', 'server_port')
+config_loader = None
 
 # # TODO: refactor logging
 #### LOGS ####
@@ -302,9 +308,6 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
 # # TODO: IP/uuid to block
 
 if __name__ == '__main__':
-
-    host = '0.0.0.0'
-    port = 4443
 
     print('Launching Server...')
     redis_logger.info('Launching Server...')
