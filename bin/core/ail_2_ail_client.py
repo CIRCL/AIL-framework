@@ -26,6 +26,8 @@ config_loader = ConfigLoader()
 local_addr = config_loader.get_config_str('AIL_2_AIL', 'local_addr')
 if not local_addr or local_addr == None:
     local_addr = None
+else:
+    local_addr = (local_addr, 0)
 config_loader = None
 
 
