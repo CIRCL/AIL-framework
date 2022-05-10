@@ -20,6 +20,14 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from core import ail_2_ail
+from lib.ConfigLoader import ConfigLoader
+
+config_loader = ConfigLoader()
+local_addr = config_loader.get_config_str('AIL_2_AIL', 'local_addr')
+if not local_addr or local_addr == None:
+    local_addr = None
+config_loader = None
+
 
 #### LOGS ####
 redis_logger = publisher
@@ -112,6 +120,7 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=No
         async with websockets.connect(
             uri,
             ssl=ssl_context,
+            local_addr=local_addr,
             #open_timeout=10, websockers 10.0 /!\ python>=3.7
             extra_headers={"Authorization": f"{ail_key}"}
         ) as websocket:
