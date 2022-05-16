@@ -67,40 +67,44 @@
                         <li class="list-group-item py-0">
                             <div class="row">
                                 <div class="col-md-10">
-                                    <table class="table" style="word-wrap: break-word;">
+                                    <table class="table">
                                         <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Tracker</th>
-                                            <th>Date added</th>
-                                            <th>Access Level</th>
-                                            <th>Created by</th>
-                                            <th>First seen</th>
-                                            <th>Last seen</th>
-                                            {% if tracker_metadata['webhook'] %}
-                                            <th>Webhook</th>
-                                            {% endif %}
-                                            <th>Tags <span class="btn-link btn-interaction mouse_pointer"
-                                                           title="Edit Tags List" onclick="edit_tags();"><i
-                                                    class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
-                                            <th>Email <span class="btn-link btn-interaction mouse_pointer"
-                                                            title="Edit Email List" onclick="edit_mails();"><i
-                                                    class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
-                                        </tr>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Tracker</th>
+                                                <th>Date added</th>
+                                                <th>Access Level</th>
+                                                <th>Created by</th>
+                                                <th>First seen</th>
+                                                <th>Last seen</th>
+                                                {% if tracker_metadata['webhook'] %}
+                                                <th>Webhook</th>
+                                                {% endif %}
+                                                <th>Tags <span class="btn-link btn-interaction mouse_pointer"
+                                                            title="Edit Tags List" onclick="edit_tags();"><i
+                                                        class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
+                                                <th>Email <span class="btn-link btn-interaction mouse_pointer"
+                                                                title="Edit Email List" onclick="edit_mails();"><i
+                                                        class="fas fa-pencil-alt" style="color:Red;"></i></span></th>
+                                            </tr>
                                         </thead>
                                         <tbody>
                                         <tr>
                                             <td>{{ tracker_metadata['type'] }}</td>
-                                            <td style="word-break: break-word;">
-                                                <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-                                                    {{ tracker_metadata['tracker'].split(",")[0] }}
-                                                </a>
-                                                <div class="collapse" id="collapseExample">
-                                                    <div class="card card-body">
-                                                        {{ tracker_metadata['tracker'] }}
+                                            {% if tracker_metadata['type'] == 'typosquat' %}
+                                                <td style="word-break: break-word;">
+                                                    <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                                        {{ tracker_metadata['tracker'].split(",")[0] }}
+                                                    </a>
+                                                    <div class="collapse" id="collapseExample">
+                                                        <div class="card card-body">
+                                                            {{ tracker_metadata['tracker'] }}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
+                                                </td>
+                                            {% else %}
+                                                <td>{{ tracker_metadata['tracker'] }}</td>
+                                            {% endif %}
                                             <td>{{ tracker_metadata['date'][0:4] }}/{{ tracker_metadata['date'][4:6] }}/{{ tracker_metadata['date'][6:8] }}</td>
                                             <td>
                                                 {% if tracker_metadata['level'] == 0 %}
