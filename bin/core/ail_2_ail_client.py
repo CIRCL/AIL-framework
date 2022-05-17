@@ -78,9 +78,8 @@ async def push(websocket, ail_uuid):
             Obj, queue_uuid = ail_2_ail.get_sync_queue_object_and_queue_uuid(ail_uuid)
             if Obj:
                 obj_ail_stream = ail_2_ail.create_ail_stream(Obj)
-                obj_ail_stream = json.dumps(obj_ail_stream)
-
                 print(obj_ail_stream['meta'])
+                obj_ail_stream = json.dumps(obj_ail_stream)
 
                 # send objects
                 await websocket.send(obj_ail_stream)
