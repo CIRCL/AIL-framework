@@ -78,7 +78,7 @@ class Sync_module(AbstractModule):
                         obj_dict = obj.get_default_meta()
                         # send to queue push and/or pull
                         for dict_ail in self.dict_sync_queues[queue_uuid]['ail_instances']:
-                            print(f'{dict_ail['ail_uuid']} {message}')
+                            print(f'{dict_ail["ail_uuid"]} {message}')
                             ail_2_ail.add_object_to_sync_queue(queue_uuid, dict_ail['ail_uuid'], obj_dict,
                                                             push=dict_ail['push'], pull=dict_ail['pull'])
 
