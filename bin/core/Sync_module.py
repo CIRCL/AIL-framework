@@ -69,16 +69,16 @@ class Sync_module(AbstractModule):
                 tags = obj.get_tags(r_set=True)
 
             # check filter + tags
+            #print(message)
             for queue_uuid in self.dict_sync_queues:
                 filter_tags = self.dict_sync_queues[queue_uuid]['filter']
                 if filter_tags and tags:
-                    #print(message)
                     #print(f'tags: {tags} filter: {filter_tags}')
-                    if tags.issubset(filter_tags):
+                    if filter_tags.issubset(tags):
                         obj_dict = obj.get_default_meta()
                         # send to queue push and/or pull
                         for dict_ail in self.dict_sync_queues[queue_uuid]['ail_instances']:
-                            print(f'{dict_ail["ail_uuid"]} {message}')
+                            print(f'ail_uuid: {dict_ail["ail_uuid"]} obj: {message}')
                             ail_2_ail.add_object_to_sync_queue(queue_uuid, dict_ail['ail_uuid'], obj_dict,
                                                             push=dict_ail['push'], pull=dict_ail['pull'])
 
