@@ -14,9 +14,6 @@ sudo apt-get install python3-pip virtualenv python3-dev python3-tk libfreetype6-
 #Needed for downloading jemalloc
 sudo apt-get install wget -qq
 
-#optional tor install
-sudo apt-get install tor -qq
-
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python3-numpy -qq
 
