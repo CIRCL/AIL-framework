@@ -1028,8 +1028,9 @@ def api_create_sync_queue(json_dict):
     tags = json_dict.get('tags')
     if not tags:
         return {"status": "error", "reason": "no tags provided"}, 400
-    if not Tag.are_enabled_tags(tags):
-        return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
+    # FIXME: add custom tags
+    # if not Tag.are_enabled_tags(tags):
+    #     return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
 
     max_size = json_dict.get('max_size')
     if not max_size:
@@ -1064,8 +1065,9 @@ def api_edit_sync_queue(json_dict):
 
     tags = json_dict.get('tags')
     if tags:
-        if not Tag.are_enabled_tags(tags):
-            return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
+        # FIXME: add custom tags
+        # if not Tag.are_enabled_tags(tags):
+        #     return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
         edit_sync_queue_filter_tags(queue_uuid, tags)
 
     max_size = json_dict.get('max_size')
