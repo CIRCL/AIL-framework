@@ -59,9 +59,10 @@ class Test_Module_Categ(unittest.TestCase):
 
     def test_module(self):
         item_id = 'tests/2021/01/01/categ.gz'
-        test_categ = ['CreditCards', 'Mail', 'Onion', 'Web', 'Credential', 'Cve']
+        test_categ = ['CreditCards', 'Mail', 'Onion', 'Urls', 'Credential', 'Cve']
 
         result = self.module_obj.compute(item_id, r_result=True)
+        print(result)
         self.assertCountEqual(result, test_categ)
 
 class Test_Module_CreditCards(unittest.TestCase):
@@ -87,8 +88,10 @@ class Test_Module_DomClassifier(unittest.TestCase):
         self.module_obj = DomClassifier()
 
     def test_module(self):
+        test_host = 'foo.be'
         item_id = 'tests/2021/01/01/domain_classifier.gz'
-        result = self.module_obj.compute(item_id, r_result=True)
+        msg = f'{test_host} {item_id}'
+        result = self.module_obj.compute(msg, r_result=True)
         self.assertTrue(len(result))
 
 class Test_Module_Global(unittest.TestCase):

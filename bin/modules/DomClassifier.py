@@ -53,37 +53,38 @@ class DomClassifier(AbstractModule):
 
 
     def compute(self, message, r_result=False):
-        item = Item(message)
+        host, id = message.split()
 
-        item_content = item.get_content()
+        item = Item(id)
         item_basename = item.get_basename()
         item_date = item.get_date()
         item_source = item.get_source()
         try:
-            mimetype = item_basic.get_item_mimetype(item.get_id())
 
-            if mimetype.split('/')[0] == "text":
-                self.c.text(rawtext=item_content)
-                self.c.potentialdomain()
-                self.c.validdomain(passive_dns=True, extended=False)
-                #self.redis_logger.debug(self.c.vdomain)
+            self.c.text(rawtext=host)
+            print(self.c.domain)
+            self.c.validdomain(passive_dns=True, extended=False)
+            #self.redis_logger.debug(self.c.vdomain)
 
-                if self.c.vdomain and d4.is_passive_dns_enabled():
-                    for dns_record in self.c.vdomain:
-                        self.send_message_to_queue(dns_record)
+            print(self.c.vdomain)
+            print()
 
-                localizeddomains = self.c.include(expression=self.cc_tld)
-                if localizeddomains:
-                    print(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{item.get_id()}")
+            if self.c.vdomain and d4.is_passive_dns_enabled():
+                for dns_record in self.c.vdomain:
+                    self.send_message_to_queue(dns_record)
 
-                localizeddomains = self.c.localizedomain(cc=self.cc)
-                if localizeddomains:
-                    print(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{item.get_id()}")
+            localizeddomains = self.c.include(expression=self.cc_tld)
+            if localizeddomains:
+                print(localizeddomains)
+                self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{item.get_id()}")
 
-                if r_result:
-                    return self.c.vdomain
+            localizeddomains = self.c.localizedomain(cc=self.cc)
+            if localizeddomains:
+                print(localizeddomains)
+                self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{item.get_id()}")
+
+            if r_result:
+                return self.c.vdomain
 
         except IOError as err:
             self.redis_logger.error(f"Duplicate;{item_source};{item_date};{item_basename};CRC Checksum Failed")
