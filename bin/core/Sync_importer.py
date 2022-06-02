@@ -79,7 +79,7 @@ class Sync_importer(AbstractModule):
         b64_gzip_content = ail_stream['payload']['raw']
 
         # # TODO: create default id
-        item_id = ail_stream['meta']['ail:id'] + 'test'
+        item_id = ail_stream['meta']['ail:id']
 
         message = f'{item_id} {b64_gzip_content}'
         print(item_id)
