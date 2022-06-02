@@ -637,8 +637,7 @@ class Item(AbstractObject):
         return content.decode()
 
     def get_ail_2_ail_payload(self):
-        payload = {'raw': self.get_gzip_content(b64=True),
-                    'compress': 'gzip'}
+        payload = {'raw': self.get_gzip_content(b64=True)}
         return payload
 
     # # TODO:
@@ -665,6 +664,9 @@ class Item(AbstractObject):
         pass
 
     def get_svg_icon(self):
+        pass
+
+    def get_misp_object(self):
         pass
 
     ############################################################################
