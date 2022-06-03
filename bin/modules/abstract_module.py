@@ -46,6 +46,9 @@ class AbstractModule(ABC):
         # If provided could be a namespaced channel like script:<ModuleName>
         self.redis_logger.channel = logger_channel
 
+        #Cache key
+        self.redis_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
+        self.max_execution_time = 30
 
         # Run module endlessly
         self.proceed = True
