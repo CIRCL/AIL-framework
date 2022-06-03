@@ -229,7 +229,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./LibInjection.py; read x"
     sleep 0.1
-
+    screen -S "Script_AIL" -X screen -t "Zerobins" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Zerobins.py; read x"
+    sleep 0.1
 
     ##################################
     #       TRACKERS MODULES         #
