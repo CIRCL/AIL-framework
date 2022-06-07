@@ -78,8 +78,8 @@ def get_all_tracker_type():
 def get_all_tracker_uuid():
     return r_serv_tracker.smembers(f'trackers:all')
 
-def get_all_tracker_by_type(tracker_type):
-    r_serv_tracker.smembers(f'trackers:all:{tracker_type}')
+def get_all_tracker_uuid_by_type(tracker_type):
+    return r_serv_tracker.smembers(f'trackers:all:{tracker_type}')
 
 # def get_all_tracker():
 #     l_keys_name = []
@@ -213,6 +213,20 @@ def get_tracker_items_by_daterange(tracker_uuid, date_from, date_to):
                 if date_day in dict_date_match:
                     all_item_id |= r_serv_tracker.smembers(f'tracker:item:{tracker_uuid}:{date_day}')
     return all_item_id
+
+def get_tracker_typosquatting_domains(tracker_uuid):
+    return r_serv_tracker.smembers(f'tracker:typosquatting:{tracker_uuid}')
+
+def get_typosquatting_tracked_words_list():
+    all_typo = dict()
+    typos_uuid = get_all_tracker_uuid_by_type("typosquatting")
+
+    for typo_uuid in typos_uuid:
+        tracker = get_tracker_by_uuid(typo_uuid)
+        all_typo[tracker] = get_tracker_typosquatting_domains(typo_uuid)
+
+    return all_typo
+
 
 def add_tracked_item(tracker_uuid, item_id):
     item_date = item_basic.get_item_date(item_id)
@@ -403,16 +417,15 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
 
             tracker = ",".join(words_set)
             tracker = "{};{}".format(tracker, nb_words)
-    elif tracker_type == 'typosquat':
+    elif tracker_type == 'typosquatting':
         tracker = tracker.lower()
         # Take only the first term
-        domain = tracker.split(" ")[0]
-        
-        typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False)
-        #typo_generation = domain
+        domain = tracker.split(" ")
+        if len(domain) > 1:
+            return {"status": "error", "reason": "Only one domain is accepted at a time"}, 400
+        if not "." in tracker:
+            return {"status": "error", "reason": "Invalid domain name"}, 400
             
-        tracker = ",".join(typo_generation)
-        tracker = "{};{}".format(tracker, len(typo_generation))
 
     elif tracker_type=='yara_custom':
         if not is_valid_yara_rule(tracker):
@@ -452,6 +465,12 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
                     os.remove(filepath)
         tracker = save_yara_rule(tracker_type, tracker, tracker_uuid=tracker_uuid)
         tracker_type = 'yara'
+
+    elif tracker_type == 'typosquatting':
+        domain = tracker.split(" ")[0]
+        typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False)
+        for typo in typo_generation:
+            r_serv_tracker.sadd(f'tracker:typosquatting:{tracker_uuid}', typo)
 
     # create metadata
     r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'tracked', tracker)

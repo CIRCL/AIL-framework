@@ -107,16 +107,6 @@ def get_text_word_frequency(item_content, filtering=True):
 def get_tracked_words_list():
     return list(r_serv_term.smembers('all:tracker:word'))
 
-def get_set_tracked_words_list():
-    set_list = r_serv_term.smembers('all:tracker:set')
-    all_set_list = []
-    for elem in set_list:
-        res = elem.split(';')
-        num_words = int(res[1])
-        ter_set = res[0].split(',')
-        all_set_list.append((ter_set, num_words, elem))
-    return all_set_list
-
 def get_typosquat_tracked_words_list():
     set_list = r_serv_term.smembers('all:tracker:typosquat')
     all_set_list = []
@@ -240,16 +230,6 @@ def parse_tracked_term_to_add(term , term_type, nb_words=1):
 
             term = ",".join(words_set)
             term = "{};{}".format(term, nb_words)
-    elif term_type == 'typosquat':
-        term = term.lower()
-        # Take only the first term
-        domain = term.split(" ")[0]
-        
-        typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False)
-        #typo_generation = domain
-            
-        term = ",".join(typo_generation)
-        term = "{};{}".format(term, len(typo_generation))
 
     elif term_type=='yara_custom':
         if not Tracker.is_valid_yara_rule(term):

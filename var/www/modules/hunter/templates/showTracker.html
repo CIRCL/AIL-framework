@@ -91,14 +91,19 @@
                                         <tbody>
                                         <tr>
                                             <td>{{ tracker_metadata['type'] }}</td>
-                                            {% if tracker_metadata['type'] == 'typosquat' %}
-                                                <td style="word-break: break-word;">
-                                                    <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                            {% if tracker_metadata['type'] == 'typosquatting' %}
+                                                <td>
+                                                    <a class="btn btn-primary" data-toggle="collapse" href="#collapseTypo" role="button" aria-expanded="false" aria-controls="collapseTypo">
                                                         {{ tracker_metadata['tracker'].split(",")[0] }}
                                                     </a>
-                                                    <div class="collapse" id="collapseExample">
+                                                    <div class="collapse" id="collapseTypo">
                                                         <div class="card card-body">
-                                                            {{ tracker_metadata['tracker'] }}
+                                                            {% if typo_squatting %}
+                                                                {% for typo in typo_squatting %}
+                                                                    {{typo}}
+                                                                    <br/>
+                                                                {% endfor %}
+                                                            {%endif%}
                                                         </div>
                                                     </div>
                                                 </td>

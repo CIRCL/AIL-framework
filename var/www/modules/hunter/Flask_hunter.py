@@ -85,11 +85,11 @@ def tracked_menu_yara():
     global_term = Term.get_all_global_tracked_terms(filter_type=filter_type)
     return render_template("trackersManagement.html", user_term=user_term, global_term=global_term, bootstrap_label=bootstrap_label, filter_type=filter_type)
 
-@hunter.route("/trackers/typosquat")
+@hunter.route("/trackers/typosquatting")
 @login_required
 @login_read_only
-def tracked_menu_typosquat():
-    filter_type = 'typosquat'
+def tracked_menu_typosquatting():
+    filter_type = 'typosquatting'
     user_id = current_user.get_id()
     user_term = Term.get_all_user_tracked_terms(user_id, filter_type=filter_type)
     global_term = Term.get_all_global_tracked_terms(filter_type=filter_type)
@@ -217,6 +217,13 @@ def show_tracker():
         yara_rule_content = Tracker.get_yara_rule_content(tracker_metadata['tracker'])
     else:
         yara_rule_content = None
+   
+    if tracker_metadata['type'] == 'typosquatting':
+        typo_squatting = list(Tracker.get_tracker_typosquatting_domains(tracker_uuid))
+        typo_squatting.sort()
+    else:
+        typo_squatting = None
+
 
     if date_from:
         res = Term.parse_get_tracker_term_item({'uuid': tracker_uuid, 'date_from': date_from, 'date_to': date_to}, user_id)
@@ -234,6 +241,7 @@ def show_tracker():
 
     return render_template("showTracker.html", tracker_metadata=tracker_metadata,
                                     yara_rule_content=yara_rule_content,
+                                    typo_squatting=typo_squatting,
                                     bootstrap_label=bootstrap_label)
 
 @hunter.route("/tracker/update_tracker_description", methods=['POST'])

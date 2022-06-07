@@ -94,7 +94,7 @@
 										<option value="set">Set</option>
 										<option value="regex">Regex</option>
 										<option value="yara">YARA rule</option>
-										<option value="typosquat">Typo-squatting</option>
+										<option value="typosquatting">Typo-squatting</option>
 									</select>
 
 									<p id="tracker_desc">Terms to track (space separated)</p>
@@ -200,7 +200,7 @@ $(document).ready(function(){
 			$("#tracker").hide();
 			$("#nb_word").hide();
 			$("#yara_rule").show();
-		} else if (tracker_type=="typosquat") {
+		} else if (tracker_type=="typosquatting") {
 			$("#tracker_desc").text("Generation of variation for domain name. Only one domain name at a time.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
