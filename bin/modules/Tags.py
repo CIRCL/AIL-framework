@@ -54,7 +54,7 @@ class Tags(AbstractModule):
             self.send_message_to_queue(message, 'MISP_The_Hive_feeder')
 
             message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
-            self.send_message_to_queue(message, 'Sync_module')
+            self.send_message_to_queue(message, 'SyncModule')
 
         else:
             # Malformed message

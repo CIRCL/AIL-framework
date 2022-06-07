@@ -20,6 +20,16 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from core import ail_2_ail
+from lib.ConfigLoader import ConfigLoader
+
+config_loader = ConfigLoader()
+local_addr = config_loader.get_config_str('AIL_2_AIL', 'local_addr')
+if not local_addr or local_addr == None:
+    local_addr = None
+else:
+    local_addr = (local_addr, 0)
+config_loader = None
+
 
 #### LOGS ####
 redis_logger = publisher
@@ -68,9 +78,8 @@ async def push(websocket, ail_uuid):
             Obj, queue_uuid = ail_2_ail.get_sync_queue_object_and_queue_uuid(ail_uuid)
             if Obj:
                 obj_ail_stream = ail_2_ail.create_ail_stream(Obj)
+                print(obj_ail_stream['meta'])
                 obj_ail_stream = json.dumps(obj_ail_stream)
-
-                sys.stdout.write(obj_ail_stream)
 
                 # send objects
                 await websocket.send(obj_ail_stream)
@@ -112,6 +121,7 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=No
         async with websockets.connect(
             uri,
             ssl=ssl_context,
+            local_addr=local_addr,
             #open_timeout=10, websockers 10.0 /!\ python>=3.7
             extra_headers={"Authorization": f"{ail_key}"}
         ) as websocket:

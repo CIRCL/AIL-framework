@@ -57,6 +57,11 @@ minute_processed_paste = 10
 #Maximum line length authorized to make a diff between duplicates
 DiffMaxLineLength = 10000
 
+[AIL_2_AIL]
+server_host = 0.0.0.0
+server_port = 4443
+local_addr = 
+
 #### Modules ####
 [BankAccount]
 max_execution_time = 60

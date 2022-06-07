@@ -35,6 +35,7 @@
 </div>
 
 
+
 <!--
         <button class="btn btn-primary" onclick="tagsSelector()">
             <i class="fas fa-plus"></i>
@@ -47,7 +48,7 @@
 var ltags;
 var ltagsgalaxies;
 
-$.getJSON("{{ url_for('tags_ui.tag_taxonomies_tags_enabled_json') }}",
+$.getJSON("{{ url_for('Tags.get_all_tags') }}",
     function(data) {
       {% if 'taxonomies_tags' in tags_selector_data %}
         var valueData = [

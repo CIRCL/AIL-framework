@@ -17,6 +17,12 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from pubsublogger import publisher
 from core import ail_2_ail
+from lib.ConfigLoader import ConfigLoader
+
+config_loader = ConfigLoader()
+host = config_loader.get_config_str('AIL_2_AIL', 'server_host')
+port = config_loader.get_config_int('AIL_2_AIL', 'server_port')
+config_loader = None
 
 # # TODO: refactor logging
 #### LOGS ####
@@ -303,9 +309,6 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
 
 if __name__ == '__main__':
 
-    host = '0.0.0.0'
-    port = 4443
-
     print('Launching Server...')
     redis_logger.info('Launching Server...')
 
@@ -315,7 +318,7 @@ if __name__ == '__main__':
     cert_dir = os.environ['AIL_FLASK']
     ssl_context.load_cert_chain(certfile=os.path.join(cert_dir, 'server.crt'), keyfile=os.path.join(cert_dir, 'server.key'))
 
-    start_server = websockets.serve(ail_to_ail_serv, host, port, ssl=ssl_context, create_protocol=AIL_2_AIL_Protocol)
+    start_server = websockets.serve(ail_to_ail_serv, host, port, ssl=ssl_context, create_protocol=AIL_2_AIL_Protocol, max_size=None)
 
     print(f'Server Launched:    wss://{host}:{port}')
     redis_logger.info(f'Server Launched:    wss://{host}:{port}')

@@ -209,8 +209,6 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Decoder" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Decoder.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./DomClassifier.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Keys" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Keys.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Onion" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Onion.py; read x"
@@ -218,6 +216,11 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Telegram" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Telegram.py; read x"
+    sleep 0.1
+
+    screen -S "Script_AIL" -X screen -t "Hosts" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Hosts.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "DomClassifier" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./DomClassifier.py; read x"
     sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "Urls" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Urls.py; read x"

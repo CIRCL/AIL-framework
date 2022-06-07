@@ -116,6 +116,9 @@ def is_domain_root(item_id):
             else:
                 return True
 
+def get_item_url(item_id):
+    return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'real_link')
+
 def get_nb_children(item_id):
     return r_serv_metadata.scard('paste_children:{}'.format(item_id))
 
@@ -166,7 +169,7 @@ def add_item_parent(parent_item_id, item_id):
 #### UNKNOW SECTION ####
 
 def get_obj_id_item_id(parent_type, parent_id):
-    all_parents_type = ['twitter_id', 'jabber_id']
+    all_parents_type = ['twitter_id', 'jabber_id', 'telegram_id']
     if parent_type in all_parents_type:
         return r_serv_metadata.hget('map:{}:item_id'.format(parent_type), parent_id)
     else:
@@ -177,6 +180,8 @@ def add_map_obj_id_item_id(obj_id, item_id, obj_type):
         r_serv_metadata.hset('map:twitter_id:item_id', obj_id, item_id)
     if obj_type == 'jabber_id':
         r_serv_metadata.hset('map:jabber_id:item_id', obj_id, item_id)
+    if obj_type == 'telegram_id':
+        r_serv_metadata.hset('map:telegram_id:item_id', obj_id, item_id)
 
 # delete twitter id
 

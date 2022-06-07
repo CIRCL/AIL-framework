@@ -102,6 +102,7 @@ class AbstractModule(ABC):
                     self.compute(message)
                 except Exception as err:
                     trace = traceback.format_tb(err.__traceback__)
+                    trace = ''.join(trace)
                     self.redis_logger.critical(f"Error in module {self.module_name}: {err}")
                     self.redis_logger.critical(f"Module {self.module_name} input message: {message}")
                     self.redis_logger.critical(trace)
@@ -109,8 +110,7 @@ class AbstractModule(ABC):
                     print(f"ERROR: {err}")
                     print(f'MESSAGE: {message}')
                     print('TRACEBACK:')
-                    for line in trace:
-                        print(line)
+                    print(trace)
                 # remove from set_module
                 ## check if item process == completed
 
