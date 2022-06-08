@@ -1205,7 +1205,7 @@ def create_ail_stream(Object):
                   'type': Object.get_type()}
 
     # OBJECT META
-    ail_stream['meta'] = {'mime-type': 'text/plain'}
+    ail_stream['meta'] = {'ail:mime-type': 'text/plain'}
     ail_stream['meta']['compress'] = 'gzip'
     ail_stream['meta']['encoding'] = 'base64'
     ail_stream['meta']['ail:id'] = Object.get_id()
