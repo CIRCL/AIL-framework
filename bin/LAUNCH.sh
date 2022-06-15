@@ -234,7 +234,7 @@ function launching_scripts {
     ##################################
     #       TRACKERS MODULES         #
     ##################################
-    screen -S "Script_AIL" -X screen -t "Tracker_Typo" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Typo.py; read x"
+    screen -S "Script_AIL" -X screen -t "Tracker_Typo_Squatting" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Typo_Squatting.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tracker_Term" bash -c "cd ${AIL_BIN}/trackers; ${ENV_PY} ./Tracker_Term.py; read x"
     sleep 0.1

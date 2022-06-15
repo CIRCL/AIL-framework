@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
-The Tracker_Typo Module
+The Tracker_Typo_Squatting Module
 ===================
 
 """
@@ -37,25 +37,24 @@ def timeout_handler(signum, frame):
 signal.signal(signal.SIGALRM, timeout_handler)
 
 
-class Tracker_Typo(AbstractModule):
+class Tracker_Typo_Squatting(AbstractModule):
     mail_body_template = "AIL Framework,\nNew occurrence for tracked Typo: {}\nitem id: {}\nurl: {}{}"
 
     """
-    Tracker_Typo module for AIL framework
+    Tracker_Typo_Squatting module for AIL framework
     """
 
     def __init__(self):
-        super(Tracker_Typo, self).__init__()
+        super(Tracker_Typo_Squatting, self).__init__()
 
         self.pending_seconds = 5
 
-        #self.max_execution_time = self.process.config.getint('Tracker_Typo', "max_execution_time")
+        #self.max_execution_time = self.process.config.getint('Tracker_Typo_Squatting', "max_execution_time")
 
         self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
 
         # loads tracked words
         self.typosquat_tracked_words_list = Tracker.get_typosquatting_tracked_words_list()
-        print(len(self.typosquat_tracked_words_list["google.com"]))
         self.last_refresh_typosquat = time.time()
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
@@ -98,7 +97,7 @@ class Tracker_Typo(AbstractModule):
                 mail_to_notify = Term.get_term_mails(term_uuid)
                 if mail_to_notify:
                     mail_subject = Tracker.get_email_subject(term_uuid)
-                    mail_body = Tracker_Typo.mail_body_template.format(term, item_id, self.full_item_url, item_id)
+                    mail_body = Tracker_Typo_Squatting.mail_body_template.format(term, item_id, self.full_item_url, item_id)
                 for mail in mail_to_notify:
                     self.redis_logger.debug(f'Send Mail {mail_subject}')
                     print(f'S        print(item_content)end Mail {mail_subject}')
@@ -127,5 +126,5 @@ class Tracker_Typo(AbstractModule):
 
 
 if __name__ == '__main__':
-    module = Tracker_Typo()
+    module = Tracker_Typo_Squatting()
     module.run()
