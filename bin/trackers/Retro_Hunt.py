@@ -65,6 +65,8 @@ class Retro_Hunt(AbstractModule):
         # First launch
         # restart
         rule = Tracker.get_retro_hunt_task_rule(task_uuid, r_compile=True)
+        self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {rule}')
+
         timeout = Tracker.get_retro_hunt_task_timeout(task_uuid)
         sources = Tracker.get_retro_hunt_task_sources(task_uuid, r_sort=True)
 
@@ -86,6 +88,7 @@ class Retro_Hunt(AbstractModule):
             # # TODO: Filter previous item
             for dir in dirs_date:
                 print(dir)
+                self.redis_logger.warning(f'{self.module_name}, Retro Hunt searching in directory {dir}')
                 l_obj = Tracker.get_items_to_analyze(dir)
                 for id in l_obj:
                     #print(f'{dir} / {id}')
