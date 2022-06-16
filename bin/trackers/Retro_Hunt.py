@@ -58,7 +58,8 @@ class Retro_Hunt(AbstractModule):
                 # end_time
 
     def compute(self, task_uuid):
-        print(task_uuid)
+        self.redis_logger.warning(f'{self.module_name}, starting Retro hunt task {task_uuid}')
+        print(f'starting Retro hunt task {task_uuid}')
         self.task_uuid = task_uuid
         self.progress = 0
         # First launch
@@ -120,6 +121,8 @@ class Retro_Hunt(AbstractModule):
         Tracker.set_retro_hunt_nb_match(task_uuid)
         Tracker.clear_retro_hunt_task_cache(task_uuid)
 
+        print(f'Retro Hunt {task_uuid} completed')
+        self.redis_logger.warning(f'{self.module_name}, Retro Hunt {task_uuid} completed')
 
         # # TODO: stop
 
@@ -133,10 +136,12 @@ class Retro_Hunt(AbstractModule):
         #     Tracker.set_retro_hunt_task_progress(task_uuid, progress)
 
     def yara_rules_match(self, data):
-        #print(data)
-
-        task_uuid = data['namespace']
         id = self.item.get_id()
+        #print(data)
+        task_uuid = data['namespace']
+
+        self.redis_logger.warning(f'{self.module_name}, Retro hunt {task_uuid} match found:    {id}')
+        print(f'Retro hunt {task_uuid} match found:    {id}')
 
         Tracker.save_retro_hunt_match(task_uuid, id)
 
