@@ -65,11 +65,9 @@ class Retro_Hunt(AbstractModule):
         # First launch
         # restart
         rule = Tracker.get_retro_hunt_task_rule(task_uuid, r_compile=True)
-        rule_str = Tracker.get_retro_hunt_task_rule(task_uuid)
-        self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {rule_str}')
 
         timeout = Tracker.get_retro_hunt_task_timeout(task_uuid)
-        self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {task_uuid} timeout {timeout}')
+        self.redis_logger.debug(f'{self.module_name}, Retro Hunt rule {task_uuid} timeout {timeout}')
         sources = Tracker.get_retro_hunt_task_sources(task_uuid, r_sort=True)
 
         self.date_from = Tracker.get_retro_hunt_task_date_from(task_uuid)
@@ -90,7 +88,7 @@ class Retro_Hunt(AbstractModule):
             # # TODO: Filter previous item
             for dir in dirs_date:
                 print(dir)
-                self.redis_logger.warning(f'{self.module_name}, Retro Hunt searching in directory {dir}')
+                self.redis_logger.debug(f'{self.module_name}, Retro Hunt searching in directory {dir}')
                 l_obj = Tracker.get_items_to_analyze(dir)
                 for id in l_obj:
                     #print(f'{dir} / {id}')
@@ -98,7 +96,7 @@ class Retro_Hunt(AbstractModule):
                     # save current item in cache
                     Tracker.set_cache_retro_hunt_task_id(task_uuid, id)
 
-                    self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {task_uuid}, searching item {id}')
+                    self.redis_logger.debug(f'{self.module_name}, Retro Hunt rule {task_uuid}, searching item {id}')
 
                     yara_match = rule.match(data=self.item.get_content(), callback=self.yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=timeout)
 
@@ -147,7 +145,7 @@ class Retro_Hunt(AbstractModule):
         #print(data)
         task_uuid = data['namespace']
 
-        self.redis_logger.warning(f'{self.module_name}, Retro hunt {task_uuid} match found:    {id}')
+        self.redis_logger.info(f'{self.module_name}, Retro hunt {task_uuid} match found:    {id}')
         print(f'Retro hunt {task_uuid} match found:    {id}')
 
         Tracker.save_retro_hunt_match(task_uuid, id)

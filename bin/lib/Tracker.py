@@ -16,6 +16,7 @@ from flask import escape
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
+import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -26,6 +27,8 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_tracker = config_loader.get_redis_conn("ARDB_Tracker")
+
+items_dir = config_loader.get_config_str("Directories", "pastes").replace('/', '')
 config_loader = None
 
 email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
@@ -248,7 +251,6 @@ def update_tracker_daterange(tracker_uuid, date, op='add'):
     if op == 'del':
         pass
 
-
 def remove_tracked_item(item_id):
     item_date = item_basic.get_item_date(item_id)
     for tracker_uuid in get_item_all_trackers_uuid(item_id):
@@ -266,6 +268,11 @@ def is_obj_tracked(obj_type, subtype, id):
 
 def get_obj_all_trackers(obj_type, subtype, id):
     return r_serv_tracker.smembers(f'obj:trackers:{obj_type}:{obj_id}')
+
+# # TODO: ADD all Objects + Subtypes
+def delete_obj_trackers(obj_type, subtype, id):
+    if obj_type == 'item':
+        remove_tracked_item(id)
 
 def get_email_subject(tracker_uuid):
     tracker_description = get_tracker_description(tracker_uuid)
@@ -1039,7 +1046,7 @@ def get_retro_hunt_dir_day_to_analyze(task_uuid, date, filter_last=False, source
 
 # # TODO: move me
 def get_items_to_analyze(dir, last=None):
-    full_dir = os.path.join(os.environ['AIL_HOME'], 'PASTES', dir) # # TODO: # FIXME: use item config dir
+    full_dir = os.path.join(os.environ['AIL_HOME'], items_dir, dir)
     if os.path.isdir(full_dir):
         all_items = sorted([os.path.join(dir, f) for f in os.listdir(full_dir) if os.path.isfile(os.path.join(full_dir, f))])
         # remove processed items
@@ -1265,7 +1272,21 @@ def api_delete_retro_hunt_task(task_uuid):
     else:
         return (delete_retro_hunt_task(task_uuid), 200)
 
-# if __name__ == '__main__':
+#### DB FIX ####
+def get_trackers_custom_tags():
+    tags = set()
+    for tracker_uuid in get_all_tracker_uuid():
+        for tag in get_tracker_tags(tracker_uuid):
+            tags.add(tag)
+    for task_uuid in get_all_retro_hunt_tasks():
+        for tag in get_retro_hunt_task_tags(task_uuid):
+            tags.add(tag)
+    return tags
+
+#### -- ####
+
+if __name__ == '__main__':
+    print(get_trackers_custom_tags())
     # fix_all_tracker_uuid_list()
     # res = get_all_tracker_uuid()
     # print(len(res))
