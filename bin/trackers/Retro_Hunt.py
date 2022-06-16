@@ -65,9 +65,11 @@ class Retro_Hunt(AbstractModule):
         # First launch
         # restart
         rule = Tracker.get_retro_hunt_task_rule(task_uuid, r_compile=True)
-        self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {rule}')
+        rule_str = Tracker.get_retro_hunt_task_rule(task_uuid)
+        self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {rule_str}')
 
         timeout = Tracker.get_retro_hunt_task_timeout(task_uuid)
+        self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {task_uuid} timeout {timeout}')
         sources = Tracker.get_retro_hunt_task_sources(task_uuid, r_sort=True)
 
         self.date_from = Tracker.get_retro_hunt_task_date_from(task_uuid)
@@ -95,6 +97,8 @@ class Retro_Hunt(AbstractModule):
                     self.item = Item(id)
                     # save current item in cache
                     Tracker.set_cache_retro_hunt_task_id(task_uuid, id)
+
+                    self.redis_logger.warning(f'{self.module_name}, Retro Hunt rule {task_uuid}, searching item {id}')
 
                     yara_match = rule.match(data=self.item.get_content(), callback=self.yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=timeout)
 
