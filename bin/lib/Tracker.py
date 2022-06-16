@@ -28,7 +28,9 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_tracker = config_loader.get_redis_conn("ARDB_Tracker")
 
-items_dir = config_loader.get_config_str("Directories", "pastes").replace('/', '')
+items_dir = config_loader.get_config_str("Directories", "pastes")
+if items_dir[-1] == '/':
+    items_dir = items_dir[:-1]
 config_loader = None
 
 email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
