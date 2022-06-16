@@ -1048,7 +1048,10 @@ def get_retro_hunt_dir_day_to_analyze(task_uuid, date, filter_last=False, source
 
 # # TODO: move me
 def get_items_to_analyze(dir, last=None):
-    full_dir = os.path.join(os.environ['AIL_HOME'], items_dir, dir)
+    if items_dir == 'PASTES':
+        full_dir = os.path.join(os.environ['AIL_HOME'], 'PASTES', dir)
+    else:
+        full_dir = os.path.join(items_dir, dir)
     if os.path.isdir(full_dir):
         all_items = sorted([os.path.join(dir, f) for f in os.listdir(full_dir) if os.path.isfile(os.path.join(full_dir, f))])
         # remove processed items
