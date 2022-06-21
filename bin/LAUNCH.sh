@@ -434,12 +434,12 @@ function launch_feeder {
 }
 
 function killscript {
-    if [[ $islogged || $isqueued || $is_ail_core || $isscripted || $isflasked || $isfeeded || $iscrawler ]]; then
+    if [[ $islogged || $isqueued || $is_ail_core || $isscripted || $isflasked || $isfeeded || $iscrawler || $is_ail_2_ail ]]; then
         echo -e $GREEN"Killing Script"$DEFAULT
-        kill $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler
+        kill $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler killed."$DEFAULT
+        echo -e $GREEN"\t* $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail killed."$DEFAULT
     else
         echo -e $RED"\t* No script to kill"$DEFAULT
     fi
