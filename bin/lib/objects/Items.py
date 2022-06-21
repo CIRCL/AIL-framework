@@ -273,20 +273,20 @@ def remove_all_urls_from_content(item_id, item_content=None):
 def get_item_languages(item_id, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
     all_languages = []
 
-    # ## CLEAN CONTENT ##
-    # content = get_item_content_html2text(item_id, ignore_links=True)
-    # content = remove_all_urls_from_content(item_id, item_content=content)
-    #
-    # # REMOVE USELESS SPACE
-    # content = ' '.join(content.split())
-    # #- CLEAN CONTENT -#
-    #
-    # #print(content)
-    # #print(len(content))
-    # if len(content) >= min_len:
-    #     for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
-    #         if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
-    #             all_languages.append(lang)
+    ## CLEAN CONTENT ##
+    content = get_item_content_html2text(item_id, ignore_links=True)
+    content = remove_all_urls_from_content(item_id, item_content=content)
+
+    # REMOVE USELESS SPACE
+    content = ' '.join(content.split())
+    #- CLEAN CONTENT -#
+
+    #print(content)
+    #print(len(content))
+    if len(content) >= min_len:
+        for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
+            if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
+                all_languages.append(lang)
     return all_languages
 
 # API
