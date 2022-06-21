@@ -6,30 +6,38 @@ import os
 import re
 import sys
 import redis
-import cld3
+# import cld3
 import html2text
 
 from io import BytesIO
 
+from pymisp import MISPObject
+
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from export.Export import get_ail_uuid # # TODO: REPLACE
+from lib.objects.abstract_object import AbstractObject
+from lib.ConfigLoader import ConfigLoader
+from lib import item_basic
+from lib import domain_basic
+
+from packages import Tag
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Tag
 import Cryptocurrency
 import Pgp
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import item_basic
-import domain_basic
-import ConfigLoader
 import Correlate_object
 import Decoded
 import Screenshot
 import Username
 
-from abstract_object import AbstractObject
-from item_basic import *
 from flask import url_for
 
-config_loader = ConfigLoader.ConfigLoader()
+config_loader = ConfigLoader()
 # get and sanityze PASTE DIRECTORY
 # # TODO: rename PASTES_FOLDER
 PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
@@ -89,6 +97,12 @@ class Item(AbstractObject):
         """
         return item_basic.get_item_content(self.id)
 
+    def get_raw_content(self):
+        filepath = self.get_filename()
+        with open(filepath, 'rb') as f:
+            raw_content = BytesIO(f.read())
+        return raw_content
+
     def get_gzip_content(self, b64=False):
         with open(self.get_filename(), 'rb') as f:
             content = f.read()
@@ -97,8 +111,7 @@ class Item(AbstractObject):
         return content.decode()
 
     def get_ail_2_ail_payload(self):
-        payload = {'raw': self.get_gzip_content(b64=True),
-                    'compress': 'gzip'}
+        payload = {'raw': self.get_gzip_content(b64=True)}
         return payload
 
     # # TODO:
@@ -108,6 +121,7 @@ class Item(AbstractObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
     def delete(self):
+        self._delete()
         try:
             os.remove(self.get_filename())
             return True
@@ -128,9 +142,19 @@ class Item(AbstractObject):
             color = '#332288'
         return {'style': '', 'icon': '', 'color': color, 'radius':5}
 
-    ############################################################################
-    ############################################################################
-    ############################################################################
+    def get_misp_object(self):
+        obj_date = self.get_date()
+        obj = MISPObject('ail-leak', standalone=True)
+        obj.first_seen = obj_date
+
+        obj_attrs = []
+        obj_attrs.append( obj.add_attribute('first-seen', value=obj_date) )
+        obj_attrs.append( obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()) )
+        obj_attrs.append( obj.add_attribute('sensor', value=get_ail_uuid()) )
+        for obj_attr in obj_attrs:
+            for tag in self.get_tags():
+                obj_attr.add_tag(tag)
+        return obj
 
     def exist_correlation(self):
         pass
@@ -249,20 +273,20 @@ def remove_all_urls_from_content(item_id, item_content=None):
 def get_item_languages(item_id, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
     all_languages = []
 
-    ## CLEAN CONTENT ##
-    content = get_item_content_html2text(item_id, ignore_links=True)
-    content = remove_all_urls_from_content(item_id, item_content=content)
-
-    # REMOVE USELESS SPACE
-    content = ' '.join(content.split())
-    #- CLEAN CONTENT -#
-
-    #print(content)
-    #print(len(content))
-    if len(content) >= min_len:
-        for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
-            if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
-                all_languages.append(lang)
+    # ## CLEAN CONTENT ##
+    # content = get_item_content_html2text(item_id, ignore_links=True)
+    # content = remove_all_urls_from_content(item_id, item_content=content)
+    #
+    # # REMOVE USELESS SPACE
+    # content = ' '.join(content.split())
+    # #- CLEAN CONTENT -#
+    #
+    # #print(content)
+    # #print(len(content))
+    # if len(content) >= min_len:
+    #     for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
+    #         if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
+    #             all_languages.append(lang)
     return all_languages
 
 # API
@@ -688,4 +712,7 @@ def delete_domain_node(item_id):
         delete_item(child_id)
 
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
+#
+#     item = Item('')
+#     print(item.get_misp_object().to_json())
