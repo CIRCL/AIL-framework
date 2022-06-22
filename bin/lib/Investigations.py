@@ -270,13 +270,22 @@ def exists_investigation(investigation_uuid):
 
 # created by user
 def get_user_all_investigations(user_id):
-    return r_tracking.smembers('investigations:user:{user_id}')
+    return r_tracking.smembers(f'investigations:user:{user_id}')
 
 def is_object_investigated(obj_id, obj_type, subtype=''):
     return r_tracking.exists(f'obj:investigations:{obj_type}:{subtype}:{obj_id}')
 
 def get_obj_investigations(obj_id, obj_type, subtype=''):
     return r_tracking.smembers(f'obj:investigations:{obj_type}:{subtype}:{obj_id}')
+
+def delete_obj_investigations(obj_id, obj_type, subtype=''):
+    unregistred = False
+    for investigation_uuid in get_obj_investigations(obj_id, obj_type, subtype=subtype):
+        investigation = Investigation(investigation_uuid)
+        investigation.unregister_object(obj_id, obj_type, subtype)
+        unregistred = True
+    return unregistred
+
 
 # # TODO: fix default threat_level analysis
 # # TODO: limit description + name
@@ -286,7 +295,7 @@ def create_investigation(user_id, date, name, threat_level, analysis, info, tags
     investigation_uuid = generate_uuid()
     r_tracking.sadd('investigations:all', investigation_uuid)
     # user map
-    r_tracking.sadd('investigations:user:{user_id}', investigation_uuid)
+    r_tracking.sadd(f'investigations:user:{user_id}', investigation_uuid)
     # metadata
     r_tracking.hset(f'investigations:data:{investigation_uuid}', 'creator_user', user_id)
 
