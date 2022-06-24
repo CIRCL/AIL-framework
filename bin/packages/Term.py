@@ -14,9 +14,6 @@ from collections import defaultdict
 from nltk.tokenize import RegexpTokenizer
 from textblob import TextBlob
 
-from ail_typo_squatting import runAll
-import math
-
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import Tracker
