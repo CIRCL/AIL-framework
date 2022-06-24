@@ -108,7 +108,7 @@ def get_tracked_words_list():
     return list(r_serv_term.smembers('all:tracker:word'))
 
 def get_typosquat_tracked_words_list():
-    set_list = r_serv_term.smembers('all:tracker:typosquat')
+    set_list = r_serv_term.smembers('all:tracker:typosquatting')
     all_set_list = []
     for elem in set_list:
         res = elem.split(';')
