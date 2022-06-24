@@ -1278,7 +1278,7 @@ def api_delete_retro_hunt_task(task_uuid):
         return (delete_retro_hunt_task(task_uuid), 200)
 
 #### DB FIX ####
-def get_trackers_custom_tags():
+def get_trackers_tags():
     tags = set()
     for tracker_uuid in get_all_tracker_uuid():
         for tag in get_tracker_tags(tracker_uuid):
@@ -1288,10 +1288,16 @@ def get_trackers_custom_tags():
             tags.add(tag)
     return tags
 
+def _fix_db_custom_tags():
+    for tag in get_trackers_tags():
+        if not Tag.is_taxonomie_tag(tag) and not Tag.is_galaxy_tag(tag):
+            print(tag)
+            Tag.create_custom_tag(tag)
+
 #### -- ####
 
 if __name__ == '__main__':
-    print(get_trackers_custom_tags())
+    _fix_db_custom_tags()
     # fix_all_tracker_uuid_list()
     # res = get_all_tracker_uuid()
     # print(len(res))

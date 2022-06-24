@@ -63,6 +63,14 @@ def get_galaxy_from_tag(tag):
     except IndexError:
         return None
 
+def get_taxonomies():
+    return Taxonomies().keys()
+
+def is_taxonomie(taxonomie, taxonomies=[]):
+    if not taxonomies:
+        taxonomies = get_taxonomies()
+    return taxonomie in taxonomies
+
 def get_active_taxonomies(r_set=False):
     res = r_serv_tags.smembers('active_taxonomies')
     if r_set:
@@ -81,6 +89,9 @@ def get_all_taxonomies_tags(): # # TODO: add + REMOVE + Update
 def get_all_galaxies_tags(): # # TODO: add + REMOVE + Update
     return r_serv_tags.smembers('active_galaxies_tags')
 
+def get_all_custom_tags():
+    return r_serv_tags.smembers('tags:custom')
+
 def get_taxonomies_enabled_tags(r_list=False):
     l_tag_keys = []
     for taxonomie in get_active_taxonomies():
@@ -89,6 +100,9 @@ def get_taxonomies_enabled_tags(r_list=False):
         res = r_serv_tags.sunion(l_tag_keys[0], *l_tag_keys[1:])
     elif l_tag_keys:
         res = r_serv_tags.smembers(l_tag_keys[0])
+    #### # WARNING: # TODO: DIRTY FIX, REPLACE WITH LOCAL TAGS ####
+
+
     if r_list:
         return list(res)
     else:
@@ -104,6 +118,19 @@ def get_galaxies_enabled_tags():
         return r_serv_tags.smembers(l_tag_keys[0])
     else:
         return []
+
+def get_custom_enabled_tags(r_list=False):
+    res = r_serv_tags.smembers('tags:custom:enabled_tags')
+    if r_list:
+        return list(res)
+    else:
+        return res
+
+def get_taxonomies_customs_tags(r_list=False):
+    tags = get_custom_enabled_tags().union(get_taxonomies_enabled_tags())
+    if r_list:
+        tags = list(tags)
+    return tags
 
 def get_taxonomie_enabled_tags(taxonomie, r_list=False):
     res = r_serv_tags.smembers(f'active_tag_{taxonomie}')
@@ -130,6 +157,9 @@ def is_galaxy_tag_enabled(galaxy, tag):
         return True
     else:
         return False
+
+def is_custom_tag_enabled(tag):
+    return r_serv_tags.sismember('tags:custom:enabled_tags', tag)
 
 def enable_taxonomy(taxonomie, enable_tags=True):
     '''
@@ -184,7 +214,7 @@ def is_taxonomie_tag(tag, namespace=None):
     if not namespace:
         namespace = tag.split(':')[0]
     if namespace != 'misp-galaxy':
-        return True
+        return is_taxonomie(namespace)
     else:
         return False
 
@@ -195,6 +225,9 @@ def is_galaxy_tag(tag, namespace=None):
         return True
     else:
         return False
+
+def is_custom_tag(tag):
+    return r_serv_tags.sismember('tags:custom', tag)
 
 # # TODO:
 # def is_valid_tag(tag):
@@ -317,6 +350,10 @@ def get_modal_add_tags(item_id, object_type='item'):
             "object_id": item_id, "object_type": object_type}
 
 ######## NEW VERSION ########
+def create_custom_tag(tag):
+    r_serv_tags.sadd('tags:custom', tag)
+    r_serv_tags.sadd('tags:custom:enabled_tags', tag)
+
 def get_tag_first_seen(tag, r_int=False):
     '''
     Get tag first seen (current: item only)
@@ -341,6 +378,7 @@ def get_tag_last_seen(tag, r_int=False):
             return int(res)
     return res
 
+# # TODO: ADD color
 def get_tag_metadata(tag, r_int=False):
     '''
     Get tag metadata (current: item only)
@@ -426,6 +464,8 @@ def update_tag_last_seen(tag, tag_first_seen, tag_last_seen):
             #tag_last_seen = Date.date_substract_day(str(tag_last_seen))
             #update_tag_last_seen(tag, tag_first_seen, tag_last_seen)
             pass
+
+## Objects tags ##
 
 def update_tag_metadata(tag, tag_date, object_type=None, add_tag=True):
     '''
@@ -742,6 +782,3 @@ def get_list_of_solo_tags_to_export_by_type(export_type): # by type
     else:
         return None
     #r_serv_db.smembers('whitelist_hive')
-
-
-#### -- ####

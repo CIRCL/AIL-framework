@@ -211,7 +211,7 @@ host = localhost
 port = 6382
 db = 10
 
-[Kvrocks_Meta]
+[Kvrocks_DB]
 host = localhost
 port = 6383
 db = 0

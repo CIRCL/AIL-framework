@@ -42,12 +42,6 @@
 
 									<div class="row">
 										<div class="col-12 col-xl-9">
-										  <div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-										      <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-										    </div>
-												<input id="tags" name="tags" class="form-control" placeholder="Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{{dict_tracker['tags']}}"{%endif%}{%endif%}>
-										  </div>
 											<div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
 										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
@@ -72,6 +66,22 @@
 										      <div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
 										    </div>
 												<input id="sources" class="form-control" type="text" name="sources" placeholder="Sources to track (ALL IF EMPTY)" autocomplete="off">
+											</div>
+
+
+											<div class="card my-4">
+											  <div class="card-header bg-secondary text-white">
+													<b>Tags</b>
+												</div>
+											  <div class="card-body">
+													<div class="input-group mb-2 mr-sm-2">
+														<div class="input-group-prepend">
+													  	<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+													  </div>
+														<input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{{dict_tracker['tags']}}"{%endif%}{%endif%}>
+													</div>
+													{% include 'tags/block_tags_selector.html' %}
+												</div>
 											</div>
 
 										</div>

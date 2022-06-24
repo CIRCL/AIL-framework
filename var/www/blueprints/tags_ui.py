@@ -84,6 +84,12 @@ def delete_tag():
 def get_all_tags():
     return jsonify(Tag.get_all_tags())
 
+@tags_ui.route('/tag/get_taxonomies_customs_tags')
+@login_required
+@login_read_only
+def get_all_taxonomies_customs_tags():
+    return jsonify(Tag.get_taxonomies_customs_tags(r_list=True))
+
 @tags_ui.route('/tag/get_all_obj_tags')
 @login_required
 @login_read_only
@@ -106,6 +112,12 @@ def tag_taxonomies_tags_enabled_json():
 def tag_galaxies_tags_enabled_json():
     tags = Tag.get_galaxies_enabled_tags()
     return jsonify(Tag.get_tags_selector_dict(tags))
+
+@tags_ui.route('/tag/custum/tags/enabled/json')
+@login_required
+@login_read_only
+def tag_custum_tags_enabled_json():
+    return jsonify(Tag.get_custom_enabled_tags(r_list=True))
 
 @tags_ui.route('/tag/taxonomie/tags/enabled/json')
 @login_required

@@ -9,6 +9,7 @@
   <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie"> <!-- TODO: make dropdown-scrollable -->
     <h6 class="dropdown-header">Taxonomie Tags</h6>
     <button class="dropdown-item" type="button" id="all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
+    <button class="dropdown-item" type="button" id="all-tags-customs">Custom Tags <i class="fas fa-tag"></i></button>
     <div class="dropdown-divider"></div>
     {% for taxo in tags_selector_data['active_taxonomies'] %}
       <button class="dropdown-item" type="button" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
@@ -48,7 +49,7 @@
 var ltags;
 var ltagsgalaxies;
 
-$.getJSON("{{ url_for('Tags.get_all_tags') }}",
+$.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
     function(data) {
       {% if 'taxonomies_tags' in tags_selector_data %}
         var valueData = [
@@ -91,7 +92,15 @@ $.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
 
 jQuery("#all-tags-taxonomies").click(function(e){
         //change input tags list
-      $.getJSON("{{ url_for('tags_ui.tag_taxonomies_tags_enabled_json') }}",
+      $.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
+        function(data) {
+          ltags.setData(data)
+      });
+    });
+
+jQuery("#all-tags-customs").click(function(e){
+        //change input tags list
+      $.getJSON("{{ url_for('tags_ui.tag_custum_tags_enabled_json') }}",
         function(data) {
           ltags.setData(data)
       });

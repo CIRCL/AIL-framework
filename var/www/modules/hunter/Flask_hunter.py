@@ -23,6 +23,9 @@ import Term
 import Tracker
 import item_basic
 
+sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
+import Tag
+
 # ============ VARIABLES ============
 import Flask_config
 
@@ -98,9 +101,25 @@ def add_tracked_menu():
         description = request.form.get("description", '')
         webhook = request.form.get("webhook", '')
         level = request.form.get("level", 0)
-        tags = request.form.get("tags", [])
         mails = request.form.get("mails", [])
         sources = request.form.get("sources", [])
+
+        tags = request.form.get("tags", [])
+        taxonomies_tags = request.form.get('taxonomies_tags')
+        if taxonomies_tags:
+            try:
+                taxonomies_tags = json.loads(taxonomies_tags)
+            except Exception:
+                taxonomies_tags = []
+        else:
+            taxonomies_tags = []
+        galaxies_tags = request.form.get('galaxies_tags')
+        if galaxies_tags:
+            try:
+                galaxies_tags = json.loads(galaxies_tags)
+            except Exception:
+                galaxies_tags = []
+        
 
         # YARA #
         if tracker_type == 'yara':
@@ -141,6 +160,7 @@ def add_tracked_menu():
     else:
         return render_template("edit_tracker.html",
                                 all_sources=item_basic.get_all_items_sources(r_list=True),
+                                tags_selector_data=Tag.get_tags_selector_data(),
                                 all_yara_files=Tracker.get_all_default_yara_files())
 
 @hunter.route("/tracker/edit", methods=['GET', 'POST'])
