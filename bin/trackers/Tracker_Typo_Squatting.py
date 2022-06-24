@@ -12,7 +12,6 @@ The Tracker_Typo_Squatting Module
 import os
 import sys
 import time
-import signal
 import requests
 
 
@@ -26,17 +25,6 @@ from packages.Item import Item
 from packages import Term
 from lib import Tracker
 
-class TimeoutException(Exception):
-    pass
-
-
-def timeout_handler(signum, frame):
-    raise TimeoutException
-
-
-signal.signal(signal.SIGALRM, timeout_handler)
-
-
 class Tracker_Typo_Squatting(AbstractModule):
     mail_body_template = "AIL Framework,\nNew occurrence for tracked Typo: {}\nitem id: {}\nurl: {}{}"
 
@@ -49,11 +37,9 @@ class Tracker_Typo_Squatting(AbstractModule):
 
         self.pending_seconds = 5
 
-        #self.max_execution_time = self.process.config.getint('Tracker_Typo_Squatting', "max_execution_time")
-
         self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
 
-        # loads tracked words
+        # loads typosquatting
         self.typosquat_tracked_words_list = Tracker.get_typosquatting_tracked_words_list()
         self.last_refresh_typosquat = time.time()
 
