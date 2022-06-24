@@ -6,7 +6,7 @@ import os
 import re
 import sys
 import redis
-# import cld3
+import cld3
 import html2text
 
 from io import BytesIO
