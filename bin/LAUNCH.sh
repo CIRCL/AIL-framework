@@ -33,6 +33,7 @@ export PATH=$AIL_FLASK:$PATH
 
 isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
 isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
+iskvrocks=`screen -ls | egrep '[0-9]+.KVROCKS_AIL' | cut -d. -f1`
 islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
 isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
@@ -61,6 +62,7 @@ function helptext {
     - All the processing modules.
     - All Redis in memory servers.
     - All ARDB on disk servers.
+    - All KVROCKS servers.
     "$DEFAULT"
     (Inside screen Daemons)
     "$DEFAULT"
@@ -102,6 +104,17 @@ function launching_ardb {
 
     sleep 0.1
     screen -S "ARDB_AIL" -X screen -t "6382" bash -c 'cd '${AIL_HOME}'; ardb-server '$conf_dir'6382.conf ; read x'
+}
+
+function launching_kvrocks {
+    conf_dir="${AIL_HOME}/configs"
+
+    screen -dmS "KVROCKS_AIL"
+    sleep 0.1
+    echo -e $GREEN"\t* Launching KVROCKS servers"$DEFAULT
+
+    sleep 0.1
+    screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; ./kvrocks/build/kvrocks -c '$conf_dir'/6383.conf ; read x'
 }
 
 function launching_logs {
@@ -277,56 +290,65 @@ function launching_scripts {
 
 }
 
+function shutting_down_redis_servers {
+    array=("$@")
+    redis_dir=${AIL_HOME}/redis/src
+    for port in "${array[@]}";
+        do
+            bash -c "${redis_dir}/redis-cli -p ${port} SHUTDOWN"
+            sleep 0.1
+        done
+}
+
 function shutting_down_redis {
-    redis_dir=${AIL_HOME}/redis/src/
-    bash -c $redis_dir'redis-cli -p 6379 SHUTDOWN'
-    sleep 0.1
-    bash -c $redis_dir'redis-cli -p 6380 SHUTDOWN'
-    sleep 0.1
-    bash -c $redis_dir'redis-cli -p 6381 SHUTDOWN'
+    ports=("6379" "6380" "6381")
+    shutting_down_redis_servers "${ports[@]}"
 }
 
 function shutting_down_ardb {
-    redis_dir=${AIL_HOME}/redis/src/
-    bash -c $redis_dir'redis-cli -p 6382 SHUTDOWN'
+    ports=("6382")
+    shutting_down_redis_servers "${ports[@]}"
+}
+
+function shutting_down_kvrocks {
+    ports=("6383")
+    shutting_down_redis_servers "${ports[@]}"
+}
+
+function checking_redis_servers {
+    db_name=$1
+    shift
+    array=("$@")
+    redis_dir="${AIL_HOME}/redis/src"
+    flag_db=0
+    for port in "${array[@]}";
+        do
+            sleep 0.2
+            bash -c "${redis_dir}/redis-cli -p ${port} PING | grep "PONG" &> /dev/null"
+            if [ ! $? == 0 ]; then
+                echo -e "${RED}\t${port} ${db_name} not ready${DEFAULT}"
+                flag_db=1
+            fi
+        done
+    return $flag_db;
 }
 
 function checking_redis {
-    flag_redis=0
-    redis_dir=${AIL_HOME}/redis/src/
-    bash -c $redis_dir'redis-cli -p 6379 PING | grep "PONG" &> /dev/null'
-    if [ ! $? == 0 ]; then
-        echo -e $RED"\t6379 not ready"$DEFAULT
-        flag_redis=1
-    fi
-    sleep 0.1
-    bash -c $redis_dir'redis-cli -p 6380 PING | grep "PONG" &> /dev/null'
-    if [ ! $? == 0 ]; then
-        echo -e $RED"\t6380 not ready"$DEFAULT
-        flag_redis=1
-    fi
-    sleep 0.1
-    bash -c $redis_dir'redis-cli -p 6381 PING | grep "PONG" &> /dev/null'
-    if [ ! $? == 0 ]; then
-        echo -e $RED"\t6381 not ready"$DEFAULT
-        flag_redis=1
-    fi
-    sleep 0.1
-
-    return $flag_redis;
+    ports=("6379" "6380" "6381")
+    checking_redis_servers "Redis" "${ports[@]}"
+    return $?
 }
 
 function checking_ardb {
-    flag_ardb=0
-    redis_dir=${AIL_HOME}/redis/src/
-    sleep 0.2
-    bash -c $redis_dir'redis-cli -p 6382 PING | grep "PONG" &> /dev/null'
-    if [ ! $? == 0 ]; then
-        echo -e $RED"\t6382 ARDB not ready"$DEFAULT
-        flag_ardb=1
-    fi
+    ports=("6382")
+    checking_redis_servers "ARDB" "${ports[@]}"
+    return $?
+}
 
-    return $flag_ardb;
+function checking_kvrocks {
+    ports=("6383")
+    checking_redis_servers "KVROCKS" "${ports[@]}"
+    return $?
 }
 
 function wait_until_redis_is_ready {
@@ -353,6 +375,18 @@ function wait_until_ardb_is_ready {
     echo -e $YELLOW"\t* ARDB Launched"$DEFAULT
 }
 
+function wait_until_kvrocks_is_ready {
+    not_ready=true;
+    while $not_ready; do
+        if checking_kvrocks; then
+            not_ready=false
+        else
+            sleep 3
+        fi
+    done
+    echo -e $YELLOW"\t* KVROCKS Launched"$DEFAULT
+}
+
 function launch_redis {
     if [[ ! $isredis ]]; then
         launching_redis;
@@ -364,6 +398,14 @@ function launch_redis {
 function launch_ardb {
     if [[ ! $isardb ]]; then
         launching_ardb;
+    else
+        echo -e $RED"\t* A screen is already launched"$DEFAULT
+    fi
+}
+
+function launch_kvrocks {
+    if [[ ! $iskvrocks ]]; then
+        launching_kvrocks;
     else
         echo -e $RED"\t* A screen is already launched"$DEFAULT
     fi
@@ -388,14 +430,14 @@ function launch_queues {
 function launch_scripts {
     if [[ ! $isscripted ]]; then ############################# is core
       sleep 1
-        if checking_ardb && checking_redis; then
+        if checking_ardb && checking_redis && checking_kvrocks; then
             launching_scripts;
         else
             no_script_launched=true
             while $no_script_launched; do
                 echo -e $YELLOW"\tScript not started, waiting 5 more secondes"$DEFAULT
                 sleep 5
-                if checking_redis && checking_ardb; then
+                if checking_redis && checking_ardb && checking_kvrocks; then
                     launching_scripts;
                     no_script_launched=false
                 else
@@ -446,7 +488,7 @@ function killscript {
 }
 
 function killall {
-    if [[ $isredis || $isardb || $islogged || $isqueued || $is_ail_2_ail || $isscripted || $isflasked || $isfeeded || $iscrawler || $is_ail_core ]]; then
+    if [[ $isredis || $isardb || $iskvrocks || $islogged || $isqueued || $is_ail_2_ail || $isscripted || $isflasked || $isfeeded || $iscrawler || $is_ail_core || $is_ail_2_ail ]]; then
         if [[ $isredis ]]; then
             echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
             shutting_down_redis;
@@ -456,18 +498,18 @@ function killall {
             echo -e $GREEN"Gracefully closing ardb servers"$DEFAULT
             shutting_down_ardb;
         fi
+        if [[ $iskvrocks ]]; then
+            echo -e $GREEN"Gracefully closing Kvrocks servers"$DEFAULT
+            shutting_down_kvrocks;
+        fi
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail
+        kill $isredis $isardb $iskvrocks $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $isredis $isardb $islogged $isqueued $isscripted $is_ail_2_ail $isflasked $isfeeded $iscrawler $is_ail_core killed."$DEFAULT
+        echo -e $GREEN"\t* $isredis $isardb $iskvrocks $islogged $isqueued $isscripted $is_ail_2_ail $isflasked $isfeeded $iscrawler $is_ail_core killed."$DEFAULT
     else
         echo -e $RED"\t* No screen to kill"$DEFAULT
     fi
-}
-
-function shutdown {
-    bash -c "./Shutdown.py"
 }
 
 function update() {
@@ -526,6 +568,7 @@ function launch_all {
     update;
     launch_redis;
     launch_ardb;
+    launch_kvrocks;
     launch_logs;
     launch_queues;
     launch_scripts;
@@ -534,7 +577,7 @@ function launch_all {
 
 function menu_display {
 
-  options=("Redis" "Ardb" "Logs" "Queues" "Scripts" "Flask" "Killall" "Shutdown" "Update" "Update-config" "Update-thirdparty")
+  options=("Redis" "Ardb" "Kvrocks" "Logs" "Queues" "Scripts" "Flask" "Killall" "Update" "Update-config" "Update-thirdparty")
 
   menu() {
       echo "What do you want to Launch?:"
@@ -565,6 +608,9 @@ function menu_display {
               Ardb)
                   launch_ardb;
                   ;;
+              Kvrocks)
+                  launch_kvrocks;
+                  ;;
               Logs)
                   launch_logs;
                   ;;
@@ -579,9 +625,6 @@ function menu_display {
                   ;;
               Killall)
                   killall;
-                  ;;
-              Shutdown)
-                  shutdown;
                   ;;
               Update)
                   checking_configuration;
@@ -612,42 +655,47 @@ function menu_display {
 
 while [ "$1" != "" ]; do
     case $1 in
-        -l | --launchAuto )           launch_all "automatic";
-                                      ;;
-        -lr | --launchRedis )         launch_redis;
-                                      ;;
-        -la | --launchARDB )          launch_ardb;
-                                      ;;
-        -lrv | --launchRedisVerify )  launch_redis;
-                                      wait_until_redis_is_ready;
-                                      ;;
-        -lav | --launchARDBVerify )   launch_ardb;
-                                      wait_until_ardb_is_ready;
-                                      ;;
-        -k | --killAll )              killall;
-                                      ;;
-        -ks | --killscript )          killscript;
-                                      ;;
-        -m | --menu )                 menu_display;
-                                      ;;
-        -u | --update )               checking_configuration;
-                                      update "--manual";
-                                      ;;
-        -t | --test )                 launch_tests;
-                                      ;;
-        -ut | --thirdpartyUpdate )    update_thirdparty;
-                                      ;;
-        -rp | --resetPassword )       reset_password;
-                                      ;;
-        -f | --launchFeeder )         launch_feeder;
-                                      ;;
-        -h | --help )                 helptext;
-                                      exit
-                                      ;;
-        -kh | --khelp )               helptext;
-                                      ;;
-        * )                           helptext
-                                      exit 1
+        -l | --launchAuto )             launch_all "automatic";
+                                        ;;
+        -lr | --launchRedis )           launch_redis;
+                                        ;;
+        -la | --launchARDB )            launch_ardb;
+                                        ;;
+        -lk | --launchKVROCKS )         launch_kvrocks;
+                                        ;;
+        -lrv | --launchRedisVerify )    launch_redis;
+                                        wait_until_redis_is_ready;
+                                        ;;
+        -lav | --launchARDBVerify )     launch_ardb;
+                                        wait_until_ardb_is_ready;
+                                        ;;
+        -lkv | --launchKVORCKSVerify )  launch_kvrocks;
+                                        wait_until_kvrocks_is_ready;
+                                        ;;
+        -k | --killAll )                killall;
+                                        ;;
+        -ks | --killscript )            killscript;
+                                        ;;
+        -m | --menu )                   menu_display;
+                                        ;;
+        -u | --update )                 checking_configuration;
+                                        update "--manual";
+                                        ;;
+        -t | --test )                   launch_tests;
+                                        ;;
+        -ut | --thirdpartyUpdate )      update_thirdparty;
+                                        ;;
+        -rp | --resetPassword )         reset_password;
+                                        ;;
+        -f | --launchFeeder )           launch_feeder;
+                                        ;;
+        -h | --help )                   helptext;
+                                        exit
+                                        ;;
+        -kh | --khelp )                 helptext;
+                                        ;;
+        * )                             helptext
+                                        exit 1
     esac
     shift
 done

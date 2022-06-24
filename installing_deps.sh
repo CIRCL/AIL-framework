@@ -11,6 +11,11 @@ sudo apt-get update
 sudo apt-get install python3-pip virtualenv python3-dev python3-tk libfreetype6-dev \
     screen g++ python-tk unzip libsnappy-dev cmake -qq
 
+# update virtualenv
+# python3-dev | python3-nose
+
+# python3-tk | python3-numpy??????
+
 #Needed for downloading jemalloc
 sudo apt-get install wget -qq
 
@@ -84,11 +89,21 @@ pushd ardb/
 make
 popd
 
-# KVROCKS #
-# test ! -d kvrocks/ && git clone https://github.com/bitleak/kvrocks.git
-# pushd kvrocks/
-# make -j4
-# popd
+DEFAULT_HOME=$(pwd)
+
+#### KVROCKS ####
+test ! -d kvrocks/ && git clone https://github.com/apache/incubator-kvrocks.git kvrocks
+pushd kvrocks
+./build.sh build
+popd
+
+DEFAULT_KVROCKS_DATA=$DEFAULT_HOME/DATA_KVROCKS
+mkdir -p $DEFAULT_KVROCKS_DATA
+
+sed -i "s|dir /tmp/kvrocks|dir ${DEFAULT_KVROCKS_DATA}|1" $DEFAULT_HOME/configs/6383.conf
+##-- KVROCKS --##
+
+
 
 # Config File
 if [ ! -f configs/core.cfg ]; then
