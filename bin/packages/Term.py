@@ -106,9 +106,9 @@ def get_text_word_frequency(item_content, filtering=True):
 # # TODO: create all tracked words
 def get_tracked_words_list():
     return list(r_serv_term.smembers('all:tracker:word'))
-
-def get_typosquat_tracked_words_list():
-    set_list = r_serv_term.smembers('all:tracker:typosquatting')
+  
+def get_set_tracked_words_list():
+    set_list = r_serv_term.smembers('all:tracker:set')
     all_set_list = []
     for elem in set_list:
         res = elem.split(';')
