@@ -301,14 +301,14 @@ def get_email_subject(tracker_uuid):
         return 'AIL framework: {}'.format(tracker_description)
 
 def get_tracker_last_updated_by_type(tracker_type):
-    epoch_update = r_serv_tracker.get(f'tracker:refresh:{tracker_type}')
+    epoch_update = r_cache.get(f'tracker:refresh:{tracker_type}')
     if not epoch_update:
         epoch_update = 0
     return float(epoch_update)
 
 # # TODO: check type API
 def trigger_trackers_refresh(tracker_type):
-    r_serv_tracker.set(f'tracker:refresh:{tracker_type}', time.time())
+    r_cache.set(f'tracker:refresh:{tracker_type}', time.time())
 
 ######################
 #### TRACKERS ACL ####
@@ -551,9 +551,9 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
         # escape source ?
         r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source))
     # toggle refresh module tracker list/set
-    r_serv_tracker.set('tracker:refresh:{}'.format(tracker_type), time.time())
+    trigger_trackers_refresh(tracker_type)
     if tracker_type != old_type: # toggle old type refresh
-        r_serv_tracker.set('tracker:refresh:{}'.format(old_type), time.time())
+        trigger_trackers_refresh(old_type)
     return tracker_uuid
 
 def api_add_tracker(dict_input, user_id):
