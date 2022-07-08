@@ -117,7 +117,7 @@ def get_tracker_mails(tracker_uuid):
     return list(r_serv_tracker.smembers('tracker:mail:{}'.format(tracker_uuid)))
 
 def get_tracker_webhook(tracker_uuid):
-    return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'webhook')
+    return r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'webhook')
 
 def get_tracker_uuid_sources(tracker_uuid):
     return list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}'))
@@ -223,14 +223,14 @@ def get_tracker_typosquatting_domains(tracker_uuid):
     return r_serv_tracker.smembers(f'tracker:typosquatting:{tracker_uuid}')
 
 def get_typosquatting_tracked_words_list():
-    all_typo = dict()
+    typosquattings = {}
     typos_uuid = get_all_tracker_uuid_by_type("typosquatting")
 
     for typo_uuid in typos_uuid:
         tracker = get_tracker_by_uuid(typo_uuid)
-        all_typo[tracker] = get_tracker_typosquatting_domains(typo_uuid)
+        typosquattings[tracker] = get_tracker_typosquatting_domains(typo_uuid)
 
-    return all_typo
+    return typosquattings
 
 
 def add_tracked_item(tracker_uuid, item_id):
@@ -301,7 +301,7 @@ def get_email_subject(tracker_uuid):
         return 'AIL framework: {}'.format(tracker_description)
 
 def get_tracker_last_updated_by_type(tracker_type):
-    epoch_update = r_serv_tracker.get('tracker:refresh:{}'.format(tracker_type))
+    epoch_update = r_serv_tracker.get(f'tracker:refresh:{tracker_type}')
     if not epoch_update:
         epoch_update = 0
     return float(epoch_update)
@@ -434,7 +434,7 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
             return {"status": "error", "reason": "Only one domain is accepted at a time"}, 400
         if not "." in tracker:
             return {"status": "error", "reason": "Invalid domain name"}, 400
-            
+
 
     elif tracker_type=='yara_custom':
         if not is_valid_yara_rule(tracker):
