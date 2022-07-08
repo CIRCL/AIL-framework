@@ -217,8 +217,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Onion" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Onion.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
-    sleep 0.1
+    # screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
+    # sleep 0.1
     screen -S "Script_AIL" -X screen -t "Telegram" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Telegram.py; read x"
     sleep 0.1
 
