@@ -8,6 +8,8 @@ AILENV
 redis-leveldb
 redis
 ardb
+kvrocks
+DATA_KVROCKS
 faup
 tlsh
 Blooms

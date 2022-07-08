@@ -25,8 +25,8 @@ import item_basic
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 
-r_serv_db = config_loader.get_redis_conn("ARDB_DB")
-r_serv_tracker = config_loader.get_redis_conn("ARDB_Tracker")
+r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
+r_serv_tracker = config_loader.get_redis_conn("Kvrocks_DB")
 
 items_dir = config_loader.get_config_str("Directories", "pastes")
 if items_dir[-1] == '/':
@@ -99,7 +99,10 @@ def get_tracker_type(tracker_uuid):
     return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'type')
 
 def get_tracker_level(tracker_uuid):
-    return int(r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'level'))
+    level = r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'level')
+    if not level:
+        level = 0
+    return int(level)
 
 def get_tracker_user_id(tracker_uuid):
     return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
@@ -232,6 +235,9 @@ def set_tracker_first_seen(tracker_uuid, date):
 
 def set_tracker_last_seen(tracker_uuid, date):
     r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'last_seen', int(date))
+
+def set_tracker_user_id(tracker_uuid, user_id):
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'user_id', user_id)
 
 # # TODO: ADD CACHE ???
 def update_tracker_daterange(tracker_uuid, date, op='add'):
@@ -419,6 +425,15 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
     else:
         return {"status": "error", "reason": "Incorrect type"}, 400
     return {"status": "success", "tracker": tracker, "type": tracker_type}, 200
+
+def _re_create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, webhook, dashboard, tracker_uuid, sources, first_seen, last_seen):
+    create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, webhook, dashboard=dashboard, tracker_uuid=tracker_uuid, sources=sources)
+    set_tracker_user_id(tracker_uuid, user_id)
+    if first_seen:
+        set_tracker_first_seen(tracker_uuid, first_seen)
+    if last_seen:
+        set_tracker_last_seen(tracker_uuid, last_seen)
+
 
 def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, webhook, dashboard=0, tracker_uuid=None, sources=[]):
     # edit tracker
@@ -836,8 +851,11 @@ def set_retro_hunt_task_state(task_uuid, new_state):
     r_serv_tracker.sadd(f'tracker:retro_hunt:task:{new_state}', task_uuid)
     r_serv_tracker.hset(f'tracker:retro_hunt:task:{task_uuid}', 'state', new_state)
 
-def get_retro_hunt_task_type(task_uuid):
-    return r_serv_tracker(f'tracker:retro_hunt:task:{task_uuid}', 'type')
+# def get_retro_hunt_task_type(task_uuid):
+#     return r_serv_tracker.hget(f'tracker:retro_hunt:task:{task_uuid}', 'type')
+#
+# def set_retro_hunt_task_type(task_uuid, task_type):
+#     r_serv_tracker.hset(f'tracker:retro_hunt:task:{task_uuid}', 'type', task_type)
 
 # # TODO: yararule
 def get_retro_hunt_task_rule(task_uuid, r_compile=False):
@@ -856,6 +874,12 @@ def get_retro_hunt_task_timeout(task_uuid):
         return int(res)
     else:
         return 30 # # TODO: FIXME use instance limit
+
+def get_retro_hunt_task_date(task_uuid):
+    return r_serv_tracker.hget(f'tracker:retro_hunt:task:{task_uuid}', 'date')
+
+def set_retro_hunt_task_date(task_uuid, date):
+    return r_serv_tracker.hset(f'tracker:retro_hunt:task:{task_uuid}', 'date', date)
 
 def get_retro_hunt_task_date_from(task_uuid):
     return r_serv_tracker.hget(f'tracker:retro_hunt:task:{task_uuid}', 'date_from')
@@ -944,8 +968,17 @@ def clear_retro_hunt_task_cache(task_uuid):
 # name
 # description
 
+# state error
+def _re_create_retro_hunt_task(name, rule, date, date_from, date_to, creator, sources, tags, mails, timeout, description, task_uuid, state='pending', nb_match=0, last_id=None):
+    create_retro_hunt_task(name, rule, date_from, date_to, creator, sources=sources, tags=tags, mails=mails, timeout=timeout, description=description, task_uuid=task_uuid, state=state)
+    if last_id:
+        set_retro_hunt_last_analyzed(task_uuid, last_id)
+    _set_retro_hunt_nb_match(task_uuid, nb_match)
+    set_retro_hunt_task_date(task_uuid, date)
+
+
 # # # TODO: TYPE
-def create_retro_hunt_task(name, rule, date_from, date_to, creator, sources=[], tags=[], mails=[], timeout=30, description=None, task_uuid=None):
+def create_retro_hunt_task(name, rule, date_from, date_to, creator, sources=[], tags=[], mails=[], timeout=30, description=None, task_uuid=None, state='pending'):
     if not task_uuid:
         task_uuid = str(uuid.uuid4())
 
@@ -970,9 +1003,11 @@ def create_retro_hunt_task(name, rule, date_from, date_to, creator, sources=[], 
         r_serv_tracker.sadd(f'tracker:retro_hunt:task:mails:{task_uuid}', escape(mail))
 
     r_serv_tracker.sadd('tracker:retro_hunt:task:all', task_uuid)
+
     # add to pending tasks
-    r_serv_tracker.sadd('tracker:retro_hunt:task:pending', task_uuid)
-    r_serv_tracker.hset(f'tracker:retro_hunt:task:{task_uuid}', 'state', 'pending')
+    if state not in ('pending', 'completed', 'paused'):
+        state = 'pending'
+    set_retro_hunt_task_state(task_uuid, state)
     return task_uuid
 
 # # TODO: delete rule
@@ -1092,12 +1127,15 @@ def compute_retro_hunt_task_progress(task_uuid, date_from=None, date_to=None, so
 
      # # TODO: # FIXME: # Cache
 
+# # TODO: ADD MAP ID => Retro_Hunt
 def save_retro_hunt_match(task_uuid, id, object_type='item'):
     item_date = item_basic.get_item_date(id)
     res = r_serv_tracker.sadd(f'tracker:retro_hunt:task:item:{task_uuid}:{item_date}', id)
     # track nb item by date
     if res == 1:
         r_serv_tracker.zincrby(f'tracker:retro_hunt:task:stat:{task_uuid}', int(item_date), 1)
+    # Add map obj_id -> task_uuid
+    r_serv_tracker.sadd(f'obj:retro_hunt:item:{item_id}', task_uuid)
 
 def get_retro_hunt_all_item_dates(task_uuid):
     return r_serv_tracker.zrange(f'tracker:retro_hunt:task:stat:{task_uuid}', 0, -1)
@@ -1111,12 +1149,15 @@ def get_retro_hunt_nb_match(task_uuid):
             nb_match += int(tuple[1])
     return int(nb_match)
 
+def _set_retro_hunt_nb_match(task_uuid, nb_match):
+    r_serv_tracker.hset(f'tracker:retro_hunt:task:{task_uuid}', 'nb_match', nb_match)
+
 def set_retro_hunt_nb_match(task_uuid):
     l_date_value = r_serv_tracker.zrange(f'tracker:retro_hunt:task:stat:{task_uuid}', 0, -1, withscores=True)
     nb_match = 0
     for tuple in l_date_value:
         nb_match += int(tuple[1])
-    r_serv_tracker.hset(f'tracker:retro_hunt:task:{task_uuid}', 'nb_match', nb_match)
+    _set_retro_hunt_nb_match(task_uuid, nb_match)
 
 def get_retro_hunt_items_by_daterange(task_uuid, date_from, date_to):
     all_item_id = set()
@@ -1296,8 +1337,9 @@ def _fix_db_custom_tags():
 
 #### -- ####
 
-if __name__ == '__main__':
-    _fix_db_custom_tags()
+#if __name__ == '__main__':
+
+    #_fix_db_custom_tags()
     # fix_all_tracker_uuid_list()
     # res = get_all_tracker_uuid()
     # print(len(res))

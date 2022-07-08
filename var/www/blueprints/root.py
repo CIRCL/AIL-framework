@@ -15,15 +15,16 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
 from Role_Manager import login_admin, login_analyst
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-from User import User
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import Users
+from lib.Users import User
 
 r_cache = Flask_config.r_cache
-r_serv_db = Flask_config.r_serv_db
-r_serv_tags = Flask_config.r_serv_tags
 
 # ============ BLUEPRINT ============
 
@@ -67,7 +68,7 @@ def login():
                     return render_template("login.html", error=error)
 
             if user and user.check_password(password):
-                if not check_user_role_integrity(user.get_id()):
+                if not Users.check_user_role_integrity(user.get_id()):
                     error = 'Incorrect User ACL, Please contact your administrator'
                     return render_template("login.html", error=error)
                 login_user(user) ## TODO: use remember me ?
@@ -113,9 +114,9 @@ def change_password():
 
     if current_user.is_authenticated and password1!=None:
         if password1==password2:
-            if check_password_strength(password1):
+            if Users.check_password_strength(password1):
                 user_id = current_user.get_id()
-                create_user_db(user_id , password1, update=True)
+                Users.create_user(user_id , password=password1, chg_passwd=False)
                 # update Note
                 # dashboard
                 return redirect(url_for('dashboard.index', update_note=True))

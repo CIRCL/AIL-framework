@@ -11,7 +11,7 @@
       		</h5>
           <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
       	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('settings.settings_page')}}" id="nav_server_status">
+      	      <a class="nav-link" href="{{url_for('settings_b.settings_page')}}" id="nav_server_status">
       	        <i class="fas fa-tools"></i>
       	        <span>Server Status</span>
       	      </a>
@@ -48,6 +48,15 @@
       	      <a class="nav-link" href="{{url_for('settings.ail_configs')}}" id="nav_ail_configs">
       	        <img src="{{ url_for('static', filename='image/ail.png')}}" alt="AIL servers" style="width:25px;">
       	        <span>AIL Configs</span>
+      	      </a>
+      	    </li> -->
+            <!-- <li class="nav-item">
+      	      <a class="nav-link" href="{{url_for('settings.passive_dns')}}" id="nav_data_retention">
+      	        <i class="fas fa-database"></i>
+                <i class="fas fa-hourglass"></i>
+                <i class="fas fa-clock"></i>
+                <i class="fas fa-stopwatch"></i>
+      	        <span>Data Retention</span>
       	      </a>
       	    </li> -->
             <li class="nav-item">

@@ -9,6 +9,8 @@ TERMINAL_BLUE = '\33[94m'
 TERMINAL_BLINK = '\33[6m'
 TERMINAL_DEFAULT = '\033[0m'
 
+REPO_ORIGIN = 'https://github.com/ail-project/ail-framework.git'
+
 # set defaut_remote
 def set_default_remote(new_origin_url, verbose=False):
     process = subprocess.run(['git', 'remote', 'set-url', 'origin', new_origin_url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -143,6 +145,28 @@ def get_last_tag_from_remote(verbose=False):
         if verbose:
             print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
         return ''
+
+def get_git_metadata():
+    dict_git = {}
+    dict_git['current_branch'] = get_current_branch()
+    dict_git['is_clone'] = is_not_fork(REPO_ORIGIN)
+    dict_git['is_working_directory_clean'] = is_working_directory_clean()
+    dict_git['current_commit'] = get_last_commit_id_from_local()
+    dict_git['last_remote_commit'] = get_last_commit_id_from_remote()
+    dict_git['last_local_tag'] = get_last_tag_from_local()
+    dict_git['last_remote_tag'] = get_last_tag_from_remote()
+
+    if dict_git['current_commit'] != dict_git['last_remote_commit']:
+        dict_git['new_git_update_available'] = True
+    else:
+        dict_git['new_git_update_available'] = False
+
+    if dict_git['last_local_tag'] != dict_git['last_remote_tag']:
+        dict_git['new_git_version_available'] = True
+    else:
+        dict_git['new_git_version_available'] = False
+
+    return dict_git
 
 if __name__ == "__main__":
     get_last_commit_id_from_remote(verbose=True)

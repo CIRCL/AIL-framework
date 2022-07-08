@@ -26,8 +26,8 @@ import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
-r_serv_db = config_loader.get_redis_conn("ARDB_DB")
-r_serv_sync = config_loader.get_redis_conn("ARDB_DB")
+r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
+r_serv_sync = config_loader.get_redis_conn("Kvrocks_DB")
 config_loader = None
 
 WEBSOCKETS_CLOSE_CODES = {
@@ -480,7 +480,7 @@ def change_pull_push_state(ail_uuid, pull=None, push=None):
         else:
             pull = False
         if curr_pull != pull:
-            print('pull hset')
+            #print('pull hset')
             r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'pull', pull)
             edited = True
     if push is not None:
@@ -490,7 +490,7 @@ def change_pull_push_state(ail_uuid, pull=None, push=None):
         else:
             push = False
         if curr_push != push:
-            print('push hset')
+            #print('push hset')
             r_serv_sync.hset(f'ail:instance:{ail_uuid}', 'push', push)
             edited = True
     if edited:
@@ -991,8 +991,12 @@ def edit_sync_queue_filter_tags(queue_uuid, new_tags):
 
 # # TODO: optionnal name ???
 # # TODO: SANITYZE TAGS
-def create_sync_queue(name, tags=[], description=None, max_size=100):
-    queue_uuid = generate_uuid()
+# # TODO: SANITYZE queue_uuid
+def create_sync_queue(name, tags=[], description=None, max_size=100, _queue_uuid=None):
+    if _queue_uuid:
+        queue_uuid = sanityze_uuid(_queue_uuid).replace('-', '')
+    else:
+        queue_uuid = generate_uuid()
     r_serv_sync.sadd('ail2ail:sync_queue:all', queue_uuid)
 
     r_serv_sync.hset(f'ail2ail:sync_queue:{queue_uuid}', 'name', name)
@@ -1156,8 +1160,19 @@ def get_sync_queue_object_by_queue_uuid(queue_uuid, ail_uuid, push=True):
         # # REVIEW: # TODO: create by obj type
         return Item(obj_dict['id'])
 
-def add_object_to_sync_queue(queue_uuid, ail_uuid, obj_dict, push=True, pull=True):
-    obj = json.dumps(obj_dict)
+def get_sync_queue_objects_by_queue_uuid(queue_uuid, ail_uuid, push=True):
+    if push:
+        sync_mode = 'push'
+    else:
+        sync_mode = 'pull'
+    return r_serv_sync.lrange(f'sync:queue:{sync_mode}:{queue_uuid}:{ail_uuid}', 0, -1)
+
+# # TODO: use queue max_size
+def add_object_to_sync_queue(queue_uuid, ail_uuid, obj_dict, push=True, pull=True, json_obj=True):
+    if json_obj:
+        obj = json.dumps(obj_dict)
+    else:
+        obj = obj_dict
 
     # # TODO: # FIXME: USE CACHE ??????
     if push:

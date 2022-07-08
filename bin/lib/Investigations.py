@@ -28,7 +28,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
-r_tracking = config_loader.get_redis_conn("DB_Tracking")
+r_tracking = config_loader.get_redis_conn("Kvrocks_DB")
 config_loader = None
 
 
@@ -287,12 +287,31 @@ def delete_obj_investigations(obj_id, obj_type, subtype=''):
     return unregistred
 
 
+def _set_timestamp(investigation_uuid, timestamp):
+    r_tracking.hset(f'investigations:data:{investigation_uuid}', 'timestamp', timestamp)
+
+# analysis - threat level - info - date - creator
+
+def _re_create_investagation(investigation_uuid, user_id, date, name, threat_level, analysis, info, tags, last_change, timestamp, misp_events):
+    create_investigation(user_id, date, name, threat_level, analysis, info, tags=tags, investigation_uuid=investigation_uuid)
+    if timestamp:
+        _set_timestamp(investigation_uuid, timestamp)
+    investigation = Investigation(investigation_uuid)
+    if last_change:
+        investigation.set_last_change(last_change)
+    for misp_event in misp_events:
+        investigation.add_misp_events(misp_event)
+
 # # TODO: fix default threat_level analysis
 # # TODO: limit description + name
 # # TODO: sanityze tags
 # # TODO: sanityze date
-def create_investigation(user_id, date, name, threat_level, analysis, info, tags=[]):
-    investigation_uuid = generate_uuid()
+def create_investigation(user_id, date, name, threat_level, analysis, info, tags=[], investigation_uuid=None):
+    if investigation_uuid:
+        if not is_valid_uuid_v4(investigation_uuid):
+            investigation_uuid = generate_uuid()
+    else:
+        investigation_uuid = generate_uuid()
     r_tracking.sadd('investigations:all', investigation_uuid)
     # user map
     r_tracking.sadd(f'investigations:user:{user_id}', investigation_uuid)
@@ -461,9 +480,10 @@ if __name__ == '__main__':
     # res = r_tracking.dbsize()
     # print(res)
 
-    investigation_uuid = 'e4e1c8e3b0a349bf81482f2f823efc0f'
+    investigation_uuid = 'a6545c38083444eeb9383d357f8fa747'
+    _set_timestamp(investigation_uuid, int(time.time()))
 
-    investigation = Investigation(investigation_uuid)
-    investigation.delete()
+    # investigation = Investigation(investigation_uuid)
+    # investigation.delete()
 
 # # TODO: PAGINATION

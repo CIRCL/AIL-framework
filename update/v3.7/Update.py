@@ -13,7 +13,7 @@ import ConfigLoader
 import Tracker
 
 sys.path.append(os.path.join(os.environ['AIL_HOME'], 'update', 'bin'))
-from ail_updater import AIL_Updater
+from old_ail_updater import AIL_Updater
 
 class Updater(AIL_Updater):
     """default Updater."""

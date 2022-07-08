@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import base64
+import gzip
 import os
 import re
 import sys
@@ -38,10 +39,9 @@ import Username
 from flask import url_for
 
 config_loader = ConfigLoader()
-# get and sanityze PASTE DIRECTORY
-# # TODO: rename PASTES_FOLDER
-PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
-PASTES_FOLDER = os.path.join(os.path.realpath(PASTES_FOLDER), '')
+# # TODO:  get and sanityze ITEMS DIRECTORY
+ITEMS_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+ITEMS_FOLDER = os.path.join(os.path.realpath(ITEMS_FOLDER), '')
 
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
@@ -82,11 +82,11 @@ class Item(AbstractObject):
 
     def get_filename(self):
         # Creating the full filepath
-        filename = os.path.join(PASTES_FOLDER, self.id)
+        filename = os.path.join(ITEMS_FOLDER, self.id)
         filename = os.path.realpath(filename)
 
         # incorrect filename
-        if not os.path.commonprefix([filename, PASTES_FOLDER]) == PASTES_FOLDER:
+        if not os.path.commonprefix([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
             return None
         else:
             return filename
@@ -114,8 +114,53 @@ class Item(AbstractObject):
         payload = {'raw': self.get_gzip_content(b64=True)}
         return payload
 
-    # # TODO:
-    def create(self):
+    def set_origin(self): # set_parent ?
+        pass
+
+    def add_duplicate(self):
+        pass
+
+    def sanitize_id(self):
+        pass
+
+    # # TODO: sanitize_id
+    # # TODO: check if already exists ?
+    # # TODO: check if duplicate
+    def save_on_disk(self, content, binary=True, compressed=False, base64=False):
+        if not binary:
+            content = content.encode()
+        if base64:
+            content = base64.standard_b64decode(content)
+        if not compressed:
+            content = gzip.compress(content)
+
+        # # TODO: # FIXME: raise Exception id filename is None ######
+        filename = self.get_filename()
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        with open(filename, 'wb') as f:
+            f.write(content)
+
+
+    # # TODO: correlations
+    #
+    # content
+    # tags
+    # origin
+    # duplicate -> all item iterations ???
+    #
+    def create(self, content, tags, origin=None, duplicate=None):
+        self.save_on_disk(content, binary=True, compressed=False, base64=False)
+
+        # # TODO:
+        # for tag in tags:
+        #     self.add_tag(tag)
+
+        if origin:
+
+        if duplicate:
+
         pass
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
@@ -174,7 +219,7 @@ def get_basename(item_id):
     return os.path.basename(item_id)
 
 def get_item_id(full_path):
-    return full_path.replace(PASTES_FOLDER, '', 1)
+    return full_path.replace(ITEMS_FOLDER, '', 1)
 
 def get_item_filepath(item_id):
     return item_basic.get_item_filepath(item_id)
@@ -192,7 +237,7 @@ def get_item_basename(item_id):
     return os.path.basename(item_id)
 
 def get_item_size(item_id):
-    return round(os.path.getsize(os.path.join(PASTES_FOLDER, item_id))/1024.0, 2)
+    return round(os.path.getsize(os.path.join(ITEMS_FOLDER, item_id))/1024.0, 2)
 
 def get_item_encoding(item_id):
     return None
@@ -561,11 +606,11 @@ def get_item_har(har_path):
 
 def get_item_filename(item_id):
     # Creating the full filepath
-    filename = os.path.join(PASTES_FOLDER, item_id)
+    filename = os.path.join(ITEMS_FOLDER, item_id)
     filename = os.path.realpath(filename)
 
     # incorrect filename
-    if not os.path.commonprefix([filename, PASTES_FOLDER]) == PASTES_FOLDER:
+    if not os.path.commonprefix([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
         return None
     else:
         return filename
@@ -712,7 +757,7 @@ def delete_domain_node(item_id):
         delete_item(child_id)
 
 
-# if __name__ == '__main__':
-#
-#     item = Item('')
-#     print(item.get_misp_object().to_json())
+if __name__ == '__main__':
+    content = 'test file content'
+    item = Item('tests/2020/01/02/test_save.gz')
+    item.save_on_disk(content, binary=False)

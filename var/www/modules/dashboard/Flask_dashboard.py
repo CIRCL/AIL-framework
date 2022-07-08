@@ -20,6 +20,7 @@ from flask_login import login_required
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import queues_modules
+import ail_updates
 
 # ============ VARIABLES ============
 import Flask_config
@@ -29,10 +30,8 @@ config_loader = Flask_config.config_loader
 baseUrl = Flask_config.baseUrl
 r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
-r_serv_db = Flask_config.r_serv_db
 
 max_dashboard_logs = Flask_config.max_dashboard_logs
-dict_update_description = Flask_config.dict_update_description
 
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
@@ -151,12 +150,11 @@ def stuff():
     return jsonify(row1=get_queues(r_serv))
 
 
+# TODO: ADD UPDATE NOTE BY USER
 @dashboard.route("/")
 @login_required
 @login_read_only
 def index():
-    update_note = request.args.get('update_note')
-
     default_minute = config_loader.get_config_str("Flask", "minute_processed_paste")
     threshold_stucked_module = config_loader.get_config_int("Module_ModuleInformation", "threshold_stucked_module")
     log_select = {10, 25, 50, 100}
@@ -165,21 +163,15 @@ def index():
     log_select.sort()
 
     # Check if update in progress
-    update_in_progress = False
-    update_warning_message = ''
-    update_warning_message_notice_me = ''
-    current_update = r_serv_db.get('ail:current_background_update')
-    if current_update:
-        if r_serv_db.scard('ail:update_{}'.format(current_update)) != dict_update_description[current_update]['nb_background_update']:
-            update_in_progress = True
-            update_warning_message = dict_update_description[current_update]['update_warning_message']
-            update_warning_message_notice_me = dict_update_description[current_update]['update_warning_message_notice_me']
+    background_update = False
+    update_message = ''
+    if ail_updates.get_current_background_update():
+        background_update = True
+        update_message = ail_updates.get_update_background_message()
 
     return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module,
                             log_select=log_select, selected=max_dashboard_logs,
-                            update_warning_message=update_warning_message, update_in_progress=update_in_progress,
-                            #update_note=update_note,
-                            update_warning_message_notice_me=update_warning_message_notice_me)
+                            background_update=background_update, update_message=update_message)
 
 # ========= REGISTRATION =========
 app.register_blueprint(dashboard, url_prefix=baseUrl)

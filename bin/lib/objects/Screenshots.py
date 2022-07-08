@@ -3,30 +3,24 @@
 
 import os
 import sys
-import redis
 
-# sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
+from io import BytesIO
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib.ConfigLoader import ConfigLoader
+from lib.objects.abstract_object import AbstractObject
 
-from abstract_object import AbstractObject
-
-config_loader = ConfigLoader.ConfigLoader()
+config_loader = ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
-HASH_DIR = config_loader.get_config_str('Directories', 'hash')
+SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 config_loader = None
-
-
-################################################################################
-################################################################################
-################################################################################
 
 class Screenshot(AbstractObject):
     """
     AIL Screenshot Object. (strings)
     """
 
+    # ID = SHA256
     def __init__(self, id):
         super(Screenshot, self).__init__('screenshot', id)
 
@@ -49,6 +43,33 @@ class Screenshot(AbstractObject):
 
     def get_svg_icon(self):
         return {'style': 'fas', 'icon': '\uf03e', 'color': '#E1F5DF', 'radius':5}
+
+    def get_rel_path(self, add_extension=False):
+        rel_path = os.path.join(self.id[0:2], self.id[2:4], self.id[4:6], self.id[6:8], self.id[8:10], self.id[10:12], self.id[12:])
+        if add_extension:
+            rel_path = f'{rel_path}.png'
+        return rel_path
+
+    def get_filepath(self):
+        filename = os.path.join(SCREENSHOT_FOLDER, self.get_rel_path(add_extension=True))
+        return os.path.realpath(filename)
+
+    def get_file_content(self):
+        filepath = self.get_filepath()
+        with open(filepath, 'rb') as f:
+            file_content = BytesIO(f.read())
+        return file_content
+
+    def get_misp_object(self):
+        obj_attrs = []
+        obj = MISPObject('file')
+
+        obj_attrs.append( obj.add_attribute('sha256', value=self.id) )
+        obj_attrs.append( obj.add_attribute('attachment', value=self.id, data=self.get_file_content()) )
+        for obj_attr in obj_attrs:
+            for tag in self.get_tags():
+                obj_attr.add_tag(tag)
+        return obj
 
     ############################################################################
     ############################################################################

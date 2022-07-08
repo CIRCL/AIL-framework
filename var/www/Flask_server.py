@@ -28,7 +28,11 @@ import Tag
 
 sys.path.append('./modules/')
 
-from User import User
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.Users import User
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -47,6 +51,7 @@ from blueprints.objects_item import objects_item
 from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
 from blueprints.ail_2_ail_sync import ail_2_ail_sync
+from blueprints.settings_b import settings_b
 
 
 Flask_dir = os.environ['AIL_FLASK']
@@ -107,6 +112,7 @@ app.register_blueprint(objects_item, url_prefix=baseUrl)
 app.register_blueprint(hunters, url_prefix=baseUrl)
 app.register_blueprint(old_endpoints, url_prefix=baseUrl)
 app.register_blueprint(ail_2_ail_sync, url_prefix=baseUrl)
+app.register_blueprint(settings_b, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========

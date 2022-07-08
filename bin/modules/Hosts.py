@@ -63,11 +63,13 @@ class Hosts(AbstractModule):
         content = item.get_content()
 
         hosts = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.host_regex, item.get_id(), content)
-        for host in hosts:
-            #print(host)
+        if hosts:
+            print(f'{len(hosts)} host     {item.get_id()}')
+            for host in hosts:
+                #print(host)
 
-            msg = f'{host} {item.get_id()}'
-            self.send_message_to_queue(msg, 'Host')
+                msg = f'{host} {item.get_id()}'
+                self.send_message_to_queue(msg, 'Host')
 
 
 

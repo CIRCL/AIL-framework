@@ -17,8 +17,8 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from packages import Tag
-from lib.Investigations import is_object_investigated, get_obj_investigations
-from lib.Tracker import is_obj_tracked, get_obj_all_trackers
+from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
+from lib.Tracker import is_obj_tracked, get_obj_all_trackers, delete_obj_trackers
 
 # # TODO: ADD CORRELATION ENGINE
 
@@ -90,6 +90,14 @@ class AbstractObject(ABC):
         else:
             investigations = get_obj_investigations(self.id, self.type, self.subtype)
         return investigations
+
+    def delete_investigations(self):
+        if not self.subtype:
+            unregistred = delete_obj_investigations(self.id, self.type)
+        else:
+            unregistred = delete_obj_investigations(self.id, self.type, self.subtype)
+        return unregistred
+
     #- Investigations -#
 
     ## Trackers ##
@@ -100,12 +108,20 @@ class AbstractObject(ABC):
     def get_trackers(self):
         return get_obj_all_trackers(self.type, self.subtype, self.id)
 
+    def delete_trackers(self):
+        return delete_obj_trackers(self.type, self.subtype, self.id)
+
     #- Investigations -#
 
     def _delete(self):
         # DELETE TAGS
         Tag.delete_obj_all_tags(self.id, self.type)
-        # # TODO: remove from investigations
+        # remove from tracker
+        self.delete_trackers()
+        # remove from investigations
+        self.delete_investigations()
+
+        # # TODO: remove from correlation
 
     @abstractmethod
     def delete(self):
@@ -122,6 +138,10 @@ class AbstractObject(ABC):
     #     pass
 
     @abstractmethod
+    def get_link(self, flask_context=False):
+        pass
+
+    @abstractmethod
     def get_svg_icon(self):
         """
         Get object svg icon
@@ -129,7 +149,7 @@ class AbstractObject(ABC):
         pass
 
     @abstractmethod
-    def get_link(self, flask_context=False):
+    def get_misp_object(self):
         pass
 
     # # TODO:

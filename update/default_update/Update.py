@@ -9,8 +9,11 @@ import argparse
 import datetime
 import configparser
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ail_updates
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AIL default update')
@@ -23,15 +26,11 @@ if __name__ == '__main__':
 
     # remove space
     update_tag = args.tag.replace(' ', '')
+    if not ail_updates.check_version(update_tag):
+        parser.print_help()
+        print(f'Error: Invalid update tag {update_tag})
+        sys.exit(0)
 
     start_deb = time.time()
 
-    config_loader = ConfigLoader.ConfigLoader()
-    r_serv = config_loader.get_redis_conn("ARDB_DB")
-    config_loader = None
-
-    #Set current ail version
-    r_serv.set('ail:version', update_tag)
-
-    #Set current ail version
-    r_serv.hset('ail:update_date', update_tag, datetime.datetime.now().strftime("%Y%m%d"))
+    ail_updates.add_ail_update(update_tag)

@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 config_loader = None
 

@@ -62,10 +62,11 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-        {%if update_in_progress%}
+        {%if background_update%}
           <div class="alert alert-warning alert-dismissible fade show my-2" role="alert">
-            <strong>Warning!</strong> {{update_warning_message}} <strong>{{update_warning_message_notice_me}}</strong>
-            (<a href="{{ url_for('settings.settings_page') }}">Check Update Status</a>)
+            <strong>Warning!</strong> An Update is running on the background. Some informations can be <strong>missing from the UI.</strong>
+            <strong>Updating: {{update_message}}</strong>
+            (<a href="{{ url_for('settings_b.settings_page') }}">Check Update Status</a>)
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>

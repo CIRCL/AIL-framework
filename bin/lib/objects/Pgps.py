@@ -58,6 +58,24 @@ class Pgp(AbstractObject):
             icon = 'times'
         return {'style': 'fas', 'icon': icon, 'color': '#44AA99', 'radius':5}
 
+    def get_misp_object(self):
+        obj_attrs = []
+        obj = MISPObject('pgp-meta')
+        obj.first_seen = self.get_first_seen()
+        obj.last_seen = self.get_last_seen()
+
+        if self.subtype=='key':
+            obj_attrs.append( obj.add_attribute('key-id', value=self.id) )
+        elif self.subtype=='name':
+            obj_attrs.append( obj.add_attribute('user-id-name', value=self.id) )
+        else: # mail
+            obj_attrs.append( obj.add_attribute('user-id-email', value=self.id) )
+
+        for obj_attr in obj_attrs:
+            for tag in self.get_tags():
+                obj_attr.add_tag(tag)
+        return obj
+
     ############################################################################
     ############################################################################
     ############################################################################

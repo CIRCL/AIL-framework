@@ -3,18 +3,16 @@
 
 import os
 import sys
-import redis
 
-# sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-
-from abstract_object import AbstractObject
 from flask import url_for
+from io import BytesIO
 
-config_loader = ConfigLoader.ConfigLoader()
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+sys.path.append(os.environ['AIL_BIN'])
+from lib.ConfigLoader import ConfigLoader
+from lib.objects.abstract_object import AbstractObject
+
+config_loader = ConfigLoader()
+r_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 HASH_DIR = config_loader.get_config_str('Directories', 'hash')
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
@@ -43,7 +41,7 @@ class Decoded(AbstractObject):
         return self.id.split('/')[0]
 
     def get_file_type(self):
-        return r_serv_metadata.hget(f'metadata_hash:{self.get_sha1()}', 'estimated_type')
+        return r_metadata.hget(f'metadata_hash:{self.get_sha1()}', 'estimated_type')
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
@@ -71,12 +69,59 @@ class Decoded(AbstractObject):
             icon = '\uf249'
         return {'style': 'fas', 'icon': icon, 'color': '#88CCEE', 'radius':5}
 
+    '''
+    Return the estimed type of a given decoded item.
+
+    :param sha1_string: sha1_string
+    '''
+    def get_estimated_type(self):
+        return r_metadata.hget(f'metadata_hash:{self.id}', 'estimated_type')
+
+    def get_rel_path(self, mimetype=None):
+        if not mimetype:
+            mimetype = self.get_estimated_type()
+        return os.path.join(HASH_DIR, mimetype, self.id[0:2], self.id)
+
+    def get_filepath(self, mimetype=None):
+        return os.path.join(os.environ['AIL_HOME'], self.get_rel_path(mimetype=mimetype))
+
+    def get_file_content(self, mimetype=None):
+        filepath = self.get_filepath(mimetype=mimetype)
+        with open(filepath, 'rb') as f:
+            file_content = BytesIO(f.read())
+        return file_content
+
+    def get_misp_object(self):
+        obj_attrs = []
+        obj = MISPObject('file')
+        obj.first_seen = self.get_first_seen()
+        obj.last_seen = self.get_last_seen()
+
+        obj_attrs.append( obj.add_attribute('sha1', value=self.id) )
+        obj_attrs.append( obj.add_attribute('mimetype', value=self.get_estimated_type()) )
+        obj_attrs.append( obj.add_attribute('malware-sample', value=self.id, data=self.get_file_content()) )
+        for obj_attr in obj_attrs:
+            for tag in self.get_tags():
+                obj_attr.add_tag(tag)
+        return obj
+
     ############################################################################
     ############################################################################
     ############################################################################
 
     def exist_correlation(self):
         pass
+
+    def create(self, content, date):
+
+
+
+
+        Decoded.save_decoded_file_content(sha1_string, decoded_file, item_date, mimetype=mimetype)
+        ####correlation Decoded.save_item_relationship(sha1_string, item_id)
+        Decoded.create_decoder_matadata(sha1_string, item_id, decoder_name)
+
+
 
     ############################################################################
     ############################################################################
