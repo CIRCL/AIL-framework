@@ -54,13 +54,12 @@ class Tracker_Typo_Squatting(AbstractModule):
             print('Tracked typosquatting refreshed')
 
         host, id = message.split()
-        item = Item(id)
 
         # Cast message as Item
-        for key in self.typosquat_tracked_words_list:
-            #print(key)
-            if host in self.typosquat_tracked_words_list[key]:
-                self.new_tracker_found(key, 'typosquatting', item)
+        for tracker in self.typosquat_tracked_words_list:
+            if host in self.typosquat_tracked_words_list[tracker]:
+                item = Item(id)
+                self.new_tracker_found(tracker, 'typosquatting', item)
 
     def new_tracker_found(self, tracker, tracker_type, item):
         item_id = item.get_id()
