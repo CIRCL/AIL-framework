@@ -18,7 +18,6 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
 from Role_Manager import login_admin, login_analyst, login_read_only
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
@@ -130,6 +129,8 @@ def export_object_file():
         else:
             dict_misp_event_export[str(obj_tuple)] = request.form.get(obj_tuple)
 
+    #print(dict_misp_event_export)
+
     if dict_misp_event_export.get('export_to_misp', None):
         export_to_misp = True
     else:
@@ -191,7 +192,7 @@ def export_investigation():
     if MispExport.ping_misp():
         event_metadata = MispExport.create_investigation_event(investigation_uuid)
     else:
-        return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True), mimetype='application/json'), 400 
+        return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True), mimetype='application/json'), 400
 
     return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid))
 

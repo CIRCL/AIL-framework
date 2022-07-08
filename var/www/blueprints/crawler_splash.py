@@ -17,7 +17,6 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import create_user_db, check_password_strength, check_user_role_integrity
 from Role_Manager import login_admin, login_analyst, login_read_only
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
