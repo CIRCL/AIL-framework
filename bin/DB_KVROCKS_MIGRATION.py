@@ -220,8 +220,11 @@ def tags_migration():
 
     pass
 
+def items_migration():
+    pass
+
 def crawler_migration():
-    
+
     pass
 
 def domain_migration():
@@ -244,7 +247,7 @@ if __name__ == '__main__':
     core_migration()
     user_migration()
     #ail_2_ail_migration()
-    #trackers_migration()
+    trackers_migration()
     #investigations_migration()
 
 

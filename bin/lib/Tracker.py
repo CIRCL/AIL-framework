@@ -92,6 +92,18 @@ def get_all_tracker_by_type(tracker_type):
 def get_all_tracker_by_type(tracker_type):
     return r_serv_tracker.smembers(f'all:tracker:{tracker_type}')
 
+def get_user_trackers_uuid(user_id, tracker_type=None):
+    if tracker_type:
+        return r_serv_tracker.smembers(f'user:tracker:{user_id}:{tracker_type}')
+    else:
+        return r_serv_tracker.smembers(f'user:tracker:{user_id}')
+
+def get_global_trackers_uuid(tracker_type=None):
+    if tracker_type:
+        return r_serv_tracker.smembers(f'global:tracker:{tracker_type}')
+    else:
+        return r_serv_tracker.smembers('global:tracker')
+
 def get_tracker_by_uuid(tracker_uuid):
     return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'tracked')
 
@@ -168,6 +180,18 @@ def get_tracker_metadata(tracker_uuid, user_id=False, description=False, level=F
         dict_uuid['webhook'] = get_tracker_webhook(tracker_uuid)
 
     return dict_uuid
+
+def get_user_trackers_metadata(user_id, tracker_type=None):
+    meta_trackers = []
+    for tracker_uuid in get_user_trackers_uuid(user_id, tracker_type=None):
+        meta_trackers.append(get_tracker_metadata(tracker_uuid, tags=True, mails=True, sparkline=True))
+    return meta_trackers
+
+def get_global_trackers_metadata(tracker_type=None):
+    meta_trackers = []
+    for tracker_uuid in get_global_trackers_uuid(tracker_type=None):
+        meta_trackers.append(get_tracker_metadata(tracker_uuid, tags=True, mails=True, sparkline=True))
+    return meta_trackers
 
 def get_tracker_metadata_api(request_dict):
     tracker_uuid = request_dict.get('tracker_uuid', None)
@@ -325,6 +349,14 @@ def is_tracker_in_user_level(tracker, tracker_type, user_id):
                 if r_serv_tracker.hget('tracker:{}'.format(elem_uuid), 'type')== tracker_type:
                     return True
     return False
+
+## API ##
+def api_check_tracker_uuid(tracker_uuid):
+    if not is_valid_uuid_v4(task_uuid):
+        return {"status": "error", "reason": "Invalid uuid"}, 400
+    if not r_serv_tracker.exists(f'tracker:{tracker_uuid}'):
+        return {"status": "error", "reason": "Unknown uuid"}, 404
+    return None
 
 def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
     if not is_valid_uuid_v4(tracker_uuid):
@@ -1135,7 +1167,7 @@ def save_retro_hunt_match(task_uuid, id, object_type='item'):
     if res == 1:
         r_serv_tracker.zincrby(f'tracker:retro_hunt:task:stat:{task_uuid}', int(item_date), 1)
     # Add map obj_id -> task_uuid
-    r_serv_tracker.sadd(f'obj:retro_hunt:item:{item_id}', task_uuid)
+    r_serv_tracker.sadd(f'obj:retro_hunt:item:{id}', task_uuid)
 
 def get_retro_hunt_all_item_dates(task_uuid):
     return r_serv_tracker.zrange(f'tracker:retro_hunt:task:stat:{task_uuid}', 0, -1)

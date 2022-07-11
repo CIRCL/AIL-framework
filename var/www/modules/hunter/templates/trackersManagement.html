@@ -46,9 +46,11 @@
 
         <div class="col-12 col-lg-10" id="core_content">
 
+          {% if user_trackers %}
+
             <div class="card my-3">
                 <div class="card-header">
-                    <h5 class="card-title">Your {{ filter_type }} Trackers</h5>
+                    <h5 class="card-title">Your {{ tracker_type }} Trackers</h5>
                 </div>
                 <div class="card-body">
                     <table id="table_user_trackers" class="table table-striped table-bordered">
@@ -63,17 +65,17 @@
                         </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
-                        {% for dict_uuid in user_term %}
+                        {% for dict_uuid in user_trackers %}
                             <tr>
                                 <td>{{ dict_uuid['type'] }}</td>
                                 <td>
                       <span>
                         <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
-                        {% if dict_uuid['term'] %}
-                            {% if dict_uuid['term']|length > 256 %}
-                                {{ dict_uuid['term'][0:256] }}...
+                        {% if dict_uuid['tracker'] %}
+                            {% if dict_uuid['tracker']|length > 256 %}
+                                {{ dict_uuid['tracker'][0:256] }}...
                             {% else %}
-                                {{ dict_uuid['term'] }}
+                                {{ dict_uuid['tracker'] }}
                             {% endif %}
                         {% endif %}
                         </a>
@@ -88,14 +90,12 @@
                                 </td>
                                 <td>
                                     {% if dict_uuid['first_seen'] %}
-                                        {{ dict_uuid['first_seen'][0:4] }}/{{ dict_uuid['first_seen'][4:6] }}/
-                                        {{ dict_uuid['first_seen'][6:8] }}
+                                        {{ dict_uuid['first_seen'][0:4] }}/{{ dict_uuid['first_seen'][4:6] }}/{{ dict_uuid['first_seen'][6:8] }}
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if dict_uuid['last_seen'] %}
-                                        {{ dict_uuid['last_seen'][0:4] }}/{{ dict_uuid['last_seen'][4:6] }}/
-                                        {{ dict_uuid['last_seen'][6:8] }}
+                                        {{ dict_uuid['last_seen'][0:4] }}/{{ dict_uuid['last_seen'][4:6] }}/{{ dict_uuid['last_seen'][6:8] }}
                                     {% endif %}
                                 </td>
                                 <td>
@@ -111,9 +111,11 @@
                 </div>
             </div>
 
+          {% endif %}
+
             <div class="card my-3">
                 <div class="card-header">
-                    <h5 class="card-title">Global {{ filter_type }} Trackers</h5>
+                    <h5 class="card-title">Global {{ tracker_type }} Trackers</h5>
                 </div>
                 <div class="card-body">
                     <table id="table_global_trackers" class="table table-striped table-bordered">
@@ -128,17 +130,17 @@
                         </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
-                        {% for dict_uuid in global_term %}
+                        {% for dict_uuid in global_trackers %}
                             <tr>
                                 <td>{{ dict_uuid['type'] }}</td>
                                 <td>
                       <span>
                         <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
-                        {% if dict_uuid['term'] %}
-                            {% if dict_uuid['term']|length > 256 %}
-                                {{ dict_uuid['term'][0:256] }}...
+                        {% if dict_uuid['tracker'] %}
+                            {% if dict_uuid['tracker']|length > 256 %}
+                                {{ dict_uuid['tracker'][0:256] }}...
                             {% else %}
-                                {{ dict_uuid['term'] }}
+                                {{ dict_uuid['tracker'] }}
                             {% endif %}
                         {% endif %}
                         </a>
@@ -153,14 +155,12 @@
                                 </td>
                                 <td>
                                     {% if dict_uuid['first_seen'] %}
-                                        {{ dict_uuid['first_seen'][0:4] }}/{{ dict_uuid['first_seen'][4:6] }}/
-                                        {{ dict_uuid['first_seen'][6:8] }}
+                                        {{ dict_uuid['first_seen'][0:4] }}/{{ dict_uuid['first_seen'][4:6] }}/{{ dict_uuid['first_seen'][6:8] }}
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if dict_uuid['last_seen'] %}
-                                        {{ dict_uuid['last_seen'][0:4] }}/{{ dict_uuid['last_seen'][4:6] }}/
-                                        {{ dict_uuid['last_seen'][6:8] }}
+                                        {{ dict_uuid['last_seen'][0:4] }}/{{ dict_uuid['last_seen'][4:6] }}/{{ dict_uuid['last_seen'][6:8] }}
                                     {% endif %}
                                 </td>
 
@@ -190,12 +190,12 @@
 <script>
     $(document).ready(function () {
         $("#page-Tracker").addClass("active");
-        $("#nav_tracker_{{filter_type}}").addClass("active");
+        $("#nav_tracker_{{tracker_type}}").addClass("active");
 
-        {% for dict_uuid in user_term %}
+        {% for dict_uuid in user_trackers %}
             sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
         {% endfor %}
-        {% for dict_uuid in global_term %}
+        {% for dict_uuid in global_trackers %}
             sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
         {% endfor %}
 
