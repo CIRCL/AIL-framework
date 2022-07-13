@@ -54,6 +54,16 @@ def is_crawled(item_id):
 def get_item_domain(item_id):
     return item_id[19:-36]
 
+def get_item_content_binary(item_id):
+    item_full_path = os.path.join(PASTES_FOLDER, item_id)
+    try:
+        with gzip.open(item_full_path, 'rb') as f:
+            item_content = f.read()
+    except Exception as e:
+        print(e)
+        item_content = ''
+    return item_content
+
 def get_item_content(item_id):
     item_full_path = os.path.join(PASTES_FOLDER, item_id)
     try:

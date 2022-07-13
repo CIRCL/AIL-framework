@@ -217,6 +217,8 @@ def item_submit_migration():
 # /!\ KEY COLISION
 # # TODO: change db
 def tags_migration():
+    
+
 
     pass
 

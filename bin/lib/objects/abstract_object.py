@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from packages import Tag
+from lib import Duplicate
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.Tracker import is_obj_tracked, get_obj_all_trackers, delete_obj_trackers
 
@@ -68,6 +69,9 @@ class AbstractObject(ABC):
         if r_set:
             tags = set(tags)
         return tags
+
+    def get_duplicates(self):
+        return Duplicate.get_duplicates(self.type, self.get_subtype(r_str=True), self.id)
 
     ## ADD TAGS ????
     #def add_tags(self):

@@ -113,20 +113,48 @@ class AbstractSubtypeObject(AbstractObject):
             if date > last_seen:
                 self.set_last_seen(date)
 
-    def add(self, date):
+    def add(self, date, item_id):
         self.update_correlation_daterange()
         # daily
         r_metadata.hincrby(f'{self.type}:{self.subtype}:{date}', self.id, 1)
         # all type
         r_metadata.zincrby(f'{self.type}_all:{self.subtype}', self.id, 1)
 
+        #######################################################################
+        #######################################################################
+        # REPLACE WITH CORRELATION ?????
 
-    
+        # global set
+        r_serv_metadata.sadd(f'set_{self.type}_{self.subtype}:{self.id}', item_id)
+
+        ## object_metadata
+        # item
+        r_serv_metadata.sadd(f'item_{self.type}_{self.subtype}:{item_id}', self.id)
+
+        # new correlation
+        #
+        #       How to filter by correlation type ????
+        #
+        f'correlation:obj:{self.type}:{self.subtype}:{self.id}',                f'{obj_type}:{obj_subtype}:{obj_id}'
+        f'correlation:obj:{self.type}:{self.subtype}:{obj_type}:{self.id}',     f'{obj_subtype}:{obj_id}'
+
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+
 
         # # domain
         # if item_basic.is_crawled(item_id):
         #     domain = item_basic.get_item_domain(item_id)
         #     self.save_domain_correlation(domain, subtype, obj_id)
+
+    def create(self, first_seen, last_seen):
+        pass
 
 
 

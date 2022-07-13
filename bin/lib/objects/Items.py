@@ -91,11 +91,14 @@ class Item(AbstractObject):
         else:
             return filename
 
-    def get_content(self):
+    def get_content(self, binary=False):
         """
         Returns Item content
         """
-        return item_basic.get_item_content(self.id)
+        if binary:
+            return item_basic.get_item_content_binary(self.id)
+        else:
+            return item_basic.get_item_content(self.id)
 
     def get_raw_content(self):
         filepath = self.get_filename()
@@ -110,15 +113,34 @@ class Item(AbstractObject):
             content = base64.b64encode(content)
         return content.decode()
 
+    def get_html2text_content(self, content=None, ignore_links=False):
+        if not content:
+            content = self.get_content()
+        h = html2text.HTML2Text()
+        h.ignore_links = ignore_links
+        h.ignore_images = ignore_links
+        return h.handle(content)
+
+    def get_size(self, str=False):
+        size = os.path.getsize(self.get_filename())/1024.0
+        if str:
+            size = round(size, 2)
+        return size
+
     def get_ail_2_ail_payload(self):
         payload = {'raw': self.get_gzip_content(b64=True)}
         return payload
 
-    def set_origin(self): # set_parent ?
-        pass
+    def set_father(self, father_id): # UPDATE KEYS ?????????????????????????????
+        r_serv_metadata.sadd(f'paste_children:{father_id}', self.id)
+        r_serv_metadata.hset(f'paste_metadata:{self.id}', 'father', father_id)
 
-    def add_duplicate(self):
-        pass
+        #f'obj:children:{obj_type}:{subtype}:{id}, {obj_type}:{subtype}:{id}
+        #f'obj:metadata:{obj_type}:{subtype}:{id}', 'father', fathe
+        #  => ON Object LEVEL ?????????
+
+
+
 
     def sanitize_id(self):
         pass
@@ -150,18 +172,25 @@ class Item(AbstractObject):
     # origin
     # duplicate -> all item iterations ???
     #
-    def create(self, content, tags, origin=None, duplicate=None):
-        self.save_on_disk(content, binary=True, compressed=False, base64=False)
+    def create(self, content, tags, father=None, duplicates=[], _save=True):
+        if _save:
+            self.save_on_disk(content, binary=True, compressed=False, base64=False)
 
         # # TODO:
         # for tag in tags:
         #     self.add_tag(tag)
 
-        if origin:
+        if father:
+            pass
 
-        if duplicate:
+        for obj_id in duplicates:
+            for dup in duplicates[obj_id]:
+                self.add_duplicate(obj_id, dup['algo'], dup['similarity'])
 
-        pass
+
+
+
+
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
@@ -203,6 +232,80 @@ class Item(AbstractObject):
 
     def exist_correlation(self):
         pass
+
+    def is_crawled(self):
+        return self.id.startswith('crawled')
+
+    # if is_crawled
+    def get_domain(self):
+        return self.id[19:-36]
+
+    def get_screenshot(self):
+        s = r_serv_metadata.hget(f'paste_metadata:{self.id}', 'screenshot')
+        if s:
+            return os.path.join(s[0:2], s[2:4], s[4:6], s[6:8], s[8:10], s[10:12], s[12:])
+
+    def get_har(self):
+        har_path = os.path.join(har_directory, self.id) + '.json'
+        if os.path.isfile(har_path):
+            return har_path
+        else:
+            return None
+
+    def get_url(self):
+        return r_serv_metadata.hget(f'paste_metadata:{self.id}', 'real_link')
+
+    # options: set of optional meta fields
+    def get_meta(self, options=set()):
+        meta = {}
+        meta['id'] = self.id
+        meta['date'] = self.get_date(separator=True) ############################ # TODO:
+        meta['source'] = self.get_source()
+        meta['tags'] = self.get_tags()
+        # optional meta fields
+        if 'content' in options:
+            meta['content'] = self.get_content()
+        if 'crawler' in options:
+            if self.is_crawled():
+                tags = meta.get('tags')
+                meta['crawler'] = self.get_meta_crawler(tags=tags)
+        if 'duplicates' in options:
+            meta['duplicates'] = self.get_duplicates()
+        if 'lines' in options:
+            content = meta.get('content')
+            meta['lines'] = self.get_meta_lines(content=content)
+        if 'size' in options:
+            meta['size'] = self.get_size(str=True)
+
+        # # TODO: ADD GET FATHER
+
+        # meta['encoding'] = None
+        return meta
+
+    def get_meta_crawler(self, tags=[]):
+        crawler = {}
+        if self.is_crawled():
+            crawler['domain'] = self.get_domain()
+            crawler['har'] = self.get_har()
+            crawler['screenshot'] = self.get_screenshot()
+            crawler['url'] = self.get_url()
+            if not tags:
+                tags = self.get_tags()
+            crawler['is_tags_safe'] = Tag.is_tags_safe(tags)
+        return crawler
+
+    def get_meta_lines(self, content=None):
+        if not content:
+            content = self.get_content()
+        max_length = 0
+        line_id = 0
+        nb_line = 0
+        for line in content.splitlines():
+            length = len(line)
+            if length > max_length:
+                max_length = length
+            nb_line += 1
+        return {'nb': nb_line, 'max_length': max_length}
 
     ############################################################################
     ############################################################################
@@ -547,7 +650,7 @@ def get_item_list_desc(list_item_id):
 def is_crawled(item_id):
     return item_basic.is_crawled(item_id)
 
-def get_crawler_matadata(item_id, ltags=None):
+def get_crawler_matadata(item_id, tags=None):
     dict_crawler = {}
     if is_crawled(item_id):
         dict_crawler['domain'] = get_item_domain(item_id)
@@ -759,5 +862,7 @@ def delete_domain_node(item_id):
 
 if __name__ == '__main__':
     content = 'test file content'
+    duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
+
     item = Item('tests/2020/01/02/test_save.gz')
-    item.save_on_disk(content, binary=False)
+    item.create(content, _save=False)

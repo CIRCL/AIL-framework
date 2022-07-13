@@ -38,7 +38,7 @@
 
   <div class="card my-2 mx-2">
     <div class="card-header bg-dark">
-      <h3 class="text-white text-center" >{{ dict_item['name'] }}</h3>
+      <h3 class="text-white text-center" >{{ meta['name'] }}</h3>
     </div>
     <div class="card-body pb-1">
       <table class="table table-condensed">
@@ -46,7 +46,7 @@
           <tr>
             <th>Date</th>
             <th>Source</th>
-            <th>Encoding</th>
+            <!-- <th>Encoding</th> -->
             <th>Size (Kb)</th>
             <th>Number of lines</th>
             <th>Max line length</th>
@@ -54,12 +54,12 @@
         </thead>
         <tbody>
           <tr>
-          <td>{{ dict_item['metadata']['date'] }}</td>
-          <td>{{ dict_item['metadata']['source'] }}</td>
-          <td>{{ dict_item['metadata']['encoding'] }}</td>
-          <td>{{ dict_item['metadata']['size'] }}</td>
-          <td>{{ dict_item['metadata']['lines']['nb'] }}</td>
-          <td>{{ dict_item['metadata']['lines']['max_length'] }}</td>
+          <td>{{ meta['date'] }}</td>
+          <td>{{ meta['source'] }}</td>
+          <!-- <td>{{ meta['encoding'] }}</td> -->
+          <td>{{ meta['size'] }}</td>
+          <td>{{ meta['lines']['nb'] }}</td>
+          <td>{{ meta['lines']['max_length'] }}</td>
           </tr>
         </tbody>
       </table>
@@ -68,9 +68,9 @@
         <h5>
           <div>
             {% include 'modals/edit_tag.html' %}
-            {% for tag in dict_item['tags'] %}
+            {% for tag in meta['tags'] %}
               <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-              data-tagid="{{ tag }}" data-objtype="item" data-objid="{{ dict_item['id'] }}">
+              data-tagid="{{ tag }}" data-objtype="item" data-objid="{{ meta['id'] }}">
                 {{ tag }}
               </button>
 
@@ -84,21 +84,21 @@
         </h5>
       </div>
 
-      {% if dict_item['father'] %}
+      {% if meta['father'] %}
         <div class="mt-3">
-          Father: <a href="{{ url_for('objects_item.showItem')}}?id={{dict_item['father']}}" target="_blank">{{dict_item['father']}}</a>
+          Father: <a href="{{ url_for('objects_item.showItem')}}?id={{meta['father']}}" target="_blank">{{meta['father']}}</a>
         </div>
       {% endif %}
 
       <div class="d-flex flex-row-reverse bd-highlight">
         <div>
-          <a href="{{ url_for('correlation.show_correlation')}}?object_type=paste&correlation_id={{ dict_item['id'] }}&correlation_objects=paste" target="_blank">
+          <a href="{{ url_for('correlation.show_correlation')}}?object_type=paste&correlation_id={{ meta['id'] }}&correlation_objects=paste" target="_blank">
 						<button class="btn btn-lg btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph
 						</button>
 					</a>
         </div>
         <div>
-          {% with obj_type='item', obj_id=dict_item['id'], obj_subtype=''%}
+          {% with obj_type='item', obj_id=meta['id'], obj_subtype=''%}
             {% include 'modals/investigations_register_obj.html' %}
           {% endwith %}
           <div class="mr-2">
@@ -108,7 +108,7 @@
           </div>
         </div>
         <div class="mx-2">
-          {% with obj_type='item', obj_id=dict_item['id'], obj_lvl=0%}
+          {% with obj_type='item', obj_id=meta['id'], obj_lvl=0%}
             {% include 'import_export/block_add_user_object_to_export.html' %}
           {% endwith %}
         </div>
@@ -134,14 +134,14 @@
     </div>
   {% endif %}
 
-  {% if dict_item['hive_case'] %}
+  {% if meta['hive_case'] %}
     <div class="list-group" id="misp_event">
       <li class="list-group-item active">The Hive Case already Created</li>
       <a target="_blank" href="{{ hive_url }}" class="list-group-item">{{ hive_url }}</a>
     </div>
   {% endif %}
 
-  {% if  dict_item['duplicates'] != 0 %}
+  {% if  meta['duplicates'] != 0 %}
     <div id="accordionDuplicate" class="mb-2 mx-3">
       <div class="card">
         <div class="card-header py-1" id="headingDuplicate">
@@ -149,7 +149,7 @@
             <div class="col-11">
               <div class="mt-2">
                 <i class="far fa-clone"></i> duplicates&nbsp;&nbsp;
-                <div class="badge badge-warning">{{dict_item['duplicates']|length}}</div>
+                <div class="badge badge-warning">{{meta['duplicates']|length}}</div>
               </div>
             </div>
             <div class="col-1">
@@ -173,19 +173,19 @@
                 </tr>
               </thead>
               <tbody>
-                {% for duplicate_id in dict_item['duplicates'] %}
+                {% for duplicate_id in meta['duplicates'] %}
                   <tr>
-                    <td>{{dict_item['duplicates'][duplicate_id]['date']}}</td>
+                    <td>{{meta['duplicates'][duplicate_id]['date']}}</td>
                     <td class="py-0">
                       <table class="table table-borderless table-sm my-0">
                         <tbody>
-                          {%for algo in dict_item['duplicates'][duplicate_id]['algo']|sort()%}
+                          {%for dict_algo in meta['duplicates'][duplicate_id]|sort(attribute='algo')%}
                             <tr>
-                              <td class="py-0">{{algo}}</td>
+                              <td class="py-0">{{dict_algo['algo']}}</td>
                               <td class="w-100 py-0">
                                 <div class="progress mt-1">
-                                  <div class="progress-bar progress-bar-striped {%if algo=='tlsh'%}bg-secondary{%endif%}" role="progressbar" style="width: {{dict_item['duplicates'][duplicate_id]['algo'][algo]}}%;" aria-valuenow="{{dict_item['duplicates'][duplicate_id]['algo'][algo]}}" aria-valuemin="0" aria-valuemax="100">
-                                    {{dict_item['duplicates'][duplicate_id]['algo'][algo]}}%
+                                  <div class="progress-bar progress-bar-striped {%if dict_algo['algo']=='tlsh'%}bg-secondary{%endif%}" role="progressbar" style="width: {{dict_algo['similarity']}}%;" aria-valuenow="{{dict_algo['similarity']}}" aria-valuemin="0" aria-valuemax="100">
+                                    {{dict_algo['similarity']}}%
                                   </div>
                                 </div>
                               </td>
@@ -200,7 +200,7 @@
                       </a>
                     </td>
                     <td>
-                      <a target="_blank" href="{{ url_for('showsavedpastes.showDiff') }}?s1={{dict_item['id']}}&s2={{duplicate_id}}" class="fa fa-columns" title="Show diff"></a>
+                      <a target="_blank" href="{{ url_for('showsavedpastes.showDiff') }}?s1={{meta['id']}}&s2={{duplicate_id}}" class="fa fa-columns" title="Show diff"></a>
                     </td>
                   </tr>
                 {% endfor %}
@@ -261,7 +261,7 @@
   {% endif %}
 
 
-  {% if dict_item['crawler'] %}
+  {% if meta['crawler'] %}
   <div id="accordionCrawler" class="mb-3 mx-3">
     <div class="card">
       <div class="card-header py-1" id="headingCrawler">
@@ -294,18 +294,18 @@
                   <tr>
                     <td><i class="far fa-file"></i></td>
                     <td>
-                      <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', paste=dict_item['father']) }}" />{{ dict_item['father'] }}</a>
+                      <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', paste=meta['father']) }}" />{{ meta['father'] }}</a>
                     </td>
                   </tr>
                     <td><i class="fab fa-html5"></i></td>
                     <td>
-                      <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=dict_item['crawler']['domain']) }}" />{{ dict_item['crawler']['domain'] }}</a>
+                      <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=meta['crawler']['domain']) }}" />{{ meta['crawler']['domain'] }}</a>
                     </td>
                   </tr>
                   <tr>
                     <td>url</td>
                     <td>
-                      {{ dict_item['crawler']['url'] }}
+                      {{ meta['crawler']['url'] }}
                     </td>
                   </tr>
                 </tbody>
@@ -318,11 +318,11 @@
               <div class="card-body py-2">
                 <div class="row">
                   <div class="col-md-8">
-                    <input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="{%if dict_item['crawler']['is_tags_safe']%}13{%else%}0{%endif%}">
+                    <input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="{%if meta['crawler']['is_tags_safe']%}13{%else%}0{%endif%}">
                   </div>
                   <div class="col-md-4">
-                    <button class="btn {%if dict_item['crawler']['is_tags_safe']%}btn-primary{%else%}btn-danger{%endif%}" onclick="blocks.value=50;pixelate();">
-                      {%if dict_item['crawler']['is_tags_safe']%}
+                    <button class="btn {%if meta['crawler']['is_tags_safe']%}btn-primary{%else%}btn-danger{%endif%}" onclick="blocks.value=50;pixelate();">
+                      {%if meta['crawler']['is_tags_safe']%}
                         <i class="fas fas fa-plus-square"></i>
                       {%else%}
                         <i class="fas fa-exclamation-triangle"></i>
@@ -358,8 +358,8 @@
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Others</a>
           <div class="dropdown-menu">
-            <a class="dropdown-item" href="{{ url_for('objects_item.item_raw_content', id=dict_item['id']) }}"><i class="far fa-file"></i> &nbsp;Raw Content</a>
-            <a class="dropdown-item" href="{{ url_for('objects_item.item_download', id=dict_item['id']) }}"><i class="fas fa-download"></i> &nbsp;Download</i></a>
+            <a class="dropdown-item" href="{{ url_for('objects_item.item_raw_content', id=meta['id']) }}"><i class="far fa-file"></i> &nbsp;Raw Content</a>
+            <a class="dropdown-item" href="{{ url_for('objects_item.item_download', id=meta['id']) }}"><i class="fas fa-download"></i> &nbsp;Download</i></a>
           </div>
         </li>
       </ul>
@@ -367,7 +367,7 @@
 
       <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-content" role="tabpanel" aria-labelledby="pills-content-tab">
-          <p class="my-0"> <pre class="border">{{ dict_item['content'] }}</pre></p>
+          <p class="my-0"> <pre class="border">{{ meta['content'] }}</pre></p>
         </div>
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
           <p class="my-0"> <pre id="html2text-container" class="border"></pre></p>
@@ -393,7 +393,7 @@
 
       $('#pills-html2text-tab').on('shown.bs.tab', function (e) {
         if ($('#html2text-container').is(':empty')){
-          $.get("{{ url_for('objects_item.html2text') }}?id={{ dict_item['id'] }}").done(function(data){
+          $.get("{{ url_for('objects_item.html2text') }}?id={{ meta['id'] }}").done(function(data){
             $('#html2text-container').text(data);
           });
 
@@ -401,7 +401,7 @@
       });
   </script>
 
-{% if dict_item['crawler'] %}
+{% if meta['crawler'] %}
   <script>
   var ctx = canvas.getContext('2d'), img = new Image();
 
@@ -413,7 +413,7 @@
   img.addEventListener("error", img_error);
   var draw_img = false;
 
-  img.src = "{{ url_for('showsavedpastes.screenshot', filename=dict_item['crawler']['screenshot']) }}";
+  img.src = "{{ url_for('showsavedpastes.screenshot', filename=meta['crawler']['screenshot']) }}";
 
   function pixelate() {
 

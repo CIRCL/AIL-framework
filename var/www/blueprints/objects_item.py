@@ -15,12 +15,15 @@ from flask_login import login_required, current_user
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Item
-import Tag
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import item_basic
+from lib.objects.Items import Item
+from export import Export
+from packages import Tag
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
-import Export
 
 # ============ BLUEPRINT ============
 objects_item = Blueprint('objects_item', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/item'))
@@ -38,28 +41,22 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 @login_read_only
 def showItem(): # # TODO: support post
     item_id = request.args.get('id')
-    if not item_id or not Item.exist_item(item_id):
+    if not item_id or not item_basic.exist_item(item_id):
         abort(404)
 
-    dict_item = {}
-    dict_item['id'] = item_id
-    dict_item['name'] = dict_item['id'].replace('/', ' / ')
-    dict_item['father'] = Item.get_item_parent(item_id)
-    dict_item['content'] = Item.get_item_content(item_id)
-    dict_item['metadata'] = Item.get_item_metadata(item_id, item_content=dict_item['content'])
-    dict_item['tags'] = Tag.get_obj_tag(item_id)
-    #dict_item['duplicates'] = Item.get_item_nb_duplicates(item_id)
-    dict_item['duplicates'] = Item.get_item_duplicates_dict(item_id)
-    dict_item['crawler'] = Item.get_crawler_matadata(item_id, ltags=dict_item['tags'])
+    item = Item(item_id)
+    meta = item.get_meta(options=set(['content', 'crawler', 'duplicates', 'lines', 'size']))
 
+    meta['name'] = meta['id'].replace('/', ' / ')
+    meta['father'] = item_basic.get_item_parent(item_id)
     ## EXPORT SECTION
     # # TODO: ADD in Export SECTION
-    dict_item['hive_case'] = Export.get_item_hive_cases(item_id)
+    meta['hive_case'] = Export.get_item_hive_cases(item_id)
 
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
-                            modal_add_tags=Tag.get_modal_add_tags(dict_item['id'], object_type='item'),
+                            modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
                             is_hive_connected=Export.get_item_hive_cases(item_id),
-                            dict_item=dict_item)
+                            meta=meta)
 
     # kvrocks data
 
@@ -74,24 +71,27 @@ def showItem(): # # TODO: support post
 @login_read_only
 def html2text(): # # TODO: support post
     item_id = request.args.get('id')
-    if not item_id or not Item.exist_item(item_id):
+    if not item_id or not item_basic.exist_item(item_id):
         abort(404)
-    return Item.get_item_content_html2text(item_id)
+    item = Item(item_id)
+    return item.get_html2text_content()
 
 @objects_item.route("/object/item/raw_content")
 @login_required
 @login_read_only
 def item_raw_content(): # # TODO: support post
     item_id = request.args.get('id')
-    if not item_id or not Item.exist_item(item_id):
+    if not item_id or not item_basic.exist_item(item_id):
         abort(404)
-    return Response(Item.get_item_content(item_id), mimetype='text/plain')
+    item = Item(item_id)
+    return Response(item.get_content(), mimetype='text/plain')
 
 @objects_item.route("/object/item/download")
 @login_required
 @login_read_only
 def item_download(): # # TODO: support post
     item_id = request.args.get('id')
-    if not item_id or not Item.exist_item(item_id):
+    if not item_id or not item_basic.exist_item(item_id):
         abort(404)
-    return send_file(Item.get_raw_content(item_id), attachment_filename=item_id, as_attachment=True)
+    item = Item(item_id)
+    return send_file(item.get_raw_content(), attachment_filename=item_id, as_attachment=True)
