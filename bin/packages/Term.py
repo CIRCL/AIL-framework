@@ -25,7 +25,7 @@ import Date
 import Item
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv_term = config_loader.get_redis_conn("Kvrocks_DB")
+r_serv_term = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
 email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'

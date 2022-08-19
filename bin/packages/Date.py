@@ -153,6 +153,12 @@ def sanitise_date_range(date_from, date_to, separator='', date_type='str'):
         date_to = date_from
 
     if date_type=='str':
+        # remove separators
+        if len(date_from) == 10:
+            date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+        if len(date_to) == 10:
+            date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+
         if not validate_str_date(date_from, separator=separator):
             date_from = datetime.date.today().strftime("%Y%m%d")
         if not validate_str_date(date_to, separator=separator):

@@ -12,7 +12,6 @@ import json
 from Date import Date
 
 from io import BytesIO
-import zipfile
 
 from hashlib import sha256
 
@@ -208,23 +207,6 @@ def get_all_keys_id_from_item(correlation_type, item_path):
                 all_keys_id_dump.add( (key_id, type_id) )
     return all_keys_id_dump
 
-def one():
-    return 1
-
-'''
-def decode_base58(bc, length):
-    n = 0
-    for char in bc:
-        n = n * 58 + digits58.index(char)
-    return n.to_bytes(length, 'big')
-
-def check_bc(bc):
-    try:
-        bcbytes = decode_base58(bc, 25)
-        return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
-    except Exception:
-        return False
-'''
 
 def get_correlation_type_search_endpoint(correlation_type):
     if correlation_type == 'pgpdump':
@@ -261,37 +243,6 @@ def get_range_type_json_endpoint(correlation_type):
     else:
         endpoint = 'hashDecoded.hashDecoded_page'
     return endpoint
-
-def get_graph_node_json_endpoint(correlation_type):
-    if correlation_type == 'pgpdump':
-        endpoint = 'hashDecoded.pgpdump_graph_node_json'
-    elif correlation_type == 'cryptocurrency':
-        endpoint = 'hashDecoded.cryptocurrency_graph_node_json'
-    elif correlation_type == 'username':
-        endpoint = 'hashDecoded.username_graph_node_json'
-    else:
-        endpoint = 'hashDecoded.hashDecoded_page'
-    return endpoint
-
-def get_graph_line_json_endpoint(correlation_type):
-    if correlation_type == 'pgpdump':
-        endpoint = 'hashDecoded.pgpdump_graph_line_json'
-    elif correlation_type == 'cryptocurrency':
-        endpoint = 'hashDecoded.cryptocurrency_graph_line_json'
-    elif correlation_type == 'username':
-        endpoint = 'hashDecoded.username_graph_line_json'
-    else:
-        endpoint = 'hashDecoded.hashDecoded_page'
-    return endpoint
-
-def get_font_family(correlation_type):
-    if correlation_type == 'pgpdump':
-        font = 'fa'
-    elif correlation_type == 'cryptocurrency':
-        font = 'fab'
-    else:
-        font = 'fa'
-    return font
 
 ############ CORE CORRELATION ############
 
@@ -392,27 +343,7 @@ def main_correlation_page(correlation_type, type_id, date_from, date_to, show_de
                                                 date_from=date_from, date_to=date_to,
                                                 show_decoded_files=show_decoded_files)
 
-# def show_correlation(correlation_type, type_id, key_id):
-#     if is_valid_type_id(correlation_type, type_id):
-#         key_id_metadata = get_key_id_metadata(correlation_type, type_id, key_id)
-#         if key_id_metadata:
-#
-#             num_day_sparkline = 6
-#             date_range_sparkline = get_date_range(num_day_sparkline)
-#
-#             sparkline_values = list_sparkline_type_id_values(date_range_sparkline, correlation_type, type_id, key_id)
-#             return render_template('showCorrelation.html', key_id=key_id, type_id=type_id,
-#                             correlation_type=correlation_type,
-#                             graph_node_endpoint=get_graph_node_json_endpoint(correlation_type),
-#                             graph_line_endpoint=get_graph_line_json_endpoint(correlation_type),
-#                             font_family=get_font_family(correlation_type),
-#                             key_id_metadata=key_id_metadata,
-#                             type_icon=get_icon(correlation_type, type_id),
-#                             sparkline_values=sparkline_values)
-#         else:
-#             return '404'
-#     else:
-#         return 'error'
+
 
 def correlation_type_range_type_json(correlation_type, date_from, date_to):
     date_range = []
@@ -462,46 +393,6 @@ def correlation_type_range_type_json(correlation_type, date_from, date_to):
             range_type.append(day_type)
 
     return jsonify(range_type)
-
-def correlation_graph_node_json(correlation_type, type_id, key_id):
-    if key_id is not None and is_valid_type_id(correlation_type, type_id):
-
-        nodes_set_dump = set()
-        nodes_set_paste = set()
-        links_set = set()
-
-        key_id_metadata = get_key_id_metadata(correlation_type, type_id, key_id)
-
-        nodes_set_dump.add((key_id, 1, type_id, key_id_metadata['first_seen'], key_id_metadata['last_seen'], key_id_metadata['nb_seen']))
-
-        #get related paste
-        l_pastes = r_serv_metadata.smembers('set_{}_{}:{}'.format(correlation_type, type_id, key_id))
-        for paste in l_pastes:
-            nodes_set_paste.add((paste, 2))
-            links_set.add((key_id, paste))
-
-            for key_id_with_type_id in get_all_keys_id_from_item(correlation_type, paste):
-                new_key_id, typ_id = key_id_with_type_id
-                if new_key_id != key_id:
-
-                    key_id_metadata = get_key_id_metadata(correlation_type, typ_id, new_key_id)
-
-                    nodes_set_dump.add((new_key_id, 3, typ_id, key_id_metadata['first_seen'], key_id_metadata['last_seen'], key_id_metadata['nb_seen']))
-                    links_set.add((new_key_id, paste))
-
-        nodes = []
-        for node in nodes_set_dump:
-            nodes.append({"id": node[0], "group": node[1], "first_seen": node[3], "last_seen": node[4], "nb_seen_in_paste": node[5], 'icon': get_icon_text(correlation_type, node[2]),"url": url_for(get_show_key_id_endpoint(correlation_type), type_id=node[2], key_id=node[0]), 'hash': True})
-        for node in nodes_set_paste:
-            nodes.append({"id": node[0], "group": node[1],"url": url_for('objects_item.showItem', id=node[0]), 'hash': False})
-        links = []
-        for link in links_set:
-            links.append({"source": link[0], "target": link[1]})
-        json = {"nodes": nodes, "links": links}
-        return jsonify(json)
-
-    else:
-        return jsonify({})
 
 # ============= ROUTES ==============
 @hashDecoded.route("/hashDecoded/all_hash_search", methods=['POST'])
@@ -634,113 +525,8 @@ def hashDecoded_page():
                                                 encoding=encoding, all_encoding=all_encoding, date_from=date_from, date_to=date_to, show_decoded_files=show_decoded_files)
 
 
-@hashDecoded.route('/hashDecoded/hash_by_type')
-@login_required
-@login_read_only
-def hash_by_type():
-    type = request.args.get('type')
-    type = 'text/plain'
-    return render_template('hash_type.html',type = type)
 
 
-@hashDecoded.route('/hashDecoded/hash_hash')
-@login_required
-@login_read_only
-def hash_hash():
-    hash = request.args.get('hash')
-    return render_template('hash_hash.html')
-
-#
-# @hashDecoded.route('/hashDecoded/showHash')
-# @login_required
-# @login_analyst
-# def showHash():
-#     hash = request.args.get('hash')
-#     #hash = 'e02055d3efaad5d656345f6a8b1b6be4fe8cb5ea'
-#
-#     # TODO FIXME show error
-#     if hash is None:
-#         return hashDecoded_page()
-#
-#     estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
-#     # hash not found
-#     # TODO FIXME show error
-#     if estimated_type is None:
-#         return hashDecoded_page()
-#
-#     else:
-#         file_icon = get_file_icon(estimated_type)
-#         size = r_serv_metadata.hget('metadata_hash:'+hash, 'size')
-#         first_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'first_seen')
-#         last_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'last_seen')
-#         nb_seen_in_all_pastes = r_serv_metadata.hget('metadata_hash:'+hash, 'nb_seen_in_all_pastes')
-#
-#         # get all encoding for this hash
-#         list_hash_decoder = []
-#         list_decoder = r_serv_metadata.smembers('all_decoder')
-#         for decoder in list_decoder:
-#             encoding = r_serv_metadata.hget('metadata_hash:'+hash, decoder+'_decoder')
-#             if encoding is not None:
-#                 list_hash_decoder.append({'encoding': decoder, 'nb_seen': encoding})
-#
-#         num_day_type = 6
-#         date_range_sparkline = get_date_range(num_day_type)
-#         sparkline_values = list_sparkline_values(date_range_sparkline, hash)
-#
-#         if r_serv_metadata.hexists('metadata_hash:'+hash, 'vt_link'):
-#             b64_vt = True
-#             b64_vt_link = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_link')
-#             b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
-#         else:
-#             b64_vt = False
-#             b64_vt_link = ''
-#             b64_vt_report = r_serv_metadata.hget('metadata_hash:'+hash, 'vt_report')
-#             # hash never refreshed
-#             if b64_vt_report is None:
-#                 b64_vt_report = ''
-#
-#         return render_template('showHash.html', hash=hash, vt_enabled=vt_enabled, b64_vt=b64_vt, b64_vt_link=b64_vt_link,
-#                                 b64_vt_report=b64_vt_report,
-#                                 size=size, estimated_type=estimated_type, file_icon=file_icon,
-#                                 first_seen=first_seen, list_hash_decoder=list_hash_decoder,
-#                                 last_seen=last_seen, nb_seen_in_all_pastes=nb_seen_in_all_pastes, sparkline_values=sparkline_values)
-
-
-@hashDecoded.route('/hashDecoded/downloadHash')
-@login_required
-@login_read_only
-def downloadHash():
-    hash = request.args.get('hash')
-    # sanitize hash
-    hash = hash.split('/')[0]
-
-    # hash exist
-    if r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type') is not None:
-
-        b64_full_path = Decoded.get_decoded_filepath(hash)
-        hash_content = ''
-        try:
-            with open(b64_full_path, 'rb') as f:
-                hash_content = f.read()
-
-            # zip buffer
-            result = BytesIO()
-            temp = BytesIO()
-            temp.write(hash_content)
-
-            with zipfile.ZipFile(result, "w") as zf:
-                #zf.setpassword(b"infected")
-                zf.writestr( hash, temp.getvalue())
-
-            filename = hash + '.zip'
-            result.seek(0)
-
-            return send_file(result, attachment_filename=filename, as_attachment=True)
-        except Exception as e:
-            print(e)
-            return 'Server Error'
-    else:
-        return 'hash: ' + hash + " don't exist"
 
 
 @hashDecoded.route('/hashDecoded/hash_by_type_json')
@@ -777,62 +563,6 @@ def hash_by_type_json():
     else:
         return jsonify()
 
-
-@hashDecoded.route('/hashDecoded/decoder_type_json')
-@login_required
-@login_read_only
-def decoder_type_json():
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-
-    typ = request.args.get('type')
-
-    if typ == 'All types':
-        typ = None
-
-    # verify file type input
-    if typ is not None:
-        #retrieve + char
-        typ = typ.replace(' ', '+')
-        if typ not in r_serv_metadata.smembers('hash_all_type'):
-            typ = None
-
-    all_decoder = r_serv_metadata.smembers('all_decoder')
-    # sort DESC decoder for color
-    all_decoder = sorted(all_decoder)
-
-    date_range = []
-    if date_from is not None and date_to is not None:
-        #change format
-        try:
-            if len(date_from) != 8:
-                date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
-                date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
-            date_range = substract_date(date_from, date_to)
-        except:
-            pass
-
-    if not date_range:
-        date_range.append(datetime.date.today().strftime("%Y%m%d"))
-
-    nb_decoded = {}
-    for decoder in all_decoder:
-        nb_decoded[decoder] = 0
-
-    for date in date_range:
-        for decoder in all_decoder:
-            if typ is None:
-                nb_decod = r_serv_metadata.get(decoder+'_decoded:'+date)
-            else:
-                nb_decod = r_serv_metadata.zscore(decoder+'_type:'+typ, date)
-
-            if nb_decod is not None:
-                nb_decoded[decoder] = nb_decoded[decoder] + int(nb_decod)
-
-    to_json = []
-    for decoder in all_decoder:
-        to_json.append({'name': decoder, 'value': nb_decoded[decoder]})
-    return jsonify(to_json)
 
 
 @hashDecoded.route('/hashDecoded/top5_type_json')
@@ -881,7 +611,7 @@ def top5_type_json():
     for date in date_range:
         for typ in all_type:
             for decoder in all_decoder:
-                nb_decoded = r_serv_metadata.zscore('{}_type:{}'.format(decoder, typ), date)
+                nb_decoded = r_serv_metadata.zscore(f'{decoder}_type:{typ}', date) # daily_type key:date mimetype 3
                 if nb_decoded is not None:
                     if typ in nb_types_decoded:
                         nb_types_decoded[typ] = nb_types_decoded[typ] + int(nb_decoded)
@@ -1005,145 +735,6 @@ def hash_graph_line_json():
     else:
         return jsonify()
 
-
-@hashDecoded.route('/hashDecoded/hash_graph_node_json')
-@login_required
-@login_read_only
-def hash_graph_node_json():
-    hash = request.args.get('hash')
-
-    estimated_type = r_serv_metadata.hget('metadata_hash:'+hash, 'estimated_type')
-
-    if hash is not None and estimated_type is not None:
-
-        nodes_set_hash = set()
-        nodes_set_paste = set()
-        links_set = set()
-
-        url = hash
-        first_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'first_seen')
-        last_seen = r_serv_metadata.hget('metadata_hash:'+hash, 'last_seen')
-        nb_seen_in_paste = r_serv_metadata.hget('metadata_hash:'+hash, 'nb_seen_in_all_pastes')
-        size = r_serv_metadata.hget('metadata_hash:'+hash, 'size')
-
-        nodes_set_hash.add((hash, 1, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
-
-        #get related paste
-        l_pastes = r_serv_metadata.zrange('nb_seen_hash:'+hash, 0, -1)
-        for paste in l_pastes:
-            # dynamic update
-            if PASTES_FOLDER in paste:
-                score = r_serv_metadata.zscore('nb_seen_hash:{}'.format(hash), paste)
-                r_serv_metadata.zrem('nb_seen_hash:{}'.format(hash), paste)
-                paste = paste.replace(PASTES_FOLDER, '', 1)
-                r_serv_metadata.zadd('nb_seen_hash:{}'.format(hash), score, paste)
-            url = paste
-            #nb_seen_in_this_paste = nb_in_file = int(r_serv_metadata.zscore('nb_seen_hash:'+hash, paste))
-            nb_hash_in_paste = r_serv_metadata.scard('hash_paste:'+paste)
-
-            nodes_set_paste.add((paste, 2,nb_hash_in_paste,url))
-            links_set.add((hash, paste))
-
-            l_hash = r_serv_metadata.smembers('hash_paste:'+paste)
-            for child_hash in l_hash:
-                if child_hash != hash:
-                    url = child_hash
-                    first_seen = r_serv_metadata.hget('metadata_hash:'+child_hash, 'first_seen')
-                    last_seen = r_serv_metadata.hget('metadata_hash:'+child_hash, 'last_seen')
-                    nb_seen_in_paste = r_serv_metadata.hget('metadata_hash:'+child_hash, 'nb_seen_in_all_pastes')
-                    size = r_serv_metadata.hget('metadata_hash:'+child_hash, 'size')
-                    estimated_type = r_serv_metadata.hget('metadata_hash:'+child_hash, 'estimated_type')
-
-                    nodes_set_hash.add((child_hash, 3, first_seen, last_seen, estimated_type, nb_seen_in_paste, size, url))
-                    links_set.add((child_hash, paste))
-
-                    #l_pastes_child = r_serv_metadata.zrange('nb_seen_hash:'+child_hash, 0, -1)
-                    #for child_paste in l_pastes_child:
-
-        nodes = []
-        for node in nodes_set_hash:
-            nodes.append({"id": node[0], "group": node[1], "first_seen": node[2], "last_seen": node[3], 'estimated_type': node[4], "nb_seen_in_paste": node[5], "size": node[6], 'icon': get_file_icon_text(node[4]),"url": url_for('hashDecoded.showHash', hash=node[7]), 'hash': True})
-        for node in nodes_set_paste:
-            nodes.append({"id": node[0], "group": node[1], "nb_seen_in_paste": node[2],"url": url_for('objects_item.showItem', id=node[3]), 'hash': False})
-        links = []
-        for link in links_set:
-            links.append({"source": link[0], "target": link[1]})
-        json = {"nodes": nodes, "links": links}
-        return jsonify(json)
-
-    else:
-        return jsonify({})
-
-
-@hashDecoded.route('/hashDecoded/hash_types')
-@login_required
-@login_read_only
-def hash_types():
-    date_from = 20180701
-    date_to = 20180706
-    return render_template('hash_types.html', date_from=date_from, date_to=date_to)
-
-
-@hashDecoded.route('/hashDecoded/send_file_to_vt_js')
-@login_required
-@login_analyst
-def send_file_to_vt_js():
-    hash = request.args.get('hash')
-
-    b64_full_path = Decoded.get_decoded_filepath(hash)
-    b64_content = ''
-    with open(b64_full_path, 'rb') as f:
-        b64_content = f.read()
-
-    files = {'file': (hash, b64_content)}
-    response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params= {'apikey': vt_auth})
-    json_response = response.json()
-    #print(json_response)
-
-    vt_link = json_response['permalink'].split('analysis')[0] + 'analysis/'
-    r_serv_metadata.hset('metadata_hash:'+hash, 'vt_link', vt_link)
-    vt_report = 'Please Refresh'
-    r_serv_metadata.hset('metadata_hash:'+hash, 'vt_report', vt_report)
-
-    return jsonify({'vt_link': vt_link, 'vt_report': vt_report})
-
-
-@hashDecoded.route('/hashDecoded/update_vt_result')
-@login_required
-@login_analyst
-def update_vt_result():
-    hash = request.args.get('hash')
-
-    params = {'apikey': vt_auth, 'resource': hash}
-    response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params)
-    if response.status_code == 200:
-        json_response = response.json()
-        response_code = json_response['response_code']
-        # report exist
-        if response_code == 1:
-            total = json_response['total']
-            positive = json_response['positives']
-
-            b64_vt_report = 'Detection {}/{}'.format(positive, total)
-        # no report found
-        elif response_code == 0:
-            b64_vt_report = 'No report found'
-            pass
-        # file in queue
-        elif response_code == -2:
-            b64_vt_report = 'File in queue'
-            pass
-
-        r_serv_metadata.hset('metadata_hash:'+hash, 'vt_report', b64_vt_report)
-        return jsonify(hash=hash, report_vt=b64_vt_report)
-    elif response.status_code == 403:
-        Flask_config.vt_enabled = False
-        print('Virustotal key is incorrect (e.g. for public API not for virustotal intelligence), authentication failed or reaching limits.')
-        return jsonify()
-    else:
-        # TODO FIXME make json response
-        return jsonify()
-
 ############################ PGPDump ############################
 
 @hashDecoded.route('/decoded/pgp_by_type_json') ## TODO: REFRACTOR
@@ -1191,7 +782,7 @@ def pgp_by_type_json():
     else:
         return jsonify()
 
-############################ Correlation ############################
+############################ DateRange ############################
 @hashDecoded.route("/correlation/pgpdump", methods=['GET'])
 @login_required
 @login_read_only
@@ -1258,22 +849,10 @@ def all_username_search():
     show_decoded_files = request.form.get('show_decoded_files')
     return redirect(url_for('hashDecoded.username_page', date_from=date_from, date_to=date_to, type_id=type_id, show_decoded_files=show_decoded_files))
 
-# @hashDecoded.route('/correlation/show_pgpdump')
-# @login_required
-# @login_analyst
-# def show_pgpdump():
-#     type_id = request.args.get('type_id')
-#     key_id = request.args.get('key_id')
-#     return show_correlation('pgpdump', type_id, key_id)
-#
-#
-# @hashDecoded.route('/correlation/show_cryptocurrency')
-# @login_required
-# @login_analyst
-# def show_cryptocurrency():
-#     type_id = request.args.get('type_id')
-#     key_id = request.args.get('key_id')
-#     return show_correlation('cryptocurrency', type_id, key_id)
+
+
+
+
 
 @hashDecoded.route('/correlation/cryptocurrency_range_type_json')
 @login_required
@@ -1299,30 +878,16 @@ def username_range_type_json():
     date_to = request.args.get('date_to')
     return correlation_type_range_type_json('username', date_from, date_to)
 
-@hashDecoded.route('/correlation/pgpdump_graph_node_json')
-@login_required
-@login_read_only
-def pgpdump_graph_node_json():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-    return correlation_graph_node_json('pgpdump', type_id, key_id)
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
 
-# # TODO: REFRACTOR
-@hashDecoded.route('/correlation/cryptocurrency_graph_node_json')
-@login_required
-@login_read_only
-def cryptocurrency_graph_node_json():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-    return correlation_graph_node_json('cryptocurrency', type_id, key_id)
-
-@hashDecoded.route('/correlation/username_graph_node_json')
-@login_required
-@login_read_only
-def username_graph_node_json():
-    type_id = request.args.get('type_id')
-    key_id = request.args.get('key_id')
-    return correlation_graph_node_json('username', type_id, key_id)
 
 # # TODO: REFRACTOR
 @hashDecoded.route('/correlation/pgpdump_graph_line_json')

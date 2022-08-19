@@ -521,7 +521,31 @@ def get_item_cryptocurrency_bitcoin():
 '''
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # #        DOMAIN       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # #        CRAWLER      # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@restApi.route("api/v1/crawl/domain", methods=['POST'])
+@token_required('analyst')
+def crawl_domain():
+    data = request.get_json()
+
+    url = data.get('url', None)
+    screenshot = data.get('screenshot', None)
+    har = data.get('har', None)
+    depth_limit = data.get('depth_limit', None)
+    max_pages = data.get('max_pages', None)
+    auto_crawler = data.get('auto_crawler', None)
+    crawler_delta = data.get('crawler_delta', None)
+    crawler_type = data.get('url', None)
+    cookiejar_uuid = data.get('url', None)
+    user_agent = data.get('url', None)
+
+    res = crawlers.api_create_crawler_task(json_dict)
+    res[0]['domain'] = domain
+    return create_json_response(res[0], res[1])
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # #        DOMAIN       # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @restApi.route("api/v1/get/domain/status/minimal", methods=['POST'])
 @token_required('analyst')
@@ -653,6 +677,11 @@ def import_json_item():
     data_json = request.get_json()
     res = importer.api_import_json_item(data_json)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # #        CORE       # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #

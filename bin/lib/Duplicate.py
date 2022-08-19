@@ -16,7 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 
 config_loader = ConfigLoader()
-r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 MIN_ITEM_SIZE = float(config_loader.get_config_str('Modules_Duplicates', 'min_paste_size')) # # TODO: RENAME ME
 config_loader = None
 

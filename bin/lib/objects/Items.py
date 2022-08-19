@@ -22,19 +22,9 @@ from export.Export import get_ail_uuid # # TODO: REPLACE
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import item_basic
-from lib import domain_basic
 
 from packages import Tag
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Cryptocurrency
-import Pgp
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import Correlate_object
-import Decoded
-import Screenshot
-import Username
 
 from flask import url_for
 
@@ -310,6 +300,51 @@ class Item(AbstractObject):
     ############################################################################
     ############################################################################
 
+def _get_dir_source_name(dir, source_name=None, l_sources_name=set(), filter_dir=False):
+    if not l_sources_name:
+        l_sources_name = set()
+    if source_name:
+        l_dir = os.listdir(os.path.join(dir, source_name))
+    else:
+        l_dir = os.listdir(dir)
+    # empty directory
+    if not l_dir:
+        return l_sources_name.add(source_name)
+    else:
+        for src_name in l_dir:
+            if len(src_name) == 4:
+                #try:
+                int(src_name)
+                to_add = os.path.join(source_name)
+                # filter sources, remove first directory
+                if filter_dir:
+                    to_add = to_add.replace('archive/', '').replace('alerts/', '')
+                l_sources_name.add(to_add)
+                return l_sources_name
+                #except:
+                #    pass
+            if source_name:
+                src_name = os.path.join(source_name, src_name)
+            l_sources_name = _get_dir_source_name(dir, source_name=src_name, l_sources_name=l_sources_name, filter_dir=filter_dir)
+    return l_sources_name
+
+def get_items_sources(filter_dir=False, r_list=False):
+    res = _get_dir_source_name(ITEMS_FOLDER, filter_dir=filter_dir)
+    if res:
+        if r_list:
+            res = list(res)
+        return res
+    else:
+        return []
+
+def get_items_by_source(source):
+    l_items = []
+    dir_item = os.path.join(os.environ['AIL_HOME'], ITEMS_FOLDER, source)
+    for root, dirs, files in os.walk(dir_item):
+        for file in files:
+            item_id = os.path.join(root, file).replace(ITEMS_FOLDER, '', 1)
+            l_items.append(item_id)
+    return l_items
 
 ################################################################################
 ################################################################################
@@ -526,117 +561,6 @@ def api_get_items_sources():
 #         return {'status': 'error', 'reason': 'Invalid source', 'provide': source}, 400
 #     return {'status': 'success', 'reason': 'Valid source', 'provide': source}, 200
 
-###
-### correlation
-###
-def get_item_cryptocurrency(item_id, currencies_type=None, get_nb=False):
-    '''
-    Return all cryptocurrencies of a given item.
-
-    :param item_id: item id
-    :param currencies_type: list of cryptocurrencies type
-    :type currencies_type: list, optional
-    '''
-    return Cryptocurrency.cryptocurrency.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
-
-def get_item_pgp(item_id, currencies_type=None, get_nb=False):
-    '''
-    Return all pgp of a given item.
-
-    :param item_id: item id
-    :param currencies_type: list of cryptocurrencies type
-    :type currencies_type: list, optional
-    '''
-    return Pgp.pgp.get_item_correlation_dict(item_id, correlation_type=currencies_type, get_nb=get_nb)
-
-def get_item_username(item_id, sub_type=None, get_nb=False):
-    '''
-    Return all pgp of a given item.
-
-    :param item_id: item id
-    :param sub_type: list of username type
-    :type sub_type: list, optional
-    '''
-    return Username.correlation.get_item_correlation_dict(item_id, correlation_type=sub_type, get_nb=get_nb)
-
-def get_item_decoded(item_id):
-    '''
-    Return all pgp of a given item.
-
-    :param item_id: item id
-    :param currencies_type: list of cryptocurrencies type
-    :type currencies_type: list, optional
-    '''
-    return Decoded.get_item_decoded(item_id)
-
-def get_item_all_screenshot(item_id):
-    '''
-    Return all screenshot of a given item.
-
-    :param item_id: item id
-    '''
-    return Screenshot.get_item_screenshot_list(item_id)
-
-def get_item_all_correlation(item_id, correlation_names=[], get_nb=False):
-    '''
-    Retun all correlation of a given item id.
-
-    :param item_id: item id
-    :type domain: str
-
-    :return: a dict of all correlation for a item id
-    :rtype: dict
-    '''
-    if not correlation_names:
-        correlation_names = Correlate_object.get_all_correlation_names()
-    item_correl = {}
-    for correlation_name in correlation_names:
-        if correlation_name=='cryptocurrency':
-            res = get_item_cryptocurrency(item_id, get_nb=get_nb)
-        elif correlation_name=='pgp':
-            res = get_item_pgp(item_id, get_nb=get_nb)
-        elif correlation_name=='username':
-            res = get_item_username(item_id, get_nb=get_nb)
-        elif correlation_name=='decoded':
-            res = get_item_decoded(item_id)
-        elif correlation_name=='screenshot':
-            res = get_item_all_screenshot(item_id)
-        else:
-            res = None
-        # add correllation to dict
-        if res:
-            item_correl[correlation_name] = res
-    return item_correl
-
-
-
-## TODO: REFRACTOR
-def _get_item_correlation(correlation_name, correlation_type, item_id):
-    res = r_serv_metadata.smembers('item_{}_{}:{}'.format(correlation_name, correlation_type, item_id))
-    if res:
-        return list(res)
-    else:
-        return []
-
-## TODO: REFRACTOR
-def get_item_bitcoin(item_id):
-    return _get_item_correlation('cryptocurrency', 'bitcoin', item_id)
-
-## TODO: REFRACTOR
-def get_item_pgp_key(item_id):
-    return _get_item_correlation('pgpdump', 'key', item_id)
-
-## TODO: REFRACTOR
-def get_item_pgp_name(item_id):
-    return _get_item_correlation('pgpdump', 'name', item_id)
-
-## TODO: REFRACTOR
-def get_item_pgp_mail(item_id):
-    return _get_item_correlation('pgpdump', 'mail', item_id)
-
-## TODO: REFRACTOR
-def get_item_pgp_correlation(item_id):
-    pass
 
 ###
 ### GET Internal Module DESC
@@ -804,60 +728,63 @@ def create_item(obj_id, obj_metadata, io_content):
     # Item not created
     return False
 
+# # TODO:
 def delete_item(obj_id):
-    # check if item exists
-    if not exist_item(obj_id):
-        return False
-    else:
-        delete_item_duplicate(obj_id)
-        # delete MISP event
-        r_serv_metadata.delete('misp_events:{}'.format(obj_id))
-        r_serv_metadata.delete('hive_cases:{}'.format(obj_id))
+    pass
 
-        os.remove(get_item_filename(obj_id))
-
-        # get all correlation
-        obj_correlations = get_item_all_correlation(obj_id)
-        for correlation in obj_correlations:
-            if correlation=='cryptocurrency' or correlation=='pgp':
-                for obj2_subtype in obj_correlations[correlation]:
-                    for obj2_id in obj_correlations[correlation][obj2_subtype]:
-                        Correlate_object.delete_obj_relationship(correlation, obj2_id, 'item', obj_id,
-                                                            obj1_subtype=obj2_subtype)
-            else:
-                for obj2_id in obj_correlations[correlation]:
-                    Correlate_object.delete_obj_relationship(correlation, obj2_id, 'item', obj_id)
-
-        # delete father/child
-        delete_node(obj_id)
-
-        # delete item metadata
-        r_serv_metadata.delete('paste_metadata:{}'.format(obj_id))
-
-        return True
-
-    ### TODO in inport V2
-    # delete from tracked items
-
-    # # # TODO: # FIXME: LATER
-    # delete from queue
-    ###
-    return False
+    # # check if item exists
+    # if not exist_item(obj_id):
+    #     return False
+    # else:
+    #     delete_item_duplicate(obj_id)
+    #     # delete MISP event
+    #     r_serv_metadata.delete('misp_events:{}'.format(obj_id))
+    #     r_serv_metadata.delete('hive_cases:{}'.format(obj_id))
+    #
+    #     os.remove(get_item_filename(obj_id))
+    #
+    #     # get all correlation
+    #     obj_correlations = get_item_all_correlation(obj_id)
+    #     for correlation in obj_correlations:
+    #         if correlation=='cryptocurrency' or correlation=='pgp':
+    #             for obj2_subtype in obj_correlations[correlation]:
+    #                 for obj2_id in obj_correlations[correlation][obj2_subtype]:
+    #                     Correlate_object.delete_obj_relationship(correlation, obj2_id, 'item', obj_id,
+    #                                                         obj1_subtype=obj2_subtype)
+    #         else:
+    #             for obj2_id in obj_correlations[correlation]:
+    #                 Correlate_object.delete_obj_relationship(correlation, obj2_id, 'item', obj_id)
+    #
+    #     # delete father/child
+    #     delete_node(obj_id)
+    #
+    #     # delete item metadata
+    #     r_serv_metadata.delete('paste_metadata:{}'.format(obj_id))
+    #
+    #     return True
+    #
+    # ### TODO in inport V2
+    # # delete from tracked items
+    #
+    # # # # TODO: # FIXME: LATER
+    # # delete from queue
+    # ###
+    # return False
 
 #### ####
-def delete_node(item_id):
-    if is_node(item_id):
-        if is_crawled(item_id):
-            delete_domain_node(item_id)
-        item_basic._delete_node(item_id)
-
-def delete_domain_node(item_id):
-    if is_domain_root(item_id):
-        # remove from domain history
-        domain, port = get_item_domain_with_port(item_id).split(':')
-        domain_basic.delete_domain_item_core(item_id, domain, port)
-    for child_id in get_all_domain_node_by_item_id(item_id):
-        delete_item(child_id)
+# def delete_node(item_id):
+#     if is_node(item_id):
+#         if is_crawled(item_id):
+#             delete_domain_node(item_id)
+#         item_basic._delete_node(item_id)
+#
+# def delete_domain_node(item_id):
+#     if is_domain_root(item_id):
+#         # remove from domain history
+#         domain, port = get_item_domain_with_port(item_id).split(':')
+#         domain_basic.delete_domain_item_core(item_id, domain, port)
+#     for child_id in get_all_domain_node_by_item_id(item_id):
+#         delete_item(child_id)
 
 
 if __name__ == '__main__':

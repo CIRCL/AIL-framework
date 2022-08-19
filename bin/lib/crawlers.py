@@ -168,7 +168,7 @@ def load_crawler_cookies(cookiejar_uuid, domain, crawler_type='regular'):
 ################################################################################
 
 def get_all_cookiejar():
-    r_serv_onion.smembers('cookiejar:all')
+    return r_serv_onion.smembers('cookiejar:all')
 
 def get_global_cookiejar():
     res = r_serv_onion.smembers('cookiejar:global')
@@ -185,19 +185,24 @@ def get_user_cookiejar(user_id):
 def exist_cookiejar(cookiejar_uuid):
     return r_serv_onion.exists('cookiejar_metadata:{}'.format(cookiejar_uuid))
 
-def create_cookiejar(user_id, level=1, description=None):
-    cookiejar_uuid = str(uuid.uuid4())
+def _set_cookiejar_date(date):
+    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'date', date)
+
+# # TODO: sanitize cookie_uuid
+def create_cookiejar(user_id, level=1, description=None, cookiejar_uuid=None):
+    if not cookiejar_uuid:
+        cookiejar_uuid = str(uuid.uuid4())
 
     r_serv_onion.sadd('cookiejar:all', cookiejar_uuid)
     if level==0:
-        r_serv_onion.sadd('cookiejar:user:{}'.format(user_id), cookiejar_uuid)
+        r_serv_onion.sadd(f'cookiejar:user:{user_id}', cookiejar_uuid)
     else:
         r_serv_onion.sadd('cookiejar:global', cookiejar_uuid)
     # metadata
-    r_serv_onion.hset('cookiejar_metadata:{}'.format(cookiejar_uuid), 'user_id', user_id)
-    r_serv_onion.hset('cookiejar_metadata:{}'.format(cookiejar_uuid), 'level', level)
-    r_serv_onion.hset('cookiejar_metadata:{}'.format(cookiejar_uuid), 'description', description)
-    r_serv_onion.hset('cookiejar_metadata:{}'.format(cookiejar_uuid), 'date', datetime.now().strftime("%Y%m%d"))
+    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'user_id', user_id)
+    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'level', level)
+    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'description', description)
+    _set_cookiejar_date(datetime.now().strftime("%Y%m%d"))
 
     # if json_cookies:
     #     json_cookies = json.loads(json_cookies) # # TODO: catch Exception
@@ -259,7 +264,7 @@ def get_cookiejar_metadata(cookiejar_uuid, level=False):
         dict_cookiejar['date'] = get_cookiejar_date(cookiejar_uuid)
         dict_cookiejar['user_id'] = get_cookiejar_owner(cookiejar_uuid)
         if level:
-            dict_cookiejar['level'] = get_cookies_level(cookiejar_uuid)
+            dict_cookiejar['level'] = get_cookiejar_level(cookiejar_uuid)
     return dict_cookiejar
 
 def get_cookiejar_metadata_by_iterator(iter_cookiejar_uuid):
@@ -311,10 +316,12 @@ def get_cookie_dict(cookie_uuid):
     return cookie_dict
 
 # name, value, path=None, httpOnly=None, secure=None, domain=None, text=None
-def add_cookie_to_cookiejar(cookiejar_uuid, cookie_dict):
-    cookie_uuid = generate_uuid()
-    r_serv_onion.sadd('cookiejar:{}:cookies:uuid'.format(cookiejar_uuid), cookie_uuid)
-    r_serv_onion.sadd('cookies:map:cookiejar:{}'.format(cookie_uuid), cookiejar_uuid)
+def add_cookie_to_cookiejar(cookiejar_uuid, cookie_dict, cookie_uuid=None):
+    # # TODO: sanitize cookie_uuid
+    if not cookie_uuid:
+        cookie_uuid = generate_uuid()
+    r_serv_onion.sadd(f'cookiejar:{cookiejar_uuid}:cookies:uuid', cookie_uuid)
+    r_serv_onion.sadd(f'cookies:map:cookiejar:{cookie_uuid}', cookiejar_uuid)
 
     set_cookie_value(cookie_uuid, 'name', cookie_dict['name'])
     set_cookie_value(cookie_uuid, 'value', cookie_dict['value'])
@@ -631,7 +638,6 @@ def add_auto_crawler_in_queue(domain, domain_type, port, epoch, delta, message):
 
 def update_auto_crawler_queue():
     current_epoch = int(time.time())
-    current_epoch = 1631096842
     # check if current_epoch > domain_next_epoch
     l_queue = r_serv_onion.zrangebyscore('crawler_auto_queue', 0, current_epoch)
     for elem in l_queue:
@@ -715,6 +721,73 @@ def send_url_to_crawl_in_queue(crawler_mode, crawler_type, url):
 
 #### ####
 #### CRAWLER TASK API ####
+
+def api_add_crawler_task(json_dict):
+    user_id = None ###############################################
+    user_agent = data.get('user_agent', None)
+    url = json_dict.get('url', '')
+    if not is_valid_uuid_v4(investigation_uuid):
+        return {"status": "error", "reason": f"Invalid Investigation uuid: {investigation_uuid}"}, 400
+
+    screenshot = json_dict.get('screenshot', True) ####
+    screenshot = screenshot == True
+    har = json_dict.get('screenshot', True) ####
+    har = har == True
+
+    depth_limit = data.get('depth_limit', 1)
+    try:
+        depth_limit = int(depth_limit)
+        if depth_limit < 0:
+            depth_limit = 0
+    except ValueError:
+        return ({'error':'invalid depth limit'}, 400)
+
+    max_pages = data.get('max_pages', 100)
+    if max_pages:
+        try:
+            max_pages = int(max_pages)
+            if max_pages < 1:
+                max_pages = 1
+        except ValueError:
+            return ({'error':'invalid max_pages limit'}, 400)
+
+    auto_crawler = data.get('auto_crawler', False)
+    auto_crawler = auto_crawler == True
+    crawler_delta = data.get('crawler_delta', 3600)
+    if auto_crawler:
+        try:
+            crawler_delta = int(crawler_delta)
+            if crawler_delta < 0:
+                return ({'error':'invalid delta between two pass of the crawler'}, 400)
+        except ValueError:
+            return ({'error':'invalid delta between two pass of the crawler'}, 400)
+
+
+    crawler_type = data.get('crawler_type', None)
+
+    cookiejar_uuid = data.get('cookiejar_uuid', None)
+    if cookiejar_uuid:
+        if not exist_cookiejar(cookiejar_uuid):
+            return ({'error': 'unknow cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404)
+        level = get_cookiejar_level(cookiejar_uuid)
+        if level == 0: # # TODO: check if user is admin ######################################################
+            cookie_owner = get_cookiejar_owner(cookiejar_uuid)
+            if cookie_owner != user_id:
+                return ({'error': 'The access to this cookiejar is restricted'}, 403)
+
+
+
+
+
+
+
+    create_crawler_task(url, screenshot=screenshot, har=har, depth_limit=depth_limit,
+                        max_pages=max_pages, crawler_type=crawler_type,
+                        auto_crawler=auto_crawler, crawler_delta=crawler_delta,
+                        cookiejar_uuid=cookiejar_uuid, user_agent=user_agent)
+
+
+# # TODO: # FIXME: REPLACE ME
 def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):
     # validate url
     if url is None or url=='' or url=='\n':
@@ -802,10 +875,16 @@ def create_domain_metadata(domain_type, domain, current_port, date, date_month):
         all_domain_ports.append(current_port)
         r_serv_onion.hset('{}_metadata:{}'.format(domain_type, domain), 'ports', ';'.join(all_domain_ports))
 
+def add_last_crawled_domain(domain_type, domain, port, epoch):
+    # update list, last crawled domains
+    redis_crawler.lpush(f'last_{domain_type}', f'{domain}:{port};{epoch}')
+    redis_crawler.ltrim(f'last_{domain_type}', 0, 15)
+
 # add root_item to history
+# if down -> root_item = epoch_date
 def add_domain_root_item(root_item, domain_type, domain, epoch_date, port):
     # Create/Update crawler history
-    r_serv_onion.zadd('crawler_history_{}:{}:{}'.format(domain_type, domain, port), epoch_date, root_item)
+    r_serv_onion.zadd(f'crawler_history_{domain_type}:{domain}:{port}', epoch_date, root_item)
 
 def create_item_metadata(item_id, domain, url, port, item_father):
     r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'father', item_father)
@@ -1498,5 +1577,5 @@ if __name__ == '__main__':
     #print(get_all_queues_stats())
 
     #res = get_auto_crawler_all_domain()
-    res = update_auto_crawler_queue()
+    res = get_all_cookiejar()
     print(res)

@@ -19,6 +19,17 @@ import Flask_config
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
+
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.objects import ail_objects
+
+
+################################################################################
+
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import Correlate_object
 import Domain
@@ -244,22 +255,22 @@ def get_description():
 @login_required
 @login_read_only
 def graph_node_json():
-    correlation_id = request.args.get('correlation_id')
-    type_id = request.args.get('type_id')
-    object_type = request.args.get('object_type')
+    obj_id = request.args.get('correlation_id') #######################3
+    subtype = request.args.get('type_id') #######################
+    obj_type = request.args.get('object_type') #######################
     max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
 
     correlation_names = sanitise_correlation_names(request.args.get('correlation_names'))
     correlation_objects = sanitise_correlation_objects(request.args.get('correlation_objects'))
 
-    # # TODO: remove me, rename screenshot to image
-    if object_type == 'image':
-        object_type == 'screenshot'
+    # # TODO: remove me, rename screenshot
+    if obj_type == 'image':
+        obj_type == 'screenshot'
 
-    mode = sanitise_graph_mode(request.args.get('mode'))
-
-    res = Correlate_object.get_graph_node_object_correlation(object_type, correlation_id, mode, correlation_names, correlation_objects, requested_correl_type=type_id, max_nodes=max_nodes)
-    return jsonify(res)
+    filter_types = correlation_names + correlation_objects
+    json_graph = ail_objects.get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=filter_types, max_nodes=max_nodes, level=2, flask_context=True)
+    #json_graph = Correlate_object.get_graph_node_object_correlation(obj_type, obj_id, 'union', correlation_names, correlation_objects, requested_correl_type=subtype, max_nodes=max_nodes)
+    return jsonify(json_graph)
 
 @correlation.route('/correlation/subtype_search', methods=['POST'])
 @login_required

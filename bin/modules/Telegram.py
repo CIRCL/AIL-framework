@@ -50,6 +50,8 @@ class Telegram(AbstractModule):
         # extract telegram links
         telegram_links = self.regex_findall(self.re_telegram_link, item.get_id(), item_content)
         for telegram_link_tuple in telegram_links:
+            print(telegram_link_tuple)
+            print(telegram_link_tuple[2:-2].split("', '", 1))
             base_url, url_path = telegram_link_tuple[2:-2].split("', '", 1)
             dict_url = telegram.get_data_from_telegram_url(base_url, url_path)
             if dict_url.get('username'):

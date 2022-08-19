@@ -8,7 +8,6 @@ Recieve Json Items (example: Twitter feeder)
 
 """
 import os
-import json
 import sys
 import datetime
 import uuid

@@ -146,7 +146,7 @@ def save_domain_relationship(obj_id, domain):
 
 def delete_domain_relationship(obj_id, domain):
     r_serv_onion.srem('domain_screenshot:{}'.format(domain), obj_id)
-    r_serv_onion.sadd('screenshot_domain:{}'.format(obj_id), domain)
+    r_serv_onion.srem('screenshot_domain:{}'.format(obj_id), domain)
 
 def save_obj_relationship(obj_id, obj2_type, obj2_id):
     if obj2_type == 'domain':

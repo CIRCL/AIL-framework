@@ -8,14 +8,15 @@ Receiver Jabber Json Items
 
 """
 import os
-import json
 import sys
 import time
-import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import item_basic
-import Username
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import item_basic
+from lib.objects.Usernames import Username
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import', 'ail_json_importer'))
 from Default_json import Default_json
@@ -45,6 +46,9 @@ class Ail_feeder_jabber(Default_json):
         to = str(self.json_item['meta']['jabber:to'])
         fr = str(self.json_item['meta']['jabber:from'])
         item_date = item_basic.get_item_date(item_id)
-        Username.save_item_correlation('jabber', to, item_id, item_date)
-        Username.save_item_correlation('jabber', fr, item_id, item_date)
+
+        user_to = Username(to, 'jabber')
+        user_fr = Username(fr, 'jabber')
+        user_to.add(date, item_id)
+        user_fr.add(date, item_id)
         return None

@@ -11,7 +11,6 @@
 ##################################
 import time
 import os
-import redis
 import base64
 from hashlib import sha1
 import magic
@@ -26,10 +25,19 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from Helper import Process
-from packages import Item
-from lib import ConfigLoader
-from lib import Decoded
+from lib.ConfigLoader import ConfigLoader
+from lib.objects.Items import Item
+from lib.objects import Decodeds
+
+config_loader = ConfigLoader()
+serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+hex_max_execution_time = config_loader.get_config_int("Hex", "max_execution_time")
+binary_max_execution_time = config_loader.get_config_int("Binary", "max_execution_time")
+base64_max_execution_time = config_loader.get_config_int("Base64", "max_execution_time")
+config_loader = None
+
+#####################################################
+#####################################################
 
 # # TODO: use regex_helper
 class TimeoutException(Exception):
@@ -38,7 +46,13 @@ class TimeoutException(Exception):
 def timeout_handler(signum, frame):
     raise TimeoutException
 
+
+# # TODO: # FIXME: Remove signal -> replace with regex_helper
 signal.signal(signal.SIGALRM, timeout_handler)
+
+
+#####################################################
+####################################################
 
 
 class Decoder(AbstractModule):
@@ -65,8 +79,6 @@ class Decoder(AbstractModule):
     def __init__(self):
         super(Decoder, self).__init__()
 
-        serv_metadata = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Metadata")
-
         regex_binary = '[0-1]{40,}'
         #regex_hex = '(0[xX])?[A-Fa-f0-9]{40,}'
         regex_hex = '[A-Fa-f0-9]{40,}'
@@ -78,10 +90,6 @@ class Decoder(AbstractModule):
 
         # map decoder function
         self.decoder_function = {'binary':self.binary_decoder,'hexadecimal':self.hex_decoder, 'base64':self.base64_decoder}
-
-        hex_max_execution_time = self.process.config.getint("Hex", "max_execution_time")
-        binary_max_execution_time = self.process.config.getint("Binary", "max_execution_time")
-        base64_max_execution_time = self.process.config.getint("Base64", "max_execution_time")
 
         # list all decoder with regex,
         decoder_binary = {'name': 'binary', 'regex': cmp_regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time}
@@ -102,11 +110,9 @@ class Decoder(AbstractModule):
 
     def compute(self, message):
 
-        obj_id = Item.get_item_id(message)
-
-        # Extract info from message
-        content = Item.get_item_content(obj_id)
-        date = Item.get_item_date(obj_id)
+        item = Item(message)
+        content = item.get_content()
+        date = item.get_date()
 
         for decoder in self.decoder_order: # add threshold and size limit
             # max execution time on regex
@@ -117,16 +123,16 @@ class Decoder(AbstractModule):
             except TimeoutException:
                 encoded_list = []
                 self.process.incr_module_timeout_statistic() # add encoder type
-                self.redis_logger.debug(f"{obj_id} processing timeout")
+                self.redis_logger.debug(f"{item.id} processing timeout")
                 continue
             else:
                 signal.alarm(0)
 
                 if(len(encoded_list) > 0):
-                    content = self.decode_string(content, message, date, encoded_list, decoder['name'], decoder['encoded_min_size'])
+                    content = self.decode_string(content, item.id, date, encoded_list, decoder['name'], decoder['encoded_min_size'])
 
 
-    def decode_string(self, content, item_id, item_date, encoded_list, decoder_name, encoded_min_size):
+    def decode_string(self, content, item_id, date, encoded_list, decoder_name, encoded_min_size):
         find = False
         for encoded in encoded_list:
             if len(encoded) >=  encoded_min_size:
@@ -134,16 +140,18 @@ class Decoder(AbstractModule):
                 find = True
 
                 sha1_string = sha1(decoded_file).hexdigest()
-                mimetype = Decoded.get_file_mimetype(decoded_file)
+                decoded = Decoded(sha1_string)
+
+                mimetype = decoded.guess_mimetype(decoded_file)
                 if not mimetype:
-                    self.redis_logger.debug(item_id)
-                    self.redis_logger.debug(sha1_string)
                     print(item_id)
                     print(sha1_string)
-                    raise Exception('Invalid mimetype')
-                Decoded.save_decoded_file_content(sha1_string, decoded_file, item_date, mimetype=mimetype)
-                Decoded.save_item_relationship(sha1_string, item_id)
-                Decoded.create_decoder_matadata(sha1_string, item_id, decoder_name)
+                    raise Exception(f'Invalid mimetype: {sha1_string} {item_id}')
+
+                decoded.create(content, date)
+                decoded.add(decoder_name, date, item_id, mimetype)
+
+                save_item_relationship(sha1_string, item_id) ################################
 
                 #remove encoded from item content
                 content = content.replace(encoded, '', 1)
@@ -151,24 +159,18 @@ class Decoder(AbstractModule):
                 self.redis_logger.debug(f'{item_id} : {decoder_name} - {mimetype}')
                 print(f'{item_id} : {decoder_name} - {mimetype}')
         if(find):
-            self.set_out_item(decoder_name, item_id)
+            self.redis_logger.info(f'{decoder_name} decoded')
+            print(f'{decoder_name} decoded')
 
+            # Send to Tags
+            msg = f'infoleak:automatic-detection="{decoder_name}";{item_id}'
+            self.send_message_to_queue(msg, 'Tags')
+
+        # perf: remove encoded from item content
         return content
-
-
-    def set_out_item(self, decoder_name, item_id):
-
-        self.redis_logger.info(f'{decoder_name} decoded')
-        print(f'{decoder_name} decoded')
-
-        # Send to duplicate
-        self.send_message_to_queue(item_id, 'Duplicate')
-
-        # Send to Tags
-        msg = f'infoleak:automatic-detection="{decoder_name}";{item_id}'
-        self.send_message_to_queue(msg, 'Tags')
 
 if __name__ == '__main__':
 
+    # # TODO: TEST ME
     module = Decoder()
     module.run()

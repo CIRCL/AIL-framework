@@ -6,6 +6,7 @@
 """
 import os
 import sys
+import time
 
 import importlib.util
 
@@ -15,13 +16,23 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib import Users
+from lib.objects import Decodeds
+from lib.objects import Domains
+from lib.objects import Items
+from lib.objects.CryptoCurrencies import CryptoCurrency
+from lib.objects.Pgps import Pgp
+from lib.objects.Screenshots import Screenshot, get_all_screenshots
+from lib.objects.Usernames import Username
 
 # # # # CONFIGS # # # #
 config_loader = ConfigLoader()
-r_kvrocks = config_loader.get_redis_conn("Kvrocks_DB")
+r_kvrocks = config_loader.get_db_conn("Kvrocks_DB")
 
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_tracker = config_loader.get_redis_conn("ARDB_Tracker")
+r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
+r_crawler = config_loader.get_redis_conn("ARDB_Onion")
+r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 # # - - CONFIGS - - # #
 
@@ -31,6 +42,13 @@ old_ail_2_ail = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old_ail_2_ail)
 
 old_ail_2_ail.r_serv_sync = r_serv_db
+
+from packages import Tag
+spec = importlib.util.find_spec('Tag')
+old_Tag = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(old_Tag)
+
+old_Tag.r_serv_tags = r_serv_tags
 
 from lib import Tracker
 spec = importlib.util.find_spec('Tracker')
@@ -46,12 +64,25 @@ spec.loader.exec_module(old_Investigations)
 
 old_Investigations.r_tracking = r_serv_tracker
 
+from lib import crawlers
+spec = importlib.util.find_spec('crawlers')
+old_crawlers = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(old_crawlers)
+
+old_crawlers.r_serv_onion = r_crawler
 
 # # TODO: desable features - credentials - stats ? - sentiment analysis
 
 # CREATE FUNCTION BY DB/FEATURES
 
 # /!\ ISSUE WITH FILE DUPLICATES => NEED TO BE REFACTORED
+
+
+def get_item_date(item_id):
+    dirs = item_id.split('/')
+    return f'{dirs[-4]}{dirs[-3]}{dirs[-2]}'
+
+################################################################
 
 def core_migration():
     print('CORE MIGRATION...')
@@ -81,6 +112,12 @@ def core_migration():
     r_kvrocks.hset('d4:passivedns', 'enabled', bool(d4_enabled))
     r_kvrocks.hset('d4:passivedns', 'update_time', d4_update_time)
 
+    # Crawler Manager
+    manager_url = old_crawlers.get_splash_manager_url()
+    manager_api_key = old_crawlers.get_splash_api_key()
+    crawlers.save_splash_manager_url_api(manager_url, manager_api_key)
+    crawlers.reload_splash_and_proxies_list()
+
     # ail:misp
     # ail:thehive
     # hive:auto-alerts
@@ -91,9 +128,6 @@ def core_migration():
 
 
     # # TODO: TO CHECK
-    # config:all_global_section +
-    # config:global:crawler +
-    # mess_not_saved_export
 
 
 # # # # # # # # # # # # # # # #
@@ -215,26 +249,361 @@ def item_submit_migration():
     pass
 
 # /!\ KEY COLISION
-# # TODO: change db
+# # TODO: change db -> olds modules + blueprints
+# # TODO: HANDLE LOCAL TAGS
+# # TODO: HANDLE LOCAL TAGS
+# # TODO: HANDLE LOCAL TAGS
+# # TODO: HANDLE LOCAL TAGS
+# # TODO: HANDLE LOCAL TAGS
 def tags_migration():
-    
+
+    # HANDLE LOCAL TAGS
+
+    print(old_Tag.get_all_tags())
+
+
+    #
+    #   /!\ OBJECTS TAGS ISSUE /!\
+    #          -> only one layer
+    #
+    #   issue with subtypes + between objects with same ID
+    #
+    #
+    #
+    #
+
 
 
     pass
+
+
+# # TODO: MIGRATE item_basic.add_map_obj_id_item_id ??????????????????????
+###############################
+#                             #
+#       ITEMS MIGRATION       #
+#                             #
+###############################
+
+def get_item_father(item_id):
+    return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'father')
 
 def items_migration():
-    pass
+    print('ITEMS MIGRATION...')
+    # MIGRATE IMPORTED URLEXTRACT Father
+    for item_id in Items.get_items_by_source('urlextract'):
+        father_id = get_item_father(item_id)
+        if father_id:
+            item = Items.Item(item_id)
+            item.set_father(father_id)
+
+
+
+# TODO: migrate cookies
+# TODO: migrate auto crawlers
+
+###############################
+#                             #
+#     CRAWLERS MIGRATION      #
+#                             #
+###############################
+
+# Retun last crawled domains by type
+#   domain;epoch
+def get_last_crawled_domains(domain_type):
+    return r_crawler.lrange(f'last_{domain_type}', 0 ,-1)
 
 def crawler_migration():
+    print('CRAWLER MIGRATION...')
 
-    pass
+    # for domain_type in ['onion', 'regular']:
+    #     for row in get_last_crawled_domains(domain_type):
+    #         dom_row, epoch = row.rsplit(';', 1)
+    #         domain, port = dom_row.rsplit(':', 1)
+    #         print(domain, port, epoch)
+    #         #crawlers.add_last_crawled_domain(domain_type, domain, port, epoch)
+
+    for cookiejar_uuid in old_crawlers.get_all_cookiejar():
+        meta = old_crawlers.get_cookiejar_metadata(cookiejar_uuid, level=True)
+        #print(meta)
+        #crawlers.create_cookiejar(meta['user_id'], level=meta['level'], description=meta['description'], cookiejar_uuid=cookiejar_uuid)
+        #_set_cookiejar_date(meta['date'])
+
+        for meta_cookie, cookie_uuid in old_crawlers.get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=True):
+            print(cookie_uuid)
+            #crawlers.add_cookie_to_cookiejar(cookiejar_uuid, meta_cookie, cookie_uuid=cookie_uuid)
+
+    # TODO: auto crawler -> to Fix / change
+
+
+    # TODO: crawlers queues
+
+###############################
+#                             #
+#      DOMAINS MIGRATION      #
+#                             #
+###############################
+
+# # TODO: DOMAIN DOWN -> start onion_down:20190101
+
+# Start -> 2019-01-01
+
+# BY TYPE - FIRST DATE DOWN / UP
+
+def get_item_link(item_id):
+    return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'real_link')
+
+def get_item_father(item_id):
+    return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'father')
+
+def get_item_children(item_id):
+    return r_serv_metadata.smembers(f'paste_children:{item_id}')
+
+def get_domains_up_by_type(domain_type):
+    return r_crawler.smembers(f'full_{domain_type}_up')
+
+def get_domain_first_seen(domain_type, domain):
+    return r_crawler.hget(f'{domain_type}_metadata:{domain}', 'first_seen')
+
+def get_domain_last_check(domain_type, domain):
+    return r_crawler.hget(f'{domain_type}_metadata:{domain}', 'last_check')
+
+def get_domain_last_origin(domain_type, domain):
+    return r_crawler.hget(f'{domain_type}_metadata:{domain}', 'paste_parent')
+
+def get_domain_ports(domain_type, domain):
+    l_ports = r_crawler.hget(f'{domain_type}_metadata:{domain}', 'ports')
+    if l_ports:
+        return l_ports.split(";")
+    return []
+
+def get_domain_languages(dom):
+    return r_crawler.smembers(f'domain:language:{dom}')
+
+def is_crawled_item(domain, item_id):
+    domain_lenght = len(domain)
+    if len(item_id) > (domain_lenght+48):
+        if item_id[-36-domain_lenght:-36] == domain:
+            return True
+    return False
+
+def get_crawled_items(domain, root_id):
+    crawled_items = get_crawled_items_children(domain, root_id)
+    crawled_items.append(root_id)
+    return crawled_items
+
+def get_crawled_items_children(domain, root_id):
+    crawled_items = []
+    for item_id in get_item_children(root_id):
+        if is_crawled_item(domain, item_id):
+            crawled_items.append(item_id)
+            crawled_items.extend(get_crawled_items_children(domain, item_id))
+    return crawled_items
+
+def get_domain_history_by_port(domain_type, domain, port):
+    history_tuple = r_crawler.zrange(f'crawler_history_{domain_type}:{domain}:{port}', 0, -1, withscores=True)
+    history = []
+    for root_id, epoch in history_tuple:
+        dict_history = {}
+        epoch = int(epoch) # force int
+        dict_history["epoch"] = epoch
+        try:
+            int(root_id)
+            dict_history['status'] = False
+        except ValueError:
+            dict_history['status'] = True
+            dict_history['root'] = root_id
+        history.append(dict_history)
+    return history
 
 def domain_migration():
-    pass
+    print('Domains MIGRATION...')
 
-# # TODO: refractor keys
-def correlations_migration():
-    pass
+    for domain_type in ['onion', 'regular']:
+        for dom in get_domains_up_by_type(domain_type):
+
+            ports = get_domain_ports(domain_type, dom)
+            first_seen = get_domain_first_seen(domain_type, dom)
+            last_check = get_domain_last_check(domain_type, dom)
+            last_origin = get_domain_last_origin(domain_type, dom)
+            languages = get_domain_languages(dom)
+
+            domain = Domains.Domain(dom)
+            # domain.update_daterange(first_seen)
+            # domain.update_daterange(last_check)
+            # domain._set_ports(ports)
+            # if last_origin:
+            #     domain.set_last_origin(last_origin)
+            for language in languages:
+                print(language)
+            #     domain.add_language(language)
+            #print('------------------')
+            #print('------------------')
+            #print('------------------')
+            #print('------------------')
+            #print('------------------')
+            print(dom)
+            #print(first_seen)
+            #print(last_check)
+            #print(ports)
+
+            # # TODO: FIXME filter invalid hostname
+
+
+             # CREATE DOMAIN HISTORY
+            for port in ports:
+                for history in get_domain_history_by_port(domain_type, dom, port):
+                    epoch = history['epoch']
+                    # DOMAIN DOWN
+                    if not history.get('status'): # domain DOWN
+                        # domain.add_history(epoch, port)
+                        print(f'DOWN {epoch}')
+                    # DOMAIN UP
+                    else:
+                        root_id = history.get('root')
+                        if root_id:
+                            # domain.add_history(epoch, port, root_item=root_id)
+                            #print(f'UP {root_id}')
+                            crawled_items = get_crawled_items(dom, root_id)
+                            for item_id in crawled_items:
+                                url = get_item_link(item_id)
+                                item_father = get_item_father(item_id)
+                                if item_father and url:
+                                    #print(f'{url}    {item_id}')
+                                    pass
+                                    # domain.add_crawled_item(url, port, item_id, item_father)
+
+
+                    #print()
+
+
+
+###############################
+#                             #
+#      DECODEDS MIGRATION     #
+#                             #
+###############################
+def get_estimated_type(decoded_id):
+    return r_serv_metadata.hget(f'metadata_hash:{decoded_id}', 'estimated_type')
+
+def get_decoded_items_list_by_decoder(decoder_type, decoded_id): ###################
+    #return r_serv_metadata.zrange('nb_seen_hash:{}'.format(sha1_string), 0, -1)
+    return r_serv_metadata.zrange(f'{decoder_type}_hash:{decoded_id}', 0, -1)
+
+
+
+def decodeds_migration():
+    print('Decoded MIGRATION...')
+    decoder_names = ['base64', 'binary', 'hexadecimal']
+
+    Decodeds._delete_old_json_descriptor()
+    for decoded_id in Decodeds.get_all_decodeds():
+        mimetype = get_estimated_type(decoded_id)
+        # ignore invalid object
+        if mimetype is None:
+            continue
+        print()
+        print(decoded_id)
+
+        decoded = Decodeds.Decoded(decoded_id)
+        filepath = decoded.get_filepath(mimetype=mimetype)
+        decoded._save_meta(filepath, mimetype)
+
+        for decoder_type in decoder_names:
+            for item_id in get_decoded_items_list_by_decoder(decoder_type, decoded_id):
+                print(item_id, decoder_type)
+                date = get_item_date(item_id)
+            #for decoder_type in :
+
+                decoded.add(decoder_type, date, item_id, mimetype)
+
+###############################
+#                             #
+#    SCREENSHOTS MIGRATION    #
+#                             #
+###############################
+
+# old correlation
+def get_screenshot_items_list(screenshot_id): ######################### # TODO: DELETE SOLO SCREENSHOTS
+    print(f'screenshot:{screenshot_id}')
+    return r_crawler.smembers(f'screenshot:{screenshot_id}')
+# old correlation
+def get_screenshot_domain(screenshot_id):
+    return r_crawler.smembers(f'screenshot_domain:{screenshot_id}')
+
+# Tags + Correlations
+# # TODO: save orphelin screenshot ?????
+def screenshots_migration():
+    print('SCREENSHOTS MIGRATION...')
+    screenshots = get_all_screenshots()
+    #screenshots = ['5fcc292ea8a699aa7a9ce93a704b78b8f493620ccdb2a5cebacb1069a4327211']
+    for screenshot_id in screenshots:
+        print(screenshot_id)
+
+        screenshot = Screenshot(screenshot_id)
+
+        tags = old_Tag.get_obj_tag(screenshot_id) ################## # TODO:
+        if tags:
+            print(screenshot_id)
+            print(tags)
+
+        # Correlations
+        for item_id in get_screenshot_items_list(screenshot_id):
+            print(item_id)
+            screenshot.add_correlation('item', '', item_id)
+        for domain_id in get_screenshot_domain(screenshot_id):
+            print(domain_id)
+            screenshot.add_correlation('domain', '', domain_id)
+
+###############################
+#                             #
+#      SUBTYPES MIGRATION     #
+#                             #
+###############################
+
+def get_item_correlation_obj(obj_type, subtype, obj_id):
+    return r_serv_metadata.smembers(f'set_{obj_type}_{subtype}:{obj_id}')
+
+def get_obj_subtype_first_seen(obj_type, subtype, obj_id):
+    return r_serv_metadata.hget(f'{obj_type}_metadata_{subtype}:{obj_id}', 'first_seen')
+
+def get_obj_subtype_last_seen(obj_type, subtype, obj_id):
+    return r_serv_metadata.hget(f'{obj_type}_metadata_{subtype}:{obj_id}', 'last_seen')
+
+def get_all_subtype_id(obj_type, subtype):
+    print(f'{obj_type}_all:{subtype}')
+    print(r_serv_metadata.zrange(f'{obj_type}_all:{subtype}', 0, -1))
+    return r_serv_metadata.zrange(f'{obj_type}_all:{subtype}', 0, -1)
+
+def get_subtype_object(obj_type, subtype, obj_id):
+    if obj_type == 'cryptocurrency':
+        return CryptoCurrency(obj_id, subtype)
+    elif obj_type == 'pgpdump':
+        return Pgp(obj_id, subtype)
+    elif obj_type == 'username':
+        return Username(obj_id, subtype)
+
+def migrate_subtype_obj(Obj, obj_type, subtype, obj_id):
+    first_seen = get_obj_subtype_first_seen(obj_type, subtype, obj_id)
+    last_seen = get_obj_subtype_last_seen(obj_type, subtype, obj_id)
+
+    # dates
+    for item_id in get_item_correlation_obj(obj_type, subtype, obj_id):
+        date = get_item_date(item_id)
+        Obj.add(date, item_id)
+
+dict_obj_subtypes = {'cryptocurrency': ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash'],
+                    'pgpdump': ['key', 'mail', 'name'],
+                    'username': ['telegram', 'twitter', 'jabber']}
+
+def subtypes_obj_migration():
+    print('SUBPTYPE MIGRATION...')
+
+    for obj_type in dict_obj_subtypes:
+        print(f'{obj_type} MIGRATION...')
+        for subtype in dict_obj_subtypes[obj_type]:
+            for obj_id in get_all_subtype_id(obj_type, subtype):
+                Obj = get_subtype_object(obj_type, subtype, obj_id)
+                migrate_subtype_obj(Obj, obj_type, subtype, obj_id)
 
 # # # # # # # # # # # # # # # #
 #       STATISTICS
@@ -246,10 +615,16 @@ def statistics_migration():
 
 if __name__ == '__main__':
 
-    core_migration()
-    user_migration()
+    #core_migration()
+    #user_migration()
+    #items_migration()
+    #crawler_migration()
+    #domain_migration()
+    #decodeds_migration()
+    #screenshots_migration()
+    #subtypes_obj_migration()
     #ail_2_ail_migration()
-    trackers_migration()
+    #trackers_migration()
     #investigations_migration()
 
 

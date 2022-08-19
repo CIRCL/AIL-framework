@@ -52,6 +52,8 @@ from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
 from blueprints.ail_2_ail_sync import ail_2_ail_sync
 from blueprints.settings_b import settings_b
+from blueprints.objects_decoded import objects_decoded
+from blueprints.objects_range import objects_range
 
 
 Flask_dir = os.environ['AIL_FLASK']
@@ -113,6 +115,8 @@ app.register_blueprint(hunters, url_prefix=baseUrl)
 app.register_blueprint(old_endpoints, url_prefix=baseUrl)
 app.register_blueprint(ail_2_ail_sync, url_prefix=baseUrl)
 app.register_blueprint(settings_b, url_prefix=baseUrl)
+app.register_blueprint(objects_decoded, url_prefix=baseUrl)
+app.register_blueprint(objects_range, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========

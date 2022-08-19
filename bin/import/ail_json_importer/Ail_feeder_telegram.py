@@ -8,13 +8,15 @@ Recieve Json Items (example: Twitter feeder)
 
 """
 import os
-import json
 import sys
 import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import item_basic
-import Username
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import item_basic
+from lib.objects.Usernames import Username
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import', 'ail_json_importer'))
 from Default_json import Default_json
@@ -46,14 +48,14 @@ class Ail_feeder_telegram(Default_json):
         telegram_id = f'{channel_id}_{message_id}'
         item_basic.add_map_obj_id_item_id(telegram_id, item_id, 'telegram_id')
         #print(self.json_item['meta'])
-        username = None
+        user = None
         if self.json_item['meta'].get('user'):
-            username = str(self.json_item['meta']['user'])
+            user = str(self.json_item['meta']['user'])
         else:
             if self.json_item['meta'].get('channel'):
-                username = str(self.json_item['meta']['channel']['username'])
-        if username:
-            #print(username)
+                user = str(self.json_item['meta']['channel']['username'])
+        if user:
             item_date = item_basic.get_item_date(item_id)
-            Username.save_item_correlation('telegram', username, item_id, item_date)
+            username = Username(user, 'telegram')
+            username.add(date, item_id)
         return None

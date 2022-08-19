@@ -18,6 +18,7 @@ from pymispgalaxies import Galaxies, Clusters
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
+#r_serv_tags = config_loader.get_db_conn("Kvrocks_Tags")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
@@ -89,7 +90,7 @@ def get_all_taxonomies_tags(): # # TODO: add + REMOVE + Update
 def get_all_galaxies_tags(): # # TODO: add + REMOVE + Update
     return r_serv_tags.smembers('active_galaxies_tags')
 
-def get_all_custom_tags():
+def get_all_custom_tags(): # # TODO: add + REMOVE + Update
     return r_serv_tags.smembers('tags:custom')
 
 def get_taxonomies_enabled_tags(r_list=False):

@@ -43,7 +43,7 @@ class Domain(AbstractObject):
         else:
             return 'regular'
 
-    def get_first_seen(selfr_int=False, separator=True):
+    def get_first_seen(self, r_int=False, separator=True):
         first_seen = r_onion.hget(f'{self.domain_type}_metadata:{self.id}', 'first_seen')
         if first_seen:
             if separator:
@@ -62,11 +62,58 @@ class Domain(AbstractObject):
                 last_check = int(last_check)
         return last_check
 
-    def get_ports(self):
+    def _set_first_seen(self, date):
+        r_onion.hset(f'{self.domain_type}_metadata:{self.id}', 'first_seen', date)
+
+    def _set_last_check(self, date):
+        r_onion.hset(f'{self.domain_type}_metadata:{self.id}', 'last_check', date)
+
+    def update_daterange(self, date):
+        first_seen = self.get_first_seen(r_int=True)
+        last_check = self.get_last_check(r_int=True)
+        if not first_seen:
+            self._set_first_seen(date)
+            self._set_last_check(date)
+        elif int(first_seen) > date:
+            self._set_first_seen(date)
+        elif int(last_check) < date:
+            self._set_last_check(date)
+
+    def get_last_origin(self):
+        return r_onion.hget(f'{self.domain_type}_metadata:{self.id}', 'paste_parent')
+
+    def set_last_origin(self, origin_id):
+        r_onion.hset(f'{self.domain_type}_metadata:{self.id}', 'paste_parent', origin_id)
+
+    def is_up(self, ports=[]):
+        if not ports:
+            ports = self.get_ports()
+        for port in ports:
+            res = r_onion.zrevrange(f'crawler_history_{self.domain_type}:{self.id}:{port}', 0, 0, withscores=True)
+            if res:
+                item_core, epoch = res[0]
+                if item_core != str(epoch):
+                    return True
+        return False
+
+    def get_ports(self, r_set=False):
         l_ports = r_onion.hget(f'{self.domain_type}_metadata:{self.id}', 'ports')
         if l_ports:
-            return l_ports.split(";")
+            l_ports = l_ports.split(";")
+            if r_set:
+                return set(l_ports)
+            else:
+                return l_ports
         return []
+
+    def _set_ports(self, ports):
+        ports = ';'.join(ports)
+        r_onion.hset(f'{self.domain_type}_metadata:{self.id}', 'ports', ports)
+
+    def add_ports(self, port):
+        ports = self.get_ports(r_set=True)
+        ports.add(port)
+        self._set_ports(ports)
 
     def get_history_by_port(self, port, status=False, root=False):
         '''
@@ -93,6 +140,23 @@ class Domain(AbstractObject):
                     dict_history['root'] = root_id
             history.append(dict_history)
         return history
+
+    def get_languages(self):
+        return r_onion.smembers(f'domain:language:{self.id}')
+
+    def get_meta(self):
+        meta = {}
+        meta['type'] = self.domain_type
+        meta['first_seen'] = self.get_first_seen()
+        meta['last_check'] = self.get_last_check()
+        meta['last_origin'] = self.last_origin()
+        meta['ports'] = self.get_ports()
+        meta['status'] = self.is_up(ports=ports)
+        meta['tags'] = self.get_last_origin()
+        #meta['is_tags_safe'] =
+        meta['languages'] = self.get_languages()
+        #meta['screenshot'] =
+
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
@@ -179,16 +243,74 @@ class Domain(AbstractObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    ############################################################################
+    def add_language(self, language):
+        r_onion.sadd('all_domains_languages', language)
+        r_onion.sadd(f'all_domains_languages:{self.domain_type}', language)
+        r_onion.sadd(f'language:domains:{self.domain_type}:{language}', self.id)
+        r_onion.sadd(f'domain:language:{self.id}', language)
+
+
     ############################################################################
     ############################################################################
 
-    def exist_correlation(self):
-        pass
+
+    def create(self, first_seen, last_check, ports, status, tags, languages):
+
+
+        r_onion.hset(f'{self.domain_type}_metadata:{self.id}', 'first_seen', first_seen)
+        r_onion.hset(f'{self.domain_type}_metadata:{self.id}', 'last_check', last_check)
+
+        for language in languages:
+            self.add_language(language)
+
+    #### CRAWLER ####
+
+    # add root_item to history
+    # if domain down -> root_item = epoch
+    def _add_history_root_item(self, root_item, epoch, port):
+        # Create/Update crawler history
+        r_onion.zadd(f'crawler_history_{self.domain_type}:{self.id}:{port}', epoch, int(root_item))
+
+    # if domain down -> root_item = epoch
+    def add_history(self, epoch, port, root_item=None):
+        date = time.strftime('%Y%m%d', time.gmtime(epoch))
+        try:
+            int(root_item)
+        except ValueError:
+            root_item = None
+        # UP
+        if root_item:
+            r_onion.sadd(f'full_{self.domain_type}_up', self.id)
+            r_onion.sadd(f'{self.domain_type}_up:{date}', self.id) # # TODO:  -> store first day
+            r_onion.sadd(f'month_{self.domain_type}_up:{date[0:6]}', self.id) # # TODO:  -> store first month
+            self._add_history_root_item(root_item, epoch, port)
+        else:
+            r_onion.sadd(f'{self.domain_type}_down:{date}', self.id) # # TODO:  -> store first month
+            self._add_history_root_item(epoch, epoch, port)
+
+    def add_crawled_item(self, url, port, item_id, item_father):
+        r_metadata.hset(f'paste_metadata:{item_id}', 'father', item_father)
+        r_metadata.hset(f'paste_metadata:{item_id}', 'domain', f'{self.id}:{port}')
+        r_metadata.hset(f'paste_metadata:{item_id}', 'real_link', url)
+        # add this item_id to his father
+        r_metadata.sadd(f'paste_children:{item_father}', item_id)
+
+    ##-- CRAWLER --##
+
 
     ############################################################################
     ############################################################################
 
+def get_all_domains_types():
+    return ['onion', 'regular'] # i2p
 
+def get_all_domains_languages():
+    return r_onion.smembers('all_domains_languages')
+
+def get_domains_up_by_type(domain_type):
+    return r_onion.smembers(f'full_{domain_type}_up')
+
+################################################################################
+################################################################################
 
 #if __name__ == '__main__':

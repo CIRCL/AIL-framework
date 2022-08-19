@@ -208,7 +208,7 @@ class Global(AbstractModule):
 
         return curr_file_content
 
-    # # TODO: add stats incomplete_file/Not a gzipped file 
+    # # TODO: add stats incomplete_file/Not a gzipped file
     def gunzip_bytes_obj(self, filename, bytes_obj):
         gunzipped_bytes_obj = None
         try:

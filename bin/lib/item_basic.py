@@ -185,6 +185,7 @@ def get_obj_id_item_id(parent_type, parent_id):
     else:
         return None
 
+# # TODO: # FIXME: TO MIGRATE ??????
 def add_map_obj_id_item_id(obj_id, item_id, obj_type):
     if obj_type == 'twitter_id':
         r_serv_metadata.hset('map:twitter_id:item_id', obj_id, item_id)

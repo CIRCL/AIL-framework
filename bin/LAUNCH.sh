@@ -295,7 +295,7 @@ function shutting_down_redis_servers {
     redis_dir=${AIL_HOME}/redis/src
     for port in "${array[@]}";
         do
-            bash -c "${redis_dir}/redis-cli -p ${port} SHUTDOWN"
+            bash -c "${redis_dir}/redis-cli -p ${port} -a ail SHUTDOWN"
             sleep 0.1
         done
 }
@@ -324,7 +324,7 @@ function checking_redis_servers {
     for port in "${array[@]}";
         do
             sleep 0.2
-            bash -c "${redis_dir}/redis-cli -p ${port} PING | grep "PONG" &> /dev/null"
+            bash -c "${redis_dir}/redis-cli -p ${port} -a ail PING | grep "PONG" &> /dev/null"
             if [ ! $? == 0 ]; then
                 echo -e "${RED}\t${port} ${db_name} not ready${DEFAULT}"
                 flag_db=1
@@ -512,6 +512,20 @@ function killall {
     fi
 }
 
+function _set_kvrocks_namespace() {
+  bash -c "${redis_dir}/redis-cli -p ${port} -a ail namespace add $1 $2"
+}
+
+function set_kvrocks_namespaces() {
+  if checking_kvrocks; then
+    _set_kvrocks_namespace "cor"  "ail_correls"
+    _set_kvrocks_namespace "obj"  "ail_objs"
+    _set_kvrocks_namespace "tag"  "ail_tags"
+  else
+    echo -e $RED"\t* Error: Please launch Kvrocks server"$DEFAULT
+  fi
+}
+
 function update() {
     bin_dir=${AIL_HOME}/bin
 
@@ -671,6 +685,8 @@ while [ "$1" != "" ]; do
                                         ;;
         -lkv | --launchKVORCKSVerify )  launch_kvrocks;
                                         wait_until_kvrocks_is_ready;
+                                        ;;
+        --set_kvrocks_namespaces )      set_kvrocks_namespaces;
                                         ;;
         -k | --killAll )                killall;
                                         ;;

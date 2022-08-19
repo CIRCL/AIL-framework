@@ -9,13 +9,13 @@ from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
-from lib.objects import abstract_object
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 
 config_loader = ConfigLoader()
 
 config_loader = None
 
-class CryptoCurrency(abstract_object.AbstractObject):
+class CryptoCurrency(AbstractSubtypeObject):
     """
     AIL CryptoCurrency Object. (strings)
     """
@@ -88,29 +88,45 @@ class CryptoCurrency(abstract_object.AbstractObject):
                 obj_attr.add_tag(tag)
         return obj
 
+    def get_meta(self, options=set()):
+        return self._get_meta()
+
+
+
     ############################################################################
     ############################################################################
-    ############################################################################
 
-    def exist_correlation(self):
-        pass
+def get_all_subtypes():
+    return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash']
 
-    ############################################################################
-    ############################################################################
-
-def build_crypto_regex(subtype, search_id):
-    pass
-
-def search_by_name(subtype, search_id):
-
-    # # TODO: BUILD regex
-    obj = CryptoCurrency(subtype, search_id)
-    if obj.exists():
-        return search_id
-    else:
-        regex = build_crypto_regex(subtype, search_id)
-        return abstract_object.search_subtype_obj_by_id('cryptocurrency', subtype, regex)
+# def build_crypto_regex(subtype, search_id):
+#     pass
+#
+# def search_by_name(subtype, search_id): ##################################################
+#
+#     # # TODO: BUILD regex
+#     obj = CryptoCurrency(subtype, search_id)
+#     if obj.exists():
+#         return search_id
+#     else:
+#         regex = build_crypto_regex(subtype, search_id)
+#         return abstract_object.search_subtype_obj_by_id('cryptocurrency', subtype, regex)
 
 
 
-#if __name__ == '__main__':
+
+
+# by days -> need first/last entry USEFULL FOR DATA RETENTION UI
+
+def get_all_cryptocurrencies():
+    cryptos = {}
+    for subtype in get_all_subtypes():
+        cryptos[subtype] = get_all_cryptocurrencies_by_subtype(subtype)
+    return cryptos
+
+def get_all_cryptocurrencies_by_subtype(subtype):
+    return get_all_id('cryptocurrency', subtype)
+
+if __name__ == '__main__':
+    res = get_all_cryptocurrencies()
+    print(res)

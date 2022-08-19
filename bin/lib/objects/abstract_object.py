@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from packages import Tag
 from lib import Duplicate
+from lib.correlations_engine import get_correlations, add_obj_correlation, delete_obj_correlation, exists_obj_correlation, is_obj_correlated
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.Tracker import is_obj_tracked, get_obj_all_trackers, delete_obj_trackers
 
@@ -156,13 +157,35 @@ class AbstractObject(ABC):
     def get_misp_object(self):
         pass
 
-    # # TODO:
-    # @abstractmethod
-    # def get_correlations(self, message):
-    #     """
-    #     Get object correlations
-    #     """
-    #     pass
+    def get_correlations(self):
+        """
+        Get object correlations
+        """
+        return get_correlations(self.type, self.subtype, self.id)
+
+    def add_correlation(self, type2, subtype2, id2):
+        """
+        Add object correlation
+        """
+        add_obj_correlation(self.type, self.subtype, self.id, type2, subtype2, id2)
+
+    def exists_correlation(self, type2):
+        """
+        Check if an object is correlated
+        """
+        return exists_obj_correlation(self.type, self.subtype, self.id, type2)
+
+    def is_correlated(self, type2, subtype2, id2):
+        """
+        Check if an object is correlated by another object
+        """
+        return is_obj_correlated(self.type, self.subtype, self.id, type2, subtype2, id2)
+
+    def delete_correlation(self, type2, subtype2, id2):
+        """
+        Get object correlations
+        """
+        delete_obj_correlation(self.type, self.subtype, self.id, type2, subtype2, id2)
 
 
     # # TODO: get favicon

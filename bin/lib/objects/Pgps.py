@@ -10,7 +10,7 @@ import redis
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
-from abstract_object import AbstractObject
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 from flask import url_for
 
 config_loader = ConfigLoader.ConfigLoader()
@@ -22,7 +22,7 @@ config_loader = None
 ################################################################################
 ################################################################################
 
-class Pgp(AbstractObject):
+class Pgp(AbstractSubtypeObject):
     """
     AIL Pgp Object. (strings)
     """
@@ -78,13 +78,18 @@ class Pgp(AbstractObject):
 
     ############################################################################
     ############################################################################
-    ############################################################################
 
-    def exist_correlation(self):
-        pass
+def get_all_subtypes():
+    return ['key', 'mail', 'name']
 
-    ############################################################################
-    ############################################################################
+def get_all_pgps():
+    pgps = {}
+    for subtype in get_all_subtypes():
+        pgps[subtype] = get_all_pgps_by_subtype(subtype)
+    return pgps
+
+def get_all_pgps_by_subtype(subtype):
+    return get_all_id('pgp', subtype)
 
 
 

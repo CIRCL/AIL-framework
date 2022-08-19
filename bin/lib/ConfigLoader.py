@@ -41,6 +41,12 @@ class ConfigLoader(object):
                                   db=self.cfg.getint(redis_name, "db"),
                                   decode_responses=decode_responses )
 
+    def get_db_conn(self, db_name, decode_responses=True): ## TODO: verify redis name
+        return redis.StrictRedis( host=self.cfg.get(db_name, "host"),
+                                  port=self.cfg.getint(db_name, "port"),
+                                  password=self.cfg.get(db_name, "password"),
+                                  decode_responses=decode_responses )
+
     def get_files_directory(self, key_name):
         directory_path = self.cfg.get('Directories', key_name)
         # full path

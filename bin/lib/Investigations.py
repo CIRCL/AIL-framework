@@ -28,7 +28,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
-r_tracking = config_loader.get_redis_conn("Kvrocks_DB")
+r_tracking = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
 

@@ -73,7 +73,7 @@ class Credential(AbstractModule):
 
         # Database
         config_loader = ConfigLoader.ConfigLoader()
-        self.server_cred = config_loader.get_redis_conn("ARDB_TermCred")
+        #self.server_cred = config_loader.get_redis_conn("ARDB_TermCred")
         self.server_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 
         # Config values
@@ -172,32 +172,33 @@ class Credential(AbstractModule):
                 self.redis_logger.info(to_print)
                 print(f'found {nb_cred} credentials')
 
-            # For searching credential in termFreq
-            for cred in all_credentials:
-                cred = cred.split('@')[0] #Split to ignore mail address
-
-                # unique number attached to unique path
-                uniq_num_path = self.server_cred.incr(Credential.REDIS_KEY_NUM_PATH)
-                self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET, {item.get_id(): uniq_num_path})
-                self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET_REV, {uniq_num_path: item.get_id()})
-
-                # unique number attached to unique username
-                uniq_num_cred = self.server_cred.hget(Credential.REDIS_KEY_ALL_CRED_SET, cred)
-                if uniq_num_cred is None:
-                    # cred do not exist, create new entries
-                    uniq_num_cred = self.server_cred.incr(Credential.REDIS_KEY_NUM_USERNAME)
-                    self.server_cred.hmset(Credential.REDIS_KEY_ALL_CRED_SET, {cred: uniq_num_cred})
-                    self.server_cred.hmset(Credential.REDIS_KEY_ALL_CRED_SET_REV, {uniq_num_cred: cred})
-
-                # Add the mapping between the credential and the path
-                self.server_cred.sadd(Credential.REDIS_KEY_MAP_CRED_TO_PATH+'_'+str(uniq_num_cred), uniq_num_path)
-
-                # Split credentials on capital letters, numbers, dots and so on
-                # Add the split to redis, each split point towards its initial credential unique number
-                splitedCred = re.findall(Credential.REGEX_CRED, cred)
-                for partCred in splitedCred:
-                    if len(partCred) > self.minimumLengthThreshold:
-                        self.server_cred.sadd(partCred, uniq_num_cred)
+            # # TODO: # FIXME: TEMP DESABLE
+            # # For searching credential in termFreq
+            # for cred in all_credentials:
+            #     cred = cred.split('@')[0] #Split to ignore mail address
+            #
+            #     # unique number attached to unique path
+            #     uniq_num_path = self.server_cred.incr(Credential.REDIS_KEY_NUM_PATH)
+            #     self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET, {item.get_id(): uniq_num_path})
+            #     self.server_cred.hmset(Credential.REDIS_KEY_ALL_PATH_SET_REV, {uniq_num_path: item.get_id()})
+            #
+            #     # unique number attached to unique username
+            #     uniq_num_cred = self.server_cred.hget(Credential.REDIS_KEY_ALL_CRED_SET, cred)
+            #     if uniq_num_cred is None:
+            #         # cred do not exist, create new entries
+            #         uniq_num_cred = self.server_cred.incr(Credential.REDIS_KEY_NUM_USERNAME)
+            #         self.server_cred.hmset(Credential.REDIS_KEY_ALL_CRED_SET, {cred: uniq_num_cred})
+            #         self.server_cred.hmset(Credential.REDIS_KEY_ALL_CRED_SET_REV, {uniq_num_cred: cred})
+            #
+            #     # Add the mapping between the credential and the path
+            #     self.server_cred.sadd(Credential.REDIS_KEY_MAP_CRED_TO_PATH+'_'+str(uniq_num_cred), uniq_num_path)
+            #
+            #     # Split credentials on capital letters, numbers, dots and so on
+            #     # Add the split to redis, each split point towards its initial credential unique number
+            #     splitedCred = re.findall(Credential.REGEX_CRED, cred)
+            #     for partCred in splitedCred:
+            #         if len(partCred) > self.minimumLengthThreshold:
+            #             self.server_cred.sadd(partCred, uniq_num_cred)
 
 
 if __name__ == '__main__':

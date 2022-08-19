@@ -84,7 +84,7 @@
 			Virus Total submission is disabled
 		{% endif %}
 
-		<a href="{{ url_for('hashDecoded.downloadHash') }}?hash={{ dict_object["correlation_id"] }}" target="blank" class="float-right" style="font-size: 15px">
+		<a href="{{ url_for('objects_decoded.decoded_download') }}?id={{ dict_object["correlation_id"] }}" target="blank" class="float-right" style="font-size: 15px">
 			<button class='btn btn-info'><i class="fas fa-download"></i> Download Decoded file
 			</button>
 		</a>
@@ -107,9 +107,9 @@
 <script>
 	function sendFileToVT(hash) {
 		//send file to vt
-		$.getJSON("{{ url_for('hashDecoded.send_file_to_vt_js') }}?hash="+hash,
+		$.getJSON("{{ url_for('objects_decoded.send_to_vt') }}?id="+hash,
 			function(data) {
-				var content = '<a id="submit_vt_b" class="btn btn-primary" target="_blank" href="'+ data['vt_link'] +'"><i class="fas fa-link"> '+ ' VT Report' +'</i></a>';
+				var content = '<a id="submit_vt_b" class="btn btn-primary" target="_blank" href="'+ data['link'] +'"><i class="fas fa-link"> '+ ' VT Report' +'</i></a>';
 				$('#submit_vt_b').remove();
 				$('darkbutton').append(content);
 		});
@@ -117,9 +117,9 @@
 
 	function updateVTReport(hash) {
 		//updateReport
-		$.getJSON("{{ url_for('hashDecoded.update_vt_result') }}?hash="+hash,
+		$.getJSON("{{ url_for('objects_decoded.refresh_vt_report') }}?id="+hash,
 			function(data) {
-				var content = '<i class="fas fa-sync-alt"></i> ' +data['report_vt'];
+				var content = '<i class="fas fa-sync-alt"></i> ' +data['report'];
 				$( "#report_vt_b" ).html(content);
 		});
 	}

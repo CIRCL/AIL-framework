@@ -13,7 +13,7 @@ from pymisp import MISPObject
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 
-from abstract_subtype_object import AbstractSubtypeObject
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 
 config_loader = ConfigLoader.ConfigLoader()
 
@@ -82,16 +82,20 @@ class Username(AbstractSubtypeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-
-    ############################################################################
     ############################################################################
     ############################################################################
 
-    def exist_correlation(self):
-        pass
+def get_all_subtypes():
+    return ['telegram', 'twitter', 'jabber']
 
-    ############################################################################
-    ############################################################################
+def get_all_usernames():
+    users = {}
+    for subtype in get_all_subtypes():
+        users[subtype] = get_all_usernames_by_subtype(subtype)
+    return users
+
+def get_all_usernames_by_subtype(subtype):
+    return get_all_id('username', subtype)
 
 
 

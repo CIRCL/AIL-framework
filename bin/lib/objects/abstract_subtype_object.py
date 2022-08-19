@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
+from lib.item_basic import is_crawled, get_item_domain
 
 # LOAD CONFIG
 config_loader = ConfigLoader()
@@ -43,7 +44,6 @@ class AbstractSubtypeObject(AbstractObject):
         self.type = obj_type
         self.subtype = subtype
 
-    # # TODO: # FIXME:  REMOVE R_INT ????????????????????????????????????????????????????????????????????
     def get_first_seen(self, r_int=False):
         first_seen = r_metadata.hget(f'{self.type}_metadata_{self.subtype}:{self.id}', 'first_seen')
         if r_int:
@@ -54,7 +54,6 @@ class AbstractSubtypeObject(AbstractObject):
         else:
             return first_seen
 
-    # # TODO: # FIXME:  REMOVE R_INT ????????????????????????????????????????????????????????????????????
     def get_last_seen(self, r_int=False):
         last_seen = r_metadata.hget(f'{self.type}_metadata_{self.subtype}:{self.id}', 'last_seen')
         if r_int:
@@ -113,49 +112,38 @@ class AbstractSubtypeObject(AbstractObject):
             if date > last_seen:
                 self.set_last_seen(date)
 
+#
+# HANDLE Others objects ????
+#
+# NEW field => first record(last record)
+#                   by subtype ??????
+
+#               => data Retention + efficicent search
+#
+#
+
     def add(self, date, item_id):
-        self.update_correlation_daterange()
+        self.update_daterange(date)
         # daily
         r_metadata.hincrby(f'{self.type}:{self.subtype}:{date}', self.id, 1)
-        # all type
+        # all subtypes
         r_metadata.zincrby(f'{self.type}_all:{self.subtype}', self.id, 1)
 
         #######################################################################
         #######################################################################
-        # REPLACE WITH CORRELATION ?????
 
-        # global set
-        r_serv_metadata.sadd(f'set_{self.type}_{self.subtype}:{self.id}', item_id)
-
-        ## object_metadata
-        # item
-        r_serv_metadata.sadd(f'item_{self.type}_{self.subtype}:{item_id}', self.id)
-
-        # new correlation
-        #
-        #       How to filter by correlation type ????
-        #
-        f'correlation:obj:{self.type}:{self.subtype}:{self.id}',                f'{obj_type}:{obj_subtype}:{obj_id}'
-        f'correlation:obj:{self.type}:{self.subtype}:{obj_type}:{self.id}',     f'{obj_subtype}:{obj_id}'
-
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        #
+        # Correlations
+        self.add_correlation('item', '', item_id)
+        # domain
+        if is_crawled(item_id):
+            domain = get_item_domain(item_id)
+            self.add_correlation('domain', '', domain)
 
 
-        # # domain
-        # if item_basic.is_crawled(item_id):
-        #     domain = item_basic.get_item_domain(item_id)
-        #     self.save_domain_correlation(domain, subtype, obj_id)
-
+    # TODO:ADD objects + Stats
     def create(self, first_seen, last_seen):
-        pass
-
+        self.set_first_seen(first_seen)
+        self.set_last_seen(last_seen)
 
 
     def _delete(self):
@@ -168,16 +156,7 @@ class AbstractSubtypeObject(AbstractObject):
     # get_metadata
     #
     #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
+
+
+def get_all_id(obj_type, subtype):
+    return r_metadata.zrange(f'{obj_type}_all:{subtype}', 0, -1)

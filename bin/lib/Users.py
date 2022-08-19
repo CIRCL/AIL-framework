@@ -18,7 +18,7 @@ from lib.ConfigLoader import ConfigLoader
 # Config
 config_loader = ConfigLoader()
 #r_serv_db = config_loader.get_redis_conn("ARDB_DB")
-r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
 regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,100}$'

@@ -8,13 +8,15 @@ Recieve Json Items (example: Twitter feeder)
 
 """
 import os
-import json
 import sys
 import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import item_basic
-import Username
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import item_basic
+from lib.objects.Usernames import Username
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import', 'ail_json_importer'))
 from Default_json import Default_json
@@ -39,9 +41,12 @@ class Ail_feeder_twitter(Default_json):
         '''
         Process JSON meta filed.
         '''
-        twitter_id = str(self.json_item['meta']['twitter:tweet_id'])
-        item_basic.add_map_obj_id_item_id(twitter_id, item_id, 'twitter_id')
-        username = str(self.json_item['meta']['twitter:id'])
-        item_date = item_basic.get_item_date(item_id)
-        Username.save_item_correlation('twitter', username, item_id, item_date)
+        tweet_id = str(self.json_item['meta']['twitter:tweet_id'])
+        item_basic.add_map_obj_id_item_id(tweet_id, item_id, 'twitter_id')
+
+        date = item_basic.get_item_date(item_id)
+        user = str(self.json_item['meta']['twitter:id'])
+        username = Username(user, 'twitter')
+        username.add(date, item_id)
+
         return None

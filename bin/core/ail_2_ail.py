@@ -26,8 +26,8 @@ import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
-r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
-r_serv_sync = config_loader.get_redis_conn("Kvrocks_DB")
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
+r_serv_sync = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
 WEBSOCKETS_CLOSE_CODES = {
