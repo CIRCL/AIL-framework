@@ -7,11 +7,9 @@ import gzip
 
 import magic
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Tag
-
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 # get and sanityze PASTE DIRECTORY
@@ -247,7 +245,7 @@ def verify_sources_list(sources):
 def get_all_items_metadata_dict(list_id):
     list_meta = []
     for item_id in list_id:
-        list_meta.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_obj_tag(item_id)} )
+        list_meta.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_object_tags('item', item_id)} )
     return list_meta
 
 ##--  --##

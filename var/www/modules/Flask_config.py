@@ -33,12 +33,13 @@ r_serv_charts = config_loader.get_redis_conn("ARDB_Trending")
 r_serv_sentiment = config_loader.get_redis_conn("ARDB_Sentiment")
 r_serv_term = config_loader.get_redis_conn("ARDB_Tracker")
 r_serv_cred = config_loader.get_redis_conn("ARDB_TermCred")
-r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
-r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 
+# # # # # # #
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
+r_serv_tags = config_loader.get_db_conn("Kvrocks_Tags")
 
 # Logger (Redis)
 redis_logger = publisher

@@ -80,6 +80,7 @@ class Pgp(AbstractSubtypeObject):
     ############################################################################
 
 def get_all_subtypes():
+    #return get_object_all_subtypes(self.type)
     return ['key', 'mail', 'name']
 
 def get_all_pgps():

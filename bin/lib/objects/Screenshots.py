@@ -8,6 +8,7 @@ from io import BytesIO
 from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
+#from lib import Tag
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 

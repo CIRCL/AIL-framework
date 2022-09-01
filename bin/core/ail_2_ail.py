@@ -16,13 +16,13 @@ from pubsublogger import publisher
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
+import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'core/'))
 import screen
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 from Item import Item
-import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")

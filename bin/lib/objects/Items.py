@@ -22,8 +22,7 @@ from export.Export import get_ail_uuid # # TODO: REPLACE
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import item_basic
-
-from packages import Tag
+from lib import Tag
 
 
 from flask import url_for
@@ -493,7 +492,7 @@ def get_item(request_dict):
         dict_item['date'] = get_item_date(item_id, add_separator=add_separator)
     tags = request_dict.get('tags', True)
     if tags:
-        dict_item['tags'] = Tag.get_obj_tag(item_id)
+        dict_item['tags'] = Tag.get_object_tags('item', item_id)
 
     size = request_dict.get('size', False)
     if size:
@@ -568,7 +567,7 @@ def api_get_items_sources():
 def get_item_list_desc(list_item_id):
     desc_list = []
     for item_id in list_item_id:
-        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_obj_tag(item_id)} )
+        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_object_tags('item', item_id)} )
     return desc_list
 
 def is_crawled(item_id):
@@ -579,7 +578,7 @@ def get_crawler_matadata(item_id, tags=None):
     if is_crawled(item_id):
         dict_crawler['domain'] = get_item_domain(item_id)
         if not ltags:
-            ltags = Tag.get_obj_tag(item_id)
+            ltags = Tag.get_object_tags('item', item_id)
         dict_crawler['is_tags_safe'] = Tag.is_tags_safe(ltags)
         dict_crawler['url'] = get_item_link(item_id)
         dict_crawler['screenshot'] = get_item_screenshot(item_id)

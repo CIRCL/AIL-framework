@@ -506,11 +506,11 @@ def reset_all_spash_crawler_status():
     r_cache.delete('all_splash_crawlers')
 
 def get_splash_crawler_status(spash_url):
-    crawler_type = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'type')
-    crawling_domain = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'crawling_domain')
-    started_time = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'started_time')
-    status_info = r_cache.hget('metadata_crawler:{}'.format(spash_url), 'status')
-    crawler_info = '{}  - {}'.format(spash_url, started_time)
+    crawler_type = r_cache.hget(f'metadata_crawler:{spash_url}', 'type')
+    crawling_domain = r_cache.hget(f'metadata_crawler:{spash_url}', 'crawling_domain')
+    started_time = r_cache.hget(f'metadata_crawler:{spash_url}', 'started_time')
+    status_info = r_cache.hget(f'metadata_crawler:{spash_url}', 'status')
+    crawler_info = f'{spash_url}  - {started_time}'
     if status_info=='Waiting' or status_info=='Crawling':
         status=True
     else:
@@ -520,13 +520,13 @@ def get_splash_crawler_status(spash_url):
 def set_current_crawler_status(splash_url, status, started_time=False, crawled_domain=None, crawler_type=None):
     # TODO: get crawler type if None
     # Status: ['Waiting', 'Error', ...]
-    r_cache.hset('metadata_crawler:{}'.format(splash_url), 'status', status)
+    r_cache.hset(f'metadata_crawler:{splash_url}', 'status', status)
     if started_time:
-        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'started_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
+        r_cache.hset(f'metadata_crawler:{splash_url}', 'started_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
     if crawler_type:
-        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'type', crawler_type)
+        r_cache.hset(f'metadata_crawler:{splash_url}', 'type', crawler_type)
     if crawled_domain:
-        r_cache.hset('metadata_crawler:{}'.format(splash_url), 'crawling_domain', crawled_domain)
+        r_cache.hset(f'metadata_crawler:{splash_url}', 'crawling_domain', crawled_domain)
 
     #r_cache.sadd('all_splash_crawlers', splash_url) # # TODO: add me in fct: create_ail_crawler
 

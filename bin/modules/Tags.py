@@ -21,7 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from packages.Item import Item
-from packages import Tag
+from lib import Tag
 
 
 class Tags(AbstractModule):
@@ -47,7 +47,7 @@ class Tags(AbstractModule):
             item = Item(mess_split[1])
 
             # Create a new tag
-            Tag.add_tag('item', tag, item.get_id())
+            Tag.add_object_tag(tag, 'item', item.get_id())
             print(f'{item.get_id()}: Tagged {tag}')
 
             # Forward message to channel

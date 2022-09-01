@@ -23,9 +23,6 @@ from os.path import join
 # # TODO: put me in lib/Tag
 from pytaxonomies import Taxonomies
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Tag
-
 sys.path.append('./modules/')
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -33,6 +30,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.Users import User
+from lib import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -72,9 +70,7 @@ except Exception:
     FLASK_PORT = 7000
 
 # ========= REDIS =========#
-r_serv_db = config_loader.get_redis_conn("ARDB_DB")
-r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
-r_cache = config_loader.get_redis_conn("Redis_Cache")
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 
 # logs
 log_dir = os.path.join(os.environ['AIL_HOME'], 'logs')

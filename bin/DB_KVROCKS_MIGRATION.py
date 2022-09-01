@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib import Tag
 from lib import Users
 from lib.objects import Decodeds
 from lib.objects import Domains
@@ -23,6 +24,7 @@ from lib.objects.CryptoCurrencies import CryptoCurrency
 from lib.objects.Pgps import Pgp
 from lib.objects.Screenshots import Screenshot, get_all_screenshots
 from lib.objects.Usernames import Username
+from packages import Date
 
 # # # # CONFIGS # # # #
 config_loader = ConfigLoader()
@@ -42,13 +44,6 @@ old_ail_2_ail = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old_ail_2_ail)
 
 old_ail_2_ail.r_serv_sync = r_serv_db
-
-from packages import Tag
-spec = importlib.util.find_spec('Tag')
-old_Tag = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(old_Tag)
-
-old_Tag.r_serv_tags = r_serv_tags
 
 from lib import Tracker
 spec = importlib.util.find_spec('Tracker')
@@ -118,16 +113,32 @@ def core_migration():
     crawlers.save_splash_manager_url_api(manager_url, manager_api_key)
     crawlers.reload_splash_and_proxies_list()
 
-    # ail:misp
-    # ail:thehive
-    # hive:auto-alerts
-    # list_export_tags
-    # misp:auto-events
-    # whitelist_hive
-    # whitelist_misp
+    # Auto Export Migration
+    ail_misp = r_serv_db.get('ail:misp')
+    if ail_misp != 'True':
+        ail_misp == 'False'
+    r_kvrocks.set('ail:misp', ail_misp)
+    ail_thehive = r_serv_db.get('ail:thehive')
+    if ail_thehive != 'True':
+        ail_thehive == 'False'
+    r_kvrocks.set('ail:thehive', ail_thehive)
 
 
-    # # TODO: TO CHECK
+    misp_auto_events = r_serv_db.get('misp:auto-events')
+    if misp_auto_events != '1':
+        misp_auto_events = '0'
+    r_kvrocks.set('misp:auto-events', misp_auto_events)
+
+    hive_auto_alerts = r_serv_db.get('hive:auto-alerts')
+    if hive_auto_alerts != '1':
+        hive_auto_alerts = '0'
+    r_kvrocks.set('hive:auto-alerts', hive_auto_alerts)
+
+    for tag in r_serv_db.smembers('whitelist_misp'):
+        r_kvrocks.sadd('whitelist_misp', tag)
+
+    for tag in r_serv_db.smembers('whitelist_hive'):
+        r_kvrocks.sadd('whitelist_hive', tag)
 
 
 # # # # # # # # # # # # # # # #
@@ -248,36 +259,71 @@ def investigations_migration():
 def item_submit_migration():
     pass
 
-# /!\ KEY COLISION
-# # TODO: change db -> olds modules + blueprints
-# # TODO: HANDLE LOCAL TAGS
-# # TODO: HANDLE LOCAL TAGS
-# # TODO: HANDLE LOCAL TAGS
-# # TODO: HANDLE LOCAL TAGS
+
+###############################
+#                             #
+#       ITEMS MIGRATION       #
+#                             #
+###############################
+
+def get_all_items_tags():
+    return r_serv_tags.smembers('list_tags:item')
+
+def get_all_items_tags_by_day(tag, date):
+    return r_serv_tags.smembers(f'{tag}:{date}')
+
+def get_tag_first_seen(tag, r_int=False):
+    res = r_serv_tags.hget(f'tag_metadata:{tag}', 'first_seen')
+    if r_int:
+        if res is None:
+            return 99999999
+        else:
+            return int(res)
+    return res
+
+def get_tags_first_seen():
+    first_seen = int(Date.get_today_date_str())
+    for tag in get_all_items_tags():
+        tag_first = get_tag_first_seen(tag, r_int=True)
+        if tag_first < first_seen:
+            first_seen = tag_first
+    return str(first_seen)
+
+def get_active_taxonomies():
+    return r_serv_tags.smembers('active_taxonomies')
+
+def get_active_galaxies():
+    return r_serv_tags.smembers('active_galaxies')
+
+
 # # TODO: HANDLE LOCAL TAGS
 def tags_migration():
+    for taxonomy in get_active_taxonomies():
+        Tag.enable_taxonomy(taxonomy)
 
-    # HANDLE LOCAL TAGS
+    for galaxy in get_active_galaxies():
+        Tag.enable_galaxy(galaxy)
 
-    print(old_Tag.get_all_tags())
-
-
-    #
-    #   /!\ OBJECTS TAGS ISSUE /!\
-    #          -> only one layer
-    #
-    #   issue with subtypes + between objects with same ID
-    #
-    #
-    #
-    #
+    # for tag in get_all_items_tags():
+    #     print(tag)
+    #     tag_first = get_tag_first_seen(tag)
+    #     if tag_first:
+    #         for date in Date.get_date_range_today(tag_first):
+    #             print(date)
+    #             for item_id in get_all_items_tags_by_day(tag, date):
+    #                 item = Items.Item(item_id)
+    #                 item.add_tag(tag)
 
 
 
-    pass
+
+
+
+
 
 
 # # TODO: MIGRATE item_basic.add_map_obj_id_item_id ??????????????????????
+# # TODO: BUILD FIRST/LAST object DATE
 ###############################
 #                             #
 #       ITEMS MIGRATION       #
@@ -298,7 +344,7 @@ def items_migration():
 
 
 
-# TODO: migrate cookies
+# TODO: test cookies migration
 # TODO: migrate auto crawlers
 
 ###############################
@@ -326,7 +372,7 @@ def crawler_migration():
         meta = old_crawlers.get_cookiejar_metadata(cookiejar_uuid, level=True)
         #print(meta)
         #crawlers.create_cookiejar(meta['user_id'], level=meta['level'], description=meta['description'], cookiejar_uuid=cookiejar_uuid)
-        #_set_cookiejar_date(meta['date'])
+        #crawlers._set_cookiejar_date(meta['date'])
 
         for meta_cookie, cookie_uuid in old_crawlers.get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=True):
             print(cookie_uuid)
@@ -348,6 +394,9 @@ def crawler_migration():
 # Start -> 2019-01-01
 
 # BY TYPE - FIRST DATE DOWN / UP
+
+def get_domain_down_by_date(domain_type, date):
+    return r_crawler.smembers(f'{domain_type}_down:{date}')
 
 def get_item_link(item_id):
     return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'real_link')
@@ -415,66 +464,90 @@ def get_domain_history_by_port(domain_type, domain, port):
         history.append(dict_history)
     return history
 
+def get_domain_tags(domain):
+    return r_serv_metadata.smembers(f'tag:{domain}')
+
 def domain_migration():
     print('Domains MIGRATION...')
 
     for domain_type in ['onion', 'regular']:
         for dom in get_domains_up_by_type(domain_type):
+            if domain_type == 'onion':
+                if not crawlers.is_valid_onion_domain(dom):
+                    print(dom)
+                    continue
+            # ports = get_domain_ports(domain_type, dom)
+            # first_seen = get_domain_first_seen(domain_type, dom)
+            # last_check = get_domain_last_check(domain_type, dom)
+            # last_origin = get_domain_last_origin(domain_type, dom)
+            # languages = get_domain_languages(dom)
+            #
+            # domain = Domains.Domain(dom)
+            # # domain.update_daterange(first_seen)
+            # # domain.update_daterange(last_check)
+            # # domain._set_ports(ports)
+            # # if last_origin:
+            # #     domain.set_last_origin(last_origin)
+            # for language in languages:
+            #     print(language)
+            # #     domain.add_language(language)
+            # for tag in get_domain_tags(domain):
+            #     domain.add_tag(tag)
+            # #print('------------------')
+            # #print('------------------')
+            # #print('------------------')
+            # #print('------------------')
+            # #print('------------------')
+            # print(dom)
+            # #print(first_seen)
+            # #print(last_check)
+            # #print(ports)
+            #
+            # # # TODO: FIXME filter invalid hostname
+            #
+            #  # CREATE DOMAIN HISTORY
+            # for port in ports:
+            #     for history in get_domain_history_by_port(domain_type, dom, port):
+            #         epoch = history['epoch']
+            #         # DOMAIN DOWN
+            #         if not history.get('status'): # domain DOWN
+            #             # domain.add_history(epoch, port)
+            #             print(f'DOWN {epoch}')
+            #         # DOMAIN UP
+            #         else:
+            #             root_id = history.get('root')
+            #             if root_id:
+            #                 # domain.add_history(epoch, port, root_item=root_id)
+            #                 #print(f'UP {root_id}')
+            #                 crawled_items = get_crawled_items(dom, root_id)
+            #                 for item_id in crawled_items:
+            #                     url = get_item_link(item_id)
+            #                     item_father = get_item_father(item_id)
+            #                     if item_father and url:
+            #                         #print(f'{url}    {item_id}')
+            #                         pass
+            #                         # domain.add_crawled_item(url, port, item_id, item_father)
+            #
+            #
+            #         #print()
 
-            ports = get_domain_ports(domain_type, dom)
-            first_seen = get_domain_first_seen(domain_type, dom)
-            last_check = get_domain_last_check(domain_type, dom)
-            last_origin = get_domain_last_origin(domain_type, dom)
-            languages = get_domain_languages(dom)
+    for domain_type in ['onion', 'regular']:
+        for date in Date.get_date_range_today('20190101'):
+            for dom in get_domain_down_by_date(domain_type, date):
+                if domain_type == 'onion':
+                    if not crawlers.is_valid_onion_domain(dom):
+                        print(dom)
+                        continue
+                first_seen = get_domain_first_seen(domain_type, dom)
+                last_check = get_domain_last_check(domain_type, dom)
+                last_origin = get_domain_last_origin(domain_type, dom)
 
-            domain = Domains.Domain(dom)
-            # domain.update_daterange(first_seen)
-            # domain.update_daterange(last_check)
-            # domain._set_ports(ports)
-            # if last_origin:
-            #     domain.set_last_origin(last_origin)
-            for language in languages:
-                print(language)
-            #     domain.add_language(language)
-            #print('------------------')
-            #print('------------------')
-            #print('------------------')
-            #print('------------------')
-            #print('------------------')
-            print(dom)
-            #print(first_seen)
-            #print(last_check)
-            #print(ports)
-
-            # # TODO: FIXME filter invalid hostname
-
-
-             # CREATE DOMAIN HISTORY
-            for port in ports:
-                for history in get_domain_history_by_port(domain_type, dom, port):
-                    epoch = history['epoch']
-                    # DOMAIN DOWN
-                    if not history.get('status'): # domain DOWN
-                        # domain.add_history(epoch, port)
-                        print(f'DOWN {epoch}')
-                    # DOMAIN UP
-                    else:
-                        root_id = history.get('root')
-                        if root_id:
-                            # domain.add_history(epoch, port, root_item=root_id)
-                            #print(f'UP {root_id}')
-                            crawled_items = get_crawled_items(dom, root_id)
-                            for item_id in crawled_items:
-                                url = get_item_link(item_id)
-                                item_father = get_item_father(item_id)
-                                if item_father and url:
-                                    #print(f'{url}    {item_id}')
-                                    pass
-                                    # domain.add_crawled_item(url, port, item_id, item_father)
-
-
-                    #print()
-
+                domain = Domains.Domain(dom)
+                # domain.update_daterange(first_seen)
+                # domain.update_daterange(last_check)
+                # if last_origin:
+                #     domain.set_last_origin(last_origin)
+                # domain.add_history(None, None, date=date)
 
 
 ###############################
@@ -489,7 +562,8 @@ def get_decoded_items_list_by_decoder(decoder_type, decoded_id): ###############
     #return r_serv_metadata.zrange('nb_seen_hash:{}'.format(sha1_string), 0, -1)
     return r_serv_metadata.zrange(f'{decoder_type}_hash:{decoded_id}', 0, -1)
 
-
+def get_decodeds_tags(decoded_id):
+    return r_serv_metadata.smembers(f'tag:{decoded_id}')
 
 def decodeds_migration():
     print('Decoded MIGRATION...')
@@ -507,6 +581,9 @@ def decodeds_migration():
         decoded = Decodeds.Decoded(decoded_id)
         filepath = decoded.get_filepath(mimetype=mimetype)
         decoded._save_meta(filepath, mimetype)
+
+        for tag in get_decodeds_tags(decoded_id):
+            decoded.add_tag(tag)
 
         for decoder_type in decoder_names:
             for item_id in get_decoded_items_list_by_decoder(decoder_type, decoded_id):
@@ -530,6 +607,9 @@ def get_screenshot_items_list(screenshot_id): ######################### # TODO: 
 def get_screenshot_domain(screenshot_id):
     return r_crawler.smembers(f'screenshot_domain:{screenshot_id}')
 
+def get_screenshot_tags(screenshot_id):
+    return r_serv_metadata.smembers(f'tag:{screenshot_id}')
+
 # Tags + Correlations
 # # TODO: save orphelin screenshot ?????
 def screenshots_migration():
@@ -541,14 +621,13 @@ def screenshots_migration():
 
         screenshot = Screenshot(screenshot_id)
 
-        tags = old_Tag.get_obj_tag(screenshot_id) ################## # TODO:
-        if tags:
-            print(screenshot_id)
-            print(tags)
+        for tag in get_screenshot_tags(screenshot_id):
+            screenshot.add_tag(tag)
 
         # Correlations
         for item_id in get_screenshot_items_list(screenshot_id):
             print(item_id)
+            date = get_item_date(item_id)
             screenshot.add_correlation('item', '', item_id)
         for domain_id in get_screenshot_domain(screenshot_id):
             print(domain_id)
@@ -615,23 +694,24 @@ def statistics_migration():
 
 if __name__ == '__main__':
 
-    #core_migration()
-    #user_migration()
+    core_migration()
+    # user_migration()
+    # tags_migration()
     #items_migration()
     #crawler_migration()
-    #domain_migration()
+    # domain_migration()                      # TO TEST
     #decodeds_migration()
-    #screenshots_migration()
+    # screenshots_migration()
     #subtypes_obj_migration()
-    #ail_2_ail_migration()
-    #trackers_migration()
-    #investigations_migration()
+    # ail_2_ail_migration()
+    # trackers_migration()
+    # investigations_migration()
 
 
 
-
-
-
+    # custom tags
+    # crawler queues + auto_crawlers
+    # stats - Cred - Mail - Provider
 
 
 

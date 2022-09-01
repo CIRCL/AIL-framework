@@ -20,7 +20,7 @@ from pymispgalaxies import Galaxies, Clusters
 
 # ============ VARIABLES ============
 import Flask_config
-import Tag
+from lib import Tag
 
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl
@@ -31,7 +31,6 @@ max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
 max_tags_result = Flask_config.max_tags_result
-PASTES_FOLDER = Flask_config.PASTES_FOLDER
 
 Tags = Blueprint('Tags', __name__, template_folder='templates')
 

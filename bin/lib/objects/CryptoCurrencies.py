@@ -97,6 +97,7 @@ class CryptoCurrency(AbstractSubtypeObject):
     ############################################################################
 
 def get_all_subtypes():
+    #return ail_core.get_object_all_subtypes(self.type)
     return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash']
 
 # def build_crypto_regex(subtype, search_id):

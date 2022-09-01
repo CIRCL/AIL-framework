@@ -30,9 +30,10 @@ from flask_login import login_required
 ##################################
 # Import Project packages
 ##################################
+from lib import Tag
+
 import Paste
 import Import_helper
-import Tag
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 

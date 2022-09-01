@@ -130,7 +130,7 @@ def get_domain_from_url(url):
         pass
     return domain
 
-def get_last_domains_crawled(type):
+def get_last_domains_crawled(type): # DONE
     return r_serv_onion.lrange('last_{}'.format(type), 0 ,-1)
 
 def get_nb_domains_inqueue(type):

@@ -116,6 +116,8 @@ def get_nb_days_by_daterange(date_from, date_to):
     delta = date_to - date_from # timedelta
     return len(range(delta.days + 1))
 
+def get_date_range_today(date_from):
+    return substract_date(date_from, get_today_date_str())
 
 def substract_date(date_from, date_to):
     date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))

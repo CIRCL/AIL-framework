@@ -16,7 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from packages import Tag
+from lib import Tag
 from lib import Duplicate
 from lib.correlations_engine import get_correlations, add_obj_correlation, delete_obj_correlation, exists_obj_correlation, is_obj_correlated
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
@@ -66,7 +66,7 @@ class AbstractObject(ABC):
 
     ## Tags ##
     def get_tags(self, r_set=False):
-        tags = Tag.get_obj_tag(self.id)
+        tags = Tag.get_object_tags(self.type, self.id, self.get_subtype(r_str=True))
         if r_set:
             tags = set(tags)
         return tags
@@ -75,7 +75,8 @@ class AbstractObject(ABC):
         return Duplicate.get_duplicates(self.type, self.get_subtype(r_str=True), self.id)
 
     ## ADD TAGS ????
-    #def add_tags(self):
+    def add_tag(self, tag):
+        Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
 
     #- Tags -#
 
@@ -120,7 +121,7 @@ class AbstractObject(ABC):
 
     def _delete(self):
         # DELETE TAGS
-        Tag.delete_obj_all_tags(self.id, self.type)
+        Tag.delete_obj_all_tags(self.id, self.type) ############ # TODO: # TODO: # FIXME:
         # remove from tracker
         self.delete_trackers()
         # remove from investigations
@@ -135,12 +136,12 @@ class AbstractObject(ABC):
         """
         pass
 
-    # @abstractmethod
-    # def get_meta(self):
-    #     """
-    #     get Object metadata
-    #     """
-    #     pass
+    @abstractmethod
+    def get_meta(self):
+        """
+        get Object metadata
+        """
+        pass
 
     @abstractmethod
     def get_link(self, flask_context=False):

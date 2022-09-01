@@ -86,6 +86,7 @@ class Username(AbstractSubtypeObject):
     ############################################################################
 
 def get_all_subtypes():
+    #return ail_core.get_object_all_subtypes(self.type)
     return ['telegram', 'twitter', 'jabber']
 
 def get_all_usernames():

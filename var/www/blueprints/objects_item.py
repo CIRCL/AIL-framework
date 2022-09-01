@@ -21,8 +21,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import item_basic
 from lib.objects.Items import Item
+from lib import Tag
 from export import Export
-from packages import Tag
 
 
 # ============ BLUEPRINT ============

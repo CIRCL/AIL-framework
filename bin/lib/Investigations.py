@@ -22,10 +22,8 @@ from flask import escape
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-from exceptions import UpdateInvestigationError
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Tag
+from exceptions import UpdateInvestigationError
 
 config_loader = ConfigLoader.ConfigLoader()
 r_tracking = config_loader.get_db_conn("Kvrocks_DB")

@@ -16,16 +16,14 @@ import random
 import time
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Cryptocurrency
-import Pgp
 import Date
-import Decoded
 import Item
 import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
-import Correlate_object
+import Tag
+
 import Language
 import Screenshot
 import Username
@@ -154,6 +152,11 @@ def get_domains_up_by_daterange(date_from, date_to, domain_type):
         domains_up = []
     return domains_up
 
+# Retun last crawled domains by type
+#   domain;epoch
+def get_last_crawled_domains(domain_type):
+    return r_serv_onion.lrange('last_{}'.format(domain_type), 0 ,-1)
+
 def paginate_iterator(iter_elems, nb_obj=50, page=1):
     dict_page = {}
     dict_page['nb_all_elem'] = len(iter_elems)
@@ -231,15 +234,21 @@ def get_domains_up_by_filers(domain_type, date_from=None, date_to=None, tags=[],
 def get_domains_by_filters():
     pass
 
-def create_domains_metadata_list(list_domains, domain_type):
+def create_domains_metadata_list(list_domains, domain_type, tags=True):
+
+    # # TODO:
+        # tags => optional
+        # last check timestamp
+
     l_domains = []
     for domain in list_domains:
         if domain_type=='all':
             dom_type = get_domain_type(domain)
         else:
             dom_type = domain_type
+
         l_domains.append(get_domain_metadata(domain, dom_type, first_seen=True, last_ckeck=True, status=True,
-                            ports=True, tags=True, languages=True, screenshot=True, tags_safe=True))
+                            ports=True, tags=tags, languages=True, screenshot=True, tags_safe=True))
     return l_domains
 
 def sanithyse_domain_name_to_search(name_to_search, domain_type):
@@ -653,7 +662,7 @@ def get_domain_tags(domain):
 
     :param domain: crawled domain
     '''
-    return Tag.get_obj_tag(domain)
+    return Tag.get_object_tags('domain', domain)
 
 def get_domain_random_screenshot(domain):
     '''
@@ -711,97 +720,6 @@ def get_domain_metadata_basic(domain, domain_type=None):
     if not domain_type:
         domain_type = get_domain_type(domain)
     return get_domain_metadata(domain, domain_type, first_seen=True, last_ckeck=True, status=True, ports=False)
-
-def get_domain_cryptocurrency(domain, currencies_type=None, get_nb=False):
-    '''
-    Retun all cryptocurrencies of a given domain.
-
-    :param domain: crawled domain
-    :param currencies_type: list of cryptocurrencies type
-    :type currencies_type: list, optional
-    '''
-    return Cryptocurrency.cryptocurrency.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
-
-def get_domain_pgp(domain, currencies_type=None, get_nb=False):
-    '''
-    Retun all pgp of a given domain.
-
-    :param domain: crawled domain
-    :param currencies_type: list of pgp type
-    :type currencies_type: list, optional
-    '''
-    return Pgp.pgp.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
-
-def get_domain_username(domain, currencies_type=None, get_nb=False):
-    '''
-    Retun all pgp of a given domain.
-
-    :param domain: crawled domain
-    :param currencies_type: list of pgp type
-    :type currencies_type: list, optional
-    '''
-    return Username.correlation.get_domain_correlation_dict(domain, correlation_type=currencies_type, get_nb=get_nb)
-
-def get_domain_decoded(domain):
-    '''
-    Retun all decoded item of a given domain.
-
-    :param domain: crawled domain
-    '''
-    return Decoded.get_domain_decoded_item(domain)
-
-def get_domain_screenshot(domain):
-    '''
-    Retun all decoded item of a given domain.
-
-    :param domain: crawled domain
-    '''
-    return Screenshot.get_domain_screenshot(domain)
-
-
-def get_domain_all_correlation(domain, correlation_names=[], get_nb=False):
-    '''
-    Retun all correlation of a given domain.
-
-    :param domain: crawled domain
-    :type domain: str
-
-    :return: a dict of all correlation for a given domain
-    :rtype: dict
-    '''
-    if not correlation_names:
-        correlation_names = Correlate_object.get_all_correlation_names()
-    domain_correl = {}
-    for correlation_name in correlation_names:
-        if correlation_name=='cryptocurrency':
-            res = get_domain_cryptocurrency(domain, get_nb=get_nb)
-        elif correlation_name=='pgp':
-            res = get_domain_pgp(domain, get_nb=get_nb)
-        elif correlation_name=='username':
-            res = get_domain_username(domain, get_nb=get_nb)
-        elif correlation_name=='decoded':
-            res = get_domain_decoded(domain)
-        elif correlation_name=='screenshot':
-            res = get_domain_screenshot(domain)
-        else:
-            res = None
-        # add correllation to dict
-        if res:
-            domain_correl[correlation_name] = res
-
-    return domain_correl
-
-def get_domain_total_nb_correlation(correlation_dict):
-    total_correlation = 0
-    if 'decoded' in correlation_dict:
-        total_correlation += len(correlation_dict['decoded'])
-    if 'screenshot' in correlation_dict:
-        total_correlation += len(correlation_dict['screenshot'])
-    if 'cryptocurrency' in correlation_dict:
-        total_correlation += correlation_dict['cryptocurrency'].get('nb', 0)
-    if 'pgp' in correlation_dict:
-        total_correlation += correlation_dict['pgp'].get('nb', 0)
-    return total_correlation
 
  # TODO: handle port
 def get_domain_history(domain, domain_type, port): # TODO: add date_range: from to + nb_elem
@@ -972,12 +890,6 @@ class Domain(object):
         '''
         return get_domain_languages(self.domain)
 
-    def get_domain_correlation(self):
-        '''
-        Retun all correlation of a given domain.
-        '''
-        return get_domain_all_correlation(self.domain, get_nb=True)
-
     def get_domain_history(self):
         '''
         Retun the full history of a given domain and port.
@@ -998,4 +910,6 @@ class Domain(object):
         return get_domain_items_crawled(self.domain, self.type, port, epoch=epoch, items_link=items_link, item_screenshot=item_screenshot, item_tag=item_tag)
 
 if __name__ == '__main__':
-    search_domains_by_name('c', 'onion')
+    #search_domains_by_name('c', 'onion')
+    res = get_last_crawled_domains('onion')
+    print(res)

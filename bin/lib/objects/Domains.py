@@ -12,6 +12,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 
 from lib.item_basic import get_item_children, get_item_date, get_item_url
+from lib import data_retention_engine
 
 config_loader = ConfigLoader()
 r_onion = config_loader.get_redis_conn("ARDB_Onion")
@@ -48,7 +49,6 @@ class Domain(AbstractObject):
         if first_seen:
             if separator:
                 first_seen = f'{first_seen[0:4]}/{first_seen[4:6]}/{first_seen[6:8]}'
-                first_seen = int(first_seen)
             elif r_int==True:
                 first_seen = int(first_seen)
         return first_seen
@@ -92,9 +92,16 @@ class Domain(AbstractObject):
             res = r_onion.zrevrange(f'crawler_history_{self.domain_type}:{self.id}:{port}', 0, 0, withscores=True)
             if res:
                 item_core, epoch = res[0]
-                if item_core != str(epoch):
+                try:
+                    epoch = int(item_core)
+                except:
+                    print('True')
                     return True
+        print('False')
         return False
+
+    def was_up(self):
+        return r_onion.hexists(f'{self.domain_type}_metadata:{self.id}', 'ports')
 
     def get_ports(self, r_set=False):
         l_ports = r_onion.hget(f'{self.domain_type}_metadata:{self.id}', 'ports')
@@ -144,18 +151,26 @@ class Domain(AbstractObject):
     def get_languages(self):
         return r_onion.smembers(f'domain:language:{self.id}')
 
-    def get_meta(self):
+    def get_meta_keys(self):
+        return ['type', 'first_seen', 'last_check', 'last_origin', 'ports', 'status', 'tags', 'languages']
+
+    # options: set of optional meta fields
+    def get_meta(self, options=set()):
         meta = {}
         meta['type'] = self.domain_type
         meta['first_seen'] = self.get_first_seen()
         meta['last_check'] = self.get_last_check()
-        meta['last_origin'] = self.last_origin()
+        meta['tags'] = self.get_tags()
         meta['ports'] = self.get_ports()
-        meta['status'] = self.is_up(ports=ports)
-        meta['tags'] = self.get_last_origin()
-        #meta['is_tags_safe'] =
-        meta['languages'] = self.get_languages()
+        meta['status'] = self.is_up(ports=meta['ports'])
+
+        if 'last_origin' in options:
+            meta['last_origin'] = self.get_last_origin()
+        #meta['is_tags_safe'] = ##################################
+        if 'languages' in options:
+            meta['languages'] = self.get_languages()
         #meta['screenshot'] =
+        return meta
 
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
@@ -272,21 +287,32 @@ class Domain(AbstractObject):
         r_onion.zadd(f'crawler_history_{self.domain_type}:{self.id}:{port}', epoch, int(root_item))
 
     # if domain down -> root_item = epoch
-    def add_history(self, epoch, port, root_item=None):
-        date = time.strftime('%Y%m%d', time.gmtime(epoch))
+    def add_history(self, epoch, port, root_item=None, date=None):
+        if not date:
+            date = time.strftime('%Y%m%d', time.gmtime(epoch))
         try:
             int(root_item)
         except ValueError:
             root_item = None
+
+        data_retention_engine.update_object_date('domain', self.domain_type, date)
+        update_first_object_date(date, self.domain_type)
+        update_last_object_date(date, self.domain_type)
         # UP
         if root_item:
+            r_onion.srem(f'full_{self.domain_type}_down', self.id)
             r_onion.sadd(f'full_{self.domain_type}_up', self.id)
             r_onion.sadd(f'{self.domain_type}_up:{date}', self.id) # # TODO:  -> store first day
             r_onion.sadd(f'month_{self.domain_type}_up:{date[0:6]}', self.id) # # TODO:  -> store first month
             self._add_history_root_item(root_item, epoch, port)
         else:
-            r_onion.sadd(f'{self.domain_type}_down:{date}', self.id) # # TODO:  -> store first month
-            self._add_history_root_item(epoch, epoch, port)
+            if port:
+                r_onion.sadd(f'{self.domain_type}_down:{date}', self.id) # # TODO:  -> store first month
+                self._add_history_root_item(epoch, epoch, port)
+            else:
+                r_onion.sadd(f'{self.domain_type}_down:{date}', self.id)
+                if not self.was_up():
+                    r_onion.sadd(f'full_{self.domain_type}_down', self.id)
 
     def add_crawled_item(self, url, port, item_id, item_father):
         r_metadata.hset(f'paste_metadata:{item_id}', 'father', item_father)
@@ -309,6 +335,44 @@ def get_all_domains_languages():
 
 def get_domains_up_by_type(domain_type):
     return r_onion.smembers(f'full_{domain_type}_up')
+
+def get_domains_down_by_type(domain_type):
+    return r_onion.smembers(f'full_{domain_type}_down')
+
+def get_first_object_date(subtype, field=''):
+    first_date = r_onion.zscore('objs:first_date', f'domain:{subtype}:{field}')
+    if not first_date:
+        first_date = 99999999
+    return int(first_date)
+
+def get_last_object_date(subtype, field=''):
+    last_date = r_onion.zscore('objs:last_date', f'domain:{subtype}:{field}')
+    if not last_date:
+        last_date = 0
+    return int(last_date)
+
+def _set_first_object_date(date, subtype, field=''):
+    return r_onion.zadd('objs:first_date', f'domain:{subtype}:{field}', date)
+
+def _set_last_object_date(date, subtype, field=''):
+    return r_onion.zadd('objs:last_date', f'domain:{subtype}:{field}', date)
+
+def update_first_object_date(date, subtype, field=''):
+    first_date = get_first_object_date(subtype, field=field)
+    if int(date) < first_date:
+        _set_first_object_date(date, subtype, field=field)
+        return date
+    else:
+        return first_date
+
+def update_last_object_date(date, subtype, field=''):
+    last_date = get_last_object_date(subtype, field=field)
+    if int(date) > last_date:
+        _set_last_object_date(date, subtype, field=field)
+        return date
+    else:
+        return last_date
+
 
 ################################################################################
 ################################################################################

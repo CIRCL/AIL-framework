@@ -28,8 +28,8 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages import Tag
 from lib import ConfigLoader
+from lib import Tag
 
 
 class SubmitPaste(AbstractModule):
@@ -298,10 +298,10 @@ class SubmitPaste(AbstractModule):
 
                 # add tags
                 for tag in ltags:
-                    Tag.add_tag('item', tag, rel_item_path)
+                    Tag.add_object_tag(tag, 'item', rel_item_path)
 
                 for tag in ltagsgalaxies:
-                    Tag.add_tag('item', tag, rel_item_path)
+                    Tag.add_object_tag(tag, 'item', rel_item_path)
 
                 self.r_serv_log_submit.incr(f'{uuid}:nb_end')
                 self.r_serv_log_submit.incr(f'{uuid}:nb_sucess')

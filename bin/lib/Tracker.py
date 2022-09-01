@@ -16,11 +16,11 @@ from flask import escape
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 import Date
-import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
 import item_basic
+import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")

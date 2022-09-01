@@ -11,10 +11,9 @@ from io import BytesIO
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Item
 import Date
-import Tag
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-
+import Tag
 
 import ConfigLoader
 
@@ -113,7 +112,7 @@ def get_decoded_metadata(sha1_string, nb_seen=False, size=False, file_type=False
     return metadata_dict
 
 def get_decoded_tag(sha1_string):
-    return Tag.get_obj_tag(sha1_string)
+    return Tag.get_object_tags('decoded', sha1_string)
 
 def get_list_nb_previous_hash(sha1_string, num_day):
     nb_previous_hash = []
@@ -351,7 +350,7 @@ def delete_decoded_file(obj_id):
     if not os.path.isfile(filepath):
         return False
 
-    Tag.delete_obj_tags(obj_id, 'decoded', Tag.get_obj_tag(obj_id))
+    Tag.delete_obj_tags(obj_id, 'decoded', Tag.get_obj_tag(obj_id)) #############
     os.remove(filepath)
     return True
 

@@ -19,16 +19,13 @@ import Flask_config
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Date
-import Tag
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+from packages import Date
+from lib import Tag
+from lib.objects import ail_objects
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Correlate_object
-
-r_cache = Flask_config.r_cache
-r_serv_db = Flask_config.r_serv_db
-r_serv_tags = Flask_config.r_serv_tags
 bootstrap_label = Flask_config.bootstrap_label
 
 # ============ BLUEPRINT ============
@@ -51,6 +48,7 @@ def add_tags():
     tagsgalaxies = request.args.get('tagsgalaxies')
     object_id = request.args.get('object_id')
     object_type = request.args.get('object_type')
+    subtype = '' # TODO: handle subtype object
 
     list_tag = tags.split(',')
     list_tag_galaxies = tagsgalaxies.split(',')
@@ -60,7 +58,7 @@ def add_tags():
     if res[1] != 200:
         return str(res[0])
 
-    return redirect(Correlate_object.get_item_url(object_type, object_id))
+    return redirect(ail_objects.get_object_link(object_type, subtype, object_id, flask_context=True))
 
 @tags_ui.route('/tag/delete_tag')
 @login_required
@@ -69,12 +67,13 @@ def delete_tag():
 
     object_type = request.args.get('object_type')
     object_id = request.args.get('object_id')
+    subtype = '' # TODO: handle subtype object
     tag = request.args.get('tag')
 
     res = Tag.api_delete_obj_tags(tags=[tag], object_id=object_id, object_type=object_type)
     if res[1] != 200:
         return str(res[0])
-    return redirect(Correlate_object.get_item_url(object_type, object_id))
+    return redirect(ail_objects.get_object_link(object_type, subtype, object_id, flask_context=True))
 
 
 @tags_ui.route('/tag/get_all_tags')
@@ -94,7 +93,7 @@ def get_all_taxonomies_customs_tags():
 @login_read_only
 def get_all_obj_tags():
     object_type = request.args.get('object_type')
-    res = Correlate_object.sanitize_object_type(object_type)
+    res = ail_objects.api_sanitize_object_type(object_type)
     if res:
         return jsonify(res)
     return jsonify(Tag.get_all_obj_tags(object_type))
@@ -173,6 +172,7 @@ def get_obj_by_tags():
 
     # # TODO: sanityze all
     object_type = request.args.get('object_type')
+    subtype = '' # TODO: handle subtype
     ltags = request.args.get('ltags')
     page = request.args.get('page')
     date_from = request.args.get('date_from')
@@ -191,7 +191,7 @@ def get_obj_by_tags():
         list_tag.append(tag.replace('"','\"'))
 
     # object_type
-    res = Correlate_object.sanitize_object_type(object_type)
+    res = ail_objects.api_sanitize_object_type(object_type)
     if res:
         return jsonify(res)
 
@@ -209,11 +209,12 @@ def get_obj_by_tags():
                         "nb_first_elem":dict_obj['nb_first_elem'], "nb_last_elem":dict_obj['nb_last_elem'], "nb_all_elem":dict_obj['nb_all_elem']}
 
         for obj_id in dict_obj['tagged_obj']:
-            obj_metadata = Correlate_object.get_object_metadata(object_type, obj_id)
+            obj_metadata = ail_objects.get_object_meta(object_type, subtype, obj_id, flask_context=True)
+            #ail_objects.
             obj_metadata['id'] = obj_id
             dict_tagged["tagged_obj"].append(obj_metadata)
 
-        dict_tagged['tab_keys'] = Correlate_object.get_obj_tag_table_keys(object_type)
+        dict_tagged['tab_keys'] = ail_objects.get_ui_obj_tag_table_keys(object_type)
 
         if len(list_tag) == 1:
             dict_tagged['current_tags'] = [ltags.replace('"', '\"')]
