@@ -22,6 +22,12 @@ pystemonpath = /home/pystemon/pystemon/
 
 sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
 
+##### Logs ######
+[Logs]
+ail_logs_syslog = False
+ail_logs_syslog_server =
+ail_logs_syslog_port =
+
 ##### Notifications ######
 [Notifications]
 ail_domain = https://localhost:7000

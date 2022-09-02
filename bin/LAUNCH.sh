@@ -105,14 +105,29 @@ function launching_ardb {
 }
 
 function launching_logs {
+    conf_dir="${AIL_HOME}/configs/"
+    syslog_cmd=""
+    syslog_enabled=`cat $conf_dir/core.cfg | grep 'ail_logs_syslog' | cut -d " " -f 3 `
+    if [ "$syslog_enabled" = "True" ]; then
+      syslog_cmd="--syslog"
+    fi
+    syslog_server=`cat $conf_dir/core.cfg | grep 'ail_logs_syslog_server' | cut -d " " -f 3 `
+    syslog_port=`cat $conf_dir/core.cfg | grep 'ail_logs_syslog_port' | cut -d " " -f 3 `
+    if [ ! -z "$syslog_server" -a "$str" != " " ]; then
+        syslog_cmd="${syslog_cmd} -ss ${syslog_server}"
+        if [ ! -z "$syslog_port" -a "$str" != " " ]; then
+            syslog_cmd="${syslog_cmd} -sp ${syslog_port}"
+        fi
+    fi
+
     screen -dmS "Logging_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching logging process"$DEFAULT
-    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Queuing -l ../logs/; read x"
+    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Queuing -l ../logs/ ${syslog_cmd}; read x"
     sleep 0.1
-    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Script -l ../logs/; read x"
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Script -l ../logs/ ${syslog_cmd}; read x"
     sleep 0.1
-    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Sync -l ../logs/; read x"
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Sync -l ../logs/ ${syslog_cmd}; read x"
 }
 
 function launching_queues {
