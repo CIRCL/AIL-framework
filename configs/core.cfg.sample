@@ -234,7 +234,7 @@ dns = 8.8.8.8
 dns = 8.8.8.8
 
 [Web]
-dns = 149.13.33.69
+dns = 8.8.8.8
 
 # Indexer configuration
 [Indexer]
@@ -253,7 +253,8 @@ maxDuplicateToPushToMISP=10
 # e.g.: tcp://127.0.0.1:5556,tcp://127.0.0.1:5557
 [ZMQ_Global]
 #address = tcp://crf.circl.lu:5556
-address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
+# address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
+address = tcp://127.0.0.1:5556
 channel = 102
 bind = tcp://127.0.0.1:5556
 
