@@ -616,6 +616,12 @@ def api_set_nb_crawlers_to_launch(dict_splash_name):
     else:
         return ({'error':'invalid input'}, 400)
 
+def get_domains_blacklist(domain_type):
+    return r_serv_onion.smembers(f'blacklist_{domain_type}')
+
+def add_domain_blacklist(domain_type, domain):
+    r_serv_onion.sadd(f'blacklist_{domain_type}', domain)
+
 ##-- CRAWLER GLOBAL --##
 
 #### AUTOMATIC CRAWLER ####

@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib import Statistics
 from lib import Tag
 from lib import Users
 from lib.objects import Decodeds
@@ -35,6 +36,8 @@ r_serv_tracker = config_loader.get_redis_conn("ARDB_Tracker")
 r_serv_tags = config_loader.get_redis_conn("ARDB_Tags")
 r_crawler = config_loader.get_redis_conn("ARDB_Onion")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+r_serv_trend = config_loader.get_redis_conn("ARDB_Trending")
+r_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 config_loader = None
 # # - - CONFIGS - - # #
 
@@ -358,8 +361,15 @@ def items_migration():
 def get_last_crawled_domains(domain_type):
     return r_crawler.lrange(f'last_{domain_type}', 0 ,-1)
 
+def get_domains_blacklist(domain_type):
+    return r_crawler.smembers(f'blacklist_{domain_type}')
+
 def crawler_migration():
     print('CRAWLER MIGRATION...')
+
+    for domain_type in ['onion', 'regular']:
+        for domain in get_domains_blacklist(domain_type):
+            crawlers.add_domain_blacklist(domain_type, domain)
 
     # for domain_type in ['onion', 'regular']:
     #     for row in get_last_crawled_domains(domain_type):
@@ -368,18 +378,17 @@ def crawler_migration():
     #         print(domain, port, epoch)
     #         #crawlers.add_last_crawled_domain(domain_type, domain, port, epoch)
 
-    for cookiejar_uuid in old_crawlers.get_all_cookiejar():
-        meta = old_crawlers.get_cookiejar_metadata(cookiejar_uuid, level=True)
-        #print(meta)
-        #crawlers.create_cookiejar(meta['user_id'], level=meta['level'], description=meta['description'], cookiejar_uuid=cookiejar_uuid)
-        #crawlers._set_cookiejar_date(meta['date'])
-
-        for meta_cookie, cookie_uuid in old_crawlers.get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=True):
-            print(cookie_uuid)
-            #crawlers.add_cookie_to_cookiejar(cookiejar_uuid, meta_cookie, cookie_uuid=cookie_uuid)
+    # for cookiejar_uuid in old_crawlers.get_all_cookiejar():
+    #     meta = old_crawlers.get_cookiejar_metadata(cookiejar_uuid, level=True)
+    #     #print(meta)
+    #     crawlers.create_cookiejar(meta['user_id'], level=meta['level'], description=meta['description'], cookiejar_uuid=cookiejar_uuid)
+    #     crawlers._set_cookiejar_date(meta['date'])
+    #
+    #     for meta_cookie, cookie_uuid in old_crawlers.get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=True):
+    #         print(cookie_uuid)
+    #         crawlers.add_cookie_to_cookiejar(cookiejar_uuid, meta_cookie, cookie_uuid=cookie_uuid)
 
     # TODO: auto crawler -> to Fix / change
-
 
     # TODO: crawlers queues
 
@@ -689,12 +698,89 @@ def subtypes_obj_migration():
 #
 # Credential:
 # HSET 'credential_by_tld:'+date, tld, 1
+
+def get_all_provider():
+    return r_serv_trend.smembers('all_provider_set')
+
+def get_item_source_stats_by_date(date, source):
+    stats = {}
+    stats['num'] = r_serv_trend.hget(f'{source}_num', date)
+    stats['size'] = r_serv_trend.hget(f'{source}_size', date)
+    stats['avg'] = r_serv_trend.hget(f'{source}_avg', date)
+    return stats
+
+def get_item_stats_size_avg_by_date(date):
+    return r_serv_trend.zrange(f'top_avg_size_set_{date}', 0, -1, withscores=True)
+
+def get_item_stats_nb_by_date(date):
+    return r_serv_trend.zrange(f'providers_set_{date}', 0, -1, withscores=True)
+
+def get_top_stats_module(module_name, date):
+    return r_serv_trend.zrange(f'top_{module_name}_set_{date}', 0, -1, withscores=True)
+
+def get_module_tld_stats_by_date(module, date):
+    return r_statistics.hgetall(f'{module}_by_tld:{date}')
+
 def statistics_migration():
+    # paste_by_modules_timeout
+
+    # Date full history => lot of keys
+
+
+    # top_size_set_{date}
+    # top_avg_size_set_{date}
+
+    # 'providers_set_{date}
+
+
+
+    sources = get_all_provider()
+    for date in Date.get_date_range_today('20180101'):
+
+        size_avg = get_item_stats_size_avg_by_date(date)
+
+        nb_items = get_item_stats_nb_by_date(date)
+
+        # top_size_set_{date}
+        # top_avg_size_set_{date}
+
+        # 'providers_set_{date}
+
+        # ITEM STATS
+        for source in sources:
+            source_stat = get_item_source_stats_by_date(date, source)
+            Statistics._create_item_stats_size_nb(date, source, source_stat['num'], source_stat['size'], source_stat['avg'])
+
+
+
+        # # MODULE STATS
+        # for module in ['credential', 'mail', 'SQLInjection']:
+        #     stats = get_module_tld_stats_by_date(module, date)
+        #     for tld in stats:
+        #         if tld:
+        #             print(module, date, tld, stats[tld])
+        #             Statistics.add_module_tld_stats_by_date(module, date, tld, stats[tld])
+        # for module in ['credential']:
+        #     # TOP STATS
+        #     top_module = get_top_stats_module(module, date)
+        #     for keyword, total_sum in top_module:
+        #         print(date, module, keyword, total_sum)
+        #         #Statistics._add_module_stats(module, total_sum, keyword, date)
+
+
+
+
+
+
+
+
+
     pass
+
 
 if __name__ == '__main__':
 
-    core_migration()
+    #core_migration()
     # user_migration()
     # tags_migration()
     #items_migration()
@@ -706,6 +792,7 @@ if __name__ == '__main__':
     # ail_2_ail_migration()
     # trackers_migration()
     # investigations_migration()
+    statistics_migration()
 
 
 

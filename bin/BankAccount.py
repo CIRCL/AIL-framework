@@ -16,6 +16,13 @@ import re
 import string
 from itertools import chain
 
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages        #
+##################################
+from lib import Statistics
+
+
 from packages import Item
 from pubsublogger import publisher
 
@@ -48,6 +55,7 @@ def is_valid_iban(iban):
         return True
     return False
 
+# # TODO: SET
 def check_all_iban(l_iban, obj_id):
     nb_valid_iban = 0
     for iban in l_iban:
@@ -61,7 +69,8 @@ def check_all_iban(l_iban, obj_id):
             if is_valid_iban(iban):
                 print('------')
                 nb_valid_iban = nb_valid_iban + 1
-                server_statistics.hincrby('iban_by_country:'+date, iban[0:2], 1)
+                Statistics.add_iban_country_stats_by_date(date, iban[0:2], 1)
+
 
     if(nb_valid_iban > 0):
         to_print = 'Iban;{};{};{};'.format(Item.get_source(obj_id), Item.get_item_date(obj_id), Item.get_basename(obj_id))
@@ -69,9 +78,6 @@ def check_all_iban(l_iban, obj_id):
             to_print, nb_valid_iban, obj_id))
         msg = 'infoleak:automatic-detection="iban";{}'.format(obj_id)
         p.populate_set_out(msg, 'Tags')
-
-        #Send to duplicate
-        p.populate_set_out(obj_id, 'Duplicate')
 
 if __name__ == "__main__":
     publisher.port = 6380
@@ -81,13 +87,6 @@ if __name__ == "__main__":
 
     p = Process(config_section)
     max_execution_time = p.config.getint("BankAccount", "max_execution_time")
-
-    # ARDB #
-    server_statistics = redis.StrictRedis(
-        host=p.config.get("ARDB_Statistics", "host"),
-        port=p.config.getint("ARDB_Statistics", "port"),
-        db=p.config.getint("ARDB_Statistics", "db"),
-        decode_responses=True)
 
     publisher.info("BankAccount started")
 

@@ -314,14 +314,6 @@ if __name__ == '__main__':
 
     print('splash url: {}'.format(splash_url))
 
-    PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], p.config.get("Directories", "pastes"))
-
-    r_serv_metadata = redis.StrictRedis(
-        host=p.config.get("ARDB_Metadata", "host"),
-        port=p.config.getint("ARDB_Metadata", "port"),
-        db=p.config.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
-
     r_cache = redis.StrictRedis(
         host=p.config.get("Redis_Cache", "host"),
         port=p.config.getint("Redis_Cache", "port"),

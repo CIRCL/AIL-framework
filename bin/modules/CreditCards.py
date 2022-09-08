@@ -75,9 +75,6 @@ class CreditCards(AbstractModule):
             if (len(creditcard_set) > 0):
                 self.redis_logger.warning(f'{to_print}Checked {len(creditcard_set)} valid number(s);{item.get_id()}')
 
-                #Send to duplicate
-                self.send_message_to_queue(item.get_id(), 'Duplicate')
-
                 msg = f'infoleak:automatic-detection="credit-card";{item.get_id()}'
                 self.send_message_to_queue(msg, 'Tags')
 

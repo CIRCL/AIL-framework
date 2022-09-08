@@ -42,6 +42,7 @@ from modules.abstract_module import AbstractModule
 from packages.Item import Item
 from lib import ConfigLoader
 from lib import regex_helper
+from lib import Statistics
 
 
 class Credential(AbstractModule):
@@ -96,6 +97,7 @@ class Credential(AbstractModule):
 
         item_content = item.get_content()
 
+        # TODO: USE SETS
         # Extract all credentials
         all_credentials = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_cred, item.get_id(), item_content, max_time=self.max_execution_time)
 
@@ -116,9 +118,6 @@ class Credential(AbstractModule):
             if nb_cred > self.criticalNumberToAlert:
                 print(f"========> Found more than 10 credentials in this file : {item.get_id()}")
                 self.redis_logger.warning(to_print)
-
-                # Send to duplicate
-                self.send_message_to_queue(item.get_id(), 'Duplicate')
 
                 msg = f'infoleak:automatic-detection="credential";{item.get_id()}'
                 self.send_message_to_queue(msg, 'Tags')
@@ -158,6 +157,7 @@ class Credential(AbstractModule):
                     print(f"=======> Probably on : {discovered_sites}")
 
                 date = datetime.now().strftime("%Y%m")
+                nb_tlds = {}
                 for cred in all_credentials:
                     maildomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
                     self.faup.decode(maildomains)
@@ -167,7 +167,9 @@ class Credential(AbstractModule):
                         tld = tld.decode()
                     except:
                         pass
-                    self.server_statistics.hincrby('credential_by_tld:'+date, tld, 1)
+                    nb_tlds[tld] = nb_tlds.get(tld, 0) + 1
+                for tld in nb_tlds:
+                    Statistics.add_module_tld_stats_by_date('credential', date, tld, nb_tlds[tld])
             else:
                 self.redis_logger.info(to_print)
                 print(f'found {nb_cred} credentials')
