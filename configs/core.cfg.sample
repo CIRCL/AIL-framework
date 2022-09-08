@@ -24,9 +24,15 @@ sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon
 
 ##### Logs ######
 [Logs]
+# activate syslog
 ail_logs_syslog = False
 ail_logs_syslog_server =
+# default=514
 ail_logs_syslog_port =
+# ['auth', 'authpriv', 'cron', 'daemon', 'ftp', 'kern', 'lpr', 'mail', 'news', 'syslog', 'user', 'uucp', 'local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', 'local7']
+ail_logs_syslog_facility =
+# ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR', 'CRITICAL']
+ail_logs_syslog_level =
 
 ##### Notifications ######
 [Notifications]

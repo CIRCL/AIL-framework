@@ -119,6 +119,14 @@ function launching_logs {
             syslog_cmd="${syslog_cmd} -sp ${syslog_port}"
         fi
     fi
+    syslog_facility=`cat $conf_dir/core.cfg | grep 'ail_logs_syslog_facility' | cut -d " " -f 3 `
+    if [ ! -z "$syslog_facility" -a "$str" != " " ]; then
+        syslog_cmd="${syslog_cmd} -sf ${syslog_facility}"
+    fi
+    syslog_level=`cat $conf_dir/core.cfg | grep 'ail_logs_syslog_level' | cut -d " " -f 3 `
+    if [ ! -z "$syslog_level" -a "$str" != " " ]; then
+        syslog_cmd="${syslog_cmd} -sl ${syslog_level}"
+    fi
 
     screen -dmS "Logging_AIL"
     sleep 0.1

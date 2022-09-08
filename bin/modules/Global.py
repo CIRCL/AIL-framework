@@ -43,7 +43,6 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 
-
 class Global(AbstractModule):
     """
     Global module for AIL framework
@@ -52,7 +51,9 @@ class Global(AbstractModule):
     def __init__(self):
         super(Global, self).__init__()
 
-        self.r_stats = ConfigLoader().get_redis_conn("ARDB_Statistics")
+        config_loader = ConfigLoader()
+        self.r_stats = config_loader.get_redis_conn("ARDB_Statistics")
+        self.r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 
         self.processed_item = 0
         self.time_last_stats = time.time()
@@ -68,6 +69,11 @@ class Global(AbstractModule):
 
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
+        # Send module state to logs
+        self.redis_logger.critical(f"AIL {self.get_ail_uuid()} started")
+
+    def get_ail_uuid(self):
+        return self.r_serv_db.get('ail:uuid')
 
 
     def computeNone(self):
@@ -208,7 +214,7 @@ class Global(AbstractModule):
 
         return curr_file_content
 
-    # # TODO: add stats incomplete_file/Not a gzipped file 
+    # # TODO: add stats incomplete_file/Not a gzipped file
     def gunzip_bytes_obj(self, filename, bytes_obj):
         gunzipped_bytes_obj = None
         try:
