@@ -74,6 +74,7 @@ class Tracker_Regex(AbstractModule):
         item_date = item.get_date()
         item_source = item.get_source()
         print(f'new tracked regex found: {tracker} in {item_id}')
+        self.redis_logger.warning(f'new tracked regex found: {tracker} in {item_id}')
 
         for tracker_uuid in uuid_list:
             # Source Filtering

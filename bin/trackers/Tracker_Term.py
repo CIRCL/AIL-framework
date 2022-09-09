@@ -113,14 +113,14 @@ class Tracker_Term(AbstractModule):
                         nb_uniq_word += 1
                 if nb_uniq_word >= nb_words_threshold:
                     self.new_term_found(word_set, 'set', item)
-            
+
     def new_term_found(self, term, term_type, item):
         uuid_list = Term.get_term_uuid_list(term, term_type)
 
         item_id = item.get_id()
         item_date = item.get_date()
         item_source = item.get_source()
-        self.redis_logger.info(f'new tracked term found: {term} in {item_id}')
+        self.redis_logger.warning(f'new tracked term found: {term} in {item_id}')
         print(f'new tracked term found: {term} in {item_id}')
         for term_uuid in uuid_list:
             tracker_sources = Tracker.get_tracker_uuid_sources(term_uuid)

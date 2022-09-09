@@ -67,6 +67,7 @@ class Tracker_Typo_Squatting(AbstractModule):
         item_source = item.get_source()
         #self.redis_logger.info(f'new tracked typo found: {tracker} in {item_id}')
         print(f'new tracked typosquatting found: {tracker} in {item_id}')
+        self.redis_logger.warning(f'tracker typosquatting: {tracker} in {item_id}')
 
         print(Tracker.get_tracker_uuid_list(tracker, tracker_type))
         for tracker_uuid in Tracker.get_tracker_uuid_list(tracker, tracker_type):

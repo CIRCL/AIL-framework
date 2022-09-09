@@ -60,7 +60,7 @@ class Tracker_Yara(AbstractModule):
         try:
             yara_match = self.rules.match(data=item_content, callback=self.yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
             if yara_match:
-                self.redis_logger.info(f'{self.item.get_id()}: {yara_match}')
+                self.redis_logger.warning(f'tracker yara: new match {self.item.get_id()}: {yara_match}')
                 print(f'{self.item.get_id()}: {yara_match}')
         except yara.TimeoutError as e:
             print(f'{self.item.get_id()}: yara scanning timed out')
