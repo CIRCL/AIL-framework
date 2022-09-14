@@ -640,7 +640,6 @@ def update_auto_crawler_queue():
         print(mess)
         r_serv_onion.sadd(f'{domain_type}_crawler_priority_queue', mess)
 
-
 ##-- AUTOMATIC CRAWLER --##
 
 #### CRAWLER TASK ####
@@ -707,14 +706,54 @@ def save_crawler_config(crawler_mode, crawler_type, crawler_config, domain, url=
         r_serv_onion.set('crawler_config:{}:{}:{}:{}'.format(crawler_mode, crawler_type, domain, url), json.dumps(crawler_config))
 
 def send_url_to_crawl_in_queue(crawler_mode, crawler_type, url):
-    print('{}_crawler_priority_queue'.format(crawler_type), '{};{}'.format(url, crawler_mode))
-    r_serv_onion.sadd('{}_crawler_priority_queue'.format(crawler_type), '{};{}'.format(url, crawler_mode))
+    print(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    r_serv_onion.sadd(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
     # add auto crawled url for user UI
     if crawler_mode == 'auto':
-        r_serv_onion.sadd('auto_crawler_url:{}'.format(crawler_type), url)
+        r_serv_onion.sadd(f'auto_crawler_url:{crawler_type}', url)
+
+def add_url_to_crawl_in_queue(url, crawler_mode='manual'): # crawler_type
+    print(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    r_serv_onion.sadd(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    # CURRENTLY DISABLED
+    # # add auto crawled url for user UI
+    # if crawler_mode == 'auto':
+    #     r_serv_onion.sadd(f'auto_crawler_url:{crawler_type}', url)
 
 #### ####
 #### CRAWLER TASK API ####
+
+# # TODO: ADD RESULT JSON Response
+
+# # TODO: ADD user agent
+# # TODO: sanitize URL
+def api_add_crawler_task(data, user_id=None):
+    url = data.get('url', None)
+    if not url or url=='\n':
+        return ({'status': 'error', 'reason': 'No url supplied'}, 400)
+
+    screenshot = data.get('screenshot', False)
+    if screenshot:
+        screenshot = True
+    else:
+        screenshot = False
+    har = data.get('har', False)
+    if har:
+        har = True
+    else:
+        har = False
+    depth_limit = data.get('depth_limit', 1)
+    if depth_limit:
+        try:
+            depth_limit = int(depth_limit)
+            if depth_limit < 0:
+                depth_limit = 0
+        except ValueError:
+            return ({'error':'invalid depth limit'}, 400)
+    print(url, screenshot, har, depth_limit)
+    return create_crawler_task(url, screenshot=screenshot, har=har, depth_limit=depth_limit, crawler_type='onion')
+
+
 def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):
     # validate url
     if url is None or url=='' or url=='\n':

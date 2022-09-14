@@ -556,6 +556,19 @@ def get_crawled_domain_list():
     dict_res['domain_type'] = domain_type
     return create_json_response(dict_res, res[1])
 
+# # TODO: ADD RESULT JSON Response
+@restApi.route("api/v1/add/crawler/task", methods=['POST'])
+@token_required('analyst')
+def add_crawler_task():
+    data = request.get_json()
+    user_id = get_user_from_token(token)
+    res = crawlers.api_add_crawler_task(data, user_id=user_id)
+    if res:
+        return create_json_response(res[0], res[1])
+
+    dict_res = {'url': data['url']}
+    return create_json_response(dict_res, res[1])
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
