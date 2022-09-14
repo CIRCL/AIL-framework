@@ -561,7 +561,8 @@ def get_crawled_domain_list():
 @token_required('analyst')
 def add_crawler_task():
     data = request.get_json()
-    user_id = get_user_from_token(token)
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
     res = crawlers.api_add_crawler_task(data, user_id=user_id)
     if res:
         return create_json_response(res[0], res[1])
