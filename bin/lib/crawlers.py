@@ -713,7 +713,7 @@ def send_url_to_crawl_in_queue(crawler_mode, crawler_type, url):
         r_serv_onion.sadd(f'auto_crawler_url:{crawler_type}', url)
 
 def add_url_to_crawl_in_queue(url, crawler_mode='manual'): # crawler_type
-    print(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    #print(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
     r_serv_onion.sadd(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
     # CURRENTLY DISABLED
     # # add auto crawled url for user UI
@@ -750,7 +750,6 @@ def api_add_crawler_task(data, user_id=None):
                 depth_limit = 0
         except ValueError:
             return ({'error':'invalid depth limit'}, 400)
-    print(url, screenshot, har, depth_limit)
     return create_crawler_task(url, screenshot=screenshot, har=har, depth_limit=depth_limit, crawler_type='onion')
 
 

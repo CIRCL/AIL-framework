@@ -15,12 +15,12 @@ import datetime
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import Domain
+import crawlers
 
 import Import_helper
 import Cryptocurrency
 import Pgp
 import Item
-import Paste
 import Tag
 import Term
 import Tracker
@@ -568,7 +568,7 @@ def add_crawler_task():
         return create_json_response(res[0], res[1])
 
     dict_res = {'url': data['url']}
-    return create_json_response(dict_res, res[1])
+    return create_json_response(dict_res, 200)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
