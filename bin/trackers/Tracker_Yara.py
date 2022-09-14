@@ -47,7 +47,7 @@ class Tracker_Yara(AbstractModule):
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
 
-    def compute(self, item_id):
+    def compute(self, item_id, item_content=None):
         # refresh YARA list
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('yara'):
             self.rules = Tracker.reload_yara_rules()
@@ -56,7 +56,11 @@ class Tracker_Yara(AbstractModule):
             print('Tracked set refreshed')
 
         self.item = Item(item_id)
-        item_content = self.item.get_content()
+        if not item_content:
+            item_content = self.item.get_content()
+
+
+
         try:
             yara_match = self.rules.match(data=item_content, callback=self.yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
             if yara_match:

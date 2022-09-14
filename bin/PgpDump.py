@@ -24,6 +24,10 @@ from packages import Paste
 
 from packages import Pgp
 
+from trackers.Tracker_Term import Tracker_Term
+from trackers.Tracker_Regex import Tracker_Regex
+from trackers.Tracker_Yara import Tracker_Yara
+
 class TimeoutException(Exception):
     pass
 
@@ -152,6 +156,10 @@ if __name__ == '__main__':
     #config_section = 'PgpDump'
     config_section = 'PgpDump'
 
+    tracker_module_term = Tracker_Term()
+    tracker_module_regex = Tracker_Regex()
+    tracker_module_yara = Tracker_Yara()
+
     # Setup the I/O queues
     p = Process(config_section)
 
@@ -245,7 +253,13 @@ if __name__ == '__main__':
         for name_id in set_name:
             print(name_id)
             Pgp.pgp.save_item_correlation('name', name_id, message, item_date)
+            tracker_module_term.compute(message, item_content=name_id)
+            tracker_module_regex.compute(message, item_content=name_id)
+            tracker_module_yara.compute(message, item_content=name_id)
 
         for mail_id in set_mail:
             print(mail_id)
             Pgp.pgp.save_item_correlation('mail', mail_id, message, item_date)
+            tracker_module_term.compute(message, item_content=name_id)
+            tracker_module_regex.compute(message, item_content=name_id)
+            tracker_module_yara.compute(message, item_content=name_id)

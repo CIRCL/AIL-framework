@@ -50,7 +50,7 @@ class Tracker_Regex(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, item_id):
+    def compute(self, item_id, item_content=None):
         # refresh Tracked regex
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('regex'):
             self.dict_regex_tracked = Term.get_regex_tracked_words_dict()
@@ -60,7 +60,8 @@ class Tracker_Regex(AbstractModule):
 
         item = Item(item_id)
         item_id = item.get_id()
-        item_content = item.get_content()
+        if not item_content:
+            item_content = item.get_content()
 
         for regex in self.dict_regex_tracked:
             matched = regex_helper.regex_search(self.module_name, self.redis_cache_key, self.dict_regex_tracked[regex], item_id, item_content, max_time=self.max_execution_time)
