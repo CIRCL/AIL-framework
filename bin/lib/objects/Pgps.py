@@ -40,6 +40,10 @@ class Pgp(AbstractSubtypeObject):
         # # TODO:
         pass
 
+    # # TODO: 
+    def get_meta(self):
+        return None
+
     def get_link(self, flask_context=False):
         if flask_context:
             url = url_for('correlation.show_correlation', object_type=self.type, type_id=self.subtype, correlation_id=self.id)

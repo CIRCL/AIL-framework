@@ -307,15 +307,15 @@ def tags_migration():
     for galaxy in get_active_galaxies():
         Tag.enable_galaxy(galaxy)
 
-    # for tag in get_all_items_tags():
-    #     print(tag)
-    #     tag_first = get_tag_first_seen(tag)
-    #     if tag_first:
-    #         for date in Date.get_date_range_today(tag_first):
-    #             print(date)
-    #             for item_id in get_all_items_tags_by_day(tag, date):
-    #                 item = Items.Item(item_id)
-    #                 item.add_tag(tag)
+    for tag in get_all_items_tags():
+        print(tag)
+        tag_first = get_tag_first_seen(tag)
+        if tag_first:
+            for date in Date.get_date_range_today(tag_first):
+                print(date)
+                for item_id in get_all_items_tags_by_day(tag, date):
+                    item = Items.Item(item_id)
+                    item.add_tag(tag)
 
 
 
@@ -485,60 +485,59 @@ def domain_migration():
                 if not crawlers.is_valid_onion_domain(dom):
                     print(dom)
                     continue
-            # ports = get_domain_ports(domain_type, dom)
-            # first_seen = get_domain_first_seen(domain_type, dom)
-            # last_check = get_domain_last_check(domain_type, dom)
-            # last_origin = get_domain_last_origin(domain_type, dom)
-            # languages = get_domain_languages(dom)
-            #
-            # domain = Domains.Domain(dom)
-            # # domain.update_daterange(first_seen)
-            # # domain.update_daterange(last_check)
-            # # domain._set_ports(ports)
-            # # if last_origin:
-            # #     domain.set_last_origin(last_origin)
-            # for language in languages:
-            #     print(language)
-            # #     domain.add_language(language)
-            # for tag in get_domain_tags(domain):
-            #     domain.add_tag(tag)
-            # #print('------------------')
-            # #print('------------------')
-            # #print('------------------')
-            # #print('------------------')
-            # #print('------------------')
-            # print(dom)
-            # #print(first_seen)
-            # #print(last_check)
-            # #print(ports)
-            #
-            # # # TODO: FIXME filter invalid hostname
-            #
-            #  # CREATE DOMAIN HISTORY
-            # for port in ports:
-            #     for history in get_domain_history_by_port(domain_type, dom, port):
-            #         epoch = history['epoch']
-            #         # DOMAIN DOWN
-            #         if not history.get('status'): # domain DOWN
-            #             # domain.add_history(epoch, port)
-            #             print(f'DOWN {epoch}')
-            #         # DOMAIN UP
-            #         else:
-            #             root_id = history.get('root')
-            #             if root_id:
-            #                 # domain.add_history(epoch, port, root_item=root_id)
-            #                 #print(f'UP {root_id}')
-            #                 crawled_items = get_crawled_items(dom, root_id)
-            #                 for item_id in crawled_items:
-            #                     url = get_item_link(item_id)
-            #                     item_father = get_item_father(item_id)
-            #                     if item_father and url:
-            #                         #print(f'{url}    {item_id}')
-            #                         pass
-            #                         # domain.add_crawled_item(url, port, item_id, item_father)
-            #
-            #
-            #         #print()
+            ports = get_domain_ports(domain_type, dom)
+            first_seen = get_domain_first_seen(domain_type, dom)
+            last_check = get_domain_last_check(domain_type, dom)
+            last_origin = get_domain_last_origin(domain_type, dom)
+            languages = get_domain_languages(dom)
+
+            domain = Domains.Domain(dom)
+            domain.update_daterange(first_seen)
+            domain.update_daterange(last_check)
+            domain._set_ports(ports)
+            if last_origin:
+                domain.set_last_origin(last_origin)
+            for language in languages:
+                print(language)
+                domain.add_language(language)
+            for tag in get_domain_tags(domain):
+                domain.add_tag(tag)
+            #print('------------------')
+            #print('------------------')
+            #print('------------------')
+            #print('------------------')
+            #print('------------------')
+            print(dom)
+            #print(first_seen)
+            #print(last_check)
+            #print(ports)
+
+            # # TODO: FIXME filter invalid hostname
+
+             # CREATE DOMAIN HISTORY
+            for port in ports:
+                for history in get_domain_history_by_port(domain_type, dom, port):
+                    epoch = history['epoch']
+                    # DOMAIN DOWN
+                    if not history.get('status'): # domain DOWN
+                        domain.add_history(epoch, port)
+                        print(f'DOWN {epoch}')
+                    # DOMAIN UP
+                    else:
+                        root_id = history.get('root')
+                        if root_id:
+                            domain.add_history(epoch, port, root_item=root_id)
+                            print(f'UP {root_id}')
+                            crawled_items = get_crawled_items(dom, root_id)
+                            for item_id in crawled_items:
+                                url = get_item_link(item_id)
+                                item_father = get_item_father(item_id)
+                                if item_father and url:
+                                    print(f'{url}    {item_id}')
+                                    domain.add_crawled_item(url, port, item_id, item_father)
+
+
+                    #print()
 
     for domain_type in ['onion', 'regular']:
         for date in Date.get_date_range_today('20190101'):
@@ -552,11 +551,11 @@ def domain_migration():
                 last_origin = get_domain_last_origin(domain_type, dom)
 
                 domain = Domains.Domain(dom)
-                # domain.update_daterange(first_seen)
-                # domain.update_daterange(last_check)
-                # if last_origin:
-                #     domain.set_last_origin(last_origin)
-                # domain.add_history(None, None, date=date)
+                domain.update_daterange(first_seen)
+                domain.update_daterange(last_check)
+                if last_origin:
+                    domain.set_last_origin(last_origin)
+                domain.add_history(None, None, date=date)
 
 
 ###############################
@@ -719,7 +718,10 @@ def get_top_stats_module(module_name, date):
     return r_serv_trend.zrange(f'top_{module_name}_set_{date}', 0, -1, withscores=True)
 
 def get_module_tld_stats_by_date(module, date):
-    return r_statistics.hgetall(f'{module}_by_tld:{date}')
+    return r_serv_trend.hgetall(f'{module}_by_tld:{date}')
+
+def get_iban_country_stats_by_date(date):
+    return r_serv_trend.hgetall(f'iban_by_country:{date}')
 
 def statistics_migration():
     # paste_by_modules_timeout
@@ -753,19 +755,24 @@ def statistics_migration():
 
 
 
-        # # MODULE STATS
-        # for module in ['credential', 'mail', 'SQLInjection']:
-        #     stats = get_module_tld_stats_by_date(module, date)
-        #     for tld in stats:
-        #         if tld:
-        #             print(module, date, tld, stats[tld])
-        #             Statistics.add_module_tld_stats_by_date(module, date, tld, stats[tld])
-        # for module in ['credential']:
-        #     # TOP STATS
-        #     top_module = get_top_stats_module(module, date)
-        #     for keyword, total_sum in top_module:
-        #         print(date, module, keyword, total_sum)
-        #         #Statistics._add_module_stats(module, total_sum, keyword, date)
+        # MODULE STATS
+        for module in ['credential', 'mail', 'SQLInjection']:
+            stats = get_module_tld_stats_by_date(module, date)
+            for tld in stats:
+                if tld:
+                    print(module, date, tld, stats[tld])
+                    Statistics.add_module_tld_stats_by_date(module, date, tld, stats[tld])
+        stats = get_iban_country_stats_by_date(date)
+        for tld in stats:
+            if tld:
+                print('iban', date, tld, stats[tld])
+                Statistics.add_module_tld_stats_by_date('iban', date, tld, stats[tld])
+        for module in ['credential']:
+            # TOP STATS
+            top_module = get_top_stats_module(module, date)
+            for keyword, total_sum in top_module:
+                print(date, module, keyword, total_sum)
+                Statistics._add_module_stats(module, total_sum, keyword, date)
 
 
 
@@ -781,17 +788,17 @@ def statistics_migration():
 if __name__ == '__main__':
 
     #core_migration()
-    # user_migration()
-    # tags_migration()
+    #user_migration()
+    #tags_migration()
     #items_migration()
     #crawler_migration()
-    # domain_migration()                      # TO TEST
+    # domain_migration()                      # TO TEST ###########################
     #decodeds_migration()
-    # screenshots_migration()
+    #screenshots_migration()
     #subtypes_obj_migration()
-    # ail_2_ail_migration()
-    # trackers_migration()
-    # investigations_migration()
+    ail_2_ail_migration()
+    trackers_migration()
+    investigations_migration()
     statistics_migration()
 
 

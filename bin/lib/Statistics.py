@@ -131,12 +131,5 @@ def get_module_tld_stats_by_date(module, date):
 def add_module_tld_stats_by_date(module, date, tld, nb):
     r_statistics.hincrby(f'{module}_by_tld:{date}', tld, int(nb))
 
-
-def get_iban_country_stats_by_date(date):
-    return r_statistics.hgetall(f'iban_by_country:{date}')
-
-def add_iban_country_stats_by_date(date, tld, nb):
-    r_statistics.hincrby(f'iban_by_country:{date}', tld, int(nb))
-
 # r_stats.zincrby('module:Global:incomplete_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
 # r_stats.zincrby('module:Global:invalid_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
