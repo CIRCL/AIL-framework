@@ -211,17 +211,25 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "CreditCards" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./CreditCards.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Cve.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Decoder" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Decoder.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Duplicates.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Iban" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Iban.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Keys" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Keys.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Onion" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Onion.py; read x"
+    screen -S "Script_AIL" -X screen -t "Languages" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Languages.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Mail.py; read x"
     sleep 0.1
     # screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
     # sleep 0.1
     screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ModuleStats.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Onion" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Onion.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Telegram" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Telegram.py; read x"
     sleep 0.1
@@ -267,21 +275,13 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mixer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Mixer.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Duplicates" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Duplicates.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "BankAccount" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./BankAccount.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "PgpDump" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./PgpDump.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Cryptocurrency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cryptocurrencies.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tools" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tools.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cve.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./MISP_The_Hive_feeder.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Languages" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Languages.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "IPAddress" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./IPAddress.py; read x"
 

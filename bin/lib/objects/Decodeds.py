@@ -16,13 +16,27 @@ from lib.item_basic import is_crawled, get_item_domain
 
 from packages import Date
 
+sys.path.append('../../configs/keys')
+try:
+    from virusTotalKEYS import vt_key
+    if vt_key != '':
+        VT_TOKEN = vt_key
+        VT_ENABLED = True
+        #print('VT submission is enabled')
+    else:
+        VT_ENABLED = False
+        #print('VT submission is disabled')
+except:
+    VT_TOKEN = None
+    VT_ENABLED = False
+    #print('VT submission is disabled')
+
 config_loader = ConfigLoader()
 r_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 
 r_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 HASH_DIR = config_loader.get_config_str('Directories', 'hash')
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
-VT_TOKEN = 'f1a6281c8a533172a45d901435452f67f5e61fd06a83dcc058f3f7b4aab66f5b'
 config_loader = None
 
 

@@ -52,6 +52,9 @@ class Item(AbstractObject):
     def __init__(self, id):
         super(Item, self).__init__('item', id)
 
+    def exists(self):
+        return os.path.isfile(self.get_filename())
+
     def get_date(self, separator=False):
         """
         Returns Item date
@@ -250,7 +253,7 @@ class Item(AbstractObject):
         meta['id'] = self.id
         meta['date'] = self.get_date(separator=True) ############################ # TODO:
         meta['source'] = self.get_source()
-        meta['tags'] = self.get_tags()
+        meta['tags'] = self.get_tags(r_list=True)
         # optional meta fields
         if 'content' in options:
             meta['content'] = self.get_content()
@@ -295,6 +298,22 @@ class Item(AbstractObject):
                 max_length = length
             nb_line += 1
         return {'nb': nb_line, 'max_length': max_length}
+
+    def get_languages(self, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
+        all_languages = []
+        ## CLEAN CONTENT ##
+        content = self.get_html2text_content(ignore_links=True)
+        content = remove_all_urls_from_content(self.id, item_content=content) ##########################################
+        # REMOVE USELESS SPACE
+        content = ' '.join(content.split())
+        #- CLEAN CONTENT -#
+        #print(content)
+        #print(len(content))
+        if len(content) >= min_len: # # TODO:  # FIXME: check num langs limit
+            for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
+                if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
+                    all_languages.append(lang)
+        return all_languages
 
     ############################################################################
     ############################################################################

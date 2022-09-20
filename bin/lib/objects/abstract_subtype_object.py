@@ -44,6 +44,9 @@ class AbstractSubtypeObject(AbstractObject):
         self.type = obj_type
         self.subtype = subtype
 
+    def exists(self):
+        return r_metadata.exists(f'{self.type}_metadata_{self.subtype}:{self.id}')
+
     def get_first_seen(self, r_int=False):
         first_seen = r_metadata.hget(f'{self.type}_metadata_{self.subtype}:{self.id}', 'first_seen')
         if r_int:

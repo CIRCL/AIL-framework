@@ -44,6 +44,9 @@ class Domain(AbstractObject):
         else:
             return 'regular'
 
+    def exists(self):
+        return r_onion.exists(f'{self.domain_type}_metadata:{self.id}')
+
     def get_first_seen(self, r_int=False, separator=True):
         first_seen = r_onion.hget(f'{self.domain_type}_metadata:{self.id}', 'first_seen')
         if first_seen:
@@ -160,7 +163,7 @@ class Domain(AbstractObject):
         meta['type'] = self.domain_type
         meta['first_seen'] = self.get_first_seen()
         meta['last_check'] = self.get_last_check()
-        meta['tags'] = self.get_tags()
+        meta['tags'] = self.get_tags(r_list=True)
         meta['ports'] = self.get_ports()
         meta['status'] = self.is_up(ports=meta['ports'])
 

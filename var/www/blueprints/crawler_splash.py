@@ -19,19 +19,27 @@ import Flask_config
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+
+
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
 import Tag
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import crawlers
-import Domain
-import Language
+
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import crawlers
+from lib import Language
+from lib.objects import Domains
+
+from lib import Domain # # # # # # # # # # # # # # # # TODO:
 
 #import Config_DB
-
-r_cache = Flask_config.r_cache
-r_serv_db = Flask_config.r_serv_db
-r_serv_tags = Flask_config.r_serv_tags
 bootstrap_label = Flask_config.bootstrap_label
 
 # ============ BLUEPRINT ============
@@ -145,19 +153,21 @@ def showDomain():
     if res:
         return res
 
-    domain = Domain.Domain(domain_name, port=port)
+    domain = Domains.Domain(domain_name)
+    dom = Domain.Domain(domain_name, port=port)
 
-    dict_domain = domain.get_domain_metadata()
+    dict_domain = dom.get_domain_metadata()
     dict_domain['domain'] = domain_name
-    if domain.domain_was_up():
-        dict_domain = {**dict_domain, **domain.get_domain_correlation()}
-        dict_domain['correlation_nb'] = Domain.get_domain_total_nb_correlation(dict_domain)
-        dict_domain['father'] = domain.get_domain_father()
-        dict_domain['languages'] = Language.get_languages_from_iso(domain.get_domain_languages(), sort=True)
-        dict_domain['tags'] = domain.get_domain_tags()
+    if dom.domain_was_up():
+        dict_domain = {**dict_domain, **domain.get_correlations()}
+        print(dict_domain)
+        dict_domain['correlation_nb'] = len(dict_domain['decoded']) + len(dict_domain['username']) + len(dict_domain['pgp']) + len(dict_domain['cryptocurrency']) + len(dict_domain['screenshot'])
+        dict_domain['father'] = dom.get_domain_father()
+        dict_domain['languages'] = Language.get_languages_from_iso(dom.get_domain_languages(), sort=True)
+        dict_domain['tags'] = dom.get_domain_tags()
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])
-        dict_domain['history'] = domain.get_domain_history_with_status()
-        dict_domain['crawler_history'] = domain.get_domain_items_crawled(items_link=True, epoch=epoch, item_screenshot=True, item_tag=True) # # TODO: handle multiple port
+        dict_domain['history'] = dom.get_domain_history_with_status()
+        dict_domain['crawler_history'] = dom.get_domain_items_crawled(items_link=True, epoch=epoch, item_screenshot=True, item_tag=True) # # TODO: handle multiple port
         if dict_domain['crawler_history'].get('items', []):
             dict_domain['crawler_history']['random_item'] = random.choice(dict_domain['crawler_history']['items'])
 

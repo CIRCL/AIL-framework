@@ -37,6 +37,16 @@ class AILObjects(object): ## ??????????????????????
 def is_valid_object_type(obj_type):
     return obj_type in get_all_objects()
 
+def sanitize_objs_types(objs):
+    l_types = []
+    print('sanitize')
+    print(objs)
+    print(get_all_objects())
+    for obj in objs:
+        if is_valid_object_type(obj):
+            l_types.append(obj)
+    return l_types
+
 def get_object(obj_type, subtype, id):
     if obj_type == 'item':
         return Item(id)
@@ -52,6 +62,10 @@ def get_object(obj_type, subtype, id):
         return Pgp(id, subtype)
     elif obj_type == 'username':
         return Username(id, subtype)
+
+def exists_obj(obj_type, subtype, id):
+    object = get_object(obj_type, subtype, id)
+    return object.exists()
 
 def get_object_link(obj_type, subtype, id, flask_context=False):
     object = get_object(obj_type, subtype, id)

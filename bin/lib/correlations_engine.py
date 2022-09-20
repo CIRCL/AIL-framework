@@ -99,7 +99,6 @@ def is_obj_correlated(obj_type, subtype, obj_id, obj2_type, subtype2, obj2_id):
     return r_metadata.sismember(f'correlation:obj:{obj_type}:{subtype}:{obj2_type}:{obj_id}', '{subtype2}:{obj2_id}')
 
 def add_obj_correlation(obj1_type, subtype1, obj1_id, obj2_type, subtype2, obj2_id):
-    print(obj1_type, subtype1, obj1_id, obj2_type, subtype2, obj2_id)
     if subtype1 is None:
         subtype1 = ''
     if subtype2 is None:
@@ -132,7 +131,7 @@ def get_correlations_graph_nodes_links(obj_type, subtype, obj_id, filter_types=[
 
     obj_str_id = get_obj_str_id(obj_type, subtype, obj_id)
 
-    _get_correlations_graph_node(links, nodes, obj_type, subtype, obj_id, level, max_nodes, filter_types=[], previous_str_obj='')
+    _get_correlations_graph_node(links, nodes, obj_type, subtype, obj_id, level, max_nodes, filter_types=filter_types, previous_str_obj='')
     return obj_str_id, nodes, links
 
 
@@ -140,8 +139,8 @@ def _get_correlations_graph_node(links, nodes, obj_type, subtype, obj_id, level,
     obj_str_id = get_obj_str_id(obj_type, subtype, obj_id)
     nodes.add(obj_str_id)
 
-    obj_correlations = get_correlations(obj_type, subtype, obj_id, filter_types=[])
-    print(obj_correlations)
+    obj_correlations = get_correlations(obj_type, subtype, obj_id, filter_types=filter_types)
+    #print(obj_correlations)
     for correl_type in obj_correlations:
         for str_obj in obj_correlations[correl_type]:
             subtype2, obj2_id = str_obj.split(':', 1)

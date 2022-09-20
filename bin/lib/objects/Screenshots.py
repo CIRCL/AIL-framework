@@ -36,6 +36,9 @@ class Screenshot(AbstractObject):
         # # TODO:
         pass
 
+    def exists(self):
+        return os.path.isfile(self.get_filepath())
+
     def get_link(self, flask_context=False):
         if flask_context:
             url = url_for('correlation.show_correlation', object_type=self.type, correlation_id=self.id)
@@ -76,21 +79,11 @@ class Screenshot(AbstractObject):
     def get_meta(self, options=set()):
         meta = {}
         meta['id'] = self.id
-        metadata_dict['img'] = get_screenshot_rel_path(sha256_string) ######### # TODO: Rename ME ??????
-        meta['tags'] = self.get_tags()
+        meta['img'] = get_screenshot_rel_path(self.id) ######### # TODO: Rename ME ??????
+        meta['tags'] = self.get_tags(r_list=True)
         # TODO: ADD IN ABSTRACT CLASS
         #meta['is_tags_safe'] = Tag.is_tags_safe(metadata_dict['tags']) ################## # TODO: ADD IN ABSZTRACT CLASS
         return meta
-
-    ############################################################################
-    ############################################################################
-    ############################################################################
-
-    def exist_correlation(self):
-        pass
-
-    ############################################################################
-    ############################################################################
 
 def get_screenshot_dir():
     return SCREENSHOT_FOLDER

@@ -65,10 +65,10 @@ class AbstractObject(ABC):
         return dict_meta
 
     ## Tags ##
-    def get_tags(self, r_set=False):
+    def get_tags(self, r_list=False):
         tags = Tag.get_object_tags(self.type, self.id, self.get_subtype(r_str=True))
-        if r_set:
-            tags = set(tags)
+        if r_list:
+            tags = list(tags)
         return tags
 
     def get_duplicates(self):
@@ -133,6 +133,13 @@ class AbstractObject(ABC):
     def delete(self):
         """
         Delete Object: used for the Data Retention
+        """
+        pass
+
+    @abstractmethod
+    def exists(self):
+        """
+        Exists Object
         """
         pass
 

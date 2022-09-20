@@ -26,7 +26,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects import ail_objects
 
-
 ################################################################################
 
 
@@ -178,7 +177,7 @@ def show_correlation():
             correlation_objects.append('domain')
         correl_option = request.form.get('PasteCheck')
         if correl_option:
-            correlation_objects.append('paste')
+            correlation_objects.append('item')
 
         # list as params
         correlation_names = ",".join(correlation_names)
@@ -198,8 +197,8 @@ def show_correlation():
 
         expand_card = request.args.get('expand_card')
 
-        correlation_names = sanitise_correlation_names(request.args.get('correlation_names'))
-        correlation_objects = sanitise_correlation_objects(request.args.get('correlation_objects'))
+        correlation_names = ail_objects.sanitize_objs_types(request.args.get('correlation_names', '').split(','))
+        correlation_objects = ail_objects.sanitize_objs_types(request.args.get('correlation_objects', '').split(','))
 
         # # TODO: remove me, rename screenshot to image
         if object_type == 'image':
@@ -244,11 +243,11 @@ def get_description():
 
     # check if correlation_id exist
     # # TODO: return error json
-    if not Correlate_object.exist_object(object_type, correlation_id, type_id=type_id):
+    if not ail_objects.exists_obj(object_type, type_id, correlation_id):
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # oject exist
     else:
-        res = Correlate_object.get_object_metadata(object_type, correlation_id, type_id=type_id)
+        res = ail_objects.get_object_meta(object_type, type_id, correlation_id, flask_context=True)
         return jsonify(res)
 
 @correlation.route('/correlation/graph_node_json')
@@ -260,8 +259,8 @@ def graph_node_json():
     obj_type = request.args.get('object_type') #######################
     max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
 
-    correlation_names = sanitise_correlation_names(request.args.get('correlation_names'))
-    correlation_objects = sanitise_correlation_objects(request.args.get('correlation_objects'))
+    correlation_names = ail_objects.sanitize_objs_types(request.args.get('correlation_names', '').split(','))
+    correlation_objects = ail_objects.sanitize_objs_types(request.args.get('correlation_objects', '').split(','))
 
     # # TODO: remove me, rename screenshot
     if obj_type == 'image':

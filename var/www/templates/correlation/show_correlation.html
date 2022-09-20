@@ -179,8 +179,8 @@
 												  <label class="form-check-label" for="DomainCheck">Domain</label>
 												</div>
 												<div class="form-check">
-												  <input class="form-check-input" type="checkbox" value="True" id="PasteCheck" name="PasteCheck" {%if "paste" in dict_object["correlation_objects"]%}checked{%endif%}>
-												  <label class="form-check-label" for="PasteCheck">Paste</label>
+												  <input class="form-check-input" type="checkbox" value="True" id="PasteCheck" name="PasteCheck" {%if "item" in dict_object["correlation_objects"]%}checked{%endif%}>
+												  <label class="form-check-label" for="PasteCheck">Item</label>
 												</div>
 
 												</li>
@@ -495,7 +495,7 @@ if (d.popover) {
 								desc = desc + "fa-times-circle\"></i>DOWN"
 							}
 							desc = desc + "</div></dd>"
-						} else if (key!="tags" && key!="id" && key!="img") {
+						} else if (key!="tags" && key!="id" && key!="img" && key!="icon" && key!="link" && key!="type") {
 							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
 						}
 					});
