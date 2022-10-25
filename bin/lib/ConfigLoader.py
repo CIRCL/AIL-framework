@@ -35,17 +35,17 @@ class ConfigLoader(object):
         else:
             self.cfg.read(default_config_file)
 
-    def get_redis_conn(self, redis_name, decode_responses=True): ## TODO: verify redis name
-        return redis.StrictRedis( host=self.cfg.get(redis_name, "host"),
+    def get_redis_conn(self, redis_name, decode_responses=True):
+        return redis.StrictRedis(host=self.cfg.get(redis_name, "host"),
                                   port=self.cfg.getint(redis_name, "port"),
                                   db=self.cfg.getint(redis_name, "db"),
-                                  decode_responses=decode_responses )
+                                  decode_responses=decode_responses)
 
-    def get_db_conn(self, db_name, decode_responses=True): ## TODO: verify redis name
-        return redis.StrictRedis( host=self.cfg.get(db_name, "host"),
+    def get_db_conn(self, db_name, decode_responses=True):
+        return redis.StrictRedis(host=self.cfg.get(db_name, "host"),
                                   port=self.cfg.getint(db_name, "port"),
                                   password=self.cfg.get(db_name, "password"),
-                                  decode_responses=decode_responses )
+                                  decode_responses=decode_responses)
 
     def get_files_directory(self, key_name):
         directory_path = self.cfg.get('Directories', key_name)
@@ -79,3 +79,33 @@ class ConfigLoader(object):
             return all_keys_values
         else:
             return []
+
+# # # # Directory Config # # # #
+
+config_loader = ConfigLoader()
+ITEMS_FOLDER = config_loader.get_config_str("Directories", "pastes")
+if ITEMS_FOLDER == 'PASTES':
+    ITEMS_FOLDER = os.path.join(os.environ['AIL_HOME'], ITEMS_FOLDER)
+ITEMS_FOLDER = ITEMS_FOLDER + '/'
+ITEMS_FOLDER = os.path.join(os.path.realpath(ITEMS_FOLDER), '')
+
+HARS_DIR = config_loader.get_files_directory('har')
+if HARS_DIR == 'CRAWLED_SCREENSHOT':
+    HARS_DIR = os.path.join(os.environ['AIL_HOME'], HARS_DIR)
+
+SCREENSHOTS_FOLDER = config_loader.get_files_directory('screenshot')
+if SCREENSHOTS_FOLDER == 'CRAWLED_SCREENSHOT/screenshot':
+    SCREENSHOTS_FOLDER = os.path.join(os.environ['AIL_HOME'], SCREENSHOTS_FOLDER)
+config_loader = None
+
+def get_hars_dir():
+    return HARS_DIR
+
+def get_items_dir():
+    return ITEMS_FOLDER
+
+def get_screenshots_dir():
+    return SCREENSHOTS_FOLDER
+
+
+

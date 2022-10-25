@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 import time
-from packages import Paste
+from lib.objects.Items import Item
 from pubsublogger import publisher
 from Helper import Process
 import re
@@ -45,8 +45,8 @@ if __name__ == "__main__":
             time.sleep(10)
             continue
 
-        paste = Paste.Paste(filepath)
-        content = paste.get_p_content()
+        item = Item(filepath)
+        content = item.get_content()
 
         #signal.alarm(max_execution_time)
         try:
@@ -54,16 +54,16 @@ if __name__ == "__main__":
             if len(releases) == 0:
                 continue
 
-                to_print = 'Release;{};{};{};{} releases;{}'.format(paste.p_source, paste.p_date, paste.p_name, len(releases), paste.p_rel_path)
-                print(to_print)
-                if len(releases) > 30:
-                    publisher.warning(to_print)
-                else:
-                    publisher.info(to_print)
+            to_print = f'Release;{item.get_source()};{item.get_date()};{item.get_basename()};{len(releases)} releases;{item.get_id()}'
+            print(to_print)
+            if len(releases) > 30:
+                publisher.warning(to_print)
+            else:
+                publisher.info(to_print)
 
         except TimeoutException:
             p.incr_module_timeout_statistic()
-            print ("{0} processing timeout".format(paste.p_rel_path))
+            print(f"{item.get_id()} processing timeout")
             continue
         else:
             signal.alarm(0)

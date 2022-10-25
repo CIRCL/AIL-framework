@@ -25,12 +25,11 @@ class ModuleStats(AbstractModule):
     Module Statistics module for AIL framework
     """
 
-
     def __init__(self):
 
         super(ModuleStats, self).__init__()
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 20
 
     def compute(self, message):
@@ -38,9 +37,10 @@ class ModuleStats(AbstractModule):
         # MODULE STATS
         if len(message.split(';')) > 1:
             module_name, num, keyword, date = message.split(';')
-            Statisticsupdate_module_stats(module_name, num, keyword, date)
+            Statistics.update_module_stats(module_name, num, keyword, date)
         # ITEM STATS
         else:
+            item_id = message
             item = Item(item_id)
             source = item.get_source()
             date = item.get_date()

@@ -20,6 +20,8 @@ from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
 
+from packages import Date
+
 # LOAD CONFIG
 config_loader = ConfigLoader()
 r_metadata = config_loader.get_redis_conn("ARDB_Metadata")
@@ -115,6 +117,11 @@ class AbstractSubtypeObject(AbstractObject):
             if date > last_seen:
                 self.set_last_seen(date)
 
+    def get_sparkline(self):
+        sparkline = []
+        for date in Date.get_previous_date_list(6):
+            sparkline.append(self.get_nb_seen_by_date(date))
+        return sparkline
 #
 # HANDLE Others objects ????
 #

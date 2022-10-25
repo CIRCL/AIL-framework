@@ -6,11 +6,13 @@
 '''
 
 import os
-import sys
 import json
 import random
+import sys
+import time
+from datetime import datetime
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, make_response
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
@@ -18,15 +20,6 @@ import Flask_config
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
-
-sys.path.append(os.environ['AIL_BIN'])
-##################################
-# Import Project packages
-##################################
-
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Tag
 
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -36,6 +29,10 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import crawlers
 from lib import Language
 from lib.objects import Domains
+from lib.objects.Items import Item
+from lib import Tag
+
+from packages import Date
 
 from lib import Domain # # # # # # # # # # # # # # # # TODO:
 
@@ -50,9 +47,9 @@ crawler_splash = Blueprint('crawler_splash', __name__, template_folder=os.path.j
 
 
 # ============ FUNCTIONS ============
-def api_validator(api_response):
-    if api_response:
-        return Response(json.dumps(api_response[0], indent=2, sort_keys=True), mimetype='application/json'), api_response[1]
+def api_validator(message, code):
+    if message and code:
+        return Response(json.dumps(message, indent=2, sort_keys=True), mimetype='application/json'), code
 
 def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
@@ -62,26 +59,26 @@ def create_json_response(data, status_code):
 @login_required
 @login_read_only
 def crawlers_dashboard():
-    # # TODO:  get splash manager status
-    is_manager_connected = crawlers.get_splash_manager_connection_metadata()
-    all_splash_crawler_status = crawlers.get_all_spash_crawler_status()
-    splash_crawlers_latest_stats = crawlers.get_splash_crawler_latest_stats()
+    is_manager_connected = crawlers.get_lacus_connection_metadata()
+    crawlers_status = crawlers.get_crawler_capture_status()
+    print(crawlers_status)
+    crawlers_latest_stats = crawlers.get_crawlers_stats()
+    print(crawlers_latest_stats)
     date = crawlers.get_current_date()
-
-    return render_template("dashboard_splash_crawler.html", all_splash_crawler_status = all_splash_crawler_status,
-                                is_manager_connected=is_manager_connected, date=date,
-                                splash_crawlers_latest_stats=splash_crawlers_latest_stats)
+    return render_template("dashboard_crawler.html", date=date,
+                           is_manager_connected=is_manager_connected,
+                           crawlers_status=crawlers_status,
+                           crawlers_latest_stats=crawlers_latest_stats)
 
 @crawler_splash.route("/crawlers/crawler_dashboard_json", methods=['GET'])
 @login_required
 @login_read_only
 def crawler_dashboard_json():
+    crawlers_status = crawlers.get_crawler_capture_status()
+    crawlers_latest_stats = crawlers.get_crawlers_stats()
 
-    all_splash_crawler_status = crawlers.get_all_spash_crawler_status()
-    splash_crawlers_latest_stats = crawlers.get_splash_crawler_latest_stats()
-
-    return jsonify({'all_splash_crawler_status': all_splash_crawler_status,
-                        'splash_crawlers_latest_stats':splash_crawlers_latest_stats})
+    return jsonify({'crawlers_status': crawlers_status,
+                    'stats': crawlers_latest_stats})
 
 @crawler_splash.route("/crawlers/manual", methods=['GET'])
 @login_required
@@ -89,12 +86,12 @@ def crawler_dashboard_json():
 def manual():
     user_id = current_user.get_id()
     l_cookiejar = crawlers.api_get_cookies_list_select(user_id)
-    all_crawlers_types = crawlers.get_all_crawlers_queues_types()
-    all_splash_name = crawlers.get_all_crawlers_to_launch_splash_name()
+    crawlers_types = crawlers.get_crawler_all_types()
+    proxies = []  # TODO HANDLE PROXIES
     return render_template("crawler_manual.html",
-                                is_manager_connected=crawlers.get_splash_manager_connection_metadata(),
-                                all_crawlers_types=all_crawlers_types,
-                                all_splash_name=all_splash_name,
+                                is_manager_connected=crawlers.get_lacus_connection_metadata(),
+                                crawlers_types=crawlers_types,
+                                proxies=proxies,
                                 l_cookiejar=l_cookiejar)
 
 @crawler_splash.route("/crawlers/send_to_spider", methods=['POST'])
@@ -106,17 +103,16 @@ def send_to_spider():
     # POST val
     url = request.form.get('url_to_crawl')
     crawler_type = request.form.get('crawler_queue_type')
-    splash_name = request.form.get('splash_name')
-    auto_crawler = request.form.get('crawler_type')
-    crawler_delta = request.form.get('crawler_epoch')
+    proxy = request.form.get('proxy_name')
+    auto_crawler = request.form.get('crawler_type')    # TODO Auto Crawler
+    crawler_delta = request.form.get('crawler_epoch')  # TODO Auto Crawler
     screenshot = request.form.get('screenshot')
     har = request.form.get('har')
     depth_limit = request.form.get('depth_limit')
-    max_pages = request.form.get('max_pages')
     cookiejar_uuid = request.form.get('cookiejar')
 
-    if splash_name:
-        crawler_type = splash_name
+    if crawler_type == 'onion':
+        proxy = 'force_tor'
 
     if cookiejar_uuid:
         if cookiejar_uuid == 'None':
@@ -125,13 +121,55 @@ def send_to_spider():
             cookiejar_uuid = cookiejar_uuid.rsplit(':')
             cookiejar_uuid = cookiejar_uuid[-1].replace(' ', '')
 
-    res = crawlers.api_create_crawler_task(user_id, url, screenshot=screenshot, har=har, depth_limit=depth_limit, max_pages=max_pages,
-                                                    crawler_type=crawler_type,
-                                                    auto_crawler=auto_crawler, crawler_delta=crawler_delta, cookiejar_uuid=cookiejar_uuid)
-    if res:
+    data = {'url': url, 'depth': depth_limit, 'har': har, 'screenshot': screenshot}
+    if proxy:
+        data['proxy'] = proxy
+    if cookiejar_uuid:
+        data['cookiejar'] = cookiejar_uuid
+    res = crawlers.api_add_crawler_task(data, user_id=user_id)
+
+    if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.manual'))
 
+@crawler_splash.route("/crawlers/last/domains", methods=['GET'])
+@login_required
+@login_read_only
+def crawlers_last_domains():
+    domain_type = request.args.get('type')
+    if domain_type not in crawlers.get_crawler_all_types():
+        return jsonify({'error': 'Invalid domain type'}), 400
+
+    # TODO STAT by EPOCH
+    domains = []
+    for domain_row in crawlers.get_last_crawled_domains(domain_type):
+        domain, epoch = domain_row.split(':', 1)
+        dom = Domains.Domain(domain)
+        meta = dom.get_meta()
+        meta['epoch'] = epoch
+        meta['status_epoch'] = dom.is_up_by_epoch(epoch)
+        domains.append(meta)
+    crawler_stats = crawlers.get_crawlers_stats(domain_type=domain_type)
+
+    now = datetime.now()
+    date = now.strftime("%Y%m%d")
+    date_string = '{}-{}-{}'.format(date[0:4], date[4:6], date[6:8])
+    return render_template("last_crawled.html", domains=domains, type=domain_type,
+                           is_manager_connected=crawlers.get_lacus_connection_metadata(),
+                           date_from=date_string, date_to=date_string,
+                           crawler_stats=crawler_stats)
+
+@crawler_splash.route('/crawlers/last/domains/json')
+@login_required
+@login_read_only
+def crawlers_last_domains_json():
+    domain_type = request.args.get('type')
+    if domain_type not in crawlers.get_crawler_all_types():
+        return jsonify({'error': 'Invalid domain type'}), 400
+    stats = []
+    for date in Date.get_date_range(7):
+        stats.append(crawlers.get_crawlers_stats_by_day(date, domain_type))
+    return jsonify(stats)
 
 #### Domains ####
 
@@ -143,36 +181,69 @@ def showDomain():
     if request.method == 'POST':
         domain_name = request.form.get('in_show_domain')
         epoch = None
-        port = None
     else:
         domain_name = request.args.get('domain')
         epoch = request.args.get('epoch')
-        port = request.args.get('port')
-
-    res = api_validator(Domain.api_verify_if_domain_exist(domain_name))
-    if res:
-        return res
+        try:
+            epoch = int(epoch)
+        except (ValueError, TypeError):
+            epoch = None
 
     domain = Domains.Domain(domain_name)
-    dom = Domain.Domain(domain_name, port=port)
+    if not domain.exists():
+        abort(404)
 
-    dict_domain = dom.get_domain_metadata()
-    dict_domain['domain'] = domain_name
-    if dom.domain_was_up():
+    dict_domain = domain.get_meta(options=['last_origin', 'languages'])
+    dict_domain['domain'] = domain.id
+    if domain.was_up():
         dict_domain = {**dict_domain, **domain.get_correlations()}
-        print(dict_domain)
         dict_domain['correlation_nb'] = len(dict_domain['decoded']) + len(dict_domain['username']) + len(dict_domain['pgp']) + len(dict_domain['cryptocurrency']) + len(dict_domain['screenshot'])
-        dict_domain['father'] = dom.get_domain_father()
-        dict_domain['languages'] = Language.get_languages_from_iso(dom.get_domain_languages(), sort=True)
-        dict_domain['tags'] = dom.get_domain_tags()
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])
-        dict_domain['history'] = dom.get_domain_history_with_status()
-        dict_domain['crawler_history'] = dom.get_domain_items_crawled(items_link=True, epoch=epoch, item_screenshot=True, item_tag=True) # # TODO: handle multiple port
-        if dict_domain['crawler_history'].get('items', []):
-            dict_domain['crawler_history']['random_item'] = random.choice(dict_domain['crawler_history']['items'])
+        dict_domain['history'] = domain.get_history(status=True)
+        curr_epoch = None
+        # Select valid epoch
+        if epoch:
+            for row in dict_domain['history']:
+                if row['epoch'] == epoch:
+                    curr_epoch = row['epoch']
+                    break
+        else:
+            curr_epoch = -1
+            for row in dict_domain['history']:
+                if row['epoch'] > curr_epoch:
+                    curr_epoch = row['epoch']
+        dict_domain['epoch'] = curr_epoch
+        dict_domain["date"] = time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(curr_epoch))
 
-    return render_template("showDomain.html", dict_domain=dict_domain, bootstrap_label=bootstrap_label,
-                                modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], object_type="domain"))
+        print(dict_domain['epoch'])
+
+        dict_domain['crawler_history_items'] = []
+        for item_id in domain.get_crawled_items_by_epoch(epoch):
+            dict_domain['crawler_history_items'].append(Item(item_id).get_meta(options=['crawler']))
+        if dict_domain['crawler_history_items']:
+            dict_domain['random_item'] = random.choice(dict_domain['crawler_history_items'])
+
+    return render_template("showDomain.html",
+                           dict_domain=dict_domain, bootstrap_label=bootstrap_label,
+                           modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], object_type="domain"))
+
+@crawler_splash.route('/crawlers/domain/download', methods=['GET'])
+@login_required
+@login_read_only
+def crawlers_domain_download():
+    domain = request.args.get('domain')
+    epoch = request.args.get('epoch')
+    try:
+        epoch = int(epoch)
+    except (ValueError, TypeError):
+        epoch = None
+    dom = Domains.Domain(domain)
+    if not dom.exists():
+        abort(404)
+    zip_file = dom.get_download_zip(epoch=epoch)
+    if not zip_file:
+        abort(404)
+    return send_file(zip_file, download_name=f'{dom.get_id()}.zip', as_attachment=True)
 
 @crawler_splash.route('/domains/explorer/domain_type_post', methods=['POST'])
 @login_required
@@ -304,13 +375,36 @@ def domains_search_name():
                                 l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
                                 domains_types=domains_types)
 
-@crawler_splash.route('/domains/TODO', methods=['GET'])
+@crawler_splash.route('/domains/date', methods=['GET'])
 @login_required
 @login_analyst
-def domains_todo():
+def domains_search_date():
+    # TODO sanitize type + date
     domain_type = request.args.get('type')
-    last_domains = Domain.get_last_crawled_domains(domain_type)
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    # page = request.args.get('page')
 
+    date = Date.sanitise_date_range(date_from, date_to)
+    domains_date = Domains.get_domains_by_daterange(date['date_from'], date['date_to'], domain_type)
+    dict_domains = {}
+    for d in domains_date:
+        dict_domains[d] = Domains.get_domains_meta(domains_date[d])
+    date_from = f"{date['date_from'][0:4]}-{date['date_from'][4:6]}-{date['date_from'][6:8]}"
+    date_to = f"{date['date_to'][0:4]}-{date['date_to'][4:6]}-{date['date_to'][6:8]}"
+
+    return render_template("domains_daterange.html", date_from=date_from, date_to=date_to,
+                           bootstrap_label=bootstrap_label,
+                           dict_domains=dict_domains, type=domain_type)
+
+@crawler_splash.route('/domains/date/post', methods=['POST'])
+@login_required
+@login_analyst
+def domains_search_date_post():
+    domain_type = request.form.get('type')
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    return redirect(url_for('crawler_splash.domains_search_date', date_from=date_from, date_to=date_to, type=domain_type))
 
 
 ##--  --##
@@ -521,49 +615,8 @@ def crawler_cookiejar_cookie_json_add_post():
 
     return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', cookiejar_uuid=cookiejar_uuid))
 
-@crawler_splash.route('/crawler/settings', methods=['GET'])
-@login_required
-@login_analyst
-def crawler_splash_setings():
-    all_proxies = crawlers.get_all_proxies_metadata()
-    all_splash = crawlers.get_all_splash_crawler_metadata()
-    splash_manager_url = crawlers.get_splash_manager_url()
-    api_key = crawlers.get_hidden_splash_api_key()
-    is_manager_connected = crawlers.get_splash_manager_connection_metadata(force_ping=True)
+#--- Cookiejar ---#
 
-    nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch()
-    #crawler_full_config = Config_DB.get_full_config_by_section('crawler')
-    is_crawler_working = crawlers.is_test_ail_crawlers_successful()
-    crawler_error_mess = crawlers.get_test_ail_crawlers_message()
-
-    return render_template("settings_splash_crawler.html",
-                                is_manager_connected=is_manager_connected,
-                                splash_manager_url=splash_manager_url, api_key=api_key,
-                                all_splash=all_splash, all_proxies=all_proxies,
-                                nb_crawlers_to_launch=nb_crawlers_to_launch,
-                                is_crawler_working=is_crawler_working,
-                                crawler_error_mess=crawler_error_mess,
-                                #crawler_full_config=crawler_full_config
-                                )
-
-@crawler_splash.route('/crawler/settings/crawler_manager', methods=['GET', 'POST'])
-@login_required
-@login_admin
-def crawler_splash_setings_crawler_manager():
-    if request.method == 'POST':
-        splash_manager_url = request.form.get('splash_manager_url')
-        api_key = request.form.get('api_key')
-
-        res = crawlers.api_save_splash_manager_url_api({'url':splash_manager_url, 'api_key':api_key})
-        if res[1] != 200:
-            return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
-        else:
-            return redirect(url_for('crawler_splash.crawler_splash_setings'))
-    else:
-        splash_manager_url = crawlers.get_splash_manager_url()
-        api_key = crawlers.get_splash_api_key()
-        return render_template("settings_edit_splash_crawler_manager.html",
-                                    splash_manager_url=splash_manager_url, api_key=api_key)
 
 @crawler_splash.route('/crawler/settings/crawlers_to_lauch', methods=['GET', 'POST'])
 @login_required
@@ -583,13 +636,6 @@ def crawler_splash_setings_crawlers_to_lauch():
         return render_template("settings_edit_crawlers_to_launch.html",
                                     nb_crawlers_to_launch=nb_crawlers_to_launch)
 
-@crawler_splash.route('/crawler/settings/test_crawler', methods=['GET'])
-@login_required
-@login_admin
-def crawler_splash_setings_test_crawler():
-    crawlers.test_ail_crawlers()
-    return redirect(url_for('crawler_splash.crawler_splash_setings'))
-
 @crawler_splash.route('/crawler/settings/relaunch_crawler', methods=['GET'])
 @login_required
 @login_admin
@@ -598,3 +644,59 @@ def crawler_splash_setings_relaunch_crawler():
     return redirect(url_for('crawler_splash.crawler_splash_setings'))
 
 ##  - -  ##
+
+#### LACUS ####
+
+@crawler_splash.route('/crawler/settings', methods=['GET'])
+@login_required
+@login_analyst
+def crawler_settings():
+    lacus_url = crawlers.get_lacus_url()
+    api_key = crawlers.get_hidden_lacus_api_key()
+
+    is_manager_connected = crawlers.get_lacus_connection_metadata(force_ping=True)
+    is_crawler_working = crawlers.is_test_ail_crawlers_successful()
+    crawler_error_mess = crawlers.get_test_ail_crawlers_message()
+
+    # TODO REGISTER PROXY
+    # all_proxies = crawlers.get_all_proxies_metadata()
+
+    # nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch()
+    # crawler_full_config = Config_DB.get_full_config_by_section('crawler')
+
+    return render_template("settings_crawler.html",
+                                is_manager_connected=is_manager_connected,
+                                lacus_url=lacus_url, api_key=api_key,
+                                #all_proxies=all_proxies,
+                                #nb_crawlers_to_launch=nb_crawlers_to_launch,
+                                is_crawler_working=is_crawler_working,
+                                crawler_error_mess=crawler_error_mess,
+                                )
+
+@crawler_splash.route('/crawler/settings/crawler/manager', methods=['GET', 'POST'])
+@login_required
+@login_admin
+def crawler_lacus_settings_crawler_manager():
+    if request.method == 'POST':
+        lacus_url = request.form.get('lacus_url')
+        api_key = request.form.get('api_key')
+
+        res = crawlers.api_save_lacus_url_key({'url': lacus_url, 'api_key': api_key})
+        print(res)
+        if res[1] != 200:
+            return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+        else:
+            return redirect(url_for('crawler_splash.crawler_settings'))
+    else:
+        lacus_url = crawlers.get_lacus_url()
+        api_key = crawlers.get_lacus_api_key()
+        return render_template("settings_edit_lacus_crawler.html", lacus_url=lacus_url, api_key=api_key)
+
+@crawler_splash.route('/crawler/settings/crawler/test', methods=['GET'])
+@login_required
+@login_admin
+def crawler_settings_crawler_test():
+    crawlers.test_ail_crawlers()
+    return redirect(url_for('crawler_splash.crawler_settings'))
+
+#--- LACUS ---#

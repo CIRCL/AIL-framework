@@ -26,7 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
+from lib.objects.Items import Item
 
 
 class Indexer(AbstractModule):
@@ -57,9 +57,7 @@ class Indexer(AbstractModule):
         self.ix = None
 
         if self.indexertype == "whoosh":
-            self.schema = Schema(title=TEXT(stored=True), path=ID(stored=True,
-                                                             unique=True),
-                            content=TEXT)
+            self.schema = Schema(title=TEXT(stored=True), path=ID(stored=True, unique=True), content=TEXT)
             if not os.path.exists(self.baseindexpath):
                 os.mkdir(self.baseindexpath)
 
@@ -96,7 +94,6 @@ class Indexer(AbstractModule):
 
             self.last_refresh = time_now
 
-
     def compute(self, message):
         docpath = message.split(" ", -1)[-1]
 
@@ -109,7 +106,7 @@ class Indexer(AbstractModule):
 
         try:
             # Avoid calculating the index's size at each message
-            if(time.time() - self.last_refresh > self.TIME_WAIT):
+            if time.time() - self.last_refresh > self.TIME_WAIT:
                 self.last_refresh = time.time()
                 if self.check_index_size() >= self.INDEX_SIZE_THRESHOLD*(1000*1000):
                     timestamp = int(time.time())
@@ -145,9 +142,7 @@ class Indexer(AbstractModule):
         cur_sum = 0
         for root, dirs, files in os.walk(the_index_name):
             cur_sum += sum(getsize(join(root, name)) for name in files)
-
         return cur_sum
-
 
     def move_index_into_old_index_folder(self):
         for cur_file in os.listdir(self.baseindexpath):

@@ -22,7 +22,7 @@ def get_ail_uuid():
 
 # # TODO: check change paste => item
 def get_all_objects():
-    return ['domain', 'item', 'pgp', 'cryptocurrency', 'decoded', 'screenshot', 'username']
+    return ['cve', 'domain', 'item', 'pgp', 'cryptocurrency', 'decoded', 'screenshot', 'username']
 
 def get_object_all_subtypes(obj_type):
     if obj_type == 'cryptocurrency':

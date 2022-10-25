@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-from packages import Paste
+from lib.objects.Items import Item
 from Helper import Process
 
 import os
@@ -12,11 +12,13 @@ import configparser
 
 from collections import defaultdict
 
+# TODO FIX ME OR REMOVE ME
+
 def get_dict_cve(list_paste_cve, only_one_same_cve_by_paste=False):
     dict_keyword = {}
 
     for paste_cve in list_paste_cve:
-        paste_content = Paste.Paste(paste_cve).get_p_content()
+        paste_content = Item(paste_cve).get_content()
 
         cve_list = reg_cve.findall(paste_content)
         if only_one_same_cve_by_paste:

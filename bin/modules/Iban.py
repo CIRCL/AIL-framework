@@ -34,7 +34,7 @@ class Iban(AbstractModule):
     """
 
     _LETTERS_IBAN = chain(enumerate(string.digits + string.ascii_uppercase),
-                     enumerate(string.ascii_lowercase, 10))
+                          enumerate(string.ascii_lowercase, 10))
     LETTERS_IBAN = {ord(d): str(i) for i, d in _LETTERS_IBAN}
 
     def __init__(self):
@@ -44,7 +44,7 @@ class Iban(AbstractModule):
         self.pending_seconds = 10
 
         self.regex_timeout = 30
-        #iban_regex = re.compile(r'\b[A-Za-z]{2}[0-9]{2}(?:[ ]?[0-9]{4}){4}(?:[ ]?[0-9]{1,2})?\b')
+        # iban_regex = re.compile(r'\b[A-Za-z]{2}[0-9]{2}(?:[ ]?[0-9]{4}){4}(?:[ ]?[0-9]{1,2})?\b')
         self.iban_regex = re.compile(r'\b([A-Za-z]{2}[ \-]?[0-9]{2})(?=(?:[ \-]?[A-Za-z0-9]){9,30})((?:[ \-]?[A-Za-z0-9]{3,5}){2,6})([ \-]?[A-Za-z0-9]{1,3})\b')
         self.iban_regex_verify = re.compile(r'^([A-Z]{2})([0-9]{2})([A-Z0-9]{9,30})$')
 
@@ -89,6 +89,7 @@ class Iban(AbstractModule):
                 # Tags
                 msg = f'infoleak:automatic-detection="iban";{item_id}'
                 self.send_message_to_queue(msg, 'Tags')
+
 
 if __name__ == '__main__':
 

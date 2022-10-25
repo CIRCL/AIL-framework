@@ -40,7 +40,6 @@ is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
 is_ail_2_ail=`screen -ls | egrep '[0-9]+.AIL_2_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
 isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
-iscrawler=`screen -ls | egrep '[0-9]+.Crawler_AIL' | cut -d. -f1`
 isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
 
 function helptext {
@@ -126,6 +125,8 @@ function launching_logs {
     screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Script -l ../logs/; read x"
     sleep 0.1
     screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Sync -l ../logs/; read x"
+    sleep 0.1
+    screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Crawler -l ../logs/; read x"
 }
 
 function launching_queues {
@@ -174,8 +175,6 @@ function launching_scripts {
 
     screen -S "Script_AIL" -X screen -t "JSON_importer" bash -c "cd ${AIL_BIN}/import; ${ENV_PY} ./JSON_importer.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Crawler_manager" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Crawler_manager.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "DbCleaner" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./DbCleaner.py; read x"
@@ -202,6 +201,9 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./submit_paste.py; read x"
     sleep 0.1
 
+    screen -S "Script_AIL" -X screen -t "Crawler" bash -c "cd ${AIL_BIN}/crawlers; ${ENV_PY} ./Crawler.py; read x"
+    sleep 0.1
+
     screen -S "Script_AIL" -X screen -t "Sync_module" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_module.py; read x"
     sleep 0.1
 
@@ -225,8 +227,6 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Mail.py; read x"
     sleep 0.1
-    # screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
-    # sleep 0.1
     screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ModuleStats.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Onion" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Onion.py; read x"
@@ -265,8 +265,12 @@ function launching_scripts {
     ##################################
     #       DISABLED MODULES         #
     ##################################
-    #screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Phone.py; read x"
-    #sleep 0.1
+    # screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Phone.py; read x"
+    # sleep 0.1
+    # screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
+    # sleep 0.1
+    # screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
+    # sleep 0.1
 
     ##################################
     #                                #
@@ -285,8 +289,6 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "IPAddress" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./IPAddress.py; read x"
 
-    #screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
-    #sleep 0.1
 
 }
 
@@ -476,19 +478,19 @@ function launch_feeder {
 }
 
 function killscript {
-    if [[ $islogged || $isqueued || $is_ail_core || $isscripted || $isflasked || $isfeeded || $iscrawler || $is_ail_2_ail ]]; then
+    if [[ $islogged || $isqueued || $is_ail_core || $isscripted || $isflasked || $isfeeded || $is_ail_2_ail ]]; then
         echo -e $GREEN"Killing Script"$DEFAULT
-        kill $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail
+        kill $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail killed."$DEFAULT
+        echo -e $GREEN"\t* $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail killed."$DEFAULT
     else
         echo -e $RED"\t* No script to kill"$DEFAULT
     fi
 }
 
 function killall {
-    if [[ $isredis || $isardb || $iskvrocks || $islogged || $isqueued || $is_ail_2_ail || $isscripted || $isflasked || $isfeeded || $iscrawler || $is_ail_core || $is_ail_2_ail ]]; then
+    if [[ $isredis || $isardb || $iskvrocks || $islogged || $isqueued || $is_ail_2_ail || $isscripted || $isflasked || $isfeeded || $is_ail_core || $is_ail_2_ail ]]; then
         if [[ $isredis ]]; then
             echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
             shutting_down_redis;
@@ -503,10 +505,10 @@ function killall {
             shutting_down_kvrocks;
         fi
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $iskvrocks $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $iscrawler $is_ail_2_ail
+        kill $isredis $isardb $iskvrocks $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $isredis $isardb $iskvrocks $islogged $isqueued $isscripted $is_ail_2_ail $isflasked $isfeeded $iscrawler $is_ail_core killed."$DEFAULT
+        echo -e $GREEN"\t* $isredis $isardb $iskvrocks $islogged $isqueued $isscripted $is_ail_2_ail $isflasked $isfeeded $is_ail_core killed."$DEFAULT
     else
         echo -e $RED"\t* No screen to kill"$DEFAULT
     fi

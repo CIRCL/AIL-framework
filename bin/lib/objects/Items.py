@@ -3,10 +3,10 @@
 
 import base64
 import gzip
+import magic
 import os
 import re
 import sys
-import redis
 import cld3
 import html2text
 
@@ -233,8 +233,9 @@ class Item(AbstractObject):
         return self.id[19:-36]
 
     def get_screenshot(self):
-        s = r_serv_metadata.hget(f'paste_metadata:{self.id}', 'screenshot')
+        s = self.get_correlation('screenshot')
         if s:
+            s = s['screenshot'].pop()[1:]
             return os.path.join(s[0:2], s[2:4], s[4:6], s[6:8], s[8:10], s[10:12], s[12:])
 
     def get_har(self):
@@ -314,6 +315,11 @@ class Item(AbstractObject):
                 if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
                     all_languages.append(lang)
         return all_languages
+
+    def get_mimetype(self, content=None):
+        if not content:
+            content = self.get_content()
+        return magic.from_buffer(content, mime=True)
 
     ############################################################################
     ############################################################################

@@ -12,14 +12,12 @@ Its input comes from other modules, namely:
 Perform comparisions with ssdeep and tlsh
 
 """
-import redis
-
 
 import os
 import sys
 import time
 
-#from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 import datetime
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -51,7 +49,6 @@ class Duplicates(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-
     def compute(self, message):
         # IOError: "CRC Checksum Failed on : {id}"
 
@@ -72,7 +69,7 @@ class Duplicates(AbstractModule):
         self.algos['ssdeep']['hash'] = Duplicate.get_ssdeep_hash(content)
         self.algos['tlsh']['hash'] = Duplicate.get_tlsh_hash(content)
 
-        # TODO: Handle coputed duplicates
+        # TODO: Handle computed duplicates
 
         nb_duplicates = 0
 
@@ -99,7 +96,7 @@ class Duplicates(AbstractModule):
 
         y = time.time()
         print(f'{item.get_id()} Processed in {y-x} sec')
-        #self.redis_logger.debug('{}Processed in {} sec'.format(to_print, y-x))
+        # self.redis_logger.debug('{}Processed in {} sec'.format(to_print, y-x))
 
 
 if __name__ == "__main__":

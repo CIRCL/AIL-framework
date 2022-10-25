@@ -15,14 +15,11 @@ from flask import Flask, render_template, jsonify, request, Blueprint, url_for, 
 
 from Role_Manager import login_admin, login_analyst, login_user_no_api, login_read_only
 from flask_login import login_required, current_user
-
-import re
-from pprint import pprint
 import Levenshtein
 
 # ---------------------------------------------------------------
 
-import Paste
+from lib.objects.Items import Item
 import Term
 
 # ============ VARIABLES ============
@@ -262,21 +259,21 @@ def credentials_tracker():
 @login_required
 @login_user_no_api
 def credentials_management_query_paste():
-    cred =  request.args.get('cred')
+    cred = request.args.get('cred')
     allPath = request.json['allPath']
 
     paste_info = []
     for pathNum in allPath:
         path = r_serv_cred.hget(REDIS_KEY_ALL_PATH_SET_REV, pathNum)
-        paste = Paste.Paste(path)
-        p_date = str(paste._get_p_date())
-        p_date = p_date[0:4]+'/'+p_date[4:6]+'/'+p_date[6:8]
-        p_source = paste.p_source
-        p_encoding = paste._get_p_encoding()
-        p_size = paste.p_size
-        p_mime = paste.p_mime
-        p_lineinfo = paste.get_lines_info()
-        p_content = paste.get_p_content()
+        item = Item(path)
+        p_date = item.get_date(separator=True)
+        p_source = item.get_source()
+        p_content = item.get_content()
+        p_encoding = item.get_mimetype()
+        p_size = item.get_size()
+        p_mime = p_encoding
+        lineinfo = item.get_meta_lines(content=p_content)
+        p_lineinfo = lineinfo['nb'], lineinfo['max_length']
         if p_content != 0:
             p_content = p_content[0:400]
         paste_info.append({"path": path, "date": p_date, "source": p_source, "encoding": p_encoding, "size": p_size, "mime": p_mime, "lineinfo": p_lineinfo, "content": p_content})

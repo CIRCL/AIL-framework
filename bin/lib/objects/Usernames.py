@@ -10,12 +10,14 @@ from pymisp import MISPObject
 
 # sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 
-config_loader = ConfigLoader.ConfigLoader()
+config_loader = ConfigLoader()
 
 config_loader = None
 
@@ -44,9 +46,9 @@ class Username(AbstractSubtypeObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', object_type=self.type, type_id=self.subtype, correlation_id=self.id)
+            url = url_for('correlation.show_correlation', type=self.type, subtype=self.subtype, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show_correlation?object_type={self.type}&type_id={self.subtype}&correlation_id={self.id}'
+            url = f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
         return url
 
     def get_svg_icon(self):
@@ -60,6 +62,13 @@ class Username(AbstractSubtypeObject):
             style = 'fas'
             icon = '\uf007'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius':5}
+
+    def get_meta(self, options=set()):
+        meta = self._get_meta()
+        meta['id'] = self.id
+        meta['subtype'] = self.subtype
+        meta['tags'] = self.get_tags()
+        return meta
 
     def get_misp_object(self):
         obj_attrs = []

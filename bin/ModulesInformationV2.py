@@ -15,7 +15,7 @@ import json
 import redis
 import psutil
 from subprocess import PIPE, Popen
-from packages import Paste
+from lib.objects.Items import Item
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
 import ConfigLoader
@@ -51,7 +51,7 @@ QUEUE_STATUS = {}
 CPU_TABLE = {}
 CPU_OBJECT_TABLE = {}
 
-# Path of the current paste for a pid
+# Path of the current item for a pid
 COMPLETE_PASTE_PATH_PER_PID = {}
 
 '''
@@ -443,10 +443,10 @@ class Show_paste(Frame):
                     self.label_list[i]._text = ""
                 return
 
-            paste = Paste.Paste(COMPLETE_PASTE_PATH_PER_PID[current_selected_value])
-            old_content = paste.get_p_content()[0:4000] # Limit number of char to be displayed
+            item = Item(COMPLETE_PASTE_PATH_PER_PID[current_selected_value])
+            old_content = item.get_content()[0:4000]  # Limit number of char to be displayed
 
-            #Replace unprintable char by ?
+            # Replace unprintable char by ?
             content = ""
             for i, c in enumerate(old_content):
                 if ord(c) > 127: # Used to avoid printing unprintable char
@@ -456,7 +456,7 @@ class Show_paste(Frame):
                 else:
                     content += c
 
-            #Print in the correct label, END or more
+            # Print in the correct label, END or more
             to_print = ""
             i = 0
             for line in content.split("\n"):
@@ -472,7 +472,7 @@ class Show_paste(Frame):
                 self.label_list[i]._text = "- END of PASTE -"
                 i += 1
 
-            while i<self.num_label: #Clear out remaining lines
+            while i<self.num_label:  # Clear out remaining lines
                 self.label_list[i]._text = ""
                 i += 1
 
@@ -490,6 +490,7 @@ class Show_paste(Frame):
             self.label_list[1]._text = str(e)
             for i in range(2,self.num_label):
                 self.label_list[i]._text = ""
+
 
 '''
 END SCENES DEFINITION

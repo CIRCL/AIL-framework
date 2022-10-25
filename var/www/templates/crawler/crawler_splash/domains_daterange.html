@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+ 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+ 	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+ 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+ 	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+ 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                {% include 'crawler/show_domains_by_daterange.html' %}
+
+
+                {% for date in dict_domains %}
+                    <div class="card text-center mt-1 mb-3">
+                        <div class="card-header bg-dark text-white">
+                            <h3 style="text-align:center;">{{'{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])}}</h3>
+                        </div>
+                        <div class="card-body px-1">
+
+                            <table id="table_{{date}}" class="table table-striped table-bordered">
+                                <thead class="bg-dark text-white">
+                                <tr>
+                                    <th>Domain</th>
+                                    <th>First Seen</th>
+                                    <th>Last Check</th>
+                                    <th>Status</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for dict_domain in dict_domains[date] %}
+                                    <tr>
+                                        <td>
+                                            <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ dict_domain['domain'] }}">{{ dict_domain['domain'] }}</a>
+                                            <div>
+                                                {% for tag in dict_domain['tags'] %}
+                                                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
+                                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                                    </a>
+                                                {%  endfor %}
+                                            </div>
+                                        </td>
+                                        <td>{{dict_domain['first_seen']}}</td>
+                                        <td>{{dict_domain['last_check']}}</td>
+                                        <td>
+                                            {% if dict_domain['status'] %}
+                                                <div style="color:Green; display:inline-block">
+                                                    <i class="fas fa-check-circle"></i> UP
+                                                </div>
+                                            {% else %}
+                                                <div style="color:Red; display:inline-block">
+                                                    <i class="fas fa-times-circle"></i> DOWN
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+
+	$('#date-range-from').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+					},
+					setValue: function(s,s1,s2){
+							$('#date-range-from-input').val(s1);
+							$('#date-range-to-input').val(s2);
+					}
+	});
+	$('#date-range-to').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+			},
+			setValue: function(s,s1,s2){
+					$('#date-range-from-input').val(s1);
+					$('#date-range-to-input').val(s2);
+			}
+	});
+
+		{% for date in dict_domains %}
+			$('#table_{{date}}').DataTable({
+				"aLengthMenu": [[5, 15, 30, -1], [5, 15, 30, "All"]],
+				"iDisplayLength": 15,
+				"order": [[ 0, "asc" ]]
+			});
+		{% endfor %}
+
+});
+
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</html>

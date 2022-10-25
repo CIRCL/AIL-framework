@@ -14,11 +14,11 @@ It test different possibility to makes some sqlInjection.
 import os
 import sys
 import re
-import redis
 import urllib.request
 
 from datetime import datetime
 from pyfaup.faup import Faup
+from urllib.parse import unquote
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -26,7 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from packages.Item import Item
+from lib.objects.Items import Item
 
 class SQLInjectionDetection(AbstractModule):
     """docstring for SQLInjectionDetection module."""
@@ -46,13 +46,13 @@ class SQLInjectionDetection(AbstractModule):
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
-        url, id = message.split()
+        url, item_id = message.split()
 
         if self.is_sql_injection(url):
             self.faup.decode(url)
             url_parsed = self.faup.get()
 
-            item = Item(id)
+            item = Item(item_id)
             item_id = item.get_id()
             print(f"Detected SQL in URL: {item_id}")
             print(urllib.request.unquote(url))
@@ -69,7 +69,7 @@ class SQLInjectionDetection(AbstractModule):
             # statistics
             tld = url_parsed['tld']
             if tld is not None:
-                ## TODO: # FIXME: remove me
+                # # TODO: # FIXME: remove me
                 try:
                     tld = tld.decode()
                 except:
@@ -77,15 +77,13 @@ class SQLInjectionDetection(AbstractModule):
                 date = datetime.now().strftime("%Y%m")
                 self.server_statistics.hincrby(f'SQLInjection_by_tld:{date}', tld, 1)
 
-    # Try to detect if the url passed might be an sql injection by appliying the regex
+    # Try to detect if the url passed might be an sql injection by applying the regex
     # defined above on it.
     def is_sql_injection(self, url_parsed):
-        line = urllib.request.unquote(url_parsed)
-
+        line = unquote(url_parsed)
         return re.search(SQLInjectionDetection.SQLI_REGEX, line, re.I) is not None
 
 
 if __name__ == "__main__":
-
     module = SQLInjectionDetection()
     module.run()

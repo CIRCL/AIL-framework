@@ -17,7 +17,6 @@ import redis
 import unicodedata
 import uuid
 from io import BytesIO
-from Date import Date
 
 from functools import wraps
 
@@ -31,9 +30,9 @@ from flask_login import login_required
 # Import Project packages
 ##################################
 from lib import Tag
+from lib.objects.Items import Item
 
-import Paste
-import Import_helper
+from packages import Import_helper
 from pytaxonomies import Taxonomies
 from pymispgalaxies import Galaxies, Clusters
 
@@ -98,8 +97,6 @@ def limit_content_length():
 
 
 # ============ FUNCTIONS ============
-def one():
-    return 1
 
 def allowed_file(filename):
     if not '.' in filename:
@@ -126,15 +123,14 @@ def date_to_str(date):
 
 def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, publish, path):
 
-    paste = Paste.Paste(path)
-    source = path.split('/')[-6:]
-    source = '/'.join(source)[:-3]
+    item = Item(path)
+    source = item.get_source()
     ail_uuid = r_serv_db.get('ail:uuid')
-    pseudofile = BytesIO(paste.get_p_content().encode())
+    pseudofile = BytesIO(item.get_content(binary=True))
 
-    temp = paste._get_p_duplicate()
+    temp = item.get_duplicates()
 
-    #beautifier
+    # beautifier
     if not temp:
         temp = ''
 
@@ -181,7 +177,7 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pub
     leak_obj = MISPObject(obj_name)
     leak_obj.add_attribute('sensor', value=ail_uuid, type="text")
     leak_obj.add_attribute('origin', value=source, type='text')
-    leak_obj.add_attribute('last-seen', value=date_to_str(paste.p_date), type='datetime')
+    leak_obj.add_attribute('last-seen', value=date_to_str(item.get_date()), type='datetime')
     leak_obj.add_attribute('raw-data', value=source, data=pseudofile, type="attachment")
 
     if p_duplicate_number > 0:
@@ -192,7 +188,8 @@ def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, pub
         templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list()['response'] if x['ObjectTemplate']['name'] == obj_name][0]
     except IndexError:
         valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
-        print ("Template for type {} not found! Valid types are: {%s}".format(obj_name, valid_types))
+        print (f"Template for type {obj_name} not found! Valid types are: {valid_types}")
+        return False
     r = pymisp.add_object(eventid, templateID, leak_obj)
     if 'errors' in r:
         print(r)
@@ -206,7 +203,7 @@ def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, 
     ail_uuid = r_serv_db.get('ail:uuid')
     source = path.split('/')[-6:]
     source = '/'.join(source)[:-3]
-    # get paste date
+    # get item date
     var = path.split('/')
     last_seen = "{0}-{1}-{2}".format(var[-4], var[-3], var[-2])
 

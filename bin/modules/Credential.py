@@ -30,7 +30,6 @@ import os
 import sys
 import time
 import re
-import redis
 from datetime import datetime
 from pyfaup.faup import Faup
 
@@ -39,9 +38,8 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
+from lib.objects.Items import Item
 from lib import ConfigLoader
-from lib import regex_helper
 from lib import Statistics
 
 
@@ -60,21 +58,18 @@ class Credential(AbstractModule):
     REDIS_KEY_ALL_PATH_SET_REV = 'AllPathRev'
     REDIS_KEY_MAP_CRED_TO_PATH = 'CredToPathMapping'
 
-
     def __init__(self):
         super(Credential, self).__init__()
 
         self.faup = Faup()
 
-        self.regex_web = "((?:https?:\/\/)[\.-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
-        self.regex_cred = "[a-zA-Z0-9\\._-]+@[a-zA-Z0-9\\.-]+\.[a-zA-Z]{2,6}[\\rn :\_\-]{1,10}[a-zA-Z0-9\_\-]+"
-        self.regex_site_for_stats = "@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:"
-
-        self.redis_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
+        self.regex_web = r"((?:https?:\/\/)[\.-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
+        self.regex_cred = r"[a-zA-Z0-9\\._-]+@[a-zA-Z0-9\\.-]+\.[a-zA-Z]{2,6}[\\rn :\_\-]{1,10}[a-zA-Z0-9\_\-]+"
+        self.regex_site_for_stats = r"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}:"
 
         # Database
         config_loader = ConfigLoader.ConfigLoader()
-        #self.server_cred = config_loader.get_redis_conn("ARDB_TermCred")
+        # self.server_cred = config_loader.get_redis_conn("ARDB_TermCred")
         self.server_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 
         # Config values
@@ -83,29 +78,27 @@ class Credential(AbstractModule):
 
         self.max_execution_time = 30
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 10
 
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
 
-
     def compute(self, message):
 
-        id, count = message.split()
-        item = Item(id)
+        item_id, count = message.split()
+        item = Item(item_id)
 
         item_content = item.get_content()
 
         # TODO: USE SETS
         # Extract all credentials
-        all_credentials = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_cred, item.get_id(), item_content, max_time=self.max_execution_time)
-
+        all_credentials = self.regex_findall(self.regex_cred, item.get_id(), item_content)
         if all_credentials:
             nb_cred = len(all_credentials)
             message = f'Checked {nb_cred} credentials found.'
 
-            all_sites = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_web, item.get_id(), item_content, max_time=self.max_execution_time)
+            all_sites = self.regex_findall(self.regex_web, item.get_id(), item_content)
             if all_sites:
                 discovered_sites = ', '.join(all_sites)
                 message += f' Related websites: {discovered_sites}'
@@ -114,7 +107,7 @@ class Credential(AbstractModule):
 
             to_print = f'Credential;{item.get_source()};{item.get_date()};{item.get_basename()};{message};{item.get_id()}'
 
-            #num of creds above tresh, publish an alert
+            # num of creds above threshold, publish an alert
             if nb_cred > self.criticalNumberToAlert:
                 print(f"========> Found more than 10 credentials in this file : {item.get_id()}")
                 self.redis_logger.warning(to_print)
@@ -122,11 +115,11 @@ class Credential(AbstractModule):
                 msg = f'infoleak:automatic-detection="credential";{item.get_id()}'
                 self.send_message_to_queue(msg, 'Tags')
 
-                site_occurence = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.regex_site_for_stats, item.get_id(), item_content, max_time=self.max_execution_time, r_set=False)
+                site_occurrence = self.regex_findall(self.regex_site_for_stats, item.get_id(), item_content)
 
                 creds_sites = {}
 
-                for site in site_occurence:
+                for site in site_occurrence:
                     site_domain = site[1:-1].lower()
                     if site_domain in creds_sites.keys():
                         creds_sites[site_domain] += 1
@@ -136,7 +129,7 @@ class Credential(AbstractModule):
                 for url in all_sites:
                     self.faup.decode(url)
                     domain = self.faup.get()['domain']
-                    ## TODO: # FIXME: remove me, check faup versionb
+                    # # TODO: # FIXME: remove me, check faup versionb
                     try:
                         domain = domain.decode()
                     except:
@@ -159,10 +152,10 @@ class Credential(AbstractModule):
                 date = datetime.now().strftime("%Y%m")
                 nb_tlds = {}
                 for cred in all_credentials:
-                    maildomains = re.findall("@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
+                    maildomains = re.findall(r"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
                     self.faup.decode(maildomains)
                     tld = self.faup.get()['tld']
-                    ## TODO: # FIXME: remove me
+                    # # TODO: # FIXME: remove me
                     try:
                         tld = tld.decode()
                     except:

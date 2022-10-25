@@ -41,14 +41,18 @@ class Pgp(AbstractSubtypeObject):
         pass
 
     # # TODO: 
-    def get_meta(self):
-        return None
+    def get_meta(self, options=set()):
+        meta = self._get_meta()
+        meta['id'] = self.id
+        meta['subtype'] = self.subtype
+        meta['tags'] = self.get_tags()
+        return meta
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', object_type=self.type, type_id=self.subtype, correlation_id=self.id)
+            url = url_for('correlation.show_correlation', type=self.type, subtype=self.subtype, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show_correlation?object_type={self.type}&type_id={self.subtype}&correlation_id={self.id}'
+            url = f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
         return url
 
     def get_svg_icon(self):

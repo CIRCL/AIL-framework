@@ -69,9 +69,9 @@ class Decoded(AbstractObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', object_type="decoded", correlation_id=self.id)
+            url = url_for('correlation.show_correlation', type="decoded", id=self.id)
         else:
-            url = f'{baseurl}/correlation/show_correlation?object_type={self.type}&correlation_id={self.id}'
+            url = f'{baseurl}/correlation/show?type={self.type}&id={self.id}'
         return url
 
     def get_svg_icon(self):
@@ -90,7 +90,7 @@ class Decoded(AbstractObject):
         return {'style': 'fas', 'icon': icon, 'color': '#88CCEE', 'radius':5}
 
     '''
-    Return the estimed type of a given decoded item.
+    Return the estimated type of a given decoded item.
 
     :param sha1_string: sha1_string
     '''
@@ -170,8 +170,11 @@ class Decoded(AbstractObject):
         if date > last_seen:
             self.set_last_seen(date)
 
-    def get_meta(self):
-        pass
+    def get_meta(self, options=set()):
+        meta = {'id': self.id,
+                'subtype': self.subtype,
+                'tags': self.get_tags()}
+        return meta
 
     def get_meta_vt(self):
         meta = {}
@@ -209,7 +212,7 @@ class Decoded(AbstractObject):
 
     def is_seen_this_day(self, date):
         for decoder in get_decoders_names():
-             if r_metadata.zscore(f'{decoder_name}_date:{date}', self.id):
+            if r_metadata.zscore(f'{decoder}_date:{date}', self.id):
                 return True
         return False
 
@@ -324,6 +327,9 @@ class Decoded(AbstractObject):
         #######################################################################################
         #######################################################################################
 
+    def is_vt_enabled(self):
+        return VT_ENABLED
+
     def set_vt_report(self, report):
         r_metadata.hset(f'metadata_hash:{self.id}', 'vt_report', report)
 
@@ -354,7 +360,6 @@ class Decoded(AbstractObject):
             print(report)
             return report
         elif response.status_code == 403:
-            Flask_config.vt_enabled = False
             return 'Virustotal key is incorrect (e.g. for public API not for virustotal intelligence), authentication failed'
         elif response.status_code == 204:
             return 'Rate Limited'

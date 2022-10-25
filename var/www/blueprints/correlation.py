@@ -26,22 +26,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects import ail_objects
 
-################################################################################
-
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Correlate_object
-import Domain
-import Screenshot
-import btc_ail
-import Username
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Cryptocurrency
-import Pgp
-import Decoded
-import Tag
-
 bootstrap_label = Flask_config.bootstrap_label
 vt_enabled = Flask_config.vt_enabled
 
@@ -74,77 +58,15 @@ def sanitise_nb_max_nodes(nb_max_nodes):
         nb_max_nodes = 300
     return nb_max_nodes
 
-def sanitise_correlation_names(correlation_names):
-    '''
-    correlation_names ex = 'pgp,crypto'
-    '''
-    all_correlation_names = Correlate_object.get_all_correlation_names()
-    if correlation_names is None:
-        return all_correlation_names
-    else:
-        l_correlation_names = []
-        for correl in correlation_names.split(','):
-            if correl in all_correlation_names:
-                l_correlation_names.append(correl)
-        if l_correlation_names:
-            return l_correlation_names
-        else:
-            return all_correlation_names
-
-def sanitise_correlation_objects(correlation_objects):
-    '''
-    correlation_objects ex = 'domain,decoded'
-    '''
-    all_correlation_objects = Correlate_object.get_all_correlation_objects()
-    if correlation_objects is None:
-        return all_correlation_objects
-    else:
-        l_correlation_objects = []
-        for correl in correlation_objects.split(','):
-            if correl in all_correlation_objects:
-                l_correlation_objects.append(correl)
-        if l_correlation_objects:
-            return l_correlation_objects
-        else:
-            return all_correlation_objects
-
-def get_card_metadata(object_type, correlation_id, type_id=None, expand_card=False):
-    card_dict = {}
-    if object_type == 'cryptocurrency':
-        card_dict["sparkline"] = Cryptocurrency.cryptocurrency.get_list_nb_previous_correlation_object(type_id, correlation_id, 6)
-        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, type_id)
-        if type_id == 'bitcoin' and expand_card:
-            card_dict["related_btc"] = btc_ail.get_bitcoin_info(correlation_id)
-    elif object_type == 'pgp':
-        card_dict["sparkline"] = Pgp.pgp.get_list_nb_previous_correlation_object(type_id, correlation_id, 6)
-        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, type_id)
-    elif object_type == 'username':
-        card_dict["sparkline"] = Username.correlation.get_list_nb_previous_correlation_object(type_id, correlation_id, 6)
-        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, type_id)
-    elif object_type == 'decoded':
-        card_dict["sparkline"] = Decoded.get_list_nb_previous_hash(correlation_id, 6)
-        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
-        card_dict["vt"] = Decoded.get_decoded_vt_report(correlation_id)
-        card_dict["vt"]["status"] = vt_enabled
-        card_dict["add_tags_modal"] = Tag.get_modal_add_tags(correlation_id, object_type='decoded')
-    elif object_type == 'domain':
-        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
-        card_dict["tags"] = Domain.get_domain_tags(correlation_id)
-    elif object_type == 'screenshot':
-        card_dict["add_tags_modal"] = Tag.get_modal_add_tags(correlation_id, object_type='image')
-    elif object_type == 'paste':
-        card_dict["icon"] = Correlate_object.get_correlation_node_icon(object_type, value=correlation_id)
-    return card_dict
-
 # ============= ROUTES ==============
-@correlation.route('/correlation/show_correlation', methods=['GET', 'POST']) # GET + POST
+@correlation.route('/correlation/show', methods=['GET', 'POST']) # GET + POST
 @login_required
 @login_read_only
 def show_correlation():
     if request.method == 'POST':
-        object_type = request.form.get('object_type')
-        type_id = request.form.get('type_id')
-        correlation_id = request.form.get('correlation_id')
+        object_type = request.form.get('obj_type')
+        subtype = request.form.get('subtype')
+        obj_id = request.form.get('obj_id')
         max_nodes = request.form.get('max_nb_nodes_in')
         mode = request.form.get('mode')
         if mode:
@@ -153,73 +75,71 @@ def show_correlation():
             mode = 'union'
 
         ## get all selected correlations
-        correlation_names = []
-        correlation_objects = []
-        #correlation_names
+        filter_types = []
+        correl_option = request.form.get('CveCheck')
+        if correl_option:
+            filter_types.append('cve')
         correl_option = request.form.get('CryptocurrencyCheck')
         if correl_option:
-            correlation_names.append('cryptocurrency')
+            filter_types.append('cryptocurrency')
         correl_option = request.form.get('PgpCheck')
         if correl_option:
-            correlation_names.append('pgp')
+            filter_types.append('pgp')
         correl_option = request.form.get('UsernameCheck')
         if correl_option:
-            correlation_names.append('username')
+            filter_types.append('username')
         correl_option = request.form.get('DecodedCheck')
         if correl_option:
-            correlation_names.append('decoded')
+            filter_types.append('decoded')
         correl_option = request.form.get('ScreenshotCheck')
         if correl_option:
-            correlation_names.append('screenshot')
+            filter_types.append('screenshot')
         # correlation_objects
         correl_option = request.form.get('DomainCheck')
         if correl_option:
-            correlation_objects.append('domain')
-        correl_option = request.form.get('PasteCheck')
+            filter_types.append('domain')
+        correl_option = request.form.get('ItemCheck')
         if correl_option:
-            correlation_objects.append('item')
+            filter_types.append('item')
 
         # list as params
-        correlation_names = ",".join(correlation_names)
-        correlation_objects = ",".join(correlation_objects)
+        filter_types = ",".join(filter_types)
 
         # redirect to keep history and bookmark
-        return redirect(url_for('correlation.show_correlation', object_type=object_type, type_id=type_id, correlation_id=correlation_id, mode=mode,
-                                            max_nodes=max_nodes, correlation_names=correlation_names, correlation_objects=correlation_objects))
+        return redirect(url_for('correlation.show_correlation', type=object_type, subtype=subtype, id=obj_id, mode=mode,
+                                            max_nodes=max_nodes, filter=filter_types))
 
     # request.method == 'GET'
     else:
-        object_type = request.args.get('object_type')
-        type_id = request.args.get('type_id')
-        correlation_id = request.args.get('correlation_id')
+        obj_type = request.args.get('type')
+        subtype = request.args.get('subtype', '')
+        obj_id = request.args.get('id')
         max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
         mode = sanitise_graph_mode(request.args.get('mode'))
 
-        expand_card = request.args.get('expand_card')
+        related_btc = bool(request.args.get('expand_card', False))
 
-        correlation_names = ail_objects.sanitize_objs_types(request.args.get('correlation_names', '').split(','))
-        correlation_objects = ail_objects.sanitize_objs_types(request.args.get('correlation_objects', '').split(','))
+        filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
 
         # # TODO: remove me, rename screenshot to image
-        if object_type == 'image':
-            object_type == 'screenshot'
+        if obj_type == 'image':
+            obj_type = 'screenshot'
 
-        # check if correlation_id exist
-        if not Correlate_object.exist_object(object_type, correlation_id, type_id=type_id):
+        # check if obj_id exist
+        if not ail_objects.exists_obj(obj_type, subtype, obj_id):
             abort(404) # return 404
-        # oject exist
+        # object exist
         else:
-            dict_object = {"object_type": object_type, "correlation_id": correlation_id}
-            dict_object["max_nodes"] = max_nodes
-            dict_object["mode"] = mode
-            dict_object["correlation_names"] = correlation_names
-            dict_object["correlation_names_str"] = ",".join(correlation_names)
-            dict_object["correlation_objects"] = correlation_objects
-            dict_object["correlation_objects_str"] = ",".join(correlation_objects)
-            dict_object["metadata"] = Correlate_object.get_object_metadata(object_type, correlation_id, type_id=type_id)
-            if type_id:
-                dict_object["metadata"]['type_id'] = type_id
-            dict_object["metadata_card"] = get_card_metadata(object_type, correlation_id, type_id=type_id, expand_card=expand_card)
+            dict_object = {"object_type": obj_type,
+                           "correlation_id": obj_id,
+                           "max_nodes": max_nodes, "mode": mode,
+                           "filter": filter_types, "filter_str": ",".join(filter_types),
+                           "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, flask_context=True)
+                           }
+            print(dict_object)
+            if subtype:
+                dict_object["metadata"]['type_id'] = subtype
+            dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label)
 
 @correlation.route('/correlation/get/description')
@@ -254,19 +174,17 @@ def get_description():
 @login_required
 @login_read_only
 def graph_node_json():
-    obj_id = request.args.get('correlation_id') #######################3
-    subtype = request.args.get('type_id') #######################
-    obj_type = request.args.get('object_type') #######################
+    obj_id = request.args.get('id')
+    subtype = request.args.get('subtype')
+    obj_type = request.args.get('type')
     max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
 
-    correlation_names = ail_objects.sanitize_objs_types(request.args.get('correlation_names', '').split(','))
-    correlation_objects = ail_objects.sanitize_objs_types(request.args.get('correlation_objects', '').split(','))
+    filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
 
     # # TODO: remove me, rename screenshot
     if obj_type == 'image':
-        obj_type == 'screenshot'
+        obj_type = 'screenshot'
 
-    filter_types = correlation_names + correlation_objects
     json_graph = ail_objects.get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=filter_types, max_nodes=max_nodes, level=2, flask_context=True)
     #json_graph = Correlate_object.get_graph_node_object_correlation(obj_type, obj_id, 'union', correlation_names, correlation_objects, requested_correl_type=subtype, max_nodes=max_nodes)
     return jsonify(json_graph)

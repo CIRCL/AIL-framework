@@ -72,6 +72,7 @@ def sendEmailNotification(recipient, mail_subject, mail_body):
         traceback.print_tb(err.__traceback__)
         publisher.warning(err)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test notification sender.')
     parser.add_argument("addr", help="Test mail 'to' address")

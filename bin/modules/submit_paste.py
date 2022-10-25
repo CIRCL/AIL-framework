@@ -16,7 +16,6 @@ import os
 import sys
 import gzip
 import io
-import redis
 import base64
 import datetime
 import time
@@ -51,6 +50,7 @@ class SubmitPaste(AbstractModule):
         """
         super(SubmitPaste, self).__init__(queue_name='submit_paste')
 
+        # TODO KVROCKS
         self.r_serv_db = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_DB")
         self.r_serv_log_submit = ConfigLoader.ConfigLoader().get_redis_conn("Redis_Log_submit")
         self.r_serv_tags = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Tags")
@@ -60,7 +60,6 @@ class SubmitPaste(AbstractModule):
         self.pending_seconds = 3
 
         self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], ConfigLoader.ConfigLoader().get_config_str("Directories", "pastes")) + '/'
-
 
     def compute(self, uuid):
         """
@@ -129,7 +128,6 @@ class SubmitPaste(AbstractModule):
                 self.redis_logger.debug(f'{self.module_name}, waiting for new message, Idling {self.pending_seconds}s')
                 time.sleep(self.pending_seconds)
 
-
     def _manage_text(self, uuid, paste_content, ltags, ltagsgalaxies, source):
         """
         Create a paste for given text
@@ -140,7 +138,6 @@ class SubmitPaste(AbstractModule):
             time.sleep(0.5)
         else:
             self.abord_file_submission(uuid, f'Text size is over {SubmitPaste.TEXT_MAX_SIZE} bytes')
-
 
     def _manage_file(self, uuid, file_full_path, ltags, ltagsgalaxies, source):
         """
@@ -230,7 +227,6 @@ class SubmitPaste(AbstractModule):
         else:
             self.abord_file_submission(uuid, "Server Error, the archive can't be found")
 
-
     def _is_compressed_type(self, file_type):
         """
         Check if file type is in the list of compressed file extensions format
@@ -238,7 +234,6 @@ class SubmitPaste(AbstractModule):
         compressed_type = ['zip', 'gz', 'tar.gz']
 
         return file_type in compressed_type
-
 
     def remove_submit_uuid(self, uuid):
         # save temp value on disk
@@ -262,7 +257,6 @@ class SubmitPaste(AbstractModule):
         self.redis_logger.debug(f'{uuid} all file submitted')
         print(f'{uuid} all file submitted')
 
-
     def create_paste(self, uuid, paste_content, ltags, ltagsgalaxies, name, source=None):
         # # TODO: Use Item create
 
@@ -272,8 +266,8 @@ class SubmitPaste(AbstractModule):
         source = source if source else 'submitted'
         save_path = source + '/' + now.strftime("%Y") + '/' + now.strftime("%m") + '/' + now.strftime("%d") + '/submitted_' + name + '.gz'
 
-        full_path = filename = os.path.join(os.environ['AIL_HOME'],
-                                self.process.config.get("Directories", "pastes"), save_path)
+        full_path = os.path.join(os.environ['AIL_HOME'],
+                                 self.process.config.get("Directories", "pastes"), save_path)
 
         self.redis_logger.debug(f'file path of the paste {full_path}')
 
@@ -281,7 +275,7 @@ class SubmitPaste(AbstractModule):
             # file not exists in AIL paste directory
             self.redis_logger.debug(f"new paste {paste_content}")
 
-            gzip64encoded = self._compress_encode_content(paste_content)
+            gzip64encoded = self._compress_encode_content(paste_content, uuid)
 
             if gzip64encoded:
 
@@ -321,28 +315,22 @@ class SubmitPaste(AbstractModule):
 
         return result
 
-
-    def _compress_encode_content(self, content):
+    def _compress_encode_content(self, content, uuid):
         gzip64encoded = None
-
         try:
             gzipencoded = gzip.compress(content)
             gzip64encoded = base64.standard_b64encode(gzipencoded).decode()
         except:
             self.abord_file_submission(uuid, "file error")
-
         return gzip64encoded
-
 
     def addError(self, uuid, errorMessage):
         self.redis_logger.debug(errorMessage)
         print(errorMessage)
         error = self.r_serv_log_submit.get(f'{uuid}:error')
-        if error != None:
+        if error is not None:
             self.r_serv_log_submit.set(f'{uuid}:error', error + '<br></br>' + errorMessage)
-
         self.r_serv_log_submit.incr(f'{uuid}:nb_end')
-
 
     def abord_file_submission(self, uuid, errorMessage):
         self.redis_logger.debug(f'abord {uuid}, {errorMessage}')
@@ -350,7 +338,7 @@ class SubmitPaste(AbstractModule):
         self.addError(uuid, errorMessage)
         self.r_serv_log_submit.set(f'{uuid}:end', 1)
         curr_date = datetime.date.today()
-        self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'submit_abord', 1)
+        self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"), 'submit_abord', 1)
         self.remove_submit_uuid(uuid)
 
     # # TODO: use Item function
@@ -358,14 +346,13 @@ class SubmitPaste(AbstractModule):
         l_directory = item_filename.split('/')
         return f'{l_directory[-4]}{l_directory[-3]}{l_directory[-2]}'
 
-
     def verify_extention_filename(self, filename):
         if not '.' in filename:
             return True
         else:
             file_type = filename.rsplit('.', 1)[1]
 
-            #txt file
+            # txt file
             if file_type in SubmitPaste.ALLOWED_EXTENSIONS:
                 return True
             else:
@@ -373,6 +360,5 @@ class SubmitPaste(AbstractModule):
 
 
 if __name__ == '__main__':
-
     module = SubmitPaste()
     module.run()

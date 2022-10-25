@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import base64
 import os
 import sys
 
+from hashlib import sha256
 from io import BytesIO
 from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
-#from lib import Tag
+##################################
+# Import Project packages
+##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 
@@ -17,14 +21,15 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 config_loader = None
 
+
 class Screenshot(AbstractObject):
     """
     AIL Screenshot Object. (strings)
     """
 
     # ID = SHA256
-    def __init__(self, id):
-        super(Screenshot, self).__init__('screenshot', id)
+    def __init__(self, screenshot_id):
+        super(Screenshot, self).__init__('screenshot', screenshot_id)
 
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True),
@@ -41,13 +46,13 @@ class Screenshot(AbstractObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', object_type=self.type, correlation_id=self.id)
+            url = url_for('correlation.show_correlation', type=self.type, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show_correlation?object_type={self.type}&correlation_id={self.id}'
+            url = f'{baseurl}/correlation/show?type={self.type}&id={self.id}'
         return url
 
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': '\uf03e', 'color': '#E1F5DF', 'radius':5}
+        return {'style': 'fas', 'icon': '\uf03e', 'color': '#E1F5DF', 'radius': 5}
 
     def get_rel_path(self, add_extension=False):
         rel_path = os.path.join(self.id[0:2], self.id[2:4], self.id[4:6], self.id[6:8], self.id[8:10], self.id[10:12], self.id[12:])
@@ -77,12 +82,11 @@ class Screenshot(AbstractObject):
         return obj
 
     def get_meta(self, options=set()):
-        meta = {}
-        meta['id'] = self.id
-        meta['img'] = get_screenshot_rel_path(self.id) ######### # TODO: Rename ME ??????
+        meta = {'id': self.id}
+        meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
         # TODO: ADD IN ABSTRACT CLASS
-        #meta['is_tags_safe'] = Tag.is_tags_safe(metadata_dict['tags']) ################## # TODO: ADD IN ABSZTRACT CLASS
+        #meta['is_tags_safe'] = Tag.is_tags_safe(metadata_dict['tags']) ################## # TODO: ADD IN ABSTRACT CLASS
         return meta
 
 def get_screenshot_dir():
@@ -90,7 +94,7 @@ def get_screenshot_dir():
 
 # get screenshot relative path
 def get_screenshot_rel_path(sha256_str, add_extension=False):
-    screenshot_path =  os.path.join(sha256_str[0:2], sha256_str[2:4], sha256_str[4:6], sha256_str[6:8], sha256_str[8:10], sha256_str[10:12], sha256_str[12:])
+    screenshot_path = os.path.join(sha256_str[0:2], sha256_str[2:4], sha256_str[4:6], sha256_str[6:8], sha256_str[8:10], sha256_str[10:12], sha256_str[12:])
     if add_extension:
         screenshot_path = f'{screenshot_path}.png'
     return screenshot_path
@@ -106,5 +110,22 @@ def get_all_screenshots():
             screenshots.append(screenshot_id)
     return screenshots
 
+# FIXME STR SIZE LIMIT
+def create_screenshot(content, size_limit=5000000, b64=True, force=False):
+    size = (len(content)*3) / 4
+    if size <= size_limit or size_limit < 0 or force:
+        if b64:
+            content = base64.standard_b64decode(content.encode())
+        screenshot_id = sha256(content).hexdigest()
+        screenshot = Screenshot(screenshot_id)
+        if not screenshot.exists():
+            filepath = screenshot.get_filepath()
+            dirname = os.path.dirname(filepath)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            with open(filepath, 'wb') as f:
+                f.write(content)
+        return screenshot
+    return  None
 
 #if __name__ == '__main__':

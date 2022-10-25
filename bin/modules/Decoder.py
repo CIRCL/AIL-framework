@@ -65,48 +65,44 @@ class Decoder(AbstractModule):
         #hexStr = ''.join( hex_string.split(" ") )
         return bytes(bytearray([int(hexStr[i:i+2], 16) for i in range(0, len(hexStr), 2)]))
 
-
     # TODO to lambda expr
     def binary_decoder(self, binary_string):
         return bytes(bytearray([int(binary_string[i:i+8], 2) for i in range(0, len(binary_string), 8)]))
-
 
     # TODO to lambda expr
     def base64_decoder(self, base64_string):
         return base64.b64decode(base64_string)
 
-
     def __init__(self):
         super(Decoder, self).__init__()
 
-        regex_binary = '[0-1]{40,}'
-        #regex_hex = '(0[xX])?[A-Fa-f0-9]{40,}'
-        regex_hex = '[A-Fa-f0-9]{40,}'
-        regex_base64 = '(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)'
+        regex_binary = r'[0-1]{40,}'
+        # regex_hex = r'(0[xX])?[A-Fa-f0-9]{40,}'
+        regex_hex = r'[A-Fa-f0-9]{40,}'
+        regex_base64 = r'(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)'
 
         cmp_regex_binary = re.compile(regex_binary)
         cmp_regex_hex = re.compile(regex_hex)
         cmp_regex_base64 = re.compile(regex_base64)
 
         # map decoder function
-        self.decoder_function = {'binary':self.binary_decoder,'hexadecimal':self.hex_decoder, 'base64':self.base64_decoder}
+        self.decoder_function = {'binary': self.binary_decoder,  'hexadecimal': self.hex_decoder, 'base64': self.base64_decoder}
 
         # list all decoder with regex,
         decoder_binary = {'name': 'binary', 'regex': cmp_regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time}
         decoder_hexadecimal = {'name': 'hexadecimal', 'regex': cmp_regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time}
         decoder_base64 = {'name': 'base64', 'regex': cmp_regex_base64, 'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}
 
-        self.decoder_order = [ decoder_base64, decoder_binary, decoder_hexadecimal, decoder_base64]
+        self.decoder_order = [decoder_base64, decoder_binary, decoder_hexadecimal, decoder_base64]
 
         for decoder in self.decoder_order:
             serv_metadata.sadd('all_decoder', decoder['name'])
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
         # Send module state to logs
         self.redis_logger.info(f'Module {self.module_name} initialized')
-
 
     def compute(self, message):
 
@@ -128,9 +124,8 @@ class Decoder(AbstractModule):
             else:
                 signal.alarm(0)
 
-                if(len(encoded_list) > 0):
+                if len(encoded_list) > 0:
                     content = self.decode_string(content, item.id, date, encoded_list, decoder['name'], decoder['encoded_min_size'])
-
 
     def decode_string(self, content, item_id, date, encoded_list, decoder_name, encoded_min_size):
         find = False
@@ -153,12 +148,12 @@ class Decoder(AbstractModule):
 
                 save_item_relationship(sha1_string, item_id) ################################
 
-                #remove encoded from item content
+                # remove encoded from item content
                 content = content.replace(encoded, '', 1)
 
                 self.redis_logger.debug(f'{item_id} : {decoder_name} - {mimetype}')
                 print(f'{item_id} : {decoder_name} - {mimetype}')
-        if(find):
+        if find:
             self.redis_logger.info(f'{decoder_name} decoded')
             print(f'{decoder_name} decoded')
 
@@ -168,6 +163,7 @@ class Decoder(AbstractModule):
 
         # perf: remove encoded from item content
         return content
+
 
 if __name__ == '__main__':
 

@@ -43,12 +43,13 @@ config_loader = None
 
 CORRELATION_TYPES_BY_OBJ = {
     "cryptocurrency" : ["domain", "item"],
-    "decoded" : ["domain", "item"],
-    "domain": ["cryptocurrency", "decoded", "item", "pgp", "username", "screenshot"],
-    "item": ["cryptocurrency", "decoded", "domain", "pgp", "username", "screenshot"],
+    "cve": ["domain", "item"],
+    "decoded": ["domain", "item"],
+    "domain": ["cve", "cryptocurrency", "decoded", "item", "pgp", "username", "screenshot"],
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "pgp", "username", "screenshot"],
     "pgp" : ["domain", "item"],
-    "username" : ["domain", "item"],
-    "screenshot" : ["domain", "item"],
+    "username": ["domain", "item"],
+    "screenshot": ["domain", "item"],
 }
 
 def get_obj_correl_types(obj_type):

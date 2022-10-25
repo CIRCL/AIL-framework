@@ -18,17 +18,18 @@ import time
 import re
 import sys
 from pubsublogger import publisher
-from packages import Paste
+from lib.objects.Items import Item
 from Helper import Process
 from ipaddress import IPv4Network, IPv4Address
 
+# TODO REWRITE ME -> IMPROVE + MIGRATE TO MODULE
 
 def search_ip(message):
-    paste = Paste.Paste(message)
-    content = paste.get_p_content()
+    item = Item(message)
+    content = item.get_content()
     # regex to find IPs
     reg_ip = re.compile(r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)', flags=re.MULTILINE)
-    # list of the regex results in the Paste, may be null
+    # list of the regex results in the Item, may be null
     results = reg_ip.findall(content)
     matching_ips = []
 
@@ -40,14 +41,13 @@ def search_ip(message):
                 matching_ips.append(address)
 
     if len(matching_ips) > 0:
-        print('{} contains {} IPs'.format(paste.p_name, len(matching_ips)))
-        publisher.warning('{} contains {} IPs'.format(paste.p_name, len(matching_ips)))
+        print(f'{item.get_id()} contains {len(matching_ips)} IPs')
+        publisher.warning(f'{item.get_id()} contains {item.get_id()} IPs')
 
-        #Tag message with IP
-        msg = 'infoleak:automatic-detection="ip";{}'.format(message)
+        # Tag message with IP
+        msg = f'infoleak:automatic-detection="ip";{item.get_id()}'
         p.populate_set_out(msg, 'Tags')
-        #Send to duplicate
-        p.populate_set_out(message, 'Duplicate')
+
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)

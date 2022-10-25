@@ -12,11 +12,15 @@ from flask import url_for
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
+##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.ail_core import get_all_objects
 from lib import correlations_engine
+from lib import btc_ail
+from lib import Tag
 
 from lib.objects.CryptoCurrencies import CryptoCurrency
+from lib.objects.Cves import Cve
 from lib.objects.Decodeds import Decoded
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
@@ -39,12 +43,11 @@ def is_valid_object_type(obj_type):
 
 def sanitize_objs_types(objs):
     l_types = []
-    print('sanitize')
-    print(objs)
-    print(get_all_objects())
     for obj in objs:
         if is_valid_object_type(obj):
             l_types.append(obj)
+    if not l_types:
+        l_types = get_all_objects()
     return l_types
 
 def get_object(obj_type, subtype, id):
@@ -54,6 +57,8 @@ def get_object(obj_type, subtype, id):
         return Domain(id)
     elif obj_type == 'decoded':
         return Decoded(id)
+    elif obj_type == 'cve':
+        return Cve(id)
     elif obj_type == 'screenshot':
         return Screenshot(id)
     elif obj_type == 'cryptocurrency':
@@ -63,23 +68,48 @@ def get_object(obj_type, subtype, id):
     elif obj_type == 'username':
         return Username(id, subtype)
 
-def exists_obj(obj_type, subtype, id):
-    object = get_object(obj_type, subtype, id)
-    return object.exists()
+def exists_obj(obj_type, subtype, obj_id):
+    obj = get_object(obj_type, subtype, obj_id)
+    if obj:
+        return obj.exists()
+    else:
+        return False
 
 def get_object_link(obj_type, subtype, id, flask_context=False):
-    object = get_object(obj_type, subtype, id)
-    return object.get_link(flask_context=flask_context)
+    obj = get_object(obj_type, subtype, id)
+    return obj.get_link(flask_context=flask_context)
 
 def get_object_svg(obj_type, subtype, id):
-    object = get_object(obj_type, subtype, id)
-    return object.get_svg_icon()
+    obj = get_object(obj_type, subtype, id)
+    return obj.get_svg_icon()
 
-def get_object_meta(obj_type, subtype, id, flask_context=False):
-    object = get_object(obj_type, subtype, id)
-    meta = object.get_meta()
-    meta['icon'] = object.get_svg_icon()
-    meta['link'] = object.get_link(flask_context=flask_context)
+def get_object_meta(obj_type, subtype, id, options=[], flask_context=False):
+    obj = get_object(obj_type, subtype, id)
+    meta = obj.get_meta(options=options)
+    meta['icon'] = obj.get_svg_icon()
+    meta['link'] = obj.get_link(flask_context=flask_context)
+    return meta
+
+def get_objects_meta(objs, options=[], flask_context=False):
+    metas = []
+    for obj_dict in objs:
+        metas.append(get_object_meta(obj_dict['type'], obj_dict['subtype'], obj_dict['id'], options=options, flask_context=flask_context))
+    return metas
+
+def get_object_card_meta(obj_type, subtype, id, related_btc=False):
+    obj = get_object(obj_type, subtype, id)
+    meta = obj.get_meta()
+    meta['icon'] = obj.get_svg_icon()
+    if subtype or obj_type == 'cve':
+        meta['sparkline'] = obj.get_sparkline()
+    if subtype == 'bitcoin' and related_btc:
+        meta["related_btc"] = btc_ail.get_bitcoin_info(obj.id)
+    if obj.get_type() == 'decoded':
+        meta["vt"] = obj.get_meta_vt()
+        meta["vt"]["status"] = obj.is_vt_enabled()
+    # TAGS MODAL
+    if obj.get_type() == 'screenshot' or obj.get_type() == 'decoded':
+        meta["add_tags_modal"] = Tag.get_modal_add_tags(obj.id, object_type=obj.get_type())
     return meta
 
 def get_ui_obj_tag_table_keys(obj_type):
@@ -203,7 +233,6 @@ def create_correlation_graph_nodes(nodes_set, obj_str_id, flask_context=True):
         dict_node['style']['node_radius'] = dict_node['style']['radius']
         # # TODO: # FIXME: in UI
 
-        dict_node['style']
         dict_node['text'] = obj_id
         if node_id == obj_str_id:
             dict_node["style"]["node_color"] = 'orange'

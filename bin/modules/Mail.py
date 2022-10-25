@@ -13,9 +13,7 @@ It apply mail regexes on item content and warn if above a threshold.
 
 import os
 import re
-import redis
 import sys
-import time
 import datetime
 
 import dns.resolver
@@ -52,7 +50,7 @@ class Mail(AbstractModule):
         self.mail_threshold = 10
 
         self.regex_timeout = 30
-        self.email_regex = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
+        self.email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
         re.compile(self.email_regex)
 
     def is_mxdomain_in_cache(self, mxdomain):
@@ -64,8 +62,8 @@ class Mail(AbstractModule):
     def check_mx_record(self, set_mxdomains):
         """Check if emails MX domains are responding.
 
-        :param adress_set: -- (set) This is a set of emails domains
-        :return: (int) Number of adress with a responding and valid MX domains
+        :param set_mxdomains: -- (set) This is a set of emails domains
+        :return: (int) Number of address with a responding and valid MX domains
 
         """
         resolver = dns.resolver.Resolver()
@@ -107,7 +105,7 @@ class Mail(AbstractModule):
                     self.redis_logger.debug('SyntaxError: EmptyLabel')
                     print('SyntaxError: EmptyLabel')
                 except dns.resolver.NXDOMAIN:
-                    #save_mxdomain_in_cache(mxdomain)
+                    # save_mxdomain_in_cache(mxdomain)
                     self.redis_logger.debug('The query name does not exist.')
                     print('The query name does not exist.')
                 except dns.name.LabelTooLong:
@@ -115,12 +113,12 @@ class Mail(AbstractModule):
                     print('The Label is too long')
                 except dns.exception.Timeout:
                     print('dns timeout')
-                    #save_mxdomain_in_cache(mxdomain)
+                    # save_mxdomain_in_cache(mxdomain)
                 except Exception as e:
                     print(e)
         return valid_mxdomain
 
-    # # TODO: sanityze mails
+    # # TODO: sanitize mails
     def compute(self, message):
         item_id, score = message.split()
         item = Item(item_id)
@@ -134,7 +132,7 @@ class Mail(AbstractModule):
                 mxdomains_email[mxdomain] = set()
             mxdomains_email[mxdomain].add(mail)
 
-            ## TODO: add MAIL trackers
+            # # TODO: add MAIL trackers
 
         valid_mx = self.check_mx_record(mxdomains_email.keys())
         print(f'valid_mx: {valid_mx}')
@@ -144,7 +142,7 @@ class Mail(AbstractModule):
             nb_mails = len(mxdomains_email[domain_mx])
             num_valid_email += nb_mails
 
-            # Create doamin_mail stats
+            # Create domain_mail stats
             msg = f'mail;{nb_mails};{domain_mx};{item_date}'
             self.send_message_to_queue(msg, 'ModuleStats')
 
@@ -159,8 +157,8 @@ class Mail(AbstractModule):
         for tld in mx_tlds:
             Statistics.add_module_tld_stats_by_date('mail', item_date, tld, mx_tlds[tld])
 
+        msg = f'Mails;{item.get_source()};{item_date};{item.get_basename()};Checked {num_valid_email} e-mail(s);{item_id}'
         if num_valid_email > self.mail_threshold:
-            msg = f'Mails;{item.get_source()};{item_date};{item.get_basename()};Checked {num_valid_email} e-mail(s);{item_id}'
             print(f'{item_id}    Checked {num_valid_email} e-mail(s)')
             self.redis_logger.warning(msg)
             # Tags
@@ -170,8 +168,6 @@ class Mail(AbstractModule):
             self.redis_logger.info(msg)
 
 
-
 if __name__ == '__main__':
     module = Mail()
-    #module.compute('tests/2021/01/01/mails.gz 50')
     module.run()

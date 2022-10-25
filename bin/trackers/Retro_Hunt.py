@@ -10,7 +10,6 @@ The Retro_Hunt trackers module
 # Import External packages
 ##################################
 import os
-import re
 import sys
 import time
 import yara
@@ -20,15 +19,15 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
-from packages.Item import Date
+from lib.objects.Items import Item
+from packages import Date
 from lib import Tracker
 
 import NotificationHelper # # TODO: refractor
 
 class Retro_Hunt(AbstractModule):
 
-    #mail_body_template = "AIL Framework,\nNew YARA match: {}\nitem id: {}\nurl: {}{}"
+    # mail_body_template = "AIL Framework,\nNew YARA match: {}\nitem id: {}\nurl: {}{}"
 
     """
     Retro_Hunt module for AIL framework
@@ -39,9 +38,6 @@ class Retro_Hunt(AbstractModule):
 
         self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
 
-        self.refresh_deleta = 10
-        self.last_refresh = 0
-
         # reset on each loop
         self.task_uuid = None
         self.date_from = 0
@@ -49,13 +45,12 @@ class Retro_Hunt(AbstractModule):
         self.nb_src_done = 0
         self.progress = 0
         self.item = None
+        self.tags = []
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-
     # # TODO: send mails
-    # # TODO:   # start_time
-                # end_time
+    # # TODO:   # start_time # end_time
 
     def compute(self, task_uuid):
         self.redis_logger.warning(f'{self.module_name}, starting Retro hunt task {task_uuid}')
@@ -75,7 +70,7 @@ class Retro_Hunt(AbstractModule):
         self.tags = Tracker.get_retro_hunt_task_tags(task_uuid)
         curr_date = Tracker.get_retro_hunt_task_current_date(task_uuid)
         self.nb_src_done = Tracker.get_retro_hunt_task_nb_src_done(task_uuid, sources=sources)
-        self.progress = self.update_progress(sources, curr_date)
+        self.update_progress(sources, curr_date)
         # iterate on date
         filter_last = True
         while int(curr_date) <= int(self.date_to):
@@ -91,14 +86,15 @@ class Retro_Hunt(AbstractModule):
                 self.redis_logger.debug(f'{self.module_name}, Retro Hunt searching in directory {dir}')
                 l_obj = Tracker.get_items_to_analyze(dir)
                 for id in l_obj:
-                    #print(f'{dir} / {id}')
+                    # print(f'{dir} / {id}')
                     self.item = Item(id)
                     # save current item in cache
                     Tracker.set_cache_retro_hunt_task_id(task_uuid, id)
 
                     self.redis_logger.debug(f'{self.module_name}, Retro Hunt rule {task_uuid}, searching item {id}')
 
-                    yara_match = rule.match(data=self.item.get_content(), callback=self.yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=timeout)
+                    yara_match = rule.match(data=self.item.get_content(), callback=self.yara_rules_match,
+                                            which_callbacks=yara.CALLBACK_MATCHES, timeout=timeout)
 
                     # save last item
                     if nb_id % 10 == 0: # # TODO: Add nb before save in DB
@@ -110,7 +106,7 @@ class Retro_Hunt(AbstractModule):
                     self.update_progress(sources, curr_date)
                     if Tracker.check_retro_hunt_pause(task_uuid):
                         Tracker.set_retro_hunt_last_analyzed(task_uuid, id)
-                        #self.update_progress(sources, curr_date, save_db=True)
+                        # self.update_progress(sources, curr_date, save_db=True)
                         Tracker.pause_retro_hunt_task(task_uuid)
                         Tracker.clear_retro_hunt_task_cache(task_uuid)
                         return None
@@ -142,7 +138,7 @@ class Retro_Hunt(AbstractModule):
 
     def yara_rules_match(self, data):
         id = self.item.get_id()
-        #print(data)
+        # print(data)
         task_uuid = data['namespace']
 
         self.redis_logger.info(f'{self.module_name}, Retro hunt {task_uuid} match found:    {id}')
@@ -177,9 +173,9 @@ class Retro_Hunt(AbstractModule):
             if task_uuid:
                 # Module processing with the message from the queue
                 self.redis_logger.debug(task_uuid)
-                #try:
+                # try:
                 self.compute(task_uuid)
-                #except Exception as err:
+                # except Exception as err:
                 #         self.redis_logger.error(f'Error in module {self.module_name}: {err}')
                 #         # Remove uuid ref
                 #         self.remove_submit_uuid(uuid)

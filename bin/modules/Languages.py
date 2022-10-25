@@ -11,7 +11,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
-#from lib.ConfigLoader import ConfigLoader
+# from lib.ConfigLoader import ConfigLoader
 
 class Languages(AbstractModule):
     """
@@ -30,6 +30,7 @@ class Languages(AbstractModule):
             domain = Domain(item.get_domain())
             for lang in item.get_languages(min_probability=0.8):
                 domain.add_language(lang.language)
+
 
 if __name__ == '__main__':
     module = Languages()

@@ -7,15 +7,15 @@ import gzip
 
 import magic
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import Tag
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
+from lib import Tag
+
 
 config_loader = ConfigLoader.ConfigLoader()
-# get and sanityze PASTE DIRECTORY
-PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
-PASTES_FOLDER = os.path.join(os.path.realpath(PASTES_FOLDER), '')
-
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
@@ -28,15 +28,15 @@ def exist_item(item_id):
         return False
 
 def get_item_filepath(item_id):
-    filename = os.path.join(PASTES_FOLDER, item_id)
+    filename = os.path.join(ConfigLoader.get_items_dir(), item_id)
     return os.path.realpath(filename)
 
 def get_item_date(item_id, add_separator=False):
-    l_directory = item_id.split('/')
+    l_dir = item_id.split('/')
     if add_separator:
-        return '{}/{}/{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+        return f'{l_dir[-4]}/{l_dir[-3]}/{l_dir[-2]}'
     else:
-        return '{}{}{}'.format(l_directory[-4], l_directory[-3], l_directory[-2])
+        return f'{l_dir[-4]}{l_dir[-3]}{l_dir[-2]}'
 
 def get_basename(item_id):
     return os.path.basename(item_id)
@@ -53,17 +53,17 @@ def get_item_domain(item_id):
     return item_id[19:-36]
 
 def get_item_content_binary(item_id):
-    item_full_path = os.path.join(PASTES_FOLDER, item_id)
+    item_full_path = os.path.join(ConfigLoader.get_items_dir(), item_id)
     try:
         with gzip.open(item_full_path, 'rb') as f:
             item_content = f.read()
     except Exception as e:
         print(e)
-        item_content = ''
+        item_content = b''
     return item_content
 
 def get_item_content(item_id):
-    item_full_path = os.path.join(PASTES_FOLDER, item_id)
+    item_full_path = os.path.join(ConfigLoader.get_items_dir(), item_id)
     try:
         item_content = r_cache.get(item_full_path)
     except UnicodeDecodeError:
@@ -84,7 +84,7 @@ def get_item_content(item_id):
 def get_item_mimetype(item_id):
     return magic.from_buffer(get_item_content(item_id), mime=True)
 
-#### TREE CHILD/FATHER ####
+# # # # TREE CHILD/FATHER # # # #
 def is_father(item_id):
     return r_serv_metadata.exists('paste_children:{}'.format(item_id))
 
@@ -127,6 +127,18 @@ def is_domain_root(item_id):
 def get_item_url(item_id):
     return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'real_link')
 
+def get_item_har(item_id):
+    har = '/'.join(item_id.rsplit('/')[-4:])
+    har = f'{har}.json'
+    path = os.path.join(ConfigLoader.get_hars_dir(), har)
+    if os.path.isfile(path):
+        return har
+
+def get_item_har_content(har):
+    with open(har, 'rb') as f:
+        har_content = f.read()
+    return har_content
+
 def get_nb_children(item_id):
     return r_serv_metadata.scard('paste_children:{}'.format(item_id))
 
@@ -140,14 +152,14 @@ def get_item_children(item_id):
 # # TODO:  handle domain last origin in domain lib
 def _delete_node(item_id):
     # only if item isn't deleted
-    #if is_crawled(item_id):
+    # if is_crawled(item_id):
     #    r_serv_metadata.hrem('paste_metadata:{}'.format(item_id), 'real_link')
     for children_id in get_item_children(item_id):
         r_serv_metadata.hdel('paste_metadata:{}'.format(children_id), 'father')
     r_serv_metadata.delete('paste_children:{}'.format(item_id))
 
     # delete regular
-        # simple if leaf
+    # simple if leaf
 
     # delete item node
 
@@ -210,7 +222,7 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
     else:
         for src_name in l_dir:
             if len(src_name) == 4:
-                #try:
+                # try:
                 int(src_name)
                 to_add = os.path.join(source_name)
                 # filter sources, remove first directory
@@ -218,7 +230,7 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
                     to_add = to_add.replace('archive/', '').replace('alerts/', '')
                 l_sources_name.add(to_add)
                 return l_sources_name
-                #except:
+                # except:
                 #    pass
             if source_name:
                 src_name = os.path.join(source_name, src_name)
@@ -227,7 +239,7 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
 
 
 def get_all_items_sources(filter_dir=False, r_list=False):
-    res = _get_dir_source_name(PASTES_FOLDER, filter_dir=filter_dir)
+    res = _get_dir_source_name(ConfigLoader.get_items_dir(), filter_dir=filter_dir)
     if res:
         if r_list:
             res = list(res)

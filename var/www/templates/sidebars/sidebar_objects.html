@@ -28,12 +28,18 @@
       		  <span>Objects</span>
       		</h5>
       	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100 mb-4">
-      	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hashDecoded.hashDecoded_page')}}" id="nav_dashboard">
-      	        <i class="fas fa-lock-open"></i>
-      	        <span>Decoded</span>
-      	      </a>
-      	    </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{{url_for('objects_cve.objects_cves')}}" id="nav_cve">
+                      <i class="fas fa-bug"></i>
+                      <span>CVE</span>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{{url_for('hashDecoded.hashDecoded_page')}}" id="nav_dashboard">
+                      <i class="fas fa-lock-open"></i>
+                      <span>Decoded</span>
+                  </a>
+              </li>
       	    <li class="nav-item">
       	      <a class="nav-link" href="{{url_for('hashDecoded.pgpdump_page')}}" id="nav_dashboard_pgpdump">
       	        <i class="fas fa-key"></i>

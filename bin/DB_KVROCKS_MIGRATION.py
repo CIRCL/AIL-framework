@@ -119,11 +119,11 @@ def core_migration():
     # Auto Export Migration
     ail_misp = r_serv_db.get('ail:misp')
     if ail_misp != 'True':
-        ail_misp == 'False'
+        ail_misp = 'False'
     r_kvrocks.set('ail:misp', ail_misp)
     ail_thehive = r_serv_db.get('ail:thehive')
     if ail_thehive != 'True':
-        ail_thehive == 'False'
+        ail_thehive = 'False'
     r_kvrocks.set('ail:thehive', ail_thehive)
 
 
@@ -494,7 +494,7 @@ def domain_migration():
             domain = Domains.Domain(dom)
             domain.update_daterange(first_seen)
             domain.update_daterange(last_check)
-            domain._set_ports(ports)
+            domain._set_ports(ports) # TODO ############################################################################
             if last_origin:
                 domain.set_last_origin(last_origin)
             for language in languages:
@@ -520,13 +520,13 @@ def domain_migration():
                     epoch = history['epoch']
                     # DOMAIN DOWN
                     if not history.get('status'): # domain DOWN
-                        domain.add_history(epoch, port)
+                        domain.add_history(epoch)
                         print(f'DOWN {epoch}')
                     # DOMAIN UP
                     else:
                         root_id = history.get('root')
                         if root_id:
-                            domain.add_history(epoch, port, root_item=root_id)
+                            domain.add_history(epoch, root_item=root_id)
                             print(f'UP {root_id}')
                             crawled_items = get_crawled_items(dom, root_id)
                             for item_id in crawled_items:
@@ -534,7 +534,7 @@ def domain_migration():
                                 item_father = get_item_father(item_id)
                                 if item_father and url:
                                     print(f'{url}    {item_id}')
-                                    domain.add_crawled_item(url, port, item_id, item_father)
+                                    domain.add_crawled_item(url, item_id, item_father)
 
 
                     #print()

@@ -37,7 +37,7 @@
 								<h5 class="card-title">Crawl a Domain</h5>
 							</div>
 						  <div class="card-body">
-						    <p class="card-text">Enter a domain and choose what kind of data you want.</p>
+						    <p class="card-text">Enter an url or a domain and choose what kind of option you want.</p>
 								<form action="{{ url_for('crawler_splash.send_to_spider') }}" method='post'>
 									<div class="row">
 										<div class="col-12 col-lg-6">
@@ -49,22 +49,22 @@
 												<div class="custom-control custom-switch">
 													<input class="custom-control-input" type="checkbox" name="queue_type_selector" value="True" id="queue_type_selector">
 													<label class="custom-control-label" for="queue_type_selector">
-														<i class="fas fa-splotch"></i> &nbsp;Splash Name
+														<i class="fas fa-splotch"></i> &nbsp;Proxy
 													</label>
 												</div>
 											</div>
 											<div id="div_crawler_queue_type">
 												<select class="custom-select form-control" name="crawler_queue_type" id="crawler_queue_type">
-													{%for crawler_type in all_crawlers_types%}
+													{%for crawler_type in crawlers_types%}
 														<option value="{{crawler_type}}" {%if crawler_type=='tor'%}selected{%endif%}>{{crawler_type}}</option>
 													{%endfor%}
 												</select>
 											</div>
-											<div id="div_splash_name">
-												<select class="custom-select form-control" name="splash_name" id="splash_name">
-													<option value="None" selected>Don't use a special splash crawler</option>
-													{%for splash_name in all_splash_name%}
-														<option value="{{splash_name}}">{{splash_name}}</option>
+											<div id="div_proxy_name">
+												<select class="custom-select form-control" name="proxy_name" id="proxy_name">
+													<option value="None" selected>Use a proxy</option>
+													{%for proxy in proxies%}
+														<option value="{{proxy}}">{{proxy}}</option>
 													{%endfor%}
 												</select>
 											</div>
@@ -122,15 +122,16 @@
 													    <span class="input-group-text">Depth Limit</span>
 													  </div>
 													</div>
-													<div class="input-group mt-2">
-														<div class="input-group-prepend">
-													    <span class="input-group-text bg-light"><i class="fas fa-copy"></i>&nbsp;</span>
-													  </div>
-													  <input class="form-control" type="number" id="max_pages" name="max_pages" min="1" value="1" required>
-														<div class="input-group-append">
-													    <span class="input-group-text">Max Pages</span>
-													  </div>
-													</div>
+{#                                                    TEMPORARY DISABLED #}
+{#													<div class="input-group mt-2">#}
+{#														<div class="input-group-prepend">#}
+{#													    <span class="input-group-text bg-light"><i class="fas fa-copy"></i>&nbsp;</span>#}
+{#													  </div>#}
+{#													  <input class="form-control" type="number" id="max_pages" name="max_pages" min="1" value="1" required>#}
+{#														<div class="input-group-append">#}
+{#													    <span class="input-group-text">Max Pages</span>#}
+{#													  </div>#}
+{#													</div>#}
 												</div>
 											</div>
 
@@ -204,10 +205,10 @@ function manual_crawler_input_controler() {
 function queue_type_selector_input_controler() {
 	if($('#queue_type_selector').is(':checked')){
 		$("#div_crawler_queue_type").hide();
-		$("#div_splash_name").show();
+		$("#div_proxy_name").show();
 	}else{
 		$("#div_crawler_queue_type").show();
-		$("#div_splash_name").hide();
+		$("#div_proxy_name").hide();
 	}
 }
 

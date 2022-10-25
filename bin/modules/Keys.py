@@ -17,7 +17,6 @@ RSA private key, certificate messages
 ##################################
 import os
 import sys
-import time
 from enum import Enum
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -25,7 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
+from lib.objects.Items import Item
 
 
 class KeyEnum(Enum):
@@ -53,9 +52,8 @@ class Keys(AbstractModule):
     def __init__(self):
         super(Keys, self).__init__()
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 1
-
 
     def compute(self, message):
         item = Item(message)
@@ -169,11 +167,12 @@ class Keys(AbstractModule):
         if get_pgp_content:
             self.send_message_to_queue(item.get_id(), 'PgpDump')
 
-        if find :
-            #Send to duplicate
-            self.send_message_to_queue(item.get_id(), 'Duplicate')
-            self.redis_logger.debug(f'{item.get_id()} has key(s)')
-            print(f'{item.get_id()} has key(s)')
+        # if find :
+        #     # Send to duplicate
+        #     self.send_message_to_queue(item.get_id(), 'Duplicate')
+        #     self.redis_logger.debug(f'{item.get_id()} has key(s)')
+        #     print(f'{item.get_id()} has key(s)')
+
 
 if __name__ == '__main__':
 

@@ -22,7 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 import NotificationHelper
-from packages.Item import Item
+from lib.objects.Items import Item
 from packages import Term
 from lib import Tracker
 
@@ -96,7 +96,7 @@ class Tracker_Term(AbstractModule):
             #    Term.create_token_statistics(item_date, word, dict_words_freq[word])
 
             # check solo words
-            ####### # TODO: check if source needed #######
+            # ###### # TODO: check if source needed #######
             for word in self.list_tracked_words:
                 if word in dict_words_freq:
                     self.new_term_found(word, 'word', item)
@@ -136,10 +136,10 @@ class Tracker_Term(AbstractModule):
                 if mail_to_notify:
                     mail_subject = Tracker.get_email_subject(term_uuid)
                     mail_body = Tracker_Term.mail_body_template.format(term, item_id, self.full_item_url, item_id)
-                for mail in mail_to_notify:
-                    self.redis_logger.debug(f'Send Mail {mail_subject}')
-                    print(f'S        print(item_content)end Mail {mail_subject}')
-                    NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
+                    for mail in mail_to_notify:
+                        self.redis_logger.debug(f'Send Mail {mail_subject}')
+                        print(f'S        print(item_content)end Mail {mail_subject}')
+                        NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
                 # Webhook
                 webhook_to_post = Term.get_term_webhook(term_uuid)
@@ -160,7 +160,6 @@ class Tracker_Term(AbstractModule):
                             self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: {response.reason}")
                     except:
                         self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: Something went wrong")
-
 
 
 if __name__ == '__main__':

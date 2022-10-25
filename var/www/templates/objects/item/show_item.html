@@ -92,7 +92,7 @@
 
       <div class="d-flex flex-row-reverse bd-highlight">
         <div>
-          <a href="{{ url_for('correlation.show_correlation')}}?object_type=paste&correlation_id={{ meta['id'] }}&correlation_objects=paste" target="_blank">
+          <a href="{{ url_for('correlation.show_correlation')}}?type=item&id={{ meta['id'] }}" target="_blank">
 						<button class="btn btn-lg btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph
 						</button>
 					</a>
@@ -248,7 +248,7 @@
               {% for b64 in l_64 %}
                 <tr>
                   <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ b64[2] }}&correlation_objects=paste"</a> {{b64[2]}} ({{ b64[4] }})</td>
+                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ b64[2] }}&correlation_objects=paste"> {{b64[2]}} ({{ b64[4] }})</a></td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -287,19 +287,22 @@
             <div class="my-2">
               <table class="table table-sm">
                 <thead>
-                  <td></td>
-                  <td>Last Origin:</td>
+                    <tr>
+                        <td></td>
+                        <td>Last Origin:</td>
+                    </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td><i class="far fa-file"></i></td>
                     <td>
-                      <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', paste=meta['father']) }}" />{{ meta['father'] }}</a>
+                      <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', paste=meta['father']) }}">{{ meta['father'] }}</a>
                     </td>
                   </tr>
+                  <tr>
                     <td><i class="fab fa-html5"></i></td>
                     <td>
-                      <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=meta['crawler']['domain']) }}" />{{ meta['crawler']['domain'] }}</a>
+                      <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=meta['crawler']['domain']) }}">{{ meta['crawler']['domain'] }}</a>
                     </td>
                   </tr>
                   <tr>

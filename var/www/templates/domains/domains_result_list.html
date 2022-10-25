@@ -28,65 +28,57 @@
 
 			{% include 'crawler/menu_sidebar.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			    <div class="col-12 col-lg-10" id="core_content">
 
-        <div class="row">
-          	<div class="col-12 col-lg-6">
+                    <div class="row">
+          	            <div class="col-12 col-lg-6">
+                            {% with page=l_dict_domains['page'], search=l_dict_domains['search'] %}
+                                {% include 'domains/block_domains_name_search.html' %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-12 col-xl-6">
+                            <div class="card my-2 border-secondary" >
+                                <div class="card-body py-2">
+                                    <div class="row">
+                                        <div class="col-md-3 text-center">
+                                            <button class="btn btn-primary" onclick="blocks.value=0;pixelate_all();">
+                                                <i class="fas fa-eye-slash"></i>
+                                                <span class="label-icon">Hide</span>
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="5">
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <button class="btn btn-primary" onclick="blocks.value=50;pixelate_all();">
+                                                <i class="fas fa-plus-square"></i>
+                                                <span class="label-icon">Full resolution</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-              {% with page=l_dict_domains['page'], search=l_dict_domains['search'] %}
-                {% include 'domains/block_domains_name_search.html' %}
-              {% endwith %}
+                    {% with l_dict_domains=l_dict_domains['list_elem'], bootstrap_label=bootstrap_label %}
+                        {% include 'domains/card_img_domain.html' %}
+                    {% endwith %}
+                    <br>
+                    <br>
 
+                    {%if l_dict_domains['list_elem']%}
+                        {% with page=l_dict_domains['page'], nb_page_max=l_dict_domains['nb_pages'],  nb_first_elem=l_dict_domains['nb_first_elem'], nb_last_elem=l_dict_domains['nb_last_elem'], nb_all_elem=l_dict_domains['nb_all_elem'] %}
+                            {% set target_url=url_for('crawler_splash.domains_search_name') + "?name=" + l_dict_domains['search']%}
+                            {%if domains_types %}
+                                {% set target_url = target_url + '&domain_types=' + ','.join(domains_types)%}
+                            {%endif%}
+                            {% include 'pagination.html' %}
+                        {% endwith %}
+                    {%endif%}
 
-            </div>
-            <div class="col-12 col-xl-6">
-
-              <div class="card my-2 border-secondary" >
-      					<div class="card-body py-2">
-      						<div class="row">
-                    <div class="col-md-3 text-center">
-      								<button class="btn btn-primary" onclick="blocks.value=0;pixelate_all();">
-      										<i class="fas fa-eye-slash"></i>
-      										<span class="label-icon">Hide</span>
-      								</button>
-      							</div>
-      							<div class="col-md-6">
-      								<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="5">
-      							</div>
-      							<div class="col-md-3 text-center">
-      								<button class="btn btn-primary" onclick="blocks.value=50;pixelate_all();">
-                          <i class="fas fa-plus-square"></i>
-      										<span class="label-icon">Full resolution</span>
-      								</button>
-      							</div>
-      						</div>
-      					</div>
-      				</div>
-
-            </div>
+                </div>
         </div>
-
-
-        {% with l_dict_domains=l_dict_domains['list_elem'], bootstrap_label=bootstrap_label %}
-          {% include 'domains/card_img_domain.html' %}
-        {% endwith %}
-
-        <br>
-        <br>
-
-        {%if l_dict_domains['list_elem']%}
-          {% with page=l_dict_domains['page'], nb_page_max=l_dict_domains['nb_pages'],  nb_first_elem=l_dict_domains['nb_first_elem'], nb_last_elem=l_dict_domains['nb_last_elem'], nb_all_elem=l_dict_domains['nb_all_elem'] %}
-            {% set target_url=url_for('crawler_splash.domains_search_name') + "?name=" + l_dict_domains['search']%}
-            {%if domains_types %}
-              {% set target_url = target_url + '&domain_types=' + ','.join(domains_types)%}
-            {%endif%}
-            {% include 'pagination.html' %}
-  				{% endwith %}
-        {%endif%}
-
-
-			</div>
-		</div>
 	</div>
 </body>
 

@@ -11,9 +11,8 @@ This module spots zerobins-like services for further processing
 ##################################
 import os
 import sys
-import time
-import pdb
 import re
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -42,33 +41,31 @@ class Zerobins(AbstractModule):
         # Send module state to logs
         self.redis_logger.info(f'Module {self.module_name} initialized')
 
-
     def computeNone(self):
         """
         Compute when no message in queue
         """
         self.redis_logger.debug("No message in queue")
 
-
     def compute(self, message):
-        """regex_helper.regex_findall(self.module_name, self.redis_cache_key
+        """
         Compute a message in queue
         """
-        print(message)
-        url, id = message.split()
+        url, item_id = message.split()
 
         # Extract zerobins addresses
-        matching_binz = self.regex_findall(self.regex, id, url)
+        matching_binz = self.regex_findall(self.regex, item_id, url)
 
         if len(matching_binz) > 0:
-            for bin in matching_binz:
-                print("send {} to crawler".format(bin))
-                crawlers.create_crawler_task(bin, screenshot=False, har=False, depth_limit=1, max_pages=1, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None)
+            for bin_url in matching_binz:
+                print(f'send {bin_url} to crawler')
+                crawlers.add_crawler_task(bin_url, depth=0, har=False, screenshot=False, proxy='force_tor',
+                                          parent='manual', priority=10)
 
         self.redis_logger.debug("Compute message in queue")
 
 
+# TODO TEST ME
 if __name__ == '__main__':
-
     module = Zerobins()
     module.run()

@@ -20,33 +20,28 @@
       	      </a>
       	    </li>
       	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hiddenServices.Crawler_Splash_last_by_type')}}?type=onion" id="nav_onion_crawler">
-      					<i class="fas fa-user-secret"></i>
-      	       	Onion Crawler
+      	      <a class="nav-link" href="{{url_for('crawler_splash.crawlers_last_domains')}}?type=onion" id="nav_onion_crawler">
+                  <i class="fas fa-user-secret"></i> Onion Crawler
       	      </a>
       	    </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{url_for('hiddenServices.Crawler_Splash_last_by_type')}}?type=regular" id="nav_regular_crawler">
-      					<i class="fab fa-html5"></i>
-                Regular Crawler
+              <a class="nav-link" href="{{url_for('crawler_splash.crawlers_last_domains')}}?type=web" id="nav_web_crawler">
+                  <i class="fab fa-html5"></i> Web Crawler
               </a>
             </li>
       			<li class="nav-item">
               <a class="nav-link" href="{{url_for('crawler_splash.manual')}}" id="nav_manual_crawler">
-      					<i class="fas fa-spider"></i>
-                Manual Crawler
+                  <i class="fas fa-spider"></i> Manual Crawler
               </a>
             </li>
       			<li class="nav-item">
               <a class="nav-link" href="{{url_for('hiddenServices.auto_crawler')}}" id="nav_auto_crawler">
-      					<i class="fas fa-sync"></i>
-                Automatic Crawler
+                  <i class="fas fa-sync"></i> Automatic Crawler
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{url_for('crawler_splash.crawler_splash_setings')}}" id="nav_settings">
-      					<i class="fas fa-cog"></i>
-                Settings
+              <a class="nav-link" href="{{url_for('crawler_splash.crawler_settings')}}" id="nav_settings">
+                  <i class="fas fa-cog"></i> Settings
               </a>
             </li>
           </ul>

@@ -38,8 +38,6 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-
-
 				<div class="row">
 
 					<div class="col-12 col-xl-6">
@@ -58,7 +56,7 @@
 										</div>
 									{% endif %}
 								</span>
-								<h3 class="card-title text-white">{{ dict_domain['domain'] }} :</h3>
+								<h3 class="card-title text-white">{{ dict_domain['domain'] }}</h3>
 							</div>
 							<div class="card-body">
 								<table class="table table-responsive table-condensed">
@@ -66,67 +64,67 @@
 										<tr>
 											<th>First Seen</th>
 											<th>Last Check</th>
-                      <th>Ports</th>
-                      <th>Languages</th>
+                                            <th>Ports</th>
+                                            <th>Languages</th>
 										</tr>
 									</thead>
-									<tbody>
+                                    <tbody>
 										<tr>
 											<td class="panelText">{%if "first_seen" in dict_domain%}{{ dict_domain['first_seen'] }}{%endif%}</td>
 											<td class="panelText">{%if "last_check" in dict_domain%}{{ dict_domain['last_check'] }}{%endif%}</td>
-                      <td class="panelText">{%if dict_domain["ports"]%}{{ dict_domain["ports"] }}{%endif%}</td>
-                      <td class="panelText">
-                        {% for languages in dict_domain['languages'] %}
-                          {{languages}}
-      									{%  endfor %}
-                      </td>
+                                            <td class="panelText">{%if dict_domain["ports"]%}{{ dict_domain["ports"] }}{%endif%}</td>
+                                            <td class="panelText">
+                                                {% for languages in dict_domain['languages'] %}
+                                                    {{languages}}
+                                                {%  endfor %}
+                                            </td>
 										</tr>
 									</tbody>
 								</table>
 
 								<div>
-                  {% include 'modals/edit_tag.html' %}
+                                    {% include 'modals/edit_tag.html' %}
 									{% for tag in dict_domain['tags'] %}
-  									<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-                    data-tagid="{{ tag }}" data-objtype="domain" data-objid="{{ dict_domain['domain'] }}">
-                      {{ tag }}
-                    </button>
-
+                                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal" data-tagid="{{ tag }}" data-objtype="domain" data-objid="{{ dict_domain['domain'] }}">
+                                            {{ tag }}
+                                        </button>
 									{%  endfor %}
 									<br>
-                  {% include 'modals/add_tags.html' %}
-                  <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
-                    <i class="far fa-plus-square"></i>
-                  </button>
+                                    {% include 'modals/add_tags.html' %}
+                                    <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                                        <i class="far fa-plus-square"></i>
+                                    </button>
 								</div>
 
                 <table class="table table-sm table-responsive">
                   <thead>
-                    <td></td>
-                    <td>Last Origin:</td>
+                    <tr>
+                        <td></td>
+                        <td>Last Origin:</td>
+                    </tr>
                   </thead>
                   <tbody>
-                    {% if 'father' in dict_domain %}
-                      {% if dict_domain['father']=='manual' or dict_domain['father']=='auto' %}
+                    {% if 'last_origin' in dict_domain %}
+                      {% if dict_domain['last_origin']=='manual' or dict_domain['last_origin']=='auto' %}
                         <tr>
                           <td></td>
-        									<td><span class="badge badge-dark">{{ dict_domain['father'] }}</span></td>
+                          <td><span class="badge badge-dark">{{ dict_domain['last_origin']['item'] }}</span></td>
                         </tr>
-      								{%else%}
-                      <tr>
-                        <td><i class="far fa-file"></i></td>
-                        <td>
-                          <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', id=dict_domain['father']['item_father']) }}" />{{ dict_domain['father']['item_father'] }}</a>
-                        </td>
-                      </tr>
-                        {% if dict_domain['father']['domain_father'] %}
+                      {%else%}
+                        <tr>
+                          <td><i class="far fa-file"></i></td>
+                          <td>
+                            <a class="badge" target="_blank" href="{{ url_for('objects_item.showItem', id=dict_domain['last_origin']['item']) }}">{{ dict_domain['last_origin']['item'] }}</a>
+                          </td>
+                        </tr>
+                        {% if dict_domain['last_origin']['domain'] %}
                           <td><i class="fab fa-html5"></i></td>
                           <td>
-                            <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=dict_domain['father']['domain_father']) }}" />{{ dict_domain['father']['domain_father'] }}</a>
+                            <a class="badge" target="_blank" href="{{ url_for('crawler_splash.showDomain', domain=dict_domain['last_origin']['domain']) }}">{{ dict_domain['last_origin']['domain']}}</a>
                           </td>
                         {%endif%}
                       <p>
-      								{%endif%}
+                      {%endif%}
                     {%endif%}
                   </tbody>
                 </table>
@@ -136,15 +134,14 @@
                     {% if dict_domain["correlation_nb"] > 0 %}
                       <hr>
                       <div>
-              					<a href="{{ url_for('correlation.show_correlation')}}?object_type=domain&correlation_id={{ dict_domain['domain'] }}&correlation_objects=domain" target="_blank" style="font-size: 15px">
-              						<button class="btn btn-info"><i class="fas fa-search"></i> Show Domain Correlations &nbsp;
-                            <div class="badge badge-warning">{{dict_domain['correlation_nb']}}</div>
-              						</button>
-              					</a>
-              				</div>
+                          <a href="{{ url_for('correlation.show_correlation')}}?type=domain&id={{ dict_domain['domain'] }}&correlation_objects=domain" target="_blank" style="font-size: 15px">
+                              <button class="btn btn-info"><i class="fas fa-search"></i> Show Domain Correlations &nbsp;
+                                  <span class="badge badge-warning">{{dict_domain['correlation_nb']}}</span>
+                              </button>
+                          </a>
+                      </div>
                     {%endif%}
                   {%endif%}
-
                   {% with obj_type='domain', obj_id=dict_domain['domain'], obj_subtype=''%}
                     {% include 'modals/investigations_register_obj.html' %}
                   {% endwith %}
@@ -157,12 +154,11 @@
                 </div>
 
                 <div class="mt-2">
-                  {% with obj_type='domain', obj_id=dict_domain['domain'], obj_lvl=0%}
-				              {% include 'import_export/block_add_user_object_to_export.html' %}
-				          {% endwith %}
+                    {% with obj_type='domain', obj_id=dict_domain['domain'], obj_lvl=0%}
+                        {% include 'import_export/block_add_user_object_to_export.html' %}
+                    {% endwith %}
                 </div>
-
-							</div>
+                </div>
 						</div>
 
 
@@ -329,7 +325,7 @@
                     <div class="row">
                       <div class="col-11">
                         <div class="mt-2">
-                          <i class="far fa-image"></i></i> Screenshot&nbsp;&nbsp;
+                          <i class="far fa-image"></i> Screenshot&nbsp;&nbsp;
                           <div class="badge badge-warning">{{dict_domain['screenshot']|length}}</div>
                         </div>
                       </div>
@@ -362,94 +358,84 @@
               </div>
             {% endif %}
 
+            {% if dict_domain["history"] %}
+                <hr class="my-4">
+                <div class="card mb-1">
+                    <div class="card-header">
+                        <div class="flex-row-reverse float-right text-secondary">Date:
+                            <span class="badge badge-pill badge-info mt-1">
+                                {{dict_domain["date"]}}
+                            </span>
+                        </div>
+                        <h5>Capture {% if not dict_domain["crawler_history_items"] %}: Domain DOWN{% endif %}</h5>
+                    </div>
+                </div>
 
-						{% if dict_domain["crawler_history"] %}
-              <hr class="my-4">
+            {% if dict_domain["crawler_history_items"] %}
+                <table class="table table-striped table-bordered table-hover" id="myTable_1">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Urls</th>
+                            <th class="text-center"><i class="fas fa-images"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in dict_domain["crawler_history_items"] %}
+                            <tr>
+                                <td>
+                                    <a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item["id"]}}" class="text-secondary">
+                                        <div style="line-height:0.9;">{{ item['crawler']["url"] }}</div>
+                                    </a>
+                                    <div>
+                                      {% for tag in item["tags"] %}
+                                          <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag["tag"] }}">
+                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag["min_tag"] }}</span>
+                                          </a>
+                                      {%  endfor %}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {%if item['crawler']["screenshot"]%}
+                                        <span class="icon_img" onclick="reload_image('{{ item['crawler']["screenshot"] }}', '{{ item['crawler']["url"] }}', '{{ item["id"] }}');" id="{{ item['crawler']["screenshot"].replace('/', '') }}">
+                                        <i class="far fa-image"></i>
+                                    {%endif%}
+                                </td>
+                            </tr>
+                        {%  endfor %}
 
-              <div class="card mb-1">
-  							<div class="card-header">
-                  <div class="flex-row-reverse float-right text-secondary">
-                    Date:
-                    <span class="badge badge-pill badge-info mt-1">
-    									{{dict_domain["crawler_history"]["date"]}}
-    								</span>
-                    &nbsp;&nbsp;PORT:
-                    <span class="badge badge-pill badge-warning mt-1">
-    									{{dict_domain["crawler_history"]["port"]}}
-    								</span>
-                  </div>
-                  <h5>Crawled Items {% if not dict_domain["crawler_history"]["items"] %}: DOWN{% endif %}</h5>
-  							</div>
-
-              </div>
-
-              {% if dict_domain["crawler_history"]["items"] %}
-  							<table class="table table-striped table-bordered table-hover" id="myTable_1">
-  						    <thead class="thead-dark">
-  						      <tr>
-  						        <th>Crawled Pastes</th>
-                      <th class="text-center"><i class="fas fa-images"></i></th>
-  						      </tr>
-  						    </thead>
-  						    <tbody>
-  					        {% for item in dict_domain["crawler_history"]["items"] %}
-  					          <tr>
-  				              <td>
-  												<a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item["id"]}}" class="text-secondary">
-  													<div style="line-height:0.9;">{{ item["link"] }}</div>
-  												</a>
-  				                <div>
-  				                  {% for tag in item["tags"] %}
-  					                  <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag["tag"] }}">
-  					                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag["min_tag"] }}</span>
-  					                  </a>
-  				                  {%  endfor %}
-  				                </div>
-  			              	</td>
-                      <td class="text-center">
-                        {%if item["screenshot"]%}
-                        <span class="icon_img" onclick="reload_image('{{ item["screenshot"] }}', '{{ item["link"] }}', '{{ item["id"] }}');" id="{{ item["screenshot"].replace('/', '') }}">
-                          <i class="far fa-image"></i>
-                        </button>
-                        {%endif%}
-                      </td>
-  						        </tr>
-  						      {%  endfor %}
-
-  						    </tbody>
-  						  </table>
+                    </tbody>
+                </table>
 
                 <div class="text-center mb-4">
-                  <a href="{{ url_for('hiddenServices.download_domain') }}?domain={{domain}}&port={{port}}{% if epoch %}&epoch={{epoch}}{% endif %}" target="blank" style="font-size: 15px">
-                      <button class="btn btn-info"><i class="fas fa-download"></i> Download Domain Content
-                      </button>
+                  <a href="{{ url_for('crawler_splash.crawlers_domain_download') }}?domain={{dict_domain['domain']}}{% if dict_domain['epoch'] %}&epoch={{dict_domain['epoch']}}{% endif %}" target="blank" style="font-size: 15px">
+                      <button class="btn btn-info"><i class="fas fa-download"></i> Download Domain Content</button>
                   </a>
                 </div>
               {%endif%}
 						{%endif%}
 
             {% if dict_domain["history"] %}
-							<table class="table table-hover mt-2" id="myTable_2">
-						    <thead>
-						      <tr>
-						        <th><i class="fas fa-history"></i> Domain History</th>
-						      </tr>
-						    </thead>
-						    <tbody>
-					        {% for dom_history in dict_domain["history"] %}
-					          <tr>
-				              <td class="{% if dom_history["epoch"]==dict_domain["crawler_history"]["epoch"] %}text-dark table-info{% endif %}">
-												<a href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["domain"]}}&port={{dict_domain["crawler_history"]["port"]}}&epoch={{dom_history["epoch"]}}" class="text-secondary">
-													<div class="d-flex justify-content-around" style="line-height:0.9;">
-                            <div>{{dict_domain["domain"]}}</div>
-                            {% if dom_history["status"] %}
-                              <div style="color:Green;"><i class="fas fa-check-circle"></i> UP</div>
-                            {% else %}
-                              <div style="color:Red;"><i class="fas fa-times-circle"></i>	DOWN</div>
-                            {% endif %}
-                            <div>{{ dom_history["date"] }}</div>
-                          </div>
-												</a>
+                <table class="table table-hover mt-2" id="myTable_2">
+                    <thead>
+                    <tr>
+                        <th><i class="fas fa-history"></i> Domain History</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for dom_history in dict_domain["history"] %}
+                        <tr>
+                            <td class="{% if dom_history["epoch"]==dict_domain["epoch"] %}text-dark table-info{% endif %}">
+                                <a href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["domain"]}}&epoch={{dom_history["epoch"]}}" class="text-secondary">
+                                    <div class="d-flex justify-content-around" style="line-height:0.9;">
+                                        <div>{{dict_domain["domain"]}}</div>
+                                        {% if dom_history["status"] %}
+                                            <div style="color:Green;"><i class="fas fa-check-circle"></i> UP</div>
+                                        {% else %}
+                                            <div style="color:Red;"><i class="fas fa-times-circle"></i>	DOWN</div>
+                                        {% endif %}
+                                            <div>{{ dom_history["date"] }}</div>
+                                    </div>
+                                </a>
 						        </tr>
 						      {%  endfor %}
 						    </tbody>
@@ -551,16 +537,16 @@ img.onload = pixelate;
 img.addEventListener("error", img_error);
 var draw_img = false;
 
-{%if "crawler_history" in dict_domain%}
-  {%if "random_item" in dict_domain['crawler_history']%}
-    {%if dict_domain['crawler_history']['random_item']['screenshot']%}
-      var screenshot = "{{dict_domain['crawler_history']['random_item']['screenshot']}}";
+{%if "crawler_history_items" in dict_domain%}
+  {%if "random_item" in dict_domain%}
+    {%if dict_domain['random_item']['crawler']['screenshot']%}
+      var screenshot = "{{dict_domain['random_item']['crawler']['screenshot']}}";
       var selected_icon = $("#"+screenshot.replace(/\//g, ""));
       selected_icon.addClass("icon_selected");
       selected_icon.removeClass("icon_img");
 
-      $("#screenshot_link").attr("href", screenshot_href + "{{dict_domain['crawler_history']['random_item']['id']}}");
-      $("#screenshot_link").text("{{dict_domain['crawler_history']['random_item']['link']}}");
+      $("#screenshot_link").attr("href", screenshot_href + "{{dict_domain['random_item']['id']}}");
+      $("#screenshot_link").text("{{dict_domain['random_item']['crawler']['url']}}");
     {%else%}
       var screenshot = "";
     {%endif%}

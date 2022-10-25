@@ -1,3 +1,12 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{#{% with modal_add_tags=dict_object['metadata_card']['add_tags_modal']%}#}
+{#	{% include 'modals/add_tags.html' %}#}
+{#{% endwith %}#}
+
+{% include 'modals/edit_tag.html' %}
+
 <div class="card my-3">
 	<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
 		<h4 class="text-secondary">{{ dict_object["correlation_id"] }} :</h4>
@@ -9,7 +18,6 @@
 							<thead>
 								<tr>
 									<th>Object type</th>
-									<th>type</th>
 									<th>First seen</th>
 									<th>Last seen</th>
 									<th>Nb seen</th>
@@ -25,7 +33,6 @@
 												<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ dict_object["metadata_card"]["icon"]["icon_class"] }}" font-size="16px">{{ dict_object["metadata_card"]["icon"]["icon_text"] }}</text>
 											</g>
 										</svg>
-										{{ dict_object["metadata"]["type_id"] }}
 									</td>
 									<td>{{ dict_object["metadata"]['first_seen'] }}</td>
 									<td>{{ dict_object["metadata"]['last_seen'] }}</td>
@@ -39,47 +46,25 @@
 					</div>
 				</div>
 			</li>
+{#			<li class="list-group-item py-0">#}
+{#				<br>#}
+{#				<div class="mb-3">#}
+{#					Tags:#}
+{#					{% for tag in dict_object["metadata"]['tags'] %}#}
+{#						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"#}
+{#						data-tagid="{{ tag }}" data-objtype="decoded" data-objid="{{ dict_object["correlation_id"] }}">#}
+{#							{{ tag }}#}
+{#						</button>#}
+{#					{%  endfor %}#}
+{#					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">#}
+{#          	<i class="far fa-plus-square"></i>#}
+{#          </button>#}
+{#				</div>#}
+{#			</li>#}
 		</ul>
-		{% if dict_object["metadata"]["type_id"] == "bitcoin" %}
-			{% if "related_btc" in dict_object["metadata_card"] %}
-				<div>
-					<table class="table">
-						<thead>
-							<tr>
-								<th>Numbers of transactions</th>
-								<th>Total received</th>
-								<th>Total sent</th>
-								<th>Balance</th>
-								<th>Inputs address seen in AIL</th>
-								<th>Outputs address seen in AIL</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>{{ dict_object["metadata_card"]["related_btc"]["n_tx"] }}</td>
-								<td>{{ dict_object["metadata_card"]["related_btc"]["total_received"] }}</td>
-								<td>{{ dict_object["metadata_card"]["related_btc"]["total_sent"] }}</td>
-								<td>{{ dict_object["metadata_card"]["related_btc"]["final_balance"] }}</td>
-								<td>
-									{% for btc_addr in dict_object["metadata_card"]["related_btc"]["btc_in"] %}
-										<a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=cryptocurrency&subtype=bitcoin&id={{ btc_addr }}">{{ btc_addr }}</a>
-									{% endfor %}
-								</td>
-								<td>
-									{% for btc_addr in dict_object["metadata_card"]["related_btc"]["btc_out"] %}
-										<a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=cryptocurrency&subtype=bitcoin&id={{ btc_addr }}">{{ btc_addr }}</a>
-									{% endfor %}
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			{% else %}
-				<a class="btn btn-secondary" href="{{ url_for('correlation.show_correlation') }}?type=cryptocurrency&subtype=bitcoin&id={{ dict_object['correlation_id'] }}&related_btc=True">Expand Bitcoin address</a>
-			{% endif %}
-		{% endif %}
 
-		{% with obj_type='cryptocurrency', obj_id=dict_object['correlation_id'], obj_subtype=dict_object["metadata"]["type_id"] %}
+
+		{% with obj_type='decoded', obj_id=dict_object['correlation_id'], obj_subtype='' %}
 			{% include 'modals/investigations_register_obj.html' %}
 		{% endwith %}
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
@@ -93,6 +78,7 @@
 <script>
 	sparkline("sparkline", {{ dict_object["metadata_card"]["sparkline"] }}, {});
 </script>
+
 
 <script>
 function create_line_chart(id, url){

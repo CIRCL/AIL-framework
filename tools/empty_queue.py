@@ -12,10 +12,8 @@ Requirements:
 
 
 """
-import redis
 import os
 import time
-from packages import Paste
 from pubsublogger import publisher
 from Helper import Process
 

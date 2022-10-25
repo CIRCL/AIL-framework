@@ -8,7 +8,6 @@
 # Import External packages
 ##################################
 import os
-import re
 import sys
 import time
 import yara
@@ -20,10 +19,10 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from packages import Term
-from packages.Item import Item
+from lib.objects.Items import Item
 from lib import Tracker
 
-import NotificationHelper # # TODO: refactor
+import NotificationHelper  # # TODO: refactor
 
 class Tracker_Yara(AbstractModule):
 
@@ -46,7 +45,6 @@ class Tracker_Yara(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-
     def compute(self, item_id):
         # refresh YARA list
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('yara'):
@@ -58,7 +56,8 @@ class Tracker_Yara(AbstractModule):
         self.item = Item(item_id)
         item_content = self.item.get_content()
         try:
-            yara_match = self.rules.match(data=item_content, callback=self.yara_rules_match, which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
+            yara_match = self.rules.match(data=item_content, callback=self.yara_rules_match,
+                                          which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
             if yara_match:
                 self.redis_logger.info(f'{self.item.get_id()}: {yara_match}')
                 print(f'{self.item.get_id()}: {yara_match}')
@@ -91,10 +90,10 @@ class Tracker_Yara(AbstractModule):
         if mail_to_notify:
             mail_subject = Tracker.get_email_subject(tracker_uuid)
             mail_body = Tracker_Yara.mail_body_template.format(data['rule'], item_id, self.full_item_url, item_id)
-        for mail in mail_to_notify:
-            self.redis_logger.debug(f'Send Mail {mail_subject}')
-            print(f'Send Mail {mail_subject}')
-            NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
+            for mail in mail_to_notify:
+                self.redis_logger.debug(f'Send Mail {mail_subject}')
+                print(f'Send Mail {mail_subject}')
+                NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
         # Webhook
         webhook_to_post = Term.get_term_webhook(tracker_uuid)
@@ -115,7 +114,6 @@ class Tracker_Yara(AbstractModule):
                     self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: {response.reason}")
             except:
                 self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: Something went wrong")
-
 
         return yara.CALLBACK_CONTINUE
 

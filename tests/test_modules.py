@@ -40,6 +40,7 @@ class Test_Module_ApiKey(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = ApiKey()
+        self.module_obj.debug = True
 
     def test_module(self):
         item_id = 'tests/2021/01/01/api_keys.gz'
@@ -56,6 +57,7 @@ class Test_Module_Categ(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = Categ()
+        self.module_obj.debug = True
 
     def test_module(self):
         item_id = 'tests/2021/01/01/categ.gz'
@@ -69,14 +71,15 @@ class Test_Module_CreditCards(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = CreditCards()
+        self.module_obj.debug = True
 
     def test_module(self):
         item_id = 'tests/2021/01/01/credit_cards.gz 7'
-        test_cards = ['341039324930797', # American Express
-                        '6011613905509166', # Discover Card
-                        '3547151714018657', # Japan Credit Bureau (JCB)
-                        '5492981206527330', # 16 digits MasterCard
-                        '4024007132849695', # '4532525919781' # 16-digit VISA, with separators
+        test_cards = ['341039324930797',     # American Express
+                        '6011613905509166',  # Discover Card
+                        '3547151714018657',  # Japan Credit Bureau (JCB)
+                        '5492981206527330',  # 16 digits MasterCard
+                        '4024007132849695',  # '4532525919781' # 16-digit VISA, with separators
                      ]
 
         result = self.module_obj.compute(item_id, r_result=True)
@@ -86,6 +89,7 @@ class Test_Module_DomClassifier(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = DomClassifier()
+        self.module_obj.debug = True
 
     def test_module(self):
         test_host = 'foo.be'
@@ -98,6 +102,7 @@ class Test_Module_Global(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = Global()
+        self.module_obj.debug = True
 
     def test_module(self):
         # # TODO: delete item
@@ -138,6 +143,7 @@ class Test_Module_Keys(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = Keys()
+        self.module_obj.debug = True
 
     def test_module(self):
         item_id = 'tests/2021/01/01/keys.gz'
@@ -148,6 +154,7 @@ class Test_Module_Onion(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = Onion()
+        self.module_obj.debug = True
 
     def test_module(self):
         item_id = 'tests/2021/01/01/onion.gz'
@@ -157,7 +164,7 @@ class Test_Module_Onion(unittest.TestCase):
 
         self.module_obj.compute(f'{item_id} 3')
         if crawlers.is_crawler_activated():
-            ## check domain queues
+            # # check domain queues
             # all domains queue
             self.assertTrue(crawlers.is_domain_in_queue('onion', domain_1))
             # all url/item queue
@@ -177,11 +184,13 @@ class Test_Module_Telegram(unittest.TestCase):
 
     def setUp(self):
         self.module_obj = Telegram()
+        self.module_obj.debug = True
 
     def test_module(self):
         item_id = 'tests/2021/01/01/keys.gz'
         # # TODO: check results
         result = self.module_obj.compute(item_id)
+
 
 if __name__ == '__main__':
     unittest.main()

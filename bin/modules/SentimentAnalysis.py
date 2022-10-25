@@ -34,9 +34,8 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages import Paste
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+from lib.objects.Items import Item
+from lib import ConfigLoader
 
 
 class TimeoutException(Exception):
@@ -53,11 +52,9 @@ class SentimentAnalysis(AbstractModule):
     SentimentAnalysis module for AIL framework
     """
 
-
     # Config Variables
     accepted_Mime_type = ['text/plain']
     line_max_length_threshold = 1000
-
 
     def __init__(self):
         super(SentimentAnalysis, self).__init__()
@@ -75,7 +72,6 @@ class SentimentAnalysis(AbstractModule):
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
 
-
     def compute(self, message):
         # Max time to compute one entry
         signal.alarm(60)
@@ -87,16 +83,31 @@ class SentimentAnalysis(AbstractModule):
         else:
             signal.alarm(0)
 
+    def get_p_content_with_removed_lines(self, threshold, item_content):
+        num_line_removed = 0
+        line_length_threshold = threshold
+        string_content = ""
+        f = item_content
+        for line_id, line in enumerate(f):
+            length = len(line)
+
+            if length < line_length_threshold:
+                string_content += line
+            else:
+                num_line_removed += 1
+
+        return num_line_removed, string_content
 
     def analyse(self, message):
 
-        paste = Paste.Paste(message)
+        item = Item(message)
 
         # get content with removed line + number of them
-        num_line_removed, p_content = paste.get_p_content_with_removed_lines(SentimentAnalysis.line_max_length_threshold)
-        provider = paste.p_source
-        p_date = str(paste._get_p_date())
-        p_MimeType = paste._get_p_encoding()
+        num_line_removed, p_content = self.get_p_content_with_removed_lines(SentimentAnalysis.line_max_length_threshold,
+                                                                            item.get_content())
+        provider = item.get_source()
+        p_date = item.get_date()
+        p_MimeType = item.get_mimetype()
 
         # Perform further analysis
         if p_MimeType == "text/plain":

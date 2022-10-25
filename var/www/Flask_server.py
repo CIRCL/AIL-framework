@@ -29,11 +29,9 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.ConfigLoader import ConfigLoader
 from lib.Users import User
 from lib import Tag
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
 
 # Import config
 import Flask_config
@@ -50,14 +48,14 @@ from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
 from blueprints.ail_2_ail_sync import ail_2_ail_sync
 from blueprints.settings_b import settings_b
+from blueprints.objects_cve import objects_cve
 from blueprints.objects_decoded import objects_decoded
-from blueprints.objects_range import objects_range
 
 
 Flask_dir = os.environ['AIL_FLASK']
 
 # CONFIG #
-config_loader = ConfigLoader.ConfigLoader()
+config_loader = ConfigLoader()
 baseUrl = config_loader.get_config_str("Flask", "baseurl")
 host = config_loader.get_config_str("Flask", "host")
 baseUrl = baseUrl.replace('/', '')
@@ -111,8 +109,8 @@ app.register_blueprint(hunters, url_prefix=baseUrl)
 app.register_blueprint(old_endpoints, url_prefix=baseUrl)
 app.register_blueprint(ail_2_ail_sync, url_prefix=baseUrl)
 app.register_blueprint(settings_b, url_prefix=baseUrl)
+app.register_blueprint(objects_cve, url_prefix=baseUrl)
 app.register_blueprint(objects_decoded, url_prefix=baseUrl)
-app.register_blueprint(objects_range, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========
@@ -162,33 +160,32 @@ for root, dirs, files in os.walk(os.path.join(Flask_dir, 'modules')):
             if name == 'Flask_config.py':
                 continue
             name = name.strip('.py')
-            #print('importing {}'.format(name))
             importlib.import_module(name)
         elif name == 'header_{}.html'.format(module_name):
             with open(join(root, name), 'r') as f:
                 to_add_to_header_dico[module_name] = f.read()
 
-#create header.html
+# create header.html
 complete_header = ""
 with open(os.path.join(Flask_dir, 'templates', 'header_base.html'), 'r') as f:
     complete_header = f.read()
 modified_header = complete_header
 
-#Add the header in the supplied order
+# Add the header in the supplied order
 for module_name, txt in list(to_add_to_header_dico.items()):
     to_replace = '<!--{}-->'.format(module_name)
     if to_replace in complete_header:
         modified_header = modified_header.replace(to_replace, txt)
         del to_add_to_header_dico[module_name]
 
-#Add the header for no-supplied order
+# Add the header for no-supplied order
 to_add_to_header = []
 for module_name, txt in to_add_to_header_dico.items():
     to_add_to_header.append(txt)
 
 modified_header = modified_header.replace('<!--insert here-->', '\n'.join(to_add_to_header))
 
-#Write the header.html file
+# Write the header.html file
 with open(os.path.join(Flask_dir, 'templates', 'header.html'), 'w') as f:
     f.write(modified_header)
 
@@ -249,6 +246,7 @@ def error_page_not_found(e):
 def page_not_found(e):
     # avoid endpoint enumeration
     return render_template('error/404.html'), 404
+
 
 # ========== INITIAL taxonomies ============
 default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]

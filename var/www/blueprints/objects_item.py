@@ -36,16 +36,16 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
 
 # ============= ROUTES ==============
-@objects_item.route("/object/item") #completely shows the paste in a new tab
+@objects_item.route("/object/item")
 @login_required
 @login_read_only
-def showItem(): # # TODO: support post
+def showItem():  # # TODO: support post
     item_id = request.args.get('id')
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
 
     item = Item(item_id)
-    meta = item.get_meta(options=set(['content', 'crawler', 'duplicates', 'lines', 'size']))
+    meta = item.get_meta(options=['content', 'crawler', 'duplicates', 'lines', 'size'])
 
     meta['name'] = meta['id'].replace('/', ' / ')
     meta['father'] = item_basic.get_item_parent(item_id)
@@ -94,4 +94,4 @@ def item_download(): # # TODO: support post
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
     item = Item(item_id)
-    return send_file(item.get_raw_content(), attachment_filename=item_id, as_attachment=True)
+    return send_file(item.get_raw_content(), download_name=item_id, as_attachment=True)

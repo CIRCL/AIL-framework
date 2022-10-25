@@ -58,7 +58,6 @@ def get_item_stats_nb_by_date():
 def _set_item_stats_nb_by_date(date, source):
     return r_statistics.zrange(f'providers_set_{date}', )
 
-
 # # TODO: load ZSET IN CACHE => FAST UPDATE
 def update_item_stats_size_nb(item_id, source, size, date):
     # Add/Update in Redis
@@ -106,7 +105,7 @@ def update_module_stats(module_name, num, keyword, date):
     # check if this keyword is eligible for progression
     keyword_total_sum = 0
 
-    curr_value = r_statistics.hget(date, module+'-'+keyword)
+    curr_value = r_statistics.hget(date, f'{module_name}-{keyword}')
     keyword_total_sum += int(curr_value) if curr_value is not None else 0
 
     if r_statistics.zcard(f'top_{module_name}_set_{date}') < PIE_CHART_MAX_CARDINALITY:

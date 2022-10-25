@@ -153,6 +153,9 @@ def sanitise_date_range(date_from, date_to, separator='', date_type='str'):
         date_from = date_to
     elif not date_to and date_from:
         date_to = date_from
+    elif not date_to and not date_from:
+        date = datetime.date.today().strftime("%Y%m%d")
+        return {"date_from": date, "date_to": date}
 
     if date_type=='str':
         # remove separators

@@ -68,17 +68,17 @@
 										<table class="table table-sm">
 											<tbody>
 												<tr>
-													<td>Splash Manager URL</td>
-													<td>{{splash_manager_url}}</td>
+													<td>Lacus URL</td>
+													<td>{{lacus_url}}</td>
 												</tr>
 												<tr>
-													<td>API Key</td>
+{#													<td>API Key</td>#}
+{#													<td>#}
+{#														{{api_key}}#}
+{#														<!-- <a class="ml-3" href="/settings/new_token"><i class="fa fa-random"></i></a> -->#}
+{#													</td>#}
 													<td>
-														{{api_key}}
-														<!-- <a class="ml-3" href="/settings/new_token"><i class="fa fa-random"></i></a> -->
-													</td>
-													<td>
-														<a href="{{ url_for('crawler_splash.crawler_splash_setings_crawler_manager') }}">
+														<a href="{{ url_for('crawler_splash.crawler_lacus_settings_crawler_manager') }}">
 															<button type="button" class="btn btn-info">
 																Edit <i class="fas fa-pencil-alt"></i>
 															</button>
@@ -92,126 +92,52 @@
 							</div>
 						</div>
 
-						<div 	{%if not is_manager_connected%}class="hidden"{%endif%}>
-
-							<div class="card border-secondary mb-4">
-								<div class="card-body text-dark">
-									<h5 class="card-title">All Splash Crawlers:</h5>
-									<table class="table table-striped">
-										<thead class="bg-info text-white">
-											<th>
-												Splash name
-											</th>
-											<th>
-												Proxy
-											</th>
-											<th>
-												Crawler type
-											</th>
-											<th>
-												Description
-											</th>
-											<th></th>
-										</thead>
-										<tbody>
-											{% for splash_name in all_splash %}
-												<tr>
-													<td>
-														{{splash_name}}
-													</td>
-													<td>
-														{{all_splash[splash_name]['proxy']}}
-													</td>
-													<td>
-														{%if all_splash[splash_name]['type']=='tor'%}
-															<i class="fas fa-user-secret"></i>
-														{%else%}
-															<i class="fab fa-html5">
-														{%endif%}
-														{{all_splash[splash_name]['type']}}
-													</td>
-													<td>
-														{{all_splash[splash_name]['description']}}
-													</td>
-													<td>
-														<div class="d-flex justify-content-end">
-															<!-- <button class="btn btn-outline-dark px-1 py-0">
-																<i class="fas fa-pencil-alt"></i>
-															</button> -->
-														</div>
-													</td>
-												</tr>
-											{% endfor %}
-										</tbody>
-									</table>
-								</div>
-							</div>
-
-							<div class="card border-secondary">
-								<div class="card-body text-dark">
-									<h5 class="card-title">All Proxies:</h5>
-									<table class="table table-striped">
-										<thead class="bg-info text-white">
-											<th>
-												Proxy name
-											</th>
-											<th>
-												Host
-											</th>
-											<th>
-												Port
-											</th>
-											<th>
-												Type
-											</th>
-											<th>
-												Crawler Type
-											</th>
-											<th>
-												Description
-											</th>
-											<th></th>
-										</thead>
-										<tbody>
-											{% for proxy_name in all_proxies %}
-												<tr>
-													<td>
-														{{proxy_name}}
-													</td>
-													<td>
-														{{all_proxies[proxy_name]['host']}}
-													</td>
-													<td>
-														{{all_proxies[proxy_name]['port']}}
-													</td>
-													<td>
-														{{all_proxies[proxy_name]['type']}}
-													</td>
-													<td>
-														{%if all_proxies[proxy_name]['crawler_type']=='tor'%}
-															<i class="fas fa-user-secret"></i>
-														{%else%}
-															<i class="fab fa-html5">
-														{%endif%}
-														{{all_proxies[proxy_name]['crawler_type']}}
-													</td>
-													<td>
-														{{all_proxies[proxy_name]['description']}}
-													</td>
-													<td>
-														<div class="d-flex justify-content-end">
-															<!-- <button class="btn btn-outline-dark px-1 py-0">
-																<i class="fas fa-pencil-alt"></i>
-															</button> -->
-														</div>
-													</td>
-												</tr>
-											{% endfor %}
-										</tbody>
-									</table>
-								</div>
-							</div>
-						</div>
+						<div class="card border-secondary">
+							<div class="card-body text-dark">
+								<h5 class="card-title">All Proxies:</h5>
+								<table class="table table-striped">
+									<thead class="bg-info text-white">
+                                        <tr>
+                                            <th>Proxy name</th>
+                                            <th>URL</th>
+                                            <th>Crawler Type</th>
+                                            <th>Description</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for proxy_name in all_proxies %}
+                                        <tr>
+                                            <td>
+                                                {{proxy_name}}
+                                            </td>
+                                            <td>
+                                                {{all_proxies[proxy_name]['url']}}
+                                            </td>
+                                            <td>
+                                                {%if all_proxies[proxy_name]['crawler_type']=='tor'%}
+                                                    <i class="fas fa-user-secret"></i>
+                                                {%else%}
+                                                    <i class="fab fa-html5"></i>
+                                                {%endif%}
+                                                {{all_proxies[proxy_name]['crawler_type']}}
+                                            </td>
+                                            <td>
+                                                {{all_proxies[proxy_name]['description']}}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-end">
+                                                    <!-- <button class="btn btn-outline-dark px-1 py-0">
+															<i class="fas fa-pencil-alt"></i>
+														</button> -->
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
 					</div>
 				</div>
@@ -242,7 +168,7 @@
 
 {{crawler_error_mess}}
 </pre>
-						<a href="{{ url_for('crawler_splash.crawler_splash_setings_test_crawler') }}">
+						<a href="{{ url_for('crawler_splash.crawler_settings_crawler_test') }}">
 							<button type="button" class="btn btn-primary">
 								ReRun Test <i class="fas fa-rocket"></i>
 							</button>

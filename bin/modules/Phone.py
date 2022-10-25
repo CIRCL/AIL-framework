@@ -17,7 +17,6 @@ It apply phone number regexes on item content and warn if above a threshold.
 import os
 import re
 import sys
-import time
 import phonenumbers
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -25,7 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
+from lib.objects.Items import Item
 
 # # TODO: # FIXME:  improve regex / filter false positives
 class Phone(AbstractModule):
@@ -37,13 +36,11 @@ class Phone(AbstractModule):
     # reg_phone = re.compile(r'(\+\d{1,4}(\(\d\))?\d?|0\d?)(\d{6,8}|([-/\. ]{1}\d{2,3}){3,4})')
     REG_PHONE = re.compile(r'(\+\d{1,4}(\(\d\))?\d?|0\d?)(\d{6,8}|([-/\. ]{1}\(?\d{2,4}\)?){3,4})')
 
-
     def __init__(self):
         super(Phone, self).__init__()
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 1
-
 
     def compute(self, message):
         item = Item(message)
@@ -79,6 +76,5 @@ class Phone(AbstractModule):
 
 
 if __name__ == '__main__':
-
     module = Phone()
     module.run()

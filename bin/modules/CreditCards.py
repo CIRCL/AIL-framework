@@ -17,14 +17,13 @@ It apply credit card regexes on item content and warn if a valid card number is 
 import os
 import re
 import sys
-import time
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
+from lib.objects.Items import Item
 from packages import lib_refine
 
 class CreditCards(AbstractModule):
@@ -53,15 +52,14 @@ class CreditCards(AbstractModule):
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
 
-
     def compute(self, message, r_result=False):
-        id, score = message.split()
-        item = Item(id)
+        item_id, score = message.split()
+        item = Item(item_id)
         content = item.get_content()
         all_cards = re.findall(self.regex, content)
 
         if len(all_cards) > 0:
-            #self.redis_logger.debug(f'All matching {all_cards}')
+            # self.redis_logger.debug(f'All matching {all_cards}')
             creditcard_set = set([])
 
             for card in all_cards:
@@ -70,9 +68,9 @@ class CreditCards(AbstractModule):
                     self.redis_logger.debug(f'{clean_card} is valid')
                     creditcard_set.add(clean_card)
 
-            #pprint.pprint(creditcard_set)
+            # pprint.pprint(creditcard_set)
             to_print = f'CreditCard;{item.get_source()};{item.get_date()};{item.get_basename()};'
-            if (len(creditcard_set) > 0):
+            if len(creditcard_set) > 0:
                 self.redis_logger.warning(f'{to_print}Checked {len(creditcard_set)} valid number(s);{item.get_id()}')
 
                 msg = f'infoleak:automatic-detection="credit-card";{item.get_id()}'
@@ -83,7 +81,7 @@ class CreditCards(AbstractModule):
             else:
                 self.redis_logger.info(f'{to_print}CreditCard related;{item.get_id()}')
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     module = CreditCards()
     module.run()

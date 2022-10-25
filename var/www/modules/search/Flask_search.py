@@ -4,7 +4,6 @@
 '''
     Flask functions and routes for the trending modules page
 '''
-import redis
 import json
 import os
 import datetime
@@ -14,10 +13,11 @@ from flask import Flask, render_template, jsonify, request, Blueprint
 from Role_Manager import login_admin, login_analyst
 from flask_login import login_required
 
-import Paste
 from whoosh import index
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser
+
+from lib.objects.Items import Item
 
 import time
 
@@ -27,7 +27,6 @@ import Flask_config
 app = Flask_config.app
 config_loader = Flask_config.config_loader
 baseUrl = Flask_config.baseUrl
-r_serv_metadata = Flask_config.r_serv_metadata
 max_preview_char = Flask_config.max_preview_char
 max_preview_modal = Flask_config.max_preview_modal
 bootstrap_label = Flask_config.bootstrap_label
@@ -128,15 +127,14 @@ def search():
         for x in results:
             r.append(x.items()[0][1].replace(PASTES_FOLDER, '', 1))
             path = x.items()[0][1].replace(PASTES_FOLDER, '', 1)
-            paste = Paste.Paste(path)
-            content = paste.get_p_content()
+            item = Item(path)
+            content = item.get_content()
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             c.append(content[0:content_range])
-            curr_date = str(paste._get_p_date())
-            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+            curr_date = item.get_date(separator=True)
             paste_date.append(curr_date)
-            paste_size.append(paste._get_p_size())
-            p_tags = r_serv_metadata.smembers('tag:'+path)
+            paste_size.append(item.get_size())
+            p_tags = item.get_tags()
             l_tags = []
             for tag in p_tags:
                 complete_tag = tag
@@ -205,15 +203,14 @@ def get_more_search_result():
             path = x.items()[0][1]
             path = path.replace(PASTES_FOLDER, '', 1)
             path_array.append(path)
-            paste = Paste.Paste(path)
-            content = paste.get_p_content()
+            item = Item(path)
+            content = item.get_content()
             content_range = max_preview_char if len(content)>max_preview_char else len(content)-1
             preview_array.append(content[0:content_range])
-            curr_date = str(paste._get_p_date())
-            curr_date = curr_date[0:4]+'/'+curr_date[4:6]+'/'+curr_date[6:]
+            curr_date = item.get_date(separator=True)
             date_array.append(curr_date)
-            size_array.append(paste._get_p_size())
-            p_tags = r_serv_metadata.smembers('tag:'+path)
+            size_array.append(item.get_size())
+            p_tags = item.get_tags()
             l_tags = []
             for tag in p_tags:
                 complete_tag = tag

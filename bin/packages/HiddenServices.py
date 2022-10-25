@@ -320,39 +320,6 @@ class HiddenServices(object):
         har_path = os.path.join(self.screenshot_directory, item_path) + '.json'
         return har_path
 
-    def create_domain_basic_archive(self, l_pastes):
-        all_har = self.get_all_har(l_pastes, filename=True)
-        all_screenshot = self.get_all_domain_screenshot(l_pastes, filename=True)
-        all_items = self.get_all_item_full_path(l_pastes, filename=True)
-
-        # try:
-
-        # zip buffer
-        zip_buffer = BytesIO()
-
-        with zipfile.ZipFile(zip_buffer, "a") as zf:
-
-            #print(all_har)
-            self.write_in_zip_buffer(zf, all_har)
-            self.write_in_zip_buffer(zf, all_screenshot)
-            self.write_in_zip_buffer(zf, all_items)
-
-            # write map url
-            map_file_content = self.get_metadata_file(l_pastes).encode()
-            zf.writestr( '_URL_MAP_', BytesIO(map_file_content).getvalue())
-
-        zip_buffer.seek(0)
-        return zip_buffer
-
-        # except Exception as e:
-        #     print(e)
-        #     return 'Server Error'
-
-    def write_in_zip_buffer(self, zf, list_file):
-        for file_path, file_name in list_file:
-            with open(file_path, "rb") as f:
-                har_content = f.read()
-                zf.writestr( file_name, BytesIO(har_content).getvalue())
 
     def get_metadata_file(self, list_items):
         file_content = ''

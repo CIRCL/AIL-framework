@@ -31,7 +31,6 @@ import os
 import sys
 import time
 import datetime
-import redis
 
 from hashlib import md5
 from uuid import uuid4
@@ -57,18 +56,17 @@ class Global(AbstractModule):
         self.processed_item = 0
         self.time_last_stats = time.time()
 
-        # Get and sanityze ITEM DIRECTORY
+        # Get and sanitize ITEM DIRECTORY
         # # TODO: rename PASTE => ITEM
         self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], self.process.config.get("Directories", "pastes"))
         self.PASTES_FOLDERS = self.PASTES_FOLDER + '/'
         self.PASTES_FOLDERS = os.path.join(os.path.realpath(self.PASTES_FOLDERS), '')
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 0.5
 
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
-
 
     def computeNone(self):
         difftime = time.time() - self.time_last_stats
@@ -79,7 +77,6 @@ class Global(AbstractModule):
 
             self.time_last_stats = time.time()
             self.processed_item = 0
-
 
     def compute(self, message, r_result=False):
         # Recovering the streamed message informations
@@ -129,14 +126,14 @@ class Global(AbstractModule):
                             item_id = item_id.replace(self.PASTES_FOLDERS, '', 1)
 
                         self.send_message_to_queue(item_id)
-                        self.processed_item+=1
+                        self.processed_item += 1
+                        print(item_id)
                         if r_result:
                             return item_id
 
         else:
             self.redis_logger.debug(f"Empty Item: {message} not processed")
             print(f"Empty Item: {message} not processed")
-
 
     def check_filename(self, filename, new_file_content):
         """
@@ -181,9 +178,7 @@ class Global(AbstractModule):
                 # File not unzipped
                 filename = None
 
-
         return filename
-
 
     def gunzip_file(self, filename):
         """
@@ -223,7 +218,6 @@ class Global(AbstractModule):
             print(f'Global; Invalid Gzip file: {filename}, {e}')
 
         return gunzipped_bytes_obj
-
 
     def rreplace(self, s, old, new, occurrence):
         li = s.rsplit(old, occurrence)

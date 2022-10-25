@@ -59,6 +59,9 @@ class AbstractModule(ABC):
         # Setup the I/O queues
         self.process = Process(self.queue_name)
 
+        # Debug Mode
+        self.debug = False
+
     def get_message(self):
         """
         Get message from the Redis Queue (QueueIn)
@@ -104,6 +107,8 @@ class AbstractModule(ABC):
                     # Module processing with the message from the queue
                     self.compute(message)
                 except Exception as err:
+                    if self.debug:
+                        raise err
                     trace = traceback.format_tb(err.__traceback__)
                     trace = ''.join(trace)
                     self.redis_logger.critical(f"Error in module {self.module_name}: {err}")

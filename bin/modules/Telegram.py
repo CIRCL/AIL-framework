@@ -16,7 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
+from lib.objects.Items import Item
 from lib import regex_helper
 from lib import telegram
 
@@ -78,7 +78,7 @@ class Telegram(AbstractModule):
 
         # CREATE TAG
         if invite_code_found:
-            #tags
+            # tags
             msg = f'infoleak:automatic-detection="telegram-invite-hash";{item.get_id()}'
             self.send_message_to_queue(msg, 'Tags')
 

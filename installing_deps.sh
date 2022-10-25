@@ -94,7 +94,7 @@ DEFAULT_HOME=$(pwd)
 #### KVROCKS ####
 test ! -d kvrocks/ && git clone https://github.com/apache/incubator-kvrocks.git kvrocks
 pushd kvrocks
-./build.sh build
+./x.py build
 popd
 
 DEFAULT_KVROCKS_DATA=$DEFAULT_HOME/DATA_KVROCKS

@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
+r_serv_db = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
 def get_first_object_date(object_type, subtype, field=''):
@@ -24,15 +24,15 @@ def get_last_object_date(object_type, subtype, field=''):
     return int(last_date)
 
 def _set_first_object_date(object_type, subtype, date, field=''):
-    return r_serv_db.zadd('objs:first_date', f'{object_type}:{subtype}:{field}', date)
+    return r_serv_db.zadd('objs:first_date', {f'{object_type}:{subtype}:{field}': date})
 
 def _set_last_object_date(object_type, subtype, date, field=''):
-    return r_serv_db.zadd('objs:last_date', f'{object_type}:{subtype}:{field}', date)
+    return r_serv_db.zadd('objs:last_date', {f'{object_type}:{subtype}:{field}': float(date)})
 
 def update_first_object_date(object_type, subtype, date, field=''):
     first_date = get_first_object_date(object_type, subtype, field=field)
     if int(date) < first_date:
-        _set_first_object_date(object_typel, subtype, date, field=field)
+        _set_first_object_date(object_type, subtype, date, field=field)
         return date
     else:
         return first_date

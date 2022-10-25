@@ -37,8 +37,9 @@ def get_object_correlation_json(correlation_id, subtype, max_nodes):
     object_type = 'cryptocurrency'
     max_nodes = sanitise_nb_max_nodes(max_nodes)
 
+    # FIXME
     # ALL correlations
-    correlation_names = Correlate_object.sanitise_correlation_names('')
+    #correlation_names = Correlate_object.sanitise_correlation_names('')
     #correlation_objects = Correlate_object.sanitise_correlation_objects('')
     correlation_objects = ['domain']
 

@@ -36,17 +36,19 @@ def _regex_findall(redis_key, regex, item_content, r_set):
     all_items = re.findall(regex, item_content)
     if r_set:
         if len(all_items) > 1:
-            r_serv_cache.sadd(redis_key, *all_items)
+            for item in all_items:
+                r_serv_cache.sadd(redis_key, str(item))
             r_serv_cache.expire(redis_key, 360)
         elif all_items:
-            r_serv_cache.sadd(redis_key, all_items[0])
+            r_serv_cache.sadd(redis_key, str(all_items[0]))
             r_serv_cache.expire(redis_key, 360)
     else:
         if len(all_items) > 1:
-            r_serv_cache.lpush(redis_key, *all_items)
+            for item in all_items:
+                r_serv_cache.lpush(redis_key, str(item))
             r_serv_cache.expire(redis_key, 360)
         elif all_items:
-            r_serv_cache.lpush(redis_key, all_items[0])
+            r_serv_cache.lpush(redis_key, str(all_items[0]))
             r_serv_cache.expire(redis_key, 360)
 
 def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time=30, r_set=True):

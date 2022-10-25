@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+
+	<style>
+		.bar {
+				fill: steelblue;
+			}
+		.bar:hover{
+			fill: brown;
+			cursor: pointer;
+		}
+		.bar_stack:hover{
+			cursor: pointer;
+		}
+		.popover{
+    	max-width: 100%;
+		}
+        .domain_name {
+            display:inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 400px;
+        }
+	</style>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				{% include 'crawler/crawler_disabled.html' %}
+
+				<div class="row">
+                    <div class="col-12 col-xl-6">
+                        <div class="table-responsive mt-1 table-hover table-borderless table-striped">
+                            <table class="table">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>Domain</th>
+							        <th>First Seen</th>
+                                    <th>Last Check</th>
+							        <th>Status</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody_last_crawled">
+                                {% for domain in domains %}
+                                    <tr data-toggle="popover" data-trigger="hover"
+                                        title="<span class='badge badge-dark'>{{domain['domain']}}</span>"
+                                        data-content="epoch: {{domain['epoch']}}<br>last status: {{ domain['status'] }}">
+                                        <td><a target="_blank" class="domain_name" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ domain['domain'] }}&epoch={{domain['epoch']}}">{{ domain['domain'] }}</a></td>
+								        <td>{{domain['first_seen']}}</td>
+                                        <td>{{domain['last_check']}}</td>
+								        <td>
+                                            {% if domain['status_epoch'] %}
+                                                <div style="color:Green; display:inline-block">
+                                                    <i class="fas fa-check-circle"></i> UP
+											    </div>
+                                            {% else %}
+                                                <div style="color:Red; display:inline-block">
+                                                    <i class="fas fa-times-circle"></i> DOWN
+											    </div>
+                                            {% endif %} 
+
+                                        </td>
+                                    </tr>
+										{% endfor %}
+                                </tbody>
+                            </table>
+						</div>
+
+						<a href="{{ url_for('hiddenServices.blacklisted_domains') }}?type={{type}}">
+							<button type="button" class="btn btn-outline-danger">Show Blacklisted {{type_name}}s</button>
+						</a>
+
+					</div>
+					<div class="col-12 col-xl-6">
+						{% include 'crawler/show_domains_by_daterange.html' %}
+
+						<div id="barchart_type"></div>
+
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_{{type}}_crawler").addClass("active");
+
+	$('#date-range-from').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+					},
+					setValue: function(s,s1,s2){
+							$('#date-range-from-input').val(s1);
+							$('#date-range-to-input').val(s2);
+					}
+	});
+	$('#date-range-to').dateRangePicker({
+			separator : ' to ',
+			getValue: function(){
+					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+					else
+							return '';
+			},
+			setValue: function(s,s1,s2){
+					$('#date-range-from-input').val(s1);
+					$('#date-range-to-input').val(s2);
+			}
+	});
+	chart.stackBarChart =barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}", 'id');
+
+	chart.onResize();
+	$(window).on("resize", function() {
+		chart.onResize();
+	});
+
+	$('[data-toggle="popover"]').popover({
+		placement: 'top',
+		container: 'body',
+		html : true,
+	});
+
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+<script>
+var margin = {top: 20, right: 90, bottom: 55, left: 0},
+				width = parseInt(d3.select('#barchart_type').style('width'), 10);
+				width  = 1000 - margin.left - margin.right,
+				height = 500  - margin.top  - margin.bottom;
+var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+
+var y = d3.scaleLinear().rangeRound([height, 0]);
+
+var xAxis = d3.axisBottom(x);
+
+var yAxis = d3.axisLeft(y);
+
+var color = d3.scaleOrdinal(d3.schemeSet3);
+
+var svg = d3.select("#barchart_type").append("svg")
+				.attr("id", "thesvg")
+				.attr("viewBox", "0 0 "+width+" 500")
+				.attr("width",  width  + margin.left + margin.right)
+				.attr("height", height + margin.top  + margin.bottom)
+			.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+function barchart_type_stack(url, id) {
+
+  d3.json(url)
+    .then(function(data){
+
+			var labelVar = 'date';  //A
+		  var varNames = d3.keys(data[0])
+		      .filter(function (key) { return key !== labelVar;}); //B
+
+		  data.forEach(function (d) { //D
+		    var y0 = 0;
+		    d.mapping = varNames.map(function (name) {
+		      return {
+		        name: name,
+		        label: d[labelVar],
+		        y0: y0,
+		        y1: y0 += +d[name]
+		      };
+		    });
+		    d.total = d.mapping[d.mapping.length - 1].y1;
+		  });
+
+		  x.domain(data.map(function (d) { return (d.date); })); //E
+		  y.domain([0, d3.max(data, function (d) { return d.total; })]);
+
+			svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+				.selectAll("text")
+					.attr("class", "bar")
+					.on("click", function (d) { window.location.href = "#" })
+					.attr("transform", "rotate(-18)" )
+					//.attr("transform", "rotate(-40)" )
+					.style("text-anchor", "end");
+
+    	svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      	.append("text")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 6)
+        	.attr("dy", ".71em")
+        	.style("text-anchor", "end");
+
+			var selection = svg.selectAll(".series")
+		    .data(data)
+		    .enter().append("g")
+		      .attr("class", "series")
+		      .attr("transform", function (d) { return "translate(" + x((d.date)) + ",0)"; });
+
+			selection.selectAll("rect")
+	      .data(function (d) { return d.mapping; })
+	    .enter().append("rect")
+				.attr("class", "bar_stack")
+	      .attr("width", x.bandwidth())
+	      .attr("y", function (d) { return y(d.y1); })
+	      .attr("height", function (d) { return y(d.y0) - y(d.y1); })
+	      .style("fill", function (d) { return color(d.name); })
+	      .style("stroke", "grey")
+	      .on("mouseover", function (d) { showPopover.call(this, d); })
+				.on("mouseout", function (d) { removePopovers(); })
+				.on("click", function(d){ window.location.href = "#" });
+
+
+				data.forEach(function(d) {
+					if(d.total != 0){
+						svg.append("text")
+								.attr("class", "bar")
+								.attr("dy", "-.35em")
+								.attr('x', x(d.date) + x.bandwidth()/2)
+								.attr('y', y(d.total))
+								.on("click", function () {window.location.href = "#" })
+								.style("text-anchor", "middle")
+								.text(d.total);
+					}
+				});
+
+			drawLegend(varNames);
+    });
+
+}
+
+function drawLegend (varNames) {
+    var legend = svg.selectAll(".legend")
+        .data(varNames.slice().reverse())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", 943)
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("fill", color)
+        .style("stroke", "grey");
+
+    legend.append("text")
+				.attr("class", "svgText")
+        .attr("x", 941)
+        .attr("y", 6)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function (d) { return d; });
+}
+
+function removePopovers () {
+    $('.popover').each(function() {
+      $(this).remove();
+    });
+  }
+
+function showPopover (d) {
+  $(this).popover({
+    title: d.name,
+    placement: 'top',
+    container: 'body',
+    trigger: 'manual',
+    html : true,
+    content: function() {
+      return d.label +
+            "<br/>num: " + d3.format(",")(d.value ? d.value: d.y1 - d.y0); }
+  });
+  $(this).popover('show')
+}
+
+chart.onResize = function () {
+    var aspect = width / height, chart = $("#thesvg");
+    var targetWidth = chart.parent().width();
+    chart.attr("width", targetWidth);
+    chart.attr("height", targetWidth / 2);
+}
+
+window.chart = chart;
+
+</script>

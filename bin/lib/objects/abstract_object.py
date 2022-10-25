@@ -144,7 +144,7 @@ class AbstractObject(ABC):
         pass
 
     @abstractmethod
-    def get_meta(self):
+    def get_meta(self, options=set()):
         """
         get Object metadata
         """
@@ -164,6 +164,18 @@ class AbstractObject(ABC):
     @abstractmethod
     def get_misp_object(self):
         pass
+
+    def _get_external_correlation(self, req_type, req_subtype, req_id, obj_type):
+        """
+        Get object correlation
+        """
+        return get_correlations(req_type, req_subtype, req_id, filter_types=[obj_type])
+
+    def get_correlation(self, obj_type):
+        """
+        Get object correlation
+        """
+        return get_correlations(self.type, self.subtype, self.id, filter_types=[obj_type])
 
     def get_correlations(self):
         """

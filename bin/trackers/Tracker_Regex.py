@@ -9,7 +9,6 @@ It processes every item coming from the global module and test the regex
 
 """
 import os
-import re
 import sys
 import time
 import requests
@@ -19,10 +18,9 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
+from lib.objects.Items import Item
 from packages import Term
 from lib import Tracker
-from lib import regex_helper
 
 import NotificationHelper
 
@@ -41,8 +39,6 @@ class Tracker_Regex(AbstractModule):
         self.max_execution_time = self.process.config.getint(self.module_name, "max_execution_time")
 
         self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
-
-        self.redis_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
 
         # refresh Tracked Regex
         self.dict_regex_tracked = Term.get_regex_tracked_words_dict()
@@ -63,7 +59,7 @@ class Tracker_Regex(AbstractModule):
         item_content = item.get_content()
 
         for regex in self.dict_regex_tracked:
-            matched = regex_helper.regex_search(self.module_name, self.redis_cache_key, self.dict_regex_tracked[regex], item_id, item_content, max_time=self.max_execution_time)
+            matched = self.regex_findall(self.dict_regex_tracked[regex], item_id, item_content)
             if matched:
                 self.new_tracker_found(regex, 'regex', item)
 
@@ -92,8 +88,8 @@ class Tracker_Regex(AbstractModule):
             if mail_to_notify:
                 mail_subject = Tracker.get_email_subject(tracker_uuid)
                 mail_body = Tracker_Regex.mail_body_template.format(tracker, item_id, self.full_item_url, item_id)
-            for mail in mail_to_notify:
-                NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
+                for mail in mail_to_notify:
+                    NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
 
             # Webhook
             webhook_to_post = Term.get_term_webhook(tracker_uuid)

@@ -17,7 +17,6 @@ It is looking for Hosts
 import os
 import re
 import sys
-import time
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -25,9 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib import regex_helper
-#from lib.objects.Items import Item
-from packages.Item import Item
+from lib.objects.Items import Item
 
 class Hosts(AbstractModule):
     """
@@ -40,19 +37,16 @@ class Hosts(AbstractModule):
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
 
-        self.redis_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
-
         # regex timeout
         self.regex_timeout = 30
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
         self.host_regex = r'\b([a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)\b'
         re.compile(self.host_regex)
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
-
 
     def compute(self, message):
         item = Item(message)
@@ -61,16 +55,14 @@ class Hosts(AbstractModule):
         # if mimetype.split('/')[0] == "text":
 
         content = item.get_content()
-
-        hosts = regex_helper.regex_findall(self.module_name, self.redis_cache_key, self.host_regex, item.get_id(), content)
+        hosts = self.regex_findall(self.host_regex, item.get_id(), content)
         if hosts:
             print(f'{len(hosts)} host     {item.get_id()}')
             for host in hosts:
-                #print(host)
+                # print(host)
 
                 msg = f'{host} {item.get_id()}'
                 self.send_message_to_queue(msg, 'Host')
-
 
 
 if __name__ == '__main__':

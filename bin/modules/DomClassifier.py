@@ -15,7 +15,6 @@ the out output of the Global module.
 ##################################
 import os
 import sys
-import time
 import DomainClassifier.domainclassifier
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -23,11 +22,8 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import d4
-import item_basic
+from lib.objects.Items import Item
+from lib import d4
 
 
 class DomClassifier(AbstractModule):
@@ -38,7 +34,7 @@ class DomClassifier(AbstractModule):
     def __init__(self):
         super(DomClassifier, self).__init__()
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
         addr_dns = self.process.config.get("DomClassifier", "dns")
@@ -51,11 +47,10 @@ class DomClassifier(AbstractModule):
         # Send module state to logs
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-
     def compute(self, message, r_result=False):
-        host, id = message.split()
+        host, item_id = message.split()
 
-        item = Item(id)
+        item = Item(item_id)
         item_basename = item.get_basename()
         item_date = item.get_date()
         item_source = item.get_source()
@@ -64,7 +59,7 @@ class DomClassifier(AbstractModule):
             self.c.text(rawtext=host)
             print(self.c.domain)
             self.c.validdomain(passive_dns=True, extended=False)
-            #self.redis_logger.debug(self.c.vdomain)
+            # self.redis_logger.debug(self.c.vdomain)
 
             print(self.c.vdomain)
             print()
