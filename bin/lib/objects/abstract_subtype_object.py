@@ -10,7 +10,7 @@ import os
 import sys
 from abc import abstractmethod
 
-#from flask import url_for
+# from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -49,6 +49,13 @@ class AbstractSubtypeObject(AbstractObject):
     def exists(self):
         return r_metadata.exists(f'{self.type}_metadata_{self.subtype}:{self.id}')
 
+    # def exists(self):
+    #     res = r_metadata.zscore(f'{self.type}_all:{self.subtype}', self.id)
+    #     if res is not None:
+    #         return True
+    #     else:
+    #         return False
+
     def get_first_seen(self, r_int=False):
         first_seen = r_metadata.hget(f'{self.type}_metadata_{self.subtype}:{self.id}', 'first_seen')
         if r_int:
@@ -70,7 +77,7 @@ class AbstractSubtypeObject(AbstractObject):
             return last_seen
 
     def get_nb_seen(self):
-        return r_metadata.scard(f'set_{self.type}_{self.subtype}:{self.id}')
+        return int(r_metadata.zscore(f'{self.type}_all:{self.subtype}', self.id))
 
     # # TODO: CHECK RESULT
     def get_nb_seen_by_date(self, date_day):
@@ -81,21 +88,10 @@ class AbstractSubtypeObject(AbstractObject):
             return int(nb)
 
     def _get_meta(self):
-        meta_dict = {}
-        meta_dict['first_seen'] = self.get_first_seen()
-        meta_dict['last_seen'] = self.get_last_seen()
-        meta_dict['nb_seen'] = self.get_nb_seen()
+        meta_dict = {'first_seen': self.get_first_seen(),
+                     'last_seen': self.get_last_seen(),
+                     'nb_seen': self.get_nb_seen()}
         return meta_dict
-
-    # def exists(self):
-    #     res = r_metadata.zscore(f'{self.type}_all:{self.subtype}', self.id)
-    #     if res is not None:
-    #         return True
-    #     else:
-    #         return False
-
-    def exists(self):
-        return r_metadata.exists(f'{self.type}_metadata_{self.subtype}:{self.id}')
 
     def set_first_seen(self, first_seen):
         r_metadata.hset(f'{self.type}_metadata_{self.subtype}:{self.id}', 'first_seen', first_seen)
@@ -137,7 +133,7 @@ class AbstractSubtypeObject(AbstractObject):
         # daily
         r_metadata.hincrby(f'{self.type}:{self.subtype}:{date}', self.id, 1)
         # all subtypes
-        r_metadata.zincrby(f'{self.type}_all:{self.subtype}', self.id, 1)
+        r_metadata.zincrby(f'{self.type}_all:{self.subtype}', 1, self.id)
 
         #######################################################################
         #######################################################################

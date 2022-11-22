@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import os
-import sys
 import redis
 import datetime
+
+import os
+import json
+import sys
+
+from glob import glob
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -24,37 +28,41 @@ config_loader = None
 
 #### CORE FUNCTIONS ####
 
+# # # # UNSAFE TAGS # # # #
+
 def build_unsafe_tags():
-    unsafe_tags = set()
-    ## CE content
-    unsafe_tags.add('dark-web:topic="pornography-child-exploitation"')
+    tags = set()
+    # CE content
+    tags.add('dark-web:topic="pornography-child-exploitation"')
     # add copine-scale tags
     taxonomies = Taxonomies()
     copine_scale = taxonomies.get('copine-scale')
     if copine_scale:
         for tag in copine_scale.machinetags():
-            unsafe_tags.add(tag)
-    return unsafe_tags
+            tags.add(tag)
+    return tags
+
+def is_tags_safe(ltags):
+    """
+    Check if a list of tags contain unsafe tags (CE, ...)
+    :param ltags: list of tags
+    :type ltags: list
+    :return: is a tag in the set unsafe
+    :rtype: boolean
+    """
+    return unsafe_tags.isdisjoint(ltags)
+
 
 # set of unsafe tags
 unsafe_tags = build_unsafe_tags()
 
-def is_tags_safe(ltags):
-    '''
-    Check if a list of tags contain an unsafe tag (CE, ...)
-
-    :param ltags: list of tags
-    :type ltags: list
-    :return: is a tag in the unsafe set
-    :rtype: boolean
-    '''
-    return unsafe_tags.isdisjoint(ltags)
+# - - - UNSAFE TAGS - - - #
 
 # # TODO: verify tags + object_type
 # get set_keys: intersection
 def get_obj_keys_by_tags(tags, obj_type, subtype='', date=None):
     l_set_keys = []
-    if obj_type=='item':
+    if obj_type == 'item':
         for tag in tags:
             l_set_keys.append(f'{obj_type}:{subtype}:{tag}:{date}')
     else:
@@ -65,7 +73,405 @@ def get_obj_keys_by_tags(tags, obj_type, subtype='', date=None):
 def get_obj_by_tag(key_tag):
     return r_tags.smembers(key_tag)
 
-##-- CORE FUNCTIONS --##
+# -- CORE FUNCTIONS -- #
+
+
+#### Taxonomies ####
+
+TAXONOMIES = {}
+def load_taxonomies():
+    global TAXONOMIES
+    manifest = os.path.join(os.environ['AIL_HOME'], 'files/misp-taxonomies/MANIFEST.json')
+    TAXONOMIES = Taxonomies(manifest_path=manifest)
+
+
+load_taxonomies()
+
+def get_taxonomies():
+    return TAXONOMIES.keys()
+
+# r_tags.sadd(f'active_taxonomies', taxonomy)
+def is_taxonomy_enabled(taxonomy):
+    # enabled = r_tags.sismember('taxonomies:enabled', taxonomy)
+    try:
+        enabled = r_tags.sismember('taxonomies:enabled', taxonomy)
+    except redis.exceptions.ResponseError:
+        enabled = False
+    return enabled
+
+def enable_taxonomy(taxonomy):
+    r_tags.sadd('taxonomies:enabled', taxonomy)
+
+def disable_taxonomy(taxonomy):
+    r_tags.srem('taxonomies:enabled', taxonomy)
+
+def exists_taxonomy(taxonomy):
+    return TAXONOMIES.get(taxonomy) is not None
+
+def get_taxonomy_description(taxonomy):
+    return TAXONOMIES.get(taxonomy).description
+
+def get_taxonomy_name(taxonomy):
+    return TAXONOMIES.get(taxonomy).name
+
+def get_taxonomy_predicates(taxonomy):
+    meta = {}
+    predicates = taxonomy.predicates
+    for predicate in predicates:
+        meta[predicate] = {}
+        expanded = predicates[predicate].expanded
+        if expanded:
+            meta[predicate]['expanded'] = expanded
+        description = predicates[predicate].description
+        if description:
+            meta[predicate]['description'] = description
+    return meta
+
+def get_taxonomy_refs(taxonomy):
+    return TAXONOMIES.get(taxonomy).refs
+
+def get_taxonomy_version(taxonomy):
+    return TAXONOMIES.get(taxonomy).version
+
+def get_taxonomy_tags(taxonomy, enabled=False):
+    taxonomy_obj = TAXONOMIES.get(taxonomy)
+    tags = []
+    for p, content in taxonomy_obj.items():
+        if content:
+            for k, entry in content.items():
+                tag = f'{taxonomy_obj.name}:{p}="{k}"'
+                expanded = entry.expanded
+                meta_tag = {'tag': tag, 'expanded': expanded}
+                if enabled:
+                    meta_tag['enabled'] = is_taxonomy_tag_enabled(taxonomy, tag)
+                tags.append(meta_tag)
+        else:
+            tag = f'{taxonomy_obj.name}:{p}'
+            expanded = content.expanded
+            meta_tag = {'tag': tag, 'expanded': expanded}
+            if enabled:
+                meta_tag['enabled'] = is_taxonomy_tag_enabled(taxonomy, tag)
+            tags.append(meta_tag)
+    return tags
+
+# TODO GET ACTIVE TAGS
+# TODO GET IF TAXONOMY IS ACTIVATED
+def get_taxonomy_meta(taxonomy_name, enabled=False, enabled_tags=False, nb_active_tags=False, predicates=False, tags=False, expanded=True):
+    meta = {}
+    if not exists_taxonomy(taxonomy_name):
+        return meta
+    taxonomy = TAXONOMIES.get(taxonomy_name)
+    meta['description'] = taxonomy.description
+    meta['name'] = taxonomy.name
+    meta['version'] = taxonomy.version
+    if enabled:
+        meta['enabled'] = is_taxonomy_enabled(taxonomy_name)
+    if predicates:
+        meta['predicates'] = get_taxonomy_predicates(taxonomy)
+    if taxonomy.expanded:
+        meta['expanded'] = taxonomy.expanded
+    if taxonomy.refs:
+        meta['refs'] = taxonomy.refs
+
+    # TODO PERF SAVE IN DB ?????
+    if tags:
+        if expanded:
+            meta['tags'] = get_taxonomy_tags(taxonomy_name, enabled=enabled_tags)
+        else:
+            meta['tags'] = taxonomy.machinetags()
+        meta['nb_tags'] = len(meta['tags'])
+    if nb_active_tags:
+        meta['nb_active_tags'] = get_taxonomy_nb_tags_enabled(taxonomy_name)
+        if not tags:
+            meta['nb_tags'] = len(taxonomy.machinetags())
+    return meta
+
+def get_taxonomies_meta():
+    meta = {}
+    for taxonomy in get_taxonomies():
+        meta[taxonomy] = get_taxonomy_meta(taxonomy, enabled=True, nb_active_tags=True)
+    return meta
+
+    #### Enabled Tags ####
+# r_tags.sadd('active_taxonomies', taxonomy)
+def get_taxonomy_tags_enabled(taxonomy):
+    return r_tags.smembers(f'taxonomy:tags:enabled:{taxonomy}')
+
+def get_taxonomy_nb_tags_enabled(taxonomy):
+    return r_tags.scard(f'taxonomy:tags:enabled:{taxonomy}')
+
+def is_taxonomy_tag_enabled(taxonomy, tag):
+    # r_tags.sismember('list_tags', tag)
+    try:
+        enabled = r_tags.sismember(f'taxonomy:tags:enabled:{taxonomy}', tag)
+    except redis.exceptions.ResponseError:
+        enabled = False
+    return enabled
+
+def add_taxonomy_tag_enabled(taxonomy, tag):
+    r_tags.sadd(f'taxonomy:tags:enabled:{taxonomy}', tag)
+
+def remove_taxonomy_tag_enabled(taxonomy, tag):
+    r_tags.srem(f'taxonomy:tags:enabled:{taxonomy}', tag)
+
+def disable_taxonomy_tags_enabled(taxonomy):
+    r_tags.delete(f'taxonomy:tags:enabled:{taxonomy}')
+
+def update_taxonomy_tag_enabled(taxonomy, tags):
+    if not tags:
+        return None
+    enable_taxonomy(taxonomy)
+    tags = set(tags)
+    enabled_tags = get_taxonomy_tags_enabled(taxonomy)
+    if tags != enabled_tags:
+        # disable tags
+        for tag in enabled_tags.difference(tags):
+            remove_taxonomy_tag_enabled(taxonomy, tag)
+        # enable tags
+        for tag in tags:
+            add_taxonomy_tag_enabled(taxonomy, tag)
+
+def api_update_taxonomy_tag_enabled(data):
+    taxonomy = data.get('taxonomy')
+    if not exists_taxonomy(taxonomy):
+        return {'error': f'taxonomy {taxonomy} not found'}, 404
+    tags = data.get('tags', [])
+    taxonomy_tags = set(TAXONOMIES.get(taxonomy).machinetags())
+    for tag in tags:
+        if tag not in taxonomy_tags:
+            return {'error': f'tag {tag} not found'}, 404
+    update_taxonomy_tag_enabled(taxonomy, tags)
+
+def enable_taxonomy_tags(taxonomy):
+    enable_taxonomy(taxonomy)
+    for tag in TAXONOMIES.get(taxonomy).machinetags():
+        add_taxonomy_tag_enabled(taxonomy, tag)
+
+def api_enable_taxonomy_tags(data):
+    taxonomy = data.get('taxonomy')
+    if not exists_taxonomy(taxonomy):
+        return {'error': f'taxonomy {taxonomy} not found'}, 404
+    enable_taxonomy_tags(taxonomy)
+
+def disable_taxonomy_tags(taxonomy):
+    disable_taxonomy(taxonomy)
+    disable_taxonomy_tags_enabled(taxonomy)
+
+def api_disable_taxonomy_tags(data):
+    taxonomy = data.get('taxonomy')
+    if not exists_taxonomy(taxonomy):
+        return {'error': f'taxonomy {taxonomy} not found'}, 404
+    disable_taxonomy_tags(taxonomy)
+
+    # -- Enabled Tags -- #
+
+# -- Taxonomies -- #
+
+#### GALAXIES ####
+
+#
+# var galaxy = galaxy type
+#
+
+
+GALAXIES = {}
+CLUSTERS = {}
+def load_galaxies():
+    global GALAXIES
+    galaxies = []
+    root_dir_galaxies = os.path.join(os.environ['AIL_HOME'], 'files/misp-galaxy/galaxies')
+    for galaxy_file in glob(os.path.join(root_dir_galaxies, '*.json')):
+        with open(galaxy_file, 'r') as f:
+            galaxies.append(json.load(f))
+    GALAXIES = Galaxies(galaxies=galaxies)
+    global CLUSTERS
+    clusters = []
+    root_dir_clusters = os.path.join(os.environ['AIL_HOME'], 'files/misp-galaxy/clusters')
+    for cluster_file in glob(os.path.join(root_dir_clusters, '*.json')):
+        with open(cluster_file, 'r') as f:
+            clusters.append(json.load(f))
+    CLUSTERS = Clusters(clusters)
+
+
+# LOAD GALAXY + CLUSTERS
+load_galaxies()
+
+def get_galaxies():
+    return GALAXIES.keys()
+
+def get_galaxy(galaxy_name):
+    return GALAXIES.get(galaxy_name)
+
+def exists_galaxy(galaxy):
+    return CLUSTERS.get(galaxy) is not None
+
+# r_tags.sadd('active_galaxies', galaxy)
+def is_galaxy_enabled(galaxy):
+    try:
+        enabled = r_tags.sismember('galaxies:enabled', galaxy)
+    except redis.exceptions.ResponseError:
+        enabled = False
+    return enabled
+
+def enable_galaxy(galaxy):
+    r_tags.sadd('galaxies:enabled', galaxy)
+
+def disable_galaxy(galaxy):
+    r_tags.srem('galaxies:enabled', galaxy)
+
+def get_galaxy_meta(galaxy_name, nb_active_tags=False):
+    galaxy = get_galaxy(galaxy_name)
+    meta = {'name': galaxy.name, 'namespace': galaxy.namespace, 'description': galaxy.description,
+            'type': galaxy.type, 'version': galaxy.version, 'enabled': is_galaxy_enabled(galaxy.type)}
+    icon = galaxy.icon
+    if icon == 'android' or icon == 'optin-monster' or icon == 'internet-explorer' or icon == 'btc':
+        meta['icon'] = f'fab fa-{icon}'
+    else:
+        meta['icon'] = f'fas fa-{icon}'
+    if nb_active_tags:
+        meta['nb_active_tags'] = get_galaxy_nb_tags_enabled(galaxy)
+        meta['nb_tags'] = len(get_galaxy_tags(galaxy.type))
+    return meta
+
+def get_galaxies_meta():
+    galaxies = []
+    for galaxy_name in get_galaxies():
+        galaxies.append(get_galaxy_meta(galaxy_name, nb_active_tags=True))
+    return galaxies
+
+def get_galaxy_tag_meta(galaxy_type, tag):
+    cluster = get_cluster(galaxy_type)
+    if not cluster:
+        return {}
+    try:
+        tag_val = tag.rsplit('=', 1)[1][1:-1]
+    except:
+        return {}
+    cluster_val = cluster.cluster_values.get(tag_val)
+    if not cluster_val:
+        return {}
+    meta = cluster_val.to_dict()
+    if 'meta' in meta:
+        meta['meta'] = json.loads(meta.get('meta').to_json())
+        meta['meta'] = json.dumps(meta['meta'], ensure_ascii=False, indent=4)
+    meta['tag'] = f'misp-galaxy:{galaxy_type}="{cluster_val.value}"'
+    meta['enabled'] = is_galaxy_tag_enabled(galaxy_type, meta['tag'])
+    return meta
+
+
+def get_clusters():
+    return CLUSTERS.keys()
+
+def get_cluster(cluster_type):
+    return CLUSTERS.get(cluster_type)
+
+def get_galaxy_tags(galaxy_type):
+    cluster = get_cluster(galaxy_type)
+    return cluster.machinetags()
+
+# TODO synonym
+def get_cluster_tags(cluster_type, enabled=False):
+    tags = []
+    cluster = get_cluster(cluster_type)
+    for cluster_val in cluster.values():
+        tag = f'misp-galaxy:{cluster_type}="{cluster_val.value}"'
+        meta_tag = {'tag': tag, 'description': cluster_val.description}
+        if enabled:
+            meta_tag['enabled'] = is_galaxy_tag_enabled(cluster_type, tag)
+        synonyms = cluster_val.meta.synonyms
+        if not synonyms:
+            synonyms = []
+        meta_tag['synonyms'] = synonyms
+        tags.append(meta_tag)
+    return tags
+
+def get_cluster_meta(cluster_type, tags=False, enabled=False):
+    cluster = get_cluster(cluster_type)
+    if not cluster:
+        return {}
+    meta = {'name': cluster.name, 'type': cluster.type, 'source': cluster.source,
+            'authors': cluster.authors, 'description': cluster.description, 'version': cluster.version,
+            'category': cluster.category}
+    if enabled:
+        meta['enabled'] = is_galaxy_enabled(cluster_type)
+    if tags:
+        meta['tags'] = get_cluster_tags(cluster_type, enabled=enabled)
+
+    return meta
+
+    #### Enabled Tags ####
+
+def get_galaxy_tags_enabled(galaxy):
+    return r_tags.smembers(f'galaxy:tags:enabled:{galaxy}')
+
+def get_galaxy_nb_tags_enabled(galaxy):
+    return r_tags.scard(f'galaxy:tags:enabled:{galaxy}')
+
+def is_galaxy_tag_enabled(galaxy, tag):
+    try:
+        enabled = r_tags.sismember(f'galaxy:tags:enabled:{galaxy}', tag)
+    except redis.exceptions.ResponseError:
+        enabled = False
+    return enabled
+
+def add_galaxy_tag_enabled(galaxy, tag):
+    r_tags.sadd(f'galaxy:tags:enabled:{galaxy}', tag)
+
+def remove_galaxy_tag_enabled(galaxy, tag):
+    r_tags.srem(f'galaxy:tags:enabled:{galaxy}', tag)
+
+def disable_galaxy_tags_enabled(galaxy):
+    r_tags.delete(f'galaxy:tags:enabled:{galaxy}')
+
+def update_galaxy_tag_enabled(galaxy, tags):
+    if not tags:
+        return None
+    enable_galaxy(galaxy)
+    tags = set(tags)
+    enabled_tags = get_galaxy_tags_enabled(galaxy)
+    if tags != enabled_tags:
+        # disable tags
+        for tag in enabled_tags.difference(tags):
+            remove_galaxy_tag_enabled(galaxy, tag)
+        # enable tags
+        for tag in tags:
+            add_galaxy_tag_enabled(galaxy, tag)
+
+def api_update_galaxy_tag_enabled(data):
+    galaxy = data.get('galaxy')
+    if not exists_galaxy(galaxy):
+        return {'error': f'galaxy {galaxy} not found'}, 404
+    tags = data.get('tags', [])
+    galaxy_tags = set(get_galaxy_tags(galaxy))
+    for tag in tags:
+        if tag not in galaxy_tags:
+            return {'error': f'tag {tag} not found'}, 404
+    update_galaxy_tag_enabled(galaxy, tags)
+
+def enable_galaxy_tags(galaxy):
+    enable_galaxy(galaxy)
+    for tag in get_galaxy_tags(galaxy):
+        add_galaxy_tag_enabled(galaxy, tag)
+
+def api_enable_galaxy_tags(data):
+    galaxy = data.get('galaxy')
+    if not exists_galaxy(galaxy):
+        return {'error': f'galaxy {galaxy} not found'}, 404
+    enable_galaxy_tags(galaxy)
+
+def disable_galaxy_tags(galaxy):
+    disable_galaxy(galaxy)
+    disable_galaxy_tags_enabled(galaxy)
+
+def api_disable_galaxy_tags(data):
+    galaxy = data.get('galaxy')
+    if not exists_galaxy(galaxy):
+        return {'error': f'galaxy {galaxy} not found'}, 404
+    disable_galaxy_tags(galaxy)
+
+    # -- Enabled Tags -- #
+
+# -- GALAXIES -- #
 
 ################################################################################
 ################################################################################
@@ -74,38 +480,44 @@ def get_obj_by_tag(key_tag):
 ################################################################################
 
 def is_obj_tagged(obj_type, obj_id, subtype=''):
-    '''
+    """
     Check if a object is tagged
 
-    :param object_id: object id
-    :type domain: str
+    :param obj_type: object type
+    :type obj_type: str
+    :param subtype: object subtype
+    :type subtype: str
+    :param obj_id: object ID
+    :type obj_id: str
 
     :return: is object tagged
     :rtype: boolean
-    '''
+    """
     return r_tags.exists(f'tag:{obj_type}:{subtype}:{obj_id}')
 
 def is_obj_tagged_by_tag(obj_type, obj_id, tag, subtype=''):
-    '''
-    Check if a object is tagged
+    """
+    Check if a object is tagged  by a specified tag
 
-    :param object_id: object id
-    :type domain: str
-    :param tag: object type
-    :type domain: str
+    :param obj_type: object type
+    :type obj_type: str
+    :param subtype: object subtype
+    :type subtype: str
+    :param obj_id: object ID
+    :type obj_id: str
+    :param tag: tag
+    :type tag: str
 
-    :return: is object tagged
+    :return: is object tagged by a specified tag
     :rtype: boolean
-    '''
+    """
     return r_tags.sismember(f'tag:{obj_type}:{subtype}:{obj_id}', tag)
 
 
-
-
 #
-#   f'tag:{obj_type}:{subtype}:{id}'              f'tag:{id}'
+#   'tag:{obj_type}:{subtype}:{id}'              'tag:{id}'
 #
-#   f'list_tags:{obj_type}:{subtype}'             f'list_tags:{obj_type}'
+#   'list_tags:{obj_type}:{subtype}'             'list_tags:{obj_type}'
 #
 #       graph tags by days ???????????????????????????????
 #
@@ -217,7 +629,7 @@ def get_tag_objects(obj_type, subtype='', date=''):
 def get_object_tags(obj_type, obj_id, subtype=''):
     return r_tags.smembers(f'tag:{obj_type}:{subtype}:{obj_id}')
 
-def add_object_tag(tag, obj_type, id, subtype=''): #############################
+def add_object_tag(tag, obj_type, id, subtype=''):
     if r_tags.sadd(f'tag:{obj_type}:{subtype}:{id}', tag) == 1:
         r_tags.sadd('list_tags', tag)
         r_tags.sadd(f'list_tags:{obj_type}', tag)
@@ -227,7 +639,7 @@ def add_object_tag(tag, obj_type, id, subtype=''): #############################
             r_tags.sadd(f'{obj_type}:{subtype}:{tag}:{date}', id)
 
             # add domain tag
-            if item_basic.is_crawled(id) and tag!='infoleak:submission="crawler"' and tag != 'infoleak:submission="manual"':
+            if item_basic.is_crawled(id) and tag != 'infoleak:submission="crawler"' and tag != 'infoleak:submission="manual"':
                 domain = item_basic.get_item_domain(id)
                 add_object_tag(tag, "domain", domain)
 
@@ -237,18 +649,28 @@ def add_object_tag(tag, obj_type, id, subtype=''): #############################
 
         r_tags.hincrby(f'daily_tags:{datetime.date.today().strftime("%Y%m%d")}', tag, 1)
 
-def update_tag_global_by_obj_type(tag, object_type, subtype=''):
+# obj -> Object()
+def confirm_tag(tag, obj):
+    if tag.startswith('infoleak:automatic-detection'):
+        tag = tag.replace('automatic-detection', 'analyst-detection', 1)
+        obj.add_tag(tag)
+        return True
+    return False
+
+# FIXME
+# TODO REVIEW ME
+def update_tag_global_by_obj_type(tag, obj_type, subtype=''):
     tag_deleted = False
-    if object_type=='item':
+    if obj_type == 'item':
         if not r_tags.exists(f'tag_metadata:{tag}'):
             tag_deleted = True
     else:
-        if not r_tags.exists(f'{object_type}:{subtype}:{tag}'):
+        if not r_tags.exists(f'{obj_type}:{subtype}:{tag}'):
             r_tags.srem(f'list_tags:{obj_type}:{subtype}', tag)
             # Iterate on all subtypes
             delete_global_obj_tag = True
             for obj_subtype in ail_core.get_object_all_subtypes():
-                if r_tags.exists(f'list_tags:{obj_type}:{subtype}'):
+                if r_tags.exists(f'list_tags:{obj_type}:{obj_subtype}'):
                     delete_global_obj_tag = False
                     break
             if delete_global_obj_tag:
@@ -280,6 +702,7 @@ def delete_object_tag(tag, obj_type, id, subtype=''):
 
 ################################################################################################################
 
+# TODO: REWRITE OLD
 # TODO: rewrite me
 # TODO: other objects
 def get_obj_by_tags(obj_type, l_tags, date_from=None, date_to=None, nb_obj=50, page=1):
@@ -338,7 +761,7 @@ def get_obj_by_tags(obj_type, l_tags, date_from=None, date_to=None, nb_obj=50, p
             l_tagged_obj = r_tags.sinter(l_set_keys[0], *l_set_keys[1:])
 
         if not l_tagged_obj:
-            return {"tagged_obj":l_tagged_obj, "page":0, "nb_pages":0}
+            return {"tagged_obj": l_tagged_obj, "page": 0, "nb_pages": 0}
 
         # handle pagination
         nb_all_elem = len(l_tagged_obj)
@@ -359,7 +782,7 @@ def get_obj_by_tags(obj_type, l_tags, date_from=None, date_to=None, nb_obj=50, p
             for elem in l_tagged_obj:
                 if current_index > stop:
                     break
-                if start <= current_index and stop >= current_index:
+                if start <= current_index <= stop:
                     l_obj.append(elem)
                 current_index += 1
             l_tagged_obj = l_obj
@@ -373,102 +796,6 @@ def get_obj_by_tags(obj_type, l_tags, date_from=None, date_to=None, nb_obj=50, p
             l_tagged_obj = list(l_tagged_obj)
 
         return {"tagged_obj":l_tagged_obj, "page":page, "nb_pages":nb_pages, "nb_first_elem":start+1, "nb_last_elem":stop, "nb_all_elem":nb_all_elem}
-
-
-
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-
-#### Taxonomies - Galaxies ####
-
-################################################################################
-# galaxies = Galaxies()
-# clusters = Clusters(skip_duplicates=True)
-#
-# list_all_tags = {}
-# for name, c in clusters.items(): #galaxy name + tags
-#     list_all_tags[name] = c
-#
-# list_galaxies = []
-# for g in galaxies.values():
-#     list_galaxies.append(g.to_json())
-#
-# list_clusters = []
-# for c in clusters.values():
-#     list_clusters.append(c.to_json())
-#
-# # tags numbers in galaxies
-# total_tags = {}
-# for name, tags in clusters.items(): #galaxie name + tags
-#     total_tags[name] = len(tags)
-################################################################################
-
-#### Taxonomies ####
-
-def get_taxonomy_tags_from_cluster(taxonomy_name):
-    taxonomies = Taxonomies()
-    taxonomy = taxonomies[taxonomy_name]
-    return taxonomy.machinetags()
-
-# TODO: ADD api handler
-def enable_taxonomy(taxonomy):
-    tags = get_taxonomy_tags_from_cluster(taxonomy)
-    r_tags.sadd('active_taxonomies', taxonomy)
-    for tag in tags:
-        r_tags.sadd(f'active_tag_{taxonomy}', tag)
-
-# def enable_taxonomy(taxonomie, enable_tags=True):
-#     '''
-#     Enable a taxonomy. (UI)
-#
-#     :param taxonomie: MISP taxonomy
-#     :type taxonomie: str
-#     :param enable_tags: crawled domain
-#     :type enable_tags: boolean
-#     '''
-#     taxonomies = Taxonomies()
-#     if enable_tags:
-#         taxonomie_info = taxonomies.get(taxonomie)
-#         if taxonomie_info:
-#             # activate taxonomie
-#             r_tags.sadd('active_taxonomies', taxonomie)
-#             # activate taxonomie tags
-#             for tag in taxonomie_info.machinetags():
-#                 r_tags.sadd('active_tag_{}'.format(taxonomie), tag)
-#                 #r_tags.sadd('active_taxonomies_tags', tag)
-#         else:
-#             print('Error: {}, please update pytaxonomies'.format(taxonomie))
-
-#### Galaxies ####
-
-def get_galaxy_tags_from_cluster(galaxy_name):
-    clusters = Clusters(skip_duplicates=True)
-    cluster = clusters[galaxy_name]
-    return cluster.machinetags()
-
-def get_galaxy_tags_with_sysnonym_from_cluster(galaxy_name):
-    tags = {}
-    clusters = Clusters(skip_duplicates=True)
-    cluster = clusters[galaxy_name]
-    for data in cluster.to_dict()['values']:
-        tag = f'misp-galaxy:{cluster.type}="{data.value}"'
-        synonyms = data.meta.synonyms
-        if not synonyms:
-            synonyms = []
-        tags[tag] = synonyms
-    return tags
-
-def enable_galaxy(galaxy):
-    tags = get_galaxy_tags_with_sysnonym_from_cluster(galaxy)
-    r_tags.sadd('active_galaxies', galaxy)
-    for tag in tags:
-        r_tags.sadd(f'active_tag_galaxies_{galaxy}', tag)
-        # synonyms
-        for synonym in tags[tag]:
-            r_tags.sadd(f'synonym_tag_{tag}', synonym)
-
 
 
 ################################################################################
@@ -489,9 +816,6 @@ def get_galaxy_from_tag(tag):
         return galaxy
     except IndexError:
         return None
-
-def get_taxonomies():
-    return Taxonomies().keys()
 
 def is_taxonomie(taxonomie, taxonomies=[]):
     if not taxonomies:
@@ -579,11 +903,11 @@ def is_taxonomie_tag_enabled(taxonomie, tag):
     else:
         return False
 
-def is_galaxy_tag_enabled(galaxy, tag):
-    if tag in r_tags.smembers('active_tag_galaxies_' + galaxy):
-        return True
-    else:
-        return False
+# def is_galaxy_tag_enabled(galaxy, tag):
+#     if tag in r_tags.smembers('active_tag_galaxies_' + galaxy):
+#         return True
+#     else:
+#         return False
 
 def is_custom_tag_enabled(tag):
     return r_tags.sismember('tags:custom:enabled_tags', tag)
@@ -748,12 +1072,12 @@ def unpack_str_tags_list(str_tags_list):
         return []
 
 # used by modal
-def get_modal_add_tags(item_id, object_type='item'):
+def get_modal_add_tags(object_id, object_type='item', object_subtype=''):
     '''
     Modal: add tags to domain or Paste
     '''
     return {"active_taxonomies": get_active_taxonomies(), "active_galaxies": get_active_galaxies(),
-            "object_id": item_id, "object_type": object_type}
+            "object_id": object_id, "object_type": object_type, "object_subtype": object_subtype}
 
 ######## NEW VERSION ########
 def create_custom_tag(tag):
@@ -790,6 +1114,27 @@ def get_all_tags():
 def get_all_obj_tags(obj_type):
     return list(r_tags.smembers(f'list_tags:{obj_type}'))
 
+# # # UI # # #
+
+def get_enabled_tags_with_synonyms_ui():
+    list_tags = []
+    for tag in get_all_tags():
+        t = tag.split(':')[0]
+        # add synonym
+        str_synonyms = ' - synonyms: '
+        if t == 'misp-galaxy':
+            synonyms = get_tag_synonyms(tag)
+            for synonym in synonyms:
+                str_synonyms = str_synonyms + synonym + ', '
+        # add real tag
+        if str_synonyms != ' - synonyms: ':
+            list_tags.append({'name': tag + str_synonyms, 'id': tag})
+        else:
+            list_tags.append({'name': tag, 'id': tag})
+    return list_tags
+
+# - - UI - - #
+
 ## Objects tags ##
 
 ###################################################################################
@@ -807,59 +1152,59 @@ def add_global_tag(tag, object_type=None):
     Create a set of all tags used in AIL (all + by object)
 
     :param tag: tag
-    :type domain: str
+    :type tag: str
     :param object_type: object type
-    :type domain: str
+    :type object_type: str
     '''
     r_tags.sadd('list_tags', tag)
     if object_type:
         r_tags.sadd('list_tags:{}'.format(object_type), tag)
 
-def add_obj_tags(object_id, object_type, tags=[], galaxy_tags=[]):
-    obj_date = get_obj_date(object_type, object_id)
+def add_obj_tags(object_id, object_subtype, object_type, tags=[], galaxy_tags=[]):
     for tag in tags:
         if tag:
-            taxonomie = get_taxonomie_from_tag(tag)
-            if is_taxonomie_tag_enabled(taxonomie, tag):
-                add_object_tag(tag, object_type, object_id)
+            taxonomy = get_taxonomie_from_tag(tag)
+            if is_taxonomie_tag_enabled(taxonomy, tag):
+                add_object_tag(tag, object_type, object_id, object_subtype)
             else:
-                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400)
+                return {'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400
 
     for tag in galaxy_tags:
         if tag:
             galaxy = get_galaxy_from_tag(tag)
             if is_galaxy_tag_enabled(galaxy, tag):
-                add_object_tag(tag, object_type, object_id)
+                add_object_tag(tag, object_type, object_id, object_subtype)
             else:
-                return ({'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400)
+                return {'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400
 
 # TEMPLATE + API QUERY
-def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item"):
+# WARNING CHECK IF OBJECT EXISTS
+def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item", object_subtype=''):
     res_dict = {}
-    if object_id == None:
-        return ({'status': 'error', 'reason': 'object_id id not found'}, 404)
+    if not object_id:
+        return {'status': 'error', 'reason': 'object_id id not found'}, 404
     if not tags and not galaxy_tags:
-        return ({'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400)
-    if object_type not in ('item', 'domain', 'image', 'decoded'):  # # TODO: put me in another file
-        return ({'status': 'error', 'reason': 'Incorrect object_type'}, 400)
+        return {'status': 'error', 'reason': 'Tags or Galaxy not specified'}, 400
+    if object_type not in ail_core.get_all_objects():
+        return {'status': 'error', 'reason': 'Incorrect object_type'}, 400
 
     # remove empty tags
     tags = list(filter(bool, tags))
     galaxy_tags = list(filter(bool, galaxy_tags))
 
-    res = add_obj_tags(object_id, object_type, tags=tags, galaxy_tags=galaxy_tags)
+    res = add_obj_tags(object_id, object_subtype, object_type, tags=tags, galaxy_tags=galaxy_tags)
     if res:
         return res
 
     res_dict['tags'] = tags + galaxy_tags
     res_dict['id'] = object_id
     res_dict['type'] = object_type
-    return (res_dict, 200)
+    return res_dict, 200
 
 # def add_tag(object_type, tag, object_id, obj_date=None):
 #     # new tag
 #     if not is_obj_tagged(object_id, tag):
-#         # # TODO: # FIXME: sanityze object_type
+#         # # TODO: # FIXME: sanitize object_type
 #         if obj_date:
 #             try:
 #                 obj_date = int(obj_date)
@@ -950,5 +1295,7 @@ def get_list_of_solo_tags_to_export_by_type(export_type): # by type
     #r_serv_db.smembers('whitelist_hive')
 
 # if __name__ == '__main__':
-#     galaxy = 'infoleak'
-#     get_taxonomy_tags_from_cluster(galaxy)
+#     taxo = 'accessnow'
+#     # taxo = TAXONOMIES.get(taxo)
+#     res = is_taxonomy_tag_enabled(taxo, 'test')
+#     print(res)

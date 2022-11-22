@@ -4,3 +4,6 @@
 [submodule "files/misp-taxonomies"]
 	path = files/misp-taxonomies
 	url = https://github.com/MISP/misp-taxonomies.git
+[submodule "files/misp-galaxy"]
+	path = files/misp-galaxy
+	url = https://github.com/MISP/misp-galaxy.git

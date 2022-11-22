@@ -63,7 +63,7 @@ class Cve(AbstractDaterangeObject):
         meta = self._get_meta(options=options)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
-        meta['tags'] = self.get_tags()
+        meta['tags'] = self.get_tags(r_list=True)
         return meta
 
     def add(self, date, item_id):

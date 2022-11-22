@@ -28,7 +28,6 @@ import Flask_config
 app = Flask_config.app
 config_loader = Flask_config.config_loader
 baseUrl = Flask_config.baseUrl
-r_serv = Flask_config.r_serv
 r_serv_log = Flask_config.r_serv_log
 
 max_dashboard_logs = Flask_config.max_dashboard_logs
@@ -53,7 +52,7 @@ def event_stream():
         if msg['type'] == 'pmessage' and level != "DEBUG":
             yield 'data: %s\n\n' % json.dumps(msg)
 
-def get_queues(r):
+def get_queues():
     # We may want to put the llen in a pipeline to do only one query.
     return queues_modules.get_all_modules_queues_stats()
 
@@ -63,22 +62,22 @@ def get_date_range(date_from, num_day):
 
     for i in range(0, num_day+1):
         new_date = date.substract_day(i)
-        date_list.append(new_date[0:4] +'-'+ new_date[4:6] +'-'+ new_date[6:8])
+        date_list.append(f'{new_date[0:4]}-{new_date[4:6]}-{new_date[6:8]}')
 
     return date_list
 
 def dashboard_alert(log):
     # check if we need to display this log
-    if len(log)>50:
+    if len(log) > 50:
         date = log[1:5]+log[6:8]+log[9:11]
         utc_str = log[1:20]
         log = log[46:].split(';')
         if len(log) == 6:
-            time = datetime_from_utc_to_local(utc_str)
-            path = url_for('objects_item.showItem',id=log[5])
+            date_time = datetime_from_utc_to_local(utc_str)
+            path = url_for('objects_item.showItem', id=log[5])
 
-            res = {'date': date, 'time': time, 'script': log[0], 'domain': log[1], 'date_paste': log[2],
-                  'paste': log[3], 'message': log[4], 'path': path}
+            res = {'date': date, 'time': date_time, 'script': log[0], 'domain': log[1], 'date_paste': log[2],
+                   'paste': log[3], 'message': log[4], 'path': path}
             return res
         else:
             return False
@@ -116,7 +115,7 @@ def get_last_logs_json():
     date_range = get_date_range(date, max_day_search)
     while max_day_search != day_search and warning_found != warning_to_found:
 
-        filename_warning_log = 'logs/Script_warn-'+ date_range[day_search] +'.log'
+        filename_warning_log = f'logs/Script_warn-{date_range[day_search]}.log'
         filename_log = os.path.join(os.environ['AIL_HOME'], filename_warning_log)
 
         try:
@@ -147,7 +146,7 @@ def get_last_logs_json():
 @login_required
 @login_read_only
 def stuff():
-    return jsonify(row1=get_queues(r_serv))
+    return jsonify(row1=get_queues())
 
 
 # TODO: ADD UPDATE NOTE BY USER
@@ -169,9 +168,11 @@ def index():
         background_update = True
         update_message = ail_updates.get_update_background_message()
 
-    return render_template("index.html", default_minute = default_minute, threshold_stucked_module=threshold_stucked_module,
-                            log_select=log_select, selected=max_dashboard_logs,
-                            background_update=background_update, update_message=update_message)
+    return render_template("index.html", default_minute = default_minute,
+                           threshold_stucked_module=threshold_stucked_module,
+                           log_select=log_select, selected=max_dashboard_logs,
+                           background_update=background_update, update_message=update_message)
+
 
 # ========= REGISTRATION =========
 app.register_blueprint(dashboard, url_prefix=baseUrl)

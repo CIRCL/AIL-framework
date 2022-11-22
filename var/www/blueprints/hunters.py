@@ -19,9 +19,13 @@ import Flask_config
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import item_basic
-import Tracker
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import item_basic
+from lib import Tracker
+
 
 bootstrap_label = Flask_config.bootstrap_label
 

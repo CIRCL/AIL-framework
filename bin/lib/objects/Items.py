@@ -53,7 +53,7 @@ class Item(AbstractObject):
         super(Item, self).__init__('item', id)
 
     def exists(self):
-        return os.path.isfile(self.get_filename())
+        return item_basic.exist_item(self.id)
 
     def get_date(self, separator=False):
         """
@@ -122,6 +122,9 @@ class Item(AbstractObject):
     def get_ail_2_ail_payload(self):
         payload = {'raw': self.get_gzip_content(b64=True)}
         return payload
+
+    def get_parent(self):
+        return item_basic.get_item_parent(self.id)
 
     def set_father(self, father_id): # UPDATE KEYS ?????????????????????????????
         r_serv_metadata.sadd(f'paste_children:{father_id}', self.id)
@@ -234,7 +237,7 @@ class Item(AbstractObject):
 
     def get_screenshot(self):
         s = self.get_correlation('screenshot')
-        if s:
+        if s.get('screenshot'):
             s = s['screenshot'].pop()[1:]
             return os.path.join(s[0:2], s[2:4], s[4:6], s[6:8], s[8:10], s[10:12], s[12:])
 
@@ -267,10 +270,13 @@ class Item(AbstractObject):
         if 'lines' in options:
             content = meta.get('content')
             meta['lines'] = self.get_meta_lines(content=content)
+        if 'parent' in options:
+            meta['parent'] = self.get_parent()
         if 'size' in options:
             meta['size'] = self.get_size(str=True)
-
-        # # TODO: ADD GET FATHER
+        if 'mimetype' in options:
+            content = meta.get('content')
+            meta['mimetype'] = self.get_mimetype(content=content)
 
         # meta['encoding'] = None
         return meta

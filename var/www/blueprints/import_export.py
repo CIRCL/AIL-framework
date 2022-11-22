@@ -20,14 +20,16 @@ import Flask_config
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
-import MispImport
-import MispExport
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from export import MispExport
+from export import MispImport
+from export import AILObjects ####################### # # # # ########################## ## # ####################################
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Correlate_object
+from lib.objects import ail_objects
 
-import AILObjects
 
 # ============ BLUEPRINT ============
 import_export = Blueprint('import_export', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/import_export'))
@@ -66,10 +68,11 @@ def import_object_file():
         map_uuid_global_id = MispImport.import_objs_from_file(filename)
         os.remove(filename)
         for obj_uuid in map_uuid_global_id:
-            dict_obj = Correlate_object.get_global_id_from_id(map_uuid_global_id[obj_uuid])
+            dict_obj = MispImport.get_global_id_from_id(map_uuid_global_id[obj_uuid])
+            obj = ail_objects.get_object(dict_obj['type'], dict_obj['subtype'], dict_obj['id'])
             dict_obj['uuid'] = obj_uuid
-            dict_obj['url'] = Correlate_object.get_item_url(dict_obj['type'], dict_obj['id'], correlation_type=dict_obj['subtype'])
-            dict_obj['node'] = Correlate_object.get_correlation_node_icon(dict_obj['type'], correlation_type=dict_obj['subtype'], value=dict_obj['id'])
+            dict_obj['url'] = obj.get_link(flask_context=True)
+            dict_obj['node'] = obj.get_svg_icon()
             all_imported_obj.append(dict_obj)
 
         if not all_imported_obj:
@@ -129,7 +132,7 @@ def export_object_file():
         else:
             dict_misp_event_export[str(obj_tuple)] = request.form.get(obj_tuple)
 
-    #print(dict_misp_event_export)
+    # print(dict_misp_event_export)
 
     if dict_misp_event_export.get('export_to_misp', None):
         export_to_misp = True
@@ -142,10 +145,12 @@ def export_object_file():
 
         for obj_dict in l_obj_invalid: # set uuid input
             obj_dict['uuid'] = str(uuid.uuid4())
-            obj_dict['type'] = Correlate_object.get_obj_str_type_subtype(obj_dict['type'], obj_dict.get('subtype', None))
+            subtype = obj_dict.get('subtype', None)
+            if subtype:
+                obj_dict['type'] = f'{obj_dict["type"]};{subtype}'
 
         return render_template("export_object.html", l_obj_to_export=l_obj_to_export,
-                                l_obj_invalid=l_obj_invalid, dict_misp_event_export=dict_misp_event_export)
+                               l_obj_invalid=l_obj_invalid, dict_misp_event_export=dict_misp_event_export)
     else:
         if export_to_misp and MispExport.ping_misp():
             event = MispExport.create_list_of_objs_to_export(l_obj_to_export, r_type='event')

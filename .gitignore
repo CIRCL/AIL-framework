@@ -2,6 +2,7 @@
 *.swp
 *.pyc
 *.swo
+.idea
 
 # Install Dirs
 AILENV

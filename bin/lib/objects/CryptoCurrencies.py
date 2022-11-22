@@ -92,7 +92,7 @@ class CryptoCurrency(AbstractSubtypeObject):
         meta = self._get_meta()
         meta['id'] = self.id
         meta['subtype'] = self.subtype
-        meta['tags'] = self.get_tags()
+        meta['tags'] = self.get_tags(r_list=True)
         return meta
 
 

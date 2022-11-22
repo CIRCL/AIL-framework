@@ -15,14 +15,15 @@ config_loader = ConfigLoader()
 
 config_loader = None
 
+AIL_OBJECTS = {'cve', 'cryptocurrency', 'decoded', 'domain', 'item', 'pgp', 'screenshot', 'username'}
+
 def get_ail_uuid():
     pass
 
 #### AIL OBJECTS ####
 
-# # TODO: check change paste => item
 def get_all_objects():
-    return ['cve', 'domain', 'item', 'pgp', 'cryptocurrency', 'decoded', 'screenshot', 'username']
+    return AIL_OBJECTS
 
 def get_object_all_subtypes(obj_type):
     if obj_type == 'cryptocurrency':

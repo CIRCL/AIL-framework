@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Show Domain - AIL</title>
+    <title>Show Domain - AIL</title>
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 	<!-- Core CSS -->
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
-  <script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
- 	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+ 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
-  <style>
-    .card-columns {
-      column-count: 4;
-    }
-  </style>
+    <style>
+        .card-columns {
+            column-count: 4;
+        }
+    </style>
 
 </head>
 <body>
@@ -217,7 +217,7 @@ blocks.addEventListener('change', pixelate_all, false);
 {% for dict_domain in dict_data['list_elem'] %}
   {% if 'screenshot' in dict_domain %}
     {% if dict_domain['is_tags_safe'] %}
-      var screenshot_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}{{dict_domain['screenshot']}}";
+      var screenshot_url = "{{ url_for('objects_item.screenshot', filename="") }}{{dict_domain['screenshot']}}";
     {% else %}
     var screenshot_url = "{{ url_for('static', filename='image/AIL.png') }}";
     {% endif %}

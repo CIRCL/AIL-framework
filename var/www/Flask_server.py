@@ -8,7 +8,6 @@ import json
 import time
 import uuid
 
-import redis
 import random
 import logging
 import logging.handlers
@@ -16,7 +15,6 @@ import logging.handlers
 from flask import Flask, render_template, jsonify, request, Request, Response, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 
-import flask
 import importlib
 from os.path import join
 
@@ -90,7 +88,7 @@ if not os.path.isdir(log_dir):
 # =========  TLS  =========#
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 ssl_context.load_cert_chain(certfile=os.path.join(Flask_dir, 'server.crt'), keyfile=os.path.join(Flask_dir, 'server.key'))
-#print(ssl_context.get_ciphers())
+# print(ssl_context.get_ciphers())
 # =========       =========#
 
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
@@ -132,6 +130,7 @@ def load_user(user_id):
 
 # ========= HEADER GENERATION ======== DEPRECATED
 
+
 # Get headers items that should be ignored (not displayed)
 toIgnoreModule = set()
 try:
@@ -166,7 +165,6 @@ for root, dirs, files in os.walk(os.path.join(Flask_dir, 'modules')):
                 to_add_to_header_dico[module_name] = f.read()
 
 # create header.html
-complete_header = ""
 with open(os.path.join(Flask_dir, 'templates', 'header_base.html'), 'r') as f:
     complete_header = f.read()
 modified_header = complete_header
@@ -250,21 +248,20 @@ def page_not_found(e):
 
 # ========== INITIAL taxonomies ============
 default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
-
 # enable default taxonomies
-for taxo in default_taxonomies:
-    Tag.enable_taxonomy(taxo)
+for taxonomy in default_taxonomies:
+    Tag.enable_taxonomy_tags(taxonomy)
 
 # ========== INITIAL tags auto export ============
-taxonomies = Taxonomies()
-
-infoleak_tags = taxonomies.get('infoleak').machinetags()
-infoleak_automatic_tags = []
-for tag in taxonomies.get('infoleak').machinetags():
-    if tag.split('=')[0][:] == 'infoleak:automatic-detection':
-        r_serv_db.sadd('list_export_tags', tag)
-
-r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
+# taxonomies = Taxonomies()
+#
+# infoleak_tags = taxonomies.get('infoleak').machinetags()
+# infoleak_automatic_tags = []
+# for tag in taxonomies.get('infoleak').machinetags():
+#     if tag.split('=')[0][:] == 'infoleak:automatic-detection':
+#         r_serv_db.sadd('list_export_tags', tag)
+#
+# r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":

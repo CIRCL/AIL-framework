@@ -69,13 +69,10 @@ function get_html_and_update_modal(event, truemodal) {
     event.preventDefault();
 
     var modal=truemodal;
-    var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + modal.attr('data-path') + "&num=" + modal.attr('data-num');
-    last_clicked_paste =  modal.attr('data-num');
+    var url = " {{ url_for('objects_item.item_preview')  }}?id=" + modal.attr('data-path');
     $.get(url, function (data) {
 
         // verify that the reveived data is really the current clicked item. Otherwise, ignore it.
-        var received_num = parseInt(data.split("|num|")[1]);
-        if (received_num == last_clicked_paste && can_change_modal_content) {
             can_change_modal_content = false;
 
             // clear data by removing html, body, head tags. prevent dark modal background stack bug.
@@ -97,7 +94,7 @@ function get_html_and_update_modal(event, truemodal) {
             // On click, donwload all item's content
             $("#load-more-button").on("click", function (event) {
                 if (complete_item == null) { //Donwload only once
-                    $.get("{{ url_for('showsavedpastes.getmoredata') }}"+"?paste="+$(modal).attr('data-path'), function(data, status){
+                    $.get("{{ url_for('objects_item.item_content_more') }}"+"?id="+$(modal).attr('data-path'), function(data, status){
                         complete_item = data;
                         update_preview();
                     });
@@ -105,9 +102,6 @@ function get_html_and_update_modal(event, truemodal) {
                     update_preview();
                 }
             });
-        } else if (can_change_modal_content) {
-            $("#modal_show_min_item_body").html("Ignoring previous not finished query of item #" + received_num);
-        }
     });
 }
 

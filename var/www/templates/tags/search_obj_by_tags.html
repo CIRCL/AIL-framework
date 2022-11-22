@@ -37,12 +37,12 @@
         {% endif %}
 
         {% with object_type=dict_tagged['object_type'], current_tags=dict_tagged['current_tags'], object_name=dict_tagged['object_name'] %}
-          {%if 'date' in dict_tagged%}
-            {% set date_from= dict_tagged['date']['date_from'] %}
-            {% set date_to= dict_tagged['date']['date_to'] %}
-          {% endif %}
-					{% include 'tags/block_obj_tags_search.html' %}
-				{% endwith %}
+            {%if 'date' in dict_tagged%}
+                {% set date_from= dict_tagged['date']['date_from'] %}
+                {% set date_to= dict_tagged['date']['date_to'] %}
+            {% endif %}
+            {% include 'tags/block_obj_tags_search.html' %}
+        {% endwith %}
 
 				<div>
 					{%if 'tagged_obj' in dict_tagged%}
@@ -61,7 +61,7 @@
                     <th>Last seen</th>
                     <th>Nb seen</th>
                     <th>Size</th>
-                  {%elif dict_tagged["object_type"]=="image"%}
+                  {%elif dict_tagged["object_type"]=="screenshot"%}
                     <th style="max-width: 800px;">Image</th>
                   {%elif dict_tagged["object_type"]=="item"%}
                     <th>Date</th>
@@ -106,7 +106,7 @@
   				          </tr>
   				        {% endfor %}
 
-                {%elif dict_tagged["object_type"]=="image"%}
+                {%elif dict_tagged["object_type"]=="screenshot"%}
                   {% for dict_obj in dict_tagged["tagged_obj"] %}
                     <tr>
                       <td class="pb-0">
@@ -141,7 +141,7 @@
                         </div>
                       </td>
                       <td class="pb-0">
-                        <button type="button" class="btn btn-light" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#modal_show_min_item" data-url="{{ url_for('showsavedpastes.showsaveditem_min') }}?paste={{ dict_obj['id'] }}" data-path="{{ dict_obj['id'] }}">
+                        <button type="button" class="btn btn-light" data-num="{{ loop.index0 + 1 }}" data-toggle="modal" data-target="#modal_show_min_item" data-url="{{ url_for('objects_item.item_preview') }}?id={{ dict_obj['id'] }}" data-path="{{ dict_obj['id'] }}">
   												<span class="fas fa-search-plus"></span>
   											</button>
 

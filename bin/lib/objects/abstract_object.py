@@ -18,7 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import Tag
 from lib import Duplicate
-from lib.correlations_engine import get_correlations, add_obj_correlation, delete_obj_correlation, exists_obj_correlation, is_obj_correlated
+from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, exists_obj_correlation, is_obj_correlated
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.Tracker import is_obj_tracked, get_obj_all_trackers, delete_obj_trackers
 
@@ -182,6 +182,9 @@ class AbstractObject(ABC):
         Get object correlations
         """
         return get_correlations(self.type, self.subtype, self.id)
+
+    def get_nb_correlations(self, filter_types=[]):
+        return get_nb_correlations(self.type, self.subtype, self.id, filter_types=filter_types)
 
     def add_correlation(self, type2, subtype2, id2):
         """

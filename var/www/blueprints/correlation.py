@@ -136,7 +136,6 @@ def show_correlation():
                            "filter": filter_types, "filter_str": ",".join(filter_types),
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, flask_context=True)
                            }
-            print(dict_object)
             if subtype:
                 dict_object["metadata"]['type_id'] = subtype
             dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
@@ -196,4 +195,4 @@ def subtype_search():
     obj_type = request.form.get('object_type')
     obj_subtype = request.form.get('object_subtype')
     obj_id = request.form.get('object_id')
-    return redirect(url_for('correlation.show_correlation', object_type=obj_type, type_id=obj_subtype, correlation_id=obj_id))
+    return redirect(url_for('correlation.show_correlation', type=obj_type, subtype=obj_subtype, id=obj_id))

@@ -29,6 +29,9 @@ r_serv = config_loader.get_redis_conn("Redis_Queues")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_log = config_loader.get_redis_conn("Redis_Log")
 r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
+
+
+
 r_serv_charts = config_loader.get_redis_conn("ARDB_Trending")
 r_serv_sentiment = config_loader.get_redis_conn("ARDB_Sentiment")
 r_serv_term = config_loader.get_redis_conn("ARDB_Tracker")

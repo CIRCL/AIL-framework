@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Taxonomies - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'tags/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <h3 class="mt-2 text-secondary">
+					<i class="fas fa-tags"></i> Taxonomies:
+				</h3>
+
+                <table class="table table-bordered table-striped table-hover" id="myTable_">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Namespace</th>
+                            <th>Description</th>
+                            <th>Version</th>
+                            <th>Enabled</th>
+                            <th>Active Tags</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for taxonomy in taxonomies %}
+                            <tr>
+                                <td>{{ taxonomies[taxonomy]['name'] }}</td>
+                                <td>{{ taxonomies[taxonomy]['description'] }}</td>
+                                <td>{{ taxonomies[taxonomy]['version'] }}</td>
+                                <td>
+                                    {% if taxonomies[taxonomy]['enabled'] %}
+                                        <div style="color:Green;">
+                                            <i class="fas fa-check-circle fa-2x"></i>
+										</div>
+                                    {% else %}
+                                        <div style="color:Red;">
+											<i class="fas fa-times-circle fa-2x"></i>
+										</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <h5>
+                                        <span class="badge badge-dark">
+                                            <b>{{ taxonomies[taxonomy]['nb_active_tags'] }}</b>/{{ taxonomies[taxonomy]['nb_tags'] }}
+                                        </span>
+                                    </h5>
+                                </td>
+                                <td>
+                                    <a class="btn btn-outline-secondary" href="{{ url_for('tags_ui.tags_taxonomy') }}?taxonomy={{ taxonomy }}">
+                                        <i class="fas fa-tag"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+
+                <br>
+                <br>
+                <br>
+                <br>
+
+    	    </div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+
+$(document).ready(function(){
+  $("#navbar-tags").addClass("active");
+  $("#nav_tags_config").removeClass("text-muted");
+  $("#nav_taxonomies").addClass("active");
+
+
+  $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 15, "order": [[ 0, "asc" ]] });
+
+});
+</script>
+
+<script>
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Galaxy - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'tags/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="my-3">
+                    <a href="{{ url_for('tags_ui.tags_galaxies') }}" class="pull-left">
+                        <i class="fa fa-arrow-left fa"></i> List Galaxies
+                    </a>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <div class="d-flex">
+                            <span class="h3">{{ galaxy['name'] }}</span>
+
+                            <span class="h5 ml-auto">
+                                {% if galaxy['enabled'] %}
+                                    <span class="badge badge-success">Enabled</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Disabled</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <table class="table table-sm table-hover">
+                            <tbody>
+                                <tr>
+                                    <td><b>Description</b></td>
+                                    <td>{{ galaxy['description'] }}</td>
+                                </tr>
+                                {% if galaxy['namespace'] %}
+                                    <tr>
+                                        <td><b>Namespace</b></td>
+                                        <td>{{ galaxy['namespace'] }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if galaxy['category'] %}
+                                    <tr>
+                                        <td><b>Category</b></td>
+                                        <td>{{ galaxy['category'] }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if galaxy['type'] %}
+                                    <tr>
+                                        <td><b>Type</b></td>
+                                        <td>{{ galaxy['type'] }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if galaxy['source'] %}
+                                    <tr>
+                                        <td><b>Source</b></td>
+                                        <td>{{ galaxy['source'] }}</td>
+                                    </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><b>Version</b></td>
+                                    <td>{{ galaxy['version'] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="mt-4">
+                            {% if galaxy['enabled'] %}
+                                <a href="{{ url_for('tags_ui.galaxy_disable') }}?galaxy={{ galaxy['type'] }}" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Disable Galaxy
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('tags_ui.galaxy_enable') }}?galaxy={{ galaxy['type'] }}" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Enable Galaxy
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('tags_ui.galaxy_enable_tags') }}" id="checkboxForm">
+				    <input type="hidden" value="{{ galaxy['type'] }}" name="galaxy">
+
+                    <table class="table table-bordered table-hover my-4">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th></th>
+                                <th>Tag</th>
+                                <th>Description</th>
+                                <th class="text-center">Enabled</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tag in galaxy['tags'] %}
+                                <tr>
+                                    <td class="text-center">
+                                        <div class="custom-control custom-switch">
+                                            <input class="custom-control-input" type="checkbox" name="tags" id="{{ tag['tag'] }}" value="{{ tag['tag'] }}" {% if tag['enabled'] %}checked{% endif %}>
+                                            <label class="custom-control-label" for="{{ tag['tag'] }}"></label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('tags_ui.tags_galaxy_tag') }}?galaxy={{ galaxy['type'] }}&tag={{ tag['tag'] }}" class="badge badge-info">{{ tag['tag'] }}</a>
+                                        {% if tag['synonyms'] %}
+                                            <div>
+                                                Synonym: <i>
+                                                {% for synonym in tag['synonyms'] %}
+                                                    {{ synonym }},
+                                                {% endfor %}
+                                                </i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if 'description' in tag %}
+                                            {{ tag['description'] }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-center">
+                                            {% if tag['enabled'] %}
+                                                <div style="color:Green;">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </div>
+                                            {% else %}
+                                                <div style="color:Red;">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="input-group-btn">
+                        <button class="btn btn-primary btn-lg" onclick="submitEnabledTags()">
+                            <i class="fas fa-check-square"></i> Update Tags
+                        </button>
+                    </div>
+
+                </form>
+
+                <br><br><br><br>
+
+    	    </div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+    $("#navbar-tags").addClass("active");
+    $("#nav_tags_config").removeClass("text-muted");
+
+    table = $('#myTable_').DataTable(
+        {
+            "aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 3, "desc" ]]
+        }
+    );
+
+});
+</script>
+
+<script>
+function submitEnabledTags() {
+    table.destroy();
+	table = $('#myTable_').DataTable(
+		{
+			"iDisplayLength": -1,
+		}
+	);
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+
+</html>

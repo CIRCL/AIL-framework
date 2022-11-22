@@ -74,7 +74,6 @@ if __name__ == '__main__':
         print('Please provide a list of valid IP addresses')
         sys.exit(0)
 
-
     # Sent to the logging a description of the module
     publisher.info("Run IP module")
 

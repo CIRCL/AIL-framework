@@ -546,7 +546,7 @@ def blacklist_domain(domain):
 
 def load_blacklist():
     try:
-        with open(os.path.join(os.environ['AIL_BIN'], 'torcrawler/blacklist.txt'), 'r') as f:
+        with open(os.path.join(os.environ['AIL_BIN'], 'crawlers/blacklist.txt'), 'r') as f:
             r_crawler.delete('blacklist:domain')
             lines = f.read().splitlines()
             for line in lines:

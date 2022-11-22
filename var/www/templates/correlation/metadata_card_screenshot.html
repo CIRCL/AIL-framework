@@ -68,7 +68,7 @@
 					Tags:
 					{% for tag in dict_object["metadata"]['tags'] %}
 						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-						data-tagid="{{ tag }}" data-objtype="image" data-objid="{{ dict_object["correlation_id"] }}">
+						data-tagid="{{ tag }}" data-objtype="screenshot" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
 							{{ tag }}
 						</button>
 					{%  endfor %}
@@ -99,7 +99,7 @@ img.onload = pixelate;
 img.addEventListener("error", img_error);
 var draw_img = false;
 
-img.src = "{{ url_for('showsavedpastes.screenshot', filename=dict_object['metadata']['img']) }}";
+img.src = "{{ url_for('objects_item.screenshot', filename=dict_object['metadata']['img']) }}";
 
 function pixelate() {
   /// use slider value

@@ -1,40 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Paste information - AIL</title>
-  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Paste information - AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
 
-  <script language="javascript" src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
 
-  <style>
-    .scrollable-menu {
-      height: auto;
-      max-height: 200px;
-      overflow-x: hidden;
-      width:100%;
-    }
+    <style>
+        .scrollable-menu {
+            height: auto;
+            max-height: 200px;
+            overflow-x: hidden;
+            width:100%;
+        }
 
 		.red_table thead{
 			background: #d91f2d;
 			color: #fff;
 		}
-  </style>
+    </style>
 
 </head>
 <body>
 
   <div class="card mb-2">
     <div class="card-header bg-dark">
-      <h3 class="text-white text-center" >{{ item_info['name'] }}</h3>
+      <h3 class="text-white text-center" >{{ meta['id'] }}</h3>
     </div>
     <div class="card-body pb-1">
       <table class="table table-condensed table-responsive">
@@ -50,19 +50,19 @@
         </thead>
         <tbody>
           <tr>
-          <td>{{ item_basic_info['date'] }}</td>
-          <td>{{ item_basic_info['source'] }}</td>
-          <td>{{ item_basic_info['encoding'] }}</td>
-          <td>{{ item_basic_info['size'] }}</td>
-          <td>{{ item_basic_info['nb_lines'] }}</td>
-          <td>{{ item_basic_info['max_length_line'] }}</td>
+          <td>{{ meta['date'] }}</td>
+          <td>{{ meta['source'] }}</td>
+          <td>{{ meta['mimetype'] }}</td>
+          <td>{{ meta['size'] }}</td>
+          <td>{{ meta['lines']['nb'] }}</td>
+          <td>{{ meta['lines']['max_length'] }}</td>
           </tr>
         </tbody>
       </table>
 
       <div>
         <h5>
-          {% for tag in item_info['tags'] %}
+          {% for tag in meta['tags'] %}
             <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
           {%  endfor %}
         </h5>
@@ -71,9 +71,9 @@
     </div>
   </div>
 
-  {% if item_parent %}
+  {% if meta['parent'] %}
     <div class="list-group" id="item_parent">
-      <a href="{{ url_for('objects_item.showItem')}}?id={{item_parent}}" target="_blank">{{item_parent}}</a>
+    parent: <a href="{{ url_for('objects_item.showItem')}}?id={{meta['parent']}}" target="_blank">{{meta['parent']}}</a>
     </div>
   {% endif %}
 
@@ -91,13 +91,13 @@
     </div>
   {% endif %}
 
-  {% if  item_info['nb_duplictates'] != 0 %}
+  {% if  meta['duplicates'] != 0 %}
     <div id="accordionDuplicate" class="mb-2">
       <div class="card">
         <div class="card-header py-1" id="headingDuplicate">
           <div class="my-1">
             <i class="far fa-clone"></i> duplicates&nbsp;&nbsp;
-            <div class="badge badge-warning">{{item_info['nb_duplictates']}}</div>
+            <div class="badge badge-warning">{{meta['duplicates']}}</div>
           </div>
         </div>
       </div>
@@ -105,52 +105,43 @@
   {% endif %}
 
 
-  {% if  l_64|length != 0 %}
-  <div id="accordionDecoded" class="mb-3">
-    <div class="card">
-      <div class="card-header py-1" id="headingDecoded">
-        <div class="row">
-          <div class="col-11">
-            <div class="mt-2">
-              <i class="fas fa-lock-open"></i> Decoded Files&nbsp;&nbsp;
-              <div class="badge badge-warning">{{l_64|length}}</div>
-            </div>
+  {% if  meta['nb_correlations'] %}
+    <div id="accordionCorrelation" class="mb-2">
+      <div class="card">
+        <div class="card-header py-1" id="headingCorrelation">
+          <div class="my-1">
+              <h5>
+                  {% for obj_type in meta['nb_correlations'] %}
+                      {% if meta['nb_correlations'][obj_type] %}
+                          <span class="badge badge-dark">
+                              {% if obj_type=='cve' %}
+                                  <i class="fas fa-bug"></i>
+                              {% elif obj_type=='cryptocurrency' %}
+                                  <i class="fas fa-coins"></i>
+                              {% elif obj_type=='decoded' %}
+                                  <i class="fas fa-lock-open"></i>
+                              {% elif obj_type=='pgp' %}
+                                  <i class="fas fa-key"></i>
+                              {% elif obj_type=='username' %}
+                                  <i class="fas fa-user"></i>
+                              {% elif obj_type=='screenshot' %}
+                                  <i class="fas fa-image"></i>
+                              {% else %}
+                                  <i class="fas fa-cube"></i>
+                              {% endif %}
+                              {{ obj_type }}&nbsp;
+                              <div class="badge badge-warning">{{meta['nb_correlations'][obj_type]}}</div>
+                          </span>
+                      {% endif %}
+                  {% endfor %}
+              </h5>
           </div>
-          <div class="col-1">
-            <button class="btn btn-link py-2 rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="true" aria-controls="collapseDecoded">
-              <i class="fas fa-chevron-circle-down"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="collapseDecoded" class="collapse show" aria-labelledby="headingDecoded" data-parent="#accordionDecoded">
-        <div class="card-body">
-
-          <table id="tableb64" class="red_table table table-striped">
-            <thead>
-              <tr>
-                <th>estimated type</th>
-                <th>hash</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for b64 in l_64 %}
-                <tr>
-                  <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ b64[2] }}&correlation_objects=paste"</a> {{b64[2]}} ({{ b64[4] }})</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-
         </div>
       </div>
     </div>
-  </div>
   {% endif %}
 
-  {% if crawler_metadata['get_metadata'] %}
+  {% if 'crawler' in meta %}
   <div id="accordionCrawler" class="mb-3">
     <div class="card">
       <div class="card-header py-1" id="headingCrawled">
@@ -175,15 +166,15 @@
             <tbody>
               <tr>
                 <td>Domain</td>
-                <td><a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ crawler_metadata['domain'] }}" id='domain'>{{ crawler_metadata['domain'] }}</a></td>
+                <td><a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ meta['crawler']['domain'] }}" id='domain'>{{ meta['crawler']['domain'] }}</a></td>
               </tr>
               <tr>
                 <td>Father</td>
-                <td><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{ crawler_metadata['paste_father'] }}" id='paste_father'>{{ crawler_metadata['paste_father'] }}</a></td>
+                <td><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{ meta['parent'] }}" id='paste_father'>{{ meta['parent'] }}</a></td>
               </tr>
               <tr>
                 <td>Url</td>
-                <td>{{ crawler_metadata['real_link'] }}</td>
+                <td>{{ meta['crawler']['url'] }}</td>
               </tr>
             </tbody>
           </table>
@@ -229,7 +220,7 @@
   </div>
 
 
-  <p class="my-0" data-initsize="{{ initsize }}"> <pre id="paste-holder" class="border">{{ content }}</pre></p>
+  <p class="my-0" data-initsize="{{ initsize }}"> <pre id="paste-holder" class="border">{{ meta['content'] }}</pre></p>
 
   <script>
       var ltags
@@ -247,7 +238,7 @@
       });
   </script>
 
-{% if crawler_metadata['get_metadata'] %}
+{% if 'crawler' in meta %}
   <script>
   var ctx = canvas.getContext('2d'), img = new Image();
 
@@ -259,7 +250,7 @@
   img.addEventListener("error", img_error);
   var draw_img = false;
 
-  img.src = "{{ url_for('showsavedpastes.screenshot', filename=crawler_metadata['screenshot']) }}";
+  img.src = "{{ url_for('objects_item.screenshot', filename=meta['crawler']['screenshot']) }}";
 
   function pixelate() {
 

@@ -8,7 +8,6 @@
 import os
 import sys
 import json
-import random
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, make_response
 from flask_login import login_required, current_user, login_user, logout_user
@@ -19,15 +18,15 @@ import Flask_config
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Tag
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from core import ail_2_ail
+from lib import item_basic
+from lib import Tag
+from lib import Tracker
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import item_basic
-import Tracker
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'core'))
-import ail_2_ail
 
 bootstrap_label = Flask_config.bootstrap_label
 
@@ -35,7 +34,6 @@ bootstrap_label = Flask_config.bootstrap_label
 ail_2_ail_sync = Blueprint('ail_2_ail_sync', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/ail_2_ail'))
 
 # ============ VARIABLES ============
-
 
 
 # ============ FUNCTIONS ============

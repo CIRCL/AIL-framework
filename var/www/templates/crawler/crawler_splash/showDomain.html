@@ -85,7 +85,7 @@
 								<div>
                                     {% include 'modals/edit_tag.html' %}
 									{% for tag in dict_domain['tags'] %}
-                                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal" data-tagid="{{ tag }}" data-objtype="domain" data-objid="{{ dict_domain['domain'] }}">
+                                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal" data-tagid="{{ tag }}" data-objtype="domain" data-objsubtype="" data-objid="{{ dict_domain['domain'] }}">
                                             {{ tag }}
                                         </button>
 									{%  endfor %}
@@ -526,7 +526,7 @@ function toggle_sidebar(){
 
 <script>
 var ctx = canvas.getContext('2d'), img = new Image();
-var base_url = "{{ url_for('showsavedpastes.screenshot', filename="") }}";
+var base_url = "{{ url_for('objects_item.screenshot', filename="") }}";
 var screenshot_href = "{{ url_for('objects_item.showItem') }}?id=";
 
 /// turn off image smoothing

@@ -69,10 +69,10 @@ def get_nb_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type):
 def get_nb_correlations(obj_type, subtype, obj_id, filter_types=[]):
     if subtype is None:
         subtype = ''
-    nb_correlations = 0
+    obj_correlations = {}
     filter_types = sanityze_obj_correl_types(obj_type, filter_types)
     for correl_type in filter_types:
-        obj_correlations += get_nb_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type)
+        obj_correlations[correl_type] = get_nb_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type)
     return obj_correlations
 
 def get_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type):

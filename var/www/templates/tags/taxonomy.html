@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Taxonomy - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'tags/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="my-3">
+                    <a href="{{ url_for('tags_ui.tags_taxonomies') }}" class="pull-left">
+                        <i class="fa fa-arrow-left fa"></i> List Taxonomies
+                    </a>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <div class="d-flex">
+                            <span class="h3">{{ taxonomy['name'] }}</span>
+
+                            <span class="h5 ml-auto">
+                                {% if taxonomy['enabled'] %}
+                                    <span class="badge badge-success">Enabled</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Disabled</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        {% if taxonomy['expended'] %}
+                            <div>{{ taxonomy['expended'] }}</div>
+                        {% endif %}
+                        {{ taxonomy['description'] }}
+                        <div>Version: {{ taxonomy['version'] }}</div>
+                        {% if taxonomy['predicates'] %}
+                            <br>
+                            Predicates:
+                            <table class="table table-sm table-hover">
+                                <tbody>
+                                {% for predicate in taxonomy['predicates'] %}
+                                    <tr>
+                                        <td><b>{{ predicate }}</b></td>
+                                        <td>{{ taxonomy['predicates'][predicate]['expanded'] }}</td>
+                                        <td>{{ taxonomy['predicates'][predicate]['description'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                        {% if taxonomy['refs'] %}
+                            <div>Refs: {{ taxonomy['refs'] }}</div>
+                            <br><br>
+                        {% endif %}
+
+                        <div class="mt-4">
+                            {% if taxonomy['enabled'] %}
+                                <a href="{{ url_for('tags_ui.taxonomy_disable') }}?taxonomy={{ taxonomy['name'] }}" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Disable Taxonomy
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('tags_ui.taxonomy_enable') }}?taxonomy={{ taxonomy['name'] }}" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Enable Taxonomy
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('tags_ui.taxonomy_enable_tags') }}" id="checkboxForm">
+				    <input type="hidden" value="{{ taxonomy['name'] }}" name="taxonomy">
+
+                    <table class="table table-bordered table-hover my-4">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th></th>
+                                <th>Tag</th>
+                                <th>Description</th>
+                                <th class="text-center">Enabled</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tag in taxonomy['tags'] %}
+                                <tr>
+                                    <td class="text-center">
+                                        <div class="custom-control custom-switch">
+                                            <input class="custom-control-input" type="checkbox" name="tags" id="{{ tag['tag'] }}" value="{{ tag['tag'] }}" {% if tag['enabled'] %}checked{% endif %}>
+                                            <label class="custom-control-label" for="{{ tag['tag'] }}"></label>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-info">{{ tag['tag'] }}</span></td>
+                                    <td>
+                                        {% if 'expanded' in tag %}
+                                            {{ tag['expanded'] }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-center">
+                                            {% if tag['enabled'] %}
+                                                <div style="color:Green;">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </div>
+                                            {% else %}
+                                                <div style="color:Red;">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="input-group-btn">
+                        <button class="btn btn-primary btn-lg" onclick="submitEnabledTags()">
+                            <i class="fas fa-check-square"></i> Update Tags
+                        </button>
+                    </div>
+
+                </form>
+
+                <br><br><br><br>
+
+    	    </div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+    $("#navbar-tags").addClass("active");
+    $("#nav_tags_config").removeClass("text-muted");
+
+    table = $('#myTable_').DataTable(
+        {
+            "aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 3, "desc" ]]
+        }
+    );
+
+});
+</script>
+
+<script>
+function submitEnabledTags() {
+    table.destroy();
+	table = $('#myTable_').DataTable(
+		{
+			"iDisplayLength": -1,
+		}
+	);
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+
+</html>

@@ -66,11 +66,11 @@
 
       <div>
         <h5>
-          <div>
+          <span>
             {% include 'modals/edit_tag.html' %}
             {% for tag in meta['tags'] %}
               <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-              data-tagid="{{ tag }}" data-objtype="item" data-objid="{{ meta['id'] }}">
+              data-tagid="{{ tag }}" data-objtype="item" data-objsubtype="" data-objid="{{ meta['id'] }}">
                 {{ tag }}
               </button>
 
@@ -80,7 +80,7 @@
             <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
               <i class="far fa-plus-square"></i>
             </button>
-          </div>
+          </span>
         </h5>
       </div>
 
@@ -200,7 +200,7 @@
                       </a>
                     </td>
                     <td>
-                      <a target="_blank" href="{{ url_for('showsavedpastes.showDiff') }}?s1={{meta['id']}}&s2={{duplicate_id}}" class="fa fa-columns" title="Show diff"></a>
+                      <a target="_blank" href="{{ url_for('objects_item.object_item_diff') }}?id1={{meta['id']}}&id2={{duplicate_id}}" class="fa fa-columns" title="Show diff"></a>
                     </td>
                   </tr>
                 {% endfor %}
@@ -362,7 +362,7 @@
           <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Others</a>
           <div class="dropdown-menu">
             <a class="dropdown-item" href="{{ url_for('objects_item.item_raw_content', id=meta['id']) }}"><i class="far fa-file"></i> &nbsp;Raw Content</a>
-            <a class="dropdown-item" href="{{ url_for('objects_item.item_download', id=meta['id']) }}"><i class="fas fa-download"></i> &nbsp;Download</i></a>
+            <a class="dropdown-item" href="{{ url_for('objects_item.item_download', id=meta['id']) }}"><i class="fas fa-download"></i> &nbsp;Download</a>
           </div>
         </li>
       </ul>
@@ -416,7 +416,11 @@
   img.addEventListener("error", img_error);
   var draw_img = false;
 
-  img.src = "{{ url_for('showsavedpastes.screenshot', filename=meta['crawler']['screenshot']) }}";
+  {% if meta['crawler']['screenshot'] %}
+      img.src = "{{ url_for('objects_item.screenshot', filename=meta['crawler']['screenshot']) }}";
+  {% else %}
+      img.src = "";
+  {% endif %}
 
   function pixelate() {
 

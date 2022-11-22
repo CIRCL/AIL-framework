@@ -42,7 +42,7 @@ def get_global_id_from_id(global_id):
         obj_meta['id'] = global_id[2]
     else:
         obj_meta['type'] = global_id[0]
-        obj_meta['subtype'] = None
+        obj_meta['subtype'] = ''
         obj_meta['id'] = global_id[1]
     return obj_meta
 

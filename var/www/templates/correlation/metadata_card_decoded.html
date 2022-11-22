@@ -32,7 +32,7 @@
 										<svg height="26" width="26">
 											<g class="nodes">
 												<circle cx="13" cy="13" r="13" fill="orange"></circle>
-												<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ dict_object["metadata_card"]["icon"]["icon_class"] }}" font-size="16px">{{ dict_object["metadata_card"]["icon"]["icon_text"] }}</text>
+												<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ dict_object["metadata_card"]["icon"]["style"] }}" font-size="16px">{{ dict_object["metadata_card"]["icon"]["icon"] }}</text>
 											</g>
 										</svg>
 										{{ dict_object["metadata"]["file_type"] }}
@@ -56,7 +56,7 @@
 					Tags:
 					{% for tag in dict_object["metadata"]['tags'] %}
 						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-						data-tagid="{{ tag }}" data-objtype="decoded" data-objid="{{ dict_object["correlation_id"] }}">
+						data-tagid="{{ tag }}" data-objtype="decoded" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
 							{{ tag }}
 						</button>
 					{%  endfor %}

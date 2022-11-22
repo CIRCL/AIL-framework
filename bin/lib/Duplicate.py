@@ -36,7 +36,6 @@ config_loader = None
 # Duplicates domains != Duplicates items
 
 
-
 def get_ssdeep_hash(content):
     return ssdeep.hash(content)
 
@@ -100,8 +99,6 @@ def add_obj_duplicate(algo, hash, similarity, obj_type, subtype, id, date_ymonth
     _add_obj_duplicate(algo, similarity, obj_type, subtype, obj2_id, id)
 
 
-
-
 def get_last_x_month_dates(nb_months):
     now = datetime.datetime.now()
     result = [now.strftime("%Y%m")]
@@ -111,20 +108,7 @@ def get_last_x_month_dates(nb_months):
     return result
 
 
-
 if __name__ == '__main__':
     res = get_last_x_month_dates(7)
     print(res)
 
-
-
-
-
-
-
-
-
-
-
-
-#################################

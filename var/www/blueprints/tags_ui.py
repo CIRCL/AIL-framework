@@ -8,9 +8,8 @@
 import os
 import sys
 import json
-import random
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, abort
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
@@ -39,6 +38,140 @@ tags_ui = Blueprint('tags_ui', __name__, template_folder=os.path.join(os.environ
 
 
 # ============= ROUTES ==============
+@tags_ui.route('/tag/taxonomies')
+@login_required
+@login_read_only
+def tags_taxonomies():
+    taxonomies = Tag.get_taxonomies_meta()
+    return render_template("tags/taxonomies.html", taxonomies=taxonomies)
+
+@tags_ui.route('/tag/taxonomy')
+@login_required
+@login_read_only
+def tags_taxonomy():
+    taxonomy_name = request.args.get('taxonomy')
+    taxonomy = Tag.get_taxonomy_meta(taxonomy_name, enabled=True, predicates=True, tags=True, enabled_tags=True)
+    if not taxonomy:
+        abort(404)
+    return render_template("tags/taxonomy.html", taxonomy=taxonomy)
+
+@tags_ui.route('/tag/taxonomy/enable')
+@login_required
+@login_read_only
+def taxonomy_enable():
+    taxonomy = request.args.get('taxonomy')
+    res = Tag.api_enable_taxonomy_tags({'taxonomy': taxonomy})
+    if res:
+        return jsonify(res[0]), res[1]
+    else:
+        return redirect(url_for('tags_ui.tags_taxonomy', taxonomy=taxonomy))
+
+@tags_ui.route('/tag/taxonomy/disable')
+@login_required
+@login_read_only
+def taxonomy_disable():
+    taxonomy = request.args.get('taxonomy')
+    res = Tag.api_disable_taxonomy_tags({'taxonomy': taxonomy})
+    if res:
+        return jsonify(res[0]), res[1]
+    else:
+        return redirect(url_for('tags_ui.tags_taxonomy', taxonomy=taxonomy))
+
+@tags_ui.route('/tag/taxonomy/enable_tags')
+@login_required
+@login_read_only
+def taxonomy_enable_tags():
+    taxonomy = request.args.get('taxonomy')
+    tags = request.args.getlist('tags')
+    res = Tag.api_update_taxonomy_tag_enabled({'taxonomy': taxonomy, 'tags': tags})
+    if res:
+        return jsonify(res[0]), 1
+    else:
+        return redirect(url_for('tags_ui.tags_taxonomy', taxonomy=taxonomy))
+
+@tags_ui.route('/tag/galaxies')
+@login_required
+@login_read_only
+def tags_galaxies():
+    galaxies = Tag.get_galaxies_meta()
+    return render_template("tags/galaxies.html", galaxies=galaxies)
+
+@tags_ui.route('/tag/galaxy')
+@login_required
+@login_read_only
+def tags_galaxy():
+    galaxy_name = request.args.get('galaxy')
+    galaxy = Tag.get_cluster_meta(galaxy_name, enabled=True, tags=True)
+    if not galaxy:
+        abort(404)
+    return render_template("tags/galaxy.html", galaxy=galaxy)
+
+@tags_ui.route('/tag/galaxy/tag')
+@login_required
+@login_read_only
+def tags_galaxy_tag():
+    galaxy_type = request.args.get('galaxy')
+    tag = request.args.get('tag')
+    tag_meta = Tag.get_galaxy_tag_meta(galaxy_type, tag)
+    if not tag_meta:
+        abort(404)
+    return render_template("tags/galaxy_tag.html", galaxy=galaxy_type, tag=tag_meta)
+
+@tags_ui.route('/tag/galaxy/enable')
+@login_required
+@login_read_only
+def galaxy_enable():
+    galaxy = request.args.get('galaxy')
+    res = Tag.api_enable_galaxy_tags({'galaxy': galaxy})
+    if res:
+        return jsonify(res[0]), res[1]
+    else:
+        return redirect(url_for('tags_ui.tags_galaxy', galaxy=galaxy))
+
+@tags_ui.route('/tag/galaxy/disable')
+@login_required
+@login_read_only
+def galaxy_disable():
+    galaxy = request.args.get('galaxy')
+    res = Tag.api_disable_galaxy_tags({'galaxy': galaxy})
+    if res:
+        return jsonify(res[0]), res[1]
+    else:
+        return redirect(url_for('tags_ui.tags_galaxy', galaxy=galaxy))
+
+@tags_ui.route('/tag/galaxy/enable_tags')
+@login_required
+@login_read_only
+def galaxy_enable_tags():
+    galaxy = request.args.get('galaxy')
+    tags = request.args.getlist('tags')
+    res = Tag.api_update_galaxy_tag_enabled({'galaxy': galaxy, 'tags': tags})
+    if res:
+        return jsonify(res[0]), 1
+    else:
+        return redirect(url_for('tags_ui.tags_galaxy', galaxy=galaxy))
+
+
+@tags_ui.route('/tag/enabled')
+@login_required
+@login_read_only
+def get_all_tags_enabled():
+    return jsonify(Tags.get_enabled_tags_with_synonyms_ui())
+
+@tags_ui.route('/tag/confirm')
+@login_required
+@login_read_only
+def tag_confirm():
+    tag = request.args.get('tag')
+    obj_type = request.args.get('type')
+    subtype = request.args.get('subtype', '')
+    obj_id = request.args.get('id', '')
+    obj = ail_objects.get_object(obj_type, subtype, obj_id)
+    if not obj.exists():
+        abort(404)
+    Tag.confirm_tag(tag, obj)
+    return redirect(obj.get_link(flask_context=True))
+
 @tags_ui.route('/tag/add_tags')
 @login_required
 @login_analyst
@@ -46,19 +179,20 @@ def add_tags():
 
     tags = request.args.get('tags')
     tagsgalaxies = request.args.get('tagsgalaxies')
-    object_id = request.args.get('object_id')
-    object_type = request.args.get('object_type')
-    subtype = '' # TODO: handle subtype object
+    object_type = request.args.get('type')
+    object_subtype = request.args.get('subtype')
+    object_id = request.args.get('id')
 
     list_tag = tags.split(',')
     list_tag_galaxies = tagsgalaxies.split(',')
 
-    res = Tag.api_add_obj_tags(tags=list_tag, galaxy_tags=list_tag_galaxies, object_id=object_id, object_type=object_type)
+    res = Tag.api_add_obj_tags(tags=list_tag, galaxy_tags=list_tag_galaxies,
+                               object_id=object_id, object_type=object_type, object_subtype=object_subtype)
     # error
     if res[1] != 200:
         return str(res[0])
 
-    return redirect(ail_objects.get_object_link(object_type, subtype, object_id, flask_context=True))
+    return redirect(ail_objects.get_object_link(object_type, object_subtype, object_id, flask_context=True))
 
 @tags_ui.route('/tag/delete_tag')
 @login_required
@@ -95,7 +229,7 @@ def get_all_obj_tags():
     object_type = request.args.get('object_type')
     res = ail_objects.api_sanitize_object_type(object_type)
     if res:
-        return jsonify(res)
+        return jsonify(res[0]), res[1]
     return jsonify(Tag.get_all_obj_tags(object_type))
 
 @tags_ui.route('/tag/taxonomies/tags/enabled/json')
@@ -137,7 +271,7 @@ def tag_galaxy_tags_enabled_json():
 @login_read_only
 def tags_search_items():
     object_type = 'item'
-    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+    dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
     dict_tagged['date'] = Date.sanitise_date_range('', '', separator='-')
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
@@ -146,7 +280,7 @@ def tags_search_items():
 @login_read_only
 def tags_search_domains():
     object_type = 'domain'
-    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+    dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
 @tags_ui.route('/tag/search/decoded')
@@ -154,15 +288,15 @@ def tags_search_domains():
 @login_read_only
 def tags_search_decoded():
     object_type = 'decoded'
-    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+    dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
-@tags_ui.route('/tag/search/image')
+@tags_ui.route('/tag/search/screenshot')
 @login_required
 @login_read_only
-def tags_search_images():
-    object_type = 'image'
-    dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+def tags_search_screenshot():
+    object_type = 'screenshot'
+    dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
 @tags_ui.route('/tag/search/get_obj_by_tags')
@@ -170,9 +304,9 @@ def tags_search_images():
 @login_read_only
 def get_obj_by_tags():
 
-    # # TODO: sanityze all
+    # # TODO: sanitize all
     object_type = request.args.get('object_type')
-    subtype = '' # TODO: handle subtype
+    subtype = ''  # TODO: handle subtype
     ltags = request.args.get('ltags')
     page = request.args.get('page')
     date_from = request.args.get('date_from')
@@ -188,7 +322,7 @@ def get_obj_by_tags():
     list_tags = ltags.split(',')
     list_tag = []
     for tag in list_tags:
-        list_tag.append(tag.replace('"','\"'))
+        list_tag.append(tag.replace('"', '\"'))
 
     # object_type
     res = ail_objects.api_sanitize_object_type(object_type)
@@ -198,19 +332,21 @@ def get_obj_by_tags():
     # page
     try:
         page = int(page)
-    except:
+    except (TypeError, ValueError):
         page = 1
 
+    # TODO REPLACE ME
     dict_obj = Tag.get_obj_by_tags(object_type, list_tag, date_from=date_from, date_to=date_to, page=page)
+    print(dict_obj)
 
     if dict_obj['tagged_obj']:
-        dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s",
-                        "tagged_obj":[], "page":dict_obj['page'] ,"nb_pages":dict_obj['nb_pages'],
-                        "nb_first_elem":dict_obj['nb_first_elem'], "nb_last_elem":dict_obj['nb_last_elem'], "nb_all_elem":dict_obj['nb_all_elem']}
+        dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s",
+                       "tagged_obj": [], "page": dict_obj['page'], "nb_pages": dict_obj['nb_pages'],
+                       "nb_first_elem": dict_obj['nb_first_elem'], "nb_last_elem": dict_obj['nb_last_elem'],
+                       "nb_all_elem": dict_obj['nb_all_elem']}
 
         for obj_id in dict_obj['tagged_obj']:
             obj_metadata = ail_objects.get_object_meta(object_type, subtype, obj_id, flask_context=True)
-            #ail_objects.
             obj_metadata['id'] = obj_id
             dict_tagged["tagged_obj"].append(obj_metadata)
 
@@ -222,9 +358,9 @@ def get_obj_by_tags():
             dict_tagged['current_tags'] = list_tag
         dict_tagged['current_tags_str'] = ltags
 
-        #return jsonify(dict_tagged)
+        # return jsonify(dict_tagged)
     else:
-        dict_tagged = {"object_type":object_type, "object_name":object_type.title() + "s"}
+        dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
 
     if 'date' in dict_obj:
         dict_tagged['date'] = dict_obj['date']

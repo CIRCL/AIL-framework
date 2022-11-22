@@ -18,12 +18,13 @@ from Role_Manager import login_admin, login_analyst, login_read_only
 sys.path.append('modules')
 import Flask_config
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Investigations
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import Investigations
 from lib.objects import ail_objects
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Tag
+from lib import Tag
 
 # ============ BLUEPRINT ============
 investigations_b = Blueprint('investigations_b', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/investigations'))

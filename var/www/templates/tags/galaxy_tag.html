@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Galaxy - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'tags/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="my-3">
+                    <a href="{{ url_for('tags_ui.tags_galaxy') }}?galaxy={{ galaxy }}" class="pull-left">
+                        <i class="fa fa-arrow-left fa"></i> {{ galaxy }} Galaxy
+                    </a>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <div class="d-flex">
+                            <span class="h3">
+                                {{ tag['value'] }}
+                            </span>
+
+                            <span class="h5 ml-auto">
+                                {% if tag['enabled'] %}
+                                    <span class="badge badge-success">Enabled</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Disabled</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <h3><div class="mb-4">
+                            <span class="badge badge-primary">{{ tag['tag'] }}</span>
+                        </div></h3>
+                        <table class="table table-sm table-hover">
+                            <tbody>
+                                {% if 'description' in tag %}
+                                    <tr>
+                                        <td><b>Description</b></td>
+                                    <td>{{ tag['description'] }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if 'refs' in tag %}
+                                    <tr>
+                                        <td><b>Refs</b></td>
+                                        <td>{{ tag['refs'] }}</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+
+                        {% if 'meta' in tag %}
+                            <hr>
+                            <b>Meta</b>
+                            <pre class="border">{{ tag['meta'] }}</pre>
+                        {% endif %}
+
+{#                        <div class="mt-4">#}
+{#                            {% if galaxy['enabled'] %}#}
+{#                                <a href="{{ url_for('tags_ui.galaxy_disable') }}?galaxy={{ galaxy['type'] }}" class="btn btn-danger">#}
+{#                                    <i class="fas fa-times"></i> Disable Galaxy#}
+{#                                </a>#}
+{#                            {% else %}#}
+{#                                <a href="{{ url_for('tags_ui.galaxy_enable') }}?galaxy={{ galaxy['type'] }}" class="btn btn-success">#}
+{#                                    <i class="fas fa-check"></i> Enable Galaxy#}
+{#                                </a>#}
+{#                            {% endif %}#}
+{#                        </div>#}
+                    </div>
+                </div>
+
+                <br><br><br><br>
+
+    	    </div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+    $("#navbar-tags").addClass("active");
+    $("#nav_tags_config").removeClass("text-muted");
+
+    table = $('#myTable_').DataTable(
+        {
+            "aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 3, "desc" ]]
+        }
+    );
+
+});
+</script>
+
+<script>
+function submitEnabledTags() {
+    table.destroy();
+	table = $('#myTable_').DataTable(
+		{
+			"iDisplayLength": -1,
+		}
+	);
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+
+</html>

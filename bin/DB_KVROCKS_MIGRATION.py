@@ -73,7 +73,7 @@ old_crawlers.r_serv_onion = r_crawler
 
 # CREATE FUNCTION BY DB/FEATURES
 
-# /!\ ISSUE WITH FILE DUPLICATES => NEED TO BE REFACTORED
+# /!\ TODO MIGRATE DUPLICATES
 
 
 def get_item_date(item_id):
@@ -670,27 +670,37 @@ def get_subtype_object(obj_type, subtype, obj_id):
         return Username(obj_id, subtype)
 
 def migrate_subtype_obj(Obj, obj_type, subtype, obj_id):
-    first_seen = get_obj_subtype_first_seen(obj_type, subtype, obj_id)
-    last_seen = get_obj_subtype_last_seen(obj_type, subtype, obj_id)
+    # first_seen = get_obj_subtype_first_seen(obj_type, subtype, obj_id)
+    # last_seen = get_obj_subtype_last_seen(obj_type, subtype, obj_id)
 
     # dates
     for item_id in get_item_correlation_obj(obj_type, subtype, obj_id):
         date = get_item_date(item_id)
         Obj.add(date, item_id)
 
+
 dict_obj_subtypes = {'cryptocurrency': ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash'],
-                    'pgpdump': ['key', 'mail', 'name'],
-                    'username': ['telegram', 'twitter', 'jabber']}
+                     'pgpdump': ['key', 'mail', 'name'],
+                     'username': ['telegram', 'twitter', 'jabber']}
 
 def subtypes_obj_migration():
-    print('SUBPTYPE MIGRATION...')
+    print('SUBTYPE MIGRATION...')
+    pgp_symmetrical_key = '0x0000000000000000'
 
     for obj_type in dict_obj_subtypes:
         print(f'{obj_type} MIGRATION...')
         for subtype in dict_obj_subtypes[obj_type]:
             for obj_id in get_all_subtype_id(obj_type, subtype):
-                Obj = get_subtype_object(obj_type, subtype, obj_id)
-                migrate_subtype_obj(Obj, obj_type, subtype, obj_id)
+                if obj_type == 'pgp' and subtype == 'key' and obj_id == pgp_symmetrical_key:
+                    pass
+                else:
+                    Obj = get_subtype_object(obj_type, subtype, obj_id)
+                    migrate_subtype_obj(Obj, obj_type, subtype, obj_id)
+
+    # ADD PGP Symmetrical tag to item
+    for item_id in get_item_correlation_obj('pgpdump', 'key', pgp_symmetrical_key):
+        item = Items.Item(item_id)
+        item.add_tag(f'infoleak:automatic-detection="pgp-symmetric";{item_id}')  # TODO SELECT TAG
 
 # # # # # # # # # # # # # # # #
 #       STATISTICS
@@ -702,10 +712,9 @@ def get_all_provider():
     return r_serv_trend.smembers('all_provider_set')
 
 def get_item_source_stats_by_date(date, source):
-    stats = {}
-    stats['num'] = r_serv_trend.hget(f'{source}_num', date)
-    stats['size'] = r_serv_trend.hget(f'{source}_size', date)
-    stats['avg'] = r_serv_trend.hget(f'{source}_avg', date)
+    stats = {'num': r_serv_trend.hget(f'{source}_num', date),
+             'size': r_serv_trend.hget(f'{source}_size', date),
+             'avg': r_serv_trend.hget(f'{source}_avg', date)}
     return stats
 
 def get_item_stats_size_avg_by_date(date):

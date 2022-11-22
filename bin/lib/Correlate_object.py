@@ -433,25 +433,7 @@ def get_obj_global_id(obj_type, obj_id, obj_sub_type=None):
 
         return '{}:{}'.format(obj_type, obj_id)
 
-def get_global_id_from_id(global_id):
-    obj_meta = {}
-    global_id = global_id.split(':', 3)
-    if len(global_id) > 2:
-        obj_meta['type'] = global_id[0]
-        obj_meta['subtype'] = global_id[1]
-        obj_meta['id'] = global_id[2]
-    else:
-        obj_meta['type'] = global_id[0]
-        obj_meta['subtype'] = None
-        obj_meta['id'] = global_id[1]
-    return obj_meta
 
-# used by UI
-def get_obj_str_type_subtype(obj_type, obj_subtype):
-    if obj_subtype:
-        return '{};{}'.format(obj_type, obj_subtype)
-    else:
-        return obj_type
 
 def sanitise_correlation_names(correlation_names):
     '''
