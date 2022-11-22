@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.objects.Items import Item
+from lib.objects.Usernames import Username
 from lib import regex_helper
 from lib import telegram
 
@@ -40,7 +41,6 @@ class Telegram(AbstractModule):
         self.redis_logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message, r_result=False):
-        # messsage = item_id
         item = Item(message)
         item_content = item.get_content()
         item_date = item.get_date()
@@ -54,24 +54,30 @@ class Telegram(AbstractModule):
             print(telegram_link_tuple[2:-2].split("', '", 1))
             base_url, url_path = telegram_link_tuple[2:-2].split("', '", 1)
             dict_url = telegram.get_data_from_telegram_url(base_url, url_path)
-            if dict_url.get('username'):
-                telegram.save_item_correlation(dict_url['username'], item.get_id(), item_date)
-                print(f'username: {dict_url["username"]}')
-            if dict_url.get('invite_hash'):
-                telegram.save_telegram_invite_hash(dict_url['invite_hash'], item.get_id())
-                print(f'invite code: {dict_url["invite_hash"]}')
+            user_id = dict_url.get('username')
+            if user_id:
+                username = Username(user_id, 'telegram')
+                username.add(item_date, item.id)
+                print(f'username: {user_id}')
+            invite_hash = dict_url.get('invite_hash')
+            if invite_hash:
+                telegram.save_telegram_invite_hash(invite_hash, item.id)
+                print(f'invite code: {invite_hash}')
                 invite_code_found = True
 
         # extract tg links
         tg_links = self.regex_findall(self.re_tg_link, item.get_id(), item_content)
         for tg_link in tg_links:
             dict_url = telegram.get_data_from_tg_url(tg_link)
-            if dict_url.get('username'):
-                telegram.save_item_correlation(dict_url['username'], item.get_id(), item_date)
-                print(f'username: {dict_url["username"]}')
-            if dict_url.get('invite_hash'):
-                telegram.save_telegram_invite_hash(dict_url['invite_hash'], item.get_id())
-                print(f'invite code: {dict_url["invite_hash"]}')
+            user_id = dict_url.get('username')
+            if user_id:
+                username = Username(user_id, 'telegram')
+                username.add(item_date, item.id)
+                print(f'username: {user_id}')
+            invite_hash = dict_url.get('invite_hash')
+            if invite_hash:
+                telegram.save_telegram_invite_hash(invite_hash, item.get_id())
+                print(f'invite code: {invite_hash}')
                 invite_code_found = True
             if dict_url.get('login_code'):
                 print(f'login code: {dict_url["login_code"]}')
@@ -79,7 +85,7 @@ class Telegram(AbstractModule):
         # CREATE TAG
         if invite_code_found:
             # tags
-            msg = f'infoleak:automatic-detection="telegram-invite-hash";{item.get_id()}'
+            msg = f'infoleak:automatic-detection="telegram-invite-hash";{item.id}'
             self.send_message_to_queue(msg, 'Tags')
 
 

@@ -30,6 +30,7 @@ from packages import Date
 # # # # CONFIGS # # # #
 config_loader = ConfigLoader()
 r_kvrocks = config_loader.get_db_conn("Kvrocks_DB")
+r_obj = config_loader.get_db_conn("Kvrocks_Objects")
 
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_tracker = config_loader.get_redis_conn("ARDB_Tracker")
@@ -172,6 +173,9 @@ def user_migration():
         Users.edit_user_password(user_id, password_hash, chg_passwd=chg_passwd)
         Users._delete_user_token(user_id)
         Users._set_user_token(user_id, token)
+
+    for invite_row in r_crawler.smembers('telegram:invite_code'):
+        r_obj.sadd('telegram:invite_code', invite_row)
 
 # # # # # # # # # # # # # # # #
 #       AIL 2 AIL
