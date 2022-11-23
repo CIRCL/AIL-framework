@@ -2,14 +2,15 @@
 # -*-coding:UTF-8 -*
 
 import os
-import re
 import sys
 import time
-import redis
 import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
 
 class AIL_Updater(object):
     """docstring for AIL_Updater."""
@@ -38,9 +39,9 @@ class AIL_Updater(object):
         """
         Update DB version
         """
-        #Set current ail version
+        # Set current ail version
         self.r_serv.hset('ail:update_date', self.version, datetime.datetime.now().strftime("%Y%m%d"))
-        #Set current ail version
+        # Set current ail version
         if self.f_version > self.current_f_version:
             self.r_serv.set('ail:version', self.version)
 

@@ -4,10 +4,7 @@
 import os
 import sys
 import time
-import redis
 import argparse
-import datetime
-import configparser
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -17,7 +14,7 @@ from lib import ail_updates
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AIL default update')
-    parser.add_argument('-t', help='version tag' , type=str, dest='tag', required=True)
+    parser.add_argument('-t', help='version tag', type=str, dest='tag', required=True)
     args = parser.parse_args()
 
     if not args.tag:
@@ -28,7 +25,7 @@ if __name__ == '__main__':
     update_tag = args.tag.replace(' ', '')
     if not ail_updates.check_version(update_tag):
         parser.print_help()
-        print(f'Error: Invalid update tag {update_tag})
+        print(f'Error: Invalid update tag {update_tag}')
         sys.exit(0)
 
     start_deb = time.time()

@@ -3,37 +3,20 @@
 
 import os
 import sys
-import time
-import redis
-import argparse
-import datetime
-import configparser
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_HOME'])
+##################################
+# Import Project packages
+##################################
+from update.bin.old_ail_updater import AIL_Updater
 
-new_version = 'v3.1.1'
+class Updater(AIL_Updater):
+    """default Updater."""
+
+    def __init__(self, version):
+        super(Updater, self).__init__(version)
+
 
 if __name__ == '__main__':
-
-    start_deb = time.time()
-
-    config_loader = ConfigLoader.ConfigLoader()
-    r_serv_db = config_loader.get_redis_conn("ARDB_DB")
-    config_loader = None
-
-    #### NEW EXPORTER
-    # remove old tags errors
-    #r_serv_db.delete('mess_not_saved_export')
-
-    # move solo tags to export in tags_db
-    #all_misp_tags = r_serv_db.smembers('whitelist_misp')
-    #all_hive_tags = r_serv_db.smembers('whitelist_hive')
-    # # TODO: save them in tags db
-    #### NEW EXPORTER
-
-    #Set current ail version
-    r_serv_db.set('ail:version', new_version)
-
-    #Set current ail version
-    r_serv_db.hset('ail:update_date', new_version, datetime.datetime.now().strftime("%Y%m%d"))
+    updater = Updater('v3.1.1')
+    updater.run_update()

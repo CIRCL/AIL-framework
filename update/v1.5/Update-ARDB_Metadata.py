@@ -4,10 +4,9 @@
 import os
 import sys
 import time
-import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+from lib import ConfigLoader
 
 def update_tracked_terms(main_key, tracked_container_key):
     for tracked_item in r_serv_term.smembers(main_key):

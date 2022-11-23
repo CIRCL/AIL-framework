@@ -4,19 +4,13 @@
 import os
 import sys
 import time
-import redis
-import datetime
-
-from hashlib import sha256
 
 from pyfaup.faup import Faup
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Date
+sys.path.append(os.environ['AIL_BIN'])
+from packages import Date
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import Tag
+from lib import ConfigLoader
 
 def sanitize_domain(domain):
     faup.decode(domain)
@@ -28,8 +22,23 @@ def sanitize_domain(domain):
         pass
     return domain_sanitized.lower()
 
+def get_all_obj_tags(obj_type):
+    return list(r_serv_tags.smembers(f'list_tags:{obj_type}'))
+
+def add_global_tag(tag, object_type=None):
+    r_serv_tags.sadd('list_tags', tag)
+    if object_type:
+        r_serv_tags.sadd('list_tags:{}'.format(object_type), tag)
+
+def get_obj_tag(object_id):
+    res = r_serv_metadata.smembers('tag:{}'.format(object_id))
+    if res:
+        return list(res)
+    else:
+        return []
+
 def delete_domain_tag_daterange():
-    all_domains_tags = Tag.get_all_obj_tags('domain')
+    all_domains_tags = get_all_obj_tags('domain')
     nb_updated = 0
     nb_to_update = len(all_domains_tags)
     if nb_to_update == 0:
@@ -49,13 +58,13 @@ def update_domain_tags(domain):
         r_serv_onion.sadd('incorrect_domain', domain)
         domain = domain_sanitized
 
-    domain_tags = Tag.get_obj_tag(domain)
+    domain_tags = get_obj_tag(domain)
     for tag in domain_tags:
         # delete incorrect tags
         if tag == 'infoleak:submission="crawler"' or tag == 'infoleak:submission="manual"':
             r_serv_metadata.srem('tag:{}'.format(domain), tag)
         else:
-            Tag.add_global_tag(tag, object_type='domain')
+            add_global_tag(tag, object_type='domain')
             r_serv_tags.sadd('{}:{}'.format('domain', tag), domain)
 
 def update_progress(refresh_time, nb_updated, nb_elem_to_update):
@@ -88,6 +97,7 @@ def update_db():
     r_serv_onion.sort('full_onion_up', alpha=True)
     r_serv_onion.sort('full_regular_up', alpha=True)
 
+
 if __name__ == '__main__':
 
     start_deb = time.time()
@@ -112,7 +122,6 @@ if __name__ == '__main__':
     update_db()
 
     r_serv_db.set('ail:current_background_script_stat', 100)
-
 
     end = time.time()
     print('ALL domains tags updated in {} s'.format(end - start_deb))

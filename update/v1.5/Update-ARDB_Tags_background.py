@@ -4,10 +4,9 @@
 import os
 import sys
 import time
-import redis
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
 def tags_key_fusion(old_item_path_key, new_item_path_key):
     print('fusion:')
@@ -17,10 +16,10 @@ def tags_key_fusion(old_item_path_key, new_item_path_key):
         r_serv_metadata.sadd(new_item_path_key, tag)
         r_serv_metadata.srem(old_item_path_key, tag)
 
+
 if __name__ == '__main__':
 
     start_deb = time.time()
-
     config_loader = ConfigLoader.ConfigLoader()
 
     PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
@@ -38,7 +37,7 @@ if __name__ == '__main__':
         print('Updating ARDB_Tags ...')
         start = time.time()
 
-        #update item metadata tags
+        # update item metadata tags
         tag_not_updated = True
         total_to_update = r_serv_tag.scard('maj:v1.5:absolute_path_to_rename')
         nb_updated = 0
@@ -57,7 +56,7 @@ if __name__ == '__main__':
                 if r_serv_tag.scard('maj:v1.5:absolute_path_to_rename') == 0:
                     tag_not_updated = False
                 else:
-                    progress = int((nb_updated * 100) /total_to_update)
+                    progress = int((nb_updated * 100) / total_to_update)
                     print('{}/{}    Tags updated    {}%'.format(nb_updated, total_to_update, progress))
                     # update progress stats
                     if progress != last_progress:
@@ -65,7 +64,6 @@ if __name__ == '__main__':
                         last_progress = progress
 
         end = time.time()
-
 
         print('Updating ARDB_Tags Done: {} s'.format(end - start))
 

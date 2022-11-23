@@ -4,11 +4,10 @@
 import os
 import sys
 import time
-import redis
 import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
 if __name__ == '__main__':
 
@@ -19,8 +18,8 @@ if __name__ == '__main__':
     r_serv = config_loader.get_redis_conn("ARDB_DB")
     config_loader = None
 
-    #Set current ail version
+    # Set current ail version
     r_serv.set('ail:version', 'v1.7')
 
-    #Set current ail version
+    # Set current ail version
     r_serv.set('ail:update_date_v1.7', datetime.datetime.now().strftime("%Y%m%d"))

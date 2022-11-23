@@ -4,11 +4,10 @@
 import os
 import sys
 import time
-import redis
 import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
 def substract_date(date_from, date_to):
     date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))

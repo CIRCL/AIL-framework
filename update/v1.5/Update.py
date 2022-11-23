@@ -4,11 +4,10 @@
 import os
 import sys
 import time
-import redis
 import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
 if __name__ == '__main__':
 

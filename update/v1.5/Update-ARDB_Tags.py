@@ -7,7 +7,7 @@ import time
 import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+from lib import ConfigLoader
 
 if __name__ == '__main__':
 

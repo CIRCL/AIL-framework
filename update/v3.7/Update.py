@@ -2,18 +2,14 @@
 # -*-coding:UTF-8 -*
 
 import os
-import re
 import sys
-import time
-import redis
-import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import Tracker
-
-sys.path.append(os.path.join(os.environ['AIL_HOME'], 'update', 'bin'))
-from old_ail_updater import AIL_Updater
+sys.path.append(os.environ['AIL_HOME'])
+##################################
+# Import Project packages
+##################################
+from update.bin.old_ail_updater import AIL_Updater
+from lib import Tracker
 
 class Updater(AIL_Updater):
     """default Updater."""
@@ -38,7 +34,7 @@ class Updater(AIL_Updater):
         # Add background update
         self.r_serv.sadd('ail:to_update', self.version)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     updater = Updater('v3.7')
     updater.run_update()

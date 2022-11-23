@@ -4,13 +4,12 @@
 import os
 import sys
 import time
-import redis
 import datetime
 
 from hashlib import sha256
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
 def rreplace(s, old, new, occurrence):
     li = s.rsplit(old, occurrence)
@@ -25,6 +24,7 @@ def substract_date(date_from, date_to):
         date = date_from + datetime.timedelta(i)
         l_date.append( date.strftime('%Y%m%d') )
     return l_date
+
 
 if __name__ == '__main__':
 
