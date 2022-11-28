@@ -17,6 +17,7 @@ def check_pid(pid):
             return False
     return True
 
+
 if __name__ == '__main__':
     configfile = os.path.join(os.environ['AIL_BIN'], 'packages/modules.cfg')
     if not os.path.exists(configfile):

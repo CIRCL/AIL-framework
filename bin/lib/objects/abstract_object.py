@@ -9,8 +9,9 @@ Base Class for AIL Objects
 import os
 import sys
 from abc import ABC, abstractmethod
+from pymisp import MISPObject
 
-#from flask import url_for
+# from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -22,7 +23,6 @@ from lib.correlations_engine import get_nb_correlations, get_correlations, add_o
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.Tracker import is_obj_tracked, get_obj_all_trackers, delete_obj_trackers
 
-# # TODO: ADD CORRELATION ENGINE
 
 class AbstractObject(ABC):
     """
@@ -31,7 +31,7 @@ class AbstractObject(ABC):
 
     # first seen last/seen ??
     # # TODO: - tags
-    #         - handle + refactor coorelations
+    #         - handle + refactor correlations
     #         - creates others objects
 
     def __init__(self, obj_type, id, subtype=None):
@@ -56,6 +56,9 @@ class AbstractObject(ABC):
                 return ''
         return self.subtype
 
+    def get_global_id(self):
+        return f'{self.get_type()}:{self.get_subtype(r_str=True)}:{self.get_id()}'
+
     def get_default_meta(self, tags=False):
         dict_meta = {'id': self.get_id(),
                      'type': self.get_type(),
@@ -78,6 +81,11 @@ class AbstractObject(ABC):
     def add_tag(self, tag):
         Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
 
+    def is_tags_safe(self, tags=None):
+        if not tags:
+            tags = self.get_tags()
+        return Tag.is_tags_safe(tags)
+
     #- Tags -#
 
     ## Investigations ##
@@ -99,10 +107,10 @@ class AbstractObject(ABC):
 
     def delete_investigations(self):
         if not self.subtype:
-            unregistred = delete_obj_investigations(self.id, self.type)
+            unregistered = delete_obj_investigations(self.id, self.type)
         else:
-            unregistred = delete_obj_investigations(self.id, self.type, self.subtype)
-        return unregistred
+            unregistered = delete_obj_investigations(self.id, self.type, self.subtype)
+        return unregistered
 
     #- Investigations -#
 
@@ -117,11 +125,11 @@ class AbstractObject(ABC):
     def delete_trackers(self):
         return delete_obj_trackers(self.type, self.subtype, self.id)
 
-    #- Investigations -#
+    #- Trackers -#
 
     def _delete(self):
         # DELETE TAGS
-        Tag.delete_obj_all_tags(self.id, self.type) ############ # TODO: # TODO: # FIXME:
+        Tag.delete_obj_all_tags(self.id, self.type)  # ########### # TODO: # TODO: # FIXME:
         # remove from tracker
         self.delete_trackers()
         # remove from investigations
@@ -164,6 +172,29 @@ class AbstractObject(ABC):
     @abstractmethod
     def get_misp_object(self):
         pass
+
+    @staticmethod
+    def get_misp_object_first_last_seen(misp_obj):
+        """
+        :type misp_obj: MISPObject
+        """
+        first_seen = misp_obj.get('first_seen')
+        last_seen = misp_obj.get('last_seen')
+        return first_seen, last_seen
+
+    @staticmethod
+    def get_misp_object_tags(misp_obj):
+        """
+        :type misp_obj: MISPObject
+        """
+        if misp_obj.attributes:
+            misp_tags = misp_obj.attributes[0].tags
+            tags = []
+            for tag in misp_tags:
+                tags.append(tag.name)
+            return tags
+        else:
+            return []
 
     def _get_external_correlation(self, req_type, req_subtype, req_id, obj_type):
         """

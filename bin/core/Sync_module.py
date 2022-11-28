@@ -21,9 +21,8 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from core import ail_2_ail
+from lib.objects.Items import Item
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
-from packages import Tag
 
 
 class Sync_module(AbstractModule):
@@ -34,7 +33,7 @@ class Sync_module(AbstractModule):
     def __init__(self):
         super(Sync_module, self).__init__()
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 10
 
         self.dict_sync_queues = ail_2_ail.get_all_sync_queue_dict()
@@ -44,7 +43,6 @@ class Sync_module(AbstractModule):
 
         # Send module state to logs
         self.redis_logger.info(f'Module {self.module_name} Launched')
-
 
     def compute(self, message):
 
@@ -64,23 +62,24 @@ class Sync_module(AbstractModule):
             obj_id = mess_split[2]
 
             # OBJECT => Item
-            if obj_type == 'item':
-                obj = Item(obj_id)
-                tags = obj.get_tags(r_set=True)
+            # if obj_type == 'item':
+            obj = Item(obj_id)
+
+            tags = obj.get_tags()
 
             # check filter + tags
-            #print(message)
+            # print(message)
             for queue_uuid in self.dict_sync_queues:
                 filter_tags = self.dict_sync_queues[queue_uuid]['filter']
                 if filter_tags and tags:
-                    #print(f'tags: {tags} filter: {filter_tags}')
+                    # print('tags: {tags} filter: {filter_tags}')
                     if filter_tags.issubset(tags):
                         obj_dict = obj.get_default_meta()
                         # send to queue push and/or pull
                         for dict_ail in self.dict_sync_queues[queue_uuid]['ail_instances']:
                             print(f'ail_uuid: {dict_ail["ail_uuid"]} obj: {message}')
                             ail_2_ail.add_object_to_sync_queue(queue_uuid, dict_ail['ail_uuid'], obj_dict,
-                                                            push=dict_ail['push'], pull=dict_ail['pull'])
+                                                               push=dict_ail['push'], pull=dict_ail['pull'])
 
         else:
             # Malformed message

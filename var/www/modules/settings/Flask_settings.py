@@ -4,16 +4,20 @@
 '''
     Flask functions and routes for the settings modules page
 '''
+import os
+import sys
+
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for
 from flask_login import login_required, current_user
 
 from Role_Manager import login_admin, login_analyst, login_user, login_read_only
 
-import json
-import datetime
-
-import d4
-import Users
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import d4
+from lib import Users
 
 
 # ============ VARIABLES ============

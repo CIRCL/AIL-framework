@@ -11,16 +11,19 @@ import datetime
 import time
 import flask
 
-from Date import Date
-
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for
 
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import queues_modules
-import ail_updates
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import queues_modules
+from lib import ail_updates
+
+from packages.Date import Date
 
 # ============ VARIABLES ============
 import Flask_config

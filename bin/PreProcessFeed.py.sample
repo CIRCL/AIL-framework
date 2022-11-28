@@ -6,7 +6,7 @@ The preProcess Module
 =====================
 
 This module is just an example of how we can pre-process a feed coming from the Mixer
-module before seding it to the Global module.
+module before seeding it to the Global module.
 
 '''
 
@@ -19,12 +19,13 @@ from Helper import Process
 def do_something(message):
     splitted = message.split()
     if len(splitted) == 2:
-        paste_name, gzip64encoded = splitted
+        item_id, gzip64encoded = splitted
 
-    paste_name = paste_name.replace("pastebin", "pastebinPROCESSED")
+    item_id = item_id.replace("pastebin", "pastebinPROCESSED")
 
-    to_send = "{0} {1}".format(paste_name, gzip64encoded)
+    to_send = "{0} {1}".format(item_id, gzip64encoded)
     return to_send
+
 
 if __name__ == '__main__':
     # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)

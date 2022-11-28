@@ -6,19 +6,11 @@ import sys
 
 from pymisp import MISPEvent, MISPObject
 from pymisp.tools.abstractgenerator import AbstractMISPObjectGenerator
-MISPEvent
 
-from packages import Paste
 import datetime
-import json
-from io import BytesIO
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import item_basic
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
-import MispExport
+from lib.objects.Items import Item
+from lib import ConfigLoader
 
 class ObjectWrapper:
     def __init__(self, pymisp):
@@ -30,33 +22,11 @@ class ObjectWrapper:
         config_loader = None
         self.attribute_to_tag = None
 
-    def add_new_object(self, uuid_ail, item_id, tag):
+    def add_new_object(self, uuid_ail, item_id):
         self.uuid_ail = uuid_ail
 
-        # self.paste = Paste.Paste(path)
-        # temp = self.paste._get_p_duplicate()
-        #
-        # #beautifier
-        # if not temp:
-        #     temp = ''
-        #
-        # p_duplicate_number = len(temp) if len(temp) >= 0 else 0
-        #
-        # to_ret = ""
-        # for dup in temp[:10]:
-        #     dup = dup.replace('\'','\"').replace('(','[').replace(')',']')
-        #     dup = json.loads(dup)
-        #     algo = dup[0]
-        #     path = dup[1].split('/')[-6:]
-        #     path = '/'.join(path)[:-3] # -3 removes .gz
-        #     if algo == 'tlsh':
-        #         perc = 100 - int(dup[2])
-        #     else:
-        #         perc = dup[2]
-        #     to_ret += "{}: {} [{}%]\n".format(path, algo, perc)
-        # p_duplicate = to_ret
-
-        return MispExport.export_ail_item(item_id, [tag])
+        item = Item(item_id)
+        return item.get_misp_object()
 
     def date_to_str(self, date):
         return "{0}-{1}-{2}".format(date.year, date.month, date.day)
@@ -125,9 +95,9 @@ class ObjectWrapper:
             # add new tag
             self.tag(self.attribute_to_tag, tag)
             print(item_id + ' tagged: ' + tag)
-        #create object
+        # create object
         else:
-            misp_obj = self.add_new_object(uuid_ail, item_id, tag)
+            misp_obj = self.add_new_object(uuid_ail, item_id)
 
             # deprecated
             # try:

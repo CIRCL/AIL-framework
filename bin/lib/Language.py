@@ -3,7 +3,6 @@
 
 import os
 import sys
-import redis
 
 dict_iso_languages = {
     'af': 'Afrikaans',

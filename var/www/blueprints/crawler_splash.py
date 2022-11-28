@@ -34,8 +34,6 @@ from lib import Tag
 
 from packages import Date
 
-from lib import Domain # # # # # # # # # # # # # # # # TODO:
-
 #import Config_DB
 bootstrap_label = Flask_config.bootstrap_label
 
@@ -261,12 +259,13 @@ def domains_explorer_post_filter():
         date_from = None
         date_to = None
 
-    if domain_onion and domain_regular:
-        if date_from and date_to:
-            return redirect(url_for('crawler_splash.domains_explorer_all', date_from=date_from, date_to=date_to))
-        else:
-            return redirect(url_for('crawler_splash.domains_explorer_all'))
-    elif domain_regular:
+    # TODO SEARCH BOTH
+    # if domain_onion and domain_regular:
+    #     if date_from and date_to:
+    #         return redirect(url_for('crawler_splash.domains_explorer_all', date_from=date_from, date_to=date_to))
+    #     else:
+    #         return redirect(url_for('crawler_splash.domains_explorer_all'))
+    if domain_regular:
         if date_from and date_to:
             return redirect(url_for('crawler_splash.domains_explorer_web', date_from=date_from, date_to=date_to))
         else:
@@ -277,20 +276,22 @@ def domains_explorer_post_filter():
         else:
             return redirect(url_for('crawler_splash.domains_explorer_onion'))
 
-@crawler_splash.route('/domains/explorer/all', methods=['GET'])
-@login_required
-@login_read_only
-def domains_explorer_all():
-    page = request.args.get('page')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    try:
-        page = int(page)
-    except:
-        page = 1
-
-    dict_data = Domain.get_domains_up_by_filers('all', page=page, date_from=date_from, date_to=date_to)
-    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
+# TODO TEMP DISABLE
+# @crawler_splash.route('/domains/explorer/all', methods=['GET'])
+# @login_required
+# @login_read_only
+# def domains_explorer_all():
+#     page = request.args.get('page')
+#     date_from = request.args.get('date_from')
+#     date_to = request.args.get('date_to')
+#     try:
+#         page = int(page)
+#     except:
+#         page = 1
+#
+#     dict_data = Domain.get_domains_up_by_filers('all', page=page, date_from=date_from, date_to=date_to)
+#     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
+#
 
 @crawler_splash.route('/domains/explorer/onion', methods=['GET'])
 @login_required
@@ -304,7 +305,7 @@ def domains_explorer_onion():
     except:
         page = 1
 
-    dict_data = Domain.get_domains_up_by_filers('onion', page=page, date_from=date_from, date_to=date_to)
+    dict_data = Domains.get_domains_up_by_filers('onion', page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='onion')
 
 @crawler_splash.route('/domains/explorer/web', methods=['GET'])
@@ -319,7 +320,7 @@ def domains_explorer_web():
     except:
         page = 1
 
-    dict_data = Domain.get_domains_up_by_filers('regular', page=page, date_from=date_from, date_to=date_to)
+    dict_data = Domains.get_domains_up_by_filers('web', page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='regular')
 
 @crawler_splash.route('/domains/languages/all/json', methods=['GET'])
@@ -329,7 +330,7 @@ def domains_all_languages_json():
     # # TODO: get domain type
     iso = request.args.get('iso')
     domain_types = request.args.getlist('domain_types')
-    return jsonify(Language.get_languages_from_iso(Domain.get_all_domains_languages(), sort=True))
+    return jsonify(Language.get_languages_from_iso(Domains.get_all_domains_languages(), sort=True))
 
 @crawler_splash.route('/domains/languages/search_get', methods=['GET'])
 @login_required
@@ -344,12 +345,12 @@ def domains_search_languages_get():
     domains_types = request.args.getlist('domain_types')
     if domains_types:
         domains_types = domains_types[0].split(',')
-    domains_types = Domain.sanitize_domain_types(domains_types)
+    domains_types = Domains.sanitize_domains_types(domains_types)
 
     languages = request.args.getlist('languages')
     if languages:
         languages = languages[0].split(',')
-    l_dict_domains = Domain.api_get_domains_by_languages(domains_types, Language.get_iso_from_languages(languages), domains_metadata=True, page=page)
+    l_dict_domains = Domains.api_get_domains_by_languages(domains_types, Language.get_iso_from_languages(languages), meta=True, page=page)
     return render_template("domains/domains_filter_languages.html", template_folder='../../',
                                 l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
                                 current_languages=languages, domains_types=domains_types)
@@ -368,9 +369,9 @@ def domains_search_name():
     domains_types = request.args.getlist('domain_types')
     if domains_types:
         domains_types = domains_types[0].split(',')
-    domains_types = Domain.sanitize_domain_types(domains_types)
+    domains_types = Domains.sanitize_domains_types(domains_types)
 
-    l_dict_domains = Domain.api_search_domains_by_name(name, domains_types, domains_metadata=True, page=page)
+    l_dict_domains = Domains.api_search_domains_by_name(name, domains_types, meta=True, page=page)
     return render_template("domains/domains_result_list.html", template_folder='../../',
                                 l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
                                 domains_types=domains_types)

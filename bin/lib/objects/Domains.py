@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-
+import itertools
 import os
+import re
 import sys
 import time
 import zipfile
@@ -18,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 
+from lib.ail_core import paginate_iterator
 from lib.item_basic import get_item_children, get_item_date, get_item_url, get_item_har
 from lib import data_retention_engine
 
@@ -201,6 +203,14 @@ class Domain(AbstractObject):
             history.append(dict_history)
         return history
 
+    # TODO ADD RANDOM OPTION
+    def get_screenshot(self):
+        last_item = self.get_last_item_root()
+        if last_item:
+            screenshot = self._get_external_correlation('item', '', last_item, 'screenshot').get('screenshot')
+            if screenshot:
+                return screenshot.pop()[1:]
+
     def get_languages(self):
         return r_crawler.smembers(f'domain:language:{self.id}')
 
@@ -217,14 +227,14 @@ class Domain(AbstractObject):
                 'tags': self.get_tags(r_list=True),
                 'status': self.is_up()
                 }
-        # meta['ports'] = self.get_ports()
-
         if 'last_origin' in options:
             meta['last_origin'] = self.get_last_origin(obj=True)
-        # meta['is_tags_safe'] = ##################################
         if 'languages' in options:
             meta['languages'] = self.get_languages()
-        # meta['screenshot'] =
+        if 'screenshot' in options:
+            meta['screenshot'] = self.get_screenshot()
+        if 'tags_safe' in options:
+            meta['is_tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
@@ -454,8 +464,58 @@ def _write_in_zip_buffer(zf, path, filename):
 def get_all_domains_types():
     return ['onion', 'web']  # i2p
 
+def sanitize_domains_types(types):
+    domains_types = get_all_domains_types()
+    if not types:
+        return domains_types
+    types_domains = []
+    for type_d in types:
+        if type_d in domains_types:
+            domains_types.append(type_d)
+    if not types_domains:
+        return domains_types
+    return types_domains
+
+
 def get_all_domains_languages():
     return r_crawler.smembers('all_domains_languages')
+
+# TODO sanitize type
+# TODO sanitize languages
+def get_domains_by_languages(languages, domain_types):
+    if len(languages) == 1:
+        if len(domain_types) == 1:
+            return r_crawler.smembers(f'language:domains:{domain_type[0]}:{languages[0]}')
+        else:
+            l_keys = []
+        for domain_type in domain_types:
+            l_keys.append(f'language:domains:{domain_type}:{languages[0]}')
+        return r_crawler.sunion(l_keys[0], *l_keys[1:])
+    else:
+        domains = []
+        for domain_type in domain_types:
+            l_keys = []
+            for language in languages:
+                l_keys.append(f'language:domains:{domain_type}:{language}')
+            res = r_crawler.sinter(l_keys[0], *l_keys[1:])
+            if res:
+                domains.append(res)
+        return list(itertools.chain.from_iterable(domains))
+
+def api_get_domains_by_languages(domains_types, languages, meta=False, page=1):
+    domains = sorted(get_domains_by_languages(languages, domains_types))
+    domains = paginate_iterator(domains, nb_obj=28, page=page)
+    if not meta:
+        return domains
+    else:
+        metas = []
+        for dom in domains['list_elem']:
+            domain = Domain(dom)
+            domain_meta = domain.get_meta(options={'languages', 'screenshot', 'tags_safe'})
+            metas.append(domain_meta)
+        domains['list_elem'] = metas
+        return domains
+
 
 def get_domains_up_by_type(domain_type):
     return r_crawler.smembers(f'full_{domain_type}_up')
@@ -488,9 +548,77 @@ def get_domains_meta(domains):
         metas.append(dom.get_meta())
     return metas
 
+# TODO HANDLE ALL MULTIPLE DOMAIN TYPES
+# TODO ADD TAGS FILTER
+def get_domains_up_by_filers(domain_type, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
+    if not tags:
+        if not date_from and not date_to:
+            domains = sorted(get_domains_up_by_type(domain_type))
+        else:
+            domains = sorted(get_domains_by_daterange(date_from, date_to, domain_type))
+        domains = paginate_iterator(domains, nb_obj=nb_obj, page=page)
+        meta = []
+        for dom in domains['list_elem']:
+            domain = Domain(dom)
+            meta.append(domain.get_meta(options={'languages', 'screenshot', 'tags_safe'}))
+        domains['list_elem'] = meta
+        domains['domain_type'] = domain_type
+        if date_from:
+            domains['date_from'] = date_from
+        if date_to:
+            domains['date_to'] = date_to
+        return domains
+    else:
+        return None
+
+def sanitize_domain_name_to_search(name_to_search, domain_type):
+    if domain_type == 'onion':
+        r_name = r'[a-z0-9\.]+'
+    else:
+        r_name = r'[a-zA-Z0-9-_\.]+'
+    # invalid domain name
+    if not re.fullmatch(r_name, name_to_search):
+        res = re.match(r_name, name_to_search)
+        return {'search': name_to_search, 'error': res.string.replace( res[0], '')}
+    return name_to_search.replace('.', '\.')
+
+def search_domain_by_name(name_to_search, domain_types, r_pos=False):
+    domains = {}
+    for domain_type in domain_types:
+        r_name = sanitize_domain_name_to_search(name_to_search, domain_type)
+        if not name_to_search or isinstance(r_name, dict):
+            break
+        r_name = re.compile(r_name)
+        for domain in get_domains_up_by_type(domain_type):
+            res = re.search(r_name, domain)
+            if res:
+                domains[domain] = {}
+                if r_pos:
+                    domains[domain]['hl-start'] = res.start()
+                    domains[domain]['hl-end'] = res.end()
+    return domains
+
+def api_search_domains_by_name(name_to_search, domain_types, meta=False, page=1):
+    domain_types = sanitize_domains_types(domain_types)
+    domains_dict = search_domain_by_name(name_to_search, domain_types, r_pos=True)
+    domains = sorted(domains_dict.keys())
+    domains = paginate_iterator(domains, nb_obj=28, page=page)
+    if not meta:
+        return domains
+    else:
+        metas = []
+        for dom in domains['list_elem']:
+            domain = Domain(dom)
+            domain_meta = domain.get_meta(options={'languages', 'screenshot', 'tags_safe'})
+            domain_meta = {**domains_dict[dom], **domain_meta}
+            metas.append(domain_meta)
+        domains['list_elem'] = metas
+        domains['search'] = name_to_search
+        return domains
+
 ################################################################################
 ################################################################################
 
-if __name__ == '__main__':
-    dom = Domain('')
-    dom.get_download_zip()
+# if __name__ == '__main__':
+#     dom = Domain('')
+#     dom.get_download_zip()

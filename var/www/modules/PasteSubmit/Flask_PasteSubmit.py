@@ -13,7 +13,6 @@ import sys
 import json
 import string
 import datetime
-import redis
 import unicodedata
 import uuid
 from io import BytesIO
@@ -33,8 +32,8 @@ from lib import Tag
 from lib.objects.Items import Item
 
 from packages import Import_helper
+
 from pytaxonomies import Taxonomies
-from pymispgalaxies import Galaxies, Clusters
 
 try:
     from pymisp.mispevent import MISPObject

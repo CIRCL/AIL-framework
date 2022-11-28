@@ -16,8 +16,8 @@ import argparse
 
 import subprocess
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages')) # # TODO: move other functions
-import git_status
+sys.path.append(os.environ['AIL_BIN']) # # TODO: move other functions
+from packages import git_status
 
 
 UPDATER_FILENAME = os.path.join(os.environ['AIL_BIN'], 'Update.py')
@@ -33,7 +33,7 @@ def auto_update_enabled(cfg):
 
 # check if files are modify locally
 def check_if_files_modified():
-    process = subprocess.run(['git', 'ls-files' ,'-m'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.run(['git', 'ls-files', '-m'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         modified_files = process.stdout
         if modified_files:
@@ -97,7 +97,8 @@ def is_upstream_created(upstream):
 def create_fork_upstream(upstream):
     print('{}... Creating upstream ...{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
     print('git remote add {} {}'.format(upstream, AIL_REPO))
-    process = subprocess.run(['git', 'remote', 'add', upstream, AIL_REPO], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.run(['git', 'remote', 'add', upstream, AIL_REPO],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         print(process.stdout.decode())
         if is_upstream_created(upstream):
@@ -127,7 +128,8 @@ def update_fork():
             if process.returncode == 0:
                 print(process.stdout.decode())
                 print('{}git merge {}/master:{}'.format(TERMINAL_YELLOW, upstream, TERMINAL_DEFAULT))
-                process = subprocess.run(['git', 'merge', '{}/master'.format(upstream)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = subprocess.run(['git', 'merge', '{}/master'.format(upstream)],
+                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 if process.returncode == 0:
                     print(process.stdout.decode())
                     print('{}...    ...{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
@@ -150,13 +152,13 @@ def update_fork():
         sys.exit(0)
 
 
-def get_git_current_tag(current_version_path):
+def get_git_current_tag(path_current_version):
     try:
-        with open(current_version_path, 'r') as version_content:
+        with open(path_current_version, 'r') as version_content:
             version = version_content.read()
     except FileNotFoundError:
         version = 'v1.4'
-        with open(current_version_path, 'w') as version_content:
+        with open(path_current_version, 'w') as version_content:
             version_content.write(version)
 
     version = version.replace(" ", "").splitlines()[0]
@@ -168,10 +170,9 @@ def get_git_upper_tags_remote(current_tag, is_fork):
     # keep only first dot
     nb_dot = current_tag.count('.')
     if nb_dot > 0:
-        nb_dot = nb_dot -1
+        nb_dot = nb_dot - 1
     current_tag_val = current_tag.rsplit('.', nb_dot)
     current_tag_val = ''.join(current_tag_val)
-
 
     if is_fork:
         process = subprocess.run(['git', 'tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -180,13 +181,13 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 
             list_upper_tags = []
             if list_all_tags[-1][1:] == current_tag:
-                list_upper_tags.append( (list_all_tags[-1], None) )
+                list_upper_tags.append((list_all_tags[-1], None))
                 # force update order
                 list_upper_tags.sort()
                 return list_upper_tags
             for tag in list_all_tags:
                 if float(tag[1:]) >= float(current_tag_val):
-                    list_upper_tags.append( (tag, None) )
+                    list_upper_tags.append((tag, None))
             # force update order
             list_upper_tags.sort()
             return list_upper_tags
@@ -195,7 +196,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
             aborting_update()
             sys.exit(0)
     else:
-        process = subprocess.run(['git', 'ls-remote' ,'--tags'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.run(['git', 'ls-remote', '--tags'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if process.returncode == 0:
             list_all_tags = process.stdout.decode().splitlines()
@@ -204,7 +205,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
             last_tag = last_tag[1].split('^{}')[0]
             list_upper_tags = []
             if last_tag[1:] == current_tag:
-                list_upper_tags.append( (last_tag, last_commit) )
+                list_upper_tags.append((last_tag, last_commit))
                 # force update order
                 list_upper_tags.sort()
                 return list_upper_tags
@@ -219,7 +220,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                     # keep only first dot
                     nb_dot = tag.count('.')
                     if nb_dot > 0:
-                        nb_dot = nb_dot -1
+                        nb_dot = nb_dot - 1
                     tag_val = tag.rsplit('.', nb_dot)
                     tag_val = ''.join(tag_val)
 
@@ -253,7 +254,7 @@ def update_submodules():
 def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork):
     print('{}git checkout master:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
     process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #process = subprocess.run(['ls'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # process = subprocess.run(['ls'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         print(process.stdout.decode())
         print()
@@ -269,8 +270,8 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
 
             # CHECK IF UPDATER Update
             if float(os.stat(UPDATER_FILENAME).st_mtime) > UPDATER_LAST_MODIFICATION:
-                # request updater relauch
-                print('{}{}{}'.format(TERMINAL_RED, '                  Relaunch Launcher                    ', TERMINAL_DEFAULT))
+                # request updater relaunch
+                print(f'{TERMINAL_RED}                  Relaunch Launcher                    {TERMINAL_DEFAULT}')
                 sys.exit(3)
 
             if len(list_upper_tags_remote) == 1:
@@ -278,10 +279,11 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                 additional_update_path = os.path.join(os.environ['AIL_HOME'], 'update', current_tag, 'additional_update.sh')
                 if os.path.isfile(additional_update_path):
                     print()
-                    print('{}------------------------------------------------------------------'.format(TERMINAL_YELLOW))
+                    print(f'{TERMINAL_YELLOW}------------------------------------------------------------------')
                     print('-                 Launching Additional Update:                   -')
-                    print('--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{}'.format(TERMINAL_DEFAULT))
-                    process = subprocess.run(['bash', additional_update_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    print(f'--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{TERMINAL_DEFAULT}')
+                    process = subprocess.run(['bash', additional_update_path],
+                                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     if process.returncode == 0:
                         output = process.stdout.decode()
                         print(output)
@@ -291,7 +293,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                         sys.exit(1)
 
                 print()
-                print('{}****************  AIL Sucessfully Updated  *****************{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
+                print(f'{TERMINAL_YELLOW}****************  AIL Successfully Updated  *****************{TERMINAL_DEFAULT}')
                 print()
                 exit(0)
 
@@ -299,15 +301,15 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                 # map version with roll back commit
                 list_update = []
                 previous_commit = list_upper_tags_remote[0][1]
-                for tuple in list_upper_tags_remote[1:]:
-                    tag = tuple[0]
-                    list_update.append( (tag, previous_commit) )
-                    previous_commit = tuple[1]
+                for row_tuple in list_upper_tags_remote[1:]:
+                    tag = row_tuple[0]
+                    list_update.append((tag, previous_commit))
+                    previous_commit = row_tuple[1]
 
                 for update in list_update:
                     launch_update_version(update[0], update[1], current_version_path, is_fork)
-                # Sucess
-                print('{}****************  AIL Sucessfully Updated  *****************{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
+                # Success
+                print(f'{TERMINAL_YELLOW}****************  AIL Successfully Updated  *****************{TERMINAL_DEFAULT}')
                 print()
                 sys.exit(0)
         else:
@@ -322,9 +324,9 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
 def launch_update_version(version, roll_back_commit, current_version_path, is_fork):
     update_path = os.path.join(os.environ['AIL_HOME'], 'update', str(version), 'Update.sh')
     print()
-    print('{}------------------------------------------------------------------'.format(TERMINAL_YELLOW))
-    print('-                 Launching Update: {}{}{}                         -'.format(TERMINAL_BLUE, version, TERMINAL_YELLOW))
-    print('--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{}'.format(TERMINAL_DEFAULT))
+    print(f'{TERMINAL_YELLOW}------------------------------------------------------------------')
+    print(f'-                 Launching Update: {TERMINAL_BLUE}{version}{TERMINAL_YELLOW}                         -')
+    print(f'--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{TERMINAL_DEFAULT}')
     if not os.path.isfile(update_path):
         update_path = os.path.join(os.environ['AIL_HOME'], 'update', 'default_update', 'Update.sh')
         process = subprocess.Popen(['bash', update_path, version], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -337,18 +339,18 @@ def launch_update_version(version, roll_back_commit, current_version_path, is_fo
         if output:
             print(output.strip())
     if process.returncode == 0:
-        #output = process.stdout.decode()
-        #print(output)
+        # output = process.stdout.decode()
+        # print(output)
 
         with open(current_version_path, 'w') as version_content:
             version_content.write(version)
 
             print('{}--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --'.format(TERMINAL_YELLOW))
-            print('-               Sucessfully Updated: {}{}{}                        -'.format(TERMINAL_BLUE, version, TERMINAL_YELLOW))
+            print('-               Successfully Updated: {}{}{}                        -'.format(TERMINAL_BLUE, version, TERMINAL_YELLOW))
             print('------------------------------------------------------------------{}'.format(TERMINAL_DEFAULT))
             print()
     else:
-        #print(process.stdout.read().decode())
+        # print(process.stdout.read().decode())
         print('{}{}{}'.format(TERMINAL_RED, process.stderr.read().decode(), TERMINAL_DEFAULT))
         print('------------------------------------------------------------------')
         print('                   {}Update Error: {}{}{}'.format(TERMINAL_RED, TERMINAL_BLUE, version, TERMINAL_DEFAULT))
@@ -360,7 +362,7 @@ def launch_update_version(version, roll_back_commit, current_version_path, is_fo
             sys.exit(1)
 
 def roll_back_update(roll_back_commit):
-    print('Rolling back to safe commit: {}{}{}'.format(TERMINAL_BLUE ,roll_back_commit, TERMINAL_DEFAULT))
+    print('Rolling back to safe commit: {}{}{}'.format(TERMINAL_BLUE, roll_back_commit, TERMINAL_DEFAULT))
     process = subprocess.run(['git', 'checkout', roll_back_commit], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         output = process.stdout
@@ -378,6 +380,7 @@ def aborting_update():
     print('*                    AIL Not Updated                             *')
     print('******************************************************************{}'.format(TERMINAL_DEFAULT))
     print()
+
 
 if __name__ == "__main__":
 
@@ -418,10 +421,10 @@ if __name__ == "__main__":
 
             current_tag = get_git_current_tag(current_version_path)
             print()
-            print('Current Version: {}{}{}'.format( TERMINAL_YELLOW, current_tag, TERMINAL_DEFAULT))
+            print('Current Version: {}{}{}'.format(TERMINAL_YELLOW, current_tag, TERMINAL_DEFAULT))
             print()
             list_upper_tags_remote = get_git_upper_tags_remote(current_tag.replace('v', ''), is_fork)
-            # new realease
+            # new release
             if len(list_upper_tags_remote) > 1:
                 print('New Releases:')
             if is_fork:

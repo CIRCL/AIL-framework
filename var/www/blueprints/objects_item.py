@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 from lib import item_basic
 from lib.objects.Items import Item
+from lib.objects.Screenshots import Screenshot
 from lib import Tag
 from export import Export
 
@@ -47,7 +48,13 @@ config_loader = None
 @login_read_only
 @no_cache
 def screenshot(filename):
-    return send_from_directory(SCREENSHOT_FOLDER, f'{filename}.png', as_attachment=True)
+    if not filename:
+        abort(404)
+    if not 64 <= len(filename) <= 70:
+        abort(404)
+    filename = filename.replace('/', '')
+    s = Screenshot(filename)
+    return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=True)
 
 @objects_item.route("/object/item")
 @login_required

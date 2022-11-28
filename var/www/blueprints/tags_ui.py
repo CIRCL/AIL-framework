@@ -7,7 +7,6 @@
 
 import os
 import sys
-import json
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, abort
 from flask_login import login_required, current_user, login_user, logout_user
@@ -21,6 +20,7 @@ from Role_Manager import login_admin, login_analyst, login_read_only
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
+##################################
 from packages import Date
 from lib import Tag
 from lib.objects import ail_objects

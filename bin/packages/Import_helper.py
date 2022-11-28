@@ -7,13 +7,12 @@
 import os
 import sys
 import uuid
-import redis
 
+sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+from lib import ConfigLoader
 
 
 config_loader = ConfigLoader.ConfigLoader()

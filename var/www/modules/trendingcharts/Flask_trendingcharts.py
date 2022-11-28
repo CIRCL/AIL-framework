@@ -4,14 +4,20 @@
 '''
     Flask functions and routes for the trending charts page
 '''
-import redis
+import os
+import sys
 import datetime
-from Date import Date
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
 
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
+
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from packages.Date import Date
 
 # ============ VARIABLES ============
 import Flask_config

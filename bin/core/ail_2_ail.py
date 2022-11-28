@@ -14,15 +14,14 @@ import subprocess
 from flask import escape
 from pubsublogger import publisher
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import Tag
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'core/'))
-import screen
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-from Item import Item
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
+from lib.objects.Items import Item
+# from lib import Tag
+from core import screen
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -1204,13 +1203,15 @@ def add_ail_stream_to_sync_importer(ail_stream):
 #                           #
 #### AIL EXCHANGE FORMAT ####
 
+# TODO
 def is_valid_ail_exchange_format_json(json_obj):
     try:
-        ail_stream = json.dumps(ail_stream)
+        ail_stream = json.dumps(json_obj)
     except ValueError:
         return False
     return is_valid_ail_exchange_format(ail_stream)
 
+# TODO
 def is_valid_ail_exchange_format(ail_stream):
     pass
 

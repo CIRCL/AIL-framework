@@ -4,21 +4,16 @@
 import os
 import sys
 import uuid
-import redis
 
 from hashlib import sha1, sha256
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Item
-import Cryptocurrency
-import Pgp
-import Decoded
-import Domain
-import Screenshot
-import Correlate_object
+sys.path.append(os.environ['AIL_BIN'])
+from lib.objects import ail_objects
 
-import AILObjects
+
+from lib.objects import Items
+
+from export import AILObjects
 
 # MISP
 from pymisp import MISPEvent, MISPObject, PyMISP
@@ -91,7 +86,7 @@ def unpack_item_obj(map_uuid_global_id, misp_obj):
             io_content = attribute.data             # # TODO: check if type == io
 
     if obj_id and io_content:
-        res = Item.create_item(obj_id, obj_meta, io_content)
+        res = Items.create_item(obj_id, obj_meta, io_content)
 
         map_uuid_global_id[misp_obj.uuid] = get_global_id('item', obj_id)
 
@@ -99,38 +94,44 @@ def unpack_item_obj(map_uuid_global_id, misp_obj):
 
 ## TODO: handle multiple pgp in the same object
 def unpack_obj_pgp(map_uuid_global_id, misp_obj):
-    # get obj sub type
-    obj_attr = misp_obj.attributes[0]
-    obj_id = obj_attr.value
-    if obj_attr.object_relation == 'key-id':
-        obj_subtype = 'key'
-    elif obj_attr.object_relation == 'user-id-name':
-        obj_subtype = 'name'
-    elif obj_attr.object_relation == 'user-id-email':
-        obj_subtype = 'mail'
-
-    if obj_id and obj_subtype:
-        obj_meta = get_object_metadata(misp_obj)
-        res = Pgp.pgp.create_correlation(obj_subtype, obj_id, obj_meta)
-
-        map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
+    # TODO ail_objects   import_misp_object(misp_obj)
+    pass
+    # # get obj sub type
+    # obj_attr = misp_obj.attributes[0]
+    # obj_id = obj_attr.value
+    # if obj_attr.object_relation == 'key-id':
+    #     obj_subtype = 'key'
+    # elif obj_attr.object_relation == 'user-id-name':
+    #     obj_subtype = 'name'
+    # elif obj_attr.object_relation == 'user-id-email':
+    #     obj_subtype = 'mail'
+    #
+    # if obj_id and obj_subtype:
+    #     obj_meta = get_object_metadata(misp_obj)
+    #     # res = Pgp.pgp.create_correlation(obj_subtype, obj_id, obj_meta)
+    #     # TODO ail_objects   import_misp_object(misp_obj)
+    #
+    #     map_uuid_global_id[misp_obj.uuid] = get_global_id('pgp', obj_id, obj_subtype=obj_subtype)
 
 
 def unpack_obj_cryptocurrency(map_uuid_global_id, misp_obj):
-    obj_id = None
-    obj_subtype = None
-    for attribute in misp_obj.attributes:
-        if attribute.object_relation == 'address': # # TODO: handle xmr address field
-            obj_id = attribute.value
-        elif attribute.object_relation == 'symbol':
-            obj_subtype = Cryptocurrency.get_cryptocurrency_type(attribute.value)
-
-    # valid cryptocurrency type
-    if obj_subtype and obj_id:
-        obj_meta = get_object_metadata(misp_obj)
-        res = Cryptocurrency.cryptocurrency.create_correlation(obj_subtype, obj_id, obj_meta)
-
-        map_uuid_global_id[misp_obj.uuid] = get_global_id('cryptocurrency', obj_id, obj_subtype=obj_subtype)
+    # TODO ail_objects   import_misp_object(misp_obj)
+    pass
+    #
+    # obj_id = None
+    # obj_subtype = None
+    # for attribute in misp_obj.attributes:
+    #     if attribute.object_relation == 'address': # # TODO: handle xmr address field
+    #         obj_id = attribute.value
+    #     elif attribute.object_relation == 'symbol':
+    #         obj_subtype = Cryptocurrency.get_cryptocurrency_type(attribute.value)
+    #
+    # # valid cryptocurrency type
+    # if obj_subtype and obj_id:
+    #     obj_meta = get_object_metadata(misp_obj)
+    #     # res = Cryptocurrency.cryptocurrency.create_correlation(obj_subtype, obj_id, obj_meta)
+    #
+    #     map_uuid_global_id[misp_obj.uuid] = get_global_id('cryptocurrency', obj_id, obj_subtype=obj_subtype)
 
 def get_obj_type_from_relationship(misp_obj):
     obj_uuid = misp_obj.uuid
@@ -180,10 +181,12 @@ def unpack_file(map_uuid_global_id, misp_obj):
         if obj_id and io_content:
             obj_meta = get_object_metadata(misp_obj)
             if obj_type == 'screenshot':
-                Screenshot.create_screenshot(obj_id, obj_meta, io_content)
+                # TODO MIGRATE + REFACTOR ME
+                # Screenshot.create_screenshot(obj_id, obj_meta, io_content)
                 map_uuid_global_id[misp_obj.uuid] = get_global_id('image', obj_id)
             else: #decoded
-                Decoded.create_decoded(obj_id, obj_meta, io_content)
+                # TODO MIGRATE + REFACTOR ME
+                # Decoded.create_decoded(obj_id, obj_meta, io_content)
                 map_uuid_global_id[misp_obj.uuid] = get_global_id('decoded', obj_id)
 
 
@@ -213,8 +216,7 @@ def create_obj_relationships(map_uuid_global_id, misp_obj):
                     print(obj_meta_target)
                     print('111111')
 
-                Correlate_object.create_obj_relationship(obj_meta_src['type'], obj_meta_src['id'], obj_meta_target['type'], obj_meta_target['id'],
-                                                            obj1_subtype=obj_meta_src['subtype'], obj2_subtype=obj_meta_target['subtype'])
+                # TODO CREATE OBJ RELATIONSHIP
 
 def create_map_all_obj_uuid_golbal_id(map_uuid_global_id):
     for obj_uuid in map_uuid_global_id:

@@ -19,7 +19,6 @@ import gzip
 
 from pubsublogger import publisher
 from Helper import Process
-from packages import Paste
 import ailleakObject
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))

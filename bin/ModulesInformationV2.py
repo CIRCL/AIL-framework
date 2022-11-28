@@ -17,8 +17,8 @@ import psutil
 from subprocess import PIPE, Popen
 from lib.objects.Items import Item
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
  # CONFIG VARIABLES
 kill_retry_threshold = 60 #1m

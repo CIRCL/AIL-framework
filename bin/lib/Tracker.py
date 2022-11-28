@@ -5,7 +5,6 @@ import os
 import re
 import sys
 import time
-import redis
 import uuid
 import yara
 import datetime
@@ -14,13 +13,14 @@ import base64
 
 from flask import escape
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Date
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import item_basic
-import Tag
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from packages import Date
+from lib import ConfigLoader
+from lib import item_basic
+from lib import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")

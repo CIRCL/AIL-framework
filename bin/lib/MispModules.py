@@ -2,7 +2,6 @@
 
 import os
 import json
-import redis
 import requests
 import configparser
 
@@ -10,8 +9,11 @@ misp_module_url = 'http://localhost:6666'
 
 default_config_path = os.path.join(os.environ['AIL_HOME'], 'configs', 'misp_modules.cfg')
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv = config_loader.get_redis_conn("ARDB_DB")

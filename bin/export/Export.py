@@ -3,11 +3,10 @@
 
 import os
 import sys
-import redis
 from uuid import uuid4
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
 sys.path.append('../../configs/keys')
 try:

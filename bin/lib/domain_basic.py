@@ -9,10 +9,12 @@
 
 import os
 import sys
-import redis
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")

@@ -4,24 +4,19 @@
 '''
     Flask functions and routes for the trending modules page
 '''
-import redis
 import os
 import sys
 import datetime
-import json
-from Date import Date
 
-from io import BytesIO
-
-from hashlib import sha256
-
-import requests
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, send_file
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Decoded
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from packages.Date import Date
 
 # ============ VARIABLES ============
 import Flask_config

@@ -5,10 +5,13 @@ import os
 import sys
 import time
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import ail_2_ail
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from core import ail_2_ail
 
-# # TODO: lauch me in core screen
+# # TODO: launch me in core screen
 
 if __name__ == '__main__':
 

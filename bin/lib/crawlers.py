@@ -17,8 +17,6 @@ import sys
 import time
 import uuid
 
-import subprocess
-
 from enum import IntEnum, unique
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, urljoin

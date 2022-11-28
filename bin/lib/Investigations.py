@@ -12,7 +12,6 @@
 import os
 import sys
 import datetime
-import redis
 import time
 import uuid
 
@@ -20,10 +19,13 @@ from abc import ABC
 from enum import Enum
 from flask import escape
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-import Tag
-from exceptions import UpdateInvestigationError
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
+from lib import Tag
+from lib.exceptions import UpdateInvestigationError
 
 config_loader = ConfigLoader.ConfigLoader()
 r_tracking = config_loader.get_db_conn("Kvrocks_DB")

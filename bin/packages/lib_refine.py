@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import os
-import re
 import sys
 import dns.resolver
 import dns.exception
@@ -10,8 +9,11 @@ from pubsublogger import publisher
 
 from datetime import timedelta
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
 dns_server = config_loader.get_config_str("Web", "dns")

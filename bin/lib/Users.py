@@ -17,7 +17,7 @@ from lib.ConfigLoader import ConfigLoader
 
 # Config
 config_loader = ConfigLoader()
-#r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+# r_serv_db = config_loader.get_redis_conn("ARDB_DB")
 r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
@@ -87,10 +87,9 @@ def exists_user(user_id):
     return r_serv_db.exists(f'ail:user:metadata:{user_id}')
 
 def get_user_metadata(user_id):
-    user_metadata = {}
-    user_metadata['email'] = user_id
-    user_metadata['role'] = r_serv_db.hget(f'ail:user:metadata:{user_id}', 'role')
-    user_metadata['api_key'] = r_serv_db.hget(f'ail:user:metadata:{user_id}', 'token')
+    user_metadata = {'email': user_id,
+                     'role': r_serv_db.hget(f'ail:user:metadata:{user_id}', 'role'),
+                     'api_key': r_serv_db.hget(f'ail:user:metadata:{user_id}', 'token')}
     return user_metadata
 
 def get_users_metadata(list_users):
@@ -100,7 +99,7 @@ def get_users_metadata(list_users):
     return users
 
 def create_user(user_id, password=None, chg_passwd=True, role=None):
-    # # TODO: check password strenght
+    # # TODO: check password strength
     if password:
         new_password = password
     else:
@@ -137,7 +136,7 @@ def edit_user_password(user_id, password_hash, chg_passwd=False):
     else:
         r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
     # remove default user password file
-    if user_id=='admin@admin.test':
+    if user_id == 'admin@admin.test':
         default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
         if os.path.isfile(default_passwd_file):
             os.remove(default_passwd_file)
@@ -149,7 +148,7 @@ def edit_user_password(user_id, password_hash, chg_passwd=False):
 def delete_user(user_id):
     if exists_user(user_id):
         for role_id in get_all_roles():
-            r_serv_db.srem('ail:users:role:{role_id}', user_id)
+            r_serv_db.srem(f'ail:users:role:{role_id}', user_id)
         user_token = get_user_token(user_id)
         r_serv_db.hdel('ail:users:tokens', user_token)
         r_serv_db.delete(f'ail:user:metadata:{user_id}')
@@ -183,7 +182,7 @@ def get_user_role_by_range(inf, sup):
 
 def get_all_user_role(user_role):
     current_role_val = get_role_level(user_role)
-    return r_serv_db.zrange('ail:roles:all', current_role_val -1, -1)
+    return r_serv_db.zrange('ail:roles:all', current_role_val - 1, -1)
 
 def get_all_user_upper_role(user_role):
     current_role_val = get_role_level(user_role)
@@ -203,12 +202,12 @@ def edit_user_role(user_id, role):
         current_role = get_role_level(current_role)
 
         if current_role < request_level:
-            role_to_remove = get_user_role_by_range(current_role -1, request_level - 2)
+            role_to_remove = get_user_role_by_range(current_role - 1, request_level - 2)
             for role_id in role_to_remove:
                 r_serv_db.srem(f'ail:users:role:{role_id}', user_id)
             r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
         else:
-            role_to_add = get_user_role_by_range(request_level -1, current_role)
+            role_to_add = get_user_role_by_range(request_level - 1, current_role)
             for role_id in role_to_add:
                 r_serv_db.sadd(f'ail:users:role:{role_id}', user_id)
             r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
@@ -238,10 +237,10 @@ class User(UserMixin):
             self.id = "__anonymous__"
 
     # return True or False
-    #def is_authenticated():
+    # def is_authenticated():
 
     # return True or False
-    #def is_anonymous():
+    # def is_anonymous():
 
     @classmethod
     def get(self_class, id):

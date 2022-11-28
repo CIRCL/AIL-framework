@@ -15,9 +15,6 @@ from flask_login import login_required, current_user
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
 
-# sys.path.append('modules')
-# import Flask_config
-
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -29,7 +26,7 @@ from packages import git_status
 settings_b = Blueprint('settings_b', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/settings'))
 
 # ============ VARIABLES ============
-#bootstrap_label = Flask_config.bootstrap_label
+# bootstrap_label = Flask_config.bootstrap_label
 
 # ============ FUNCTIONS ============
 def create_json_response(data, status_code):

@@ -3,15 +3,17 @@
 
 import datetime
 import os
-import redis
 import sys
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
 r_statistics = config_loader.get_redis_conn("ARDB_Statistics")
-#r_serv_trend = ConfigLoader().get_redis_conn("ARDB_Trending")
+# r_serv_trend = ConfigLoader().get_redis_conn("ARDB_Trending")
 config_loader = None
 
 PIE_CHART_MAX_CARDINALITY = 8

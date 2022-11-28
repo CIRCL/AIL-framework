@@ -14,8 +14,8 @@ import sys
 ##################################
 # Import Project packages
 ##################################
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 from pubsublogger import publisher
 
 # FLASK #

@@ -7,7 +7,6 @@
 
 import os
 import sys
-import json
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required, current_user

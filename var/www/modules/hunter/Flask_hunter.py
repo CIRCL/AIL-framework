@@ -7,24 +7,21 @@
 import os
 import sys
 import json
-import redis
-import datetime
-import calendar
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, Response, escape
 
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required, current_user
 
-# ---------------------------------------------------------------
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import item_basic
+from lib import Tracker
+from lib import Tag
+from packages import Term
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import Term
-import Tracker
-import item_basic
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Tag
 
 # ============ VARIABLES ============
 import Flask_config

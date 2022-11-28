@@ -3,12 +3,14 @@
 
 import os
 import sys
-import redis
 
 from shutil import rmtree
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
 INDEX_PATH = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Indexer", "path"))

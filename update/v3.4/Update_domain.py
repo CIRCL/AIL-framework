@@ -11,7 +11,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ConfigLoader
 from lib.objects.Items import Item
-from lib import Domain
 
 def get_domain_type(domain_name):
     if str(domain_name).endswith('.onion'):
@@ -109,7 +108,6 @@ if __name__ == '__main__':
             print(domain)
             domain = str(domain)
             domain_t = get_domain_type(domain)
-            domain = Domain.Domain(domain)
             for domain_history in get_domain_history(domain_t, domain):
                 domain_items = get_domain_items_crawled(domain, domain_t, domain_history[1])
                 for id_item in domain_items:

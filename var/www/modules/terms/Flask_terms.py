@@ -6,10 +6,8 @@
 
     note: The matching of credential against supplied credential is done using Levenshtein distance
 '''
-import json
-import redis
-import datetime
-import calendar
+import os
+import sys
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, Response
 
@@ -17,10 +15,11 @@ from Role_Manager import login_admin, login_analyst, login_user_no_api, login_re
 from flask_login import login_required, current_user
 import Levenshtein
 
-# ---------------------------------------------------------------
-
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
 from lib.objects.Items import Item
-import Term
 
 # ============ VARIABLES ============
 import Flask_config

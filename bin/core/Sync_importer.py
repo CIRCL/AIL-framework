@@ -24,8 +24,6 @@ sys.path.append(os.environ['AIL_BIN'])
 from core import ail_2_ail
 from lib.ConfigLoader import ConfigLoader
 from modules.abstract_module import AbstractModule
-from packages.Item import Item
-from packages import Tag
 
 #### CONFIG ####
 config_loader = ConfigLoader()

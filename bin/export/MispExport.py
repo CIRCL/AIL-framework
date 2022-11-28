@@ -5,30 +5,16 @@ import os
 import io
 import sys
 import uuid
-import redis
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'export'))
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-import Item
-import Cryptocurrency
-import Pgp
-import Decoded
-import Domain
-import Screenshot
+sys.path.append(os.environ['AIL_BIN'])
+from lib.objects import ail_objects
 
-import Username
-
-import Correlate_object
-
-import AILObjects
-import Export
+from export import AILObjects
 
 
-from Investigations import Investigation
-import Tag
+from lib.Investigations import Investigation
 
-# # TODO: # FIXME: REFRACTOR ME => use UI/Global config
+# # TODO: # FIXME: REFACTOR ME => use UI/Global config
 sys.path.append('../../configs/keys')
 try:
     from mispKEYS import misp_url, misp_key, misp_verifycert
@@ -41,11 +27,11 @@ except:
 from pymisp import MISPEvent, MISPObject, PyMISP
 
 def is_valid_obj_to_export(obj_type, obj_subtype, obj_id):
-    if not Correlate_object.is_valid_object_type(obj_type):
+    if not ail_objects.is_valid_object_type(obj_type):
         return False
-    if not Correlate_object.is_valid_object_subtype(obj_type, obj_subtype):
+    if not ail_objects.is_valid_object_subtype(obj_type, obj_subtype):
         return False
-    if not Correlate_object.exist_object(obj_type, obj_id, type_id=obj_subtype):
+    if not ail_objects.exists_obj(obj_type, obj_subtype, obj_id):
         return False
     return True
 
@@ -62,159 +48,9 @@ def get_export_filename(json_content):
 def create_in_memory_file(json_content):
     return io.BytesIO(json_content.encode())
 
-def tag_misp_object_attributes(l_ref_obj_attr, tags):
-    for obj_attr in l_ref_obj_attr:
-        for tag in tags:
-            obj_attr.add_tag(tag)
-
-def export_ail_item(item_id, tags=[]):
-    dict_metadata = Item.get_item({'id': item_id, 'date':True, 'tags':True, 'raw_content':True})[0]
-    # force tags
-    for tag in tags:
-        if tag not in dict_metadata['tags']:
-            dict_metadata['tags'].append(tag)
-
-    #obj = MISPObject('ail-item', standalone=True)
-    obj = MISPObject('ail-leak', standalone=True)
-    obj.first_seen = dict_metadata['date']
-
-    l_obj_attr = []
-    l_obj_attr.append( obj.add_attribute('first-seen', value=dict_metadata['date']) )
-    l_obj_attr.append( obj.add_attribute('raw-data', value=item_id, data=dict_metadata['raw_content']) )
-    l_obj_attr.append( obj.add_attribute('sensor', value=Export.get_ail_uuid()) )
-
-    # add tags
-    if dict_metadata['tags']:
-        tag_misp_object_attributes(l_obj_attr, dict_metadata['tags'])
-    return obj
-
-def export_domain(domain):
-    domain_obj = Domain.Domain(domain)
-    dict_metadata = domain_obj.get_domain_metadata(tags=True)
-
-    # create domain-ip obj
-    obj = MISPObject('domain-crawled', standalone=True)
-    obj.first_seen = dict_metadata['first_seen']
-    obj.last_seen = dict_metadata['last_check']
-
-    l_obj_attr = []
-    l_obj_attr.append( obj.add_attribute('domain', value=domain) )
-    dict_all_url = Domain.get_domain_all_url(domain, domain_obj.get_domain_type())
-    for crawled_url in dict_all_url:
-        attribute = obj.add_attribute('url', value=crawled_url)
-        attribute.first_seen = str(dict_all_url[crawled_url]['first_seen'])
-        attribute.last_seen = str(dict_all_url[crawled_url]['last_seen'])
-        l_obj_attr.append( attribute )
-
-    # add tags
-    if dict_metadata['tags']:
-        tag_misp_object_attributes(l_obj_attr, dict_metadata['tags'])
-
-    #print(obj.to_json())
-    return obj
-
-# TODO: add tags
-def export_decoded(sha1_string):
-
-    decoded_metadata = Decoded.get_decoded_metadata(sha1_string, tag=True)
-
-    obj = MISPObject('file')
-    obj.first_seen = decoded_metadata['first_seen']
-    obj.last_seen = decoded_metadata['last_seen']
-
-    l_obj_attr = []
-    l_obj_attr.append( obj.add_attribute('sha1', value=sha1_string) )
-    l_obj_attr.append( obj.add_attribute('mimetype', value=Decoded.get_decoded_item_type(sha1_string)) )
-    l_obj_attr.append( obj.add_attribute('malware-sample', value=sha1_string, data=Decoded.get_decoded_file_content(sha1_string)) )
-
-    # add tags
-    if decoded_metadata['tags']:
-        tag_misp_object_attributes(l_obj_attr, decoded_metadata['tags'])
-
-    return obj
-
-# TODO: add tags
-def export_screenshot(sha256_string):
-    obj = MISPObject('file')
-
-    l_obj_attr = []
-    l_obj_attr.append( obj.add_attribute('sha256', value=sha256_string) )
-    l_obj_attr.append( obj.add_attribute('attachment', value=sha256_string, data=Screenshot.get_screenshot_file_content(sha256_string)) )
-
-    # add tags
-    tags = Screenshot.get_screenshot_tags(sha256_string)
-    if tags:
-        tag_misp_object_attributes(l_obj_attr, tags)
-
-    return obj
-
-# TODO: add tags
-def export_cryptocurrency(crypto_type, crypto_address):
-    dict_metadata = Cryptocurrency.cryptocurrency.get_metadata(crypto_type, crypto_address)
-
-    obj = MISPObject('coin-address')
-    obj.first_seen = dict_metadata['first_seen']
-    obj.last_seen = dict_metadata['last_seen']
-
-    l_obj_attr = []
-    l_obj_attr.append( obj.add_attribute('address', value=crypto_address) )
-    crypto_symbol = Cryptocurrency.get_cryptocurrency_symbol(crypto_type)
-    if crypto_symbol:
-        l_obj_attr.append( obj.add_attribute('symbol', value=crypto_symbol) )
-
-    return obj
-
-# TODO: add tags
-def export_pgp(pgp_type, pgp_value):
-    dict_metadata = Pgp.pgp.get_metadata(pgp_type, pgp_value)
-
-    obj = MISPObject('pgp-meta')
-    obj.first_seen = dict_metadata['first_seen']
-    obj.last_seen = dict_metadata['last_seen']
-
-    l_obj_attr = []
-    if pgp_type=='key':
-        l_obj_attr.append( obj.add_attribute('key-id', value=pgp_value) )
-    elif pgp_type=='name':
-        #l_obj_attr.append( obj.add_attribute('key-id', value='debug') )
-        l_obj_attr.append( obj.add_attribute('user-id-name', value=pgp_value) )
-    else: # mail
-        #l_obj_attr.append( obj.add_attribute('key-id', value='debug') )
-        l_obj_attr.append( obj.add_attribute('user-id-email', value=pgp_value) )
-    return obj
-
-def export_username(username_type, username):
-    dict_metadata = Username.correlation.get_metadata(username_type, username)
-
-    obj_attrs = []
-    if username_type == 'telegram':
-        obj = MISPObject('telegram-account', standalone=True)
-        obj_attrs.append( obj.add_attribute('username', value=username) )
-
-    elif username_type == 'twitter':
-        obj = MISPObject('twitter-account', standalone=True)
-        obj_attrs.append( obj.add_attribute('name', value=username) )
-
-    else:
-        obj = MISPObject('user-account', standalone=True)
-        obj_attrs.append( obj.add_attribute('username', value=username) )
-
-    obj.first_seen = dict_metadata['first_seen']
-    obj.last_seen = dict_metadata['last_seen']
-    # for obj_attr in obj_attrs:
-    #     for tag in self.get_tags():
-    #         obj_attr.add_tag(tag)
-    return obj
-
-# filter objects to export, export only object who correlect which each other
-def filter_obj_linked(l_obj):
-    for obj in l_obj:
-        res = Correlate_object.get_object_correlation(obj['type'], obj['id'], obj.get('subtype', None))
-        print(res)
-
 def add_relation_ship_to_create(set_relationship, dict_obj, dict_new_obj):
-    global_id = Correlate_object.get_obj_global_id(dict_obj['type'], dict_obj['id'], dict_obj.get('subtype', None))
-    global_id_new = Correlate_object.get_obj_global_id(dict_new_obj['type'], dict_new_obj['id'], dict_new_obj.get('subtype', None))
+    global_id = ail_objects.get_obj_global_id(dict_obj['type'], dict_obj.get('subtype', ''), dict_obj['id'])
+    global_id_new = ail_objects.get_obj_global_id(dict_new_obj['type'], dict_new_obj.get('subtype', ''), dict_new_obj['id'])
     if global_id > global_id_new:
         res = (global_id, global_id_new)
     else:
@@ -224,7 +60,7 @@ def add_relation_ship_to_create(set_relationship, dict_obj, dict_new_obj):
 # # TODO: add action by obj type
 # ex => Domain
 def add_obj_to_create(all_obj_to_export, set_relationship, dict_obj):
-    all_obj_to_export.add(Correlate_object.get_obj_global_id(dict_obj['type'], dict_obj['id'], dict_obj.get('subtype', None)))
+    all_obj_to_export.add(ail_objects.get_obj_global_id(dict_obj['type'], dict_obj.get('subtype', ''), dict_obj['id']))
 
 def add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl):
     # # TODO: filter by export mode or filter on all global ?
@@ -235,7 +71,7 @@ def add_obj_to_create_by_lvl(all_obj_to_export, set_relationship, dict_obj, lvl)
         lvl = lvl - 1
 
         # # TODO: filter by correlation types
-        obj_correlations = Correlate_object.get_object_correlation(dict_obj['type'], dict_obj['id'], requested_correl_type=dict_obj.get('subtype', None))
+        obj_correlations = ail_objects.get_obj_correlations(dict_obj['type'], dict_obj.get('subtype', ''), dict_obj['id'])
         for obj_type in obj_correlations:
             dict_new_obj = {'type': obj_type}
             if obj_type=='pgp' or obj_type=='cryptocurrency' or obj_type=='username':
@@ -286,32 +122,23 @@ def create_list_of_objs_to_export(l_obj, r_type='json'):
 
     return event
 
+# TODO REFACTOR ME
 def create_all_misp_obj(all_obj_to_export, set_relationship):
     dict_misp_obj = {}
     for obj_global_id in all_obj_to_export:
         obj_type, obj_id = obj_global_id.split(':', 1)
         dict_misp_obj[obj_global_id] = create_misp_obj(obj_type, obj_id)
-
     return dict_misp_obj
 
+# TODO REFACTOR ME
 def create_misp_obj(obj_type, obj_id):
-    if obj_type == 'item':
-        return export_ail_item(obj_id)
-    elif obj_type == 'decoded':
-        return export_decoded(obj_id)
-    elif obj_type == 'image':
-        return export_screenshot(obj_id)
-    elif obj_type == 'cryptocurrency':
+    if obj_type in ['cryptocurrency', 'pgp', 'username']:
         obj_subtype, obj_id = obj_id.split(':', 1)
-        return export_cryptocurrency(obj_subtype, obj_id)
-    elif obj_type == 'pgp':
-        obj_subtype, obj_id = obj_id.split(':', 1)
-        return export_pgp(obj_subtype, obj_id)
-    elif obj_type == 'username':
-        obj_subtype, obj_id = obj_id.split(':', 1)
-        return export_username(obj_subtype, obj_id)
-    elif obj_type == 'domain':
-        return export_domain(obj_id)
+    else:
+        obj_subtype = ''
+    misp_obj = ail_objects.get_misp_object(obj_type, obj_subtype, obj_id)
+    return misp_obj
+
 
 def get_relationship_between_global_obj(obj_global_id_1, obj_global_id_2):
     obj_type_1 = obj_global_id_1.split(':', 1)[0]

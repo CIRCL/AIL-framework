@@ -3,13 +3,12 @@
 
 import os
 import sys
-import json
 import requests
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-import Cryptocurrency
+sys.path.append(os.environ['AIL_BIN'])
+from lib.objects.CryptoCurrencies import CryptoCurrency
 
-blockchain_all='https://blockchain.info/rawaddr'
+blockchain_all = 'https://blockchain.info/rawaddr'
 
 # pre-alpha script
 
@@ -18,7 +17,6 @@ def get_bitcoin_info(bitcoin_address, nb_transaction=50):
     dict_btc = {}
     set_btc_in = set()
     set_btc_out = set()
-    req = None
     try:
         req = requests.get('{}/{}?limit={}'.format(blockchain_all, bitcoin_address, nb_transaction))
         jreq = req.json()
@@ -26,7 +24,7 @@ def get_bitcoin_info(bitcoin_address, nb_transaction=50):
         print(e)
         return dict_btc
 
-    #print(json.dumps(jreq))
+    # print(json.dumps(jreq))
     dict_btc['n_tx'] = jreq['n_tx']
     dict_btc['total_received'] = float(jreq['total_received'] / 100000000)
     dict_btc['total_sent'] = float(jreq['total_sent'] / 100000000)
@@ -50,6 +48,7 @@ def get_bitcoin_info(bitcoin_address, nb_transaction=50):
 def filter_btc_seen(btc_addr_set):
     list_seen_btc = []
     for btc_addr in btc_addr_set:
-        if Cryptocurrency.cryptocurrency._exist_corelation_field('bitcoin', btc_addr):
+        cryptocurrency = CryptoCurrency(btc_addr, 'bitcoin')
+        if cryptocurrency.exists():
             list_seen_btc.append(btc_addr)
     return list_seen_btc

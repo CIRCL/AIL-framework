@@ -34,3 +34,41 @@ def get_object_all_subtypes(obj_type):
         return ['telegram', 'twitter', 'jabber']
 
 ##-- AIL OBJECTS --##
+
+def paginate_iterator(iter_elems, nb_obj=50, page=1):
+    dict_page = {}
+    dict_page['nb_all_elem'] = len(iter_elems)
+    nb_pages = dict_page['nb_all_elem'] / nb_obj
+    if not nb_pages.is_integer():
+        nb_pages = int(nb_pages)+1
+    else:
+        nb_pages = int(nb_pages)
+    if page > nb_pages:
+        page = nb_pages
+
+    # multiple pages
+    if nb_pages > 1:
+        dict_page['list_elem'] = []
+        start = nb_obj*(page - 1)
+        stop = (nb_obj*page) - 1
+        current_index = 0
+        for elem in iter_elems:
+            if current_index > stop:
+                break
+            if start <= current_index <= stop:
+                dict_page['list_elem'].append(elem)
+            current_index += 1
+        stop += 1
+        if stop > dict_page['nb_all_elem']:
+            stop = dict_page['nb_all_elem']
+
+    else:
+        start = 0
+        stop = dict_page['nb_all_elem']
+        dict_page['list_elem'] = list(iter_elems)
+    dict_page['page'] = page
+    dict_page['nb_pages'] = nb_pages
+    # UI
+    dict_page['nb_first_elem'] = start+1
+    dict_page['nb_last_elem'] = stop
+    return dict_page

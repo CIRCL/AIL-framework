@@ -6,15 +6,15 @@ import sys
 import time
 import unittest
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages'))
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'bin'))
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import Tag
+from packages import Import_helper
+
 sys.path.append(os.environ['AIL_FLASK'])
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
-
-import Import_helper
-import Tag
-
-from Flask_server import app
+from var.www.Flask_server import app
 
 def parse_response(obj, ail_response):
     res_json = ail_response.get_json()
@@ -35,6 +35,7 @@ def get_api_key():
     else:
         apikey = sys.argv[1]
     return apikey
+
 
 APIKEY = get_api_key()
 

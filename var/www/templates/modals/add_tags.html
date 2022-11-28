@@ -47,12 +47,12 @@
       </div>
 
       <div class="modal-footer">
-        <a class="btn btn-link" href="{{ url_for('Tags.taxonomies') }}" target="_blank">
-            <span class="label-icon">Edit Taxonomies List </span>
+        <a class="btn btn-link" href="{{ url_for('tags_ui.tags_taxonomies') }}" target="_blank">
+            <span class="label-icon">Taxonomies</span>
             <i class="fas fa-wrench fa-2x"></i>
         </a>
-        <a class="btn btn-link" href="{{ url_for('Tags.galaxies') }}" target="_blank">
-            <span class="label-icon">Edit Galaxies List</span>
+        <a class="btn btn-link" href="{{ url_for('tags_ui.tags_galaxies') }}" target="_blank">
+            <span class="label-icon">Galaxies</span>
             <i class="fas fa-rocket fa-2x"></i>
         </a>
         <button class="btn btn-primary" onclick="addTags()">

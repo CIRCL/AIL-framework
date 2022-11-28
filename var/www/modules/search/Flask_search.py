@@ -4,8 +4,8 @@
 '''
     Flask functions and routes for the trending modules page
 '''
-import json
 import os
+import sys
 import datetime
 import flask
 from flask import Flask, render_template, jsonify, request, Blueprint
@@ -17,6 +17,10 @@ from whoosh import index
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser
 
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
 from lib.objects.Items import Item
 
 import time

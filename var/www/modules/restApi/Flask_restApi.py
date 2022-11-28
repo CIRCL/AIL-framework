@@ -10,20 +10,19 @@ import re
 import sys
 import uuid
 import json
-import redis
 import datetime
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import Domain
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.objects.Items import Item
+from lib import Tag
+from lib import Tracker
 
-import Import_helper
-import Cryptocurrency
-import Pgp
-import Item
-import Paste
-import Tag
-import Term
-import Tracker
+from packages import Term
+
+from packages import Import_helper
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import'))
 import importer
@@ -419,7 +418,8 @@ def get_cryptocurrency_bitcoin_metadata():
     data = request.get_json()
     crypto_address = data.get('bitcoin', None)
     req_data = {'bitcoin': crypto_address, 'metadata': True}
-    res = Cryptocurrency.get_cryptocurrency(req_data, 'bitcoin')
+    raise Exception('TO MIGRATE')
+    res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/cryptocurrency/bitcoin/item", methods=['POST'])
@@ -428,7 +428,8 @@ def get_cryptocurrency_bitcoin_item():
     data = request.get_json()
     bitcoin_address = data.get('bitcoin', None)
     req_data = {'bitcoin': bitcoin_address, 'items': True}
-    res = Cryptocurrency.get_cryptocurrency(req_data, 'bitcoin')
+    raise Exception('TO MIGRATE')
+    res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -440,7 +441,8 @@ def get_pgp_key_metadata():
     data = request.get_json()
     pgp_field = data.get('key', None)
     req_data = {'key': pgp_field, 'metadata': True}
-    res = Pgp.get_pgp(req_data, 'key')
+    raise Exception('TO MIGRATE')
+    res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/mail/metadata", methods=['POST'])
@@ -449,7 +451,8 @@ def get_pgp_mail_metadata():
     data = request.get_json()
     pgp_field = data.get('mail', None)
     req_data = {'mail': pgp_field, 'metadata': True}
-    res = Pgp.get_pgp(req_data, 'mail')
+    raise Exception('TO MIGRATE')
+    res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/name/metadata", methods=['POST'])
@@ -458,7 +461,8 @@ def get_pgp_name_metadata():
     data = request.get_json()
     pgp_field = data.get('name', None)
     req_data = {'name': pgp_field, 'metadata': True}
-    res = Pgp.get_pgp(req_data, 'name')
+    raise Exception('TO MIGRATE')
+    res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/key/item", methods=['POST'])
@@ -467,7 +471,8 @@ def get_pgp_key_item():
     data = request.get_json()
     pgp_field = data.get('key', None)
     req_data = {'key': pgp_field, 'items': True}
-    res = Pgp.get_pgp(req_data, 'key')
+    res = 0
+    raise Exception('TO MIGRATE')
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/mail/item", methods=['POST'])
@@ -476,7 +481,8 @@ def get_pgp_mail_item():
     data = request.get_json()
     pgp_mail = data.get('mail', None)
     req_data = {'mail': pgp_mail, 'items': True}
-    res = Pgp.get_pgp(req_data, 'mail')
+    raise Exception('TO MIGRATE')
+    res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 @restApi.route("api/v1/get/pgp/name/item", methods=['POST'])
@@ -485,7 +491,8 @@ def get_pgp_name_item():
     data = request.get_json()
     pgp_name = data.get('name', None)
     req_data = {'name': pgp_name, 'items': True}
-    res = Pgp.get_pgp(req_data, 'name')
+    raise Exception('TO MIGRATE')
+    res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 '''
@@ -553,10 +560,14 @@ def get_domain_status_minimal():
     data = request.get_json()
     domain = data.get('domain', None)
     # error handler
-    res = Domain.api_verify_if_domain_exist(domain)
+    # TODO TO MIGRATE
+    raise Exception('TO MIGRATE')
+    # res = Domain.api_verify_if_domain_exist(domain)
     if res:
         return create_json_response(res[0], res[1])
-    res = Domain.api_get_domain_up_range(domain)
+    # TODO TO MIGRATE
+    raise Exception('TO MIGRATE')
+    # res = Domain.api_get_domain_up_range(domain)
     res[0]['domain'] = domain
     return create_json_response(res[0], res[1])
 
@@ -572,7 +583,9 @@ def get_crawled_domain_list():
     date_to = data.get('date_to', None)
     domain_type = data.get('domain_type', None)
     domain_status = 'UP'
-    res = Domain.api_get_domains_by_status_daterange(date_from, date_to, domain_type)
+    # TODO TO MIGRATE
+    raise Exception('TO MIGRATE')
+    # res = Domain.api_get_domains_by_status_daterange(date_from, date_to, domain_type)
     dict_res = res[0]
     dict_res['date_from'] = date_from
     dict_res['date_to'] = date_to

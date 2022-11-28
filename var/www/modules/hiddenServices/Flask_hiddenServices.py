@@ -4,21 +4,21 @@
 '''
     Flask functions and routes for the trending modules page
 '''
-import redis
 import datetime
 import sys
 import os
 import time
-import json
 from pyfaup.faup import Faup
 from flask import Flask, render_template, jsonify, request, send_file, Blueprint, redirect, url_for
 
 from Role_Manager import login_admin, login_analyst, login_read_only, no_cache
 from flask_login import login_required
 
-from Date import Date
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import crawlers
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import crawlers
 
 # ============ VARIABLES ============
 import Flask_config

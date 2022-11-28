@@ -15,7 +15,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from packages import Date
-from packages import Item
 from packages import Term
 
 from pubsublogger import publisher

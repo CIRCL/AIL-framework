@@ -3,7 +3,6 @@
 
 import os
 import sys
-import argparse
 import configparser
 
 def print_message(message_to_print, verbose):
@@ -63,10 +62,8 @@ def update_config(config_file, config_file_sample, config_file_backup=False):
             print_message('Config File: Nothing to update', verbose)
 
 
-#return true if the configuration is up-to-date
+# return true if the configuration is up-to-date
 def main():
-
-    #------------------------------------------------------------------------------------#
 
     config_file_default = os.path.join(os.environ['AIL_HOME'], 'configs/core.cfg')
     config_file_default_sample = os.path.join(os.environ['AIL_HOME'], 'configs/core.cfg.sample')
@@ -79,7 +76,6 @@ def main():
         raise Exception('Unable to find the configuration file. \
                         Did you set environment variables? \
                         Or activate the virtualenv.')
-
 
     update_config(config_file_default, config_file_default_sample, config_file_backup=config_file_default_backup)
     update_config(config_file_update, config_file_update_sample)

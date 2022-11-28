@@ -24,7 +24,7 @@ from modules.Telegram import Telegram
 # project packages
 from lib.ConfigLoader import ConfigLoader
 import lib.crawlers as crawlers
-import packages.Item as Item
+import lib.objects.Items as Items
 
 #### COPY SAMPLES ####
 config_loader = ConfigLoader()
@@ -75,11 +75,11 @@ class Test_Module_CreditCards(unittest.TestCase):
 
     def test_module(self):
         item_id = 'tests/2021/01/01/credit_cards.gz 7'
-        test_cards = ['341039324930797',     # American Express
-                        '6011613905509166',  # Discover Card
-                        '3547151714018657',  # Japan Credit Bureau (JCB)
-                        '5492981206527330',  # 16 digits MasterCard
-                        '4024007132849695',  # '4532525919781' # 16-digit VISA, with separators
+        test_cards = ['341039324930797',   # American Express
+                      '6011613905509166',  # Discover Card
+                      '3547151714018657',  # Japan Credit Bureau (JCB)
+                      '5492981206527330',  # 16 digits MasterCard
+                      '4024007132849695',  # '4532525919781' # 16-digit VISA, with separators
                      ]
 
         result = self.module_obj.compute(item_id, r_result=True)
@@ -107,7 +107,7 @@ class Test_Module_Global(unittest.TestCase):
     def test_module(self):
         # # TODO: delete item
         item_id = 'tests/2021/01/01/global.gz'
-        item = Item.Item(item_id)
+        item = Items.Item(item_id)
         item.delete()
 
         item_content = b'Lorem ipsum dolor sit amet, consectetur adipiscing elit'
@@ -126,7 +126,7 @@ class Test_Module_Global(unittest.TestCase):
         self.assertIsNone(result)
 
         # Test same id with != content
-        item = Item.Item('tests/2021/01/01/global_831875da824fc86ab5cc0e835755b520.gz')
+        item = Items.Item('tests/2021/01/01/global_831875da824fc86ab5cc0e835755b520.gz')
         item.delete()
         message = f'{item_id} {item_content_2}'
         result = self.module_obj.compute(message, r_result=True)
@@ -135,7 +135,7 @@ class Test_Module_Global(unittest.TestCase):
         self.assertNotEqual(result, item_id)
 
         # cleanup
-        # item = Item.Item(result)
+        # item = Items.Item(result)
         # item.delete()
         # # TODO: remove from queue
 

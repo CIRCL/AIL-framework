@@ -15,9 +15,12 @@ from multiprocessing import Process as Proc
 sys.path.append(os.environ['AIL_BIN'])
 from pubsublogger import publisher
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import ConfigLoader
-import Statistics
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib import ConfigLoader
+from lib import Statistics
 
 ## LOAD CONFIG ##
 config_loader = ConfigLoader.ConfigLoader()

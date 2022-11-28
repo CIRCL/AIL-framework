@@ -3,8 +3,6 @@
 
 import os
 import sys
-import uuid
-import redis
 
 from abc import ABC
 from flask import url_for
@@ -19,27 +17,35 @@ from lib import correlations_engine
 from lib import btc_ail
 from lib import Tag
 
-from lib.objects.CryptoCurrencies import CryptoCurrency
+from lib.objects import CryptoCurrencies
 from lib.objects.Cves import Cve
 from lib.objects.Decodeds import Decoded
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
-from lib.objects.Pgps import Pgp
+from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
-from lib.objects.Usernames import Username
+from lib.objects import Usernames
 
 
 config_loader = ConfigLoader()
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 
-class AILObjects(object): ## ??????????????????????
+class AILObjects(object):  ## ??????????????????????
     initial = 0
     ongoing = 1
     completed = 2
 
 def is_valid_object_type(obj_type):
     return obj_type in get_all_objects()
+
+def is_valid_object_subtype(obj_type, subtype):
+    if obj_type == 'cryptocurrency':
+        return subtype in CryptoCurrencies.get_all_subtypes()
+    elif obj_type == 'pgp':
+        return subtype in Pgps.get_all_subtypes()
+    elif obj_type == 'username':
+        return subtype in CryptoCurrencies.get_all_subtypes()
 
 def sanitize_objs_types(objs):
     l_types = []
@@ -62,11 +68,11 @@ def get_object(obj_type, subtype, id):
     elif obj_type == 'screenshot':
         return Screenshot(id)
     elif obj_type == 'cryptocurrency':
-        return CryptoCurrency(id, subtype)
+        return CryptoCurrencies.CryptoCurrency(id, subtype)
     elif obj_type == 'pgp':
-        return Pgp(id, subtype)
+        return Pgps.Pgp(id, subtype)
     elif obj_type == 'username':
-        return Username(id, subtype)
+        return Usernames.Username(id, subtype)
 
 def exists_obj(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
@@ -74,6 +80,14 @@ def exists_obj(obj_type, subtype, obj_id):
         return obj.exists()
     else:
         return False
+
+def get_obj_global_id(obj_type, subtype, obj_id):
+    obj = get_object(obj_type, subtype, obj_id)
+    return obj.get_global_id()
+
+def get_obj_from_global_id(global_id):
+    obj = global_id.split(':', 3)
+    return get_object(obj[0], obj[1], obj[2])
 
 def get_object_link(obj_type, subtype, id, flask_context=False):
     obj = get_object(obj_type, subtype, id)
@@ -93,7 +107,8 @@ def get_object_meta(obj_type, subtype, id, options=[], flask_context=False):
 def get_objects_meta(objs, options=[], flask_context=False):
     metas = []
     for obj_dict in objs:
-        metas.append(get_object_meta(obj_dict['type'], obj_dict['subtype'], obj_dict['id'], options=options, flask_context=flask_context))
+        metas.append(get_object_meta(obj_dict['type'], obj_dict['subtype'], obj_dict['id'], options=options,
+                                     flask_context=flask_context))
     return metas
 
 def get_object_card_meta(obj_type, subtype, id, related_btc=False):
@@ -116,31 +131,18 @@ def get_ui_obj_tag_table_keys(obj_type):
     '''
     Warning: use only in flask (dynamic templates)
     '''
-    if obj_type=="domain":
-        return ['id', 'first_seen', 'last_check', 'status'] # # TODO: add root screenshot
-
-# # TODO: # FIXME:
-# def get_objects_meta(l_dict_objs, icon=False, url=False, flask_context=False):
-#     l_meta = []
-#     for dict_obj in l_dict_objs:
-#         object = get_object(dict_obj['type'], dict_obj['subtype'], dict_obj['id'])
-#         dict_meta = object.get_default_meta(tags=True)
-#         if icon:
-#             dict_meta['icon'] = object.get_svg_icon()
-#         if url:
-#             dict_meta['link'] = object.get_link(flask_context=flask_context)
-#         l_meta.append(dict_meta)
-#     return l_meta
+    if obj_type == "domain":
+        return ['id', 'first_seen', 'last_check', 'status']  # # TODO: add root screenshot
 
 # # TODO: CHECK IF object already have an UUID
 def get_misp_object(obj_type, subtype, id):
-    object = get_object(obj_type, subtype, id)
-    return object.get_misp_object()
+    obj = get_object(obj_type, subtype, id)
+    return obj.get_misp_object()
 
 # get misp relationship
 def get_objects_relationship(obj_1, obj2):
     relationship = {}
-    obj_types = ( obj_1.get_type(), obj2.get_type() )
+    obj_types = (obj_1.get_type(), obj2.get_type())
 
     ##############################################################
     # if ['cryptocurrency', 'pgp', 'username', 'decoded', 'screenshot']:
@@ -149,12 +151,12 @@ def get_objects_relationship(obj_1, obj2):
     ##############################################################
     if 'cryptocurrency' in obj_types:
         relationship['relation'] = 'extracted-from'
-        if obj1_type == 'cryptocurrency':
-            relationship['src'] = obj1_id
-            relationship['dest'] =  obj2_id
+        if obj_1.get_type() == 'cryptocurrency':
+            relationship['src'] = obj_1.get_id()
+            relationship['dest'] = obj2.get_id()
         else:
-            relationship['src'] = obj2_id
-            relationship['dest'] =  obj1_id
+            relationship['src'] = obj2.get_id()
+            relationship['dest'] = obj_1.get_id()
 
     elif 'pgp' in obj_types:
         relationship['relation'] = 'extracted-from'
@@ -175,16 +177,15 @@ def get_objects_relationship(obj_1, obj2):
     else:
         pass
 
-
-
-
-
-
     return relationship
 
 def api_sanitize_object_type(obj_type):
     if not is_valid_object_type(obj_type):
-        return ({'status': 'error', 'reason': 'Incorrect object type'}, 400)
+        return {'status': 'error', 'reason': 'Incorrect object type'}, 400
+
+def get_obj_correlations(obj_type, subtype, id):
+    obj = get_object(obj_type, subtype, id)
+    return obj.get_correlations()
 
 ################################################################################
 # DATA RETENTION

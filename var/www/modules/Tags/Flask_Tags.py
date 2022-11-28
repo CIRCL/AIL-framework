@@ -18,7 +18,6 @@ from pymispgalaxies import Galaxies, Clusters
 
 # ============ VARIABLES ============
 import Flask_config
-from lib import Tag
 
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl

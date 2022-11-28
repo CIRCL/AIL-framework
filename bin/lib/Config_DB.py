@@ -12,7 +12,7 @@ import sys
 import redis
 
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import ConfigLoader
+from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_db = config_loader.get_redis_conn("ARDB_DB")

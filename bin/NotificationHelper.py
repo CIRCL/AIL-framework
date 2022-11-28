@@ -11,8 +11,8 @@ from pubsublogger import publisher
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
+sys.path.append(os.environ['AIL_BIN'])
+from lib import ConfigLoader
 
 """
 This module allows the global configuration and management of notification settings and methods.

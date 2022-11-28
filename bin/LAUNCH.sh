@@ -213,6 +213,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "CreditCards" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./CreditCards.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Cryptocurrency" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Cryptocurrencies.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Cve.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Decoder" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Decoder.py; read x"
@@ -280,8 +282,6 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "Mixer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Mixer.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "PgpDump" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./PgpDump.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Cryptocurrency" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Cryptocurrencies.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tools" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Tools.py; read x"
     sleep 0.1

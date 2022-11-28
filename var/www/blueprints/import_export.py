@@ -9,7 +9,6 @@ import os
 import sys
 import uuid
 import json
-import random
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file
 from flask_login import login_required, current_user, login_user, logout_user
