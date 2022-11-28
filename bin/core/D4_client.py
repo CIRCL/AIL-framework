@@ -13,40 +13,43 @@ a Passive DNS server which can be queried later to search for the Passive DNS re
 import os
 import sys
 import time
-from pubsublogger import publisher
+
 sys.path.append(os.environ['AIL_BIN'])
-from Helper import Process
+##################################
+# Import Project packages
+#################################
+from modules.abstract_module import AbstractModule
+from lib import d4
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import ConfigLoader
-import d4
-
-# # TODO: lauch me in core screen
+# # TODO: launch me in core screen
 # # TODO: check if already launched in core screen
 
-if __name__ == '__main__':
-    publisher.port = 6380
-    publisher.channel = "Script"
+class D4Client(AbstractModule):
+    """
+        D4Client module for AIL framework
+    """
 
-    config_section = 'D4_client'
-    p = Process(config_section)
-    publisher.info("""D4_client is Running""")
+    def __init__(self):
+        super(D4Client, self).__init__()
 
-    last_refresh = time.time()
-    d4_client = d4.create_d4_client()
+        self.d4_client = d4.create_d4_client()
+        self.last_refresh = time.time()
 
-    while True:
-        if last_refresh < d4.get_config_last_update_time():
-            d4_client = d4.create_d4_client()
-            last_refresh = time.time()
+        # Send module state to logs
+        self.redis_logger.info(f'Module {self.module_name} initialized')
+
+    def compute(self, dns_record):
+        # Refresh D4 Client
+        if self.last_refresh < d4.get_config_last_update_time():
+            self.d4_client = d4.create_d4_client()
+            self.last_refresh = time.time()
             print('D4 Client: config updated')
 
-        dns_record = p.get_from_set()
-        if dns_record is None:
-            publisher.debug("Script D4_client is idling 1s")
-            time.sleep(1)
-            continue
-
-        if d4_client:
+        if self.d4_client:
             # Send DNS Record to D4Server
-            d4_client.send_manual_data(dns_record)
+            self.d4_client.send_manual_data(dns_record)
+
+
+if __name__ == '__main__':
+    module = D4Client()
+    module.run()

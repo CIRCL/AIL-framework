@@ -1,251 +1,231 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 """
-    PgpDum module
+The PgpDump Module
+======================
 
-    Extract ID from PGP Blocks
+This module Extract ID from PGP Blocks.
+
 """
 
+##################################
+# Import External packages
+##################################
 import os
-import re
-import time
-import uuid
-import redis
-import signal
-import datetime
+import sys
 import subprocess
 
-from pubsublogger import publisher
 from bs4 import BeautifulSoup
+from uuid import uuid4
 
-from Helper import Process
-from packages import Item
-from packages import Paste
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from modules.abstract_module import AbstractModule
+from lib.objects import Pgps
+from lib.objects.Items import Item
 
-from packages import Pgp
 
-class TimeoutException(Exception):
-    pass
+class PgpDump(AbstractModule):
+    """
+    Cve module for AIL framework
+    """
 
-def timeout_handler(signum, frame):
-    raise TimeoutException
+    def __init__(self):
+        super(PgpDump, self).__init__()
 
-signal.signal(signal.SIGALRM, timeout_handler)
+        # check/create pgpdump queue directory (used for huge pgp blocks)
+        self.pgpdump_dir = os.path.join(os.environ['AIL_HOME'], 'temp', 'pgpdump')
+        if not os.path.isdir(self.pgpdump_dir):
+            os.makedirs(self.pgpdump_dir)
 
-# save pgp message in directory, process one time each day
-def save_in_file(message, pgp_content):
-    print('save in file')
-    UUID = str(uuid.uuid4())
-    file_name = os.path.join(pgp_dump_dir_to_process, UUID)
-    with open(file_name, 'w') as f:
-        f.write(pgp_content)
-    r_serv_db.sadd('pgpdumb:uuid', '{};{}'.format(UUID, message))
+        # Regex
+        self.reg_user_id = r'User ID - .+'
+        self.reg_key_id = r'Key ID - .+'
+        self.reg_pgp_public_blocs = r'-----BEGIN PGP PUBLIC KEY BLOCK-----[\s\S]+?-----END PGP PUBLIC KEY BLOCK-----'
+        self.reg_pgp_private_blocs = r'-----BEGIN PGP PRIVATE KEY BLOCK-----[\s\S]+?-----END PGP PRIVATE KEY BLOCK-----'
+        self.reg_pgp_signature = r'-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
+        self.reg_pgp_message = r'-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
+        self.reg_tool_version = r'\bVersion:.*\n'
+        self.reg_block_comment = r'\bComment:.*\n'
 
-def remove_html(item_content):
-    try:
-        if bool(BeautifulSoup(item_content, "html.parser").find()):
-            soup = BeautifulSoup(item_content, 'html.parser')
-            # kill all script and style elements
-            for script in soup(["script", "style"]):
-                script.extract()    # remove
+        # Waiting time in seconds between to message processed
+        self.pending_seconds = 1
 
-            # get text
-            text = soup.get_text()
-            return text
-        else:
-            return item_content
-    except TypeError:
-        return item_content
+        # init
+        self.item_id = None
+        self.keys = set()
+        self.private_keys = set()
+        self.names = set()
+        self.mails = set()
+        self.symmetrically_encrypted = False
 
-def extract_all_id(message, item_content, regex=None, is_file=False):
+        # Send module state to logs
+        self.redis_logger.info(f'Module {self.module_name} initialized')
 
-    if is_file:
-        pgp_packet = get_pgp_packet_file(item_content)
-        extract_id_from_output(pgp_packet)
-
-    else:
-        # max execution time on regex
-        signal.alarm(max_execution_time)
+    def remove_html(self, pgp_block):
         try:
-            pgp_extracted_block = re.findall(regex, item_content)
-        except TimeoutException:
-            pgp_extracted_block = []
-            p.incr_module_timeout_statistic() # add encoder type
-            print ("{0} processing timeout".format(paste.p_rel_path))
-        else:
-            signal.alarm(0)
+            if bool(BeautifulSoup(pgp_block, "html.parser").find()):
+                soup = BeautifulSoup(pgp_block, 'html.parser')
+                # kill all script and style elements
+                for script in soup(["script", "style"]):
+                    script.extract()  # remove
 
-        for pgp_to_dump in pgp_extracted_block:
+                # get text
+                text = soup.get_text()
+                return text
+            else:
+                return pgp_block
+        except TypeError:
+            return pgp_block
 
-            pgp_packet = get_pgp_packet(message, pgp_to_dump)
-            extract_id_from_output(pgp_packet)
+    def sanitize_pgp_block(self, pgp_block):
+        # Debug
+        print(pgp_block)
+        print()
+        pgp_block = self.remove_html(pgp_block)
+        # Remove Version
+        versions = self.regex_findall(self.reg_tool_version, self.item_id, pgp_block)
+        for version in versions:
+            pgp_block = pgp_block.replace(version, '')
+        # Remove Comment
+        comments = self.regex_findall(self.reg_block_comment, self.item_id, pgp_block)
+        for comment in comments:
+            pgp_block = pgp_block.replace(comment, '')
+        # Remove Empty Lines
+        pgp_block = [s for s in pgp_block.splitlines() if (s and not s.isspace())]
+        pgp_block[0] = pgp_block[0] + '\n'
+        pgp_block[-1] = '\n' + pgp_block[-1]
+        pgp_block = '\n'.join(pgp_block)
 
-def get_pgp_packet(message, save_path):
-    save_path = '{}'.format(save_path)
-    # remove Version
-    all_version = re.findall(regex_tool_version, save_path)
-    for version in all_version:
-        save_path = save_path.replace(version, '')
-    # remove comment
-    all_comment= re.findall(regex_block_comment, save_path)
-    for comment in all_comment:
-        save_path = save_path.replace(comment, '')
-    # remove empty line
-    save_path = [s for s in save_path.splitlines() if s]
-    save_path[0] = save_path[0] + '\n'
-    save_path[-1] = '\n' + save_path[-1]
-    save_path = '\n'.join(save_path)
+        # Debug
+        print(pgp_block)
+        print('-------------------------------------------------------------------------')
+        return pgp_block
 
-    #print(save_path)
+    def get_pgpdump_from_file(self, pgp_block):
+        print('Save PGP Block in File')
+        file_uuid = str(uuid4())
+        filepath = os.path.join(self.pgpdump_dir, file_uuid)
+        with open(filepath, 'w') as f:
+            f.write(pgp_block)
+        process1 = subprocess.Popen(['pgpdump', filepath], stdout=subprocess.PIPE)
+        output = process1.communicate()[0].decode()
+        os.remove(filepath)
+        return output
 
-    if len(save_path) > 131072:
-        save_in_file(message, save_path)
-        return ''
-    else:
-        process1 = subprocess.Popen([ 'echo', '-e', save_path], stdout=subprocess.PIPE)
-        process2 = subprocess.Popen([ 'pgpdump'], stdin=process1.stdout, stdout=subprocess.PIPE)
+    def get_pgpdump_from_terminal(self, pgp_block):
+        process1 = subprocess.Popen(['echo', '-e', pgp_block], stdout=subprocess.PIPE)
+        process2 = subprocess.Popen(['pgpdump'], stdin=process1.stdout, stdout=subprocess.PIPE)
         process1.stdout.close()
         output = process2.communicate()[0]
         try:
             output = output.decode()
         except UnicodeDecodeError:
-            publisher.error('Error PgpDump UnicodeDecodeError: {}'.format(message))
+            self.redis_logger.error(f'Error PgpDump UnicodeDecodeError: {self.item_id}')
             output = ''
         return output
 
-def get_pgp_packet_file(file):
-    process1 = subprocess.Popen([ 'pgpdump', file], stdout=subprocess.PIPE)
-    output = process1.communicate()[0].decode()
-    return output
-
-def extract_id_from_output(pgp_dump_outpout):
-    all_user_id = set(re.findall(regex_user_id, pgp_dump_outpout))
-    for user_id in all_user_id:
-        # avoid key injection in user_id:
-        pgp_dump_outpout.replace(user_id, '', 1)
-
-        user_id = user_id.replace(user_id_str, '', 1)
-        mail = None
-        if ' <' in user_id:
-            name, mail = user_id.rsplit(' <', 1)
-            mail = mail[:-1]
-            set_name.add(name)
-            set_mail.add(mail)
+    def get_pgpdump(self, pgp_block):
+        if len(pgp_block) > 131072:
+            return self.get_pgpdump_from_file(pgp_block)
         else:
-            name = user_id
-            set_name.add(name)
+            return self.get_pgpdump_from_terminal(pgp_block)
 
-    all_key_id = set(re.findall(regex_key_id, pgp_dump_outpout))
-    for key_id in all_key_id:
-        key_id = key_id.replace(key_id_str, '', 1)
-        set_key.add(key_id)
+    def extract_id_from_pgpdump_output(self, pgpdump_output):
+        if 'Secret Key Packet' in pgpdump_output:
+            private = True
+        else:
+            private = False
+        users = self.regex_findall(self.reg_user_id, self.item_id, pgpdump_output)
+        for user in users:
+            # avoid key injection in user_id:
+            pgpdump_output.replace(user, '', 1)
+            user = user.replace('User ID - ', '', 1)
+            if ' <' in user:
+                name, mail = user.rsplit(' <', 1)
+                mail = mail[:-1]
+                self.names.add(name)
+                self.mails.add(mail)
+            else:
+                name = user
+                self.names.add(name)
+
+        keys = self.regex_findall(self.reg_key_id, self.item_id, pgpdump_output)
+        for key_id in keys:
+            key_id = key_id.replace('Key ID - ', '', 1)
+            if key_id != '0x0000000000000000':
+                self.keys.add(key_id)
+                if private:
+                    self.private_keys.add(key_id)
+            else:
+                self.symmetrically_encrypted = True
+                print('symmetrically encrypted')
+
+    def compute(self, message):
+        item = Item(message)
+        self.item_id = item.get_id()
+        content = item.get_content()
+
+        pgp_blocks = []
+        # Public Block
+        for pgp_block in self.regex_findall(self.reg_pgp_public_blocs, self.item_id, content):
+            # content = content.replace(pgp_block, '')
+            pgp_block = self.sanitize_pgp_block(pgp_block)
+            pgp_blocks.append(pgp_block)
+        # Private Block
+        for pgp_block in self.regex_findall(self.reg_pgp_private_blocs, self.item_id, content):
+            # content = content.replace(pgp_block, '')
+            pgp_block = self.sanitize_pgp_block(pgp_block)
+            pgp_blocks.append(pgp_block)
+        # Signature
+        for pgp_block in self.regex_findall(self.reg_pgp_signature, self.item_id, content):
+            # content = content.replace(pgp_block, '')
+            pgp_block = self.sanitize_pgp_block(pgp_block)
+            pgp_blocks.append(pgp_block)
+        # Message
+        for pgp_block in self.regex_findall(self.reg_pgp_message, self.item_id, content):
+            pgp_block = self.sanitize_pgp_block(pgp_block)
+            pgp_blocks.append(pgp_block)
+
+        self.symmetrically_encrypted = False
+        self.keys = set()
+        self.private_keys = set()
+        self.names = set()
+        self.mails = set()
+        for pgp_block in pgp_blocks:
+            pgpdump_output = self.get_pgpdump(pgp_block)
+            self.extract_id_from_pgpdump_output(pgpdump_output)
+
+        if self.keys or self.names or self.mails:
+            print(self.item_id)
+            date = item.get_date()
+            for key in self.keys:
+                pgp = Pgps.Pgp(key, 'key')
+                pgp.add(date, self.item_id)
+                print(f'    key: {key}')
+            for name in self.names:
+                pgp = Pgps.Pgp(name, 'name')
+                pgp.add(date, self.item_id)
+                print(f'    name: {name}')
+            for mail in self.mails:
+                pgp = Pgps.Pgp(mail, 'mail')
+                pgp.add(date, self.item_id)
+                print(f'    mail: {mail}')
+
+            # Keys extracted from PGP PRIVATE KEY BLOCK
+            for key in self.private_keys:
+                pgp = Pgps.Pgp(key, 'key')
+                pgp.add_tag('infoleak:automatic-detection="pgp-private-key"')
+                print(f'    private key: {key}')
+
+        if self.symmetrically_encrypted:
+            msg = f'infoleak:automatic-detection="pgp-symmetric";{self.item_id}'
+            self.send_message_to_queue(msg, 'Tags')
 
 
 if __name__ == '__main__':
-    # If you wish to use an other port of channel, do not forget to run a subscriber accordingly (see launch_logs.sh)
-    # Port of the redis instance used by pubsublogger
-    publisher.port = 6380
-    # Script is the default channel used for the modules.
-    publisher.channel = 'Script'
+    module = PgpDump()
+    module.run()
 
-    # Section name in bin/packages/modules.cfg
-    #config_section = 'PgpDump'
-    config_section = 'PgpDump'
-
-    # Setup the I/O queues
-    p = Process(config_section)
-
-    r_serv_db = redis.StrictRedis(
-        host=p.config.get("ARDB_DB", "host"),
-        port=p.config.getint("ARDB_DB", "port"),
-        db=p.config.getint("ARDB_DB", "db"),
-        decode_responses=True)
-
-    serv_metadata = redis.StrictRedis(
-        host=p.config.get("ARDB_Metadata", "host"),
-        port=p.config.getint("ARDB_Metadata", "port"),
-        db=p.config.getint("ARDB_Metadata", "db"),
-        decode_responses=True)
-
-    # Sent to the logging a description of the module
-    publisher.info("PgpDump started")
-
-    # check/create pgpdump queue directory (used for huge pgp blocks)
-    pgp_dump_dir_to_process = os.path.join(os.environ['AIL_HOME'], 'temp', 'pgpdump')
-    if not os.path.isdir(pgp_dump_dir_to_process):
-        os.makedirs(pgp_dump_dir_to_process)
-
-    user_id_str = 'User ID - '
-    regex_user_id= '{}.+'.format(user_id_str)
-
-    key_id_str = 'Key ID - '
-    regex_key_id = '{}.+'.format(key_id_str)
-    regex_pgp_public_blocs = r'-----BEGIN PGP PUBLIC KEY BLOCK-----[\s\S]+?-----END PGP PUBLIC KEY BLOCK-----'
-    regex_pgp_signature = r'-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
-    regex_pgp_message = r'-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
-    regex_tool_version = r"\bVersion:.*\n"
-    regex_block_comment = r"\bComment:.*\n"
-
-    re.compile(regex_user_id)
-    re.compile(regex_key_id)
-    re.compile(regex_pgp_public_blocs)
-    re.compile(regex_pgp_signature)
-    re.compile(regex_pgp_message)
-    re.compile(regex_tool_version)
-    re.compile(regex_block_comment)
-
-    max_execution_time = p.config.getint("PgpDump", "max_execution_time")
-
-    # Endless loop getting messages from the input queue
-    while True:
-
-        is_file = False
-        set_key = set()
-        set_name = set()
-        set_mail = set()
-
-        if r_serv_db.scard('pgpdumb:uuid') > 0:
-            res = r_serv_db.spop('pgpdumb:uuid')
-            file_to_process, message = res.split(';', 1)
-            file_to_process = os.path.join(pgp_dump_dir_to_process, file_to_process)
-            date = datetime.datetime.now().strftime("%Y/%m/%d")
-            paste = Paste.Paste(message)
-            date = str(paste._get_p_date())
-            print(message)
-            extract_all_id(message, file_to_process, is_file=True)
-            os.remove(file_to_process)
-
-        else:
-            # Get one message from the input queue
-            message = p.get_from_set()
-
-            if message is None:
-                publisher.debug("{} queue is empty, waiting".format(config_section))
-                time.sleep(1)
-                continue
-
-            print(message)
-            paste = Paste.Paste(message)
-
-            date = str(paste._get_p_date())
-            content = paste.get_p_content()
-            content = remove_html(content)
-
-
-            extract_all_id(message, content, regex_pgp_public_blocs)
-            extract_all_id(message, content, regex_pgp_signature)
-            extract_all_id(message, content, regex_pgp_message)
-
-        item_date = Item.get_item_date(message)
-
-        for key_id in set_key:
-            print(key_id)
-            Pgp.pgp.save_item_correlation('key', key_id, message, item_date)
-
-        for name_id in set_name:
-            print(name_id)
-            Pgp.pgp.save_item_correlation('name', name_id, message, item_date)
-
-        for mail_id in set_mail:
-            print(mail_id)
-            Pgp.pgp.save_item_correlation('mail', mail_id, message, item_date)
