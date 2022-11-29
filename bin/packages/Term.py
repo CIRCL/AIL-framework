@@ -24,7 +24,7 @@ from packages import Date
 from lib.objects import Items
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv_term = config_loader.get_db_conn("Kvrocks_DB")
+r_serv_term = config_loader.get_db_conn("Kvrocks_Trackers")
 config_loader = None
 
 email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
@@ -387,11 +387,11 @@ def add_tracked_item(term_uuid, item_id, item_date):
     # track item
     r_serv_term.sadd('tracker:item:{}:{}'.format(term_uuid, item_date), item_id)
     # track nb item by date
-    r_serv_term.zadd('tracker:stat:{}'.format(term_uuid), item_date, int(item_date))
+    r_serv_term.zadd('tracker:stat:{}'.format(term_uuid), {item_date: item_date})
 
 def create_token_statistics(item_date, word, nb):
-    r_serv_term.zincrby('stat_token_per_item_by_day:{}'.format(item_date), word, 1)
-    r_serv_term.zincrby('stat_token_total_by_day:{}'.format(item_date), word, nb)
+    r_serv_term.zincrby('stat_token_per_item_by_day:{}'.format(item_date), 1, word)
+    r_serv_term.zincrby('stat_token_total_by_day:{}'.format(item_date), nb, word)
     r_serv_term.sadd('stat_token_history', item_date)
 
 def delete_token_statistics_by_date(item_date):

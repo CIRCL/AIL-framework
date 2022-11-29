@@ -21,12 +21,12 @@ from packages import Date
 from lib import ConfigLoader
 from lib import item_basic
 from lib import Tag
+from lib.Users import User
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 
-r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
-r_serv_tracker = config_loader.get_db_conn("Kvrocks_DB")
+r_serv_tracker = config_loader.get_db_conn("Kvrocks_Trackers")
 
 items_dir = config_loader.get_config_str("Directories", "pastes")
 if items_dir[-1] == '/':
@@ -250,7 +250,7 @@ def add_tracked_item(tracker_uuid, item_id):
     res = r_serv_tracker.sadd(f'tracker:item:{tracker_uuid}:{item_date}', item_id)
     # track nb item by date
     if res == 1:
-        nb_items = r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(item_date), 1)
+        nb_items = r_serv_tracker.zincrby(f'tracker:stat:{tracker_uuid}', 1, int(item_date))
         if nb_items == 1:
             update_tracker_daterange(tracker_uuid, item_date)
 
@@ -289,7 +289,7 @@ def remove_tracked_item(item_id):
         r_serv_tracker.srem(f'obj:trackers:item:{item_id}', tracker_uuid)
         res = r_serv_tracker.srem(f'tracker:item:{tracker_uuid}:{item_date}', item_id)
         if res:
-            r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(item_date), -1)
+            r_serv_tracker.zincrby(f'tracker:stat:{tracker_uuid}', -1, int(item_date))
 
 def get_item_all_trackers_uuid(obj_id):
     #obj_type = 'item'
@@ -326,13 +326,6 @@ def trigger_trackers_refresh(tracker_type):
 ######################
 #### TRACKERS ACL ####
 
-# # TODO: use new package => duplicate fct
-def is_in_role(user_id, role):
-    if r_serv_db.sismember('user_role:{}'.format(role), user_id):
-        return True
-    else:
-        return False
-
 def is_tracker_in_global_level(tracker, tracker_type):
     res = r_serv_tracker.smembers('all:tracker_uuid:{}:{}'.format(tracker_type, tracker))
     if res:
@@ -364,10 +357,10 @@ def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
     tracker_creator = r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
     if not tracker_creator:
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    if not is_in_role(user_id, 'admin') and user_id != tracker_creator:
+    user = User(user_id)
+    if not user.is_in_role('admin') and user_id != tracker_creator:
         return {"status": "error", "reason": "Access Denied"}, 403
     return {"uuid": tracker_uuid}, 200
-
 
 ##-- ACL --##
 
@@ -385,7 +378,7 @@ def fix_tracker_stats_per_day(tracker_uuid):
 
         nb_items = r_serv_tracker.scard(f'tracker:item:{tracker_uuid}:{date_day}')
         if nb_items:
-            r_serv_tracker.zincrby('tracker:stat:{}'.format(tracker_uuid), int(date_day), nb_items)
+            r_serv_tracker.zincrby(f'tracker:stat:{tracker_uuid}', nb_items, int(date_day))
 
             # update first_seen/last_seen
             update_tracker_daterange(tracker_uuid, date_day)
@@ -470,12 +463,15 @@ def _re_create_tracker(tracker, tracker_type, user_id, level, tags, mails, descr
 def create_tracker(tracker, tracker_type, user_id, level, tags, mails, description, webhook, dashboard=0, tracker_uuid=None, sources=[]):
     # edit tracker
     if tracker_uuid:
-        edit_tracker = True
         # check if type changed
         old_type = get_tracker_type(tracker_uuid)
-        old_tracker = get_tracker_by_uuid(tracker_uuid)
-        old_level = get_tracker_level(tracker_uuid)
-        tracker_user_id = get_tracker_user_id(tracker_uuid)
+        if not old_type:
+            edit_tracker = False
+        else:
+            edit_tracker = True
+            old_tracker = get_tracker_by_uuid(tracker_uuid)
+            old_level = get_tracker_level(tracker_uuid)
+            tracker_user_id = get_tracker_user_id(tracker_uuid)
 
     # Create new tracker
     else:
@@ -497,19 +493,19 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
         tracker_type = 'yara'
 
     # create metadata
-    r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'tracked', tracker)
-    r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'type', tracker_type)
-    r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'date', datetime.date.today().strftime("%Y%m%d"))
-    r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'level', level)
-    r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'dashboard', dashboard)
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'tracked', tracker)
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'type', tracker_type)
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'date', datetime.date.today().strftime("%Y%m%d"))
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'level', level)
+    r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'dashboard', dashboard)
     if not edit_tracker:
-        r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'user_id', user_id)
+        r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'user_id', user_id)
 
     if description:
-        r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'description', description)
+        r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'description', description)
 
     if webhook:
-        r_serv_tracker.hset('tracker:{}'.format(tracker_uuid), 'webhook', webhook)
+        r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'webhook', webhook)
 
     # type change
     if edit_tracker:
@@ -1165,7 +1161,7 @@ def save_retro_hunt_match(task_uuid, id, object_type='item'):
     res = r_serv_tracker.sadd(f'tracker:retro_hunt:task:item:{task_uuid}:{item_date}', id)
     # track nb item by date
     if res == 1:
-        r_serv_tracker.zincrby(f'tracker:retro_hunt:task:stat:{task_uuid}', int(item_date), 1)
+        r_serv_tracker.zincrby(f'tracker:retro_hunt:task:stat:{task_uuid}', 1, int(item_date))
     # Add map obj_id -> task_uuid
     r_serv_tracker.sadd(f'obj:retro_hunt:item:{id}', task_uuid)
 

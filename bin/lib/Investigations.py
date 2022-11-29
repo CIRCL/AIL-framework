@@ -15,7 +15,6 @@ import datetime
 import time
 import uuid
 
-from abc import ABC
 from enum import Enum
 from flask import escape
 
@@ -279,12 +278,12 @@ def get_obj_investigations(obj_id, obj_type, subtype=''):
     return r_tracking.smembers(f'obj:investigations:{obj_type}:{subtype}:{obj_id}')
 
 def delete_obj_investigations(obj_id, obj_type, subtype=''):
-    unregistred = False
+    unregistered = False
     for investigation_uuid in get_obj_investigations(obj_id, obj_type, subtype=subtype):
         investigation = Investigation(investigation_uuid)
         investigation.unregister_object(obj_id, obj_type, subtype)
-        unregistred = True
-    return unregistred
+        unregistered = True
+    return unregistered
 
 
 def _set_timestamp(investigation_uuid, timestamp):
@@ -304,8 +303,8 @@ def _re_create_investagation(investigation_uuid, user_id, date, name, threat_lev
 
 # # TODO: fix default threat_level analysis
 # # TODO: limit description + name
-# # TODO: sanityze tags
-# # TODO: sanityze date
+# # TODO: sanitize tags
+# # TODO: sanitize date
 def create_investigation(user_id, date, name, threat_level, analysis, info, tags=[], investigation_uuid=None):
     if investigation_uuid:
         if not is_valid_uuid_v4(investigation_uuid):
@@ -472,18 +471,18 @@ def api_unregister_object(json_dict):
 
 ##--  API  --##
 
-
-if __name__ == '__main__':
-    # res = create_star_list(user_id, name, description)
-    # print(res)
-
-    # res = r_tracking.dbsize()
-    # print(res)
-
-    investigation_uuid = 'a6545c38083444eeb9383d357f8fa747'
-    _set_timestamp(investigation_uuid, int(time.time()))
-
-    # investigation = Investigation(investigation_uuid)
-    # investigation.delete()
+#
+# if __name__ == '__main__':
+#     # res = create_star_list(user_id, name, description)
+#     # print(res)
+#
+#     # res = r_tracking.dbsize()
+#     # print(res)
+#
+#     investigation_uuid = 'a6545c38083444eeb9383d357f8fa747'
+#     _set_timestamp(investigation_uuid, int(time.time()))
+#
+#     # investigation = Investigation(investigation_uuid)
+#     # investigation.delete()
 
 # # TODO: PAGINATION

@@ -126,7 +126,7 @@ def feeder(message, count=0):
         ## FIXME: remove it
         if not item_basic.exist_item(item_id):
             if count < 10:
-                r_serv_db.zincrby('mess_not_saved_export', message, 1)
+                r_serv_db.zincrby('mess_not_saved_export', 1, message)
                 return 0
             else:
                 r_serv_db.zrem('mess_not_saved_export', message)

@@ -220,17 +220,17 @@ class Decoded(AbstractObject):
 
         if not self.is_seen_this_day(date):
             # mimetype
-            r_metadata.zincrby(f'decoded:mimetype:{date}', mimetype, 1)
+            r_metadata.zincrby(f'decoded:mimetype:{date}', 1, mimetype)
             r_metadata.sadd(f'decoded:mimetypes', mimetype)
 
         # filter hash encoded in the same object
         if not self.is_correlated('item', None, obj_id):
 
             r_metadata.hincrby(f'metadata_hash:{self.id}', f'{decoder_name}_decoder', 1)
-            r_metadata.zincrby(f'{decoder_name}_type:{mimetype}', date, 1)
+            r_metadata.zincrby(f'{decoder_name}_type:{mimetype}', 1, date)
 
             r_metadata.incrby(f'{decoder_name}_decoded:{date}', 1)
-            r_metadata.zincrby(f'{decoder_name}_date:{date}', self.id, 1)
+            r_metadata.zincrby(f'{decoder_name}_date:{date}', 1, self.id)
 
 
             self.update_daterange(date)
@@ -268,7 +268,7 @@ class Decoded(AbstractObject):
 
 
         # mimetype # # # # # # # #
-        r_metadata.zincrby(f'decoded:mimetype:{date}', mimetype, 1)
+        r_metadata.zincrby(f'decoded:mimetype:{date}', 1, mimetype)
 
         # create hash metadata
         r_metadata.sadd(f'decoded:mimetypes', mimetype)
@@ -280,13 +280,13 @@ class Decoded(AbstractObject):
         self.update_daterange(date)
 
         r_metadata.incrby(f'{decoder_type}_decoded:{date}', 1)
-        r_metadata.zincrby(f'{decoder_type}_date:{date}', self.id, 1)
+        r_metadata.zincrby(f'{decoder_type}_date:{date}', 1, self.id)
 
         r_metadata.hincrby(f'metadata_hash:{self.id}', f'{decoder_type}_decoder', 1)
-        r_metadata.zincrby(f'{decoder_type}_type:{mimetype}', date, 1) # # TODO: # DUP1
+        r_metadata.zincrby(f'{decoder_type}_type:{mimetype}', 1, date) # # TODO: # DUP1
 
         ################################################################ # TODO:  REMOVE ?????????????????????????????????
-        r_metadata.zincrby(f'{decoder_type}_hash:{self.id}', obj_id, 1) # number of b64 on this item
+        r_metadata.zincrby(f'{decoder_type}_hash:{self.id}', 1, obj_id) # number of b64 on this item
 
 
         # first time we see this hash encoding on this item
@@ -297,7 +297,7 @@ class Decoded(AbstractObject):
 
             # first time we see this hash encoding today
             if not r_metadata.zscore(f'{decoder_type}_date:{date}', self.id):
-                r_metadata.zincrby(f'{decoder_type}_type:{mimetype}', date, 1) # # TODO: # DUP1
+                r_metadata.zincrby(f'{decoder_type}_type:{mimetype}', 1, date) # # TODO: # DUP1
 
 
         # Correlations

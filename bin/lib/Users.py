@@ -168,11 +168,11 @@ def get_all_roles():
 # create role_list
 def _create_roles_list():
     if not r_serv_db.exists('ail:roles:all'):
-        r_serv_db.zadd('ail:roles:all', 1, 'admin')
-        r_serv_db.zadd('ail:roles:all', 2, 'analyst')
-        r_serv_db.zadd('ail:roles:all', 3, 'user')
-        r_serv_db.zadd('ail:roles:all', 4, 'user_no_api')
-        r_serv_db.zadd('ail:roles:all', 5, 'read_only')
+        r_serv_db.zadd('ail:roles:all', {'admin': 1})
+        r_serv_db.zadd('ail:roles:all', {'analyst': 2})
+        r_serv_db.zadd('ail:roles:all', {'user': 3})
+        r_serv_db.zadd('ail:roles:all', {'user_no_api': 4})
+        r_serv_db.zadd('ail:roles:all', {'read_only': 5})
 
 def get_role_level(role):
     return int(r_serv_db.zscore('ail:roles:all', role))
@@ -235,6 +235,9 @@ class User(UserMixin):
             self.id = id
         else:
             self.id = "__anonymous__"
+
+    def exists(self):
+        return self.id != "__anonymous__"
 
     # return True or False
     # def is_authenticated():

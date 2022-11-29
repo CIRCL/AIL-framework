@@ -19,9 +19,9 @@ if __name__ == '__main__':
     r_serv = config_loader.get_redis_conn("ARDB_DB")
     config_loader = None
 
-    r_serv.zadd('ail:all_role', 3, 'user')
-    r_serv.zadd('ail:all_role', 4, 'user_no_api')
-    r_serv.zadd('ail:all_role', 5, 'read_only')
+    r_serv.zadd('ail:all_role', {'user': 3})
+    r_serv.zadd('ail:all_role', {'user_no_api': 4})
+    r_serv.zadd('ail:all_role', {'read_only': 5})
 
     for user in r_serv.hkeys('user:all'):
         r_serv.sadd('user_role:user', user)

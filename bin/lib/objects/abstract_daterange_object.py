@@ -10,7 +10,7 @@ import os
 import sys
 from abc import abstractmethod, ABC
 
-#from flask import url_for
+# from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -24,7 +24,6 @@ from packages import Date
 
 # LOAD CONFIG
 config_loader = ConfigLoader()
-# r_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
@@ -118,7 +117,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
 
         # NB Object seen by day
         r_object.hincrby(f'{self.type}:date:{date}', self.id, 1)
-        r_object.zincrby(f'{self.type}:date:{date}', self.id, 1) # # # # # # # # # #
+        r_object.zincrby(f'{self.type}:date:{date}', 1, self.id) # # # # # # # # # #
         # NB Object seen
         r_object.hincrby(f'{self.type}:meta:{self.id}', 'nb', 1)
 

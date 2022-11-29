@@ -191,7 +191,7 @@
                         <tbody>
                           {% for decoded in dict_domain['decoded']%}
                             <tr>
-                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=decoded&correlation_id={{ decoded }}&correlation_objects=domain">{{ decoded }}</a></td>
+                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=decoded&id={{ decoded }}">{{ decoded }}</a></td>
                             </tr>
                           {% endfor %}
                         </tbody>
@@ -245,7 +245,7 @@
                                     <i class="{{ var_icon }}"></i>
                                     &nbsp;&nbsp;{{ dict_key }}
                                   </td>
-                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=pgp&correlation_id={{ key_id }}&type_id={{ dict_key }}&correlation_objects=domain">{{ key_id }}</a></td>
+                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=pgp&subtype={{ dict_key }}&id={{ key_id }}">{{ key_id }}</a></td>
                                 </tr>
                               {% endfor %}
                             {% endif %}
@@ -304,7 +304,7 @@
                                     <i class="{{ var_icon }}"></i>
                                     &nbsp;&nbsp;{{ dict_key }}
                                   </td>
-                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=cryptocurrency&correlation_id={{ key_id }}&type_id={{ dict_key }}&correlation_objects=domain">{{ key_id }}</a></td>
+                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=cryptocurrency&subtype={{ dict_key }}&id={{ key_id }}">{{ key_id }}</a></td>
                                 </tr>
                               {% endfor %}
                             {% endif %}
@@ -347,7 +347,7 @@
                         <tbody>
                           {% for screenshot in dict_domain['screenshot']%}
                             <tr>
-                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?object_type=screenshot&correlation_id={{ screenshot }}&correlation_objects=domain">{{ screenshot }}</a></td>
+                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=screenshot&id={{ screenshot }}">{{ screenshot }}</a></td>
                             </tr>
                           {% endfor %}
                         </tbody>

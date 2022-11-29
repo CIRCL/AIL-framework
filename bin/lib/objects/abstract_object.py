@@ -74,9 +74,6 @@ class AbstractObject(ABC):
             tags = list(tags)
         return tags
 
-    def get_duplicates(self):
-        return Duplicate.get_duplicates(self.type, self.get_subtype(r_str=True), self.id)
-
     ## ADD TAGS ????
     def add_tag(self, tag):
         Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
@@ -87,6 +84,14 @@ class AbstractObject(ABC):
         return Tag.is_tags_safe(tags)
 
     #- Tags -#
+
+    ## Duplicates ##
+    def get_duplicates(self):
+        return Duplicate.get_obj_duplicates(self.type, self.get_subtype(r_str=True), self.id)
+
+    def add_duplicate(self, algo, similarity, id_2):
+        return Duplicate.add_obj_duplicate(algo, similarity, self.type, self.get_subtype(r_str=True), self.id, id_2)
+    # -Duplicates -#
 
     ## Investigations ##
     # # TODO: unregister =====

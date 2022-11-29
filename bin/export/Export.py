@@ -34,13 +34,6 @@ r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 config_loader = None
 ## -- ##
 
-def get_ail_uuid():
-    uuid_ail = r_serv_db.get('ail:uuid')
-    if uuid_ail is None:
-        uuid_ail = str(uuid4())
-        r_serv_db.set('ail:uuid', uuid_ail)
-    return uuid_ail
-
 def load_tags_to_export_in_cache():
     all_exports = ['misp', 'thehive']
     for export_target in all_exports:

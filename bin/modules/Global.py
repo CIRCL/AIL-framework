@@ -194,12 +194,12 @@ class Global(AbstractModule):
             self.redis_logger.warning(f'Global; Incomplete file: {filename}')
             print(f'Global; Incomplete file: {filename}')
             # save daily stats
-            self.r_stats.zincrby('module:Global:incomplete_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
+            self.r_stats.zincrby('module:Global:incomplete_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
         except OSError:
             self.redis_logger.warning(f'Global; Not a gzipped file: {filename}')
             print(f'Global; Not a gzipped file: {filename}')
             # save daily stats
-            self.r_stats.zincrby('module:Global:invalid_file', datetime.datetime.now().strftime('%Y%m%d'), 1)
+            self.r_stats.zincrby('module:Global:invalid_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
 
         return curr_file_content
 

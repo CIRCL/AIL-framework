@@ -3,7 +3,6 @@
 
 import os
 import sys
-import redis
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################

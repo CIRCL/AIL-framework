@@ -17,7 +17,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 
 config_loader = ConfigLoader()
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 config_loader = None
 

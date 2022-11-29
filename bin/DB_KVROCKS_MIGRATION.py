@@ -43,34 +43,34 @@ config_loader = None
 # # - - CONFIGS - - # #
 
 from core import ail_2_ail
-spec = importlib.util.find_spec('ail_2_ail')
+spec = importlib.util.find_spec('core.ail_2_ail')
 old_ail_2_ail = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old_ail_2_ail)
 
 old_ail_2_ail.r_serv_sync = r_serv_db
 
 from lib import Tracker
-spec = importlib.util.find_spec('Tracker')
+spec = importlib.util.find_spec('lib.Tracker')
 old_Tracker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old_Tracker)
 
 old_Tracker.r_serv_tracker = r_serv_tracker
 
 from lib import Investigations
-spec = importlib.util.find_spec('Investigations')
+spec = importlib.util.find_spec('lib.Investigations')
 old_Investigations = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old_Investigations)
 
 old_Investigations.r_tracking = r_serv_tracker
 
 from lib import crawlers
-spec = importlib.util.find_spec('crawlers')
+spec = importlib.util.find_spec('lib.crawlers')
 old_crawlers = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old_crawlers)
 
 old_crawlers.r_serv_onion = r_crawler
 
-# # TODO: desable features - credentials - stats ? - sentiment analysis
+# # TODO: disable features - credentials - stats ? - sentiment analysis
 
 # CREATE FUNCTION BY DB/FEATURES
 
@@ -97,7 +97,7 @@ def core_migration():
     for version in dict_update:
         r_kvrocks.hset('ail:update_date', version, dict_update[version])
 
-    versions_to_update =  r_serv_db.smembers('ail:to_update')
+    versions_to_update = r_serv_db.smembers('ail:to_update')
     for version in versions_to_update:
         r_kvrocks.sadd('ail:update:to_update', version)
     update_error = r_serv_db.get('ail:update_error')
@@ -107,15 +107,15 @@ def core_migration():
 
     # d4 passivedns
     d4_enabled = r_serv_db.hget('d4:passivedns', 'enabled')
-    d4_update_time =  r_serv_db.hget('d4:passivedns', 'update_time')
+    d4_update_time = r_serv_db.hget('d4:passivedns', 'update_time')
     r_kvrocks.hset('d4:passivedns', 'enabled', bool(d4_enabled))
     r_kvrocks.hset('d4:passivedns', 'update_time', d4_update_time)
 
     # Crawler Manager
-    manager_url = old_crawlers.get_splash_manager_url()
-    manager_api_key = old_crawlers.get_splash_api_key()
-    crawlers.save_splash_manager_url_api(manager_url, manager_api_key)
-    crawlers.reload_splash_and_proxies_list()
+    # manager_url = old_crawlers.get_splash_manager_url()
+    # manager_api_key = old_crawlers.get_splash_api_key()
+    # crawlers.save_splash_manager_url_api(manager_url, manager_api_key)
+    # crawlers.reload_splash_and_proxies_list()
 
     # Auto Export Migration
     ail_misp = r_serv_db.get('ail:misp')
@@ -237,6 +237,7 @@ def trackers_migration():
 
         # object migration # # TODO: in background
         for item_id in old_Tracker.get_tracker_items_by_daterange(tracker_uuid, meta['first_seen'], meta['last_seen']):
+            print(item_id)
             Tracker.add_tracked_item(tracker_uuid, item_id)
 
     print('RETRO HUNT MIGRATION...')
@@ -269,7 +270,7 @@ def item_submit_migration():
 
 ###############################
 #                             #
-#       ITEMS MIGRATION       #
+#       TAGS MIGRATION        #
 #                             #
 ###############################
 
@@ -340,15 +341,53 @@ def tags_migration():
 def get_item_father(item_id):
     return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'father')
 
+def get_item_duplicate(item_id, r_list=True):
+    res = r_serv_metadata.smembers(f'dup:{item_id}')
+    if r_list:
+        if res:
+            return list(res)
+        else:
+            return []
+    return res
+
+def get_item_duplicates_dict(item_id):
+    dict_duplicates = {}
+    for duplicate in get_item_duplicate(item_id):
+        duplicate = duplicate[1:-1].replace('\'', '').replace(' ', '').split(',')
+        duplicate_id = duplicate[1]
+        if duplicate_id not in dict_duplicates:
+            dict_duplicates[duplicate_id] = {}
+        algo = duplicate[0]
+        if algo == 'tlsh':
+            similarity = 100 - int(duplicate[2])
+        else:
+            similarity = int(duplicate[2])
+        dict_duplicates[duplicate_id][algo] = similarity
+    return dict_duplicates
+
+
 def items_migration():
     print('ITEMS MIGRATION...')
     # MIGRATE IMPORTED URLEXTRACT Father
-    for item_id in Items.get_items_by_source('urlextract'):
-        father_id = get_item_father(item_id)
-        if father_id:
-            item = Items.Item(item_id)
-            item.set_father(father_id)
+    # for item_id in Items.get_items_by_source('urlextract'):
+    #     father_id = get_item_father(item_id)
+    #     if father_id:
+    #         item = Items.Item(item_id)
+    #         item.set_father(father_id)
 
+    for tag in ['infoleak:automatic-detection="credential"']:  # Creditcards, Mail, Keys ???????????????????????????????
+        print(f'Duplicate migration: {tag}')
+        tag_first = get_tag_first_seen(tag)
+        if tag_first:
+            for date in Date.get_date_range_today(tag_first):
+                print(date)
+                for item_id in get_all_items_tags_by_day(tag, date):
+                    item = Items.Item(item_id)
+                    duplicates_dict = get_item_duplicates_dict(item_id)
+                    for id_2 in duplicates_dict:
+                        for algo in duplicates_dict[id_2]:
+                            print(algo, duplicates_dict[id_2][algo], id_2)
+                            item.add_duplicate(algo, duplicates_dict[id_2][algo], id_2)
 
 
 # TODO: test cookies migration
@@ -360,10 +399,10 @@ def items_migration():
 #                             #
 ###############################
 
-# Retun last crawled domains by type
+# Return last crawled domains by type
 #   domain;epoch
 def get_last_crawled_domains(domain_type):
-    return r_crawler.lrange(f'last_{domain_type}', 0 ,-1)
+    return r_crawler.lrange(f'last_{domain_type}', 0, -1)
 
 def get_domains_blacklist(domain_type):
     return r_crawler.smembers(f'blacklist_{domain_type}')
@@ -414,9 +453,6 @@ def get_domain_down_by_date(domain_type, date):
 def get_item_link(item_id):
     return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'real_link')
 
-def get_item_father(item_id):
-    return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'father')
-
 def get_item_children(item_id):
     return r_serv_metadata.smembers(f'paste_children:{item_id}')
 
@@ -466,7 +502,7 @@ def get_domain_history_by_port(domain_type, domain, port):
     history = []
     for root_id, epoch in history_tuple:
         dict_history = {}
-        epoch = int(epoch) # force int
+        epoch = int(epoch)  # force int
         dict_history["epoch"] = epoch
         try:
             int(root_id)
@@ -564,7 +600,7 @@ def domain_migration():
 
 ###############################
 #                             #
-#      DECODEDS MIGRATION     #
+#      DECODED MIGRATION      #
 #                             #
 ###############################
 def get_estimated_type(decoded_id):
@@ -803,16 +839,16 @@ if __name__ == '__main__':
     #core_migration()
     #user_migration()
     #tags_migration()
-    #items_migration()
+    # items_migration()
     #crawler_migration()
     # domain_migration()                      # TO TEST ###########################
     #decodeds_migration()
-    #screenshots_migration()
+    # screenshots_migration()
     #subtypes_obj_migration()
-    ail_2_ail_migration()
+    # ail_2_ail_migration()
     trackers_migration()
-    investigations_migration()
-    statistics_migration()
+    # investigations_migration()
+    # statistics_migration()
 
 
 

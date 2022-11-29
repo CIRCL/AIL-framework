@@ -102,7 +102,7 @@ if __name__ == '__main__':
                 # create new history
                 root_key = get_domain_root_from_paste_childrens(item_father, onion_domain)
                 if root_key:
-                    r_serv_onion.zadd('crawler_history_onion:{}:80'.format(onion_domain), get_date_epoch(date_history), root_key)
+                    r_serv_onion.zadd(f'crawler_history_onion:{onion_domain}:80', {root_key: get_date_epoch(date_history)})
                     print('crawler_history_onion:{}:80   {}   {}'.format(onion_domain, get_date_epoch(date_history), root_key))
                     #update service metadata: paste_parent
                     r_serv_onion.hset('onion_metadata:{}'.format(onion_domain), 'paste_parent', root_key)

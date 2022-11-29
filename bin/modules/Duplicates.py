@@ -77,16 +77,16 @@ class Duplicates(AbstractModule):
             obj_hash = self.algos[algo]['hash']
             for date_ymonth in last_month_dates:
                 if Duplicate.exists_algo_hash_by_month(algo, obj_hash, date_ymonth):
-                    Duplicate.add_obj_duplicate(algo, obj_hash, 100, 'item', '', item.get_id(), date_ymonth)
-                    nb_duplicates +=1
+                    Duplicate.add_duplicate(algo, obj_hash, 100, 'item', '', item.get_id(), date_ymonth)
+                    nb_duplicates += 1
                 else:
                     for hash in Duplicate.get_algo_hashs_by_month(algo, date_ymonth):
                         # # FIXME:  try - catch 'hash not comparable, bad hash: '+dico_hash+' , current_hash: '+paste_hash
                         similarity = Duplicate.get_algo_similarity(algo, obj_hash, hash)
-                        print(f'[{algo}] comparing: {obj_hash} and {hash} similarity: {similarity}') # DEBUG:
+                        print(f'[{algo}] comparing: {obj_hash} and {hash} similarity: {similarity}')  # DEBUG:
                         if similarity >= self.algos[algo]['threshold']:
-                            Duplicate.add_obj_duplicate(algo, hash, similarity, 'item', '', item.get_id(), date_ymonth)
-                            nb_duplicates +=1
+                            Duplicate.add_duplicate(algo, hash, similarity, 'item', '', item.get_id(), date_ymonth)
+                            nb_duplicates += 1
 
             # Save Hashs
             Duplicate.save_object_hash(algo, curr_date_ymonth, self.algos[algo]['hash'], item.get_id())
