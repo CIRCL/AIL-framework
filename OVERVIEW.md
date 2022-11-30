@@ -229,13 +229,6 @@ Redis and ARDB overview
 ## DB7 - Metadata:
 
 #### Crawled Items:
-##### Hset:
-| Key | Field | Value |
-| ------ | ------ | ------ |
-| paste_metadata:**item path** | super_father | **first url crawled** |
-| | father | **item father** |
-| | domain | **crawled domain**:**domain port** |
-| | screenshot | **screenshot hash** |
 
 ##### Set:
 | Key | Field |

@@ -205,7 +205,7 @@ class Crawler(AbstractModule):
             msg = f'infoleak:submission="crawler";{item_id}'
             self.send_message_to_queue(msg, 'Tags')
 
-            crawlers.create_item_metadata(item_id, self.domain.id, last_url, parent_id)
+            crawlers.create_item_metadata(item_id, last_url, parent_id)
             if self.root_item is None:
                 self.root_item = item_id
             parent_id = item_id

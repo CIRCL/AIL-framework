@@ -18,6 +18,7 @@ from lib import Tag
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
 def exist_item(item_id):
@@ -85,26 +86,26 @@ def get_item_mimetype(item_id):
     return magic.from_buffer(get_item_content(item_id), mime=True)
 
 # # # # TREE CHILD/FATHER # # # #
-def is_father(item_id):
-    return r_serv_metadata.exists('paste_children:{}'.format(item_id))
+def is_parent(item_id):
+    return r_object.exists(f'obj:child:item::{item_id}')
 
 def is_children(item_id):
-    return r_serv_metadata.hexists('paste_metadata:{}'.format(item_id), 'father')
+    return r_object.hexists(f'meta:item::{item_id}' 'parent')
 
 def is_root_node(item_id):
-    if is_father(item_id) and not is_children(item_id):
+    if is_parent(item_id) and not is_children(item_id):
         return True
     else:
         return False
 
 def is_node(item_id):
-    if is_father(item_id) or is_children(item_id):
+    if is_parent(item_id) or is_children(item_id):
         return True
     else:
         return False
 
 def is_leaf(item_id):
-    if not is_father(item_id) and is_children(item_id):
+    if not is_parent(item_id) and is_children(item_id):
         return True
     else:
         return False
@@ -125,7 +126,7 @@ def is_domain_root(item_id):
                 return True
 
 def get_item_url(item_id):
-    return r_serv_metadata.hget(f'paste_metadata:{item_id}', 'real_link')
+    return r_object.hget(f'meta:item::{item_id}', 'url')
 
 def get_item_har(item_id):
     har = '/'.join(item_id.rsplit('/')[-4:])
@@ -134,34 +135,29 @@ def get_item_har(item_id):
     if os.path.isfile(path):
         return har
 
-def get_item_har_content(har):
-    with open(har, 'rb') as f:
-        har_content = f.read()
-    return har_content
-
-def get_nb_children(item_id):
-    return r_serv_metadata.scard('paste_children:{}'.format(item_id))
+# def get_item_har_content(har):
+#     with open(har, 'rb') as f:
+#         har_content = f.read()
+#     return har_content
 
 
 def get_item_parent(item_id):
-    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'father')
+    return r_object.hget(f'meta:item::{item_id}', 'parent')
 
 def get_item_children(item_id):
-    return list(r_serv_metadata.smembers('paste_children:{}'.format(item_id)))
+    return list(r_object.smembers(f'obj:child:item::{item_id}'))
 
 # # TODO:  handle domain last origin in domain lib
-def _delete_node(item_id):
-    # only if item isn't deleted
-    # if is_crawled(item_id):
-    #    r_serv_metadata.hrem('paste_metadata:{}'.format(item_id), 'real_link')
-    for children_id in get_item_children(item_id):
-        r_serv_metadata.hdel('paste_metadata:{}'.format(children_id), 'father')
-    r_serv_metadata.delete('paste_children:{}'.format(item_id))
-
-    # delete regular
-    # simple if leaf
-
-    # delete item node
+# def _delete_node(item_id):
+#     # only if item isn't deleted
+#     # if is_crawled(item_id):
+#     #    delete item meta url
+#     # delete item parent + children
+#
+#     # delete regular
+#     # simple if leaf
+#
+#     # delete item node
 
 def get_all_domain_node_by_item_id(item_id, l_nodes=[]):
     domain = get_item_domain(item_id)
@@ -174,15 +170,11 @@ def get_all_domain_node_by_item_id(item_id, l_nodes=[]):
 ##--  --##
 
 
-def add_item_parent_by_parent_id(parent_type, parent_id, item_id):
-    parent_item_id = get_obj_id_item_id(parent_type, parent_id)
-    if parent_item_id:
-        add_item_parent(parent_item_id, item_id)
-
-def add_item_parent(parent_item_id, item_id):
-    r_serv_metadata.hset('paste_metadata:{}'.format(item_id), 'father', parent_item_id)
-    r_serv_metadata.sadd('paste_children:{}'.format(parent_item_id), item_id)
-    return True
+# def add_item_parent_by_parent_id(parent_type, parent_id, item_id):
+#     parent_item_id = get_obj_id_item_id(parent_type, parent_id)
+#     if parent_item_id:
+#         add_item_parent(parent_item_id, item_id)
+#
 
 # TODO:
 # FIXME:

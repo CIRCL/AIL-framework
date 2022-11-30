@@ -28,7 +28,7 @@ from lib.objects import Usernames
 
 
 config_loader = ConfigLoader()
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+
 config_loader = None
 
 class AILObjects(object):  ## ??????????????????????

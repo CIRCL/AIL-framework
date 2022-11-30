@@ -18,22 +18,21 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from export.Export import get_ail_uuid # # TODO: REPLACE
+from lib.ail_core import get_ail_uuid
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import item_basic
-from lib import Tag
 
 
 from flask import url_for
 
 config_loader = ConfigLoader()
-# # TODO:  get and sanityze ITEMS DIRECTORY
+# # TODO:  get and sanitize ITEMS DIRECTORY
 ITEMS_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
 ITEMS_FOLDER = os.path.join(os.path.realpath(ITEMS_FOLDER), '')
 
 r_cache = config_loader.get_redis_conn("Redis_Cache")
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+r_object = config_loader.get_db_conn("Kvrocks_Objects")
 screenshot_directory = config_loader.get_files_directory('screenshot')
 har_directory = config_loader.get_files_directory('har')
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -65,7 +64,7 @@ class Item(AbstractObject):
         """
         Returns Item source/feeder name
         """
-        #return self.id.split('/')[-5]
+        # return self.id.split('/')[-5]
         l_source = self.id.split('/')[:-4]
         return os.path.join(*l_source)
 
@@ -113,9 +112,9 @@ class Item(AbstractObject):
         h.ignore_images = ignore_links
         return h.handle(content)
 
-    def get_size(self, str=False):
+    def get_size(self, r_str=False):
         size = os.path.getsize(self.get_filename())/1024.0
-        if str:
+        if r_str:
             size = round(size, 2)
         return size
 
@@ -126,16 +125,13 @@ class Item(AbstractObject):
     def get_parent(self):
         return item_basic.get_item_parent(self.id)
 
-    def set_father(self, father_id): # UPDATE KEYS ?????????????????????????????
-        r_serv_metadata.sadd(f'paste_children:{father_id}', self.id)
-        r_serv_metadata.hset(f'paste_metadata:{self.id}', 'father', father_id)
+    def set_parent(self, parent_id):
+        r_object.sadd(f'obj:child:item::{parent_id}', self.id)  # TODO
+        r_object.hset(f'meta:item::{self.id}', 'parent', parent_id)
 
-        #f'obj:children:{obj_type}:{subtype}:{id}, {obj_type}:{subtype}:{id}
-        #f'obj:metadata:{obj_type}:{subtype}:{id}', 'father', fathe
-        #  => ON Object LEVEL ?????????
-
-
-
+    def add_children(self, child_id):
+        r_object.sadd(f'obj:child:item::{self.id}', child_id)  # TODO
+        r_object.hset(f'meta:item::{child_id}', 'parent', self.id)
 
     def sanitize_id(self):
         pass
@@ -249,7 +245,11 @@ class Item(AbstractObject):
             return None
 
     def get_url(self):
-        return r_serv_metadata.hget(f'paste_metadata:{self.id}', 'real_link')
+        return r_object.hset(f'meta:item::{self.id}', 'url')
+
+    def set_crawled(self, url, parent_id):
+        r_object.hset(f'meta:item::{self.id}', 'url', url)
+        self.set_parent(parent_id)
 
     # options: set of optional meta fields
     def get_meta(self, options=set()):
@@ -273,7 +273,7 @@ class Item(AbstractObject):
         if 'parent' in options:
             meta['parent'] = self.get_parent()
         if 'size' in options:
-            meta['size'] = self.get_size(str=True)
+            meta['size'] = self.get_size(r_str=True)
         if 'mimetype' in options:
             content = meta.get('content')
             meta['mimetype'] = self.get_mimetype(content=content)
@@ -290,14 +290,13 @@ class Item(AbstractObject):
             crawler['url'] = self.get_url()
             if not tags:
                 tags = self.get_tags()
-            crawler['is_tags_safe'] = Tag.is_tags_safe(tags)
+            crawler['is_tags_safe'] = self.is_tags_safe(tags)
         return crawler
 
     def get_meta_lines(self, content=None):
         if not content:
             content = self.get_content()
         max_length = 0
-        line_id = 0
         nb_line = 0
         for line in content.splitlines():
             length = len(line)
@@ -503,60 +502,60 @@ def get_item_languages(item_id, min_len=600, num_langs=3, min_proportion=0.2, mi
     return all_languages
 
 # API
-def get_item(request_dict):
-    if not request_dict:
-        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
-
-    item_id = request_dict.get('id', None)
-    if not item_id:
-        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
-    if not exist_item(item_id):
-        return {'status': 'error', 'reason': 'Item not found'}, 404
-
-    dict_item = {}
-    dict_item['id'] = item_id
-    date = request_dict.get('date', True)
-    if date:
-        add_separator = False
-        if request_dict.get('date_separator', False):
-            add_separator = True
-        dict_item['date'] = get_item_date(item_id, add_separator=add_separator)
-    tags = request_dict.get('tags', True)
-    if tags:
-        dict_item['tags'] = Tag.get_object_tags('item', item_id)
-
-    size = request_dict.get('size', False)
-    if size:
-        dict_item['size'] = get_item_size(item_id)
-
-    content = request_dict.get('content', False)
-    if content:
-        # UTF-8 outpout, # TODO: use base64
-        dict_item['content'] = get_item_content(item_id)
-
-    raw_content = request_dict.get('raw_content', False)
-    if raw_content:
-        dict_item['raw_content'] = get_raw_content(item_id)
-
-    lines_info = request_dict.get('lines', False)
-    if lines_info:
-        dict_item['lines'] = get_lines_info(item_id, dict_item.get('content', 'None'))
-
-    if request_dict.get('pgp'):
-        dict_item['pgp'] = {}
-        if request_dict['pgp'].get('key'):
-            dict_item['pgp']['key'] = get_item_pgp_key(item_id)
-        if request_dict['pgp'].get('mail'):
-            dict_item['pgp']['mail'] = get_item_pgp_mail(item_id)
-        if request_dict['pgp'].get('name'):
-            dict_item['pgp']['name'] = get_item_pgp_name(item_id)
-
-    if request_dict.get('cryptocurrency'):
-        dict_item['cryptocurrency'] = {}
-        if request_dict['cryptocurrency'].get('bitcoin'):
-            dict_item['cryptocurrency']['bitcoin'] = get_item_bitcoin(item_id)
-
-    return dict_item, 200
+# def get_item(request_dict):
+#     if not request_dict:
+#         return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+#
+#     item_id = request_dict.get('id', None)
+#     if not item_id:
+#         return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+#     if not exist_item(item_id):
+#         return {'status': 'error', 'reason': 'Item not found'}, 404
+#
+#     dict_item = {}
+#     dict_item['id'] = item_id
+#     date = request_dict.get('date', True)
+#     if date:
+#         add_separator = False
+#         if request_dict.get('date_separator', False):
+#             add_separator = True
+#         dict_item['date'] = get_item_date(item_id, add_separator=add_separator)
+#     tags = request_dict.get('tags', True)
+#     if tags:
+#         dict_item['tags'] = Tag.get_object_tags('item', item_id)
+#
+#     size = request_dict.get('size', False)
+#     if size:
+#         dict_item['size'] = get_item_size(item_id)
+#
+#     content = request_dict.get('content', False)
+#     if content:
+#         # UTF-8 outpout, # TODO: use base64
+#         dict_item['content'] = get_item_content(item_id)
+#
+#     raw_content = request_dict.get('raw_content', False)
+#     if raw_content:
+#         dict_item['raw_content'] = get_raw_content(item_id)
+#
+#     lines_info = request_dict.get('lines', False)
+#     if lines_info:
+#         dict_item['lines'] = get_lines_info(item_id, dict_item.get('content', 'None'))
+#
+#     if request_dict.get('pgp'):
+#         dict_item['pgp'] = {}
+#         if request_dict['pgp'].get('key'):
+#             dict_item['pgp']['key'] = get_item_pgp_key(item_id)
+#         if request_dict['pgp'].get('mail'):
+#             dict_item['pgp']['mail'] = get_item_pgp_mail(item_id)
+#         if request_dict['pgp'].get('name'):
+#             dict_item['pgp']['name'] = get_item_pgp_name(item_id)
+#
+#     if request_dict.get('cryptocurrency'):
+#         dict_item['cryptocurrency'] = {}
+#         if request_dict['cryptocurrency'].get('bitcoin'):
+#             dict_item['cryptocurrency']['bitcoin'] = get_item_bitcoin(item_id)
+#
+#     return dict_item, 200
 
 
 
@@ -598,23 +597,12 @@ def api_get_items_sources():
 def get_item_list_desc(list_item_id):
     desc_list = []
     for item_id in list_item_id:
-        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': Tag.get_object_tags('item', item_id)} )
+        item = Item(item_id)
+        desc_list.append( {'id': item_id, 'date': get_item_date(item_id), 'tags': item.get_tags(r_list=True)})
     return desc_list
 
 def is_crawled(item_id):
     return item_basic.is_crawled(item_id)
-
-def get_crawler_matadata(item_id, tags=None):
-    dict_crawler = {}
-    if is_crawled(item_id):
-        dict_crawler['domain'] = get_item_domain(item_id)
-        if not ltags:
-            ltags = Tag.get_object_tags('item', item_id)
-        dict_crawler['is_tags_safe'] = Tag.is_tags_safe(ltags)
-        dict_crawler['url'] = get_item_link(item_id)
-        dict_crawler['screenshot'] = get_item_screenshot(item_id)
-        dict_crawler['har'] = get_item_har_name(item_id)
-    return dict_crawler
 
 def is_onion(item_id):
     is_onion = False
@@ -639,18 +627,6 @@ def get_domain(item_id):
     item_id = item_id[-1]
     return item_id[:-36]
 
-def get_item_domain_with_port(item_id):
-    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'domain')
-
-def get_item_link(item_id):
-    return r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'real_link')
-
-def get_item_screenshot(item_id):
-    screenshot = r_serv_metadata.hget('paste_metadata:{}'.format(item_id), 'screenshot')
-    if screenshot:
-        return os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8], screenshot[8:10], screenshot[10:12], screenshot[12:])
-    return ''
-
 def get_item_har_name(item_id):
     har_path = os.path.join(har_directory, item_id) + '.json'
     if os.path.isfile(har_path):
@@ -671,44 +647,6 @@ def get_item_filename(item_id):
         return None
     else:
         return filename
-
-def get_item_duplicate(item_id, r_list=True):
-    res = r_serv_metadata.smembers('dup:{}'.format(item_id))
-    if r_list:
-        if res:
-            return list(res)
-        else:
-            return []
-    return res
-
-def get_item_nb_duplicates(item_id):
-    return r_serv_metadata.scard('dup:{}'.format(item_id))
-
-def get_item_duplicates_dict(item_id):
-    dict_duplicates = {}
-    for duplicate in get_item_duplicate(item_id):
-        duplicate = duplicate[1:-1].replace('\'', '').replace(' ', '').split(',')
-        duplicate_id = duplicate[1]
-        if not duplicate_id in dict_duplicates:
-            dict_duplicates[duplicate_id] = {'date': get_item_date(duplicate_id, add_separator=True), 'algo': {}}
-        algo = duplicate[0]
-        if algo == 'tlsh':
-            similarity = 100 - int(duplicate[2])
-        else:
-            similarity = int(duplicate[2])
-        dict_duplicates[duplicate_id]['algo'][algo] = similarity
-    return dict_duplicates
-
-def add_item_duplicate(item_id, l_dup):
-    for item_dup in l_dup:
-        r_serv_metadata.sadd('dup:{}'.format(item_dup), item_id)
-        r_serv_metadata.sadd('dup:{}'.format(item_id), item_dup)
-
-def delete_item_duplicate(item_id):
-    item_dup = get_item_duplicate(item_id)
-    for item_dup in get_item_duplicate(item_id):
-        r_serv_metadata.srem('dup:{}'.format(item_dup), item_id)
-    r_serv_metadata.delete('dup:{}'.format(item_id))
 
 def get_raw_content(item_id):
     filepath = get_item_filepath(item_id)
@@ -751,8 +689,10 @@ def create_item(obj_id, obj_metadata, io_content):
     if res:
         # creata tags
         if 'tags' in obj_metadata:
+            item = Item(obj_id)
             # # TODO: handle mixed tags: taxonomies and Galaxies
-            Tag.api_add_obj_tags(tags=obj_metadata['tags'], object_id=obj_id, object_type="item")
+            # for tag in obj_metadata['tags']:
+            #     item.add_tag(tag)
         return True
 
     # Item not created
@@ -768,8 +708,8 @@ def delete_item(obj_id):
     # else:
     #     delete_item_duplicate(obj_id)
     #     # delete MISP event
-    #     r_serv_metadata.delete('misp_events:{}'.format(obj_id))
-    #     r_serv_metadata.delete('hive_cases:{}'.format(obj_id))
+    #     r_s_metadata.delete('misp_events:{}'.format(obj_id))
+    #     r_s_metadata.delete('hive_cases:{}'.format(obj_id))
     #
     #     os.remove(get_item_filename(obj_id))
     #
@@ -789,7 +729,6 @@ def delete_item(obj_id):
     #     delete_node(obj_id)
     #
     #     # delete item metadata
-    #     r_serv_metadata.delete('paste_metadata:{}'.format(obj_id))
     #
     #     return True
     #
@@ -817,9 +756,9 @@ def delete_item(obj_id):
 #         delete_item(child_id)
 
 
-if __name__ == '__main__':
-    content = 'test file content'
-    duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
-
-    item = Item('tests/2020/01/02/test_save.gz')
-    item.create(content, _save=False)
+# if __name__ == '__main__':
+#     content = 'test file content'
+#     duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
+#
+#     item = Item('tests/2020/01/02/test_save.gz')
+#     item.create(content, _save=False)

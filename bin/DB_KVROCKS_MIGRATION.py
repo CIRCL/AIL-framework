@@ -570,11 +570,12 @@ def domain_migration():
                             print(f'UP {root_id}')
                             crawled_items = get_crawled_items(dom, root_id)
                             for item_id in crawled_items:
+                                item = Items.Item(item_id)
                                 url = get_item_link(item_id)
-                                item_father = get_item_father(item_id)
-                                if item_father and url:
+                                parent_id = get_item_father(item_id)
+                                if parent_id and url:
                                     print(f'{url}    {item_id}')
-                                    domain.add_crawled_item(url, item_id, item_father)
+                                    item.set_crawled(url, parent_id)
 
 
                     #print()

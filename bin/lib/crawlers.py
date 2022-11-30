@@ -37,6 +37,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from packages import git_status
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
+from lib.objects.Items import Item
 from core import screen
 
 config_loader = ConfigLoader()
@@ -44,7 +45,6 @@ r_db = config_loader.get_db_conn("Kvrocks_DB")
 r_crawler = config_loader.get_db_conn("Kvrocks_Crawler")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")
 
 ITEMS_FOLDER = config_loader.get_config_str("Directories", "pastes")
@@ -561,12 +561,9 @@ def update_last_crawled_domain(domain_type, domain, epoch):
     r_crawler.lpush(f'last_{domain_type}', f'{domain}:{epoch}')
     r_crawler.ltrim(f'last_{domain_type}', 0, 15)
 
-def create_item_metadata(item_id, domain, url, item_father):
-    r_serv_metadata.hset(f'paste_metadata:{item_id}', 'father', item_father)
-    r_serv_metadata.hset(f'paste_metadata:{item_id}', 'domain', domain)
-    r_serv_metadata.hset(f'paste_metadata:{item_id}', 'real_link', url)
-    # add this item_id to his father
-    r_serv_metadata.sadd(f'paste_children:{item_father}', item_id)
+def create_item_metadata(item_id, url, item_father):
+    item = Item(item_id)
+    item.set_crawled(url, item_father)
 
 def get_gzipped_b64_item(item_id, content):
     try:
@@ -1120,15 +1117,6 @@ def save_har(har_dir, item_id, har_content):
     filename = os.path.join(har_dir, item_id + '.json')
     with open(filename, 'w') as f:
         f.write(json.dumps(har_content))
-
-# # TODO: FIXME
-def api_add_crawled_item(dict_crawled):
-
-    domain = None
-    # create item_id item_id =
-
-    save_crawled_item(item_id, response.data['html'])
-    create_item_metadata(item_id, domain, 'last_url', 'father')
 
 #### CRAWLER QUEUES ####
 

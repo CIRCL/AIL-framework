@@ -20,15 +20,13 @@ from lib import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 
 from lib.ail_core import paginate_iterator
-from lib.item_basic import get_item_children, get_item_date, get_item_url, get_item_har
+from lib.item_basic import get_item_children, get_item_date, get_item_url, get_item_domain, get_item_har
 from lib import data_retention_engine
 
 from packages import Date
 
 config_loader = ConfigLoader.ConfigLoader()
 r_crawler = config_loader.get_db_conn("Kvrocks_Crawler")
-
-r_metadata = config_loader.get_redis_conn("ARDB_Metadata") ######################################
 
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
@@ -103,8 +101,8 @@ class Domain(AbstractObject):
         if obj and origin['item']:
             if origin['item'] != 'manual' and origin['item'] != 'auto':
                 item_id = origin['item']
-                origin['domain'] = r_metadata.hget(f'paste_metadata:{item_id}', 'domain')
-                origin['url'] = r_metadata.hget(f'paste_metadata:{item_id}', 'url')
+                origin['domain'] = get_item_domain()
+                origin['url'] = get_item_url()
         return origin
 
     def set_last_origin(self, origin_id):
@@ -442,15 +440,6 @@ class Domain(AbstractObject):
                 self._add_history_root_item(epoch, epoch)
             else:
                 r_crawler.sadd(f'full_{self.domain_type}_down', self.id)
-
-    # TODO RENAME PASTE_METADATA
-    def add_crawled_item(self, url, item_id, item_father):
-        r_metadata.hset(f'paste_metadata:{item_id}', 'father', item_father)
-        r_metadata.hset(f'paste_metadata:{item_id}', 'domain', self.id) # FIXME REMOVE ME -> extract for real link ?????????
-        r_metadata.hset(f'paste_metadata:{item_id}', 'real_link', url)
-        # add this item_id to his father
-        r_metadata.sadd(f'paste_children:{item_father}', item_id)
-
 
 ############################################################################
 # In memory zipfile
