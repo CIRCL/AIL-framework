@@ -55,6 +55,17 @@ class Onion(AbstractModule):
         # TEMP var: SAVE I2P Domain (future I2P crawler)
         # self.save_i2p = config_loader.get_config_boolean("Onion", "save_i2p")
 
+    def extract(self, obj_id, content, tag):
+        extracted = []
+        onions = self.regex_finditer(self.onion_regex, obj_id, content)
+        for onion in onions:
+            start, end, value = onion
+            url_unpack = crawlers.unpack_url(value)
+            domain = url_unpack['domain']
+            if crawlers.is_valid_onion_domain(domain):
+                extracted.append(onion)
+        return extracted
+
     def compute(self, message):
         onion_urls = []
         domains = []

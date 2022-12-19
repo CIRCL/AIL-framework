@@ -26,13 +26,13 @@ from lib.objects import Cves
 from lib.objects.Items import Item
 
 
-class Cve(AbstractModule):
+class CveModule(AbstractModule):
     """
-    Cve module for AIL framework
+    CveModule for AIL framework
     """
 
     def __init__(self):
-        super(Cve, self).__init__()
+        super(CveModule, self).__init__()
 
         # regex to find CVE
         self.reg_cve = re.compile(r'CVE-[1-2]\d{1,4}-\d{1,5}')
@@ -68,6 +68,6 @@ class Cve(AbstractModule):
 
 if __name__ == '__main__':
 
-    module = Cve()
+    module = CveModule()
     # module.run()
     module.compute('crawled/2022/09/15/circl.lu1e4f9721-06dc-404f-aabf-3c3bd0b533bd 9')

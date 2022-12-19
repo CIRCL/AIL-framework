@@ -21,7 +21,7 @@ from lib.objects.abstract_object import AbstractObject
 
 from lib.ail_core import paginate_iterator
 from lib.item_basic import get_item_children, get_item_date, get_item_url, get_item_domain, get_item_har
-from lib import data_retention_engine
+from lib.data_retention_engine import update_obj_date
 
 from packages import Date
 
@@ -426,7 +426,7 @@ class Domain(AbstractObject):
         except (ValueError, TypeError):
             status = True
 
-        data_retention_engine.update_object_date('domain', self.domain_type, date)
+        update_obj_date(date, 'domain', self.domain_type)
         # UP
         if status:
             r_crawler.srem(f'full_{self.domain_type}_down', self.id)

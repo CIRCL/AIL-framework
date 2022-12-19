@@ -45,41 +45,57 @@ class CreditCards(AbstractModule):
             ]
 
         self.regex = re.compile('|'.join(cards))
+        self.re_clean_card = r'[^0-9]'
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 10
 
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
 
+    def get_valid_card(self, card):
+        clean_card = re.sub(self.re_clean_card, '', card)
+        if lib_refine.is_luhn_valid(clean_card):
+            return clean_card
+
+    def extract(self, obj_id, content, tag):
+        extracted = []
+        cards = self.regex_finditer(self.regex, obj_id, content)
+        for card in cards:
+            start, end, value = card
+            if self.get_valid_card(value):
+                extracted.append(card)
+        return extracted
+
     def compute(self, message, r_result=False):
         item_id, score = message.split()
         item = Item(item_id)
         content = item.get_content()
-        all_cards = re.findall(self.regex, content)
+        all_cards = self.regex_findall(self.regex, item.id, content)
 
         if len(all_cards) > 0:
             # self.redis_logger.debug(f'All matching {all_cards}')
-            creditcard_set = set([])
-
+            creditcard_set = set()
             for card in all_cards:
-                clean_card = re.sub('[^0-9]', '', card)
-                if lib_refine.is_luhn_valid(clean_card):
-                    self.redis_logger.debug(f'{clean_card} is valid')
-                    creditcard_set.add(clean_card)
+                print(card)
+                valid_card = self.get_valid_card(card)
+                if valid_card:
+                    creditcard_set.add(valid_card)
 
-            # pprint.pprint(creditcard_set)
+            # print(creditcard_set)
             to_print = f'CreditCard;{item.get_source()};{item.get_date()};{item.get_basename()};'
-            if len(creditcard_set) > 0:
-                self.redis_logger.warning(f'{to_print}Checked {len(creditcard_set)} valid number(s);{item.get_id()}')
+            if creditcard_set:
+                mess = f'{to_print}Checked {len(creditcard_set)} valid number(s);{item.id}'
+                print(mess)
+                self.redis_logger.warning(mess)
 
-                msg = f'infoleak:automatic-detection="credit-card";{item.get_id()}'
+                msg = f'infoleak:automatic-detection="credit-card";{item.id}'
                 self.send_message_to_queue(msg, 'Tags')
 
                 if r_result:
                     return creditcard_set
             else:
-                self.redis_logger.info(f'{to_print}CreditCard related;{item.get_id()}')
+                self.redis_logger.info(f'{to_print}CreditCard related;{item.id}')
 
 
 if __name__ == '__main__':

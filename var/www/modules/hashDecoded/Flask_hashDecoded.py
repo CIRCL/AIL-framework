@@ -16,6 +16,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.objects import ail_objects
+
 from packages.Date import Date
 
 # ============ VARIABLES ============
@@ -167,22 +169,9 @@ def get_all_types_id(correlation_type):
     else:
         return []
 
-def is_valid_type_id(correlation_type, type_id):
-    all_type_id = get_all_types_id(correlation_type)
-    if type_id in all_type_id:
-        return True
-    else:
-        return False
-
-def get_key_id_metadata(correlation_type, type_id, key_id):
-    key_id_metadata = {}
-    if r_serv_metadata.exists('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id)):
-        key_id_metadata['first_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id), 'first_seen')
-        key_id_metadata['first_seen'] = '{}/{}/{}'.format(key_id_metadata['first_seen'][0:4], key_id_metadata['first_seen'][4:6], key_id_metadata['first_seen'][6:8])
-        key_id_metadata['last_seen'] = r_serv_metadata.hget('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id), 'last_seen')
-        key_id_metadata['last_seen'] = '{}/{}/{}'.format(key_id_metadata['last_seen'][0:4], key_id_metadata['last_seen'][4:6], key_id_metadata['last_seen'][6:8])
-        key_id_metadata['nb_seen'] = r_serv_metadata.scard('set_{}_{}:{}'.format(correlation_type, type_id, key_id))
-    return key_id_metadata
+def get_key_id_metadata(obj_type, subtype, obj_id):
+    obj = ail_objects.get_object_meta(obj_type, subtype, obj_id)
+    return obj._get_meta()
 
 def list_sparkline_type_id_values(date_range_sparkline, correlation_type, type_id, key_id):
     sparklines_value = []
@@ -250,7 +239,7 @@ def main_correlation_page(correlation_type, type_id, date_from, date_to, show_de
     if type_id is not None:
         #retrieve char
         type_id = type_id.replace(' ', '')
-        if not is_valid_type_id(correlation_type, type_id):
+        if not ail_objects.is_valid_object_subtype(correlation_type, type_id):
             type_id = None
 
     date_range = []
@@ -897,7 +886,7 @@ def pgpdump_graph_line_json():
 
 def correlation_graph_line_json(correlation_type, type_id, key_id, date_from, date_to):
     # verify input
-    if key_id is not None and is_valid_type_id(correlation_type, type_id) and r_serv_metadata.exists('{}_metadata_{}:{}'.format(correlation_type, type_id, key_id)):
+    if key_id is not None and ail_objects.is_valid_object_subtype(correlation_type, type_id) and ail_objects.exists_obj(correlation_type, type_id, key_id):
 
         if date_from is None or date_to is None:
             nb_days_seen_in_pastes = 30

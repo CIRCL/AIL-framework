@@ -41,7 +41,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-
+from lib.data_retention_engine import update_obj_date
+from lib import item_basic
 
 class Global(AbstractModule):
     """
@@ -85,7 +86,7 @@ class Global(AbstractModule):
         if len(splitted) == 2:
             item, gzip64encoded = splitted
 
-            # Remove PASTES_FOLDER from item path (crawled item + submited)
+            # Remove PASTES_FOLDER from item path (crawled item + submitted)
             if self.PASTES_FOLDERS in item:
                 item = item.replace(self.PASTES_FOLDERS, '', 1)
 
@@ -124,6 +125,8 @@ class Global(AbstractModule):
                         # remove self.PASTES_FOLDER from
                         if self.PASTES_FOLDERS in item_id:
                             item_id = item_id.replace(self.PASTES_FOLDERS, '', 1)
+
+                        update_obj_date(item_basic.get_item_date(item_id), 'item')
 
                         self.send_message_to_queue(item_id)
                         self.processed_item += 1

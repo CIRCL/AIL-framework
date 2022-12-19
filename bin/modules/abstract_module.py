@@ -47,7 +47,7 @@ class AbstractModule(ABC):
         self.redis_logger.channel = logger_channel
 
         #Cache key
-        self.redis_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
+        self.r_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
         self.max_execution_time = 30
 
         # Run module endlessly
@@ -81,6 +81,12 @@ class AbstractModule(ABC):
         self.process.populate_set_out(message, queue_name)
         # add to new set_module
 
+    def regex_search(self, regex, obj_id, content):
+        return regex_helper.regex_search(self.r_cache_key, regex, obj_id, content, max_time=self.max_execution_time)
+
+    def regex_finditer(self, regex, obj_id, content):
+        return regex_helper.regex_finditer(self.r_cache_key, regex, obj_id, content, max_time=self.max_execution_time)
+
     def regex_findall(self, regex, id, content):
         """
         regex findall helper (force timeout)
@@ -90,7 +96,7 @@ class AbstractModule(ABC):
 
         ex: send_to_queue(item_id, 'Global')
         """
-        return regex_helper.regex_findall(self.module_name, self.redis_cache_key, regex, id, content, max_time=self.max_execution_time)
+        return regex_helper.regex_findall(self.module_name, self.r_cache_key, regex, id, content, max_time=self.max_execution_time)
 
     def run(self):
         """

@@ -19,12 +19,14 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
+from lib.data_retention_engine import update_obj_date
 
 from packages import Date
 
 # LOAD CONFIG
 config_loader = ConfigLoader()
 r_metadata = config_loader.get_redis_conn("ARDB_Metadata")
+r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
 # # TODO: ADD CORRELATION ENGINE
@@ -47,7 +49,7 @@ class AbstractSubtypeObject(AbstractObject):
         self.subtype = subtype
 
     def exists(self):
-        return r_metadata.exists(f'{self.type}_metadata_{self.subtype}:{self.id}')
+        return r_object.exists(f'meta:{self.type}:{self.subtype}:{self.id}')
 
     # def exists(self):
     #     res = r_metadata.zscore(f'{self.type}_all:{self.subtype}', self.id)
@@ -57,7 +59,7 @@ class AbstractSubtypeObject(AbstractObject):
     #         return False
 
     def get_first_seen(self, r_int=False):
-        first_seen = r_metadata.hget(f'{self.type}_metadata_{self.subtype}:{self.id}', 'first_seen')
+        first_seen = r_object.hget(f'meta:{self.type}:{self.subtype}:{self.id}', 'first_seen')
         if r_int:
             if first_seen:
                 return int(first_seen)
@@ -67,7 +69,7 @@ class AbstractSubtypeObject(AbstractObject):
             return first_seen
 
     def get_last_seen(self, r_int=False):
-        last_seen = r_metadata.hget(f'{self.type}_metadata_{self.subtype}:{self.id}', 'last_seen')
+        last_seen = r_object.hget(f'meta:{self.type}:{self.subtype}:{self.id}', 'last_seen')
         if r_int:
             if last_seen:
                 return int(last_seen)
@@ -94,10 +96,10 @@ class AbstractSubtypeObject(AbstractObject):
         return meta_dict
 
     def set_first_seen(self, first_seen):
-        r_metadata.hset(f'{self.type}_metadata_{self.subtype}:{self.id}', 'first_seen', first_seen)
+        r_object.hset(f'meta:{self.type}:{self.subtype}:{self.id}', 'first_seen', first_seen)
 
     def set_last_seen(self, last_seen):
-        r_metadata.hset(f'{self.type}_metadata_{self.subtype}:{self.id}', 'last_seen', last_seen)
+        r_object.hset(f'meta:{self.type}:{self.subtype}:{self.id}', 'last_seen', last_seen)
 
     def update_daterange(self, date):
         date = int(date)
@@ -124,12 +126,13 @@ class AbstractSubtypeObject(AbstractObject):
 # NEW field => first record(last record)
 #                   by subtype ??????
 
-#               => data Retention + efficicent search
+#               => data Retention + efficient search
 #
 #
 
     def add(self, date, item_id):
         self.update_daterange(date)
+        update_obj_date(date, self.type, self.subtype)
         # daily
         r_metadata.hincrby(f'{self.type}:{self.subtype}:{date}', self.id, 1)
         # all subtypes

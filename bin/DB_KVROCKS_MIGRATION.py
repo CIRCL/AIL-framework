@@ -375,6 +375,7 @@ def items_migration():
     #         item = Items.Item(item_id)
     #         item.set_father(father_id)
 
+    # DUPLICATES
     for tag in ['infoleak:automatic-detection="credential"']:  # Creditcards, Mail, Keys ???????????????????????????????
         print(f'Duplicate migration: {tag}')
         tag_first = get_tag_first_seen(tag)
@@ -388,6 +389,10 @@ def items_migration():
                         for algo in duplicates_dict[id_2]:
                             print(algo, duplicates_dict[id_2][algo], id_2)
                             item.add_duplicate(algo, duplicates_dict[id_2][algo], id_2)
+
+    # ITEM FIRST/LAST DATE
+    Items._manual_set_items_date_first_last()
+
 
 
 # TODO: test cookies migration
@@ -840,14 +845,14 @@ if __name__ == '__main__':
     #core_migration()
     #user_migration()
     #tags_migration()
-    # items_migration()
+    items_migration()
     #crawler_migration()
     # domain_migration()                      # TO TEST ###########################
     #decodeds_migration()
     # screenshots_migration()
-    #subtypes_obj_migration()
+    subtypes_obj_migration()
     # ail_2_ail_migration()
-    trackers_migration()
+    # trackers_migration()
     # investigations_migration()
     # statistics_migration()
 

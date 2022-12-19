@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
+# from lib import data_retention_engine
 
 config_loader = ConfigLoader()
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")

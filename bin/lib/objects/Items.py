@@ -22,6 +22,7 @@ from lib.ail_core import get_ail_uuid
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import item_basic
+from lib.data_retention_engine import update_obj_date
 
 
 from flask import url_for
@@ -245,7 +246,7 @@ class Item(AbstractObject):
             return None
 
     def get_url(self):
-        return r_object.hset(f'meta:item::{self.id}', 'url')
+        return r_object.hget(f'meta:item::{self.id}', 'url')
 
     def set_crawled(self, url, parent_id):
         r_object.hset(f'meta:item::{self.id}', 'url', url)
@@ -374,6 +375,24 @@ def get_items_by_source(source):
             item_id = os.path.join(root, file).replace(ITEMS_FOLDER, '', 1)
             l_items.append(item_id)
     return l_items
+
+def _manual_set_items_date_first_last():
+    first = 9999
+    last = 0
+    sources = get_items_sources()
+    for source in sources:
+        dir_source = os.path.join(os.environ['AIL_HOME'], ITEMS_FOLDER, source)
+        for dir_name in os.listdir(dir_source):
+            if os.path.isdir(os.path.join(dir_source, dir_name)):
+                date = int(dir_name)
+                if date < first:
+                    first = date
+                if date > last:
+                    last = date
+    if first != 9999:
+        update_obj_date(first, 'item')
+    if last != 0:
+        update_obj_date(last, 'item')
 
 ################################################################################
 ################################################################################

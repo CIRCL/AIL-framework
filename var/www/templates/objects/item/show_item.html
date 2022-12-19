@@ -10,6 +10,7 @@
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
 
   <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
   <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
@@ -256,6 +257,8 @@
 
         </div>
       </div>
+
+
     </div>
   </div>
   {% endif %}
@@ -346,6 +349,13 @@
   {% endif %}
 
 
+  {% if extracted %}
+      {% for row in extracted %}
+          <div><a href="#{{ row[0] }}:{{ row[1] }}">{{ row[2] }}</a></div>
+      {% endfor  %}
+  {% endif %}
+
+
   <!-- nav-pills nav-justified nav-tabs-->
 
   <div class="card">
@@ -367,15 +377,21 @@
         </li>
       </ul>
 
-
       <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-content" role="tabpanel" aria-labelledby="pills-content-tab">
-          <p class="my-0"> <pre class="border">{{ meta['content'] }}</pre></p>
+            {% if not extracted %}
+                <p class="my-0"> <pre class="border">{{ meta['content'] }}</pre></p>
+            {% else %}
+                <p class="my-0"> <pre class="border">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
+            {% endif %}
         </div>
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
           <p class="my-0"> <pre id="html2text-container" class="border"></pre></p>
         </div>
       </div>
+
+
+
     </div>
   </div>
 

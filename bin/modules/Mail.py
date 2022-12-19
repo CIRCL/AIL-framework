@@ -57,7 +57,7 @@ class Mail(AbstractModule):
         return self.r_cache.exists(f'mxdomain:{mxdomain}')
 
     def save_mxdomain_in_cache(self, mxdomain):
-        self.r_cache.setex(f'mxdomain:{mxdomain}', 1, datetime.timedelta(days=1))
+        self.r_cache.setex(f'mxdomain:{mxdomain}', datetime.timedelta(days=1), 1)
 
     def check_mx_record(self, set_mxdomains):
         """Check if emails MX domains are responding.
@@ -117,6 +117,21 @@ class Mail(AbstractModule):
                 except Exception as e:
                     print(e)
         return valid_mxdomain
+
+    def extract(self, obj_id, content, tag):
+        extracted = []
+        mxdomains = {}
+        mails = self.regex_finditer(self.email_regex, obj_id, content)
+        for mail in mails:
+            start, end, value = mail
+            mxdomain = value.rsplit('@', 1)[1].lower()
+            if mxdomain not in mxdomains:
+                mxdomains[mxdomain] = []
+            mxdomains[mxdomain].append(mail)
+        for mx in self.check_mx_record(mxdomains.keys()):
+            for row in mxdomains[mx]:
+                extracted.append(row)
+        return extracted
 
     # # TODO: sanitize mails
     def compute(self, message):

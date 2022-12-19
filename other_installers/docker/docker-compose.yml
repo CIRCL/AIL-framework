@@ -248,7 +248,7 @@ services:
     depends_on:
       - redis-log
     entrypoint:
-      - /opt/AIL/bin/Cve.py
+      - /opt/AIL/bin/CveModule.py
     network_mode: service:flask
     image: ail-framework
     volumes:

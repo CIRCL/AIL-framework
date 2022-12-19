@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
+from lib.data_retention_engine import update_obj_date
 
 from packages import Date
 
@@ -41,10 +42,10 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         super().__init__(obj_type, id)
 
     def exists(self):
-        return r_object.exists(f'{self.type}:meta:{self.id}')
+        return r_object.exists(f'meta:{self.type}:{self.id}')
 
     def get_first_seen(self, r_int=False):
-        first_seen = r_object.hget(f'{self.type}:meta:{self.id}', 'first_seen')
+        first_seen = r_object.hget(f'meta:{self.type}:{self.id}', 'first_seen')
         if r_int:
             if first_seen:
                 return int(first_seen)
@@ -54,7 +55,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             return first_seen
 
     def get_last_seen(self, r_int=False):
-        last_seen = r_object.hget(f'{self.type}:meta:{self.id}', 'last_seen')
+        last_seen = r_object.hget(f'meta:{self.type}:{self.id}', 'last_seen')
         if r_int:
             if last_seen:
                 return int(last_seen)
@@ -64,7 +65,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             return last_seen
 
     def get_nb_seen(self):
-        return r_object.hget(f'{self.type}:meta:{self.id}', 'nb')
+        return r_object.hget(f'meta:{self.type}:{self.id}', 'nb')
 
     def get_nb_seen_by_date(self, date):
         nb = r_object.hget(f'{self.type}:date:{date}', self.id)
@@ -82,10 +83,10 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         return meta_dict
 
     def set_first_seen(self, first_seen):
-        r_object.hset(f'{self.type}:meta:{self.id}', 'first_seen', first_seen)
+        r_object.hset(f'meta:{self.type}:{self.id}', 'first_seen', first_seen)
 
     def set_last_seen(self, last_seen):
-        r_object.hset(f'{self.type}:meta:{self.id}', 'last_seen', last_seen)
+        r_object.hset(f'meta:{self.type}:{self.id}', 'last_seen', last_seen)
 
     def update_daterange(self, date):
         date = int(date)
@@ -114,12 +115,13 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             r_object.sadd(f'{self.type}:all', self.id)
         else:
             self.update_daterange(date)
+        update_obj_date(date, self.type)
 
         # NB Object seen by day
         r_object.hincrby(f'{self.type}:date:{date}', self.id, 1)
         r_object.zincrby(f'{self.type}:date:{date}', 1, self.id) # # # # # # # # # #
         # NB Object seen
-        r_object.hincrby(f'{self.type}:meta:{self.id}', 'nb', 1)
+        r_object.hincrby(f'meta:{self.type}:{self.id}', 'nb', 1)
 
         # Correlations
         self.add_correlation('item', '', item_id)

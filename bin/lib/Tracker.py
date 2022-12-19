@@ -295,10 +295,10 @@ def get_item_all_trackers_uuid(obj_id):
     #obj_type = 'item'
     return r_serv_tracker.smembers(f'obj:trackers:item:{obj_id}')
 
-def is_obj_tracked(obj_type, subtype, id):
+def is_obj_tracked(obj_type, subtype, obj_id):
     return r_serv_tracker.exists(f'obj:trackers:{obj_type}:{obj_id}')
 
-def get_obj_all_trackers(obj_type, subtype, id):
+def get_obj_all_trackers(obj_type, subtype, obj_id):
     return r_serv_tracker.smembers(f'obj:trackers:{obj_type}:{obj_id}')
 
 # # TODO: ADD all Objects + Subtypes
@@ -663,6 +663,10 @@ def get_all_tracked_yara_files(filter_disabled=False):
     if filter_disabled:
         pass
     return yara_files
+
+def get_yara_rule_by_uuid(tracker_uuid):
+    yar_path = get_tracker_by_uuid(tracker_uuid)
+    return yara.compile(filepath=os.path.join(get_yara_rules_dir(), yar_path))
 
 def reload_yara_rules():
     yara_files = get_all_tracked_yara_files()

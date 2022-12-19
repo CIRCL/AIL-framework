@@ -26,6 +26,8 @@ from lib.objects.Screenshots import Screenshot
 from lib import Tag
 from export import Export
 
+from lib import module_extractor
+
 
 # ============ BLUEPRINT ============
 objects_item = Blueprint('objects_item', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/item'))
@@ -73,10 +75,12 @@ def showItem():  # # TODO: support post
     # # TODO: ADD in Export SECTION
     meta['hive_case'] = Export.get_item_hive_cases(item_id)
 
+    extracted = module_extractor.extract(item.id, content=meta['content'])
+
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
                             modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
                             is_hive_connected=Export.get_item_hive_cases(item_id),
-                            meta=meta)
+                            meta=meta, extracted=extracted)
 
     # kvrocks data
 
