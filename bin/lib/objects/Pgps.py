@@ -3,18 +3,19 @@
 
 import os
 import sys
-import redis
 
-# sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
-
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib/'))
-import ConfigLoader
-
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 from flask import url_for
+from pymisp import MISPObject
 
-config_loader = ConfigLoader.ConfigLoader()
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.ConfigLoader import ConfigLoader
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 
+config_loader = ConfigLoader()
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
@@ -64,7 +65,7 @@ class Pgp(AbstractSubtypeObject):
             icon = '\uf1fa'
         else:
             icon = 'times'
-        return {'style': 'fas', 'icon': icon, 'color': '#44AA99', 'radius':5}
+        return {'style': 'fas', 'icon': icon, 'color': '#44AA99', 'radius': 5}
 
     def get_misp_object(self):
         obj_attrs = []
@@ -72,12 +73,12 @@ class Pgp(AbstractSubtypeObject):
         obj.first_seen = self.get_first_seen()
         obj.last_seen = self.get_last_seen()
 
-        if self.subtype=='key':
-            obj_attrs.append( obj.add_attribute('key-id', value=self.id) )
-        elif self.subtype=='name':
-            obj_attrs.append( obj.add_attribute('user-id-name', value=self.id) )
-        else: # mail
-            obj_attrs.append( obj.add_attribute('user-id-email', value=self.id) )
+        if self.subtype == 'key':
+            obj_attrs.append(obj.add_attribute('key-id', value=self.id))
+        elif self.subtype == 'name':
+            obj_attrs.append(obj.add_attribute('user-id-name', value=self.id))
+        else:  # mail
+            obj_attrs.append(obj.add_attribute('user-id-email', value=self.id))
 
         for obj_attr in obj_attrs:
             for tag in self.get_tags():
@@ -88,7 +89,6 @@ class Pgp(AbstractSubtypeObject):
     ############################################################################
 
 def get_all_subtypes():
-    #return get_object_all_subtypes(self.type)
     return ['key', 'mail', 'name']
 
 def get_all_pgps():
@@ -101,5 +101,4 @@ def get_all_pgps_by_subtype(subtype):
     return get_all_id('pgp', subtype)
 
 
-
-#if __name__ == '__main__':
+# if __name__ == '__main__':

@@ -68,7 +68,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         return r_object.hget(f'meta:{self.type}:{self.id}', 'nb')
 
     def get_nb_seen_by_date(self, date):
-        nb = r_object.hget(f'{self.type}:date:{date}', self.id)
+        nb = r_object.zscore(f'{self.type}:date:{date}', self.id)
         if nb is None:
             return 0
         else:
@@ -118,8 +118,8 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         update_obj_date(date, self.type)
 
         # NB Object seen by day
-        r_object.hincrby(f'{self.type}:date:{date}', self.id, 1)
-        r_object.zincrby(f'{self.type}:date:{date}', 1, self.id) # # # # # # # # # #
+        print(f'{self.type}:date:{date}', 1, self.id)
+        r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
         # NB Object seen
         r_object.hincrby(f'meta:{self.type}:{self.id}', 'nb', 1)
 

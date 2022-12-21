@@ -41,11 +41,11 @@ def objects_cves():
     date_from = date['date_from']
     date_to = date['date_to']
 
-    # barchart_type
-    # correlation_type_search_endpoint
+    if show_objects:
+        dict_objects = Cves.api_get_cves_meta_by_daterange(date_from, date_to)
+    else:
+        dict_objects = {}
 
-    dict_objects = Cves.api_get_cves_meta_by_daterange(date_from, date_to)
-    print(date_from, date_to, dict_objects)
     return render_template("CveDaterange.html", date_from=date_from, date_to=date_to,
                            dict_objects=dict_objects, show_objects=show_objects)
 
@@ -62,7 +62,12 @@ def objects_cves_post():
 @login_required
 @login_read_only
 def objects_cve_range_json():
-    return None
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    date = Date.sanitise_date_range(date_from, date_to)
+    date_from = date['date_from']
+    date_to = date['date_to']
+    return jsonify(Cves.api_get_cves_range_by_daterange(date_from, date_to))
 
 @objects_cve.route("/objects/cve/search", methods=['POST'])
 @login_required

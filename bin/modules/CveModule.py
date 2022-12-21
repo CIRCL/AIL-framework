@@ -51,7 +51,7 @@ class CveModule(AbstractModule):
 
         cves = self.regex_findall(self.reg_cve, item_id, item.get_content())
         if cves:
-            print(cves)
+            # print(cves)
             date = item.get_date()
             for cve_id in cves:
                 cve = Cves.Cve(cve_id)

@@ -5,6 +5,7 @@ import os
 import sys
 
 from flask import url_for
+from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -19,12 +20,6 @@ r_objects = config_loader.get_db_conn("Kvrocks_Objects")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
-
-################################################################################
-################################################################################
-################################################################################
-
-# # TODO: COMPLETE CLASS
 
 class Cve(AbstractDaterangeObject):
     """
@@ -55,14 +50,21 @@ class Cve(AbstractDaterangeObject):
     def get_svg_icon(self):
         return {'style': 'fas', 'icon': '\uf188', 'color': '#1E88E5', 'radius': 5}
 
-    # TODO # TODO # TODO # TODO # TODO # TODO # TODO # TODO
     def get_misp_object(self):
-        pass
+        obj_attrs = []
+        obj = MISPObject('vulnerability')
+        obj.first_seen = self.get_first_seen()
+        obj.last_seen = self.get_last_seen()
+
+        obj_attrs.append(obj.add_attribute('id', value=self.id))
+        for obj_attr in obj_attrs:
+            for tag in self.get_tags():
+                obj_attr.add_tag(tag)
+        return obj
 
     def get_meta(self, options=set()):
         meta = self._get_meta(options=options)
         meta['id'] = self.id
-        meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True)
         return meta
 
@@ -70,19 +72,21 @@ class Cve(AbstractDaterangeObject):
         self._add(date, item_id)
 
 
-# TODO # TODO # TODO # TODO # TODO # TODO # TODO # TODO # TODO # TODO
+# TODO  ADD SEARCH FUNCTION
+
 def get_all_cves():
-    cves = []
-    return cves
+    return r_objects.smembers(f'cve:all')
 
 def get_cves_by_date(date):
-    # return r_objects.zrange(f'cve:date:{date}', 0, -1)
-    return set(r_objects.hkeys(f'cve:date:{date}'))
+    return r_objects.zrange(f'cve:date:{date}', 0, -1)
+
+def get_nb_cves_by_date(date):
+    return r_objects.zcard(f'cve:date:{date}')
 
 def get_cves_by_daterange(date_from, date_to):
     cves = set()
     for date in Date.substract_date(date_from, date_to):
-        cves | get_cves_by_date(date)
+        cves = cves | set(get_cves_by_date(date))
     return cves
 
 def get_cves_meta(cves_id, options=set()):
@@ -91,6 +95,14 @@ def get_cves_meta(cves_id, options=set()):
         cve = Cve(cve_id)
         dict_cve[cve_id] = cve.get_meta(options=options)
     return dict_cve
+
+def api_get_cves_range_by_daterange(date_from, date_to):
+    cves = []
+    for date in Date.substract_date(date_from, date_to):
+        d = {'date': f'{date[0:4]}-{date[4:6]}-{date[6:8]}',
+             'CVE': get_nb_cves_by_date(date)}
+        cves.append(d)
+    return cves
 
 def api_get_cves_meta_by_daterange(date_from, date_to):
     date = Date.sanitise_date_range(date_from, date_to)

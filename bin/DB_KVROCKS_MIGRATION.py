@@ -840,23 +840,43 @@ def statistics_migration():
     pass
 
 
+
+###############################
+#                             #
+#       CVES MIGRATION        #
+#                             #
+###############################
+
+from modules.CveModule import CveModule
+
+def cves_migration():
+    module = CveModule()
+    tag = 'infoleak:automatic-detection="cve"'
+    first = Tag.get_tag_first_seen(tag)
+    last = Tag.get_tag_last_seen(tag)
+    if first and last:
+        for date in Date.substract_date(first, last):
+            for item_id in Tag.get_tag_objects(tag, 'item', date=date):
+                module.compute(f'{item_id} 0')
+
+
 if __name__ == '__main__':
 
     #core_migration()
     #user_migration()
     #tags_migration()
-    items_migration()
+    # items_migration()
     #crawler_migration()
     # domain_migration()                      # TO TEST ###########################
     #decodeds_migration()
     # screenshots_migration()
-    subtypes_obj_migration()
+    # subtypes_obj_migration()
     # ail_2_ail_migration()
     # trackers_migration()
     # investigations_migration()
     # statistics_migration()
 
-
+    cves_migration()
 
     # custom tags
     # crawler queues + auto_crawlers
