@@ -7,6 +7,8 @@ import sys
 from flask import url_for
 from pymisp import MISPObject
 
+import requests
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -71,6 +73,18 @@ class Cve(AbstractDaterangeObject):
     def add(self, date, item_id):
         self._add(date, item_id)
 
+    def get_cve_search(self):
+        response = requests.get(f'https://cvepremium.circl.lu/api/cve/{self.id}', timeout=10)
+        if response.status_code == 200:
+            json_response = response.json()
+            # 'summary'
+            # 'references'
+            # 'last-modified'
+            # 'Published'
+            # 'Modified'
+            return json_response
+        else:
+            return {'error': 'cve search error'}  # TODO
 
 # TODO  ADD SEARCH FUNCTION
 
@@ -107,5 +121,6 @@ def api_get_cves_range_by_daterange(date_from, date_to):
 def api_get_cves_meta_by_daterange(date_from, date_to):
     date = Date.sanitise_date_range(date_from, date_to)
     return get_cves_meta(get_cves_by_daterange(date['date_from'], date['date_to']), options=['sparkline'])
+
 
 # if __name__ == '__main__':

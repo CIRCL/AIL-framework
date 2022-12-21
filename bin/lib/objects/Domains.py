@@ -101,8 +101,8 @@ class Domain(AbstractObject):
         if obj and origin['item']:
             if origin['item'] != 'manual' and origin['item'] != 'auto':
                 item_id = origin['item']
-                origin['domain'] = get_item_domain()
-                origin['url'] = get_item_url()
+                origin['domain'] = get_item_domain(item_id)
+                origin['url'] = get_item_url(item_id)
         return origin
 
     def set_last_origin(self, origin_id):
