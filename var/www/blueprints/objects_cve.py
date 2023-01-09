@@ -83,5 +83,15 @@ def objects_cve_search():
     else:
         return redirect(cve.get_link(flask_context=True))
 
+@objects_cve.route("/objects/cve/graphline/json", methods=['GET'])
+@login_required
+@login_read_only
+def objects_cve_graphline_json():
+    cve_id = request.args.get('id')
+    cve = Cves.Cve(cve_id)
+    if not cve.exists():
+        abort(404)
+    return jsonify(Cves.get_cve_graphline(cve_id))
+
 # ============= ROUTES ==============
 

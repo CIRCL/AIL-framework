@@ -612,8 +612,10 @@ def domain_migration():
 def get_estimated_type(decoded_id):
     return r_serv_metadata.hget(f'metadata_hash:{decoded_id}', 'estimated_type')
 
-def get_decoded_items_list_by_decoder(decoder_type, decoded_id): ###################
-    #return r_serv_metadata.zrange('nb_seen_hash:{}'.format(sha1_string), 0, -1)
+def get_hash_size(decoded_id):
+    return r_serv_metadata.hget(f'metadata_hash:{decoded_id}', 'size')
+
+def get_decoded_items_list_by_decoder(decoder_type, decoded_id):
     return r_serv_metadata.zrange(f'{decoder_type}_hash:{decoded_id}', 0, -1)
 
 def get_decodeds_tags(decoded_id):
@@ -621,10 +623,10 @@ def get_decodeds_tags(decoded_id):
 
 def decodeds_migration():
     print('Decoded MIGRATION...')
-    decoder_names = ['base64', 'binary', 'hexadecimal']
+    algo_names = ['base64', 'binary', 'hexadecimal']
 
     Decodeds._delete_old_json_descriptor()
-    for decoded_id in Decodeds.get_all_decodeds():
+    for decoded_id in Decodeds.get_all_decodeds_files():
         mimetype = get_estimated_type(decoded_id)
         # ignore invalid object
         if mimetype is None:
@@ -633,19 +635,23 @@ def decodeds_migration():
         print(decoded_id)
 
         decoded = Decodeds.Decoded(decoded_id)
-        filepath = decoded.get_filepath(mimetype=mimetype)
-        decoded._save_meta(filepath, mimetype)
+        decoded._add_create()
+        decoded.set_mimetype(mimetype)
+
+        size = get_hash_size(decoded_id)
+        if not size:
+            filepath = decoded.get_filepath(mimetype=mimetype)
+            size = os.path.getsize(filepath)
+        decoded.set_size(size)
 
         for tag in get_decodeds_tags(decoded_id):
             decoded.add_tag(tag)
 
-        for decoder_type in decoder_names:
-            for item_id in get_decoded_items_list_by_decoder(decoder_type, decoded_id):
-                print(item_id, decoder_type)
+        for algo in algo_names:
+            for item_id in get_decoded_items_list_by_decoder(algo, decoded_id):
+                print(item_id, algo)
                 date = get_item_date(item_id)
-            #for decoder_type in :
-
-                decoded.add(decoder_type, date, item_id, mimetype)
+                decoded.add(algo, date, item_id, mimetype=mimetype)
 
 ###############################
 #                             #
@@ -868,7 +874,7 @@ if __name__ == '__main__':
     # items_migration()
     #crawler_migration()
     # domain_migration()                      # TO TEST ###########################
-    #decodeds_migration()
+    decodeds_migration()
     # screenshots_migration()
     # subtypes_obj_migration()
     # ail_2_ail_migration()
@@ -876,7 +882,7 @@ if __name__ == '__main__':
     # investigations_migration()
     # statistics_migration()
 
-    cves_migration()
+    # cves_migration()
 
     # custom tags
     # crawler queues + auto_crawlers

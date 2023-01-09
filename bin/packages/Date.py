@@ -183,3 +183,42 @@ def sanitise_date_range(date_from, date_to, separator='', date_type='str'):
         date_from = date_to
         date_to = res
     return {"date_from": date_from, "date_to": date_to}
+
+def sanitise_daterange(date_from, date_to, separator='', date_type='str'):
+    '''
+    Check/Return a correct date_form and date_to
+    '''
+    if not date_from and date_to:
+        date_from = date_to
+    elif not date_to and date_from:
+        date_to = date_from
+    elif not date_to and not date_from:
+        date = datetime.date.today().strftime("%Y%m%d")
+        return date, date
+
+    if date_type == 'str':
+        # remove separators
+        if len(date_from) == 10:
+            date_from = date_from[0:4] + date_from[5:7] + date_from[8:10]
+        if len(date_to) == 10:
+            date_to = date_to[0:4] + date_to[5:7] + date_to[8:10]
+
+        if not validate_str_date(date_from, separator=separator):
+            date_from = datetime.date.today().strftime("%Y%m%d")
+        if not validate_str_date(date_to, separator=separator):
+            date_to = datetime.date.today().strftime("%Y%m%d")
+    else:  # datetime
+        if isinstance(date_from, datetime.datetime):
+            date_from = date_from.strftime("%Y%m%d")
+        else:
+            date_from = datetime.date.today().strftime("%Y%m%d")
+        if isinstance(date_to, datetime.datetime):
+            date_to = date_to.strftime("%Y%m%d")
+        else:
+            date_to = datetime.date.today().strftime("%Y%m%d")
+
+    if int(date_from) > int(date_to):
+        res = date_from
+        date_from = date_to
+        date_to = res
+    return date_from, date_to

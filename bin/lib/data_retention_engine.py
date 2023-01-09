@@ -27,7 +27,7 @@ config_loader = None
 # DOMAIN -> subtype = domain type
 
 # TAG -> type = "TAG"
-# TAG -> subtype = "OBJ:"tag
+# TAG -> subtype = f"OBJ:{tag}"
 
 def load_obj_date_first_last():
     # LOAD FIRST DATE

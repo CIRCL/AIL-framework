@@ -97,6 +97,21 @@ def get_object_svg(obj_type, subtype, id):
     obj = get_object(obj_type, subtype, id)
     return obj.get_svg_icon()
 
+## TAGS ##
+def get_obj_tags(obj_type, subtype, id):
+    obj = get_object(obj_type, subtype, id)
+    return obj.get_tags()
+
+def add_obj_tag(obj_type, subtype, id, tag):
+    obj = get_object(obj_type, subtype, id)
+    obj.add_tag(tag)
+
+def add_obj_tags(obj_type, subtype, id, tags):
+    obj = get_object(obj_type, subtype, id)
+    for tag in tags:
+        obj.add_tag(tag)
+# -TAGS- #
+
 def get_object_meta(obj_type, subtype, id, options=[], flask_context=False):
     obj = get_object(obj_type, subtype, id)
     meta = obj.get_meta(options=options)
@@ -117,6 +132,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     meta['icon'] = obj.get_svg_icon()
     if subtype or obj_type == 'cve':
         meta['sparkline'] = obj.get_sparkline()
+        meta['cve_search'] = obj.get_cve_search()
     if subtype == 'bitcoin' and related_btc:
         meta["related_btc"] = btc_ail.get_bitcoin_info(obj.id)
     if obj.get_type() == 'decoded':

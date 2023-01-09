@@ -96,7 +96,10 @@ def is_obj_correlated(obj_type, subtype, obj_id, obj2_type, subtype2, obj2_id):
         subtype = ''
     if subtype2 is None:
         subtype2 = ''
-    return r_metadata.sismember(f'correlation:obj:{obj_type}:{subtype}:{obj2_type}:{obj_id}', f'{subtype2}:{obj2_id}')
+    try:
+        return r_metadata.sismember(f'correlation:obj:{obj_type}:{subtype}:{obj2_type}:{obj_id}', f'{subtype2}:{obj2_id}')
+    except:
+        return False
 
 def add_obj_correlation(obj1_type, subtype1, obj1_id, obj2_type, subtype2, obj2_id):
     if subtype1 is None:

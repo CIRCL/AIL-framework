@@ -9,15 +9,10 @@
 ##################################
 # Import External packages
 ##################################
-import time
 import os
 import base64
 from hashlib import sha1
-import magic
-import json
-import datetime
 import re
-import signal
 import sys
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -27,32 +22,13 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
-from lib.objects import Decodeds
+from lib.objects.Decodeds import Decoded
 
 config_loader = ConfigLoader()
-serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 hex_max_execution_time = config_loader.get_config_int("Hex", "max_execution_time")
 binary_max_execution_time = config_loader.get_config_int("Binary", "max_execution_time")
 base64_max_execution_time = config_loader.get_config_int("Base64", "max_execution_time")
 config_loader = None
-
-#####################################################
-#####################################################
-
-# # TODO: use regex_helper
-class TimeoutException(Exception):
-    pass
-
-def timeout_handler(signum, frame):
-    raise TimeoutException
-
-
-# # TODO: # FIXME: Remove signal -> replace with regex_helper
-signal.signal(signal.SIGALRM, timeout_handler)
-
-
-#####################################################
-####################################################
 
 
 class Decoder(AbstractModule):
@@ -60,16 +36,13 @@ class Decoder(AbstractModule):
     Decoder module for AIL framework
     """
 
-    # TODO to lambda expr
     def hex_decoder(self, hexStr):
-        #hexStr = ''.join( hex_string.split(" ") )
+        # hexStr = ''.join( hex_string.split(" ") )
         return bytes(bytearray([int(hexStr[i:i+2], 16) for i in range(0, len(hexStr), 2)]))
 
-    # TODO to lambda expr
     def binary_decoder(self, binary_string):
         return bytes(bytearray([int(binary_string[i:i+8], 2) for i in range(0, len(binary_string), 8)]))
 
-    # TODO to lambda expr
     def base64_decoder(self, base64_string):
         return base64.b64decode(base64_string)
 
@@ -86,17 +59,19 @@ class Decoder(AbstractModule):
         cmp_regex_base64 = re.compile(regex_base64)
 
         # map decoder function
-        self.decoder_function = {'binary': self.binary_decoder,  'hexadecimal': self.hex_decoder, 'base64': self.base64_decoder}
+        self.decoder_function = {'binary': self.binary_decoder,
+                                 'hexadecimal': self.hex_decoder,
+                                 'base64': self.base64_decoder}
 
         # list all decoder with regex,
-        decoder_binary = {'name': 'binary', 'regex': cmp_regex_binary, 'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time}
-        decoder_hexadecimal = {'name': 'hexadecimal', 'regex': cmp_regex_hex, 'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time}
-        decoder_base64 = {'name': 'base64', 'regex': cmp_regex_base64, 'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}
+        decoder_binary = {'name': 'binary', 'regex': cmp_regex_binary,
+                          'encoded_min_size': 300, 'max_execution_time': binary_max_execution_time}
+        decoder_hexadecimal = {'name': 'hexadecimal', 'regex': cmp_regex_hex,
+                               'encoded_min_size': 300, 'max_execution_time': hex_max_execution_time}
+        decoder_base64 = {'name': 'base64', 'regex': cmp_regex_base64,
+                          'encoded_min_size': 40, 'max_execution_time': base64_max_execution_time}
 
         self.decoder_order = [decoder_base64, decoder_binary, decoder_hexadecimal, decoder_base64]
-
-        for decoder in self.decoder_order:
-            serv_metadata.sadd('all_decoder', decoder['name'])
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
@@ -110,63 +85,47 @@ class Decoder(AbstractModule):
         content = item.get_content()
         date = item.get_date()
 
-        for decoder in self.decoder_order: # add threshold and size limit
-            # max execution time on regex
-            signal.alarm(decoder['max_execution_time'])
+        for decoder in self.decoder_order:
+            find = False
+            dname = decoder['name']
 
-            try:
-                encoded_list = decoder['regex'].findall(content)
-            except TimeoutException:
-                encoded_list = []
-                self.process.incr_module_timeout_statistic() # add encoder type
-                self.redis_logger.debug(f"{item.id} processing timeout")
-                continue
-            else:
-                signal.alarm(0)
-
-                if len(encoded_list) > 0:
-                    content = self.decode_string(content, item.id, date, encoded_list, decoder['name'], decoder['encoded_min_size'])
-
-    def decode_string(self, content, item_id, date, encoded_list, decoder_name, encoded_min_size):
-        find = False
-        for encoded in encoded_list:
-            if len(encoded) >=  encoded_min_size:
-                decoded_file = self.decoder_function[decoder_name](encoded)
-                find = True
-
-                sha1_string = sha1(decoded_file).hexdigest()
-                decoded = Decoded(sha1_string)
-
-                mimetype = decoded.guess_mimetype(decoded_file)
-                if not mimetype:
-                    print(item_id)
-                    print(sha1_string)
-                    raise Exception(f'Invalid mimetype: {sha1_string} {item_id}')
-
-                decoded.create(content, date)
-                decoded.add(decoder_name, date, item_id, mimetype)
-
-                save_item_relationship(sha1_string, item_id) ################################
-
-                # remove encoded from item content
+            encodeds = self.regex_findall(decoder['regex'], item.id, content)
+            # PERF remove encoded from item content
+            for encoded in encodeds:
                 content = content.replace(encoded, '', 1)
+            encodeds = set(encodeds)
 
-                self.redis_logger.debug(f'{item_id} : {decoder_name} - {mimetype}')
-                print(f'{item_id} : {decoder_name} - {mimetype}')
-        if find:
-            self.redis_logger.info(f'{decoder_name} decoded')
-            print(f'{decoder_name} decoded')
+            for encoded in encodeds:
+                find = False
+                if len(encoded) >= decoder['encoded_min_size']:
+                    decoded_file = self.decoder_function[dname](encoded)
 
-            # Send to Tags
-            msg = f'infoleak:automatic-detection="{decoder_name}";{item_id}'
-            self.send_message_to_queue(msg, 'Tags')
+                    sha1_string = sha1(decoded_file).hexdigest()
+                    decoded = Decoded(sha1_string)
 
-        # perf: remove encoded from item content
-        return content
+                    if not decoded.exists():
+                        mimetype = decoded.guess_mimetype(decoded_file)
+                        if not mimetype:
+                            print(sha1_string, item.id)
+                            raise Exception(f'Invalid mimetype: {decoded.id} {item.id}')
+                        decoded.save_file(decoded_file, mimetype)
+                    else:
+                        mimetype = decoded.get_mimetype()
+                    decoded.add(dname, date, item.id, mimetype=mimetype)
+
+                    # DEBUG
+                    self.redis_logger.debug(f'{item.id} : {dname} - {decoded.id} - {mimetype}')
+                    print(f'{item.id} : {dname} - {decoded.id} - {mimetype}')
+
+            if find:
+                self.redis_logger.info(f'{item.id} - {dname}')
+                print(f'{item.id} - {dname}')
+
+                # Send to Tags
+                msg = f'infoleak:automatic-detection="{dname}";{item.id}'
+                self.send_message_to_queue(msg, 'Tags')
 
 
 if __name__ == '__main__':
-
-    # # TODO: TEST ME
     module = Decoder()
     module.run()

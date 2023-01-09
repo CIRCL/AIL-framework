@@ -87,7 +87,7 @@ class AbstractModule(ABC):
     def regex_finditer(self, regex, obj_id, content):
         return regex_helper.regex_finditer(self.r_cache_key, regex, obj_id, content, max_time=self.max_execution_time)
 
-    def regex_findall(self, regex, id, content):
+    def regex_findall(self, regex, id, content, r_set=False):
         """
         regex findall helper (force timeout)
         :param regex: compiled regex
@@ -96,7 +96,7 @@ class AbstractModule(ABC):
 
         ex: send_to_queue(item_id, 'Global')
         """
-        return regex_helper.regex_findall(self.module_name, self.r_cache_key, regex, id, content, max_time=self.max_execution_time)
+        return regex_helper.regex_findall(self.module_name, self.r_cache_key, regex, id, content, max_time=self.max_execution_time, r_set=r_set)
 
     def run(self):
         """

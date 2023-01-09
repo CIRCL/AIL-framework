@@ -20,10 +20,12 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects import Decodeds
-
+from packages import Date
 
 # ============ BLUEPRINT ============
-objects_decoded = Blueprint('objects_decoded', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/decoded'))
+objects_decoded = Blueprint('objects_decoded', __name__,
+                            template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/decoded'))
+
 
 # ============ VARIABLES ============
 
@@ -33,9 +35,60 @@ objects_decoded = Blueprint('objects_decoded', __name__, template_folder=os.path
 
 # ============= ROUTES ==============
 
-# # TODO: # FIXME: CHECK IF OBJ EXIST
+@objects_decoded.route("/object/decodeds", methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def decodeds_dashboard():
+    if request.method == 'POST':
+        date_from = request.form.get('date_from')
+        date_to = request.form.get('date_to')
+        mimetype = request.form.get('mimetype')
+        algo = request.form.get('algo')
+        show_decoded = request.form.get('show_decoded')
+        return redirect(
+            url_for('objects_decoded.decodeds_dashboard', date_from=date_from, date_to=date_to, mimetype=mimetype,
+                    algo=algo, show=show_decoded))
+    else:
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        mimetype = request.args.get('mimetype')
+        algo = request.args.get('algo')
+        show_decoded = request.args.get('show')
+        if show_decoded:
+            show_decoded = True
 
-@objects_decoded.route("/object/decoded/download") #completely shows the paste in a new tab
+    if mimetype == 'All types':
+        mimetype = None
+    if algo == 'All encoding':
+        algo = None
+
+    algo = Decodeds.sanitise_algo(algo)
+    mimetype = Decodeds.sanitise_mimetype(mimetype)
+    date_from, date_to = Date.sanitise_daterange(date_from, date_to)
+    metas = []
+    if show_decoded:
+        decodeds = Decodeds.get_decodeds_by_daterange(date_from, date_to, algo=algo, mimetype=mimetype)
+        metas = []
+        for decoded_id in decodeds:
+            decoded = Decodeds.Decoded(decoded_id)
+            metas.append(decoded.get_meta(options={'sparkline', 'mimetype', 'icon', 'size', 'vt'}))
+
+    # TODO GET PIE CHARTS
+
+    return render_template("decoded/decodeds_dashboard.html", metas=metas, vt_enabled=Decodeds.is_vt_enabled(),
+                           date_from=date_from, date_to=date_to, algo=algo, mimetype=mimetype,
+                           algos=Decodeds.get_algos(), show_decoded=show_decoded,
+                           mimetypes=Decodeds.get_all_mimetypes())
+
+@objects_decoded.route("/object/decodeds/search", methods=['POST'])
+@login_required
+@login_read_only
+def decodeds_search():
+    decoded_id = request.form.get('object_id')
+    print(decoded_id)
+    return redirect(url_for('correlation.show_correlation', type='decoded', id=decoded_id))
+
+@objects_decoded.route("/object/decoded/download")
 @login_required
 @login_read_only
 def decoded_download():
@@ -51,7 +104,8 @@ def decoded_download():
     else:
         abort(404)
 
-@objects_decoded.route("/object/decoded/send_to_vt") #completely shows the paste in a new tab
+
+@objects_decoded.route("/object/decoded/send_to_vt")
 @login_required
 @login_read_only
 def send_to_vt():
@@ -66,7 +120,8 @@ def send_to_vt():
     else:
         abort(404)
 
-@objects_decoded.route("/object/decoded/refresh_vt_report") #completely shows the paste in a new tab
+
+@objects_decoded.route("/object/decoded/refresh_vt_report")
 @login_required
 @login_read_only
 def refresh_vt_report():
@@ -81,18 +136,42 @@ def refresh_vt_report():
     else:
         abort(404)
 
-@objects_decoded.route("/object/decoded/decoder_pie_chart_json", methods=['GET'])
+
+# TODO
+@objects_decoded.route("/object/decoded/algo_pie_chart/json", methods=['GET'])
 @login_required
 @login_read_only
 def decoder_pie_chart_json():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
-    mimetype = request.args.get('type')
+    mimetype = request.args.get('mimetype')
     return jsonify(Decodeds.api_pie_chart_decoder_json(date_from, date_to, mimetype))
 
+# TODO
+@objects_decoded.route("/object/decoded/mimetype_pie_chart/json", methods=['GET'])
+@login_required
+@login_read_only
+def mimetype_pie_chart_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    algo = request.args.get('algo')
+    return jsonify(Decodeds.api_pie_chart_mimetype_json(date_from, date_to, algo))
 
+@objects_decoded.route("/object/decoded/barchart/json", methods=['GET'])
+@login_required
+@login_read_only
+def barchart_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    mimetype = request.args.get('mimetype')
+    return jsonify(Decodeds.api_barchart_range_json(date_from, date_to , mimetype))
 
-
-
-
-#####################################################3
+@objects_decoded.route("/object/decoded/graphline/json", methods=['GET'])
+@login_required
+@login_read_only
+def graphline_json():
+    decoded_id = request.args.get('id')
+    decoded = Decodeds.Decoded(decoded_id)
+    if not decoded:
+        abort(404)
+    return jsonify(Decodeds.graphline_json(decoded_id))

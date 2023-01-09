@@ -84,7 +84,7 @@ class Cve(AbstractDaterangeObject):
             # 'Modified'
             return json_response
         else:
-            return {'error': 'cve search error'}  # TODO
+            return {'error': f'{response.status_code}'}
 
 # TODO  ADD SEARCH FUNCTION
 
@@ -121,6 +121,15 @@ def api_get_cves_range_by_daterange(date_from, date_to):
 def api_get_cves_meta_by_daterange(date_from, date_to):
     date = Date.sanitise_date_range(date_from, date_to)
     return get_cves_meta(get_cves_by_daterange(date['date_from'], date['date_to']), options=['sparkline'])
+
+def get_cve_graphline(cve_id):
+    cve = Cve(cve_id)
+    graphline = []
+    if cve.exists():
+        nb_day = 30
+        for date in Date.get_previous_date_list(nb_day):
+            graphline.append({'date': f'{date[0:4]}-{date[4:6]}-{date[6:8]}', 'value': cve.get_nb_seen_by_date(date)})
+    return graphline
 
 
 # if __name__ == '__main__':

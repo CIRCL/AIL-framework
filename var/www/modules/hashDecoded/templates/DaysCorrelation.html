@@ -594,8 +594,7 @@ function barchart_type(url, id) {
 						.attr("transform", "rotate(-20)" );
 						{% else %}
 						.attr("transform", "rotate(-70)" )
-						.attr("class", "bar")
-						.on("click", function (d) { window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}"+'?date_from='+d+'&date_to='+d });
+						.attr("class", "bar");
 						{% endif %}
 
         svg.append("g")
@@ -617,12 +616,6 @@ function barchart_type(url, id) {
             .attr("width", x.bandwidth())
             .attr("y", function(d) { return y(d.value); })
             .attr("height", function(d) { return height - y(d.value); })
-						{% if  type %}
-            .on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type={{type}}&date_from='+ d.date +'&date_to='+ d.date; });
-						{% endif  %}
-						{% if  daily_type_chart %}
-						.on("click", function(d){ window.location.href = "{{ url_for('hashDecoded.hashDecoded_page') }}" +'?type='+d.date+'&date_from={{ daily_date }}&date_to={{ daily_date }}'; });
-						{% endif  %}
 
 
         data.forEach(function(d) {

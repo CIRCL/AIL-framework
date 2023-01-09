@@ -65,7 +65,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             return last_seen
 
     def get_nb_seen(self):
-        return r_object.hget(f'meta:{self.type}:{self.id}', 'nb')
+        return self.get_nb_correlation('item')
 
     def get_nb_seen_by_date(self, date):
         nb = r_object.zscore(f'{self.type}:date:{date}', self.id)
@@ -108,20 +108,23 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             sparkline.append(self.get_nb_seen_by_date(date))
         return sparkline
 
+    def _add_create(self):
+        r_object.sadd(f'{self.type}:all', self.id)
+
+    # TODO don't increase nb if same hash in item with different encoding
+    # if hash already in item
     def _add(self, date, item_id):
         if not self.exists():
+            self._add_create(date)
             self.set_first_seen(date)
             self.set_last_seen(date)
-            r_object.sadd(f'{self.type}:all', self.id)
         else:
             self.update_daterange(date)
         update_obj_date(date, self.type)
 
         # NB Object seen by day
-        print(f'{self.type}:date:{date}', 1, self.id)
-        r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
-        # NB Object seen
-        r_object.hincrby(f'meta:{self.type}:{self.id}', 'nb', 1)
+        if not self.is_correlated('item', '', item_id):  # if decoded not already in object
+            r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
 
         # Correlations
         self.add_correlation('item', '', item_id)
