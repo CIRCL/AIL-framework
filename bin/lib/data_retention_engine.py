@@ -51,7 +51,7 @@ def get_obj_date_first(obj_type, subtype='', r_int=False):
         first = r_obj.hget(f'date:first', f'{obj_type}:{subtype}')
     if r_int:
         if not first:
-            return 0
+            return 99999999
         else:
             return int(first)
     return first
@@ -62,7 +62,7 @@ def get_obj_date_last(obj_type, subtype='', r_int=False):
         last = r_obj.hget(f'date:last', f'{obj_type}:{subtype}')
     if r_int:
         if not last:
-            return 99999999
+            return 0
         else:
             return int(last)
     return last
@@ -92,4 +92,8 @@ def update_obj_date(date, obj_type, subtype=''):
     if date > last:
         set_obj_date_last(date, obj_type, subtype=subtype)
 
+
+if __name__ == '__main__':
+    print(r_obj.hgetall(f'date:first'))
+    print(r_obj.hgetall(f'date:last'))
 
