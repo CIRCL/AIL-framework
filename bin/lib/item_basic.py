@@ -87,7 +87,7 @@ def get_item_mimetype(item_id):
 
 # # # # TREE CHILD/FATHER # # # #
 def is_parent(item_id):
-    return r_object.exists(f'obj:child:item::{item_id}')
+    return r_object.exists(f'child:item::{item_id}')
 
 def is_children(item_id):
     return r_object.hexists(f'meta:item::{item_id}' 'parent')
@@ -145,7 +145,7 @@ def get_item_parent(item_id):
     return r_object.hget(f'meta:item::{item_id}', 'parent')
 
 def get_item_children(item_id):
-    return list(r_object.smembers(f'obj:child:item::{item_id}'))
+    return list(r_object.smembers(f'child:item::{item_id}'))
 
 # # TODO:  handle domain last origin in domain lib
 # def _delete_node(item_id):

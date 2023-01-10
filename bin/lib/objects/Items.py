@@ -40,10 +40,6 @@ baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
-################################################################################
-################################################################################
-################################################################################
-
 class Item(AbstractObject):
     """
     AIL Item Object. (strings)
@@ -127,23 +123,27 @@ class Item(AbstractObject):
         return item_basic.get_item_parent(self.id)
 
     def set_parent(self, parent_id):
-        r_object.sadd(f'obj:child:item::{parent_id}', self.id)  # TODO
+        r_object.sadd(f'child:item::{parent_id}', self.id)
         r_object.hset(f'meta:item::{self.id}', 'parent', parent_id)
 
     def add_children(self, child_id):
-        r_object.sadd(f'obj:child:item::{self.id}', child_id)  # TODO
+        r_object.sadd(f'child:item::{self.id}', child_id)
         r_object.hset(f'meta:item::{child_id}', 'parent', self.id)
+
+####################################################################################
+####################################################################################
 
     def sanitize_id(self):
         pass
 
+
     # # TODO: sanitize_id
     # # TODO: check if already exists ?
     # # TODO: check if duplicate
-    def save_on_disk(self, content, binary=True, compressed=False, base64=False):
+    def save_on_disk(self, content, binary=True, compressed=False, b64=False):
         if not binary:
             content = content.encode()
-        if base64:
+        if b64:
             content = base64.standard_b64decode(content)
         if not compressed:
             content = gzip.compress(content)
@@ -156,9 +156,8 @@ class Item(AbstractObject):
         with open(filename, 'wb') as f:
             f.write(content)
 
-
-    # # TODO: correlations
-    #
+    # # TODO:
+    # correlations
     # content
     # tags
     # origin
@@ -180,10 +179,6 @@ class Item(AbstractObject):
                 self.add_duplicate(obj_id, dup['algo'], dup['similarity'])
 
 
-
-
-
-
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
     def delete(self):
@@ -193,6 +188,9 @@ class Item(AbstractObject):
             return True
         except FileNotFoundError:
             return False
+
+####################################################################################
+####################################################################################
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -206,17 +204,16 @@ class Item(AbstractObject):
             color = 'red'
         else:
             color = '#332288'
-        return {'style': '', 'icon': '', 'color': color, 'radius':5}
+        return {'style': '', 'icon': '', 'color': color, 'radius': 5}
 
     def get_misp_object(self):
         obj_date = self.get_date()
         obj = MISPObject('ail-leak', standalone=True)
         obj.first_seen = obj_date
 
-        obj_attrs = []
-        obj_attrs.append( obj.add_attribute('first-seen', value=obj_date) )
-        obj_attrs.append( obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()) )
-        obj_attrs.append( obj.add_attribute('sensor', value=get_ail_uuid()) )
+        obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
+                     obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),
+                     obj.add_attribute('sensor', value=get_ail_uuid())]
         for obj_attr in obj_attrs:
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
@@ -253,12 +250,16 @@ class Item(AbstractObject):
         self.set_parent(parent_id)
 
     # options: set of optional meta fields
-    def get_meta(self, options=set()):
-        meta = {}
-        meta['id'] = self.id
-        meta['date'] = self.get_date(separator=True) ############################ # TODO:
-        meta['source'] = self.get_source()
-        meta['tags'] = self.get_tags(r_list=True)
+    def get_meta(self, options=None):
+        """
+        :type options: set
+        """
+        if options is None:
+            options = set()
+        meta = {'id': self.id,
+                'date': self.get_date(separator=True),
+                'source': self.get_source(),
+                'tags': self.get_tags(r_list=True)}
         # optional meta fields
         if 'content' in options:
             meta['content'] = self.get_content()
@@ -282,7 +283,12 @@ class Item(AbstractObject):
         # meta['encoding'] = None
         return meta
 
-    def get_meta_crawler(self, tags=[]):
+    def get_meta_crawler(self, tags=None):
+        """
+        :type tags: list
+        """
+        if tags is None:
+            tags = []
         crawler = {}
         if self.is_crawled():
             crawler['domain'] = self.get_domain()
@@ -330,20 +336,23 @@ class Item(AbstractObject):
     ############################################################################
     ############################################################################
 
-def _get_dir_source_name(dir, source_name=None, l_sources_name=set(), filter_dir=False):
+def _get_dir_source_name(directory, source_name=None, l_sources_name=None, filter_dir=False):
+    """
+    :type l_sources_name: set
+    """
     if not l_sources_name:
         l_sources_name = set()
     if source_name:
-        l_dir = os.listdir(os.path.join(dir, source_name))
+        l_dir = os.listdir(os.path.join(directory, source_name))
     else:
-        l_dir = os.listdir(dir)
+        l_dir = os.listdir(directory)
     # empty directory
     if not l_dir:
         return l_sources_name.add(source_name)
     else:
         for src_name in l_dir:
             if len(src_name) == 4:
-                #try:
+                # try:
                 int(src_name)
                 to_add = os.path.join(source_name)
                 # filter sources, remove first directory
@@ -351,11 +360,11 @@ def _get_dir_source_name(dir, source_name=None, l_sources_name=set(), filter_dir
                     to_add = to_add.replace('archive/', '').replace('alerts/', '')
                 l_sources_name.add(to_add)
                 return l_sources_name
-                #except:
+                # except:
                 #    pass
             if source_name:
                 src_name = os.path.join(source_name, src_name)
-            l_sources_name = _get_dir_source_name(dir, source_name=src_name, l_sources_name=l_sources_name, filter_dir=filter_dir)
+            l_sources_name = _get_dir_source_name(directory, source_name=src_name, l_sources_name=l_sources_name, filter_dir=filter_dir)
     return l_sources_name
 
 def get_items_sources(filter_dir=False, r_list=False):
@@ -397,6 +406,7 @@ def _manual_set_items_date_first_last():
 ################################################################################
 ################################################################################
 ################################################################################
+            # TODO
 
 def exist_item(item_id):
     return item_basic.exist_item(item_id)
@@ -454,12 +464,6 @@ def get_item_metadata(item_id, item_content=None):
                      'lines': get_lines_info(item_id, item_content=item_content)
                      }
     return item_metadata
-
-def get_item_parent(item_id):
-    return item_basic.get_item_parent(item_id)
-
-def add_item_parent(item_parent, item_id):
-    return item_basic.add_item_parent(item_parent, item_id)
 
 def get_item_content(item_id):
     return item_basic.get_item_content(item_id)
@@ -646,15 +650,13 @@ def get_domain(item_id):
     item_id = item_id[-1]
     return item_id[:-36]
 
+# TODO MOVE ME
 def get_item_har_name(item_id):
     har_path = os.path.join(har_directory, item_id) + '.json'
     if os.path.isfile(har_path):
         return har_path
     else:
         return None
-
-def get_item_har(har_path):
-    pass
 
 def get_item_filename(item_id):
     # Creating the full filepath
@@ -716,10 +718,6 @@ def create_item(obj_id, obj_metadata, io_content):
 
     # Item not created
     return False
-
-# # TODO:
-def delete_item(obj_id):
-    pass
 
     # # check if item exists
     # if not exist_item(obj_id):

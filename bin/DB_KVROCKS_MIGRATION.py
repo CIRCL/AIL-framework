@@ -369,11 +369,11 @@ def get_item_duplicates_dict(item_id):
 def items_migration():
     print('ITEMS MIGRATION...')
     # MIGRATE IMPORTED URLEXTRACT Father
-    # for item_id in Items.get_items_by_source('urlextract'):
-    #     father_id = get_item_father(item_id)
-    #     if father_id:
-    #         item = Items.Item(item_id)
-    #         item.set_father(father_id)
+    for item_id in Items.get_items_by_source('urlextract'):
+        father_id = get_item_father(item_id)
+        if father_id:
+            item = Items.Item(item_id)
+            item.set_parent(father_id)
 
     # DUPLICATES
     for tag in ['infoleak:automatic-detection="credential"']:  # Creditcards, Mail, Keys ???????????????????????????????
@@ -871,10 +871,10 @@ if __name__ == '__main__':
     #core_migration()
     #user_migration()
     #tags_migration()
-    # items_migration()
+    items_migration()
     #crawler_migration()
     # domain_migration()                      # TO TEST ###########################
-    decodeds_migration()
+    # decodeds_migration()
     # screenshots_migration()
     # subtypes_obj_migration()
     # ail_2_ail_migration()
