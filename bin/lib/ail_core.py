@@ -12,13 +12,13 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 
 config_loader = ConfigLoader()
-
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
-AIL_OBJECTS = {'cve', 'cryptocurrency', 'decoded', 'domain', 'item', 'pgp', 'screenshot', 'username'}
+AIL_OBJECTS = sorted({'cve', 'cryptocurrency', 'decoded', 'domain', 'item', 'pgp', 'screenshot', 'username'})
 
 def get_ail_uuid():
-    pass
+    return r_serv_db.get('ail:uuid')
 
 #### AIL OBJECTS ####
 
@@ -33,11 +33,21 @@ def get_object_all_subtypes(obj_type):
     if obj_type == 'username':
         return ['telegram', 'twitter', 'jabber']
 
+def get_all_objects_with_subtypes_tuple():
+    str_objs = []
+    for obj_type in get_all_objects():
+        subtypes = get_object_all_subtypes(obj_type)
+        if subtypes:
+            for subtype in subtypes:
+                str_objs.append((obj_type, subtype))
+        else:
+            str_objs.append((obj_type, ''))
+    return str_objs
+
 ##-- AIL OBJECTS --##
 
 def paginate_iterator(iter_elems, nb_obj=50, page=1):
-    dict_page = {}
-    dict_page['nb_all_elem'] = len(iter_elems)
+    dict_page = {'nb_all_elem': len(iter_elems)}
     nb_pages = dict_page['nb_all_elem'] / nb_obj
     if not nb_pages.is_integer():
         nb_pages = int(nb_pages)+1

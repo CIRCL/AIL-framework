@@ -107,8 +107,8 @@
 
 									{% if metadata['misp_events'] %}
 										{% for misp_url in metadata['misp_events'] %}
-											<a target="_blank" href="{{misp_url}}/events/view/{{metadata['uuid'][:8]}}-{{metadata['uuid'][8:12]}}-{{metadata['uuid'][12:16]}}-{{metadata['uuid'][16:20]}}-{{metadata['uuid'][20:]}}">
-												{{misp_url}}/events/view/{{metadata['uuid'][:8]}}-{{metadata['uuid'][8:12]}}-{{metadata['uuid'][12:16]}}-{{metadata['uuid'][16:20]}}-{{metadata['uuid'][20:]}}</br>
+											<a target="_blank" href="{{ misp_url }}">
+												{{ misp_url }}</br>
 											</a>
 										{% endfor %}
 									{% endif %}

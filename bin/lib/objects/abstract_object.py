@@ -243,6 +243,14 @@ class AbstractObject(ABC):
         """
         return is_obj_correlated(self.type, self.subtype, self.id, type2, subtype2, id2)
 
+    def are_correlated(self, object2):
+        """
+        Check if an object is correlated with another Object
+        :type object2 AbstractObject
+        """
+        return is_obj_correlated(self.type, self.subtype, self.id,
+                                 object2.get_type(), object2.get_subtype(r_str=True), object2.get_id())
+
     def delete_correlation(self, type2, subtype2, id2):
         """
         Get object correlations

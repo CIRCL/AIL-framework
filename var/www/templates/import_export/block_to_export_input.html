@@ -1,38 +1,21 @@
 <div class="input-group mb-1">
-	<select class="custom-select col-2" name="{{input_uuid}}" value="{{obj_type}}">
-		{% if not obj_type %}
-			<option selected="">Object type...</option>
-		{% else %}
-			<option>Object type...</option>
-		{% endif %}
-		<option value="item" {%if obj_type=="item"%}selected{%endif%}>Item</option>
-		<option value="domain" {%if obj_type=="domain"%}selected{%endif%}>Domain</option>
-		<option value="image" {%if obj_type=="image"%}selected{%endif%}>Image</option>
-		<option value="decoded" {%if obj_type=="decoded"%}selected{%endif%}>Decoded</option>
-		<option value="pgp;key" {%if obj_type=="pgp" and obj_subtype=="key"%}selected{%endif%}>PGP - Key</option>
-		<option value="pgp;name" {%if obj_type=="pgp" and obj_subtype=="name"%}selected{%endif%}>PGP - Name</option>
-		<option value="pgp;mail" {%if obj_type=="pgp" and obj_subtype=="mail"%}selected{%endif%}>PGP - Mail</option>
-		<option value="cryptocurrency;bitcoin" {%if obj_type=="cryptocurrency" and obj_subtype=="bitcoin"%}selected{%endif%}>Cryptocurrency - Bitcoin</option>
-		<option value="cryptocurrency;bitcoin-cash" {%if obj_type=="cryptocurrency" and obj_subtype=="bitcoin-cash"%}selected{%endif%}>Cryptocurrency - Bitcoin Cash</option>
-		<option value="cryptocurrency;dash" {%if obj_type=="cryptocurrency" and obj_subtype=="dash"%}selected{%endif%}>Cryptocurrency - Dash</option>
-		<option value="cryptocurrency;etherum" {%if obj_type=="cryptocurrency" and obj_subtype=="etherum"%}selected{%endif%}>Cryptocurrency - Etherum</option>
-		<option value="cryptocurrency;litecoin" {%if obj_type=="cryptocurrency" and obj_subtype=="litecoin"%}selected{%endif%}>Cryptocurrency - Litecoin</option>
-		<option value="cryptocurrency;monero" {%if obj_type=="cryptocurrency" and obj_subtype=="monero"%}selected{%endif%}>Cryptocurrency - Monero</option>
-		<option value="cryptocurrency;zcash" {%if obj_type=="cryptocurrency" and obj_subtype=="zcash"%}selected{%endif%}>Cryptocurrency - Zcash</option>
-
-		<option value="username;telegram" {%if obj_type=="username" and obj_subtype=="telegram"%}selected{%endif%}>Username - telegram</option>
-		<option value="username;twitter" {%if obj_type=="username" and obj_subtype=="twitter"%}selected{%endif%}>Username - twitter</option>
-		<option value="username;jabber" {%if obj_type=="username" and obj_subtype=="jabber"%}selected{%endif%}>Username - jabber</option>
-
+	<select class="custom-select col-2" name="{{input_uuid}}" disabled>
+        <option selected="" value="{{ obj_type }}:{{ obj_subtype }}">
+            {% if obj_subtype %}
+                {{ obj_type }} - {{ obj_subtype }}
+            {%  else %}
+                {{ obj_type }}
+            {% endif %}
+        </option>
 	</select>
-	<input type="text" class="form-control col-8 {%if obj_error%}is-invalid{%else%}is-valid{%endif%}" name="{{input_uuid}}" value="{{obj_id}}">
+	<input type="text" class="form-control col-8 {%if obj_error%}is-invalid{%else%}is-valid{%endif%}" name="{{input_uuid}}" value="{{obj_id}}" disabled>
 	<input class="form-control col-1" type="number" min="0" name="{{input_uuid}}" {%if obj_lvl%}value="{{obj_lvl}}"{%else%}value="0"{%endif%}>
-	<span class="btn btn-danger input-group-addon delete-field col-1"><i class="fas fa-trash-alt"></i></span>
+	<span class="btn btn-danger input-group-addon delete-field col-1" id="{{ obj_type }}:{{ obj_subtype }}:{{ obj_id }}"><i class="fas fa-trash-alt"></i></span>
 	<div class="invalid-feedback">
 		{%if obj_type=="Object type..."%}
 			&nbsp;&nbsp;&nbsp; Please select an object type.
 		{%else%}
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Unknow or Invalid ID.
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Unknown or Invalid ID.
 		{%endif%}
   </div>
 </div>

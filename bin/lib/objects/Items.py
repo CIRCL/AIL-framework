@@ -88,10 +88,13 @@ class Item(AbstractObject):
         else:
             return item_basic.get_item_content(self.id)
 
-    def get_raw_content(self):
+    def get_raw_content(self, decompress=False):
         filepath = self.get_filename()
-        with open(filepath, 'rb') as f:
-            raw_content = BytesIO(f.read())
+        if decompress:
+            raw_content = BytesIO(self.get_content(binary=True))
+        else:
+            with open(filepath, 'rb') as f:
+                raw_content = BytesIO(f.read())
         return raw_content
 
     def get_gzip_content(self, b64=False):

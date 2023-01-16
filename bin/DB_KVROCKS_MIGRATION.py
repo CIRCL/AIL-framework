@@ -564,7 +564,7 @@ def domain_migration():
                 for history in get_domain_history_by_port(domain_type, dom, port):
                     epoch = history['epoch']
                     # DOMAIN DOWN
-                    if not history.get('status'): # domain DOWN
+                    if not history.get('status'):  # domain DOWN
                         domain.add_history(epoch)
                         print(f'DOWN {epoch}')
                     # DOMAIN UP
@@ -585,6 +585,7 @@ def domain_migration():
 
                     #print()
 
+    # TODO REMOVE INVALID DOMAINS
     for domain_type in ['onion', 'regular']:
         for date in Date.get_date_range_today('20190101'):
             for dom in get_domain_down_by_date(domain_type, date):
@@ -601,7 +602,7 @@ def domain_migration():
                 domain.update_daterange(last_check)
                 if last_origin:
                     domain.set_last_origin(last_origin)
-                domain.add_history(None, None, date=date)
+                domain.add_history(0, None, date=date)
 
 
 ###############################
@@ -871,12 +872,12 @@ if __name__ == '__main__':
     #core_migration()
     #user_migration()
     #tags_migration()
-    items_migration()
-    #crawler_migration()
-    # domain_migration()                      # TO TEST ###########################
+    # items_migration()
+    # crawler_migration()
+    domain_migration()                      # TO TEST ###########################
     # decodeds_migration()
     # screenshots_migration()
-    # subtypes_obj_migration()
+    subtypes_obj_migration()
     # ail_2_ail_migration()
     # trackers_migration()
     # investigations_migration()

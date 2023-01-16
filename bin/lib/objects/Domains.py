@@ -420,11 +420,15 @@ class Domain(AbstractObject):
     def add_history(self, epoch, root_item=None, date=None):
         if not date:
             date = time.strftime('%Y%m%d', time.gmtime(epoch))
-        try:
-            root_item = int(root_item)
+        if not root_item:
+            root_item = int(epoch)
             status = False
-        except (ValueError, TypeError):
-            status = True
+        else:
+            try:
+                root_item = int(root_item)
+                status = False
+            except (ValueError, TypeError):
+                status = True
 
         update_obj_date(date, 'domain', self.domain_type)
         # UP

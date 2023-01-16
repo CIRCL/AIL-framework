@@ -171,7 +171,7 @@
 							{% for key_id in all_metadata %}
 									<tr>
 										<td><i class="{{ all_metadata[key_id]['type_icon'] }}"></i>&nbsp;&nbsp;{{ all_metadata[key_id]['type_id'] }}</td>
-										<td><a target="_blank" href="{{ url_for(show_key_id_endpoint) }}?object_type={{correlation_type_n}}&type_id={{ all_metadata[key_id]['type_id'] }}&correlation_id={{ key_id }}&correlation_objects=paste">{{ key_id }}</a></td>
+										<td><a target="_blank" href="{{ url_for(show_key_id_endpoint) }}?type={{correlation_type_n}}&subtype={{ all_metadata[key_id]['type_id'] }}&id={{ key_id }}">{{ key_id }}</a></td>
 										<td>{{ all_metadata[key_id]['first_seen'] }}</td>
 										<td>{{ all_metadata[key_id]['last_seen'] }}</td>
 										<td>{{ all_metadata[key_id]['nb_seen'] }}</td>

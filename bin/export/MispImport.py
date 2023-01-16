@@ -13,8 +13,6 @@ from lib.objects import ail_objects
 
 from lib.objects import Items
 
-from export import AILObjects
-
 # MISP
 from pymisp import MISPEvent, MISPObject, PyMISP
 
@@ -218,10 +216,6 @@ def create_obj_relationships(map_uuid_global_id, misp_obj):
 
                 # TODO CREATE OBJ RELATIONSHIP
 
-def create_map_all_obj_uuid_golbal_id(map_uuid_global_id):
-    for obj_uuid in map_uuid_global_id:
-        AILObjects.create_map_obj_uuid_golbal_id(obj_uuid, map_uuid_global_id[obj_uuid])
-
 def import_objs_from_file(filepath):
     map_uuid_global_id = {}
 
@@ -237,7 +231,6 @@ def import_objs_from_file(filepath):
     for misp_obj in event_to_import.objects:
         create_obj_relationships(map_uuid_global_id, misp_obj)
 
-    create_map_all_obj_uuid_golbal_id(map_uuid_global_id)
     return map_uuid_global_id
 
 

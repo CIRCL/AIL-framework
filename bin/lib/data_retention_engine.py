@@ -96,4 +96,3 @@ def update_obj_date(date, obj_type, subtype=''):
 if __name__ == '__main__':
     print(r_obj.hgetall(f'date:first'))
     print(r_obj.hgetall(f'date:last'))
-

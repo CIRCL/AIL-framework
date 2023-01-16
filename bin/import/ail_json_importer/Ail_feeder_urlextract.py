@@ -12,11 +12,15 @@ import sys
 import datetime
 import uuid
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
-import item_basic
-
 sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import', 'ail_json_importer'))
 from Default_json import Default_json
+
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.objects.Items import Item
+
 
 class Ail_feeder_urlextract(Default_json):
     """urlextract Feeder functions"""
@@ -46,13 +50,14 @@ class Ail_feeder_urlextract(Default_json):
 
     # # TODO:
     def process_json_meta(self, process, item_id):
-        '''
+        """
         Process JSON meta filed.
-        '''
+        """
         json_meta = self.get_json_meta()
+        parent_id = str(json_meta['parent:twitter:tweet_id']) # TODO SEARCH IN CACHE !!!
+        item = Item(item_id)
+        item.set_parent(parent_id)
 
         # # TODO: change me
-        parent_type = 'twitter_id'
-
-        parent_id = str(json_meta['parent:twitter:tweet_id'])
-        item_basic.add_item_parent_by_parent_id(parent_type, parent_id, item_id)
+        # parent_type = 'twitter_id'
+        # item_basic.add_item_parent_by_parent_id(parent_type, parent_id, item_id)

@@ -131,7 +131,7 @@ def get_all_types_id(correlation_type):
 
 def get_key_id_metadata(obj_type, subtype, obj_id):
     obj = ail_objects.get_object_meta(obj_type, subtype, obj_id)
-    return obj._get_meta()
+    return obj
 
 def list_sparkline_type_id_values(date_range_sparkline, correlation_type, type_id, key_id):
     sparklines_value = []

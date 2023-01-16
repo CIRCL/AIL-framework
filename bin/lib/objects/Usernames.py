@@ -18,7 +18,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 
 config_loader = ConfigLoader()
-
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 

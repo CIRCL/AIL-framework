@@ -34,7 +34,7 @@
 						</div>
 						<div class="card-body">
 
-							<form action="{{ url_for('import_export.export_object_file') }}" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+							<form action="{{ url_for('import_export.objects_misp_export_post') }}" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
 
 								<div id="container-id-to-import">
 
@@ -47,36 +47,30 @@
 									</div>
 
 									<div class="form-horizontal">
-									  <div class="form-body">
-									    <div class="form-group">
-									      <div class="fields">
-									        <div class="input-group mb-1">
-														<select class="custom-select col-2" name="first_obj_to_export" id="obj_input_type">
-													    <option selected>Object type...</option>
-													    <option value="item">Item</option>
-													    <option value="domain">Domain</option>
-													    <option value="image">Image</option>
-															<option value="decoded">Decoded</option>
-															<option value="pgp;key">PGP - Key</option>
-															<option value="pgp;name">PGP - Name</option>
-															<option value="pgp;mail">PGP - Mail</option>
-															<option value="cryptocurrency;bitcoin">Cryptocurrency - Bitcoin</option>
-															<option value="cryptocurrency;bitcoin-cash">Cryptocurrency - Bitcoin Cash</option>
-															<option value="cryptocurrency;dash">Cryptocurrency - Dash</option>
-															<option value="cryptocurrency;etherum">Cryptocurrency - Etherum</option>
-															<option value="cryptocurrency;litecoin">Cryptocurrency - Litecoin</option>
-															<option value="cryptocurrency;monero">Cryptocurrency - Monero</option>
-															<option value="cryptocurrency;zcash">Cryptocurrency - Zcash</option>
-															<option value="username;telegram">Username - telegram</option>
-															<option value="username;twitter">Username - twitter</option>
-															<option value="username;jabber">Username - jabber</option>
-													  </select>
-									          <input type="text" class="form-control col-8" name="first_obj_to_export" id="obj_input_id">
+                                        <div class="form-body">
+                                            <div class="form-group">
+                                                <div class="fields">
+                                                    <div class="input-group mb-1">
+                                                        <select class="custom-select col-2" name="first_obj_to_export" id="obj_input_type">
+                                                            <option selected>Object type...</option>
+                                                            {% for object_type in object_types %}
+                                                                <option value="{{ object_type[0] }}:{{ object_type[1] }}">
+                                                                    {% if object_type[1] %}
+                                                                        {{ object_type[0] }} - {{ object_type[1] }}
+                                                                    {%  else %}
+                                                                        {{ object_type[0] }}
+                                                                    {% endif %}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+
+                                                        <input type="text" class="form-control col-8" name="first_obj_to_export" id="obj_input_id">
 														<input class="form-control col-1" type="number" min="0" value="0" name="first_obj_to_export" id="obj_input_lvl">
-									          <span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
-									        </div>
-													{% for obj_dict in l_obj_to_export %}
-														{% with obj_type=obj_dict['type'], obj_subtype=obj_dict.get('subtype', None), obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict, obj_error=False%}
+									                    <span class="btn btn-info input-group-addon add-field col-1"><i class="fas fa-plus"></i></span>
+									                </div>
+
+													{% for obj_dict in to_export %}
+														{% with obj_type=obj_dict['type'], obj_subtype=obj_dict['subtype'], obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict, obj_error=False%}
 															{% include 'import_export/block_to_export_input.html' %}
 														{% endwith %}
 													{% endfor %}
@@ -84,7 +78,7 @@
 													<br>
 
 													{% for obj_dict in l_obj_invalid %}
-														{% with obj_type=obj_dict['type'], obj_subtype=obj_dict.get('subtype', None), obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict['uuid'], obj_error=True%}
+														{% with obj_type=obj_dict['type'], obj_subtype=obj_dict.get('subtype', None), obj_id=obj_dict['id'], obj_lvl=obj_dict['lvl'], input_uuid=obj_dict, obj_error=True%}
 															{% include 'import_export/block_to_export_input.html' %}
 														{% endwith %}
 													{% endfor %}
@@ -119,10 +113,10 @@
 						</div>
 					</div>
 
-					{% if event_metadata %}
+					{% if misp_url %}
 						MISP Event Created:
-						<a target="_blank" href="{{  event_metadata['url'] }}">
-							{{  event_metadata['url'] }}
+						<a target="_blank" href="{{  misp_url }}">
+							{{  misp_url }}
 						</a>
 					{% endif %}
 
@@ -155,7 +149,17 @@ function toggle_sidebar(){
 }
 
 var input_1 = '<div class="input-group mb-1"><select class="custom-select col-2" name="'
-var input_2 = '"><option selected>Object type...</option><option value="item">Item</option><option value="domain">Domain</option><option value="image">Image</option><option value="decoded">Decoded</option><option value="pgp;key">PGP - Key</option><option value="pgp;name">PGP - Name</option><option value="pgp;mail">PGP - Mail</option><option value="cryptocurrency;bitcoin">Cryptocurrency - Bitcoin</option><option value="cryptocurrency;bitcoin-cash">Cryptocurrency - Bitcoin Cash</option><option value="cryptocurrency;dash">Cryptocurrency - Dash</option><option value="cryptocurrency;etherum">Cryptocurrency - Etherum</option><option value="cryptocurrency;litecoin">Cryptocurrency - Litecoin</option><option value="cryptocurrency;monero">Cryptocurrency - Monero</option><option value="cryptocurrency;zcash">Cryptocurrency - Zcash</option></select><input type="text" class="form-control col-8" name="'
+var input_2 = '"><option selected>Object type...</option>' +
+    {% for object_type in object_types %}
+        '<option value="{{ object_type[0] }}:{{ object_type[1] }}">' +
+        {% if object_type[1] %}
+            '{{ object_type[0] }} - {{ object_type[1] }}' +
+        {%  else %}
+            '{{ object_type[0] }}' +
+        {% endif %}
+        '</option>' +
+    {% endfor %}
+    '</select><input type="text" class="form-control col-8" name="'
 var input_3 = '"><input class="form-control col-1" type="number" min="0" value="0" name="'
 var input_4 = '"></div>';
 var minusButton = '<span class="btn btn-danger input-group-addon delete-field col-1"><i class="fas fa-trash-alt"></i></span>';
@@ -163,13 +167,15 @@ var minusButton = '<span class="btn btn-danger input-group-addon delete-field co
 $('.add-field').click(function() {
 	var new_uuid = uuidv4();
 	var template = input_1 + new_uuid + input_2 + new_uuid + input_3+ new_uuid + input_4;
-  var temp = $(template).insertBefore('.help-block');
-  temp.append(minusButton);
+    var temp = $(template).insertBefore('.help-block');
+    temp.append(minusButton);
 });
 
 $('.fields').on('click', '.delete-field', function(){
-  $(this).parent().remove();
-	//$.get( "#")
+    var obj = $(this).attr('id').split(":", 3);
+    var params = "?type=" + obj[0] + "&subtype=" + obj[1] +"&id=" + obj[2];
+    $.ajax({url: "{{ url_for('import_export.delete_object_id_to_export') }}" + params })
+    $(this).parent().remove();
 });
 
 

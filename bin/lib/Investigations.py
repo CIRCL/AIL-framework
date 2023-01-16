@@ -200,8 +200,8 @@ class Investigation(object):
         else:
             raise UpdateInvestigationError(f'Invalid analysis: {analysis}')
 
-    def add_misp_events(self, misp_url):
-        r_tracking.sadd(f'investigations:misp:{self.uuid}', misp_url)
+    def add_misp_events(self, event_uuid):
+        r_tracking.sadd(f'investigations:misp:{self.uuid}', event_uuid)
 
     def set_tags(self, tags):
         # delete previous tags

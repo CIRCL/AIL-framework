@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-'''
-    Flask functions and routes for the trending modules page
-'''
+"""
+    Flask functions and routes for the Item Submit modules page
+"""
 ##################################
 # Import External packages
 ##################################
 import re
 import os
 import sys
-import json
 import string
 import datetime
 import unicodedata
@@ -20,7 +19,7 @@ from io import BytesIO
 from functools import wraps
 
 # Flask
-from flask import Flask, render_template, jsonify, request, Blueprint, url_for, redirect, abort
+from flask import render_template, jsonify, request, Blueprint, url_for, redirect, abort
 from Role_Manager import login_admin, login_analyst
 from flask_login import login_required
 
@@ -28,56 +27,39 @@ from flask_login import login_required
 ##################################
 # Import Project packages
 ##################################
+from export import Export
 from lib import Tag
 from lib.objects.Items import Item
 
 from packages import Import_helper
 
-from pytaxonomies import Taxonomies
+from pytaxonomies import Taxonomies # TODO REMOVE ME
 
-try:
-    from pymisp.mispevent import MISPObject
-    flag_misp = True
-except:
-    flag_misp = False
-try:
-    from thehive4py.models import Case, CaseTask, CustomFieldHelper, CaseObservable
-    flag_hive = True
-except:
-    flag_hive = False
 
 # ============ VARIABLES ============
 import Flask_config
 
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl
-r_serv_metadata = Flask_config.r_serv_metadata
-r_serv_db = Flask_config.r_serv_db
-r_serv_log_submit = Flask_config.r_serv_log_submit
+
+
+
+r_serv_metadata = Flask_config.r_serv_metadata # TODO REMOVE ME
+r_serv_db = Flask_config.r_serv_db # TODO REMOVE ME
+r_serv_log_submit = Flask_config.r_serv_log_submit # TODO REMOVE ME
 
 logger = Flask_config.redis_logger
 
-pymisp = Flask_config.pymisp
-if pymisp is False:
-    flag_misp = False
-
-HiveApi = Flask_config.HiveApi
-if HiveApi is False:
-    flag_hive = False
-
-PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder='templates')
 
 valid_filename_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 
 UPLOAD_FOLDER = Flask_config.UPLOAD_FOLDER
 
-misp_event_url = Flask_config.misp_event_url
-hive_case_url = Flask_config.hive_case_url
-
 text_max_size = int(Flask_config.SUBMIT_PASTE_TEXT_MAX_SIZE) / (1000*1000)
 file_max_size = int(Flask_config.SUBMIT_PASTE_FILE_MAX_SIZE) / (1000*1000*1000)
 allowed_extensions = ", ". join(Flask_config.SUBMIT_PASTE_FILE_ALLOWED_EXTENSIONS)
 
+PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder='templates')
 
 # ============ Validators ============
 def limit_content_length():
@@ -116,133 +98,6 @@ def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
 
     # keep only whitelisted chars
     return ''.join(c for c in cleaned_filename if c in whitelist)
-
-def date_to_str(date):
-    return "{0}-{1}-{2}".format(date.year, date.month, date.day)
-
-def misp_create_event(distribution, threat_level_id, analysis, info, l_tags, publish, path):
-
-    item = Item(path)
-    source = item.get_source()
-    ail_uuid = r_serv_db.get('ail:uuid')
-    pseudofile = BytesIO(item.get_content(binary=True))
-
-    temp = item.get_duplicates()
-
-    # beautifier
-    if not temp:
-        temp = ''
-
-    p_duplicate_number = len(temp) if len(temp) >= 0 else 0
-
-    to_ret = ""
-    for dup in temp[:10]:
-        dup = dup.replace('\'','\"').replace('(','[').replace(')',']')
-        dup = json.loads(dup)
-        algo = dup[0]
-        path = dup[1].split('/')[-6:]
-        path = '/'.join(path)[:-3] # -3 removes .gz
-        if algo == 'tlsh':
-            perc = 100 - int(dup[2])
-        else:
-            perc = dup[2]
-        to_ret += "{}: {} [{}%]\n".format(path, algo, perc)
-    p_duplicate = to_ret
-
-    today = datetime.date.today()
-    # [0-3]
-    if publish == 'True':
-        published = True
-    else:
-        published = False
-    org_id = None
-    orgc_id = None
-    sharing_group_id = None
-    date = today
-    event = pymisp.new_event(distribution, threat_level_id,
-            analysis, info, date,
-            published, orgc_id, org_id, sharing_group_id)
-    eventUuid = event['Event']['uuid']
-    eventid = event['Event']['id']
-
-    r_serv_metadata.set('misp_events:'+path, eventid)
-
-    # add tags
-    for tag in l_tags:
-        pymisp.tag(eventUuid, tag)
-
-    # create attributes
-    obj_name = 'ail-leak'
-    leak_obj = MISPObject(obj_name)
-    leak_obj.add_attribute('sensor', value=ail_uuid, type="text")
-    leak_obj.add_attribute('origin', value=source, type='text')
-    leak_obj.add_attribute('last-seen', value=date_to_str(item.get_date()), type='datetime')
-    leak_obj.add_attribute('raw-data', value=source, data=pseudofile, type="attachment")
-
-    if p_duplicate_number > 0:
-        leak_obj.add_attribute('duplicate', value=p_duplicate, type='text')
-        leak_obj.add_attribute('duplicate_number', value=p_duplicate_number, type='counter')
-
-    try:
-        templateID = [x['ObjectTemplate']['id'] for x in pymisp.get_object_templates_list()['response'] if x['ObjectTemplate']['name'] == obj_name][0]
-    except IndexError:
-        valid_types = ", ".join([x['ObjectTemplate']['name'] for x in pymisp.get_object_templates_list()])
-        print (f"Template for type {obj_name} not found! Valid types are: {valid_types}")
-        return False
-    r = pymisp.add_object(eventid, templateID, leak_obj)
-    if 'errors' in r:
-        print(r)
-        return False
-    else:
-        event_url = misp_event_url + eventid
-        return event_url
-
-def hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, l_tags, path):
-
-    ail_uuid = r_serv_db.get('ail:uuid')
-    source = path.split('/')[-6:]
-    source = '/'.join(source)[:-3]
-    # get item date
-    var = path.split('/')
-    last_seen = "{0}-{1}-{2}".format(var[-4], var[-3], var[-2])
-
-    case = Case(title=hive_case_title,
-                tlp=hive_tlp,
-                severity=threat_level,
-                flag=False,
-                tags=l_tags,
-                description='hive_description')
-
-    # Create the case
-    id = None
-    response = HiveApi.create_case(case)
-    if response.status_code == 201:
-        id = response.json()['id']
-
-        observ_sensor = CaseObservable(dataType="other", data=[ail_uuid], message="sensor")
-        observ_file = CaseObservable(dataType="file", data=[path], tags=l_tags)
-        observ_source = CaseObservable(dataType="other", data=[source], message="source")
-        observ_last_seen = CaseObservable(dataType="other", data=[last_seen], message="last-seen")
-
-        res = HiveApi.create_case_observable(id,observ_sensor)
-        if res.status_code != 201:
-            logger.info(f'ko sensor: {res.status_code}/{res.text}')
-        res = HiveApi.create_case_observable(id, observ_source)
-        if res.status_code != 201:
-            logger.info(f'ko source: {res.status_code}/{res.text}')
-        res = HiveApi.create_case_observable(id, observ_file)
-        if res.status_code != 201:
-            logger.info(f'ko file: {res.status_code}/{res.text}')
-        res = HiveApi.create_case_observable(id, observ_last_seen)
-        if res.status_code != 201:
-            logger.info(f'ko last_seen: {res.status_code}/{res.text}')
-
-        r_serv_metadata.set('hive_cases:'+path, id)
-
-        return hive_case_url.replace('id_here', id)
-    else:
-        logger.info(f'ko: {response.status_code}/{response.text}')
-        return False
 
 # ============= ROUTES ==============
 
@@ -462,50 +317,31 @@ def submit_status():
     else:
         return 'INVALID UUID'
 
-
-@PasteSubmit.route("/PasteSubmit/create_misp_event", methods=['POST'])
-@login_required
-@login_analyst
-def create_misp_event():
-
-    distribution = int(request.form['misp_data[Event][distribution]'])
-    threat_level_id = int(request.form['misp_data[Event][threat_level_id]'])
-    analysis = int(request.form['misp_data[Event][analysis]'])
-    info = request.form['misp_data[Event][info]']
-    path = request.form['paste']
-    publish = request.form.get('misp_publish')
-
-    #verify input
-    if (0 <= distribution <= 3) and (1 <= threat_level_id <= 4) and (0 <= analysis <= 2):
-
-        l_tags = list(r_serv_metadata.smembers('tag:'+path))
-        event = misp_create_event(distribution, threat_level_id, analysis, info, l_tags, publish, path)
-
-        if event != False:
-            return redirect(event)
-        else:
-            return 'error, event creation'
-    return 'error0'
-
+# TODO MOVE ME IN import_export blueprint
 @PasteSubmit.route("/PasteSubmit/create_hive_case", methods=['POST'])
 @login_required
 @login_analyst
 def create_hive_case():
 
-    hive_tlp = int(request.form['hive_tlp'])
-    threat_level = int(request.form['threat_level_hive'])
-    hive_description = request.form['hive_description']
-    hive_case_title = request.form['hive_case_title']
-    path = os.environ['AIL_HOME'] + "/PASTES/"+ request.form['paste']
+    tlp = request.form['hive_tlp']
+    if tlp:
+        tlp = int(tlp)
+    else:
+        tlp = 2
+    threat_level = request.form['threat_level_hive']
+    if threat_level:
+        threat_level = int(threat_level)
+    else:
+        threat_level = 2
+    description = request.form['hive_description']
+    title = request.form['hive_case_title']
+    item_id = request.form['obj_id']
 
-    #verify input
-    if (0 <= hive_tlp <= 3) and (1 <= threat_level <= 4):
+    if (0 <= tlp <= 3) and (1 <= threat_level <= 4):
 
-        l_tags = list(r_serv_metadata.smembers('tag:'+path))
-        case = hive_create_case(hive_tlp, threat_level, hive_description, hive_case_title, l_tags, path)
-
-        if case != False:
-            return redirect(case)
+        case_id = Export.create_thehive_case(item_id, title=title, tlp=tlp, threat_level=threat_level, description=description)
+        if case_id:
+            return redirect(get_case_url(case_id))
         else:
             return 'error'
 

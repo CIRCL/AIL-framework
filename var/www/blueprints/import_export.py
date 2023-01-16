@@ -4,17 +4,16 @@
 '''
     Blueprint Flask: MISP format import export
 '''
-
+import io
 import os
 import sys
 import uuid
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
-import Flask_config
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
@@ -23,18 +22,19 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from export import MispExport
-from export import MispImport
-from export import AILObjects ####################### # # # # ########################## ## # ####################################
-
+from export import Export
 from lib.objects import ail_objects
 
+from export import MispImport  # TODO REMOVE ME
+
+# TODO REMOVE ME
 
 # ============ BLUEPRINT ============
-import_export = Blueprint('import_export', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/import_export'))
+import_export = Blueprint('import_export', __name__,
+                          template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/import_export'))
+
 
 # ============ VARIABLES ============
-
 
 
 # ============ FUNCTIONS ============
@@ -47,6 +47,7 @@ import_export = Blueprint('import_export', __name__, template_folder=os.path.joi
 def import_object():
     return render_template("import_object.html")
 
+# TODO
 @import_export.route("/import_export/import_file", methods=['POST'])
 @login_required
 @login_analyst
@@ -79,137 +80,129 @@ def import_object_file():
 
     return render_template("import_object.html", all_imported_obj=all_imported_obj, error=error)
 
-@import_export.route('/import_export/export')
+
+@import_export.route("/objects/misp/export", methods=['GET'])
 @login_required
 @login_analyst
-def export_object():
+def objects_misp_export():
     user_id = current_user.get_id()
+    object_types = ail_objects.get_all_objects_with_subtypes_tuple()
+    to_export = Export.get_user_misp_objects_to_export(user_id)
+    return render_template("export_object.html", object_types=object_types, to_export=to_export)
 
-    # get user saved obj to export
-    l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
 
-    return render_template("export_object.html", l_obj_to_export=l_obj_to_export)
-
-@import_export.route("/import_export/export_file", methods=['POST'])
+@import_export.route("/objects/misp/export/post", methods=['POST'])
 @login_required
 @login_analyst
-def export_object_file():
+def objects_misp_export_post():
     user_id = current_user.get_id()
-
-    l_obj_to_export = []
-    l_obj_invalid = []
-
-    export_to_misp = False
-    dict_misp_event_export = {}
 
     # Get new added Object
+    new_export = []
+    user_lvl_export = {}
     for obj_tuple in list(request.form):
+        # GET NEW LEVEL
+        if obj_tuple[0] == '{':
+            obj_j = obj_tuple.replace("'", "\"")
+            obj_dict = json.loads(obj_j)  # TODO sanitize
+            lvl = int(request.form.getlist(obj_tuple)[0])
+            user_lvl_export[f"{obj_dict['type']}:{obj_dict['subtype']}:{obj_dict['id']}"] = lvl
+
         l_input = request.form.getlist(obj_tuple)
         if len(l_input) == 3:
-            obj_type = l_input[0]
-            obj_id = l_input[1]
-            lvl = l_input[2]
-            lvl = MispExport.sanitize_obj_export_lvl(lvl)
+            if l_input[0] != 'Object type...':
+                new_type, new_subtype = l_input[0].split(':', 1)
+                if not new_subtype:
+                    new_subtype = ''
+                new_export.append({'type': new_type, 'subtype': new_subtype, 'id': l_input[1], 'lvl': l_input[2]})
 
-            obj_subtype = obj_type.split(';')
-            if len(obj_subtype) == 2:
-                obj_type = obj_subtype[0]
-                obj_subtype = obj_subtype[1]
-            else:
-                obj_subtype = None
-
-            obj_dict = {'id': obj_id, 'type': obj_type, 'lvl': lvl}
-            if obj_subtype:
-                obj_dict['subtype'] = obj_subtype
-
-            if MispExport.is_valid_obj_to_export(obj_type, obj_subtype, obj_id):
-                l_obj_to_export.append(obj_dict)
-                AILObjects.add_user_object_to_export(user_id, obj_dict['type'], obj_dict['id'], obj_dict['lvl'], obj_subtype=obj_dict.get('subtype', None))
-            else:
-                if obj_id:
-                    l_obj_invalid.append(obj_dict)
+    objects = []
+    invalid_obj = []
+    for obj in new_export:
+        if not ail_objects.exists_obj(obj['type'], obj['subtype'], obj['id']):
+            invalid_obj.append(obj)
         else:
-            dict_misp_event_export[str(obj_tuple)] = request.form.get(obj_tuple)
-
-    # print(dict_misp_event_export)
-
-    if dict_misp_event_export.get('export_to_misp', None):
-        export_to_misp = True
-    else:
-        dict_misp_event_export = None
-
-    if l_obj_invalid:
-        # get user saved obj to export # # TODO: # performance
-        l_obj_to_export = AILObjects.get_user_list_of_obj_to_export(user_id)
-
-        for obj_dict in l_obj_invalid: # set uuid input
-            obj_dict['uuid'] = str(uuid.uuid4())
-            subtype = obj_dict.get('subtype', None)
-            if subtype:
-                obj_dict['type'] = f'{obj_dict["type"]};{subtype}'
-
-        return render_template("export_object.html", l_obj_to_export=l_obj_to_export,
-                               l_obj_invalid=l_obj_invalid, dict_misp_event_export=dict_misp_event_export)
-    else:
-        if export_to_misp and MispExport.ping_misp():
-            event = MispExport.create_list_of_objs_to_export(l_obj_to_export, r_type='event')
-
-            event_metadata = MispExport.create_misp_event(event, distribution=dict_misp_event_export.get('export_to_misp', None),
-                                        threat_level_id=dict_misp_event_export.get('misp_threat_level_id', None),
-                                        publish=dict_misp_event_export.get('misp_publish', None),
-                                        analysis=dict_misp_event_export.get('misp_event_analysis', None),
-                                        event_info=dict_misp_event_export.get('misp_event_info', None))
-
-            AILObjects.delete_all_user_object_to_export(user_id)
-            return render_template("export_object.html", l_obj_to_export=l_obj_to_export,
-                                    event_metadata=event_metadata,
-                                    l_obj_invalid=[], dict_misp_event_export=[])
+            objects.append(obj)
+    for obj in Export.get_user_misp_objects_to_export(user_id):
+        if not ail_objects.exists_obj(obj['type'], obj['subtype'], obj['id']):
+            invalid_obj.append(obj)
         else:
-            # get user saved obj to export # # TODO: # performance
-            json_export = MispExport.create_list_of_objs_to_export(l_obj_to_export)
-            export_filename = MispExport.get_export_filename(json_export)
-            json_export = MispExport.create_in_memory_file(json_export.to_json())
-            AILObjects.delete_all_user_object_to_export(user_id)
-            return send_file(json_export, as_attachment=True, attachment_filename=export_filename)
+            str_id = f"{obj['type']}:{obj['subtype']}:{obj['id']}"
+            if str_id in user_lvl_export:
+                obj['lvl'] = user_lvl_export[str_id]
+            objects.append(obj)
+
+    if invalid_obj:
+        object_types = ail_objects.get_all_objects_with_subtypes_tuple()
+        return render_template("export_object.html", object_types=object_types,
+                               to_export=objects, l_obj_invalid=invalid_obj)
+
+    export = request.form.get('export_to_misp', False)
+    distribution = request.form.get('misp_event_distribution')
+    threat_level_id = request.form.get('threat_level_id')
+    analysis = request.form.get('misp_event_analysis')
+    info = request.form.get('misp_event_info')
+    publish = request.form.get('misp_event_info', False)
+
+    objs = ail_objects.get_objects(objects)
+    event = Export.create_misp_event(objs, distribution=distribution, threat_level_id=threat_level_id,
+                                     analysis=analysis, info=info, export=export, publish=publish)
+
+    Export.delete_user_misp_objects_to_export(user_id)
+
+    if not export:
+        return send_file(io.BytesIO(event['event'].encode()), as_attachment=True,
+                         download_name=f'ail_export_{event["uuid"]}.json')
+    else:
+        object_types = ail_objects.get_all_objects_with_subtypes_tuple()
+        return render_template("export_object.html", object_types=object_types,
+                               misp_url=event['url'])
 
 
-@import_export.route("/import_export/add_object_id_to_export", methods=['GET'])
+@import_export.route("/objects/misp/export/add", methods=['GET'])
 @login_required
 @login_analyst
 def add_object_id_to_export():
     user_id = current_user.get_id()
-    user_id = current_user.get_id()
-    obj_type = request.args.get('obj_type')
-    obj_id = request.args.get('obj_id')
-    obj_subtype = request.args.get('obj_subtype')
-    obj_lvl = request.args.get('obj_lvl')
-    AILObjects.add_user_object_to_export(user_id, obj_type, obj_id, obj_lvl, obj_subtype=obj_subtype)
+    obj_type = request.args.get('type')
+    obj_id = request.args.get('id')
+    obj_subtype = request.args.get('subtype')
+    obj_lvl = request.args.get('lvl')
+
+    try:
+        obj_lvl = int(obj_lvl)
+    except:
+        obj_lvl = 0
+
+    if not ail_objects.exists_obj(obj_type, obj_subtype, obj_id):
+        abort(404)
+    Export.add_user_misp_object_to_export(user_id, obj_type, obj_subtype, obj_id, lvl=obj_lvl)
     # redirect
-    return redirect(url_for('import_export.export_object'))
+    return redirect(url_for('import_export.objects_misp_export'))
+
+
+@import_export.route("/objects/misp/export/delete", methods=['GET'])
+@login_required
+@login_analyst
+def delete_object_id_to_export():
+    user_id = current_user.get_id()
+    obj_type = request.args.get('type')
+    obj_id = request.args.get('id')
+    obj_subtype = request.args.get('subtype')
+
+    Export.delete_user_misp_object_to_export(user_id, obj_type, obj_subtype, obj_id)
+    return jsonify(success=True)
+
 
 @import_export.route("/import_export/investigation", methods=['GET'])
 @login_required
 @login_analyst
 def export_investigation():
     investigation_uuid = request.args.get("uuid")
-
-    if MispExport.ping_misp():
-        event_metadata = MispExport.create_investigation_event(investigation_uuid)
+    if Export.ping_misp():
+        event = Export.create_investigation_misp_event(investigation_uuid)
+        print(event)
     else:
-        return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True), mimetype='application/json'), 400
-
+        return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True),
+                        mimetype='application/json'), 400
     return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid))
-
-
-# @import_export.route("/import_export/delete_object_id_to_export", methods=['GET'])
-# @login_required
-# @login_analyst
-# def delete_object_id_to_export():
-#     user_id = current_user.get_id()
-#     obj_type = request.args.get('obj_type')
-#     obj_id = request.args.get('obj_id')
-#     obj_subtype = request.args.get('obj_subtype')
-#     obj_lvl = request.args.get('obj_lvl')
-#     AILObjects.delete_user_object_to_export(user_id, object_type, object_id, obj_lvl, obj_subtype=obj_subtype)
-#     # redirect
-#     return 'ok'
