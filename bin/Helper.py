@@ -140,12 +140,6 @@ class Process(object):
                 db=self.config.get('RedisPubSub', 'db'),
                 decode_responses=True)
 
-            self.serv_statistics = redis.StrictRedis(
-                host=self.config.get('ARDB_Statistics', 'host'),
-                port=self.config.get('ARDB_Statistics', 'port'),
-                db=self.config.get('ARDB_Statistics', 'db'),
-                decode_responses=True)
-
             self.moduleNum = os.getpid()
 
     def populate_set_in(self):
@@ -181,9 +175,9 @@ class Process(object):
             try:
                 if '.gz' in message:
                     path = message.split(".")[-2].split("/")[-1]
-                    #find start of path with AIL_HOME
+                    # find start of path with AIL_HOME
                     index_s = message.find(os.environ['AIL_HOME'])
-                    #Stop when .gz
+                    # Stop when .gz
                     index_e = message.find(".gz")+3
                     if(index_s == -1):
                         complete_path = message[0:index_e]
@@ -200,7 +194,6 @@ class Process(object):
                 self.r_temp.sadd("MODULE_TYPE_"+self.subscriber_name, str(self.moduleNum))
 
                 curr_date = datetime.date.today()
-                self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'paste_by_modules_in:'+self.subscriber_name, 1)
                 return message
 
             except:
@@ -238,6 +231,3 @@ class Process(object):
                 continue
             self.pubsub.publish(message)
 
-    def incr_module_timeout_statistic(self):
-        curr_date = datetime.date.today()
-        self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'paste_by_modules_timeout:'+self.subscriber_name, 1)

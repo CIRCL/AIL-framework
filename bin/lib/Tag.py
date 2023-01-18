@@ -620,7 +620,7 @@ def update_tag_metadata(tag, date, delete=False): # # TODO: delete Tags
 # old
 # r_tags.smembers(f'{tag}:{date}')
 # r_tags.smembers(f'{obj_type}:{tag}')
-def get_tag_objects(obj_type, subtype='', date=''):
+def get_tag_objects(tag, obj_type, subtype='', date=''):
     if obj_type == 'item':
         return r_tags.smembers(f'{obj_type}:{subtype}:{tag}:{date}')
     else:
@@ -1079,6 +1079,10 @@ def get_modal_add_tags(object_id, object_type='item', object_subtype=''):
     return {"active_taxonomies": get_active_taxonomies(), "active_galaxies": get_active_galaxies(),
             "object_id": object_id, "object_type": object_type, "object_subtype": object_subtype}
 
+#####################################################################################
+#####################################################################################
+#####################################################################################
+
 ######## NEW VERSION ########
 def create_custom_tag(tag):
     r_tags.sadd('tags:custom', tag)
@@ -1142,23 +1146,40 @@ def get_enabled_tags_with_synonyms_ui():
 ###################################################################################
 ###################################################################################
 ###################################################################################
-###################################################################################
-###################################################################################
-###################################################################################
-###################################################################################
 
-def add_global_tag(tag, object_type=None):
-    '''
-    Create a set of all tags used in AIL (all + by object)
+# TYPE -> taxonomy/galaxy/custom
 
-    :param tag: tag
-    :type tag: str
-    :param object_type: object type
-    :type object_type: str
-    '''
-    r_tags.sadd('list_tags', tag)
-    if object_type:
-        r_tags.sadd('list_tags:{}'.format(object_type), tag)
+class Tag:
+
+    def __int__(self, t_type, t_id, obj='item'):
+        self.type = t_type
+        self.id = t_id
+        self.obj = obj
+
+    def get_first_seen(self):
+        pass
+
+    def get_last_seen(self):
+        pass
+
+    def get_color(self):
+        pass
+
+    def is_enabled(self):
+        pass
+
+    def get_meta(self):
+        meta = {'first_seen': self.get_first_seen(),
+                'last_seen': self.get_last_seen(),
+                'obj': self.obj,
+                'tag': self.id,
+                'type': self.type}
+
+
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
 
 def add_obj_tags(object_id, object_subtype, object_type, tags=[], galaxy_tags=[]):
     for tag in tags:
@@ -1201,23 +1222,6 @@ def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item"
     res_dict['type'] = object_type
     return res_dict, 200
 
-# def add_tag(object_type, tag, object_id, obj_date=None):
-#     # new tag
-#     if not is_obj_tagged(object_id, tag):
-#         # # TODO: # FIXME: sanitize object_type
-#         if obj_date:
-#             try:
-#                 obj_date = int(obj_date)
-#             except:
-#                 obj_date = None
-#         if not obj_date:
-#             obj_date = get_obj_date(object_type, object_id)
-#         add_global_tag(tag, object_type=object_type)
-#         add_obj_tag(object_type, object_id, tag, obj_date=obj_date)
-#         update_tag_metadata(tag, obj_date, object_type=object_type)
-#
-#     # create tags stats  # # TODO:  put me in cache
-#     r_tags.hincrby('daily_tags:{}'.format(datetime.date.today().strftime("%Y%m%d")), tag, 1)
 
 # def delete_obj_tag(object_type, object_id, tag, obj_date):
 #     if object_type=="item": # # TODO: # FIXME: # REVIEW: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

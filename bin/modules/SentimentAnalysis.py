@@ -62,7 +62,7 @@ class SentimentAnalysis(AbstractModule):
         self.sentiment_lexicon_file = ConfigLoader.ConfigLoader().get_config_str("Directories", "sentiment_lexicon_file")
 
         # REDIS_LEVEL_DB #
-        self.db = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Sentiment")
+        self.db = ConfigLoader.ConfigLoader().get_redis_conn("_Sentiment")
 
         self.time1 = time.time()
 

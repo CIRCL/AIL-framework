@@ -252,6 +252,8 @@ def trackers_migration():
         for id in old_Tracker.get_retro_hunt_items_by_daterange(task_uuid, meta['date_from'], meta['date_to']):
             Tracker.save_retro_hunt_match(task_uuid, id)
 
+    Tracker._fix_db_custom_tags()
+
 
 def investigations_migration():
     print('INVESTIGATION MIGRATION...')

@@ -36,11 +36,11 @@ class Template(AbstractModule):
         # Send module state to logs
         self.redis_logger.info(f'Module {self.module_name} initialized')
 
-    def computeNone(self):
-        """
-        Do something when there is no message in the queue
-        """
-        self.redis_logger.debug("No message in queue")
+    # def computeNone(self):
+    #     """
+    #     Do something when there is no message in the queue
+    #     """
+    #     self.redis_logger.debug("No message in queue")
 
     def compute(self, message):
         """

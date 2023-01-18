@@ -551,9 +551,11 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
 
     # create tracker tags list
     for tag in tags:
-        r_serv_tracker.sadd(f'tracker:tags:{tracker_uuid}', escape(tag))
+        tag = escape(tag)
+        r_serv_tracker.sadd(f'tracker:tags:{tracker_uuid}', tag)
+        Tag.create_custom_tag(tag)
 
-    # create tracker tags mail notification list
+    # create tracker mail notification list
     for mail in mails:
         r_serv_tracker.sadd(f'tracker:mail:{tracker_uuid}', escape(mail))
 
@@ -1030,7 +1032,9 @@ def create_retro_hunt_task(name, rule, date_from, date_to, creator, sources=[], 
     for source in sources:
         r_serv_tracker.sadd(f'tracker:retro_hunt:task:sources:{task_uuid}', escape(source))
     for tag in tags:
-        r_serv_tracker.sadd(f'tracker:retro_hunt:task:tags:{task_uuid}', escape(tag))
+        tag = escape(tag)
+        r_serv_tracker.sadd(f'tracker:retro_hunt:task:tags:{task_uuid}', tag)
+        Tag.create_custom_tag(tag)
     for mail in mails:
         r_serv_tracker.sadd(f'tracker:retro_hunt:task:mails:{task_uuid}', escape(mail))
 
@@ -1364,14 +1368,13 @@ def get_trackers_tags():
 def _fix_db_custom_tags():
     for tag in get_trackers_tags():
         if not Tag.is_taxonomie_tag(tag) and not Tag.is_galaxy_tag(tag):
-            print(tag)
             Tag.create_custom_tag(tag)
 
 #### -- ####
 
-#if __name__ == '__main__':
+if __name__ == '__main__':
 
-    #_fix_db_custom_tags()
+    _fix_db_custom_tags()
     # fix_all_tracker_uuid_list()
     # res = get_all_tracker_uuid()
     # print(len(res))

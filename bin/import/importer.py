@@ -10,7 +10,6 @@ Recieve Json Items (example: Twitter feeder)
 import os
 import importlib
 import json
-import redis
 import sys
 import time
 

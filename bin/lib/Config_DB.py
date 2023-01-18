@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.environ['AIL_BIN'], 'lib'))
 from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+r_serv_db = config_loader.get_redis_conn("_DB")
 config_loader = None
 
 #### TO PUT IN CONFIG

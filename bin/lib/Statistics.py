@@ -12,8 +12,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
-r_statistics = config_loader.get_redis_conn("ARDB_Statistics")
-# r_serv_trend = ConfigLoader().get_redis_conn("ARDB_Trending")
+r_statistics = config_loader.get_db_conn("Kvrocks_Stats")
 config_loader = None
 
 PIE_CHART_MAX_CARDINALITY = 8
@@ -113,11 +112,11 @@ def update_module_stats(module_name, num, keyword, date):
 
     if r_statistics.zcard(f'top_{module_name}_set_{date}') < PIE_CHART_MAX_CARDINALITY:
         r_statistics.zadd(f'top_{module_name}_set_{date}', {keyword: float(keyword_total_sum)})
-    else: # zset at full capacity
+    else:  # zset at full capacity
         member_set = r_statistics.zrangebyscore(f'top_{module_name}_set_{date}', '-inf', '+inf', withscores=True, start=0, num=1)
         # Member set is a list of (value, score) pairs
         if int(member_set[0][1]) < keyword_total_sum:
-            #remove min from set and add the new one
+            # remove min from set and add the new one
             r_statistics.zrem(f'top_{module_name}_set_{date}', member_set[0][0])
             r_statistics.zadd(f'top_{module_name}_set_{date}', {keyword: float(keyword_total_sum)})
 

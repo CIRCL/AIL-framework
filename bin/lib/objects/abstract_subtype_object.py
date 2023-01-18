@@ -8,7 +8,6 @@ Base Class for AIL Objects
 ##################################
 import os
 import sys
-from abc import abstractmethod
 
 # from flask import url_for
 
@@ -25,7 +24,6 @@ from packages import Date
 
 # LOAD CONFIG
 config_loader = ConfigLoader()
-r_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
@@ -51,13 +49,6 @@ class AbstractSubtypeObject(AbstractObject):
     def exists(self):
         return r_object.exists(f'meta:{self.type}:{self.subtype}:{self.id}')
 
-    # def exists(self):
-    #     res = r_metadata.zscore(f'{self.type}_all:{self.subtype}', self.id)
-    #     if res is not None:
-    #         return True
-    #     else:
-    #         return False
-
     def get_first_seen(self, r_int=False):
         first_seen = r_object.hget(f'meta:{self.type}:{self.subtype}:{self.id}', 'first_seen')
         if r_int:
@@ -79,11 +70,11 @@ class AbstractSubtypeObject(AbstractObject):
             return last_seen
 
     def get_nb_seen(self):
-        return int(r_metadata.zscore(f'{self.type}_all:{self.subtype}', self.id))
+        return int(r_object.zscore(f'{self.type}_all:{self.subtype}', self.id))
 
     # # TODO: CHECK RESULT
     def get_nb_seen_by_date(self, date_day):
-        nb = r_metadata.hget(f'{self.type}:{self.subtype}:{date_day}', self.id)
+        nb = r_object.hget(f'{self.type}:{self.subtype}:{date_day}', self.id)
         if nb is None:
             return 0
         else:
@@ -134,9 +125,9 @@ class AbstractSubtypeObject(AbstractObject):
         self.update_daterange(date)
         update_obj_date(date, self.type, self.subtype)
         # daily
-        r_metadata.hincrby(f'{self.type}:{self.subtype}:{date}', self.id, 1)
+        r_object.hincrby(f'{self.type}:{self.subtype}:{date}', self.id, 1)
         # all subtypes
-        r_metadata.zincrby(f'{self.type}_all:{self.subtype}', 1, self.id)
+        r_object.zincrby(f'{self.type}_all:{self.subtype}', 1, self.id)
 
         #######################################################################
         #######################################################################
@@ -158,14 +149,5 @@ class AbstractSubtypeObject(AbstractObject):
     def _delete(self):
         pass
 
-
-    ####################################
-    #
-    # _get_items
-    # get_metadata
-    #
-    #
-
-
 def get_all_id(obj_type, subtype):
-    return r_metadata.zrange(f'{obj_type}_all:{subtype}', 0, -1)
+    return r_object.zrange(f'{obj_type}_all:{subtype}', 0, -1)

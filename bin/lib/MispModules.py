@@ -3,6 +3,7 @@
 import os
 import json
 import requests
+import sys
 import configparser
 
 misp_module_url = 'http://localhost:6666'
@@ -16,7 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv = config_loader.get_redis_conn("ARDB_DB")
+r_serv = config_loader.get_redis_conn("_DB")
 config_loader = None
 
 def init_config(config_path=default_config_path):
@@ -113,6 +114,7 @@ def parse_module_enrichment_response(misp_module_response):
         # TODO: handle / verify / use response types
         #print(response_types)
     return response_values
+
 
 if __name__ == "__main__":
 

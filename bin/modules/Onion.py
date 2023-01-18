@@ -34,7 +34,6 @@ class Onion(AbstractModule):
 
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
-        self.r_onion = config_loader.get_redis_conn("ARDB_Onion")
 
         self.pending_seconds = config_loader.get_config_int("Onion", "max_execution_time")
         # regex timeout
@@ -91,7 +90,7 @@ class Onion(AbstractModule):
 
         if onion_urls:
             if crawlers.is_crawler_activated():
-                for domain in domains:# TODO LOAD DEFAULT SCREENSHOT + HAR
+                for domain in domains:  # TODO LOAD DEFAULT SCREENSHOT + HAR
                     task_uuid = crawlers.add_crawler_task(domain, parent=item.get_id())
                     if task_uuid:
                         print(f'{domain} added to crawler queue: {task_uuid}')
@@ -109,6 +108,3 @@ if __name__ == "__main__":
     module = Onion()
     # module.compute('submitted/2022/10/10/submitted_705d1d92-7e9a-4a44-8c21-ccd167bfb7db.gz 9')
     module.run()
-
-
-# 5ajw6aqf3ep7sijnscdzw77t7xq4xjpsy335yb2wiwgouo7yfxtjlmid.onion to debian.org

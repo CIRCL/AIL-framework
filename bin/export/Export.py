@@ -72,6 +72,25 @@ def is_hive_connected():
 
 HIVE_CLIENT = get_hive_client()
 
+def sanitize_threat_level_hive(threat_level):
+    try:
+        int(threat_level)
+        if 1 <= threat_level <= 3:
+            return threat_level
+        else:
+            return 2
+    except:
+        return 2
+
+def sanitize_tlp_hive(tlp):
+    try:
+        int(tlp)
+        if 0 <= tlp <= 3:
+            return tlp
+        else:
+            return 2
+    except:
+        return 2
 
 def create_thehive_alert(item_id, tag_trigger):
     item = Item(item_id)

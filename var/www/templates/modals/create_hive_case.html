@@ -6,9 +6,9 @@
                 <img id="hive-logo" src="{{url_for('static', filename='image/thehive-logo.png') }}" width="500" >
             </div>
 
-            <form method="post" action="{{ url_for('PasteSubmit.create_hive_case') }}" target="_blank">
+            <form method="post" action="{{ url_for('import_export.create_thehive_case') }}" target="_blank">
 
-            <div class="modal-body">
+                <div class="modal-body">
 
                     <div class="input clear required">
                         <label for="EventThreatLevelId">Threat Level</label>
@@ -35,8 +35,9 @@
                         <label for="hive_description">Description</label>
                         <input name="hive_description" class="form-control span6" placeholder="Quick Case Description" type="text" id="hive_description"/>
                     </div>
+                    <input type="hidden" id="obj_type" name="obj_type" value="item">
                     <input type="hidden" id="obj_id" name="obj_id" value="{{ dict_item['id'] }}">
-            </div>
+                </div>
 
             <div class="modal-footer">
                 <button class="btn btn-primary" type="submit">

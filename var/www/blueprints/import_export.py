@@ -81,7 +81,7 @@ def import_object_file():
     return render_template("import_object.html", all_imported_obj=all_imported_obj, error=error)
 
 
-@import_export.route("/objects/misp/export", methods=['GET'])
+@import_export.route("/misp/objects/export", methods=['GET'])
 @login_required
 @login_analyst
 def objects_misp_export():
@@ -91,7 +91,7 @@ def objects_misp_export():
     return render_template("export_object.html", object_types=object_types, to_export=to_export)
 
 
-@import_export.route("/objects/misp/export/post", methods=['POST'])
+@import_export.route("/misp/objects/export/post", methods=['POST'])
 @login_required
 @login_analyst
 def objects_misp_export_post():
@@ -159,7 +159,7 @@ def objects_misp_export_post():
                                misp_url=event['url'])
 
 
-@import_export.route("/objects/misp/export/add", methods=['GET'])
+@import_export.route("/misp/objects/export/add", methods=['GET'])
 @login_required
 @login_analyst
 def add_object_id_to_export():
@@ -181,7 +181,7 @@ def add_object_id_to_export():
     return redirect(url_for('import_export.objects_misp_export'))
 
 
-@import_export.route("/objects/misp/export/delete", methods=['GET'])
+@import_export.route("/misp/objects/export/delete", methods=['GET'])
 @login_required
 @login_analyst
 def delete_object_id_to_export():
@@ -194,7 +194,7 @@ def delete_object_id_to_export():
     return jsonify(success=True)
 
 
-@import_export.route("/import_export/investigation", methods=['GET'])
+@import_export.route("/investigation/misp/export", methods=['GET'])
 @login_required
 @login_analyst
 def export_investigation():
@@ -206,3 +206,24 @@ def export_investigation():
         return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True),
                         mimetype='application/json'), 400
     return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid))
+
+
+@import_export.route("/thehive/objects/case/export", methods=['POST'])
+@login_required
+@login_analyst
+def create_thehive_case():
+    description = request.form['hive_description']
+    title = request.form['hive_case_title']
+    threat_level = Export.sanitize_threat_level_hive(request.form['threat_level_hive'])
+    tlp = Export.sanitize_tlp_hive(request.form['hive_tlp'])
+    item_id = request.form['obj_id']
+
+    item = Item(item_id)
+    if not item.exists():
+        abort(404)
+
+    case_id = Export.create_thehive_case(item_id, title=title, tlp=tlp, threat_level=threat_level, description=description)
+    if case_id:
+        return redirect(Export.get_case_url(case_id))
+    else:
+        return 'error'

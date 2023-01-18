@@ -43,6 +43,7 @@ from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.data_retention_engine import update_obj_date
 from lib import item_basic
+# from lib import Statistics
 
 class Global(AbstractModule):
     """
@@ -51,8 +52,6 @@ class Global(AbstractModule):
 
     def __init__(self):
         super(Global, self).__init__()
-
-        self.r_stats = ConfigLoader().get_redis_conn("ARDB_Statistics")
 
         self.processed_item = 0
         self.time_last_stats = time.time()
@@ -197,12 +196,13 @@ class Global(AbstractModule):
             self.redis_logger.warning(f'Global; Incomplete file: {filename}')
             print(f'Global; Incomplete file: {filename}')
             # save daily stats
-            self.r_stats.zincrby('module:Global:incomplete_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
+            # self.r_stats.zincrby('module:Global:incomplete_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
+            # Statistics.
         except OSError:
             self.redis_logger.warning(f'Global; Not a gzipped file: {filename}')
             print(f'Global; Not a gzipped file: {filename}')
             # save daily stats
-            self.r_stats.zincrby('module:Global:invalid_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
+            # self.r_stats.zincrby('module:Global:invalid_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
 
         return curr_file_content
 

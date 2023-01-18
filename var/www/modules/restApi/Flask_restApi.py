@@ -41,8 +41,6 @@ app = Flask_config.app
 baseUrl = Flask_config.baseUrl
 r_cache = Flask_config.r_cache
 r_serv_db = Flask_config.r_serv_db
-r_serv_onion = Flask_config.r_serv_onion
-r_serv_metadata = Flask_config.r_serv_metadata
 
 
 restApi = Blueprint('restApi', __name__, template_folder='templates')
@@ -258,7 +256,8 @@ def add_item_tags():
     tags = data.get('tags', [])
     galaxy = data.get('galaxy', [])
 
-    res = Tag.api_add_obj_tags(tags=tags, galaxy_tags=galaxy, object_id=object_id, object_type="item")
+    # res = Tag.api_add_obj_tags(tags=tags, galaxy_tags=galaxy, object_id=object_id, object_type="item")
+    res = {'error': 'disabled endpoint'}, 500
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

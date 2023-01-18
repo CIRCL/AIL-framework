@@ -69,8 +69,7 @@ class Credential(AbstractModule):
 
         # Database
         config_loader = ConfigLoader.ConfigLoader()
-        # self.server_cred = config_loader.get_redis_conn("ARDB_TermCred")
-        self.server_statistics = config_loader.get_redis_conn("ARDB_Statistics")
+        # self.server_cred = config_loader.get_redis_conn("_TermCred")
 
         # Config values
         self.minimumLengthThreshold = config_loader.get_config_int("Credential", "minimumLengthThreshold")

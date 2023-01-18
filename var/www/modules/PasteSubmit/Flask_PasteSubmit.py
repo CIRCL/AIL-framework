@@ -11,10 +11,8 @@ import re
 import os
 import sys
 import string
-import datetime
 import unicodedata
 import uuid
-from io import BytesIO
 
 from functools import wraps
 
@@ -42,9 +40,6 @@ import Flask_config
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl
 
-
-
-r_serv_metadata = Flask_config.r_serv_metadata # TODO REMOVE ME
 r_serv_db = Flask_config.r_serv_db # TODO REMOVE ME
 r_serv_log_submit = Flask_config.r_serv_log_submit # TODO REMOVE ME
 
@@ -317,35 +312,16 @@ def submit_status():
     else:
         return 'INVALID UUID'
 
-# TODO MOVE ME IN import_export blueprint
-@PasteSubmit.route("/PasteSubmit/create_hive_case", methods=['POST'])
-@login_required
-@login_analyst
-def create_hive_case():
 
-    tlp = request.form['hive_tlp']
-    if tlp:
-        tlp = int(tlp)
-    else:
-        tlp = 2
-    threat_level = request.form['threat_level_hive']
-    if threat_level:
-        threat_level = int(threat_level)
-    else:
-        threat_level = 2
-    description = request.form['hive_description']
-    title = request.form['hive_case_title']
-    item_id = request.form['obj_id']
+######################################################################################################
+######################################################################################################
+######################################################################################################
+######################################################################################################
 
-    if (0 <= tlp <= 3) and (1 <= threat_level <= 4):
+# TODO MIGRATE TAGS PUSH
 
-        case_id = Export.create_thehive_case(item_id, title=title, tlp=tlp, threat_level=threat_level, description=description)
-        if case_id:
-            return redirect(get_case_url(case_id))
-        else:
-            return 'error'
+# TEMPORARY: 2 SET OF CUSTOM + infoleak tags ?????????
 
-    return 'error'
 
 @PasteSubmit.route("/PasteSubmit/edit_tag_export")
 @login_required
@@ -410,8 +386,8 @@ def edit_tag_export():
                             status_hive=status_hive,
                             nb_tags_whitelist_misp=nb_tags_whitelist_misp,
                             nb_tags_whitelist_hive=nb_tags_whitelist_hive,
-                            flag_misp=flag_misp,
-                            flag_hive=flag_hive)
+                            flag_misp=True,
+                            flag_hive=True)
 
 @PasteSubmit.route("/PasteSubmit/tag_export_edited", methods=['POST'])
 @login_required

@@ -27,7 +27,6 @@ app = Flask_config.app
 baseUrl = Flask_config.baseUrl
 r_cache = Flask_config.r_cache
 r_serv_onion = Flask_config.r_serv_onion
-r_serv_metadata = Flask_config.r_serv_metadata
 bootstrap_label = Flask_config.bootstrap_label
 
 hiddenServices = Blueprint('hiddenServices', __name__, template_folder='templates')

@@ -27,6 +27,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
+from lib import Statistics
 
 class SQLInjectionDetection(AbstractModule):
     """docstring for SQLInjectionDetection module."""
@@ -39,9 +40,6 @@ class SQLInjectionDetection(AbstractModule):
         super(SQLInjectionDetection, self).__init__()
 
         self.faup = Faup()
-
-        config_loader = ConfigLoader()
-        self.server_statistics = config_loader.get_redis_conn("ARDB_Statistics")
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
@@ -75,7 +73,7 @@ class SQLInjectionDetection(AbstractModule):
                 except:
                     pass
                 date = datetime.now().strftime("%Y%m")
-                self.server_statistics.hincrby(f'SQLInjection_by_tld:{date}', tld, 1)
+                Statistics.add_module_tld_stats_by_date(self.module_name, date, tld, 1)
 
     # Try to detect if the url passed might be an sql injection by applying the regex
     # defined above on it.

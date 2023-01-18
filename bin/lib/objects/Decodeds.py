@@ -36,7 +36,6 @@ except:
 config_loader = ConfigLoader()
 r_objects = config_loader.get_db_conn("Kvrocks_Objects")
 
-r_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 HASH_DIR = config_loader.get_config_str('Directories', 'hash')
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
