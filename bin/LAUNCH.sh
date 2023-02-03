@@ -162,7 +162,7 @@ function launching_scripts {
     # sleep 0.1
     echo -e $GREEN"\t* Launching core scripts ..."$DEFAULT
 
-    # TODO: MOOVE IMPORTER ????  => multiple scripts
+    # TODO: IMPORTER SCREEN ????
 
     #### SYNC ####
     screen -S "Script_AIL" -X screen -t "Sync_importer" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_importer.py; read x"
@@ -173,7 +173,9 @@ function launching_scripts {
     sleep 0.1
     ##-- SYNC --##
 
-    screen -S "Script_AIL" -X screen -t "JSON_importer" bash -c "cd ${AIL_BIN}/import; ${ENV_PY} ./JSON_importer.py; read x"
+    screen -S "Script_AIL" -X screen -t "ZMQImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./ZMQImporter.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "FeederImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./FeederImporter.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
     sleep 0.1
@@ -279,7 +281,7 @@ function launching_scripts {
     # sleep 0.1
 
     ##################################
-    #                                #
+    #          TO MIGRATE            #
     ##################################
     screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModulesInformationV2.py -k 0 -c 1; read x"
     sleep 0.1

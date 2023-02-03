@@ -169,7 +169,8 @@ def index():
     update_message = ''
     if ail_updates.get_current_background_update():
         background_update = True
-        update_message = ail_updates.get_update_background_message()
+        # update_message = ail_updates.get_update_background_message()
+        update_message = None
 
     return render_template("index.html", default_minute = default_minute,
                            threshold_stucked_module=threshold_stucked_module,

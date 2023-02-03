@@ -12,7 +12,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 
 config_loader = ConfigLoader()
-r_db = config_loader.get_redis_conn("Kvrocks_DB")
+r_db = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
 BACKGROUND_UPDATES = {

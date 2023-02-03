@@ -16,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import Users
 from lib.objects.Items import Item
 from lib import Tag
 from lib import Tracker
@@ -24,8 +25,7 @@ from packages import Term
 
 from packages import Import_helper
 
-sys.path.append(os.path.join(os.environ['AIL_BIN'], 'import'))
-import importer
+from importer.FeederImporter import api_add_json_feeder_to_queue
 
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, escape
@@ -40,7 +40,6 @@ import Flask_config
 app = Flask_config.app
 baseUrl = Flask_config.baseUrl
 r_cache = Flask_config.r_cache
-r_serv_db = Flask_config.r_serv_db
 
 
 restApi = Blueprint('restApi', __name__, template_folder='templates')
@@ -57,31 +56,16 @@ def verify_token(token):
     if not check_token_format(token):
         return False
 
-    if r_serv_db.hexists('user:tokens', token):
-        return True
-    else:
-        return False
-
-def get_user_from_token(token):
-    return r_serv_db.hget('user:tokens', token)
+    return Users.exists_token(token)
 
 def verify_user_role(role, token):
     # User without API
     if role == 'user_no_api':
         return False
 
-    user_id = get_user_from_token(token)
+    user_id = Users.get_token_user(token)
     if user_id:
-        if is_in_role(user_id, role):
-            return True
-        else:
-            return False
-    else:
-        return False
-
-def is_in_role(user_id, role):
-    if r_serv_db.sismember('user_role:{}'.format(role), user_id):
-        return True
+        return Users.is_in_role(user_id, role)
     else:
         return False
 
@@ -366,7 +350,7 @@ def get_all_tags():
 def add_tracker_term():
     data = request.get_json()
     user_token = get_auth_from_header()
-    user_id = get_user_from_token(user_token)
+    user_id = Users.get_token_user(user_token)
     res = Tracker.api_add_tracker(data, user_id)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -375,7 +359,7 @@ def add_tracker_term():
 def delete_tracker_term():
     data = request.get_json()
     user_token = get_auth_from_header()
-    user_id = get_user_from_token(user_token)
+    user_id = Users.get_token_user(user_token)
     res = Term.parse_tracked_term_to_delete(data, user_id)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -384,7 +368,7 @@ def delete_tracker_term():
 def get_tracker_term_item():
     data = request.get_json()
     user_token = get_auth_from_header()
-    user_id = get_user_from_token(user_token)
+    user_id = Users.get_token_user(user_token)
     res = Term.parse_get_tracker_term_item(data, user_id)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -687,7 +671,7 @@ def import_item_uuid():
 def import_json_item():
 
     data_json = request.get_json()
-    res = importer.api_import_json_item(data_json)
+    res = api_add_json_feeder_to_queue(data_json)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
 

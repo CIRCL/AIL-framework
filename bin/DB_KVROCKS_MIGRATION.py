@@ -100,15 +100,19 @@ def core_migration():
     versions_to_update = r_serv_db.smembers('ail:to_update')
     for version in versions_to_update:
         r_kvrocks.sadd('ail:update:to_update', version)
+
     update_error = r_serv_db.get('ail:update_error')
+    if update_error:
+        r_kvrocks.set('ail:update:error', update_error)
+
     update_in_progress = r_serv_db.get('ail:update_in_progress')
-    r_kvrocks.set('ail:update:error', update_error)
-    r_kvrocks.set('ail:update:update_in_progress', update_in_progress)
+    if update_in_progress:
+        r_kvrocks.set('ail:update:update_in_progress', update_in_progress)
 
     # d4 passivedns
-    d4_enabled = r_serv_db.hget('d4:passivedns', 'enabled')
+    d4_enabled = bool(r_serv_db.hget('d4:passivedns', 'enabled'))
     d4_update_time = r_serv_db.hget('d4:passivedns', 'update_time')
-    r_kvrocks.hset('d4:passivedns', 'enabled', bool(d4_enabled))
+    r_kvrocks.hset('d4:passivedns', 'enabled', str(d4_enabled))
     r_kvrocks.hset('d4:passivedns', 'update_time', d4_update_time)
 
     # Crawler Manager
@@ -172,6 +176,7 @@ def user_migration():
         Users.create_user(user_id, password=None, chg_passwd=chg_passwd, role=role)
         Users.edit_user_password(user_id, password_hash, chg_passwd=chg_passwd)
         Users._delete_user_token(user_id)
+        print(user_id, token)
         Users._set_user_token(user_id, token)
 
     for invite_row in r_crawler.smembers('telegram:invite_code'):
@@ -871,15 +876,15 @@ def cves_migration():
 
 if __name__ == '__main__':
 
-    #core_migration()
-    #user_migration()
+    core_migration()
+    user_migration()
     #tags_migration()
     # items_migration()
     # crawler_migration()
-    domain_migration()                      # TO TEST ###########################
+    # domain_migration()                      # TO TEST ###########################
     # decodeds_migration()
     # screenshots_migration()
-    subtypes_obj_migration()
+    # subtypes_obj_migration()
     # ail_2_ail_migration()
     # trackers_migration()
     # investigations_migration()
@@ -891,6 +896,6 @@ if __name__ == '__main__':
     # crawler queues + auto_crawlers
     # stats - Cred - Mail - Provider
 
-
+# TODO FEEDER IMPORT -> return r_serv_db.lpop('importer:json:item')
 
     ##########################################################

@@ -48,7 +48,8 @@ def gen_token():
 
 def _delete_user_token(user_id):
     current_token = get_user_token(user_id)
-    r_serv_db.hdel('ail:users:tokens', current_token)
+    if current_token:
+        r_serv_db.hdel('ail:users:tokens', current_token)
 
 def _set_user_token(user_id, token):
     r_serv_db.hset('ail:users:tokens', token, user_id)
@@ -81,6 +82,12 @@ def get_user_passwd_hash(user_id):
 
 def get_user_token(user_id):
     return r_serv_db.hget(f'ail:users:metadata:{user_id}', 'token')
+
+def get_token_user(token):
+    return r_serv_db.hget('ail:users:tokens', token)
+
+def exists_token(token):
+    return r_serv_db.hexists('ail:users:tokens', token)
 
 def exists_user(user_id):
     return r_serv_db.exists(f'ail:user:metadata:{user_id}')
@@ -131,7 +138,7 @@ def create_user(user_id, password=None, chg_passwd=True, role=None):
 
 def edit_user_password(user_id, password_hash, chg_passwd=False):
     if chg_passwd:
-        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', True)
+        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
     else:
         r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
     # remove default user password file
@@ -193,6 +200,9 @@ def get_all_user_upper_role(user_role):
 
 def get_default_role():
     return 'read_only'
+
+def is_in_role(user_id, role):
+    return r_serv_db.sismember(f'ail:users:role:{role}', user_id)
 
 def edit_user_role(user_id, role):
     current_role = get_user_role(user_id)
