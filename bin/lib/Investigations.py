@@ -91,6 +91,9 @@ class Investigation(object):
     def __init__(self, investigation_uuid):
         self.uuid = investigation_uuid
 
+    def exists(self):
+        return r_tracking.exists(f'investigations:data:{self.uuid}')
+
     def get_uuid(self, separator=False):
         if separator:
             return uuid.UUID(hex=self.uuid, version=4)

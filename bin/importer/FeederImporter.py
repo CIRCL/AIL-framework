@@ -27,6 +27,23 @@ r_db = config_loader.get_db_conn('Kvrocks_DB')
 config_loader = None
 # --- CONFIG --- #
 
+#### FUNCTIONS ####
+
+def add_json_feeder_to_queue(json_data):
+    json_data = json.dumps(json_data)
+    return r_db.rpush('importer:feeder', json_data)
+
+def api_add_json_feeder_to_queue(json_data):
+    if not json_data:
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+    # # TODO: add JSON verification
+    res = add_json_feeder_to_queue(json_data)
+    if not res:
+        return {'status': 'error'}, 400
+    return {'status': 'success'}, 200
+
+# --- FUNCTIONS --- #
+
 class FeederImporter(AbstractImporter):
     def __init__(self):
         super().__init__()
@@ -89,9 +106,8 @@ class FeederModuleImporter(AbstractModule):
         self.importer = FeederImporter()
 
     def get_message(self):
-        return self.r_db.lpop('importer:feeder')  # TODO CHOOSE DB
-        # TODO RELOAD LIST
-        # after delta
+        return self.r_db.lpop('importer:feeder')
+        # TODO RELOAD LIST after delta
 
     def compute(self, message):
         # TODO HANDLE Invalid JSON
@@ -102,20 +118,6 @@ class FeederModuleImporter(AbstractModule):
     # TODO IN MIXER
     # increase nb of paste by feeder name
     # server_cache.hincrby("mixer_cache:list_feeder", feeder_name, 1)
-
-
-def add_json_feeder_to_queue(json_data):
-    json_data = json.dumps(json_data)
-    return r_db.rpush('importer:feeder', json_data)
-
-def api_add_json_feeder_to_queue(json_data):
-    if not json_data:
-        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
-    # # TODO: add JSON verification
-    res = add_json_feeder_to_queue(json_data)
-    if not res:
-        return {'status': 'error'}, 400
-    return {'status': 'success'}, 200
 
 
 # Launch Importer

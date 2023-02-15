@@ -9,7 +9,6 @@ Import Content
 """
 import os
 import sys
-import time
 
 import zmq
 
@@ -63,6 +62,7 @@ class ZMQModuleImporter(AbstractModule):
         # TODO register all Importers
         self.zmq_importer.add(address, channel)
 
+    # TODO MESSAGE SOURCE - UI
     def get_message(self):
         for message in self.zmq_importer.importer():
             # remove channel from message
