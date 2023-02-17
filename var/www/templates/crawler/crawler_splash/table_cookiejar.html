@@ -17,11 +17,11 @@
           {%endif%}
         </td>
         <td>
-          <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?cookiejar_uuid={{ dict_cookiejar['cookiejar_uuid'] }}">
-            {{ dict_cookiejar['cookiejar_uuid']}}
+          <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?uuid={{ dict_cookiejar['uuid'] }}">
+            {{ dict_cookiejar['uuid']}}
           </a>
         </td>
-        <td>{{dict_cookiejar['user_id']}}</td>
+        <td>{{dict_cookiejar['user']}}</td>
       </tr>
     {% endfor %}
   </tbody>

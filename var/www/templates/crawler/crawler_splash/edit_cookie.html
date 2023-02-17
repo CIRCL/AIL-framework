@@ -42,7 +42,6 @@
           <div class="card-body">
 
 						<form action="{{ url_for('crawler_splash.crawler_cookiejar_cookie_edit_post') }}" method="post" enctype="multipart/form-data">
-							<input type="text" name="cookiejar_uuid" value="{{cookiejar_uuid}}" hidden>
 							<input type="text" name="cookie_uuid" value="{{cookie_uuid}}" hidden>
 							{% include 'crawler/crawler_splash/cookie_edit_block.html' %}
 							<div class="form-group">

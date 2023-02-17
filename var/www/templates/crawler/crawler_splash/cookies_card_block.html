@@ -8,12 +8,12 @@
         <div class="card-header py-0">
           <div class="d-flex flex-row-reverse">
             <div>
-              <a class="btn btn-light" href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_edit') }}?cookiejar_uuid={{cookiejar_uuid}}&cookie_uuid={{l_cookie_uuid[loop.index0]}}" style="font-size: 15px">
+              <a class="btn btn-light" href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_edit') }}?uuid={{dict_cookie['uuid']}}" style="font-size: 15px">
                 <i class="text-secondary fas fa-pencil-alt"></i>
               </a>
             </div>
             <div>
-              <a class="btn btn-light" href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_delete') }}?cookiejar_uuid={{cookiejar_uuid}}&cookie_uuid={{l_cookie_uuid[loop.index0]}}" style="font-size: 15px">
+              <a class="btn btn-light" href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_delete') }}?uuid={{dict_cookie['uuid']}}" style="font-size: 15px">
                 <i class="text-danger fas fa-trash-alt"></i>
               </a>
             </div>
@@ -21,7 +21,7 @@
 
         </div>
         <div class="card-body">
-          <pre>{{dict_cookie}}</pre>
+          <pre>{{dict_cookie['data']}}</pre>
         </div>
       </div>
 

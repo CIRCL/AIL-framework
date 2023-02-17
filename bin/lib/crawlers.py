@@ -38,7 +38,6 @@ from packages import git_status
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
-from core import screen
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -210,115 +209,224 @@ def load_crawler_cookies(cookiejar_uuid, domain, crawler_type='web'):
     return all_cookies
 
 ################################################################################
+################################################################################
+################################################################################
 
-def get_all_cookiejar():
-    return r_serv_onion.smembers('cookiejar:all')
+def get_cookiejars():
+    return r_crawler.smembers('cookiejars:all')
 
-def get_global_cookiejar():
-    cookiejars = r_serv_onion.smembers('cookiejar:global')
+def get_cookiejars_global():
+    cookiejars = r_crawler.smembers('cookiejars:global')
     if not cookiejars:
         cookiejars = []
     return cookiejars
 
-def get_user_cookiejar(user_id):
-    cookiejars = r_serv_onion.smembers('cookiejar:user:{}'.format(user_id))
+def get_cookiejars_user(user_id):
+    cookiejars = r_crawler.smembers(f'cookiejars:user:{user_id}')
     if not cookiejars:
         cookiejars = []
     return cookiejars
 
-def exist_cookiejar(cookiejar_uuid):
-    return r_serv_onion.exists('cookiejar_metadata:{}'.format(cookiejar_uuid))
+class Cookiejar:
 
-def _set_cookiejar_date(cookiejar_uuid, date):
-    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'date', date)
+    def __init__(self, cookiejar_uuid):
+        self.uuid = cookiejar_uuid
 
-# # TODO: sanitize cookie_uuid
-def create_cookiejar(user_id, level=1, description=None, cookiejar_uuid=None):
-    if not cookiejar_uuid:
-        cookiejar_uuid = str(uuid.uuid4())
+    def exists(self):
+        return r_crawler.exists(f'cookiejar:meta:{self.uuid}')  # or cookiejar:uuid
 
-    r_serv_onion.sadd('cookiejar:all', cookiejar_uuid)
-    if level == 0:
-        r_serv_onion.sadd(f'cookiejar:user:{user_id}', cookiejar_uuid)
+    def get_date(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'date')
+
+    def _set_date(self, date):
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'date', date)
+
+    def get_description(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'description')
+
+    def set_description(self, description):
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'description', description)
+
+    def get_user(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'user')
+
+    def _set_user(self, user_id):
+        return r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'user', user_id)
+
+    def get_level(self):
+        level = r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'level')
+        if level:
+            level = 1
+        else:
+            level = 0
+        return level
+
+    def _set_level(self, level):
+        if level:
+            level = 1
+        else:
+            level = 0
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'level', level)
+
+    def is_cookie_in_jar(self, cookie_uuid):
+        return r_crawler.sismember(f'cookiejar:cookies:{self.uuid}', cookie_uuid)
+
+    def get_cookies_uuid(self):
+        return r_crawler.smembers(f'cookiejar:cookies:{self.uuid}')
+
+    def get_cookies(self, r_json=False):
+        l_cookies = []
+        for cookie_uuid in self.get_cookies_uuid():
+            cookies = Cookie(cookie_uuid)
+            l_cookies.append(cookies.get_meta(r_json=r_json))
+        return l_cookies
+
+    def get_nb_cookies(self):
+        return r_crawler.scard(f'cookiejar:cookies:{self.uuid}')
+
+    def get_meta(self, level=False, nb_cookies=False, cookies=False, r_json=False):
+        meta = {'uuid': self.uuid,
+                'date': self.get_date(),
+                'description': self.get_description(),
+                'user': self.get_user()}
+        if level:
+            meta['level'] = self.get_level()
+        if nb_cookies:
+            meta['nb_cookies'] = self.get_nb_cookies()
+        if cookies:
+            meta['cookies'] = self.get_cookies(r_json=r_json)
+        return meta
+
+    def add_cookie(self, name, value, cookie_uuid=None, domain=None, httponly=None, path=None, secure=None, text=None):
+        if cookie_uuid:
+            cookie = Cookie(cookie_uuid)
+            if cookie.exists():
+                cookie_uuid = generate_uuid()
+        else:
+            cookie_uuid = generate_uuid()
+        r_crawler.sadd(f'cookiejar:cookies:{self.uuid}', cookie_uuid)
+
+        cookie = Cookie(cookie_uuid)
+        cookie.set_cookiejar(self.uuid)
+
+        cookie.set_field('name', name)
+        cookie.set_field('value', value)
+        if domain:
+            cookie.set_field('domain', domain)
+        if httponly:
+            cookie.set_field('httpOnly', str(httponly))
+        if path:
+            cookie.set_field('path', path)
+        if secure:
+            cookie.set_field('secure', str(secure))
+        if text:
+            cookie.set_field('path', text)
+        return cookie_uuid
+
+    def delete_cookie(self, cookie_uuid):
+        if self.is_cookie_in_jar(cookie_uuid):
+            cookie = Cookie(cookie_uuid)
+            cookie.delete()
+
+    # TODO INIT with COOKIES ?????
+    def create(self, user_id, description=None, level=1):
+        if self.exists():
+            raise Exception('Cookiejar already exists')
+
+        r_crawler.sadd('cookiejars:all', self.uuid)
+        if level == 0:
+            r_crawler.sadd(f'cookiejars:user:{user_id}', self.uuid)
+        else:
+            r_crawler.sadd('cookiejars:global', self.uuid)
+
+        self._set_user(user_id)
+        self._set_date(datetime.now().strftime("%Y%m%d"))
+        self._set_level(level)
+        if description:
+            self.set_description(description)
+
+    def delete(self):
+        if self.get_level() == 0:
+            user = self.get_user()
+            if user:
+                r_crawler.srem(f'cookiejars:user:{user}', self.uuid)
+        else:
+            r_crawler.srem('cookiejar:global', self.uuid)
+        r_crawler.srem('cookiejars:all', self.uuid)
+        r_crawler.delete(f'cookiejar:meta:{self.uuid}')
+        for cookie_uuid in self.get_cookies_uuid():
+            self.delete_cookie(cookie_uuid)
+
+
+def create_cookiejar(user_id, description=None, level=1, cookiejar_uuid=None):
+    if cookiejar_uuid:
+        cookiejar = Cookiejar(cookiejar_uuid)
+        if cookiejar.exists():
+            cookiejar_uuid = generate_uuid()
     else:
-        r_serv_onion.sadd('cookiejar:global', cookiejar_uuid)
-    # metadata
-    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'user_id', user_id)
-    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'level', level)
-    r_serv_onion.hset(f'cookiejar_metadata:{cookiejar_uuid}', 'description', description)
-    _set_cookiejar_date(cookiejar_uuid, datetime.now().strftime("%Y%m%d"))
-
+        cookiejar_uuid = generate_uuid()
+    cookiejar = Cookiejar(cookiejar_uuid)
+    cookiejar.create(user_id, description=description, level=level)
+    return cookiejar_uuid
     # if json_cookies:
     #     json_cookies = json.loads(json_cookies) # # TODO: catch Exception
     #     r_serv_onion.set('cookies:json_cookies:{}'.format(cookies_uuid), json.dumps(json_cookies))
     #
     # for cookie_dict in l_cookies:
     #     r_serv_onion.hset('cookies:manual_cookies:{}'.format(cookies_uuid), cookie_dict['name'], cookie_dict['value'])
-    return cookiejar_uuid
 
-def delete_cookie_jar(cookiejar_uuid):
-    level = get_cookiejar_level(cookiejar_uuid)
-    if level == 0:
-        user_id = get_cookiejar_owner(cookiejar_uuid)
-        r_serv_onion.srem('cookiejar:user:{}'.format(user_id), cookiejar_uuid)
-    else:
-        r_serv_onion.srem('cookiejar:global', cookiejar_uuid)
-
-    r_serv_onion.delete('cookiejar_metadata:{}'.format(cookiejar_uuid))
-
-def get_cookiejar_cookies_uuid(cookiejar_uuid):
-    cookies = r_serv_onion.smembers('cookiejar:{}:cookies:uuid'.format(cookiejar_uuid))
-    if not cookies:
-        cookies = []
-    return cookies
-
-def get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=False):
-    l_cookiejar = []
-    for cookie_uuid in get_cookiejar_cookies_uuid(cookiejar_uuid):
-        if add_cookie_uuid:
-            l_cookiejar.append((get_cookie_dict(cookie_uuid), cookie_uuid))
-        else:
-            l_cookiejar.append(get_cookie_dict(cookie_uuid))
-    return l_cookiejar
-
-## Cookiejar metadata ##
-def get_cookiejar_description(cookiejar_uuid):
-    return r_serv_onion.hget('cookiejar_metadata:{}'.format(cookiejar_uuid), 'description')
-
-def get_cookiejar_date(cookiejar_uuid):
-    return r_serv_onion.hget('cookiejar_metadata:{}'.format(cookiejar_uuid), 'date')
-
-def get_cookiejar_owner(cookiejar_uuid):
-    return r_serv_onion.hget('cookiejar_metadata:{}'.format(cookiejar_uuid), 'user_id')
-
-def get_cookiejar_date(cookiejar_uuid):
-    return r_serv_onion.hget('cookiejar_metadata:{}'.format(cookiejar_uuid), 'date')
-
-def get_cookiejar_level(cookiejar_uuid):
-    level = r_serv_onion.hget('cookiejar_metadata:{}'.format(cookiejar_uuid), 'level')
-    if not level:
-        level = 1
-    return int(level)
-
-def get_cookiejar_metadata(cookiejar_uuid, level=False):
-    dict_cookiejar = {}
-    if exist_cookiejar(cookiejar_uuid):
-        dict_cookiejar['cookiejar_uuid'] = cookiejar_uuid
-        dict_cookiejar['description'] = get_cookiejar_description(cookiejar_uuid)
-        dict_cookiejar['date'] = get_cookiejar_date(cookiejar_uuid)
-        dict_cookiejar['user_id'] = get_cookiejar_owner(cookiejar_uuid)
-        if level:
-            dict_cookiejar['level'] = get_cookiejar_level(cookiejar_uuid)
-    return dict_cookiejar
-
-def get_cookiejar_metadata_by_iterator(iter_cookiejar_uuid):
-    l_cookiejar_metadata = []
+def get_cookiejars_meta_by_iterator(iter_cookiejar_uuid):
+    cookiejars_meta = []
     for cookiejar_uuid in iter_cookiejar_uuid:
-        l_cookiejar_metadata.append(get_cookiejar_metadata(cookiejar_uuid))
-    return l_cookiejar_metadata
+        cookiejar = Cookiejar(cookiejar_uuid)
+        cookiejars_meta.append(cookiejar.get_meta(nb_cookies=True))
+    return cookiejars_meta
 
-def edit_cookiejar_description(cookiejar_uuid, description):
-    r_serv_onion.hset('cookiejar_metadata:{}'.format(cookiejar_uuid), 'description', description)
+def get_cookiejars_by_user(user_id):
+    cookiejars_global = get_cookiejars_global()
+    cookiejars_user = get_cookiejars_user(user_id)
+    return [*cookiejars_user, *cookiejars_global]
+
+## API ##
+
+def api_get_cookiejars_selector(user_id):
+    cookiejars = []
+    for cookiejar_uuid in get_cookiejars_by_user(user_id):
+        cookiejar = Cookiejar(cookiejar_uuid)
+        cookiejars.append(f'{cookiejar.get_description()} : {cookiejar.uuid}')
+    return sorted(cookiejars)
+
+def api_verify_cookiejar_acl(cookiejar_uuid, user_id):
+    cookiejar = Cookiejar(cookiejar_uuid)
+    if not cookiejar.exists():
+        return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
+    if cookiejar.get_level() == 0:  # TODO: check if user is admin
+        if cookiejar.get_user() != user_id:
+            return {'error': 'The access to this cookiejar is restricted'}, 403
+
+def api_edit_cookiejar_description(user_id, cookiejar_uuid, description):
+    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+    if resp:
+        return resp
+    cookiejar = Cookiejar(cookiejar_uuid)
+    cookiejar.set_description(description)
+    return {'cookiejar_uuid': cookiejar_uuid}, 200
+
+def api_delete_cookiejar(user_id, cookiejar_uuid):
+    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+    if resp:
+        return resp
+    cookiejar = Cookiejar(cookiejar_uuid)
+    cookiejar.delete()
+    return {'cookiejar_uuid': cookiejar_uuid}, 200
+
+def api_get_cookiejar(cookiejar_uuid, user_id):
+    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+    if resp:
+        return resp
+    cookiejar = Cookiejar(cookiejar_uuid)
+    meta = cookiejar.get_meta(level=True, cookies=True, r_json=True)
+    return meta, 200
 
 # # # # # # # #
 #             #
@@ -336,85 +444,162 @@ def edit_cookiejar_description(cookiejar_uuid, description):
 #   - httpOnly  (optional)
 #   - text      (optional)
 # # # #
-def get_cookie_all_keys_name():
-    return ['name', 'value', 'domain', 'path', 'httpOnly', 'secure']
 
-def exists_cookie(cookie_uuid):
-    if int(r_serv_onion.scard(f'cookies:map:cookiejar:{cookie_uuid}')) > 0:
-        return True
-    return False
+# TODO   MISP Import
 
-def get_cookie_value(cookie_uuid, name):
-    return r_serv_onion.hget(f'cookiejar:cookie:{cookie_uuid}', name)
+class Cookie:
 
-def set_cookie_value(cookie_uuid, name, value):
-    r_serv_onion.hset(f'cookiejar:cookie:{cookie_uuid}', name, value)
+    def __init__(self, cookie_uuid):
+        self.uuid = cookie_uuid
 
-def delete_cookie_value(cookie_uuid, name):
-    r_serv_onion.hdel(f'cookiejar:cookie:{cookie_uuid}', name)
+    def exists(self):
+        return r_crawler.exists(f'cookie:meta:{self.uuid}')
 
-def get_cookie_dict(cookie_uuid):
-    cookie_dict = {}
-    for key_name in r_serv_onion.hkeys(f'cookiejar:cookie:{cookie_uuid}'):
-        cookie_dict[key_name] = get_cookie_value(cookie_uuid, key_name)
-    return cookie_dict
+    def get_cookiejar(self):
+        return r_crawler.hget(f'cookie:meta:{self.uuid}', 'cookiejar')
 
-# name, value, path=None, httpOnly=None, secure=None, domain=None, text=None
-def add_cookie_to_cookiejar(cookiejar_uuid, cookie_dict, cookie_uuid=None):
-    # # TODO: sanitize cookie_uuid
-    if not cookie_uuid:
-        cookie_uuid = generate_uuid()
-    r_serv_onion.sadd(f'cookiejar:{cookiejar_uuid}:cookies:uuid', cookie_uuid)
-    r_serv_onion.sadd(f'cookies:map:cookiejar:{cookie_uuid}', cookiejar_uuid)
+    def set_cookiejar(self, cookiejar_uuid):
+        r_crawler.hset(f'cookie:meta:{self.uuid}', 'cookiejar', cookiejar_uuid)
 
-    set_cookie_value(cookie_uuid, 'name', cookie_dict['name'])
-    set_cookie_value(cookie_uuid, 'value', cookie_dict['value'])
-    if 'path' in cookie_dict:
-        set_cookie_value(cookie_uuid, 'path', cookie_dict['path'])
-    if 'httpOnly' in cookie_dict:
-        set_cookie_value(cookie_uuid, 'httpOnly', cookie_dict['httpOnly'])
-    if 'secure' in cookie_dict:
-        set_cookie_value(cookie_uuid, 'secure', cookie_dict['secure'])
-    if 'domain' in cookie_dict:
-        set_cookie_value(cookie_uuid, 'domain', cookie_dict['domain'])
-    if 'text' in cookie_dict:
-        set_cookie_value(cookie_uuid, 'text', cookie_dict['text'])
-    return cookie_uuid
+    def get_name(self):
+        return r_crawler.hget(f'cookie:meta:{self.uuid}', 'name')
 
-def add_cookies_to_cookiejar(cookiejar_uuid, l_cookies):
-    for cookie_dict in l_cookies:
-        add_cookie_to_cookiejar(cookiejar_uuid, cookie_dict)
+    def get_value(self):
+        return r_crawler.hget(f'cookie:meta:{self.uuid}', 'value')
 
-def delete_all_cookies_from_cookiejar(cookiejar_uuid):
-    for cookie_uuid in get_cookiejar_cookies_uuid(cookiejar_uuid):
-        delete_cookie_from_cookiejar(cookiejar_uuid, cookie_uuid)
+    def _get_field(self, field):
+        return r_crawler.hget(f'cookie:meta:{self.uuid}', field)
 
-def delete_cookie_from_cookiejar(cookiejar_uuid, cookie_uuid):
-    r_serv_onion.srem(f'cookiejar:{cookiejar_uuid}:cookies:uuid', cookie_uuid)
-    r_serv_onion.srem(f'cookies:map:cookiejar:{cookie_uuid}', cookiejar_uuid)
-    if not exists_cookie(cookie_uuid):
-        r_serv_onion.delete(f'cookiejar:cookie:{cookie_uuid}')
+    def set_field(self, field, value):
+        return r_crawler.hset(f'cookie:meta:{self.uuid}', field, value)
 
-def edit_cookie(cookiejar_uuid, cookie_uuid, cookie_dict):
-    # delete old keys
-    for key_name in r_serv_onion.hkeys(f'cookiejar:cookie:{cookie_uuid}'):
-        if key_name not in cookie_dict:
-            delete_cookie_value(cookie_uuid, key_name)
-    # add new keys
-    cookie_all_keys_name = get_cookie_all_keys_name()
-    for key_name in cookie_dict:
-        if key_name in cookie_all_keys_name:
-            set_cookie_value(cookie_uuid, key_name, cookie_dict[key_name])
+    def remove_field(self, field):
+        return r_crawler.hdel(f'cookie:meta:{self.uuid}', field)
+
+    def get_fields(self):
+        fields = set(r_crawler.hkeys(f'cookie:meta:{self.uuid}'))
+        if 'cookiejar' in fields:
+            fields.remove('cookiejar')
+        return fields
+
+    # def get_domain(self):
+    #     return r_crawler.hget(f'cookie:meta:{self.uuid}', 'domain')
+    #
+    # def get_path(self):
+    #     return r_crawler.hget(f'cookie:meta:{self.uuid}', 'path')
+    #
+    # def get_httpOnly(self):
+    #     return r_crawler.hget(f'cookie:meta:{self.uuid}', 'httpOnly')
+    #
+    # def get_secure(self):
+    #     return r_crawler.hget(f'cookie:meta:{self.uuid}', 'secure')
+
+    # TODO expire ????
+    def get_meta(self, r_json=False):
+        meta = {}
+        # ['domain', 'path', 'httpOnly', 'secure'] + name + value
+        for field in self.get_fields():
+            value = self._get_field(field)
+            if value:
+                meta[field] = value
+        if r_json:
+            data = json.dumps(meta, indent=4, sort_keys=True)
+            meta = {'data': data}
+        meta['uuid'] = self.uuid
+        return meta
+
+    def edit(self, cookie_dict):
+        # remove old keys
+        for field in self.get_fields():
+            if field not in cookie_dict:
+                self.remove_field(field)
+        # add new keys
+        for field in cookie_dict:
+            value = cookie_dict[field]
+            if value:
+                if field == 'secure' or field == 'httpOnly':
+                    value = str(value)
+                self.set_field(field, value)
+
+    def delete(self):
+        cookiejar_uuid = self.get_cookiejar()
+        r_crawler.delete(f'cookie:meta:{self.uuid}')
+        r_crawler.srem(f'cookiejar:cookies:{cookiejar_uuid}', self.uuid)
+
+## API ##
+
+def api_get_cookie(user_id, cookie_uuid):
+    cookie = Cookie(cookie_uuid)
+    if not cookie.exists():
+        return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
+    resp = api_verify_cookiejar_acl(cookie.get_cookiejar(), user_id)
+    if resp:
+        return resp
+    return cookie.get_meta()
+
+def api_edit_cookie(user_id, cookie_uuid, cookie_dict):
+    cookie = Cookie(cookie_uuid)
+    if not cookie.exists():
+        return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
+    resp = api_verify_cookiejar_acl(cookie.get_cookiejar(), user_id)
+    if resp:
+        return resp
+    if 'name' not in cookie_dict or 'value' not in cookie_dict or not cookie_dict['name'] or not cookie_dict['value']:
+        return {'error': 'cookie name or value not provided'}, 400
+    cookie.edit(cookie_dict)
+    return cookie.get_meta(), 200
+
+def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
+    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+    if resp:
+        return resp
+    if 'name' not in cookie_dict or 'value' not in cookie_dict or not cookie_dict['name'] or not cookie_dict['value']:
+        return {'error': 'cookie name or value not provided'}, 400
+    cookiejar = Cookiejar(cookiejar_uuid)
+    name = cookie_dict.get('name')
+    value = cookie_dict.get('value')
+    domain = cookie_dict.get('domain')
+    path = cookie_dict.get('path')
+    text = cookie_dict.get('text')
+    httponly = bool(cookie_dict.get('httponly'))
+    secure = bool(cookie_dict.get('secure'))
+    cookiejar.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure, text=text)
+    return resp, 200
+
+def api_delete_cookie(user_id, cookie_uuid):
+    cookie = Cookie(cookie_uuid)
+    if not cookie.exists():
+        return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
+    cookiejar_uuid = cookie.get_cookiejar()
+    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+    if resp:
+        return resp
+    cookiejar = Cookiejar(cookiejar_uuid)
+    if not cookiejar.is_cookie_in_jar(cookie_uuid):
+        return {'error': 'Cookie isn\'t in the jar', 'cookiejar_uuid': cookiejar_uuid}, 404
+    cookiejar.delete_cookie(cookie_uuid)
+    return {'cookiejar_uuid': cookiejar_uuid, 'cookie_uuid': cookie_uuid}, 200
+
+# def get_cookie_all_keys_name():
+#     return ['name', 'value', 'domain', 'path', 'httpOnly', 'secure']
 
 ##  - -  ##
 ## Cookies import ##       # TODO: add browser type ?
 def import_cookies_from_json(json_cookies, cookiejar_uuid):
+    cookiejar = Cookiejar(cookiejar_uuid)
     for cookie in json_cookies:
         try:
             cookie_dict = unpack_imported_json_cookie(cookie)
-            add_cookie_to_cookiejar(cookiejar_uuid, cookie_dict)
+            name = cookie_dict.get('name')
+            value = cookie_dict.get('value')
+            domain = cookie_dict.get('domain')
+            httponly = cookie_dict.get('httponly')
+            path = cookie_dict.get('path')
+            secure = cookie_dict.get('secure')
+            text = cookie_dict.get('text')
+            cookiejar.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure, text=text)
         except KeyError:
-            return {'error': 'Invalid cookie key, please submit a valid JSON', 'cookiejar_uuid': cookiejar_uuid}
+            return {'error': 'Invalid cookie key, please submit a valid JSON', 'cookiejar_uuid': cookiejar_uuid}, 400
 
 # # TODO: add text field
 def unpack_imported_json_cookie(json_cookie):
@@ -430,93 +615,21 @@ def unpack_imported_json_cookie(json_cookie):
         cookie_dict['domain'] = url.netloc.split(':', 1)[0]
     return cookie_dict
 
-def misp_cookie_import(misp_object, cookiejar_uuid):
-    pass
 ##  - -  ##
 #### COOKIEJAR API ####
-def api_import_cookies_from_json(json_cookies_str, cookiejar_uuid): # # TODO: add catch
+def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str): # # TODO: add catch
+    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+    if resp:
+        return resp
     json_cookies = json.loads(json_cookies_str)
     resp = import_cookies_from_json(json_cookies, cookiejar_uuid)
     if resp:
         return resp, 400
 #### ####
 
-#### COOKIES API ####
-
-def api_verify_basic_cookiejar(cookiejar_uuid, user_id):
-    if not exist_cookiejar(cookiejar_uuid):
-        return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
-    level = get_cookiejar_level(cookiejar_uuid)
-    if level == 0: # # TODO: check if user is admin
-        cookie_owner = get_cookiejar_owner(cookiejar_uuid)
-        if cookie_owner != user_id:
-            return {'error': 'The access to this cookiejar is restricted'}, 403
-
-def api_get_cookiejar_cookies(cookiejar_uuid, user_id):
-    resp = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
-    if resp:
-        return resp
-    resp = get_cookiejar_cookies_list(cookiejar_uuid)
-    return resp, 200
-
-def api_edit_cookiejar_description(user_id, cookiejar_uuid, description):
-    resp = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
-    if resp:
-        return resp
-    edit_cookiejar_description(cookiejar_uuid, description)
-    return {'cookiejar_uuid': cookiejar_uuid}, 200
-
-def api_get_cookiejar_cookies_with_uuid(cookiejar_uuid, user_id):
-    resp = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
-    if resp:
-        return resp
-    resp = get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=True)
-    return resp, 200
-
-def api_get_cookies_list_select(user_id):
-    l_cookiejar = []
-    for cookies_uuid in get_global_cookiejar():
-        l_cookiejar.append(f'{get_cookiejar_description(cookies_uuid)} : {cookies_uuid}')
-    for cookies_uuid in get_user_cookiejar(user_id):
-        l_cookiejar.append(f'{get_cookiejar_description(cookies_uuid)} : {cookies_uuid}')
-    return sorted(l_cookiejar)
-
-def api_delete_cookie_from_cookiejar(user_id, cookiejar_uuid, cookie_uuid):
-    resp = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
-    if resp:
-        return resp
-    delete_cookie_from_cookiejar(cookiejar_uuid, cookie_uuid)
-    return {'cookiejar_uuid': cookiejar_uuid, 'cookie_uuid': cookie_uuid}, 200
-
-def api_delete_cookie_jar(user_id, cookiejar_uuid):
-    resp = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
-    if resp:
-        return resp
-    delete_cookie_jar(cookiejar_uuid)
-    return {'cookiejar_uuid': cookiejar_uuid}, 200
-
-def api_edit_cookie(user_id, cookiejar_uuid, cookie_uuid, cookie_dict):
-    resp = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
-    if resp:
-        return resp
-    if 'name' not in cookie_dict or 'value' not in cookie_dict or cookie_dict['name'] == '':
-        return {'error': 'cookie name or value not provided'}, 400
-    edit_cookie(cookiejar_uuid, cookie_uuid, cookie_dict)
-    return get_cookie_dict(cookie_uuid), 200
-
-def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
-    resp = api_verify_basic_cookiejar(cookiejar_uuid, user_id)
-    if resp:
-        return resp
-    if 'name' not in cookie_dict or 'value' not in cookie_dict or cookie_dict['name'] == '':
-        return {'error': 'cookie name or value not provided'}, 400
-    resp = add_cookie_to_cookiejar(cookiejar_uuid, cookie_dict)
-    return resp, 200
-
-#### ####
 
 # # # # # # # #
-#             #
+#             # TODO CLASS          CrawlerTask
 #   CRAWLER   # ###################################################################################
 #             #
 # # # # # # # #
@@ -858,7 +971,7 @@ def api_add_crawler_task(data, user_id=None):
     # cookiejar_uuid = data.get('cookiejar_uuid', None)
     # if cookiejar_uuid:
     #     if not exist_cookiejar(cookiejar_uuid):
-    #         return ({'error': 'unknow cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404)
+    #         return ({'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404)
     #     level = get_cookiejar_level(cookiejar_uuid)
     #     if level == 0:  # # TODO: check if user is admin ######################################################
     #         cookie_owner = get_cookiejar_owner(cookiejar_uuid)
@@ -1195,14 +1308,6 @@ def get_nb_elem_to_crawl_by_type(queue_type): # # TODO: rename me
     nb += r_serv_onion.scard('{}_crawler_queue'.format(queue_type))
     return nb
 ###################################################################################
-
-def get_all_crawlers_queues_types():
-    all_queues_types = set()
-    all_splash_name = get_all_crawlers_to_launch_splash_name()
-    for splash_name in all_splash_name:
-        all_queues_types.add(get_splash_crawler_type(splash_name))
-    all_splash_name = list()
-    return all_queues_types
 
 def get_crawler_queue_types_by_splash_name(splash_name):
     all_domain_type = [splash_name]

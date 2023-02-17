@@ -64,11 +64,11 @@ spec.loader.exec_module(old_Investigations)
 old_Investigations.r_tracking = r_serv_tracker
 
 from lib import crawlers
-spec = importlib.util.find_spec('lib.crawlers')
-old_crawlers = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(old_crawlers)
-
-old_crawlers.r_serv_onion = r_crawler
+# spec = importlib.util.find_spec('lib.crawlers')
+# old_crawlers = importlib.util.module_from_spec(spec)
+# spec.loader.exec_module(old_crawlers)
+#
+# old_crawlers.r_serv_onion = r_crawler
 
 # # TODO: disable features - credentials - stats ? - sentiment analysis
 
@@ -411,6 +411,39 @@ def items_migration():
 #                             #
 ###############################
 
+def get_all_cookiejar():
+    return r_crawler.smembers('cookiejar:all')
+
+def get_cookiejar_level(cookiejar_uuid):
+    level = r_crawler.hget(f'cookiejar_metadata:{cookiejar_uuid}', 'level')
+    try:
+        level = int(level)
+    except:
+        level = 0
+    return level
+
+def get_cookiejar_metadata(cookiejar_uuid):
+    dict_cookiejar = {}
+    if r_crawler.exists(f'cookiejar_metadata:{cookiejar_uuid}'):
+        dict_cookiejar['uuid'] = cookiejar_uuid
+        dict_cookiejar['description'] = r_crawler.hget(f'cookiejar_metadata:{cookiejar_uuid}', 'description')
+        dict_cookiejar['date'] = r_crawler.hget(f'cookiejar_metadata:{cookiejar_uuid}', 'date')
+        dict_cookiejar['user'] = r_crawler.hget(f'cookiejar_metadata:{cookiejar_uuid}', 'user_id')
+        dict_cookiejar['level'] = get_cookiejar_level(cookiejar_uuid)
+    return dict_cookiejar
+
+def get_cookiejar_cookies_uuid(cookiejar_uuid):
+    res = r_crawler.smembers(f'cookiejar:{cookiejar_uuid}:cookies:uuid')
+    if not res:
+        res = []
+    return res
+
+def get_cookie_dict(cookie_uuid):
+    cookie_dict = {}
+    for key_name in r_crawler.hkeys(f'cookiejar:cookie:{cookie_uuid}'):
+        cookie_dict[key_name] = r_crawler.hget(f'cookiejar:cookie:{cookie_uuid}', key_name)
+    return cookie_dict
+
 # Return last crawled domains by type
 #   domain;epoch
 def get_last_crawled_domains(domain_type):
@@ -422,9 +455,9 @@ def get_domains_blacklist(domain_type):
 def crawler_migration():
     print('CRAWLER MIGRATION...')
 
-    for domain_type in ['onion', 'regular']:
-        for domain in get_domains_blacklist(domain_type):
-            crawlers.add_domain_blacklist(domain_type, domain)
+    # for domain_type in ['onion', 'regular']:
+    #     for domain in get_domains_blacklist(domain_type):
+    #         crawlers.add_domain_blacklist(domain_type, domain)
 
     # for domain_type in ['onion', 'regular']:
     #     for row in get_last_crawled_domains(domain_type):
@@ -433,15 +466,21 @@ def crawler_migration():
     #         print(domain, port, epoch)
     #         #crawlers.add_last_crawled_domain(domain_type, domain, port, epoch)
 
-    # for cookiejar_uuid in old_crawlers.get_all_cookiejar():
-    #     meta = old_crawlers.get_cookiejar_metadata(cookiejar_uuid, level=True)
-    #     #print(meta)
-    #     crawlers.create_cookiejar(meta['user_id'], level=meta['level'], description=meta['description'], cookiejar_uuid=cookiejar_uuid)
-    #     crawlers._set_cookiejar_date(meta['date'])
-    #
-    #     for meta_cookie, cookie_uuid in old_crawlers.get_cookiejar_cookies_list(cookiejar_uuid, add_cookie_uuid=True):
-    #         print(cookie_uuid)
-    #         crawlers.add_cookie_to_cookiejar(cookiejar_uuid, meta_cookie, cookie_uuid=cookie_uuid)
+    for cookiejar_uuid in get_all_cookiejar():
+        meta = get_cookiejar_metadata(cookiejar_uuid)
+        if meta:
+            # print(meta)
+            cookiejar = crawlers.Cookiejar(meta['uuid'])
+            if not cookiejar.exists():
+                crawlers.create_cookiejar(meta['user'], description=meta['description'], level=meta['level'],
+                                          cookiejar_uuid=meta['uuid'])
+                cookiejar._set_date(meta['date'])
+
+                for cookie_uuid in get_cookiejar_cookies_uuid(meta['uuid']):
+                    cookie_dict = get_cookie_dict(cookie_uuid)
+                    if cookie_dict:
+                        # print(cookie_dict)
+                        crawlers.api_create_cookie(meta['user'], cookiejar_uuid, cookie_dict)
 
     # TODO: auto crawler -> to Fix / change
 
@@ -876,11 +915,11 @@ def cves_migration():
 
 if __name__ == '__main__':
 
-    core_migration()
-    user_migration()
+    # core_migration()
+    # user_migration()
     #tags_migration()
     # items_migration()
-    # crawler_migration()
+    crawler_migration()
     # domain_migration()                      # TO TEST ###########################
     # decodeds_migration()
     # screenshots_migration()
