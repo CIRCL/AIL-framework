@@ -131,29 +131,29 @@ Finally, you can quit this program by pressing either ``<q>`` or ``<C-c>``.
 Crawler
 ---------------------
 
-In AIL, you can crawl Tor hidden services. Don't forget to review the proxy configuration of your Tor client and especially if you enabled the SOCKS5 proxy and binding on the appropriate IP address reachable via the dockers where Splash runs.
+In AIL, you can crawl websites and Tor hidden services. Don't forget to review the proxy configuration of your Tor client and especially if you enabled the SOCKS5 proxy
+
+[//]: # (and binding on the appropriate IP address reachable via the dockers where Splash runs.)
 
 ### Installation
 
 
-[Install AIL-Splash-Manager](https://github.com/ail-project/ail-splash-manager)
+[Install Lacus](https://github.com/ail-project/lacus)
 
 ### Configuration
 
-1. Search the Splash-Manager API key. This API key is generated when you launch the manager for the first time.  
-(located in your Splash Manager directory ``ail-splash-manager/token_admin.txt``)
-
-
-2. Splash Manager URL and API Key:  
+1. Lacus URL:  
 In the webinterface, go to ``Crawlers>Settings`` and click on the Edit button
-![Splash Manager Config](./doc/screenshots/splash_manager_config_edit_1.png?raw=true "AIL framework Splash Manager Config")
 
-![Splash Manager Config](./doc/screenshots/splash_manager_config_edit_2.png?raw=true "AIL framework Splash Manager Config")
+![Splash Manager Config](./doc/screenshots/lacus_config.png?raw=true "AIL Lacus Config")
 
-3. Launch AIL Crawlers:   
+![Splash Manager Config](./doc/screenshots/lacus_config_edit.png?raw=true "AIL Lacus Config")
+
+2. Launch AIL Crawlers:   
 Choose the number of crawlers you want to launch
-![Splash Manager Nb Crawlers Config](./doc/screenshots/splash_manager_nb_crawlers_1.png?raw=true "AIL framework Nb Crawlers Config")
-![Splash Manager Nb Crawlers Config](./doc/screenshots/splash_manager_nb_crawlers_2.png?raw=true "AIL framework Nb Crawlers Config")
+
+![Splash Manager Nb Crawlers Config](./doc/screenshots/crawler_nb_captures.png?raw=true "AIL Lacus Nb Crawlers Config")
+![Splash Manager Nb Crawlers Config](./doc/screenshots/crawler_nb_captures_edit.png?raw=true "AIL Lacus Nb Crawlers Config")
 
 
 

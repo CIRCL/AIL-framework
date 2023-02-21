@@ -125,7 +125,7 @@ def unpack_url(url):
 #             #
 #   FAVICON   # TODO REWRITE ME
 #             #
-# # # # # # # #
+# # # # # # # # TODO CREATE NEW OBJECT
 
 def get_favicon_from_html(html, domain, url):
     favicon_urls = extract_favicon_from_html(html, url)
@@ -328,7 +328,6 @@ class Cookiejar:
             cookie = Cookie(cookie_uuid)
             cookie.delete()
 
-    # TODO INIT with COOKIES ?????
     def create(self, user_id, description=None, level=1):
         if self.exists():
             raise Exception('Cookiejar already exists')
@@ -346,16 +345,12 @@ class Cookiejar:
             self.set_description(description)
 
     def delete(self):
-        if self.get_level() == 0:
-            user = self.get_user()
-            if user:
-                r_crawler.srem(f'cookiejars:user:{user}', self.uuid)
-        else:
-            r_crawler.srem('cookiejar:global', self.uuid)
-        r_crawler.srem('cookiejars:all', self.uuid)
-        r_crawler.delete(f'cookiejar:meta:{self.uuid}')
         for cookie_uuid in self.get_cookies_uuid():
             self.delete_cookie(cookie_uuid)
+        r_crawler.srem(f'cookiejars:user:{self.get_user()}', self.uuid)
+        r_crawler.srem('cookiejars:global', self.uuid)
+        r_crawler.srem('cookiejars:all', self.uuid)
+        r_crawler.delete(f'cookiejar:meta:{self.uuid}')
 
 
 def create_cookiejar(user_id, description=None, level=1, cookiejar_uuid=None):
@@ -368,12 +363,6 @@ def create_cookiejar(user_id, description=None, level=1, cookiejar_uuid=None):
     cookiejar = Cookiejar(cookiejar_uuid)
     cookiejar.create(user_id, description=description, level=level)
     return cookiejar_uuid
-    # if json_cookies:
-    #     json_cookies = json.loads(json_cookies) # # TODO: catch Exception
-    #     r_serv_onion.set('cookies:json_cookies:{}'.format(cookies_uuid), json.dumps(json_cookies))
-    #
-    # for cookie_dict in l_cookies:
-    #     r_serv_onion.hset('cookies:manual_cookies:{}'.format(cookies_uuid), cookie_dict['name'], cookie_dict['value'])
 
 def get_cookiejars_meta_by_iterator(iter_cookiejar_uuid):
     cookiejars_meta = []
@@ -393,7 +382,10 @@ def api_get_cookiejars_selector(user_id):
     cookiejars = []
     for cookiejar_uuid in get_cookiejars_by_user(user_id):
         cookiejar = Cookiejar(cookiejar_uuid)
-        cookiejars.append(f'{cookiejar.get_description()} : {cookiejar.uuid}')
+        description = cookiejar.get_description()
+        if not description:
+            description = ''
+        cookiejars.append(f'{description} : {cookiejar.uuid}')
     return sorted(cookiejars)
 
 def api_verify_cookiejar_acl(cookiejar_uuid, user_id):
@@ -505,7 +497,7 @@ class Cookie:
         if r_json:
             data = json.dumps(meta, indent=4, sort_keys=True)
             meta = {'data': data}
-        meta['uuid'] = self.uuid
+            meta['uuid'] = self.uuid
         return meta
 
     def edit(self, cookie_dict):
@@ -606,9 +598,9 @@ def unpack_imported_json_cookie(json_cookie):
     cookie_dict = {'name': json_cookie['Name raw'], 'value': json_cookie['Content raw']}
     if 'Path raw' in json_cookie:
         cookie_dict['path'] = json_cookie['Path raw']
-    if 'httpOnly' in json_cookie:
-        cookie_dict['httpOnly'] = json_cookie['HTTP only raw'] == 'true'
-    if 'secure' in json_cookie:
+    if 'HTTP only raw' in json_cookie:
+        cookie_dict['httponly'] = json_cookie['HTTP only raw'] == 'true'
+    if 'Send for' in json_cookie:
         cookie_dict['secure'] = json_cookie['Send for'] == 'Encrypted connections only'
     if 'Host raw' in json_cookie:
         url = urlparse(json_cookie['Host raw'])
@@ -629,42 +621,13 @@ def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str): # #
 
 
 # # # # # # # #
-#             # TODO CLASS          CrawlerTask
+#             #
 #   CRAWLER   # ###################################################################################
 #             #
 # # # # # # # #
 
-
-@unique
-class CaptureStatus(IntEnum):
-    """The status of the capture"""
-    UNKNOWN = -1
-    QUEUED = 0
-    DONE = 1
-    ONGOING = 2
-
 def get_default_user_agent():
     return 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0'
-
-def get_blacklist():
-    return r_crawler.smembers('blacklist:domain')
-
-def is_blacklisted_domain(domain):
-    return r_crawler.sismember('blacklist:domain', domain)
-
-def blacklist_domain(domain):
-    return r_crawler.sadd('blacklist:domain', domain)
-
-def load_blacklist():
-    try:
-        with open(os.path.join(os.environ['AIL_BIN'], 'crawlers/blacklist.txt'), 'r') as f:
-            r_crawler.delete('blacklist:domain')
-            lines = f.read().splitlines()
-            for line in lines:
-                blacklist_domain(line)
-    # TODO LOG
-    except Exception as e:
-        print(e)
 
 def get_last_crawled_domains(domain_type):
     return r_crawler.lrange(f'last_{domain_type}', 0, -1)
@@ -710,11 +673,31 @@ def get_crawlers_stats(domain_type=None):
         stats[domain_type] = {'queue': queue, 'up': up, 'down': down, 'crawled': crawled}
     return stats
 
+#### Blocklist ####
+
+def get_blacklist():
+    return r_crawler.smembers('blacklist:domain')
+
+def is_blacklisted_domain(domain):
+    return r_crawler.sismember('blacklist:domain', domain)
+
+def blacklist_domain(domain):
+    return r_crawler.sadd('blacklist:domain', domain)
+
+def load_blacklist():
+    try:
+        with open(os.path.join(os.environ['AIL_BIN'], 'crawlers/blacklist.txt'), 'r') as f:
+            r_crawler.delete('blacklist:domain')
+            lines = f.read().splitlines()
+            for line in lines:
+                blacklist_domain(line)
+    # TODO LOG
+    except Exception as e:
+        print(e)
+
 #### CRAWLER STATE ####
 
-# TODO SET IN UI OR USE DEFAULT
-def get_crawler_max_captures():
-    return 10
+#### CRAWLER CAPTURE ####
 
 def get_nb_crawler_captures():
     return r_cache.zcard('crawler:captures')
@@ -724,127 +707,275 @@ def get_crawler_captures():
 
 def reload_crawler_captures():
     r_cache.delete('crawler:captures')
-    for capture in get_crawler_captures():
-        r_cache.zadd('crawler:captures', {capture[0]: capture[1]})
+    for capture_uuid in get_crawler_captures():
+        capture = CrawlerCapture(capture_uuid)
+        r_cache.zadd('crawler:captures', {capture.uuid: 0})
+
+@unique
+class CaptureStatus(IntEnum):
+    """The status of the capture"""
+    UNKNOWN = -1
+    QUEUED = 0
+    DONE = 1
+    ONGOING = 2
+
+class CrawlerCapture:
+
+    def __init__(self, task_uuid):
+        self.uuid = task_uuid
+
+    def exists(self):
+        return r_crawler.hexists('crawler:captures:tasks', self.uuid)
+
+    def get_task_uuid(self):
+        return r_crawler.hget('crawler:captures:tasks', self.uuid)
+
+    def get_task(self):
+        task_uuid = self.get_task_uuid()
+        if task_uuid:
+            return CrawlerTask(task_uuid)
+
+    def get_start_time(self):
+        return self.get_task().get_start_time()
+
+    def get_status(self):
+        return r_cache.hget(f'crawler:capture:{self.uuid}', 'status')
+
+    def create(self, task_uuid):
+        if self.exists():
+            raise Exception(f'Error: Capture {self.uuid} already exists')
+        launch_time = int(time.time())
+        r_crawler.hset(f'crawler:task:{task_uuid}', 'capture', self.uuid)
+        r_crawler.hset('crawler:captures:tasks', self.uuid, task_uuid)
+        r_crawler.zadd('crawler:captures', {self.uuid: launch_time})
+        r_cache.hset(f'crawler:capture:{self.uuid}', 'launch_time', launch_time)
+        r_cache.zadd('crawler:captures', {self.uuid: launch_time})
+
+    def update(self, status):
+        last_check = int(time.time())
+        r_cache.hset(f'crawler:capture:{self.uuid}', 'status', status)
+        r_cache.zadd('crawler:captures', {self.uuid: last_check})
+
+    def remove(self): # TODO INCOMPLETE
+        r_crawler.zrem('crawler:captures', self.uuid)
+        r_crawler.hdel('crawler:captures:tasks', self.uuid)
+
+    # TODO
+    # TODO DELETE TASK ???
+    def delete(self):
+        # task = self.get_task()
+        # task.delete()
+        r_cache.delete(f'crawler:capture:{self.uuid}')
+
+
+def create_capture(capture_uuid, task_uuid):
+    capture = CrawlerCapture(capture_uuid)
+    capture.create(task_uuid)
 
 def get_crawler_capture():
-    return r_cache.zpopmin('crawler:captures')
+    capture = r_cache.zpopmin('crawler:captures')
+    if capture:
+        capture = CrawlerCapture(capture[0][0])
+    else:
+        capture = None
+    return capture
 
-def update_crawler_capture(capture_uuid):
-    last_check = int(time.time())
-    r_cache.zadd('crawler:captures', {capture_uuid: last_check})
-
-def get_crawler_capture_task_uuid(capture_uuid):
-    return r_crawler.hget('crawler:captures:tasks', capture_uuid)
-
-def add_crawler_capture(task_uuid, capture_uuid):
-    launch_time = int(time.time())
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'capture', capture_uuid)
-    r_crawler.hset('crawler:captures:tasks', capture_uuid, task_uuid)
-    r_crawler.zadd('crawler:captures', {capture_uuid: launch_time})
-    r_cache.zadd('crawler:captures', {capture_uuid: launch_time})
-
-def remove_crawler_capture(capture_uuid):
-    r_crawler.zrem('crawler:captures', capture_uuid)
-    r_crawler.hdel('crawler:captures:tasks', capture_uuid)
-
-def get_crawler_capture_status():
+# TODO add capture times
+def get_captures_status():
     status = []
     for capture_uuid in get_crawler_captures():
-        task_uuid = get_crawler_capture_task_uuid(capture_uuid)
-        domain = get_crawler_task_domain(task_uuid)
+        capture = CrawlerCapture(capture_uuid)
+        task = capture.get_task()
+        domain = task.get_domain()
         dom = Domain(domain)
         meta = {
-            'uuid': task_uuid,
+            'uuid': task.uuid,
             'domain': dom.get_id(),
             'type': dom.get_domain_type(),
-            'start_time': get_crawler_task_start_time(task_uuid),
-            'status': 'test',
+            'start_time': capture.get_start_time(), ############### TODO
+            'status': capture.get_status(),
         }
         status.append(meta)
     return status
 
 ##-- CRAWLER STATE --##
 
+#### CRAWLER TASKS ####
+
 #### CRAWLER TASK ####
 
-def get_crawler_task_url(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'url')
+class CrawlerTask:
 
-def get_crawler_task_domain(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'domain')
+    def __init__(self, task_uuid):
+        self.uuid = task_uuid
 
-def get_crawler_task_depth(task_uuid):
-    depth = r_crawler.hget(f'crawler:task:{task_uuid}', 'depth')
-    if not depth:
-        depth = 1
-    return int(depth)
+    def exists(self):
+        return r_crawler.exists(f'crawler:task:{self.uuid}')
 
-def get_crawler_task_har(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'har') == '1'
+    def get_url(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'url')
 
-def get_crawler_task_screenshot(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'screenshot') == '1'
+    def get_domain(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'domain')
 
-def get_crawler_task_user_agent(task_uuid):
-    user_agent = r_crawler.hget(f'crawler:task:{task_uuid}', 'user_agent')
-    if not user_agent:
-        user_agent = get_default_user_agent()
-    return user_agent
+    def get_depth(self):
+        depth = r_crawler.hget(f'crawler:task:{self.uuid}', 'depth')
+        if not depth:
+            depth = 1
+        return int(depth)
 
-def get_crawler_task_cookiejar(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'cookiejar')
+    def get_har(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'har') == '1'
 
-def get_crawler_task_header(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'header')
+    def get_screenshot(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'screenshot') == '1'
 
-def get_crawler_task_proxy(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'proxy')
+    def get_queue(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'queue')
 
-def get_crawler_task_parent(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'parent')
+    def get_user_agent(self):
+        user_agent = r_crawler.hget(f'crawler:task:{self.uuid}', 'user_agent')
+        if not user_agent:
+            user_agent = get_default_user_agent()
+        return user_agent
 
-def get_crawler_task_hash(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'hash')
+    def get_cookiejar(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'cookiejar')
 
-def get_crawler_task_start_time(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'start_time')
+    def get_cookies(self):
+        cookiejar = self.get_cookiejar()
+        if cookiejar:
+            cookiejar = Cookiejar(cookiejar)
+            return cookiejar.get_cookies()
+        else:
+            return []
 
-def get_crawler_task_status(task_uuid):
-    return r_crawler.hget(f'crawler:task:{task_uuid}', 'status')
+    def get_header(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'header')
 
-def get_crawler_task_capture(task_uuid):
-    return r_crawler.hset(f'crawler:task:{task_uuid}', 'capture')
+    def get_proxy(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'proxy')
 
-def get_crawler_task(task_uuid):
-    meta = {
-        'uuid': task_uuid,
-        'url': get_crawler_task_url(task_uuid),
-        'domain': get_crawler_task_domain(task_uuid),
-        'depth': get_crawler_task_depth(task_uuid),
-        'har': get_crawler_task_har(task_uuid),
-        'screenshot': get_crawler_task_screenshot(task_uuid),
-        'user_agent': get_crawler_task_user_agent(task_uuid),
-        'cookiejar': get_crawler_task_cookiejar(task_uuid),
-        'header': get_crawler_task_header(task_uuid),
-        'proxy': get_crawler_task_proxy(task_uuid),
-        'parent': get_crawler_task_parent(task_uuid),
-    }
-    return meta
+    def get_parent(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'parent')
 
-def get_task_status(task_uuid):
-    domain = get_crawler_task_domain(task_uuid)
-    dom = Domain(domain)
-    meta = {
-        'uuid': task_uuid,
-        'domain': dom.get_id(),
-        'domain_type': dom.get_domain_type(),
-        'start_time': get_crawler_task_start_time(task_uuid),
-        'status': 'test',
-    }
-    return meta
+    def get_hash(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'hash')
 
-# domain -> uuid
+    def get_start_time(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'start_time')
+
+    # TODO
+    def get_status(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'status') #######################################
+
+    def get_capture(self):
+        return r_crawler.hget(f'crawler:task:{self.uuid}', 'capture')
+
+    def _set_field(self, field, value):
+        return r_crawler.hset(f'crawler:task:{self.uuid}', field, value)
+
+    def get_meta(self):
+        meta = {
+            'uuid': self.uuid,
+            'url': self.get_url(),
+            'domain': self.get_domain(),
+            'depth': self.get_depth(),
+            'har': self.get_har(),
+            'screenshot': self.get_screenshot(),
+            'type': self.get_queue(),
+            'user_agent': self.get_user_agent(),
+            'cookiejar': self.get_cookiejar(),
+            'header': self.get_header(),
+            'proxy': self.get_proxy(),
+            'parent': self.get_parent(),
+        }
+        return meta
+
+    # TODO STATUS UPDATE
+    # TODO SANITIZE PRIORITY
+    # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
+    def create(self, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
+               user_agent=None, parent='manual', priority=0):
+        if self.exists():
+            raise Exception('Error: Task already exists')
+
+        url_decoded = unpack_url(url)
+        url = url_decoded['url']
+        domain = url_decoded['domain']
+
+        dom = Domain(domain)
+
+        # Discovery crawler
+        if priority == 0:
+            if is_blacklisted_domain(dom.get_id()):
+                return None
+            if not dom.exists():
+                priority = 10
+            # Domain Crawled today or UP this month
+            if dom.is_down_today() or dom.is_up_this_month():
+                return None
+
+        har = int(har)
+        screenshot = int(screenshot)
+
+        if proxy == 'web':
+            proxy = None
+        elif proxy == 'force_tor' or proxy == 'tor' or proxy == 'onion':
+            proxy = 'force_tor'
+        if not user_agent:
+            user_agent = get_default_user_agent()
+
+        # TODO SANITIZE COOKIEJAR -> UUID
+
+        # Check if already in queue
+        hash_query = get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header)
+        if r_crawler.hexists(f'crawler:queue:hash', hash_query):
+            self.uuid = r_crawler.hget(f'crawler:queue:hash', hash_query)
+            return self.uuid
+
+        # TODO ADD TASK STATUS -----
+        self._set_field('domain', domain)
+        self._set_field('url', url)
+        self._set_field('depth', int(depth))
+        self._set_field('har', har)
+        self._set_field('screenshot', screenshot)
+        self._set_field('user_agent', user_agent)
+        self._set_field('parent', parent)
+
+        if cookiejar:
+            self._set_field('cookiejar', cookiejar)
+        if header:
+            self._set_field('header', header)
+        if proxy:
+            self._set_field('proxy', proxy)
+
+        r_crawler.hset('crawler:queue:hash', hash_query, self.uuid)
+        self._set_field('hash', hash_query)
+        r_crawler.zadd('crawler:queue', {self.uuid: priority})
+        # UI
+        domain_type = dom.get_domain_type()
+        r_crawler.sadd(f'crawler:queue:type:{domain_type}', self.uuid)
+        self._set_field('queue', domain_type)
+        return self.uuid
+
+    def lacus_queue(self):
+        r_crawler.sadd('crawler:queue:queued', self.uuid)
+        self._set_field('start_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
+
+    def clear(self):
+        r_crawler.hdel('crawler:queue:hash', self.get_hash())
+        r_crawler.srem(f'crawler:queue:type:{self.get_queue()}', self.uuid)
+        r_crawler.srem('crawler:queue:queued', self.uuid)
+
+    def delete(self):
+        self.clear()
+        r_crawler.delete(f'crawler:task:{self.uuid}')
+        # r_crawler.zadd('crawler:queue', {self.uuid: priority})
+
+
+
+# TODO move to class ???
 def get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header):
     to_enqueue = {'domain': domain, 'depth': depth, 'har': har, 'screenshot': screenshot,
                   'priority': priority, 'proxy': proxy, 'cookiejar': cookiejar, 'user_agent': user_agent,
@@ -853,88 +984,49 @@ def get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookieja
         to_enqueue['url'] = url
     return hashlib.sha512(pickle.dumps(to_enqueue)).hexdigest()
 
-# TODO STATUS UPDATE
-# PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
-def add_crawler_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None, parent='manual', priority=0):
-    url_decoded = unpack_url(url)
-    url = url_decoded['url']
-    domain = url_decoded['domain']
-    dom = Domain(domain)
-
-    # Discovery crawler
-    if priority == 0:
-        if is_blacklisted_domain(dom.get_id()):
-            return None
-        if not dom.exists():
-            priority = 10
-        # Domain Crawled today or UP this month
-        if dom.is_down_today() or dom.is_up_this_month():
-            return None
-
-    har = int(har)
-    screenshot = int(screenshot)
-
-    # TODO SELECT PROXY -> URL  TODO SELECT PROXY
-    if proxy == 'web':
-        proxy = None
-    else:
-        proxy = 'force_tor'
-    if not user_agent:
-        user_agent = get_default_user_agent()
-
-    # TODO COOKIEJAR -> UUID
-    if cookiejar:
-        pass
-
-    # Check if already in queue
-    hash_query = get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header)
-    if r_crawler.hexists(f'crawler:queue:hash', hash_query):
-        return r_crawler.hget(f'crawler:queue:hash', hash_query)
-
-    # TODO ADD TASK STATUS -----
-    task_uuid = gen_uuid()  # TODO Save hash ??? (just to be safe and remove it)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'domain', domain)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'url', url)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'depth', int(depth))
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'har', har)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'screenshot', har)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'user_agent', user_agent)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'proxy', proxy)
-    if cookiejar:
-        r_crawler.hset(f'crawler:task:{task_uuid}', 'cookiejar', cookiejar) # TODO
-    if header:
-        r_crawler.hset(f'crawler:task:{task_uuid}', 'header', header)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'hash', hash_query)
-
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'parent', parent)
-
-    r_crawler.hset('crawler:queue:hash', hash_query, task_uuid)
-    r_crawler.zadd('crawler:queue', {task_uuid: priority})
-    # UI
-    r_crawler.sadd(f'crawler:queue:type:{dom.get_domain_type()}', task_uuid)
-    return task_uuid
-
-def get_crawler_task_from_queue():
+def add_task_to_lacus_queue():
     task_uuid = r_crawler.zpopmax('crawler:queue')
     if not task_uuid or not task_uuid[0]:
         return None
     task_uuid, priority = task_uuid[0]
-    r_crawler.sadd('crawler:queue:queued', task_uuid)
-    r_crawler.hset(f'crawler:task:{task_uuid}', 'start_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
-    return task_uuid, priority
+    task = CrawlerTask(task_uuid)
+    task.lacus_queue()
+    return task.uuid, priority
 
-def clear_crawler_task(task_uuid, domain_type):
-    hash_query = get_crawler_task_hash(task_uuid)
-    r_crawler.hdel('crawler:queue:hash', hash_query)
-    r_crawler.srem(f'crawler:queue:type:{domain_type}', task_uuid)
-    r_crawler.srem('crawler:queue:queued', task_uuid)
+# PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
+def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
+                user_agent=None, parent='manual', priority=0, task_uuid=None):
+    if task_uuid:
+        if CrawlerTask(task_uuid).exists():
+            task_uuid = gen_uuid()
+    else:
+        task_uuid = gen_uuid()
+    task = CrawlerTask(task_uuid)
+    task_uuid = task.create(url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar,
+                            proxy=proxy, user_agent=user_agent, parent=parent, priority=priority)
+    return task_uuid
 
-def get_crawlers_tasks_status():
-    tasks_status = []
-    tasks = r_crawler.smembers('crawler:queue:queued')
-    for task_uuid in tasks:
-        tasks_status.append(get_task_status(task_uuid))
-    return tasks_status
+######################################################################
+######################################################################
+
+# def get_task_status(task_uuid):
+#     domain = r_crawler.hget(f'crawler:task:{task_uuid}', 'domain')
+#     dom = Domain(domain)
+#     meta = {
+#         'uuid': task_uuid,
+#         'domain': dom.get_id(),
+#         'domain_type': dom.get_domain_type(),
+#         'start_time': r_crawler.hget(f'crawler:task:{task_uuid}', 'start_time'),
+#         'status': 'test',
+#     }
+#     return meta
+
+# def get_crawlers_tasks_status():
+#     tasks_status = []
+#     tasks = r_crawler.smembers('crawler:queue:queued')
+#     for task_uuid in tasks:
+#         tasks_status.append(get_task_status(task_uuid))
+#     return tasks_status
 
 ##-- CRAWLER TASK --##
 
@@ -944,8 +1036,8 @@ def get_crawlers_tasks_status():
 # # TODO: sanitize URL
 def api_add_crawler_task(data, user_id=None):
     url = data.get('url', None)
-    if not url or url=='\n':
-        return ({'status': 'error', 'reason': 'No url supplied'}, 400)
+    if not url or url == '\n':
+        return {'status': 'error', 'reason': 'No url supplied'}, 400
 
     screenshot = data.get('screenshot', False)
     if screenshot:
@@ -957,26 +1049,27 @@ def api_add_crawler_task(data, user_id=None):
         har = True
     else:
         har = False
-    depth_limit = data.get('depth_limit', 1)
+    depth_limit = data.get('depth', 1)
     if depth_limit:
         try:
             depth_limit = int(depth_limit)
             if depth_limit < 0:
                 depth_limit = 0
         except ValueError:
-            return ({'error':'invalid depth limit'}, 400)
+            return {'error': 'invalid depth limit'}, 400
     else:
         depth_limit = 0
 
-    # cookiejar_uuid = data.get('cookiejar_uuid', None)
-    # if cookiejar_uuid:
-    #     if not exist_cookiejar(cookiejar_uuid):
-    #         return ({'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404)
-    #     level = get_cookiejar_level(cookiejar_uuid)
-    #     if level == 0:  # # TODO: check if user is admin ######################################################
-    #         cookie_owner = get_cookiejar_owner(cookiejar_uuid)
-    #         if cookie_owner != user_id:
-    #             return ({'error': 'The access to this cookiejar is restricted'}, 403)
+    cookiejar_uuid = data.get('cookiejar', None)
+    if cookiejar_uuid:
+        cookiejar = Cookiejar(cookiejar_uuid)
+        if not cookiejar.exists():
+            return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
+        level = cookiejar.get_level()
+        if level == 0:  # # TODO: check if user is admin
+            if cookiejar.get_user() != user_id:
+                return {'error': 'The access to this cookiejar is restricted'}, 403
+        cookiejar_uuid = cookiejar.uuid
 
     # if auto_crawler:
     #     try:
@@ -986,23 +1079,24 @@ def api_add_crawler_task(data, user_id=None):
     #     except ValueError:
     #         return ({'error':'invalid delta between two pass of the crawler'}, 400)
 
+    # PROXY
     proxy = data.get('proxy', None)
-    if proxy == 'onion' or proxy == 'tor':
+    if proxy == 'onion' or proxy == 'tor' or proxy == 'force_tor':
         proxy = 'force_tor'
-    else:
-        # TODO sanitize PROXY
-        proxy = None
+    elif proxy:
+        verify = api_verify_proxy(proxy)
+        if verify[1] != 200:
+            return verify
 
     # TODO #############################################################################################################
-    auto_crawler = auto_crawler
-    crawler_delta = crawler_delta
+    # auto_crawler = auto_crawler
+    # crawler_delta = crawler_delta
     parent = 'manual'
 
-    return add_crawler_task(url, depth=depth_limit, har=har, screenshot=screenshot, cookiejar=cookiejar_uuid,
-                            proxy=proxy, user_agent=user_agent, parent='manual', priority=90), 200
-
-
-
+    # TODO HEADERS
+    # TODO USER AGENT
+    return create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None, cookiejar=cookiejar_uuid,
+                       proxy=proxy, user_agent=None, parent='manual', priority=90), 200
 
 
 #### ####
@@ -1038,130 +1132,6 @@ def sanitize_crawler_types(l_crawler_types):
         if crawler_type not in all_crawler_types:
             return all_crawler_types
     return l_crawler_types
-
-def get_all_spash_crawler_status():
-    crawler_metadata = []
-    all_crawlers = r_cache.smembers('all_splash_crawlers')
-    for crawler in all_crawlers:
-        crawler_metadata.append(get_splash_crawler_status(crawler))
-    return crawler_metadata
-
-def reset_all_spash_crawler_status():
-    r_cache.delete('all_splash_crawlers')
-
-def get_splash_crawler_status(spash_url):
-    crawler_type = r_cache.hget(f'metadata_crawler:{spash_url}', 'type')
-    crawling_domain = r_cache.hget(f'metadata_crawler:{spash_url}', 'crawling_domain')
-    started_time = r_cache.hget(f'metadata_crawler:{spash_url}', 'started_time')
-    status_info = r_cache.hget(f'metadata_crawler:{spash_url}', 'status')
-    crawler_info = f'{spash_url}  - {started_time}'
-    if status_info=='Waiting' or status_info=='Crawling':
-        status=True
-    else:
-        status=False
-    return {'crawler_info': crawler_info, 'crawling_domain': crawling_domain, 'status_info': status_info, 'status': status, 'type': crawler_type}
-
-def set_current_crawler_status(splash_url, status, started_time=False, crawled_domain=None, crawler_type=None):
-    # TODO: get crawler type if None
-    # Status: ['Waiting', 'Error', ...]
-    r_cache.hset(f'metadata_crawler:{splash_url}', 'status', status)
-    if started_time:
-        r_cache.hset(f'metadata_crawler:{splash_url}', 'started_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
-    if crawler_type:
-        r_cache.hset(f'metadata_crawler:{splash_url}', 'type', crawler_type)
-    if crawled_domain:
-        r_cache.hset(f'metadata_crawler:{splash_url}', 'crawling_domain', crawled_domain)
-
-    #r_cache.sadd('all_splash_crawlers', splash_url) # # TODO: add me in fct: create_ail_crawler
-
-def get_stats_last_crawled_domains(crawler_types, date):
-    statDomains = {}
-    for crawler_type in crawler_types:
-        stat_type = {}
-        stat_type['domains_up'] = r_crawler.scard('{}_up:{}'.format(crawler_type, date))
-        stat_type['domains_down'] = r_crawler.scard('{}_down:{}'.format(crawler_type, date))
-        stat_type['total'] = stat_type['domains_up'] + stat_type['domains_down']
-        stat_type['domains_queue'] = get_nb_elem_to_crawl_by_type(crawler_type)
-        statDomains[crawler_type] = stat_type
-    return statDomains
-
-# # TODO: handle custom proxy
-def get_splash_crawler_latest_stats():
-    now = datetime.now()
-    date = now.strftime("%Y%m%d")
-    return get_stats_last_crawled_domains(['onion', 'web'], date)
-
-def get_nb_crawlers_to_launch_by_splash_name(splash_name):
-    res = r_serv_onion.hget('all_crawlers_to_launch', splash_name)
-    if res:
-        return int(res)
-    else:
-        return 0
-
-def get_all_crawlers_to_launch_splash_name():
-    return r_serv_onion.hkeys('all_crawlers_to_launch')
-
-def get_nb_crawlers_to_launch():
-    nb_crawlers_to_launch = r_serv_onion.hgetall('all_crawlers_to_launch')
-    for splash_name in nb_crawlers_to_launch:
-        nb_crawlers_to_launch[splash_name] = int(nb_crawlers_to_launch[splash_name])
-    return nb_crawlers_to_launch
-
-def get_nb_crawlers_to_launch_ui():
-    nb_crawlers_to_launch = get_nb_crawlers_to_launch()
-    for splash_name in get_all_splash():
-        if splash_name not in nb_crawlers_to_launch:
-            nb_crawlers_to_launch[splash_name] = 0
-    return nb_crawlers_to_launch
-
-def set_nb_crawlers_to_launch(dict_splash_name):
-    r_serv_onion.delete('all_crawlers_to_launch')
-    for splash_name in dict_splash_name:
-        r_serv_onion.hset('all_crawlers_to_launch', splash_name, int(dict_splash_name[splash_name]))
-    relaunch_crawlers()
-
-def relaunch_crawlers():
-    all_crawlers_to_launch = get_nb_crawlers_to_launch()
-    for splash_name in all_crawlers_to_launch:
-        nb_crawlers = int(all_crawlers_to_launch[splash_name])
-
-        all_crawler_urls = get_splash_all_url(splash_name, r_list=True)
-        if nb_crawlers > len(all_crawler_urls):
-            print('Error, can\'t launch all Splash Dockers')
-            print('Please launch {} additional {} Dockers'.format( nb_crawlers - len(all_crawler_urls), splash_name))
-            nb_crawlers = len(all_crawler_urls)
-
-        reset_all_spash_crawler_status()
-
-        for i in range(0, int(nb_crawlers)):
-            splash_url = all_crawler_urls[i]
-            print(all_crawler_urls[i])
-
-            launch_ail_splash_crawler(splash_url, script_options='{}'.format(splash_url))
-
-def api_set_nb_crawlers_to_launch(dict_splash_name):
-    # TODO: check if is dict
-    dict_crawlers_to_launch = {}
-    all_splash = get_all_splash()
-    crawlers_to_launch = list(set(all_splash) & set(dict_splash_name.keys()))
-    for splash_name in crawlers_to_launch:
-        try:
-            nb_to_launch = int(dict_splash_name.get(splash_name, 0))
-            if nb_to_launch < 0:
-                return {'error':'The number of crawlers to launch is negative'}, 400
-        except:
-            return {'error':'invalid number of crawlers to launch'}, 400
-        if nb_to_launch > 0:
-            dict_crawlers_to_launch[splash_name] = nb_to_launch
-
-    if dict_crawlers_to_launch:
-        set_nb_crawlers_to_launch(dict_crawlers_to_launch)
-        return (dict_crawlers_to_launch, 200)
-    else:
-        return {'error':'invalid input'}, 400
-
-def add_domain_blacklist(domain_type, domain):
-    r_serv_onion.sadd(f'blacklist_{domain_type}', domain)
 
 ##-- CRAWLER GLOBAL --##
 
@@ -1231,197 +1201,46 @@ def save_har(har_dir, item_id, har_content):
     with open(filename, 'w') as f:
         f.write(json.dumps(har_content))
 
-#### CRAWLER QUEUES ####
-
-## queues priority:
-# 1 - priority queue
-# 2 - discovery queue
-# 3 - default queue
-##
-def get_all_queues_names():
-    return ['priority', 'discovery', 'default']
-
-def get_all_queues_keys():
-    return ['{}_crawler_priority_queue', '{}_crawler_discovery_queue', '{}_crawler_queue']
-
-def get_queue_key_by_name(queue_name):
-    if queue_name == 'priority':
-        return '{}_crawler_priority_queue'
-    elif queue_name == 'discovery':
-        return '{}_crawler_discovery_queue'
-    else: # default
-        return '{}_crawler_queue'
-
-def get_stats_elem_to_crawl_by_queue_type(queue_type):
-    dict_stats = {}
-    for queue_name in get_all_queues_names():
-        dict_stats[queue_name] = r_serv_onion.scard(get_queue_key_by_name(queue_name).format(queue_type))
-    return dict_stats
-
-def get_all_queues_stats():
-    dict_stats = {}
-    for queue_type in get_crawler_all_types():
-        dict_stats[queue_type] = get_stats_elem_to_crawl_by_queue_type(queue_type)
-    for queue_type in get_all_splash():
-        dict_stats[queue_type] = get_stats_elem_to_crawl_by_queue_type(queue_type)
-    return dict_stats
-
-def is_domain_in_queue(queue_type, domain):
-    return r_serv_onion.sismember(f'{queue_type}_domain_crawler_queue', domain)
-
-def is_item_in_queue(queue_type, url, item_id, queue_name=None):
-    if queue_name is None:
-        queues = get_all_queues_keys()
-    else:
-        queues = get_queue_key_by_name(queue_name)
-
-    key = f'{url};{item_id}'
-    for queue in queues:
-        if r_serv_onion.sismember(queue.format(queue_type), key):
-            return True
-    return False
-
-def queue_test_clean_up(queue_type, domain, item_id):
-    date_month = datetime.now().strftime("%Y%m")
-    r_serv_onion.srem(f'month_{queue_type}_up:{date_month}', domain)
-
-    # Clean up
-    r_serv_onion.srem(f'{queue_type}_domain_crawler_queue', domain)
-    msg = f'{domain};{item_id}'
-    r_serv_onion.srem(f'{queue_type}_crawler_discovery_queue', msg)
-    r_serv_onion.srem(f'{queue_type}_crawler_queue', msg)
-
-
-def remove_task_from_crawler_queue(queue_name, queue_type, key_to_remove):
-    r_serv_onion.srem(queue_name.format(queue_type), key_to_remove)
-
-# # TODO: keep auto crawler ?
-def clear_crawler_queues():
-    for queue_key in get_all_queues_keys():
-        for queue_type in get_crawler_all_types():
-            r_serv_onion.delete(queue_key.format(queue_type))
-
-###################################################################################
-def get_nb_elem_to_crawl_by_type(queue_type): # # TODO: rename me
-    nb = r_serv_onion.scard('{}_crawler_priority_queue'.format(queue_type))
-    nb += r_serv_onion.scard('{}_crawler_discovery_queue'.format(queue_type))
-    nb += r_serv_onion.scard('{}_crawler_queue'.format(queue_type))
-    return nb
-###################################################################################
-
-def get_crawler_queue_types_by_splash_name(splash_name):
-    all_domain_type = [splash_name]
-    crawler_type = get_splash_crawler_type(splash_name)
-    #if not is_splash_used_in_discovery(splash_name)
-    if crawler_type == 'tor':
-        all_domain_type.append('onion')
-        all_domain_type.append('web')
-    else:
-        all_domain_type.append('web')
-    return all_domain_type
-
-def get_crawler_type_by_url(url):
-    faup.decode(url)
-    unpack_url = faup.get()
-    ## TODO: # FIXME: remove me
-    try:
-        tld = unpack_url['tld'].decode()
-    except:
-        tld = unpack_url['tld']
-
-    if tld == 'onion':
-        crawler_type = 'onion'
-    else:
-        crawler_type = 'web'
-    return crawler_type
-
-
-def get_elem_to_crawl_by_queue_type(l_queue_type):
-    ## queues priority:
-    # 1 - priority queue
-    # 2 - discovery queue
-    # 3 - normal queue
-    ##
-
-    for queue_key in get_all_queues_keys():
-        for queue_type in l_queue_type:
-            message = r_serv_onion.spop(queue_key.format(queue_type))
-            if message:
-                dict_to_crawl = {}
-                splitted = message.rsplit(';', 1)
-                if len(splitted) == 2:
-                    url, item_id = splitted
-                    item_id = item_id.replace(ITEMS_FOLDER+'/', '')
-                else:
-                # # TODO: to check/refractor
-                    item_id = None
-                    url = message
-                crawler_type = get_crawler_type_by_url(url)
-                return {'url': url, 'paste': item_id, 'type_service': crawler_type, 'queue_type': queue_type, 'original_message': message}
-    return None
-
-#### ---- ####
-
 # # # # # # # # # # # #
 #                     #
-#   SPLASH MANAGER    #
+#   CRAWLER MANAGER   # TODO REFACTOR ME
 #                     #
 # # # # # # # # # # # #
 
-    ## PROXY ##
-def get_all_proxies(r_list=False):
-    res = r_serv_onion.smembers('all_proxies')
-    if res:
-        return list(res)
+def api_verify_proxy(proxy_url):
+    parsed_proxy = urlparse(proxy_url)
+    if parsed_proxy.scheme and parsed_proxy.hostname and parsed_proxy.port:
+        if parsed_proxy.scheme in ['http', 'https', 'socks5']:
+            if (parsed_proxy.username and parsed_proxy.password) != (
+                    not parsed_proxy.username and not parsed_proxy.password):
+                return proxy_url, 200
+            else:
+                return {'error': 'You need to enter a username AND a password for your proxy.'}, 400
+        else:
+            return {'error': 'Proxy scheme not supported: must be http(s) or socks5.'}, 400
     else:
-        return []
+        return {'error': 'Invalid proxy: Check that you entered a scheme, a hostname and a port.'}, 400
 
-def delete_all_proxies():
-    for proxy_name in get_all_proxies():
-        delete_proxy(proxy_name)
+def get_proxies():
+    return r_crawler.smembers('crawler:proxies')
 
-def get_proxy_host(proxy_name):
-    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'host')
+class CrawlerProxy:
+    def __init__(self, proxy_uuid):
+        self.uuid = proxy_uuid
 
-def get_proxy_port(proxy_name):
-    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'port')
+    def get_description(self):
+        return r_crawler.hgrt(f'crawler:proxy:{self.uuif}', 'description')
 
-def get_proxy_type(proxy_name):
-    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'type')
+    # Host
+    # Port
+    # Type -> need test
+    def get_url(self):
+        return r_crawler.hgrt(f'crawler:proxy:{self.uuif}', 'url')
 
-def get_proxy_crawler_type(proxy_name):
-    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'crawler_type')
-
-def get_proxy_description(proxy_name):
-    return r_serv_onion.hget('proxy:metadata:{}'.format(proxy_name), 'description')
-
-def get_proxy_metadata(proxy_name):
-    meta_dict = {}
-    meta_dict['host'] = get_proxy_host(proxy_name)
-    meta_dict['port'] = get_proxy_port(proxy_name)
-    meta_dict['type'] = get_proxy_type(proxy_name)
-    meta_dict['crawler_type'] = get_proxy_crawler_type(proxy_name)
-    meta_dict['description'] = get_proxy_description(proxy_name)
-    return meta_dict
-
-def get_all_proxies_metadata():
-    all_proxy_dict = {}
-    for proxy_name in get_all_proxies():
-        all_proxy_dict[proxy_name] = get_proxy_metadata(proxy_name)
-    return all_proxy_dict
-
-# def set_proxy_used_in_discovery(proxy_name, value):
-#     r_serv_onion.hset('splash:metadata:{}'.format(splash_name), 'discovery_queue', value)
-
-def delete_proxy(proxy_name): # # TODO: force delete (delete all proxy)
-    proxy_splash = get_all_splash_by_proxy(proxy_name)
-    #if proxy_splash:
-    #    print('error, a splash container is using this proxy')
-    r_serv_onion.delete('proxy:metadata:{}'.format(proxy_name))
-    r_serv_onion.srem('all_proxies', proxy_name)
-    ## -- ##
-
-#### ---- ####
+###############################################################################################
+###############################################################################################
+###############################################################################################
+###############################################################################################
 
 
 # # # # CRAWLER LACUS # # # #
@@ -1429,14 +1248,14 @@ def delete_proxy(proxy_name): # # TODO: force delete (delete all proxy)
 def get_lacus_url():
     return r_db.hget('crawler:lacus', 'url')
 
-def get_lacus_api_key(reload=False): # TODO: add in db config
+def get_lacus_api_key():
     return r_db.hget('crawler:lacus', 'key')
 
 # TODO Rewrite with new API key
-def get_hidden_lacus_api_key(): # TODO: add in db config
+def get_hidden_lacus_api_key():
     key = get_lacus_api_key()
     if key:
-        if len(key)==41:
+        if len(key) == 41:
             return f'{key[:4]}*********************************{key[-4:]}'
 
 # TODO Rewrite with new API key
@@ -1447,7 +1266,7 @@ def is_valid_api_key(api_key, search=re.compile(r'[^a-zA-Z0-9_-]').search):
 
 def save_lacus_url_api(url, api_key):
     r_db.hset('crawler:lacus', 'url', url)
-    r_db.hset('crawler:lacus', 'key', api_key)
+    # r_db.hset('crawler:lacus', 'key', api_key)
 
 def is_lacus_connected(delta_check=30):
     last_check = r_cache.hget('crawler:lacus', 'last_check')
@@ -1460,7 +1279,7 @@ def is_lacus_connected(delta_check=30):
     return is_connected == 'True'
 
 def get_lacus_connection_metadata(force_ping=False):
-    dict_manager={}
+    dict_manager = {}
     if force_ping:
         dict_manager['status'] = ping_lacus()
     else:
@@ -1478,12 +1297,14 @@ def get_lacus():
 # TODO CATCH EXCEPTIONS
 def ping_lacus():
     # TODO CATCH EXCEPTION
+    req_error = None
     lacus = get_lacus()
     if not lacus:
         ping = False
+        req_error = {'error': 'Lacus URL undefined', 'status_code': 400}
     else:
         ping = lacus.is_up
-    update_lacus_connection_status(ping)
+    update_lacus_connection_status(ping, req_error=req_error)
     return ping
 
 def update_lacus_connection_status(is_connected, req_error=None):
@@ -1516,8 +1337,31 @@ def api_save_lacus_url_key(data):
     save_lacus_url_api(manager_url, api_key)
     return {'url': manager_url, 'api_key': get_hidden_lacus_api_key()}, 200
 
+def get_crawler_max_captures():
+    nb_captures = r_cache.hget('crawler:lacus', 'nb_captures')
+    if not nb_captures:
+        nb_captures = r_db.hget('crawler:lacus', 'nb_captures')
+        if not nb_captures:
+            nb_captures = 10
+            save_nb_max_captures(nb_captures)
+        else:
+            r_cache.hset('crawler:lacus', 'nb_captures', int(nb_captures))
+    return int(nb_captures)
 
+def save_nb_max_captures(nb_captures):
+    r_db.hset('crawler:lacus', 'nb_captures', int(nb_captures))
+    r_cache.hset('crawler:lacus', 'nb_captures', int(nb_captures))
 
+def api_set_crawler_max_captures(data):
+    nb_captures = data.get('nb', 10)
+    try:
+        nb_captures = int(nb_captures)
+        if nb_captures < 1:
+            nb_captures = 1
+    except (TypeError, ValueError):
+        return {'error': 'Invalid number of crawlers to launch'}, 400
+    save_nb_max_captures(nb_captures)
+    return nb_captures, 200
 
  ## PROXY ##
 
@@ -1529,15 +1373,14 @@ def api_save_lacus_url_key(data):
 def is_test_ail_crawlers_successful():
     return r_db.hget('crawler:tor:test', 'success') == 'True'
 
-
 def get_test_ail_crawlers_message():
     return r_db.hget('crawler:tor:test', 'message')
-
 
 def save_test_ail_crawlers_result(test_success, message):
     r_db.hset('crawler:tor:test', 'success', str(test_success))
     r_db.hset('crawler:tor:test', 'message', message)
 
+# TODO CREATE TEST TASK
 def test_ail_crawlers():
     # # TODO: test web domain
     if not ping_lacus():
@@ -1549,8 +1392,8 @@ def test_ail_crawlers():
 
     lacus = get_lacus()
     commit_id = git_status.get_last_commit_id_from_local()
-    user_agent = f'commit_id-AIL LACUS CRAWLER'
-    domain = 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
+    user_agent = f'{commit_id}-AIL LACUS CRAWLER'
+    # domain = 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
     url = 'http://eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
 
     ## LAUNCH CRAWLER, TEST MODE ##
@@ -1559,8 +1402,8 @@ def test_ail_crawlers():
     capture_uuid = lacus.enqueue(url=url, depth=0, user_agent=user_agent, proxy='force_tor',
                                  force=True, general_timeout_in_sec=90)
     status = lacus.get_capture_status(capture_uuid)
-    launch_time = int(time.time()) # capture timeout
-    while int(time.time()) - launch_time < 60 and status != CaptureStatus.DONE:
+    launch_time = int(time.time())  # capture timeout
+    while int(time.time()) - launch_time < 90 and status != CaptureStatus.DONE:
         # DEBUG
         print(int(time.time()) - launch_time)
         print(status)
@@ -1579,11 +1422,11 @@ def test_ail_crawlers():
             return True
         else:
             return False
+    elif status == 2:
+        save_test_ail_crawlers_result(False, 'Timeout Error')
+    else:
+        save_test_ail_crawlers_result(False, 'Error')
     return False
-
-#### ---- ####
-
-#### CRAWLER PROXY ####
 
 #### ---- ####
 
@@ -1591,15 +1434,7 @@ def test_ail_crawlers():
 # TODO MOVE ME
 load_blacklist()
 
-if __name__ == '__main__':
-    # res = get_splash_manager_version()
-    # res = test_ail_crawlers()
-    # res = is_test_ail_crawlers_successful()
-    # print(res)
-    # print(get_test_ail_crawlers_message())
-    # print(get_all_queues_stats())
+# if __name__ == '__main__':
+#     task = CrawlerTask('2dffcae9-8f66-4cfa-8e2c-de1df738a6cd')
+#     print(task.get_meta())
 
-    # res = get_auto_crawler_all_domain()
-    # res = get_all_cookiejar()
-    res = unpack_url('http://test.com/')
-    print(res)

@@ -26,22 +26,17 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-				<form action="{{ url_for('crawler_splash.crawler_splash_setings_crawlers_to_lauch') }}" method="post" enctype="multipart/form-data">
-					<h5 class="card-title">Number of Crawlers to Launch:</h5>
-					<table class="table table-sm">
-						<tbody>
-							{%for crawler_name in nb_crawlers_to_launch%}
-								<tr>
-									<td>{{crawler_name}}</td>
-									<td>
-										<input class="form-control" type="number" id="{{crawler_name}}" value="{{nb_crawlers_to_launch[crawler_name]}}" min="0" name="{{crawler_name}}" required>
-									</td>
-								</tr>
-							{%endfor%}
-						</tbody>
-					</table>
-				  <button type="submit" class="btn btn-primary">Edit <i class="fas fa-pencil-alt"></i></button>
-				</form>
+                <div class="card my-2">
+                    <div class="card-header bg-dark text-white">
+
+                        <form action="{{ url_for('crawler_splash.crawler_settings_crawlers_to_launch') }}" method="post" enctype="multipart/form-data">
+                            <h3 class="card-title">Number of Concurrent Crawlers to Launch:</h3>
+                            <input class="form-control" type="number" id="nb_captures" value="{{ nb_captures }}" min="1" name="nb_captures" required>
+
+                            <button type="submit" class="btn btn-primary my-2">Edit <i class="fas fa-pencil-alt"></i></button>
+                        </form>
+                    </div>
+                </div>
 
 			</div>
 		</div>

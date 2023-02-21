@@ -60,7 +60,7 @@ def create_json_response(data, status_code):
 @login_read_only
 def crawlers_dashboard():
     is_manager_connected = crawlers.get_lacus_connection_metadata()
-    crawlers_status = crawlers.get_crawler_capture_status()
+    crawlers_status = crawlers.get_captures_status()
     print(crawlers_status)
     crawlers_latest_stats = crawlers.get_crawlers_stats()
     print(crawlers_latest_stats)
@@ -75,7 +75,7 @@ def crawlers_dashboard():
 @login_required
 @login_read_only
 def crawler_dashboard_json():
-    crawlers_status = crawlers.get_crawler_capture_status()
+    crawlers_status = crawlers.get_captures_status()
     crawlers_latest_stats = crawlers.get_crawlers_stats()
 
     return jsonify({'crawlers_status': crawlers_status,
@@ -106,7 +106,6 @@ def send_to_spider():
     # POST val
     url = request.form.get('url_to_crawl')
     crawler_type = request.form.get('crawler_queue_type')
-    proxy = request.form.get('proxy_name')
     auto_crawler = request.form.get('crawler_type')  # TODO Auto Crawler
     crawler_delta = request.form.get('crawler_epoch')  # TODO Auto Crawler
     screenshot = request.form.get('screenshot')
@@ -114,7 +113,13 @@ def send_to_spider():
     depth_limit = request.form.get('depth_limit')
     cookiejar_uuid = request.form.get('cookiejar')
 
-    if crawler_type == 'onion':
+    # PROXY
+    proxy = request.form.get('proxy_name')
+    if proxy:
+        res = crawlers.api_verify_proxy(proxy)
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
+    elif crawler_type == 'onion':
         proxy = 'force_tor'
 
     if cookiejar_uuid:
@@ -129,6 +134,7 @@ def send_to_spider():
         data['proxy'] = proxy
     if cookiejar_uuid:
         data['cookiejar'] = cookiejar_uuid
+    # print(data)
     res = crawlers.api_add_crawler_task(data, user_id=user_id)
 
     if res[1] != 200:
@@ -655,36 +661,6 @@ def crawler_cookiejar_cookie_json_add_post():
 
 # --- Cookiejar ---#
 
-
-@crawler_splash.route('/crawler/settings/crawlers_to_lauch', methods=['GET', 'POST'])
-@login_required
-@login_admin
-def crawler_splash_setings_crawlers_to_lauch():
-    if request.method == 'POST':
-        dict_splash_name = {}
-        for crawler_name in list(request.form):
-            dict_splash_name[crawler_name] = request.form.get(crawler_name)
-        res = crawlers.api_set_nb_crawlers_to_launch(dict_splash_name)
-        if res[1] != 200:
-            return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
-        else:
-            return redirect(url_for('crawler_splash.crawler_splash_setings'))
-    else:
-        nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch_ui()
-        return render_template("settings_edit_crawlers_to_launch.html",
-                               nb_crawlers_to_launch=nb_crawlers_to_launch)
-
-
-@crawler_splash.route('/crawler/settings/relaunch_crawler', methods=['GET'])
-@login_required
-@login_admin
-def crawler_splash_setings_relaunch_crawler():
-    crawlers.relaunch_crawlers()
-    return redirect(url_for('crawler_splash.crawler_splash_setings'))
-
-
-##  - -  ##
-
 #### LACUS ####
 
 @crawler_splash.route('/crawler/settings', methods=['GET'])
@@ -693,6 +669,7 @@ def crawler_splash_setings_relaunch_crawler():
 def crawler_settings():
     lacus_url = crawlers.get_lacus_url()
     api_key = crawlers.get_hidden_lacus_api_key()
+    nb_captures = crawlers.get_crawler_max_captures()
 
     is_manager_connected = crawlers.get_lacus_connection_metadata(force_ping=True)
     is_crawler_working = crawlers.is_test_ail_crawlers_successful()
@@ -701,14 +678,13 @@ def crawler_settings():
     # TODO REGISTER PROXY
     # all_proxies = crawlers.get_all_proxies_metadata()
 
-    # nb_crawlers_to_launch = crawlers.get_nb_crawlers_to_launch()
     # crawler_full_config = Config_DB.get_full_config_by_section('crawler')
 
     return render_template("settings_crawler.html",
                            is_manager_connected=is_manager_connected,
                            lacus_url=lacus_url, api_key=api_key,
+                           nb_captures=nb_captures,
                            # all_proxies=all_proxies,
-                           # nb_crawlers_to_launch=nb_crawlers_to_launch,
                            is_crawler_working=is_crawler_working,
                            crawler_error_mess=crawler_error_mess,
                            )
@@ -732,6 +708,22 @@ def crawler_lacus_settings_crawler_manager():
         lacus_url = crawlers.get_lacus_url()
         api_key = crawlers.get_lacus_api_key()
         return render_template("settings_edit_lacus_crawler.html", lacus_url=lacus_url, api_key=api_key)
+
+@crawler_splash.route('/crawler/settings/crawlers_to_launch', methods=['GET', 'POST'])
+@login_required
+@login_admin
+def crawler_settings_crawlers_to_launch():
+    if request.method == 'POST':
+        nb_captures = request.form.get('nb_captures')
+        res = crawlers.api_set_crawler_max_captures({'nb': nb_captures})
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
+        else:
+            return redirect(url_for('crawler_splash.crawler_settings'))
+    else:
+        nb_captures = crawlers.get_crawler_max_captures()
+        return render_template("settings_edit_crawlers_to_launch.html",
+                               nb_captures=nb_captures)
 
 
 @crawler_splash.route('/crawler/settings/crawler/test', methods=['GET'])

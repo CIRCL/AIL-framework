@@ -10,8 +10,8 @@ This module spots zerobins-like services for further processing
 # Import External packages
 ##################################
 import os
-import sys
 import re
+import sys
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -30,7 +30,7 @@ class Zerobins(AbstractModule):
         super(Zerobins, self).__init__()
 
         binz = [
-            r'^https:\/\/(zerobin||privatebin)\..*$', # historical ones
+            r'^https:\/\/(zerobin||privatebin)\..*$',  # historical ones
             ]
 
         self.regex = re.compile('|'.join(binz))
@@ -59,13 +59,13 @@ class Zerobins(AbstractModule):
         if len(matching_binz) > 0:
             for bin_url in matching_binz:
                 print(f'send {bin_url} to crawler')
-                crawlers.add_crawler_task(bin_url, depth=0, har=False, screenshot=False, proxy='force_tor',
-                                          parent='manual', priority=10)
+                # TODO Change priority ???
+                crawlers.create_task(bin_url, depth=0, har=False, screenshot=False, proxy='force_tor',
+                                     parent='manual', priority=60)
 
         self.redis_logger.debug("Compute message in queue")
 
 
-# TODO TEST ME
 if __name__ == '__main__':
     module = Zerobins()
     module.run()

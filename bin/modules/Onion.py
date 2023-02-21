@@ -91,7 +91,7 @@ class Onion(AbstractModule):
         if onion_urls:
             if crawlers.is_crawler_activated():
                 for domain in domains:  # TODO LOAD DEFAULT SCREENSHOT + HAR
-                    task_uuid = crawlers.add_crawler_task(domain, parent=item.get_id())
+                    task_uuid = crawlers.create_task(domain, parent=item.get_id(), priority=0)
                     if task_uuid:
                         print(f'{domain} added to crawler queue: {task_uuid}')
             else:

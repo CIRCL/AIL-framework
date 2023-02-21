@@ -53,7 +53,7 @@
 								</div>
 							{% endif %}
 						</span>
-						<h4>Splash Crawler Manager</h4>
+						<h4>AIL Lacus Crawler</h4>
 					</div>
 					<div class="card-body">
 
@@ -92,52 +92,43 @@
 							</div>
 						</div>
 
-						<div class="card border-secondary">
-							<div class="card-body text-dark">
-								<h5 class="card-title">All Proxies:</h5>
-								<table class="table table-striped">
-									<thead class="bg-info text-white">
-                                        <tr>
-                                            <th>Proxy name</th>
-                                            <th>URL</th>
-                                            <th>Crawler Type</th>
-                                            <th>Description</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for proxy_name in all_proxies %}
-                                        <tr>
-                                            <td>
-                                                {{proxy_name}}
-                                            </td>
-                                            <td>
-                                                {{all_proxies[proxy_name]['url']}}
-                                            </td>
-                                            <td>
-                                                {%if all_proxies[proxy_name]['crawler_type']=='tor'%}
-                                                    <i class="fas fa-user-secret"></i>
-                                                {%else%}
-                                                    <i class="fab fa-html5"></i>
-                                                {%endif%}
-                                                {{all_proxies[proxy_name]['crawler_type']}}
-                                            </td>
-                                            <td>
-                                                {{all_proxies[proxy_name]['description']}}
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-end">
-                                                    <!-- <button class="btn btn-outline-dark px-1 py-0">
-															<i class="fas fa-pencil-alt"></i>
-														</button> -->
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+{#						<div class="card border-secondary">#}
+{#							<div class="card-body text-dark">#}
+{#								<h5 class="card-title">All Proxies:</h5>#}
+{#								<table class="table table-striped">#}
+{#									<thead class="bg-info text-white">#}
+{#                                        <tr>#}
+{#                                            <th>Proxy name</th>#}
+{#                                            <th>URL</th>#}
+{#                                            <th>Description</th>#}
+{#                                            <th></th>#}
+{#                                        </tr>#}
+{#                                    </thead>#}
+{#                                    <tbody>#}
+{#                                    {% for proxy_name in all_proxies %}#}
+{#                                        <tr>#}
+{#                                            <td>#}
+{#                                                {{proxy_name}}#}
+{#                                            </td>#}
+{#                                            <td>#}
+{#                                                {{all_proxies[proxy_name]['url']}}#}
+{#                                            </td>#}
+{#                                            <td>#}
+{#                                                {{all_proxies[proxy_name]['description']}}#}
+{#                                            </td>#}
+{#                                            <td>#}
+{#                                                <div class="d-flex justify-content-end">#}
+{#                                                    <!-- <button class="btn btn-outline-dark px-1 py-0">#}
+{#															<i class="fas fa-pencil-alt"></i>#}
+{#														</button> -->#}
+{#                                                </div>#}
+{#                                            </td>#}
+{#                                        </tr>#}
+{#                                    {% endfor %}#}
+{#                                    </tbody>#}
+{#                                </table>#}
+{#                            </div>#}
+{#                        </div>#}
 
 					</div>
 				</div>
@@ -176,25 +167,12 @@
 
 						<div class="card border-secondary my-4">
 							<div class="card-body text-dark">
-								<h5 class="card-title">Number of Crawlers to Launch:</h5>
-								<table class="table table-sm">
-									<tbody>
-										{%for crawler in nb_crawlers_to_launch%}
-											<tr>
-												<td>{{crawler}}</td>
-												<td>{{nb_crawlers_to_launch[crawler]}}</td>
-											</tr>
-										{%endfor%}
-									</tbody>
-								</table>
-								<a href="{{ url_for('crawler_splash.crawler_splash_setings_crawlers_to_lauch') }}">
+								<h5 class="card-title">
+                                    Number of Concurrent Crawlers to Launch: &nbsp;&nbsp;<b class="text-primary">{{ nb_captures }}</b>
+                                </h5>
+								<a href="{{ url_for('crawler_splash.crawler_settings_crawlers_to_launch') }}">
 									<button type="button" class="btn btn-info">
-										Edit number of crawlers to launch <i class="fas fa-pencil-alt"></i>
-									</button>
-								</a>
-								<a href="{{ url_for('crawler_splash.crawler_splash_setings_relaunch_crawler') }}">
-									<button type="button" class="btn btn-danger">
-										ReLaunch Crawlers <i class="fas fa-redo"></i>
+										Edit <i class="fas fa-pencil-alt"></i>
 									</button>
 								</a>
 							</div>

@@ -65,31 +65,29 @@ class Crawler(AbstractModule):
     def get_message(self):
         # Check if a new Capture can be Launched
         if crawlers.get_nb_crawler_captures() < crawlers.get_crawler_max_captures():
-            task_row = crawlers.get_crawler_task_from_queue()
+            task_row = crawlers.add_task_to_lacus_queue()
             if task_row:
                 print(task_row)
                 task_uuid, priority = task_row
                 self.enqueue_capture(task_uuid, priority)
 
-        # Check if a Capture is Done
+        # Get CrawlerCapture Object
         capture = crawlers.get_crawler_capture()
         if capture:
-            print(capture)
-            capture_uuid = capture[0][0]
-            capture_status = self.lacus.get_capture_status(capture_uuid)
-            if capture_status != crawlers.CaptureStatus.DONE: # TODO ADD GLOBAL TIMEOUT-> Save start time
-                crawlers.update_crawler_capture(capture_uuid)
-                print(capture_uuid, capture_status, int(time.time()))
+            print(capture.uuid)
+            status = self.lacus.get_capture_status(capture.uuid)
+            if status != crawlers.CaptureStatus.DONE:  # TODO ADD GLOBAL TIMEOUT-> Save start time
+                capture.update(status)
+                print(capture.uuid, status, int(time.time()))
             else:
-                self.compute(capture_uuid)
-                crawlers.remove_crawler_capture(capture_uuid)
-                print('capture', capture_uuid, 'completed')
-
+                self.compute(capture)
+                capture.delete() # TODO DELETE TASK ONLY IF NOT SCHEDULED TASKS
+                print('capture', capture.uuid, 'completed')
 
         time.sleep(self.pending_seconds)
 
     def enqueue_capture(self, task_uuid, priority):
-        task = crawlers.get_crawler_task(task_uuid)
+        task = crawlers.CrawlerTask(task_uuid)
         print(task)
         # task = {
         #         'uuid': task_uuid,
@@ -104,47 +102,43 @@ class Crawler(AbstractModule):
         #         'proxy': 'force_tor',
         #         'parent': 'manual',
         # }
-        url = task['url']
+        url = task.get_url()
         force = priority != 0
-
-        # TODO unpack cookiejar
+        # TODO timeout
 
         # TODO HEADER
 
         capture_uuid = self.lacus.enqueue(url=url,
-                                          depth=task['depth'],
-                                          user_agent=task['user_agent'],
-                                          proxy=task['proxy'],
-                                          cookies=[],
+                                          depth=task.get_depth(),
+                                          user_agent=task.get_user_agent(),
+                                          proxy=task.get_proxy(),
+                                          cookies=task.get_cookies(),
                                           force=force,
                                           general_timeout_in_sec=90)
 
-        crawlers.add_crawler_capture(task_uuid, capture_uuid)
-        print(task_uuid, capture_uuid, 'launched')
+        crawlers.create_capture(capture_uuid, task_uuid)
+        print(task.uuid, capture_uuid, 'launched')
         return capture_uuid
 
     # CRAWL DOMAIN
     # TODO: CATCH ERRORS
-    def compute(self, capture_uuid):
+    def compute(self, capture):
+        print('saving capture', capture.uuid)
 
-        print('saving capture', capture_uuid)
+        task = capture.get_task()
+        domain = task.get_domain()
+        print(domain)
 
-        task_uuid = crawlers.get_crawler_capture_task_uuid(capture_uuid)
-        task = crawlers.get_crawler_task(task_uuid)
-
-        print(task['domain'])
-
-        self.domain = Domain(task['domain'])
+        self.domain = Domain(domain)
 
         # TODO CHANGE EPOCH
         epoch = int(time.time())
-        parent_id = task['parent']
-        print(task)
+        parent_id = task.get_parent()
 
-        entries = self.lacus.get_capture(capture_uuid)
+        entries = self.lacus.get_capture(capture.uuid)
         print(entries['status'])
-        self.har = task['har']
-        self.screenshot = task['screenshot']
+        self.har = task.get_har()
+        self.screenshot = task.get_screenshot()
         str_date = crawlers.get_current_date(separator=True)
         self.har_dir = crawlers.get_date_har_dir(str_date)
         self.items_dir = crawlers.get_date_crawled_items_source(str_date)
@@ -156,14 +150,13 @@ class Crawler(AbstractModule):
         self.domain.update_daterange(str_date.replace('/', ''))
         # Origin + History
         if self.root_item:
-            # domain.add_ports(port)
             self.domain.set_last_origin(parent_id)
             self.domain.add_history(epoch, root_item=self.root_item)
         elif self.domain.was_up():
             self.domain.add_history(epoch, root_item=epoch)
 
         crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
-        crawlers.clear_crawler_task(task_uuid, self.domain.get_domain_type())
+        task.clear()
 
     def save_capture_response(self, parent_id, entries):
         print(entries.keys())
@@ -241,14 +234,6 @@ if __name__ == '__main__':
 ##################################
 ##################################
 ##################################
-
-
-# from Helper import Process
-# from pubsublogger import publisher
-
-
-# ======== FUNCTIONS ========
-
 
 # def update_auto_crawler():
 #     current_epoch = int(time.time())
