@@ -39,6 +39,7 @@ class ApiKey(AbstractModule):
         re.compile(self.re_aws_secret_key)
 
         # r'=AIza[0-9a-zA-Z-_]{35}' keep equal ????
+        # AIza[0-9A-Za-z\\-_]{35}
         self.re_google_api_key = r'AIza[0-9a-zA-Z-_]{35}'
         re.compile(self.re_google_api_key)
 
@@ -79,9 +80,6 @@ class ApiKey(AbstractModule):
             # Tags
             msg = f'infoleak:automatic-detection="api-key";{item.get_id()}'
             self.send_message_to_queue(msg, 'Tags')
-
-            # Send to duplicate
-            self.send_message_to_queue(item.get_id(), 'Duplicate')
 
             if r_result:
                 return google_api_key, aws_access_key, aws_secret_key

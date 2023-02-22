@@ -40,7 +40,7 @@ def is_passive_dns_enabled(cache=True):
         res = r_cache.get('d4:passivedns:enabled')
         if res is None:
             res = r_serv_db.hget('d4:passivedns', 'enabled') == 'True'
-            r_cache.set('d4:passivedns:enabled', res)
+            r_cache.set('d4:passivedns:enabled', str(res))
             return res
         else:
             return res == 'True'

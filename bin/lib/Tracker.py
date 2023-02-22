@@ -26,7 +26,9 @@ from lib.Users import User
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 
-r_serv_tracker = config_loader.get_db_conn("Kvrocks_Trackers")
+r_tracker = config_loader.get_db_conn("Kvrocks_Trackers")
+
+r_serv_tracker = config_loader.get_db_conn("Kvrocks_Trackers") # TODO REMOVE ME
 
 items_dir = config_loader.get_config_str("Directories", "pastes")
 if items_dir[-1] == '/':
@@ -68,11 +70,111 @@ def is_valid_mail(email):
 def verify_mail_list(mail_list):
     for mail in mail_list:
         if not is_valid_mail(mail):
-            return ({'status': 'error', 'reason': 'Invalid email', 'value': mail}, 400)
+            return {'status': 'error', 'reason': 'Invalid email', 'value': mail}, 400
     return None
 
 ##-- UTILS --##
 ###############
+
+################################################################################################
+################################################################################################
+################################################################################################
+
+class Tracker:
+    def __init__(self, tracker_uuid):
+        self.uuid = tracker_uuid
+
+    def get_uuid(self):
+        return self.uuid
+
+    def exists(self):
+        return r_tracker.exists(f'tracker:{self.uuid}')
+
+    def get_date(self):
+        return r_tracker.hget(f'tracker:{self.uuid}', 'date')
+
+    def get_first_seen(self):
+        return r_tracker.hget(f'tracker:{self.uuid}', 'first_seen')
+
+    def get_last_seen(self):
+        return r_tracker.hget(f'tracker:{self.uuid}', 'last_seen')
+
+    def get_description(self):
+        return r_tracker.hget(f'tracker:{self.uuid}', 'description')
+
+    def get_level(self):
+        level = r_tracker.hget(f'tracker:{self.uuid}', 'level')
+        if not level:
+            level = 0
+        return int(level)
+
+    def get_sources(self):
+        return r_tracker.smembers(f'tracker:sources:{self.uuid}')
+
+    def get_tracker(self):
+        return r_serv_tracker.hget(f'tracker:{self.uuid}', 'tracked')
+
+    def get_type(self):
+        return r_tracker.hget(f'tracker:{self.uuid}', 'type')
+
+    def get_tags(self):
+        return r_tracker.smembers(f'tracker:tags:{self.uuid}')
+
+    def mail_export(self):
+        return r_tracker.exists(f'tracker:mail:{self.uuid}')
+
+    def get_mails(self):
+        return r_tracker.smembers(f'tracker:mail:{self.uuid}')
+
+    def get_user(self):
+        return r_tracker.hget(f'tracker:{self.uuid}', 'user_id')
+
+    def webhook_export(self):
+        return r_tracker.hexists(f'tracker:mail:{self.uuid}', 'webhook')
+
+    def get_webhook(self):
+        return r_tracker.hget(f'tracker:{self.uuid}', 'webhook')
+
+    # TODO get objects/ tracked items
+
+
+    # TODO sparkline
+    def get_meta(self, options):
+        if not options:
+            options = set()
+        meta = {'uuid': self.uuid,
+                'tracker': self.get_tracker(),
+                'type': self.get_type(),
+                'date': self.get_date(),
+                'first_seen': self.get_first_seen(),
+                'last_seen': self.get_last_seen()}
+        if 'user' in options:
+            meta['user'] = self.get_user()
+        if 'level' in options:
+            meta['level'] = self.get_level()
+        if 'description' in options:
+            meta['description'] = self.get_description()
+        if 'tags' in options:
+            meta['tags'] = self.get_tags()
+        if 'sources' in options:
+            meta['sources'] = self.get_sources()
+        if 'mails' in options:
+            meta['mails'] = self.get_mails()
+        if 'webhooks' in options:
+            meta['webhook'] = self.get_webhook()
+        # if 'sparkline' in options:
+        #     meta['sparkline'] = get_tracker_sparkline(tracker_uuid)
+
+
+
+
+    # TODO
+    def add(self, obj_id):
+        pass
+
+################################################################################################
+################################################################################################
+################################################################################################
 
 def get_all_tracker_type():
     return ['word', 'set', 'regex', 'yara']
@@ -345,7 +447,7 @@ def is_tracker_in_user_level(tracker, tracker_type, user_id):
 
 ## API ##
 def api_check_tracker_uuid(tracker_uuid):
-    if not is_valid_uuid_v4(task_uuid):
+    if not is_valid_uuid_v4(tracker_uuid):
         return {"status": "error", "reason": "Invalid uuid"}, 400
     if not r_serv_tracker.exists(f'tracker:{tracker_uuid}'):
         return {"status": "error", "reason": "Unknown uuid"}, 404
@@ -678,6 +780,10 @@ def reload_yara_rules():
         l_tracker_uuid = get_tracker_uuid_list(yar_path, 'yara')
         for tracker_uuid in l_tracker_uuid:
             rule_dict[tracker_uuid] = os.path.join(get_yara_rules_dir(), yar_path)
+    for tracker_uuid in rule_dict:
+        if not os.path.isfile(rule_dict[tracker_uuid]):
+            # TODO IGNORE + LOGS
+            raise Exception(f"Error: {rule_dict[tracker_uuid]} doesn't exists")
     rules = yara.compile(filepaths=rule_dict)
     return rules
 

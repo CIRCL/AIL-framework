@@ -217,7 +217,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Cryptocurrency" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Cryptocurrencies.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Cve" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Cve.py; read x"
+    screen -S "Script_AIL" -X screen -t "CveModule" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./CveModule.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Decoder" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Decoder.py; read x"
     sleep 0.1

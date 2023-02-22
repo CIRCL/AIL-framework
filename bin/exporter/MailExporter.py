@@ -60,9 +60,6 @@ class MailExporter(AbstractExporter, ABC):
                 self.port is None):
             raise Exception('SMTP configuration (host, port, sender) is missing or incomplete!')
 
-    def import(self):
-        pass
-
     def get_smtp_client(self):
         # try:
         if self.pw is not None:

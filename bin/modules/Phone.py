@@ -56,9 +56,6 @@ class Phone(AbstractModule):
             msg = f'infoleak:automatic-detection="phone-number";{item.get_id()}'
             self.send_message_to_queue(msg, 'Tags')
 
-            # Send to duplicate
-            self.send_message_to_queue(item.get_id(), 'Duplicate')
-
             stats = {}
             for phone_number in results:
                 try:

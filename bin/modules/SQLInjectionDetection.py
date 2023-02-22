@@ -57,9 +57,6 @@ class SQLInjectionDetection(AbstractModule):
             to_print = f'SQLInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{item_id}'
             self.redis_logger.warning(to_print)
 
-            # Send to duplicate
-            self.send_message_to_queue(item_id, 'Duplicate')
-
             # Tag
             msg = f'infoleak:automatic-detection="sql-injection";{item_id}'
             self.send_message_to_queue(msg, 'Tags')

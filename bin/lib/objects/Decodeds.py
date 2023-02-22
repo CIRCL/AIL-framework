@@ -3,6 +3,7 @@
 
 import os
 import sys
+import magic
 import requests
 import zipfile
 
@@ -135,9 +136,9 @@ class Decoded(AbstractDaterangeObject):
         obj.first_seen = self.get_first_seen()
         obj.last_seen = self.get_last_seen()
 
-        obj_attrs.append( obj.add_attribute('sha1', value=self.id))
-        obj_attrs.append( obj.add_attribute('mimetype', value=self.get_mimetype()))
-        obj_attrs.append( obj.add_attribute('malware-sample', value=self.id, data=self.get_content()))
+        obj_attrs.append(obj.add_attribute('sha1', value=self.id))
+        obj_attrs.append(obj.add_attribute('mimetype', value=self.get_mimetype()))
+        obj_attrs.append(obj.add_attribute('malware-sample', value=self.id, data=self.get_content()))
         for obj_attr in obj_attrs:
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
@@ -177,7 +178,10 @@ class Decoded(AbstractDaterangeObject):
         else:
             return {}
 
+    # TODO
     def guess_mimetype(self, bytes_content):
+        # if not bytes_content:
+        #     bytes_content = self.get_content()
         return magic.from_buffer(bytes_content, mime=True)
 
     # avoid counting the same hash multiple time on the same item
@@ -226,15 +230,15 @@ class Decoded(AbstractDaterangeObject):
         # -> sinter with r_objects.sunion(f'decoded:algo:{algo_name}:{date}')
 
     # # TODO: ADD items
-    def create(self, content, date, mimetype=None):
-        if not mimetype:
-            mimetype = self.guess_mimetype(content)
-        self.save_file(content, mimetype)
-
-
-        update_decoded_daterange(sha1_string, date_from)
-        if date_from != date_to and date_to:
-            update_decoded_daterange(sha1_string, date_to)
+    # def create(self, content, date, mimetype=None):
+    #     if not mimetype:
+    #         mimetype = self.guess_mimetype(content)
+    #     self.save_file(content, mimetype)
+    #
+    #
+    #     update_decoded_daterange(sha1_string, date_from)
+    #     if date_from != date_to and date_to:
+    #         update_decoded_daterange(sha1_string, date_to)
 
         #######################################################################################
         #######################################################################################
@@ -266,6 +270,8 @@ class Decoded(AbstractDaterangeObject):
             # file in queue
             elif response_code == -2:
                 report = 'In Queue - Refresh'
+            else:
+                report = 'Error - Unknown VT response'
             self.set_vt_report(report)
             print(json_response)
             print(response_code)
