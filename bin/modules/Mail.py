@@ -130,7 +130,7 @@ class Mail(AbstractModule):
             mxdomains[mxdomain].append(mail)
         for mx in self.check_mx_record(mxdomains.keys()):
             for row in mxdomains[mx]:
-                extracted.append(row)
+                extracted.append([row[0], row[1], row[2], f'tag:{tag}'])
         return extracted
 
     # # TODO: sanitize mails

@@ -69,8 +69,7 @@ class Iban(AbstractModule):
             start, end, value = iban
             value = ''.join(e for e in value if e.isalnum())
             if self.is_valid_iban(value):
-                print(value)
-                extracted.append(iban)
+                extracted.append([start, end, value, f'tag:{tag}'])
         return extracted
 
     def compute(self, message):

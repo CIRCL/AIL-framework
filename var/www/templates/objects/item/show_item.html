@@ -20,6 +20,9 @@
   <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
   <style>
+    .popover{
+        max-width: 100%;
+    }
 	.rotate{
 		-moz-transition: all 0.1s linear;
 		-webkit-transition: all 0.1s linear;
@@ -349,10 +352,62 @@
   {% endif %}
 
 
-  {% if extracted %}
-      {% for row in extracted %}
-          <div><a href="#{{ row[0] }}:{{ row[1] }}">{{ row[2] }}</a></div>
-      {% endfor  %}
+  {% if extracted_matches %}
+  <div id="accordion_extracted" class="mb-3 mx-3">
+      <div class="card">
+          <div class="card-header py-1" id="heading_extracted">
+              <div class="row">
+                  <div class="col-11">
+                      <div class="mt-2">
+                          <img id="misp-logo" src="{{ url_for('static', filename='image/ail-icon.png')}}" height="32"> Extracted&nbsp;&nbsp;
+                          <div class="badge badge-warning">{{extracted_matches|length}}</div>
+                      </div>
+                  </div>
+                  <div class="col-1">
+                      <button class="btn btn-link btn-lg py-2 float-right rotate down" data-toggle="collapse" data-target="#collapse_extracted" aria-expanded="true" aria-controls="collapseDecoded">
+                          <i class="fas fa-chevron-circle-down"></i>
+                      </button>
+                  </div>
+              </div>
+          </div>
+
+          <div id="collapse_extracted" class="collapse show" aria-labelledby="heading_extracted" data-parent="#accordion_extracted">
+              <div class="card-body">
+                  <table id="table_extracted" class="table table-striped">
+                      <thead class="thead-dark">
+                      <tr>
+                          <th>Type</th>
+                          <th>ID</th>
+                          <th>Extracted</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {% for match in extracted_matches %}
+                          <tr>
+                              <td>
+                                  <svg height="26" width="26">
+                                      <g class="nodes">
+                                          <circle cx="13" cy="13" r="13" fill="{{ extracted_matches[match]['icon']['color'] }}"></circle>
+                                          <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ extracted_matches[match]['icon']['style'] }}" font-size="16px">{{ extracted_matches[match]['icon']['icon'] }}</text>
+                                      </g>
+                                  </svg>
+                                  {{ extracted_matches[match]['subtype'] }}
+                              </td>
+                              <td>{{ extracted_matches[match]['id'] }}</td>
+                              <td>
+                                  {% for row in extracted_matches[match]['matches'] %}
+                                      <a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a><br>
+                                  {% endfor %}
+                              </td>
+                          </tr>
+                      {% endfor %}
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+
+      </div>
+  </div>
   {% endif %}
 
 
@@ -382,7 +437,7 @@
             {% if not extracted %}
                 <p class="my-0"> <pre class="border">{{ meta['content'] }}</pre></p>
             {% else %}
-                <p class="my-0"> <pre class="border">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
+                <p class="my-0"> <pre class="border">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="<svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[row[3]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;graph_node_icon {{ extracted_matches[row[3]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[row[3]]['icon']['icon'] }}</text></g></svg> {{ extracted_matches[row[3]]['subtype'] }}" data-content="{{ extracted_matches[row[3]]['id'] }}" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
             {% endif %}
         </div>
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
@@ -395,19 +450,22 @@
     </div>
   </div>
 
-  <script>
-      var ltags
-      var ltagsgalaxies
-      $(document).ready(function(){
-          $('#tableDup').DataTable();
+<script>
+    var ltags
+    var ltagsgalaxies
+    $(document).ready(function(){
+        $('#tableDup').DataTable();
           // $('#tableb64').DataTable({
     			// 	"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
     			// 	"iDisplayLength": 5,
     			// 	"order": [[ 1, "asc" ]]
     			// });
-          $(".rotate").click(function(){
-        	 $(this).toggleClass("down")  ;
-        	})
+        {% if extracted %}
+            $('#table_extracted').DataTable();
+        {% endif %}
+        $(".rotate").click(function(){
+            $(this).toggleClass("down");
+        })
       });
 
       $('#pills-html2text-tab').on('shown.bs.tab', function (e) {
@@ -418,7 +476,7 @@
 
         }
       });
-  </script>
+</script>
 
 {% if meta['crawler'] %}
   <script>
@@ -470,6 +528,9 @@
   }
 
   blocks.addEventListener('change', pixelate, false);
+  $(function () {
+    $('[data-toggle="popover"]').popover()
+  })
   </script>
 {% endif %}
 

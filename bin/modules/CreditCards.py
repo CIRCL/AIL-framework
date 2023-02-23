@@ -64,7 +64,7 @@ class CreditCards(AbstractModule):
         for card in cards:
             start, end, value = card
             if self.get_valid_card(value):
-                extracted.append(card)
+                extracted.append([start, end, value, f'tag:{tag}'])
         return extracted
 
     def compute(self, message, r_result=False):

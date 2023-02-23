@@ -67,7 +67,7 @@ def showItem():  # # TODO: support post
         abort(404)
 
     item = Item(item_id)
-    meta = item.get_meta(options=['content', 'crawler', 'duplicates', 'lines', 'size'])
+    meta = item.get_meta(options={'content', 'crawler', 'duplicates', 'lines', 'size'})
 
     meta['name'] = meta['id'].replace('/', ' / ')
     meta['father'] = item_basic.get_item_parent(item_id)
@@ -76,11 +76,13 @@ def showItem():  # # TODO: support post
     meta['hive_case'] = Export.get_item_hive_cases(item_id)
 
     extracted = module_extractor.extract(item.id, content=meta['content'])
+    extracted_matches = module_extractor.get_extracted_by_match(extracted)
 
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
-                            modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
-                            is_hive_connected=Export.get_item_hive_cases(item_id),
-                            meta=meta, extracted=extracted)
+                           modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
+                           is_hive_connected=Export.get_item_hive_cases(item_id),
+                           meta=meta,
+                           extracted=extracted, extracted_matches=extracted_matches)
 
     # kvrocks data
 

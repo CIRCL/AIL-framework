@@ -409,8 +409,12 @@ class Tools(AbstractModule):
         return TOOLS.keys()
 
     def extract(self, obj_id, content, tag):
+        extracted = []
         tool_name = tag.rsplit('"', 2)[1][:-5]
-        return self.regex_finditer(TOOLS[tool_name]['regex'], obj_id, content)
+        tools = self.regex_finditer(TOOLS[tool_name]['regex'], obj_id, content)
+        for tool in tools:
+            extracted.append([tool[0], tool[1], tool[2], f'tag:{tag}'])
+        return extracted
 
     def compute(self, message):
         item = Item(message)
