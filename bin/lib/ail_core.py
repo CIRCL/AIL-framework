@@ -25,6 +25,9 @@ def get_ail_uuid():
 def get_all_objects():
     return AIL_OBJECTS
 
+def get_objects_with_subtypes():
+    return ['cryptocurrency', 'pgp', 'username']
+
 def get_object_all_subtypes(obj_type):
     if obj_type == 'cryptocurrency':
         return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash']

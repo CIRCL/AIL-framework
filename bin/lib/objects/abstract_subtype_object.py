@@ -8,6 +8,7 @@ Base Class for AIL Objects
 ##################################
 import os
 import sys
+from abc import ABC
 
 # from flask import url_for
 
@@ -16,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_object import AbstractObject
+from lib.ail_core import get_object_all_subtypes
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
 from lib.data_retention_engine import update_obj_date
@@ -31,7 +33,7 @@ config_loader = None
 
 # # FIXME: SAVE SUBTYPE NAMES ?????
 
-class AbstractSubtypeObject(AbstractObject):
+class AbstractSubtypeObject(AbstractObject, ABC):
     """
     Abstract Subtype Object
     """
@@ -80,11 +82,19 @@ class AbstractSubtypeObject(AbstractObject):
         else:
             return int(nb)
 
-    def _get_meta(self):
-        meta_dict = {'first_seen': self.get_first_seen(),
-                     'last_seen': self.get_last_seen(),
-                     'nb_seen': self.get_nb_seen()}
-        return meta_dict
+    def _get_meta(self, options=None):
+        if options is None:
+            options = set()
+        meta = {'first_seen': self.get_first_seen(),
+                'last_seen': self.get_last_seen(),
+                'nb_seen': self.get_nb_seen()}
+        if 'icon' in options:
+            meta['icon'] = self.get_svg_icon()
+        if 'link' in options:
+            meta['link'] = self.get_link()
+        if 'sparkline' in options:
+            meta['sparkline'] = self.get_sparkline()
+        return meta
 
     def set_first_seen(self, first_seen):
         r_object.hset(f'meta:{self.type}:{self.subtype}:{self.id}', 'first_seen', first_seen)
@@ -111,6 +121,17 @@ class AbstractSubtypeObject(AbstractObject):
         for date in Date.get_previous_date_list(6):
             sparkline.append(self.get_nb_seen_by_date(date))
         return sparkline
+
+    def get_graphline(self, date_from=None, date_to=None):
+        graphline = []
+        # TODO get by daterange
+        # if date_from and date_to:
+        dates = Date.get_date_range(30)
+        for date in dates:
+            nb = self.get_nb_seen_by_date(date)
+            date = f'{date[0:4]}-{date[4:6]}-{date[6:8]}'
+            graphline.append({'date': date, 'value': nb})
+        return graphline
 #
 # HANDLE Others objects ????
 #
@@ -151,3 +172,52 @@ class AbstractSubtypeObject(AbstractObject):
 
 def get_all_id(obj_type, subtype):
     return r_object.zrange(f'{obj_type}_all:{subtype}', 0, -1)
+
+def get_subtypes_objs_by_date(obj_type, subtype, date):
+    return r_object.hkeys(f'{obj_type}:{subtype}:{date}')
+
+def get_subtypes_objs_by_daterange(obj_type, date_from, date_to, subtype=None):
+    if subtype:
+        subtypes = [subtype]
+    else:
+        subtypes = get_object_all_subtypes(obj_type)
+    objs = set()
+    for date in Date.get_daterange(date_from, date_to):
+        for subtype in subtypes:
+            for obj_id in get_subtypes_objs_by_date(obj_type, subtype, date):
+                objs.add((obj_type, subtype, obj_id))
+    return objs
+
+
+def get_subtypes_objs_range_json(obj_type, date_from, date_to):
+    objs_range = []
+    dates = Date.get_daterange(date_from, date_to)
+    if len(dates) == 1:
+        dict_subtype = {}
+        subtypes = get_object_all_subtypes(obj_type)
+        for subtype in subtypes:
+            dict_subtype[subtype] = 0
+        for subtype in get_object_all_subtypes(obj_type):
+            day_dict = dict_subtype.copy()
+            day_dict['date'] = subtype
+            # if don't filter duplicates
+            # nb = 0
+            # for val in r_object.hvals(f'{obj_type}:{subtype}:{dates[0]}'):
+            #     nb += int(val)
+            # day_dict[subtype] = nb
+            day_dict[subtype] = r_object.hlen(f'{obj_type}:{subtype}:{dates[0]}')
+            objs_range.append(day_dict)
+    else:
+        subtypes = get_object_all_subtypes(obj_type)
+        for date in dates:
+            day_dict = {'date': f'{date[0:4]}-{date[4:6]}-{date[6:8]}'}
+            for subtype in subtypes:
+                # if don't filter duplicates
+                # nb = 0
+                # for val in r_object.hvals(f'{obj_type}:{subtype}:{date}'):
+                #     nb += int(val)
+                # day_dict[subtype] = nb
+                day_dict[subtype] = r_object.hlen(f'{obj_type}:{subtype}:{date}')
+                objs_range.append(day_dict)
+
+    return objs_range

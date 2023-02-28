@@ -31,12 +31,11 @@ r_serv_log = config_loader.get_redis_conn("Redis_Log")
 r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
 
 r_serv_charts = config_loader.get_redis_conn("ARDB_Trending")  # -> TODO MIGRATE Stats Graphs
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")  # -> TODO MIGRATE /correlation/ subtypes objects
 r_serv_onion = config_loader.get_redis_conn("ARDB_Onion")  # -> TODO MIGRATE AUTO CRAWLER
 
 # # # # # # #
-r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
-r_serv_tags = config_loader.get_db_conn("Kvrocks_Tags")
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")         # TODO remove redis call from blueprint
+r_serv_tags = config_loader.get_db_conn("Kvrocks_Tags")     # TODO remove redis call from blueprint
 
 # Logger (Redis)
 redis_logger = publisher

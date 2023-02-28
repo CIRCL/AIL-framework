@@ -265,10 +265,8 @@ $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
 
 		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}");
-		{% if dict_object["object_type"] == "pgp" %}
-			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.pgpdump_graph_line_json') }}?type_id={{dict_object["metadata"]["type_id"]}}&key_id={{dict_object["correlation_id"]}}");
-		{% elif dict_object["object_type"] == "cryptocurrency" %}
-			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('hashDecoded.cryptocurrency_graph_line_json') }}?type_id={{dict_object["metadata"]["type_id"]}}&key_id={{dict_object["correlation_id"]}}");
+		{% if dict_object["object_type"] in ["cryptocurrency", "pgp", "username"] %}
+			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_subtypes.objects_cve_graphline_json') }}?type={{ dict_object["object_type"] }}&subtype={{dict_object["metadata"]["type_id"]}}&id={{dict_object["correlation_id"]}}");
 		{% elif dict_object["object_type"] == "decoded" %}
 			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_decoded.graphline_json') }}?id={{dict_object["correlation_id"]}}");
 		{% elif dict_object["object_type"] == "cve" %}

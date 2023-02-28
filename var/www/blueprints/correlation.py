@@ -163,7 +163,7 @@ def get_description():
     # # TODO: return error json
     if not ail_objects.exists_obj(object_type, type_id, correlation_id):
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
-    # oject exist
+    # object exist
     else:
         res = ail_objects.get_object_meta(object_type, type_id, correlation_id, flask_context=True)
         return jsonify(res)
@@ -187,11 +187,3 @@ def graph_node_json():
     #json_graph = Correlate_object.get_graph_node_object_correlation(obj_type, obj_id, 'union', correlation_names, correlation_objects, requested_correl_type=subtype, max_nodes=max_nodes)
     return jsonify(json_graph)
 
-@correlation.route('/correlation/subtype_search', methods=['POST'])
-@login_required
-@login_read_only
-def subtype_search():
-    obj_type = request.form.get('object_type')
-    obj_subtype = request.form.get('object_subtype')
-    obj_id = request.form.get('object_id')
-    return redirect(url_for('correlation.show_correlation', type=obj_type, subtype=obj_subtype, id=obj_id))

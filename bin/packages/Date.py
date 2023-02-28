@@ -129,6 +129,16 @@ def substract_date(date_from, date_to):
         l_date.append( date.strftime('%Y%m%d') )
     return l_date
 
+def get_daterange(date_from, date_to):
+    date_from = datetime.date(int(date_from[0:4]), int(date_from[4:6]), int(date_from[6:8]))
+    date_to = datetime.date(int(date_to[0:4]), int(date_to[4:6]), int(date_to[6:8]))
+    delta = date_to - date_from  # timedelta
+    l_date = []
+    for i in range(delta.days + 1):
+        date = date_from + datetime.timedelta(i)
+        l_date.append(date.strftime('%Y%m%d'))
+    return l_date
+
 def validate_str_date(str_date, separator=''):
     try:
         datetime.datetime.strptime(str_date, '%Y{}%m{}%d'.format(separator, separator))

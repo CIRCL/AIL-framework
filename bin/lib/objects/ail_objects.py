@@ -130,7 +130,7 @@ def add_obj_tags(obj_type, subtype, id, tags):
 
 # -TAGS- #
 
-def get_object_meta(obj_type, subtype, id, options=[], flask_context=False):
+def get_object_meta(obj_type, subtype, id, options=set(), flask_context=False):
     obj = get_object(obj_type, subtype, id)
     meta = obj.get_meta(options=options)
     meta['icon'] = obj.get_svg_icon()
