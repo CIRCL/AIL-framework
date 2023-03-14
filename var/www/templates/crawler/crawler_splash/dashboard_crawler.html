@@ -208,8 +208,9 @@ function refresh_crawler_status(){
 			$('#stat_web_total').text(data.stats['web']['crawled']);
 			$('#stat_web_queue').text(data.stats['web']['queue']);
 
+            $("#tbody_crawler_onion_info").empty();
+
 			if(data.crawlers_status.length!=0){
-				$("#tbody_crawler_onion_info").empty();
 				var tableRef = document.getElementById('tbody_crawler_onion_info');
 				for (var i = 0; i < data.crawlers_status.length; i++) {
 						var crawler = data.crawlers_status[i];

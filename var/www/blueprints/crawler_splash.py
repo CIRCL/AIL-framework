@@ -61,9 +61,9 @@ def create_json_response(data, status_code):
 def crawlers_dashboard():
     is_manager_connected = crawlers.get_lacus_connection_metadata()
     crawlers_status = crawlers.get_captures_status()
-    print(crawlers_status)
+    # print(crawlers_status)
     crawlers_latest_stats = crawlers.get_crawlers_stats()
-    print(crawlers_latest_stats)
+    # print(crawlers_latest_stats)
     date = crawlers.get_current_date()
     return render_template("dashboard_crawler.html", date=date,
                            is_manager_connected=is_manager_connected,
@@ -77,6 +77,7 @@ def crawlers_dashboard():
 def crawler_dashboard_json():
     crawlers_status = crawlers.get_captures_status()
     crawlers_latest_stats = crawlers.get_crawlers_stats()
+    # print(crawlers_status)
 
     return jsonify({'crawlers_status': crawlers_status,
                     'stats': crawlers_latest_stats})
@@ -106,12 +107,23 @@ def send_to_spider():
     # POST val
     url = request.form.get('url_to_crawl')
     crawler_type = request.form.get('crawler_queue_type')
-    auto_crawler = request.form.get('crawler_type')  # TODO Auto Crawler
-    crawler_delta = request.form.get('crawler_epoch')  # TODO Auto Crawler
     screenshot = request.form.get('screenshot')
     har = request.form.get('har')
     depth_limit = request.form.get('depth_limit')
     cookiejar_uuid = request.form.get('cookiejar')
+
+    # Frequency
+    if request.form.get('crawler_scheduler'):
+        frequency = request.form.get('frequency')
+        if frequency == 'custom':
+            months = request.form.get('frequency_months', 0)
+            weeks = request.form.get('frequency_weeks', 0)
+            days = request.form.get('frequency_days', 0)
+            hours = request.form.get('frequency_hours', 0)
+            minutes = request.form.get('frequency_minutes', 0)
+            frequency = {'months': months, 'weeks': weeks, 'days': days, 'hours': hours, 'minutes': minutes}
+    else:
+        frequency = None
 
     # PROXY
     proxy = request.form.get('proxy_name')
@@ -129,7 +141,7 @@ def send_to_spider():
             cookiejar_uuid = cookiejar_uuid.rsplit(':')
             cookiejar_uuid = cookiejar_uuid[-1].replace(' ', '')
 
-    data = {'url': url, 'depth': depth_limit, 'har': har, 'screenshot': screenshot}
+    data = {'url': url, 'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'frequency': frequency}
     if proxy:
         data['proxy'] = proxy
     if cookiejar_uuid:
@@ -140,6 +152,43 @@ def send_to_spider():
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.manual'))
+
+
+@crawler_splash.route("/crawlers/scheduler", methods=['GET'])
+@login_required
+@login_read_only
+def scheduler_dashboard():
+    schedulers = crawlers.get_schedulers_metas()
+    # print(schedulers)
+    # TODO list currently queued ?
+    return render_template("crawler_scheduler_dashboard.html",
+                           schedulers=schedulers,
+                           is_manager_connected=crawlers.get_lacus_connection_metadata())
+
+@crawler_splash.route("/crawlers/schedule", methods=['GET'])
+@login_required
+@login_read_only
+def schedule_show():
+    schedule_uuid = request.args.get('uuid')
+    schedule = crawlers.CrawlerSchedule(schedule_uuid)
+    if not schedule.exists():
+        abort(404)
+    meta = schedule.get_meta(ui=True)
+    return render_template("crawler_schedule_uuid.html",
+                           meta=meta)
+
+@crawler_splash.route("/crawlers/schedule/delete", methods=['GET'])
+@login_required
+@login_analyst
+def schedule_delete():
+    schedule_uuid = request.args.get('uuid')
+    schedule = crawlers.CrawlerSchedule(schedule_uuid)
+    if not schedule.exists():
+        abort(404)
+    res = crawlers.api_delete_schedule({'uuid': schedule_uuid})
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.scheduler_dashboard'))
 
 
 @crawler_splash.route("/crawlers/last/domains", methods=['GET'])
@@ -228,11 +277,11 @@ def showDomain():
         dict_domain['epoch'] = curr_epoch
         dict_domain["date"] = time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(curr_epoch))
 
-        print(dict_domain['epoch'])
+        # print(dict_domain['epoch'])
 
         dict_domain['crawler_history_items'] = []
         for item_id in domain.get_crawled_items_by_epoch(epoch):
-            dict_domain['crawler_history_items'].append(Item(item_id).get_meta(options=['crawler']))
+            dict_domain['crawler_history_items'].append(Item(item_id).get_meta(options={'crawler'}))
         if dict_domain['crawler_history_items']:
             dict_domain['random_item'] = random.choice(dict_domain['crawler_history_items'])
 
@@ -521,7 +570,7 @@ def crawler_cookiejar_show():
 
 @crawler_splash.route('/crawler/cookie/delete', methods=['GET'])
 @login_required
-@login_read_only
+@login_analyst
 def crawler_cookiejar_cookie_delete():
     user_id = current_user.get_id()
     cookie_uuid = request.args.get('uuid')
@@ -536,7 +585,7 @@ def crawler_cookiejar_cookie_delete():
 
 @crawler_splash.route('/crawler/cookiejar/delete', methods=['GET'])
 @login_required
-@login_read_only
+@login_analyst
 def crawler_cookiejar_delete():
     user_id = current_user.get_id()
     cookiejar_uuid = request.args.get('uuid')
@@ -699,7 +748,7 @@ def crawler_lacus_settings_crawler_manager():
         api_key = request.form.get('api_key')
 
         res = crawlers.api_save_lacus_url_key({'url': lacus_url, 'api_key': api_key})
-        print(res)
+        # print(res)
         if res[1] != 200:
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
         else:

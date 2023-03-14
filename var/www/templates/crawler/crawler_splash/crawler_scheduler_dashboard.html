@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				{% include 'crawler/crawler_disabled.html' %}
+
+                <h1>Schedulers:</h1>
+
+                <table class="table mt-1 table-hover table-borderless table-striped" id="table_scheduler">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>Url</th>
+                        <th>Status</th>
+                        <th>Next Run</th>
+                        <th>User</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody_last_crawled">
+                    {% for meta in schedulers %}
+                        <tr>
+                            <td><a href="{{ url_for('crawler_splash.schedule_show') }}?uuid={{ meta['uuid'] }}">{{ meta['url'] }}</a></td>
+                            <td>{{ meta['status'] }}</td>
+                            <td>
+                                {% if not meta['next_run'] %}
+                                    <b class="text-danger"><i class="fas fa-exclamation-triangle"></i> Please verify that the crawler module is running ...</b>
+                                {% else %}
+                                    {{ meta['next_run'] }}
+                                {% endif %}
+                            </td>
+                            <td>{{ meta['user'] }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_scheduler_crawler").addClass("active");
+    $('#table_scheduler').DataTable();
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>

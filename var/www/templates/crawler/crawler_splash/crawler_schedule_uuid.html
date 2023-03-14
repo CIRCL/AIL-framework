@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="card my-1">
+					<div class="card-header bg-dark text-white">
+						<h4 class="card-title"><b>{{ meta['url'] }}</b></h4>
+					</div>
+					<div class="card-body">
+
+                        <div class="row">
+                            <div class="col-lg-8">
+
+                                <table class="table table-hover">
+                                    <tbody>
+                                    <tr>
+                                        <th>UUID</th>
+                                        <td>{{ meta['uuid'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Url</th>
+                                        <td>{{ meta['url'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Frequency</th>
+                                        <td>{{ meta['frequency'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Creator</th>
+                                        <td>{{ meta['user'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date</th>
+                                        <td>{{ meta['date'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status</th>
+                                        <td>{{ meta['status'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Next Run</th>
+                                        <td>
+                                            {% if not meta['next_run'] %}
+                                                <b class="text-danger"><i class="fas fa-exclamation-triangle"></i> Please verify that the crawler module is running ...</b>
+                                            {% else %}
+                                                {{ meta['next_run'] }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>Config:</h4>
+
+                                <table class="table table-hover">
+                                    <tbody>
+                                    <tr>
+                                        <th><i class="fas fa-water"></i> Depth</th>
+                                        <td>{{ meta['depth'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-image"></i>  Screenshot</th>
+                                        <td>
+                                            <div class="custom-control custom-switch">
+                                                <input class="custom-control-input" type="checkbox" id="html_content_id" {% if meta['screenshot'] %}checked{% endif %} disabled>
+                                                <label class="custom-control-label" for="html_content_id">
+                                                    <i class="fas fa-image"></i> &nbsp;
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-file"></i> &nbsp;Har</th>
+                                        <td>
+                                            <div class="custom-control custom-switch">
+                                                <input class="custom-control-input" type="checkbox" id="html_content_id" {% if meta['har'] %}checked{% endif %} disabled>
+                                                <label class="custom-control-label" for="html_content_id">
+                                                    <i class="fas fa-file"></i> &nbsp;
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-cookie-bite"></i> Cookiejar</th>
+                                        <td>
+                                            {% if not meta['cookiejar'] %}
+                                                -
+                                            {% else %}
+                                                <a href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?uuid={{meta['cookiejar']}}">
+                                                    {{ meta['cookiejar'] }}
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Proxy</th>
+                                        <td>
+                                            {% if not meta['proxy'] %}
+                                                -
+                                            {% else %}
+                                                {{ meta['proxy'] }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>User Agent</th>
+                                        <td>
+                                            {% if meta['user_agent'] %}
+                                                {{ meta['user_agent'] }}
+                                            {% else %}
+                                                Default
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if meta['header'] %}
+                                    <tr>
+                                        <th>header</th>
+                                        <td>{{ meta['header'] }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-lg-4">
+                                <div>
+                                    <a href="{{ url_for('crawler_splash.schedule_delete') }}?uuid={{meta['uuid']}}">
+                                        <button type="button" class="btn btn-danger">
+                                            <i class="fas fa-trash-alt"></i> <b>Delete</b>
+                                        </button>
+                                    </a>
+{#                                    <a href="{{ url_for('investigations_b.edit_investigation') }}?uuid={{meta['uuid']}}">#}
+{#                                        <button type="button" class="btn btn-info">#}
+{#                                            <i class="fas fa-pencil-alt"></i> <b>Edit</b>#}
+{#                                        </button>#}
+{#                                    </a>#}
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+			</div>
+
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+var chart = {};
+$(document).ready(function(){
+	$("#page-Crawler").addClass("active");
+	$("#nav_monitoring_crawler").addClass("active");
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>

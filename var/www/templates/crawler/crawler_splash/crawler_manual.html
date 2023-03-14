@@ -66,21 +66,59 @@
 											<div class="d-flex mt-3">
 												<i class="fas fa-user-ninja mt-1"></i> &nbsp;Manual&nbsp;&nbsp;
 												<div class="custom-control custom-switch">
-													<input class="custom-control-input" type="checkbox" name="crawler_type" value="True" id="crawler_type">
-													<label class="custom-control-label" for="crawler_type">
-														<i class="fas fa-clock"></i> &nbsp;Automatic
+													<input class="custom-control-input" type="checkbox" name="crawler_scheduler" value="True" id="crawler_scheduler">
+													<label class="custom-control-label" for="crawler_scheduler">
+														<i class="fas fa-clock"></i> &nbsp;Scheduler
 													</label>
 												</div>
 											</div>
-											<div class="input-group mt-2 mb-2" id="crawler_epoch_input">
-												<div class="input-group-prepend">
-													<span class="input-group-text bg-light"><i class="fas fa-clock"></i>&nbsp;</span>
-												</div>
-												<input class="form-control" type="number" id="crawler_epoch" value="3600" min="1" name="crawler_epoch" required>
-												<div class="input-group-append">
-													<span class="input-group-text">Time (seconds) between each crawling</span>
-												</div>
-											</div>
+
+                                            <div id="frequency_inputs">
+                                                <div class="mb-4">
+                                                    <select class="custom-select" id="frequency" name="frequency" onchange="frequency_selector_update(this);">
+                                                        <option value="hourly">Hourly</option>
+                                                        <option value="daily">Daily</option>
+                                                        <option value="weekly">Weekly</option>
+                                                        <option value="monthly">Monthly</option>
+                                                        <option value="custom">Custom</option>
+                                                    </select>
+                                                </div>
+                                                <div id="custom_frequency">
+                                                    <h5><i class="fas fa-clock"></i>&nbsp;Adjust crawling interval as needed</h5>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Months</b></span>
+                                                        </div>
+                                                        <input class="form-control" type="number" id="frequency_months" value="0" min="0" name="frequency_months" required>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Weeks</b></span>
+                                                        </div>
+                                                        <input class="form-control" type="number" id="frequency_weeks" value="0" min="0" name="frequency_weeks" required>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Days</b></span>
+                                                        </div>
+                                                        <input class="form-control" type="number" id="frequency_days" value="0" min="0" name="frequency_days" required>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Hours</b></span>
+                                                        </div>
+                                                        <input class="form-control" type="number" id="frequency_hours" value="0" min="0" name="frequency_hours" required>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Minutes</b></span>
+                                                        </div>
+                                                        <input class="form-control" type="number" id="frequency_minutes" value="0" min="0" name="frequency_minutes" required>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
 										</div>
 
 
@@ -165,8 +203,9 @@ $(document).ready(function(){
 	$("#nav_manual_crawler").addClass("active");
 	queue_type_selector_input_controler()
 	manual_crawler_input_controler();
+    $("#custom_frequency").hide();
 
-	$('#crawler_type').on("change", function () {
+	$('#crawler_scheduler').on("change", function () {
 		manual_crawler_input_controler();
 	});
 
@@ -190,10 +229,18 @@ function toggle_sidebar(){
 }
 
 function manual_crawler_input_controler() {
-	if($('#crawler_type').is(':checked')){
-		$("#crawler_epoch_input").show();
+	if($('#crawler_scheduler').is(':checked')){
+		$("#frequency_inputs").show();
 	}else{
-		$("#crawler_epoch_input").hide();
+		$("#frequency_inputs").hide();
+	}
+}
+
+function frequency_selector_update(obj) {
+	if(obj.value === "custom") {
+        $("#custom_frequency").show();
+    }else{
+		$("#custom_frequency").hide();
 	}
 }
 

@@ -5,6 +5,8 @@ import os
 import sys
 import time
 
+from requests.exceptions import ConnectionError
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -14,6 +16,7 @@ from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib.objects import Screenshots
+
 
 class Crawler(AbstractModule):
 
@@ -37,8 +40,11 @@ class Crawler(AbstractModule):
         # update captures cache
         crawlers.reload_crawler_captures()
 
+        self.crawler_scheduler = crawlers.CrawlerScheduler()
+
         # LACUS
         self.lacus = crawlers.get_lacus()
+        self.is_lacus_up = crawlers.get_lacus().is_up
 
         # Capture
         self.har = None
@@ -51,44 +57,70 @@ class Crawler(AbstractModule):
         # Send module state to logs
         self.redis_logger.info('Crawler initialized')
 
-    def print_crawler_start_info(self, url, domain, domain_url):
+    def refresh_lacus_status(self):
+        try:
+            self.is_lacus_up = crawlers.get_lacus().is_up
+        except:
+            self.is_lacus_up = False
+        if not self.is_lacus_up:
+            print("Can't reach lacus server", int(time.time()))
+            time.sleep(30)
+
+    def print_crawler_start_info(self, url, domain_url):
         print()
         print()
         print('\033[92m------------------START CRAWLER------------------\033[0m')
-        print(f'crawler type:     {domain}')
+        print(f'crawler type:     {self.domain}')
         print('\033[92m-------------------------------------------------\033[0m')
         print(f'url:         {url}')
-        print(f'domain:      {domain}')
+        print(f'domain:      {self.domain}')
         print(f'domain_url:  {domain_url}')
         print()
 
     def get_message(self):
+        # Crawler Scheduler
+        self.crawler_scheduler.update_queue()
+        self.crawler_scheduler.process_queue()
+
+        self.refresh_lacus_status() # TODO LOG ERROR
+        if not self.is_lacus_up:
+            return None
+
         # Check if a new Capture can be Launched
         if crawlers.get_nb_crawler_captures() < crawlers.get_crawler_max_captures():
             task_row = crawlers.add_task_to_lacus_queue()
             if task_row:
-                print(task_row)
                 task_uuid, priority = task_row
-                self.enqueue_capture(task_uuid, priority)
+                try:
+                    self.enqueue_capture(task_uuid, priority)
+                except ConnectionError:
+                    print(task_row)
+                    task = crawlers.CrawlerTask(task_uuid)
+                    task.add_to_db_crawler_queue(priority)
+                    self.refresh_lacus_status()
+                    return None
 
         # Get CrawlerCapture Object
         capture = crawlers.get_crawler_capture()
         if capture:
-            print(capture.uuid)
-            status = self.lacus.get_capture_status(capture.uuid)
-            if status != crawlers.CaptureStatus.DONE:  # TODO ADD GLOBAL TIMEOUT-> Save start time
-                capture.update(status)
-                print(capture.uuid, status, int(time.time()))
-            else:
-                self.compute(capture)
-                capture.delete() # TODO DELETE TASK ONLY IF NOT SCHEDULED TASKS
-                print('capture', capture.uuid, 'completed')
+            try:
+                status = self.lacus.get_capture_status(capture.uuid)
+                if status != crawlers.CaptureStatus.DONE:  # TODO ADD GLOBAL TIMEOUT-> Save start time
+                    capture.update(status)
+                    print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
+                else:
+                    return capture
+
+            except ConnectionError:
+                print(capture.uuid)
+                capture.update(self, -1)
+                self.refresh_lacus_status()
 
         time.sleep(self.pending_seconds)
 
     def enqueue_capture(self, task_uuid, priority):
         task = crawlers.CrawlerTask(task_uuid)
-        print(task)
+        # print(task)
         # task = {
         #         'uuid': task_uuid,
         #         'url': 'https://foo.be',
@@ -102,11 +134,15 @@ class Crawler(AbstractModule):
         #         'proxy': 'force_tor',
         #         'parent': 'manual',
         # }
+
         url = task.get_url()
         force = priority != 0
         # TODO timeout
 
         # TODO HEADER
+        # capture_uuid = self.lacus.enqueue(url='https://cpg.circl.lu:7000',
+        #                                   force=force,
+        #                                   general_timeout_in_sec=120)
 
         capture_uuid = self.lacus.enqueue(url=url,
                                           depth=task.get_depth(),
@@ -114,14 +150,13 @@ class Crawler(AbstractModule):
                                           proxy=task.get_proxy(),
                                           cookies=task.get_cookies(),
                                           force=force,
-                                          general_timeout_in_sec=90)
+                                          general_timeout_in_sec=90)  # TODO increase timeout if onion ????
 
         crawlers.create_capture(capture_uuid, task_uuid)
         print(task.uuid, capture_uuid, 'launched')
         return capture_uuid
 
     # CRAWL DOMAIN
-    # TODO: CATCH ERRORS
     def compute(self, capture):
         print('saving capture', capture.uuid)
 
@@ -131,7 +166,6 @@ class Crawler(AbstractModule):
 
         self.domain = Domain(domain)
 
-        # TODO CHANGE EPOCH
         epoch = int(time.time())
         parent_id = task.get_parent()
 
@@ -139,6 +173,9 @@ class Crawler(AbstractModule):
         print(entries['status'])
         self.har = task.get_har()
         self.screenshot = task.get_screenshot()
+        # DEBUG
+        # self.har = True
+        # self.screenshot = True
         str_date = crawlers.get_current_date(separator=True)
         self.har_dir = crawlers.get_date_har_dir(str_date)
         self.items_dir = crawlers.get_date_crawled_items_source(str_date)
@@ -156,7 +193,10 @@ class Crawler(AbstractModule):
             self.domain.add_history(epoch, root_item=epoch)
 
         crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
-        task.clear()
+        print('capture:', capture.uuid, 'completed')
+        print('task:   ', task.uuid, 'completed')
+        print()
+        task.remove()
 
     def save_capture_response(self, parent_id, entries):
         print(entries.keys())
@@ -168,12 +208,11 @@ class Crawler(AbstractModule):
                 print('retrieved content')
                 # print(entries.get('html'))
 
-        # TODO LOGS IF != domain
         if 'last_redirected_url' in entries and entries['last_redirected_url']:
             last_url = entries['last_redirected_url']
             unpacked_last_url = crawlers.unpack_url(last_url)
             current_domain = unpacked_last_url['domain']
-            # REDIRECTION TODO CHECK IF WEB
+            # REDIRECTION TODO CHECK IF TYPE CHANGE
             if current_domain != self.domain.id and not self.root_item:
                 self.redis_logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
                 print(f'External redirection {self.domain.id} -> {current_domain}')
@@ -225,92 +264,4 @@ class Crawler(AbstractModule):
 if __name__ == '__main__':
     module = Crawler()
     module.debug = True
-    # module.compute(('ooooo', 0))
     module.run()
-
-
-##################################
-##################################
-##################################
-##################################
-##################################
-
-# def update_auto_crawler():
-#     current_epoch = int(time.time())
-#     list_to_crawl = redis_crawler.zrangebyscore('crawler_auto_queue', '-inf', current_epoch)
-#     for elem_to_crawl in list_to_crawl:
-#         mess, type = elem_to_crawl.rsplit(';', 1)
-#         redis_crawler.sadd('{}_crawler_priority_queue'.format(type), mess)
-#         redis_crawler.zrem('crawler_auto_queue', elem_to_crawl)
-
-# Extract info form url (url, domain, domain url, ...)
-# def unpack_url(url):
-#     to_crawl = {}
-#     faup.decode(url)
-#     url_unpack = faup.get()
-#     to_crawl['domain'] = to_crawl['domain'].lower()
-#     new_url_host = url_host.lower()
-#     url_lower_case = url.replace(url_host, new_url_host, 1)
-#
-#     if url_unpack['scheme'] is None:
-#         to_crawl['scheme'] = 'http'
-#         url= 'http://{}'.format(url_lower_case)
-#     else:
-#         try:
-#             scheme = url_unpack['scheme'].decode()
-#         except Exception as e:
-#             scheme = url_unpack['scheme']
-#         if scheme in default_proto_map:
-#             to_crawl['scheme'] = scheme
-#             url = url_lower_case
-#         else:
-#             redis_crawler.sadd('new_proto', '{} {}'.format(scheme, url_lower_case))
-#             to_crawl['scheme'] = 'http'
-#             url= 'http://{}'.format(url_lower_case.replace(scheme, '', 1))
-#
-#     if url_unpack['port'] is None:
-#         to_crawl['port'] = default_proto_map[to_crawl['scheme']]
-#     else:
-#         try:
-#             port = url_unpack['port'].decode()
-#         except:
-#             port = url_unpack['port']
-#         # Verify port number                        #################### make function to verify/correct port number
-#         try:
-#             int(port)
-#         # Invalid port Number
-#         except Exception as e:
-#             port = default_proto_map[to_crawl['scheme']]
-#         to_crawl['port'] = port
-#
-#     #if url_unpack['query_string'] is None:
-#     #    if to_crawl['port'] == 80:
-#     #        to_crawl['url']= '{}://{}'.format(to_crawl['scheme'], url_unpack['host'].decode())
-#     #    else:
-#     #        to_crawl['url']= '{}://{}:{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'])
-#     #else:
-#     #    to_crawl['url']= '{}://{}:{}{}'.format(to_crawl['scheme'], url_unpack['host'].decode(), to_crawl['port'], url_unpack['query_string'].decode())
-#
-#     to_crawl['url'] = url
-#     if to_crawl['port'] == 80:
-#         to_crawl['domain_url'] = '{}://{}'.format(to_crawl['scheme'], new_url_host)
-#     else:
-#         to_crawl['domain_url'] = '{}://{}:{}'.format(to_crawl['scheme'], new_url_host, to_crawl['port'])
-#
-#     try:
-#         to_crawl['tld'] = url_unpack['tld'].decode()
-#     except:
-#         to_crawl['tld'] = url_unpack['tld']
-#
-#     return to_crawl
-
-# ##################################################### add ftp ???
-        # update_auto_crawler()
-
-                # # add next auto Crawling in queue:
-                # if to_crawl['paste'] == 'auto':
-                #     redis_crawler.zadd('crawler_auto_queue', int(time.time()+crawler_config['crawler_options']['time']) , '{};{}'.format(to_crawl['original_message'], to_crawl['type_service']))
-                #     # update list, last auto crawled domains
-                #     redis_crawler.lpush('last_auto_crawled', '{}:{};{}'.format(url_data['domain'], url_data['port'], date['epoch']))
-                #     redis_crawler.ltrim('last_auto_crawled', 0, 9)
-                #
