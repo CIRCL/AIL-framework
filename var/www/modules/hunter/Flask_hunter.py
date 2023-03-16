@@ -89,12 +89,12 @@ def tracked_menu_yara():
 @login_required
 @login_read_only
 def tracked_menu_typosquatting():
-    filter_type = 'typosquatting'
+    tracker_type = 'typosquatting'
     user_id = current_user.get_id()
-    user_term = Term.get_all_user_tracked_terms(user_id, filter_type=filter_type)
-    global_term = Term.get_all_global_tracked_terms(filter_type=filter_type)
-    return render_template("trackersManagement.html", user_term=user_term, global_term=global_term, bootstrap_label=bootstrap_label, filter_type=filter_type)
-
+    user_trackers = Tracker.get_user_trackers_metadata(user_id, tracker_type=tracker_type)
+    global_trackers = Tracker.get_global_trackers_metadata(tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers,
+                           bootstrap_label=bootstrap_label, tracker_type=tracker_type)
 
 @hunter.route("/tracker/add", methods=['GET', 'POST'])
 @login_required
@@ -241,10 +241,9 @@ def show_tracker():
     else:
         typo_squatting = None
 
-
     if date_from:
         res = Term.parse_get_tracker_term_item({'uuid': tracker_uuid, 'date_from': date_from, 'date_to': date_to}, user_id)
-        if res[1] !=200:
+        if res[1] != 200:
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
         tracker_metadata['items'] = res[0]['items']
         tracker_metadata['date_from'] = res[0]['date_from']
@@ -257,9 +256,9 @@ def show_tracker():
     tracker_metadata['sources'] = sorted(tracker_metadata['sources'])
 
     return render_template("showTracker.html", tracker_metadata=tracker_metadata,
-                                    yara_rule_content=yara_rule_content,
-                                    typo_squatting=typo_squatting,
-                                    bootstrap_label=bootstrap_label)
+                           yara_rule_content=yara_rule_content,
+                           typo_squatting=typo_squatting,
+                           bootstrap_label=bootstrap_label)
 
 @hunter.route("/tracker/update_tracker_description", methods=['POST'])
 @login_required
