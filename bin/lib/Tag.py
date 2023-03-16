@@ -538,6 +538,7 @@ def get_tag_first_seen(tag, object_type=None, r_int=False):
         else:
             first_seen = 99999999
     return first_seen
+
     # # TODO: LATER ADD object metadata
     # if not object_type:
     #     r_tags.hget(f'tag_metadata:{tag}', 'first_seen')
@@ -1147,33 +1148,68 @@ def get_enabled_tags_with_synonyms_ui():
 ###################################################################################
 ###################################################################################
 
+
+# TODO FORBID Collision CUSTOM TAG or force custom:tag
+
 # TYPE -> taxonomy/galaxy/custom
 
 class Tag:
 
-    def __int__(self, t_type, t_id, obj='item'):
-        self.type = t_type
-        self.id = t_id
-        self.obj = obj
+    def __int__(self, name: str, local=False):  # TODO Get first seen by object, obj='item
+        self.name = name
+        self.local = local
 
-    def get_first_seen(self):
-        pass
+    def is_local(self):
+        return self.local
 
-    def get_last_seen(self):
-        pass
+    # TODO custom / local
+    def get_type(self):
+        if self.name.startswith('misp-galaxy:'):
+            return 'galaxy'
+        else:
+            return 'taxonomy'
+
+
+
+    def get_first_seen(self, r_int=False):
+        first_seen = r_tags.hget(f'meta:tag:{self.name}', 'first_seen')
+        if r_int:
+            if first_seen:
+                first_seen = int(first_seen)
+            else:
+                first_seen = 99999999
+        return first_seen
+
+    def get_last_seen(self, r_int=False):
+        last_seen = r_tags.hget(f'meta:tag:{self.name}', 'last_seen')  # 'last_seen:object' -> only if date or daterange
+        if r_int:
+            if last_seen:
+                last_seen = int(last_seen)
+            else:
+                last_seen = 0
+        return last_seen
 
     def get_color(self):
-        pass
+        color = r_tags.hget(f'meta:tag:{self.name}', 'color')
+        if not color:
+            return '#ffffff'
+
+    def set_color(self, color):
+        r_tags.hget(f'meta:tag:{self.name}', 'color', color)
 
     def is_enabled(self):
-        pass
+        return r_tags.sismember(f'tags:enabled', self.name)
 
+    def get_synonyms(self):
+        return r_tags.smembers(f'synonyms:tag:{self.name}')
+
+    # color
     def get_meta(self):
         meta = {'first_seen': self.get_first_seen(),
                 'last_seen': self.get_last_seen(),
-                'obj': self.obj,
-                'tag': self.id,
-                'type': self.type}
+                'tag': self.name,
+                'local': self.is_local()}
+        return meta
 
 
 ###################################################################################

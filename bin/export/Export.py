@@ -28,20 +28,6 @@ import thehive4py.exceptions
 
 from pymisp import MISPEvent, MISPObject, PyMISP
 
-##################################
-#           THE HIVE
-##################################
-
-# TODO
-def get_item_hive_cases(item_id):
-    hive_case = r_serv_metadata.get('hive_cases:{}'.format(item_id))
-    if hive_case:
-        hive_case = the_hive_url + '/index.html#/case/{}/details'.format(hive_case)
-    return hive_case
-
-
-
-
 ###########################################################
 # # set default
 # if r_serv_db.get('hive:auto-alerts') is None:

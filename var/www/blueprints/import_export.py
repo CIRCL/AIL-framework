@@ -22,12 +22,13 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from exporter import MISPExporter
+from exporter import TheHiveExporter
 from lib.objects import ail_objects
 from lib.Investigations import Investigation
 
 # TODO REMOVE ME
-from export import Export  # TODO REMOVE ME
 from export import MispImport  # TODO REMOVE ME
+
 # TODO REMOVE ME
 
 # ============ BLUEPRINT ============
@@ -37,6 +38,9 @@ import_export = Blueprint('import_export', __name__,
 # ============ VARIABLES ============
 misp_exporter_objects = MISPExporter.MISPExporterAILObjects()
 misp_exporter_investigation = MISPExporter.MISPExporterInvestigation()
+
+thehive_exporter_item = TheHiveExporter.TheHiveExporterItem()
+
 
 # ============ FUNCTIONS ============
 
@@ -205,7 +209,7 @@ def export_investigation():
     if not investigation.exists():
         abort(404)
     if misp_exporter_objects.ping_misp():
-        event = misp_exporter_objects.export({'type': 'investigation', 'data': {'investigation': investigation}})
+        event = misp_exporter_investigation.export(investigation)
         print(event)
     else:
         return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True),
@@ -219,17 +223,17 @@ def export_investigation():
 def create_thehive_case():
     description = request.form['hive_description']
     title = request.form['hive_case_title']
-    threat_level = Export.sanitize_threat_level_hive(request.form['threat_level_hive'])
-    tlp = Export.sanitize_tlp_hive(request.form['hive_tlp'])
+    threat_level = request.form['threat_level_hive']
+    tlp = request.form['hive_tlp']
     item_id = request.form['obj_id']
 
     item = ail_objects.get_object('item', '', item_id)
     if not item.exists():
         abort(404)
 
-    case_id = Export.create_thehive_case(item_id, title=title, tlp=tlp, threat_level=threat_level,
-                                         description=description)
+    case_id = thehive_exporter_item.export(item.get_id(), description=description, title=title,
+                                           threat_level=threat_level, tlp=tlp)
     if case_id:
-        return redirect(Export.get_case_url(case_id))
+        return redirect(thehive_exporter_item.get_case_url(case_id))
     else:
         return 'error'
