@@ -1091,7 +1091,6 @@ def get_captures_status():
 
 ##-- CRAWLER STATE --##
 
-#### CRAWLER TASKS ####
 
 #### CRAWLER TASK ####
 
@@ -1147,6 +1146,7 @@ class CrawlerTask:
     def get_proxy(self):
         return r_crawler.hget(f'crawler:task:{self.uuid}', 'proxy')
 
+<<<<<<< HEAD
     def get_parent(self):
         return r_crawler.hget(f'crawler:task:{self.uuid}', 'parent')
 
@@ -1316,6 +1316,22 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
 
 
 ## -- CRAWLER TASK -- ##
+=======
+def send_url_to_crawl_in_queue(crawler_mode, crawler_type, url):
+    print(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    r_serv_onion.sadd(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    # add auto crawled url for user UI
+    if crawler_mode == 'auto':
+        r_serv_onion.sadd(f'auto_crawler_url:{crawler_type}', url)
+
+def add_url_to_crawl_in_queue(url, crawler_mode='manual'): # crawler_type
+    #print(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    r_serv_onion.sadd(f'{crawler_type}_crawler_priority_queue', f'{url};{crawler_mode}')
+    # CURRENTLY DISABLED
+    # # add auto crawled url for user UI
+    # if crawler_mode == 'auto':
+    #     r_serv_onion.sadd(f'auto_crawler_url:{crawler_type}', url)
+>>>>>>> master
 
 #### CRAWLER TASK API ####
 
@@ -1665,6 +1681,20 @@ def test_ail_crawlers():
     return False
 
 #### ---- ####
+
+# TODO CHECK MIGRATION - Rest API
+
+# def add_auto_crawler_in_queue(domain, domain_type, port, epoch, delta, message):
+#     r_serv_onion.zadd('crawler_auto_queue', int(time.time() + delta) , f'{message};{domain_type}')
+#     # update list, last auto crawled domains
+#     r_serv_onion.lpush('last_auto_crawled', f'{domain}:{port};{epoch}')
+#     r_serv_onion.ltrim('last_auto_crawled', 0, 9)
+
+# TODO MIGRATE ME
+# def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):
+#     # validate url
+#     if url is None or url=='' or url=='\n':
+#         return ({'error':'invalid depth limit'}, 400)
 
 
 # TODO MOVE ME IN CRAWLER OR FLASK

@@ -10,6 +10,9 @@ import yara
 import datetime
 import base64
 
+from ail_typo_squatting import runAll
+import math
+
 
 from flask import escape
 
@@ -182,8 +185,8 @@ def get_all_tracker_type():
 def get_all_tracker_uuid():
     return r_serv_tracker.smembers(f'trackers:all')
 
-def get_all_tracker_by_type(tracker_type):
-    r_serv_tracker.smembers(f'trackers:all:{tracker_type}')
+def get_all_tracker_uuid_by_type(tracker_type):
+    return r_serv_tracker.smembers(f'trackers:all:{tracker_type}')
 
 # def get_all_tracker():
 #     l_keys_name = []
@@ -231,7 +234,7 @@ def get_tracker_mails(tracker_uuid):
     return list(r_serv_tracker.smembers('tracker:mail:{}'.format(tracker_uuid)))
 
 def get_tracker_webhook(tracker_uuid):
-    return r_serv_tracker.hget('tracker:{}'.format(tracker_uuid), 'webhook')
+    return r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'webhook')
 
 def get_tracker_uuid_sources(tracker_uuid):
     return list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}'))
@@ -345,6 +348,20 @@ def get_tracker_items_by_daterange(tracker_uuid, date_from, date_to):
                     all_item_id |= r_serv_tracker.smembers(f'tracker:item:{tracker_uuid}:{date_day}')
     return all_item_id
 
+def get_tracker_typosquatting_domains(tracker_uuid):
+    return r_serv_tracker.smembers(f'tracker:typosquatting:{tracker_uuid}')
+
+def get_typosquatting_tracked_words_list():
+    typosquattings = {}
+    typos_uuid = get_all_tracker_uuid_by_type("typosquatting")
+
+    for typo_uuid in typos_uuid:
+        tracker = get_tracker_by_uuid(typo_uuid)
+        typosquattings[tracker] = get_tracker_typosquatting_domains(typo_uuid)
+
+    return typosquattings
+
+
 def add_tracked_item(tracker_uuid, item_id):
     item_date = item_basic.get_item_date(item_id)
     # track item
@@ -416,14 +433,14 @@ def get_email_subject(tracker_uuid):
         return 'AIL framework: {}'.format(tracker_description)
 
 def get_tracker_last_updated_by_type(tracker_type):
-    epoch_update = r_serv_tracker.get('tracker:refresh:{}'.format(tracker_type))
+    epoch_update = r_cache.get(f'tracker:refresh:{tracker_type}')
     if not epoch_update:
         epoch_update = 0
     return float(epoch_update)
 
 # # TODO: check type API
 def trigger_trackers_refresh(tracker_type):
-    r_serv_tracker.set(f'tracker:refresh:{tracker_type}', time.time())
+    r_cache.set(f'tracker:refresh:{tracker_type}', time.time())
 
 ######################
 #### TRACKERS ACL ####
@@ -542,6 +559,15 @@ def api_validate_tracker_to_add(tracker , tracker_type, nb_words=1):
 
             tracker = ",".join(words_set)
             tracker = "{};{}".format(tracker, nb_words)
+    elif tracker_type == 'typosquatting':
+        tracker = tracker.lower()
+        # Take only the first term
+        domain = tracker.split(" ")
+        if len(domain) > 1:
+            return {"status": "error", "reason": "Only one domain is accepted at a time"}, 400
+        if not "." in tracker:
+            return {"status": "error", "reason": "Invalid domain name"}, 400
+
 
     elif tracker_type=='yara_custom':
         if not is_valid_yara_rule(tracker):
@@ -593,6 +619,12 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
                     os.remove(filepath)
         tracker = save_yara_rule(tracker_type, tracker, tracker_uuid=tracker_uuid)
         tracker_type = 'yara'
+
+    elif tracker_type == 'typosquatting':
+        domain = tracker.split(" ")[0]
+        typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False)
+        for typo in typo_generation:
+            r_serv_tracker.sadd(f'tracker:typosquatting:{tracker_uuid}', typo)
 
     # create metadata
     r_serv_tracker.hset(f'tracker:{tracker_uuid}', 'tracked', tracker)
@@ -666,9 +698,9 @@ def create_tracker(tracker, tracker_type, user_id, level, tags, mails, descripti
         # escape source ?
         r_serv_tracker.sadd(f'tracker:sources:{tracker_uuid}', escape(source))
     # toggle refresh module tracker list/set
-    r_serv_tracker.set('tracker:refresh:{}'.format(tracker_type), time.time())
+    trigger_trackers_refresh(tracker_type)
     if tracker_type != old_type: # toggle old type refresh
-        r_serv_tracker.set('tracker:refresh:{}'.format(old_type), time.time())
+        trigger_trackers_refresh(old_type)
     return tracker_uuid
 
 def api_add_tracker(dict_input, user_id):

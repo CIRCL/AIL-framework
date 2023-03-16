@@ -24,13 +24,11 @@ Requirements
 # Import External packages
 ##################################
 import base64
-import hashlib
 import io
 import gzip
 import os
 import sys
 import time
-import datetime
 
 from hashlib import md5
 from uuid import uuid4
@@ -40,7 +38,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.ConfigLoader import ConfigLoader
+from lib.ail_core import get_ail_uuid
 from lib.data_retention_engine import update_obj_date
 from lib import item_basic
 # from lib import Statistics
@@ -67,6 +65,8 @@ class Global(AbstractModule):
 
         # Send module state to logs
         self.redis_logger.info(f"Module {self.module_name} initialized")
+        # Send module state to logs
+        self.redis_logger.critical(f"AIL {get_ail_uuid()} started")
 
     def computeNone(self):
         difftime = time.time() - self.time_last_stats

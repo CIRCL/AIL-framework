@@ -16,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import crawlers
 from lib import Users
 from lib.objects.Items import Item
 from lib import Tag
@@ -46,8 +47,8 @@ restApi = Blueprint('restApi', __name__, template_folder='templates')
 
 # ============ AUTH FUNCTIONS ============
 
-def check_token_format(strg, search=re.compile(r'[^a-zA-Z0-9_-]').search):
-    return not bool(search(strg))
+def check_token_format(token, search=re.compile(r'[^a-zA-Z0-9_-]').search):
+    return not bool(search(token))
 
 def verify_token(token):
     if len(token) != 41:
@@ -90,7 +91,7 @@ def get_auth_from_header():
 def authErrors(user_role):
     # Check auth
     if not request.headers.get('Authorization'):
-        return ({'status': 'error', 'reason': 'Authentication needed'}, 401)
+        return {'status': 'error', 'reason': 'Authentication needed'}, 401
     token = get_auth_from_header()
     data = None
     # verify token format
@@ -102,7 +103,7 @@ def authErrors(user_role):
     if login_failed_ip:
         login_failed_ip = int(login_failed_ip)
         if login_failed_ip >= 5:
-            return ({'status': 'error', 'reason': 'Max Connection Attempts reached, Please wait {}s'.format(r_cache.ttl('failed_login_ip_api:{}'.format(current_ip)))}, 401)
+            return {'status': 'error', 'reason': 'Max Connection Attempts reached, Please wait {}s'.format(r_cache.ttl('failed_login_ip_api:{}'.format(current_ip)))}, 401
 
     try:
         authenticated = False
@@ -145,9 +146,6 @@ def is_valid_uuid_v4(header_uuid):
         return uuid_test.hex == header_uuid
     except:
         return False
-
-def one():
-    return 1
 
 # ============= ROUTES ==============
 
@@ -575,6 +573,20 @@ def get_crawled_domain_list():
     dict_res['domain_status'] = domain_status
     dict_res['domain_type'] = domain_type
     return create_json_response(dict_res, res[1])
+
+# # TODO: ADD RESULT JSON Response
+@restApi.route("api/v1/add/crawler/task", methods=['POST'])
+@token_required('analyst')
+def add_crawler_task():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = get_user_from_token(user_token)
+    res = crawlers.api_add_crawler_task(data, user_id=user_id)
+    if res:
+        return create_json_response(res[0], res[1])
+
+    dict_res = {'url': data['url']}
+    return create_json_response(dict_res, 200)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #

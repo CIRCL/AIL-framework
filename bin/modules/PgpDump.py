@@ -25,6 +25,9 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.objects import Pgps
 from lib.objects.Items import Item
+from trackers.Tracker_Term import Tracker_Term
+from trackers.Tracker_Regex import Tracker_Regex
+from trackers.Tracker_Yara import Tracker_Yara
 
 
 class PgpDump(AbstractModule):
@@ -52,6 +55,10 @@ class PgpDump(AbstractModule):
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
+
+        self.tracker_term = Tracker_Term()
+        self.tracker_regex = Tracker_Regex()
+        self.tracker_yara = Tracker_Yara()
 
         # init
         self.item_id = None
@@ -209,10 +216,16 @@ class PgpDump(AbstractModule):
                 pgp = Pgps.Pgp(name, 'name')
                 pgp.add(date, self.item_id)
                 print(f'    name: {name}')
+                self.tracker_term.compute(self.item_id, item_content=name)
+                self.tracker_regex.compute(self.item_id, content=name)
+                self.tracker_yara.compute(self.item_id, item_content=name)
             for mail in self.mails:
                 pgp = Pgps.Pgp(mail, 'mail')
                 pgp.add(date, self.item_id)
                 print(f'    mail: {mail}')
+                self.tracker_term.compute(self.item_id, item_content=mail)
+                self.tracker_regex.compute(self.item_id, content=mail)
+                self.tracker_yara.compute(self.item_id, item_content=mail)
 
             # Keys extracted from PGP PRIVATE KEY BLOCK
             for key in self.private_keys:

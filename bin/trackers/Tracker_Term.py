@@ -61,7 +61,7 @@ class Tracker_Term(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, item_id):
+    def compute(self, item_id, item_content=None):
         # refresh Tracked term
         if self.last_refresh_word < Term.get_tracked_term_last_updated_by_type('word'):
             self.list_tracked_words = Term.get_tracked_words_list()
@@ -78,7 +78,8 @@ class Tracker_Term(AbstractModule):
         # Cast message as Item
         item = Item(item_id)
         item_date = item.get_date()
-        item_content = item.get_content()
+        if not item_content:
+            item_content = item.get_content()
 
         signal.alarm(self.max_execution_time)
 
@@ -120,7 +121,7 @@ class Tracker_Term(AbstractModule):
         item_id = item.get_id()
         item_date = item.get_date()
         item_source = item.get_source()
-        self.redis_logger.info(f'new tracked term found: {term} in {item_id}')
+        self.redis_logger.warning(f'new tracked term found: {term} in {item_id}')
         print(f'new tracked term found: {term} in {item_id}')
         for term_uuid in uuid_list:
             tracker_sources = Tracker.get_tracker_uuid_sources(term_uuid)

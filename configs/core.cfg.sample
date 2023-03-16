@@ -22,6 +22,18 @@ pystemonpath = /home/pystemon/pystemon/
 
 sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
 
+##### Logs ######
+[Logs]
+# activate syslog
+ail_logs_syslog = False
+ail_logs_syslog_server =
+# default=514
+ail_logs_syslog_port =
+# ['auth', 'authpriv', 'cron', 'daemon', 'ftp', 'kern', 'lpr', 'mail', 'news', 'syslog', 'user', 'uucp', 'local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', 'local7']
+ail_logs_syslog_facility =
+# ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR', 'CRITICAL']
+ail_logs_syslog_level =
+
 ##### Notifications ######
 [Notifications]
 ail_domain = https://localhost:7000
@@ -228,7 +240,7 @@ dns = 8.8.8.8
 dns = 8.8.8.8
 
 [Web]
-dns = 149.13.33.69
+dns = 8.8.8.8
 
 # Indexer configuration
 [Indexer]
@@ -247,7 +259,8 @@ maxDuplicateToPushToMISP=10
 # e.g.: tcp://127.0.0.1:5556,tcp://127.0.0.1:5557
 [ZMQ_Global]
 #address = tcp://crf.circl.lu:5556
-address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
+# address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
+address = tcp://127.0.0.1:5556
 channel = 102
 bind = tcp://127.0.0.1:5556
 
