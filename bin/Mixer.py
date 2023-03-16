@@ -85,9 +85,10 @@ if __name__ == '__main__':
 
         message = p.get_from_set()
         if message is not None:
+            print(message)
             splitted = message.split()
             if len(splitted) == 2:
-                complete_paste, gzip64encoded = splitted
+                complete_paste, gzip64encoded = splitted  # NEW: source, item_id, gzip64 source if len==3 ???
 
                 try:
                     #feeder_name = ( complete_paste.replace("archive/","") ).split("/")[0]

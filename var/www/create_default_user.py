@@ -18,7 +18,7 @@ if __name__ == "__main__":
     user_id = 'admin@admin.test'
     password = Users.gen_password()
 
-    create_user(user_id, password=password, role='admin')
+    Users.create_user(user_id, password=password, role='admin')
     token = Users.get_default_admin_token()
 
     default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')

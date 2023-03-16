@@ -919,11 +919,11 @@ if __name__ == '__main__':
     # user_migration()
     #tags_migration()
     # items_migration()
-    crawler_migration()
+    # crawler_migration()
     # domain_migration()                      # TO TEST ###########################
     # decodeds_migration()
     # screenshots_migration()
-    # subtypes_obj_migration()
+    subtypes_obj_migration()
     # ail_2_ail_migration()
     # trackers_migration()
     # investigations_migration()

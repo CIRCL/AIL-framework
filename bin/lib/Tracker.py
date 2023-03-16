@@ -112,7 +112,7 @@ class Tracker:
         return r_tracker.smembers(f'tracker:sources:{self.uuid}')
 
     def get_tracker(self):
-        return r_serv_tracker.hget(f'tracker:{self.uuid}', 'tracked')
+        return r_tracker.hget(f'tracker:{self.uuid}', 'tracked')
 
     def get_type(self):
         return r_tracker.hget(f'tracker:{self.uuid}', 'type')

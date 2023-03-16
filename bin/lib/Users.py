@@ -131,7 +131,7 @@ def create_user(user_id, password=None, chg_passwd=True, role=None):
 
         r_serv_db.hset('ail:users:all', user_id, password_hash)
         if chg_passwd:
-            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', True)
+            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
 
         # create user token
         generate_new_token(user_id)
