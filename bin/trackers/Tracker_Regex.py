@@ -25,9 +25,6 @@ from exporter.MailExporter import MailExporterTracker
 from exporter.WebHookExporter import WebHookExporterTracker
 
 class Tracker_Regex(AbstractModule):
-
-    mail_body_template = "AIL Framework,\nNew occurrence for tracked regex: {}\nitem id: {}\nurl: {}{}"
-
     """
     Tracker_Regex module for AIL framework
     """
@@ -66,18 +63,12 @@ class Tracker_Regex(AbstractModule):
             if matched:
                 self.new_tracker_found(regex, 'regex', item)
 
-            # match = self.regex_finditer(self.dict_regex_tracked[regex], item_id, content)
-            # if match:
-            #     self.new_tracker_found(regex, 'regex', item)
-
     def new_tracker_found(self, tracker_name, tracker_type, item):
         uuid_list = Tracker.get_tracker_uuid_list(tracker_name, tracker_type)
 
         item_id = item.get_id()
         # date = item.get_date()
         item_source = item.get_source()
-        print(f'new tracked regex found: {tracker_name} in {item_id}')
-        self.redis_logger.warning(f'new tracked regex found: {tracker_name} in {item_id}')
 
         for tracker_uuid in uuid_list:
             tracker = Tracker.Tracker(tracker_uuid)
@@ -87,7 +78,10 @@ class Tracker_Regex(AbstractModule):
             if tracker_sources and item_source not in tracker_sources:
                 continue
 
-            Tracker.add_tracked_item(tracker_uuid, item_id)  # TODO
+            print(f'new tracked regex found: {tracker_name} in {item_id}')
+            self.redis_logger.warning(f'new tracked regex found: {tracker_name} in {item_id}')
+            # TODO
+            Tracker.add_tracked_item(tracker_uuid, item_id)
 
             for tag in tracker.get_tags():
                 msg = f'{tag};{item_id}'

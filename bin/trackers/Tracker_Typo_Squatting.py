@@ -26,8 +26,6 @@ from exporter.MailExporter import MailExporterTracker
 from exporter.WebHookExporter import WebHookExporterTracker
 
 class Tracker_Typo_Squatting(AbstractModule):
-    mail_body_template = "AIL Framework,\nNew occurrence for tracked Typo: {}\nitem id: {}\nurl: {}{}"
-
     """
     Tracker_Typo_Squatting module for AIL framework
     """
