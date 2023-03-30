@@ -27,7 +27,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
-from lib import Statistics
+# from lib import Statistics
 
 class LibInjection(AbstractModule):
     """docstring for LibInjection module."""
@@ -81,14 +81,14 @@ class LibInjection(AbstractModule):
             self.send_message_to_queue(msg, 'Tags')
 
             # statistics
-            # # TODO: # FIXME: remove me
-            try:
-                tld = url_parsed['tld'].decode()
-            except:
-                tld = url_parsed['tld']
-            if tld is not None:
-                date = datetime.now().strftime("%Y%m")
-                Statistics.add_module_tld_stats_by_date(self.module_name, date, tld, 1)
+            # # # TODO: # FIXME: remove me
+            # try:
+            #     tld = url_parsed['tld'].decode()
+            # except:
+            #     tld = url_parsed['tld']
+            # if tld is not None:
+            #     date = datetime.now().strftime("%Y%m")
+            #     Statistics.add_module_tld_stats_by_date(self.module_name, date, tld, 1)
 
 
 if __name__ == "__main__":

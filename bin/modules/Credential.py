@@ -40,7 +40,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.objects.Items import Item
 from lib import ConfigLoader
-from lib import Statistics
+# from lib import Statistics
 
 
 class Credential(AbstractModule):
@@ -160,8 +160,8 @@ class Credential(AbstractModule):
                     except:
                         pass
                     nb_tlds[tld] = nb_tlds.get(tld, 0) + 1
-                for tld in nb_tlds:
-                    Statistics.add_module_tld_stats_by_date('credential', date, tld, nb_tlds[tld])
+                # for tld in nb_tlds:
+                #     Statistics.add_module_tld_stats_by_date('credential', date, tld, nb_tlds[tld])
             else:
                 self.redis_logger.info(to_print)
                 print(f'found {nb_cred} credentials')

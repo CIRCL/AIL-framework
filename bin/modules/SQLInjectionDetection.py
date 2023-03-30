@@ -27,7 +27,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
-from lib import Statistics
+# from lib import Statistics
 
 class SQLInjectionDetection(AbstractModule):
     """docstring for SQLInjectionDetection module."""
@@ -62,15 +62,15 @@ class SQLInjectionDetection(AbstractModule):
             self.send_message_to_queue(msg, 'Tags')
 
             # statistics
-            tld = url_parsed['tld']
-            if tld is not None:
-                # # TODO: # FIXME: remove me
-                try:
-                    tld = tld.decode()
-                except:
-                    pass
-                date = datetime.now().strftime("%Y%m")
-                Statistics.add_module_tld_stats_by_date(self.module_name, date, tld, 1)
+            # tld = url_parsed['tld']
+            # if tld is not None:
+            #     # # TODO: # FIXME: remove me
+            #     try:
+            #         tld = tld.decode()
+            #     except:
+            #         pass
+            #     date = datetime.now().strftime("%Y%m")
+            #     Statistics.add_module_tld_stats_by_date(self.module_name, date, tld, 1)
 
     # Try to detect if the url passed might be an sql injection by applying the regex
     # defined above on it.

@@ -927,7 +927,7 @@ if __name__ == '__main__':
     # ail_2_ail_migration()
     # trackers_migration()
     # investigations_migration()
-    # statistics_migration()
+    ## statistics_migration()
 
     # cves_migration()
 

@@ -28,7 +28,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.objects.Items import Item
 from lib.ConfigLoader import ConfigLoader
-from lib import Statistics
+# from lib import Statistics
 
 
 class Mail(AbstractModule):
@@ -169,8 +169,8 @@ class Mail(AbstractModule):
             except:
                 pass
             mx_tlds[tld] = mx_tlds.get(tld, 0) + nb_mails
-        for tld in mx_tlds:
-            Statistics.add_module_tld_stats_by_date('mail', item_date, tld, mx_tlds[tld])
+        # for tld in mx_tlds:
+        #     Statistics.add_module_tld_stats_by_date('mail', item_date, tld, mx_tlds[tld])
 
         msg = f'Mails;{item.get_source()};{item_date};{item.get_basename()};Checked {num_valid_email} e-mail(s);{item_id}'
         if num_valid_email > self.mail_threshold:

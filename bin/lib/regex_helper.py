@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ConfigLoader
-from lib import Statistics
+# from lib import Statistics
 
 ## LOAD CONFIG ##
 config_loader = ConfigLoader.ConfigLoader()
@@ -62,7 +62,7 @@ def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time
         proc.join(max_time)
         if proc.is_alive():
             proc.terminate()
-            Statistics.incr_module_timeout_statistic(module_name)
+            # Statistics.incr_module_timeout_statistic(module_name)
             err_mess = f"{module_name}: processing timeout: {item_id}"
             print(err_mess)
             publisher.info(err_mess)
@@ -96,7 +96,7 @@ def regex_finditer(r_key, regex, item_id, content, max_time=30):
         proc.join(max_time)
         if proc.is_alive():
             proc.terminate()
-            Statistics.incr_module_timeout_statistic(r_key)
+            # Statistics.incr_module_timeout_statistic(r_key)
             err_mess = f"{r_key}: processing timeout: {item_id}"
             print(err_mess)
             publisher.info(err_mess)
@@ -127,7 +127,7 @@ def regex_search(r_key, regex, item_id, content, max_time=30):
         proc.join(max_time)
         if proc.is_alive():
             proc.terminate()
-            Statistics.incr_module_timeout_statistic(r_key)
+            # Statistics.incr_module_timeout_statistic(r_key)
             err_mess = f"{r_key}: processing timeout: {item_id}"
             print(err_mess)
             publisher.info(err_mess)

@@ -254,8 +254,6 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Mail" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Mail.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ModuleStats.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Onion" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Onion.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "PgpDump" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./PgpDump.py; read x"
@@ -303,6 +301,8 @@ function launching_scripts {
     # screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
     # sleep 0.1
     # screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"
+    # sleep 0.1
+    # screen -S "Script_AIL" -X screen -t "ModuleStats" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ModuleStats.py; read x"
     # sleep 0.1
 
     ##################################

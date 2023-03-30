@@ -26,7 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.objects.Items import Item
 from lib.ConfigLoader import ConfigLoader
-from lib import Statistics
+# from lib import Statistics
 
 class Iban(AbstractModule):
     """
@@ -91,8 +91,8 @@ class Iban(AbstractModule):
             if valid_ibans:
                 print(f'{valid_ibans} ibans {item_id}')
                 date = datetime.datetime.now().strftime("%Y%m")
-                for iban in valid_ibans:
-                    Statistics.add_module_tld_stats_by_date('iban', date, iban[0:2], 1)
+                # for iban in valid_ibans:
+                #     Statistics.add_module_tld_stats_by_date('iban', date, iban[0:2], 1)
 
                 to_print = f'Iban;{item.get_source()};{item.get_date()};{item.get_basename()};'
                 self.redis_logger.warning(f'{to_print}Checked found {len(valid_ibans)} IBAN;{item_id}')
