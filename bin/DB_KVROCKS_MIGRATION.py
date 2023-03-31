@@ -466,23 +466,33 @@ def crawler_migration():
     #         print(domain, port, epoch)
     #         #crawlers.add_last_crawled_domain(domain_type, domain, port, epoch)
 
-    for cookiejar_uuid in get_all_cookiejar():
-        meta = get_cookiejar_metadata(cookiejar_uuid)
-        if meta:
-            # print(meta)
-            cookiejar = crawlers.Cookiejar(meta['uuid'])
-            if not cookiejar.exists():
-                crawlers.create_cookiejar(meta['user'], description=meta['description'], level=meta['level'],
-                                          cookiejar_uuid=meta['uuid'])
-                cookiejar._set_date(meta['date'])
-
-                for cookie_uuid in get_cookiejar_cookies_uuid(meta['uuid']):
-                    cookie_dict = get_cookie_dict(cookie_uuid)
-                    if cookie_dict:
-                        # print(cookie_dict)
-                        crawlers.api_create_cookie(meta['user'], cookiejar_uuid, cookie_dict)
+    # for cookiejar_uuid in get_all_cookiejar():
+    #     meta = get_cookiejar_metadata(cookiejar_uuid)
+    #     if meta:
+    #         # print(meta)
+    #         cookiejar = crawlers.Cookiejar(meta['uuid'])
+    #         if not cookiejar.exists():
+    #             crawlers.create_cookiejar(meta['user'], description=meta['description'], level=meta['level'],
+    #                                       cookiejar_uuid=meta['uuid'])
+    #             cookiejar._set_date(meta['date'])
+    #
+    #             for cookie_uuid in get_cookiejar_cookies_uuid(meta['uuid']):
+    #                 cookie_dict = get_cookie_dict(cookie_uuid)
+    #                 if cookie_dict:
+    #                     # print(cookie_dict)
+    #                     crawlers.api_create_cookie(meta['user'], cookiejar_uuid, cookie_dict)
 
     # TODO: auto crawler -> to Fix / change
+
+    auto_crawler_web = r_crawler.smembers('auto_crawler_url:regular')
+    auto_crawler_onion = r_crawler.smembers('auto_crawler_url:onion')
+    if auto_crawler_onion or auto_crawler_web:
+        with open('old_auto_crawler_domains.txt', 'w') as f:
+            f.write('OLD Crawler Scheduler:\n\n')
+            for domain in auto_crawler_onion:
+                f.write(f'{domain}\n')
+            for domain in auto_crawler_web:
+                f.write(f'{domain}\n')
 
     # TODO: crawlers queues
 
@@ -919,11 +929,11 @@ if __name__ == '__main__':
     # user_migration()
     #tags_migration()
     # items_migration()
-    # crawler_migration()
+    crawler_migration()
     # domain_migration()                      # TO TEST ###########################
     # decodeds_migration()
     # screenshots_migration()
-    subtypes_obj_migration()
+    # subtypes_obj_migration()
     # ail_2_ail_migration()
     # trackers_migration()
     # investigations_migration()

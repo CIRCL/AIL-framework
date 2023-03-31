@@ -91,6 +91,12 @@ def is_valid_onion_domain(domain):
             return True
     return False
 
+def is_valid_domain(domain):
+    faup.decode(domain)
+    url_unpack = faup.get()
+    unpack_domain = url_unpack['domain'].lower()
+    return domain == unpack_domain
+
 def get_faup():
     return faup
 
@@ -676,6 +682,9 @@ def is_blacklisted_domain(domain):
 def blacklist_domain(domain):
     return r_crawler.sadd('blacklist:domain', domain)
 
+def unblacklist_domain(domain):
+    return r_crawler.srem('blacklist:domain', domain)
+
 def load_blacklist():
     try:
         with open(os.path.join(os.environ['AIL_BIN'], 'crawlers/blacklist.txt'), 'r') as f:
@@ -686,6 +695,22 @@ def load_blacklist():
     # TODO LOG
     except Exception as e:
         print(e)
+
+def api_blacklist_domain(data):
+    domain = str(data.get('domain', '')).lower()
+    if not is_valid_domain(domain):
+        return {'error': 'invalid domain'}, 400
+    if is_blacklisted_domain(domain):
+        return {'error': 'domain already blacklisted'}, 400
+    return blacklist_domain(domain), 200
+
+def api_unblacklist_domain(data):
+    domain = str(data.get('domain', '')).lower()
+    if not is_valid_domain(domain):
+        return {'error': 'invalid domain'}, 400
+    if not is_blacklisted_domain(domain):
+        return {'error': 'domain not blacklisted'}, 404
+    return unblacklist_domain(domain), 200
 
 #### CRAWLER Scheduler ####
 
@@ -1666,12 +1691,6 @@ def test_ail_crawlers():
 #### ---- ####
 
 # TODO CHECK MIGRATION - Rest API
-
-# def add_auto_crawler_in_queue(domain, domain_type, port, epoch, delta, message):
-#     r_serv_onion.zadd('crawler_auto_queue', int(time.time() + delta) , f'{message};{domain_type}')
-#     # update list, last auto crawled domains
-#     r_serv_onion.lpush('last_auto_crawled', f'{domain}:{port};{epoch}')
-#     r_serv_onion.ltrim('last_auto_crawled', 0, 9)
 
 # TODO MIGRATE ME
 # def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):

@@ -13,9 +13,9 @@
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
-	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 	<style>
 		.bar {
@@ -92,10 +92,6 @@
                                 </tbody>
                             </table>
 						</div>
-
-						<a href="{{ url_for('hiddenServices.blacklisted_domains') }}?type={{type}}">
-							<button type="button" class="btn btn-outline-danger">Show Blacklisted {{type_name}}s</button>
-						</a>
 
 					</div>
 					<div class="col-12 col-xl-6">

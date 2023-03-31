@@ -190,6 +190,39 @@ def schedule_delete():
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.scheduler_dashboard'))
 
+@crawler_splash.route("/crawlers/blacklist", methods=['GET'])
+@login_required
+@login_analyst
+def crawler_blacklist():
+    domain = request.args.get('domain')
+    if domain:
+        res = crawlers.api_blacklist_domain({'domain': domain})
+        if res[1] != 200:
+            if res[0].get('error') == 'domain already blacklisted':
+                error_code = 2
+            else:
+                error_code = 1
+        else:
+            error_code = 0
+            domain = None
+    else:
+        domain = None
+        error_code = None
+    blacklist = crawlers.get_blacklist()
+    return render_template("crawler_blacklist.html", blacklist=blacklist,
+                           domain=domain, error_code=error_code,
+                           is_manager_connected=crawlers.get_lacus_connection_metadata())
+
+@crawler_splash.route("/crawlers/blacklist/delete", methods=['GET'])
+@login_required
+@login_analyst
+def crawler_blacklist_delete():
+    domain = request.args.get('domain')
+    res = crawlers.api_unblacklist_domain({'domain': domain})
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawler_blacklist'))
+
 
 @crawler_splash.route("/crawlers/last/domains", methods=['GET'])
 @login_required
