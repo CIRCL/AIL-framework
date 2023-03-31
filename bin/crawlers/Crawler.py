@@ -27,7 +27,6 @@ class Crawler(AbstractModule):
         self.pending_seconds = 1
 
         config_loader = ConfigLoader()
-        self.r_log_submit = config_loader.get_redis_conn('Redis_Log_submit')
 
         self.default_har = config_loader.get_config_boolean('Crawler', 'default_har')
         self.default_screenshot = config_loader.get_config_boolean('Crawler', 'default_screenshot')
@@ -228,10 +227,8 @@ class Crawler(AbstractModule):
             print(item_id)
             gzip64encoded = crawlers.get_gzipped_b64_item(item_id, entries['html'])
             # send item to Global
-            relay_message = f'{item_id} {gzip64encoded}'
+            relay_message = f'crawler {item_id} {gzip64encoded}'
             self.send_message_to_queue(relay_message, 'Mixer')
-            # increase nb of paste by feeder name
-            self.r_log_submit.hincrby('mixer_cache:list_feeder', 'crawler', 1)
 
             # Tag
             msg = f'infoleak:submission="crawler";{item_id}'

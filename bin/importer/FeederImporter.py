@@ -93,7 +93,7 @@ class FeederImporter(AbstractImporter):
             feeder.process_meta()
         gzip64_content = feeder.get_gzip64_content()
 
-        return f'{item_id} {gzip64_content}'
+        return f'{feeder_name} {item_id} {gzip64_content}'
 
 
 class FeederModuleImporter(AbstractModule):
@@ -114,10 +114,6 @@ class FeederModuleImporter(AbstractModule):
         json_data = json.loads(message)
         relay_message = self.importer.importer(json_data)
         self.send_message_to_queue(relay_message)
-
-    # TODO IN MIXER
-    # increase nb of paste by feeder name
-    # server_cache.hincrby("mixer_cache:list_feeder", feeder_name, 1)
 
 
 # Launch Importer

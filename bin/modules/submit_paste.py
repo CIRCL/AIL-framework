@@ -284,11 +284,8 @@ class SubmitPaste(AbstractModule):
                 self.redis_logger.debug(f"relative path {rel_item_path}")
 
                 # send paste to Global module
-                relay_message = f"{rel_item_path} {gzip64encoded}"
+                relay_message = f"submitted {rel_item_path} {gzip64encoded}"
                 self.process.populate_set_out(relay_message, 'Mixer')
-
-                # increase nb of paste by feeder name
-                self.r_serv_log_submit.hincrby("mixer_cache:list_feeder", source, 1)
 
                 # add tags
                 for tag in ltags:

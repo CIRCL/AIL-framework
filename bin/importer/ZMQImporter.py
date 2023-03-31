@@ -56,11 +56,12 @@ class ZMQModuleImporter(AbstractModule):
         super().__init__()
 
         config_loader = ConfigLoader()
-        address = config_loader.get_config_str('ZMQ_Global', 'address')
+        addresses = config_loader.get_config_str('ZMQ_Global', 'address')
+        addresses = addresses.split(',').strip()
         channel = config_loader.get_config_str('ZMQ_Global', 'channel')
         self.zmq_importer = ZMQImporters()
-        # TODO register all Importers
-        self.zmq_importer.add(address, channel)
+        for address in addresses:
+            self.zmq_importer.add(address, channel)
 
     # TODO MESSAGE SOURCE - UI
     def get_message(self):
