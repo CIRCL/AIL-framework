@@ -625,7 +625,7 @@ def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str): # #
 # # # # # # # #
 
 def get_default_user_agent():
-    return 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0'
+    return 'Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0'
 
 def get_last_crawled_domains(domain_type):
     return r_crawler.lrange(f'last_{domain_type}', 0, -1)
