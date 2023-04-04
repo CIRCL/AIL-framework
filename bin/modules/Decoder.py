@@ -25,9 +25,9 @@ from lib.objects.Items import Item
 from lib.objects.Decodeds import Decoded
 
 config_loader = ConfigLoader()
-hex_max_execution_time = config_loader.get_config_int("Hex", "max_execution_time")
-binary_max_execution_time = config_loader.get_config_int("Binary", "max_execution_time")
-base64_max_execution_time = config_loader.get_config_int("Base64", "max_execution_time")
+hex_max_execution_time = config_loader.get_config_int("Decoder", "max_execution_time_hexadecimal")
+binary_max_execution_time = config_loader.get_config_int("Decoder", "max_execution_time_binary")
+base64_max_execution_time = config_loader.get_config_int("Decoder", "max_execution_time_base64")
 config_loader = None
 
 

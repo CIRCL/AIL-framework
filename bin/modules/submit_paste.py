@@ -48,7 +48,7 @@ class SubmitPaste(AbstractModule):
         super(SubmitPaste, self).__init__(queue_name='submit_paste')
 
         # TODO KVROCKS
-        self.r_serv_db = ConfigLoader.ConfigLoader().get_redis_conn("Kvrocks_DB")
+        self.r_serv_db = ConfigLoader.ConfigLoader().get_db_conn("Kvrocks_DB")
         self.r_serv_log_submit = ConfigLoader.ConfigLoader().get_redis_conn("Redis_Log_submit")
 
         self.pending_seconds = 3

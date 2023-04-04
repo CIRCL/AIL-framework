@@ -10,7 +10,6 @@ Search tools outpout
 
 import os
 import sys
-import time
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -433,6 +432,5 @@ class Tools(AbstractModule):
 
 if __name__ == '__main__':
     module = Tools()
-    # module.run()
-    module.compute('crawled/2022/09/15/circl.lu179c7903-5b21-452e-9f25-4b61d9934e2b')
+    module.run()
 

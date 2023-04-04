@@ -69,5 +69,4 @@ class CveModule(AbstractModule):
 if __name__ == '__main__':
 
     module = CveModule()
-    # module.run()
-    module.compute('crawled/2022/09/15/circl.lu1e4f9721-06dc-404f-aabf-3c3bd0b533bd 9')
+    module.run()

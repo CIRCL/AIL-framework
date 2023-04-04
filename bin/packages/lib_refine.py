@@ -16,7 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 
 config_loader = ConfigLoader.ConfigLoader()
-dns_server = config_loader.get_config_str("Web", "dns")
+dns_server = config_loader.get_config_str("DomClassifier", "dns")
 config_loader = None
 
 def is_luhn_valid(card_number):

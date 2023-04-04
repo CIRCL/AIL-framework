@@ -57,11 +57,11 @@ class ZMQModuleImporter(AbstractModule):
 
         config_loader = ConfigLoader()
         addresses = config_loader.get_config_str('ZMQ_Global', 'address')
-        addresses = addresses.split(',').strip()
+        addresses = addresses.split(',')
         channel = config_loader.get_config_str('ZMQ_Global', 'channel')
         self.zmq_importer = ZMQImporters()
         for address in addresses:
-            self.zmq_importer.add(address, channel)
+            self.zmq_importer.add(address.strip(), channel)
 
     # TODO MESSAGE SOURCE - UI
     def get_message(self):

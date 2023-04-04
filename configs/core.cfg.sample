@@ -90,6 +90,11 @@ criticalNumberToAlert=8
 #Will be considered as false positive if less that X matches from the top password list
 minTopPassList=5
 
+[Decoder]
+max_execution_time_base64 = 60
+max_execution_time_binary = 60
+max_execution_time_hexadecimal = 60
+
 [Onion]
 save_i2p = False
 max_execution_time = 180

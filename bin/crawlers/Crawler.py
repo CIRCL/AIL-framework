@@ -43,7 +43,7 @@ class Crawler(AbstractModule):
 
         # LACUS
         self.lacus = crawlers.get_lacus()
-        self.is_lacus_up = crawlers.get_lacus().is_up
+        self.is_lacus_up = is_lacus_connected(delta_check=0)
 
         # Capture
         self.har = None
