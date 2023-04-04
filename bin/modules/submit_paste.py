@@ -281,7 +281,7 @@ class SubmitPaste(AbstractModule):
 
                 # send paste to Global module
                 relay_message = f"submitted {rel_item_path} {gzip64encoded}"
-                self.process.populate_set_out(relay_message, 'Mixer')
+                self.process.populate_set_out(relay_message)
 
                 # add tags
                 for tag in ltags:
