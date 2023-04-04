@@ -110,6 +110,8 @@ class SubmitPaste(AbstractModule):
             if nb_submit > 0:
                 try:
                     uuid = self.r_serv_db.srandmember('submitted:uuid')
+                    if isinstance(uuid, list):
+                        return uuid[0]
                     # Module processing with the message from the queue
                     self.redis_logger.debug(uuid)
                     self.compute(uuid)
@@ -294,8 +296,8 @@ class SubmitPaste(AbstractModule):
                 if self.r_serv_log_submit.get(f'{uuid}:nb_end') == self.r_serv_log_submit.get(f'{uuid}:nb_total'):
                     self.r_serv_log_submit.set(f'{uuid}:end', 1)
 
-                self.redis_logger.debug(f'    {rel_item_path} send to Global')
-                print(f'    {rel_item_path} send to Global')
+                self.redis_logger.debug(f'    {rel_item_path} send to Mixer')
+                print(f'    {rel_item_path} send to Mixer')
                 self.r_serv_log_submit.sadd(f'{uuid}:paste_submit_link', rel_item_path)
 
                 curr_date = datetime.date.today()

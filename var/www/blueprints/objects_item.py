@@ -24,7 +24,6 @@ from lib import item_basic
 from lib.objects.Items import Item
 from lib.objects.Screenshots import Screenshot
 from lib import Tag
-from export import Export
 
 from lib import module_extractor
 
@@ -73,14 +72,15 @@ def showItem():  # # TODO: support post
     meta['father'] = item_basic.get_item_parent(item_id)
     ## EXPORT SECTION
     # # TODO: ADD in Export SECTION
-    meta['hive_case'] = Export.get_item_hive_cases(item_id)
+    # meta['hive_case'] = Export.get_item_hive_cases(item_id)
+    meta['hive_case'] = None
 
     extracted = module_extractor.extract(item.id, content=meta['content'])
     extracted_matches = module_extractor.get_extracted_by_match(extracted)
 
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
                            modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
-                           is_hive_connected=Export.get_item_hive_cases(item_id),
+                           is_hive_connected=False,
                            meta=meta,
                            extracted=extracted, extracted_matches=extracted_matches)
 
