@@ -16,7 +16,7 @@ from lib import ConfigLoader
 
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv_db = config_loader.get_redis_conn("ARDB_DB")
+r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
 r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
 config_loader = None
 
@@ -62,11 +62,11 @@ def create_import_queue(tags, galaxy, paste_content, UUID, password=None, isfile
 
 def check_import_status(UUID):
     if not is_valid_uuid_v4(UUID):
-        return ({'status': 'error', 'reason': 'Invalid uuid'}, 400)
+        return {'status': 'error', 'reason': 'Invalid uuid'}, 400
 
     processing = r_serv_log_submit.get(UUID + ':processing')
     if not processing:
-        return ({'status': 'error', 'reason': 'Unknown uuid'}, 404)
+        return {'status': 'error', 'reason': 'Unknown uuid'}, 404
 
     # nb_total = r_serv_log_submit.get(UUID + ':nb_total')
     # nb_sucess = r_serv_log_submit.get(UUID + ':nb_sucess')
@@ -90,4 +90,4 @@ def check_import_status(UUID):
             status = 'imported'
     dict_import_status['status'] = status
 
-    return (dict_import_status, 200)
+    return dict_import_status, 200

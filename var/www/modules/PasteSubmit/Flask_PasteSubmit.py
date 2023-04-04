@@ -25,9 +25,7 @@ from flask_login import login_required
 ##################################
 # Import Project packages
 ##################################
-from export import Export
 from lib import Tag
-from lib.objects.Items import Item
 
 from packages import Import_helper
 
@@ -75,7 +73,7 @@ def limit_content_length():
 # ============ FUNCTIONS ============
 
 def allowed_file(filename):
-    if not '.' in filename:
+    if '.' not in filename:
         return True
     else:
         file_ext = filename.rsplit('.', 1)[1].lower()
@@ -86,7 +84,7 @@ def allowed_file(filename):
 def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
     # replace characters
     for r in replace:
-        filename = filename.replace(r,'_')
+        filename = filename.replace(r, '_')
 
     # keep only valid ascii chars
     cleaned_filename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore').decode()
@@ -116,8 +114,6 @@ def PasteSubmit_page():
 @login_analyst
 @limit_content_length()
 def submit():
-
-    #paste_name = request.form['paste_name']
     logger.debug('submit')
 
     password = request.form['archive_pass']
@@ -127,10 +123,10 @@ def submit():
     paste_source = request.form['paste_source']
 
     if paste_source:
-    # limit source length
+        # limit source length
         paste_source = paste_source.replace('/', '')[:80]
         if paste_source in ['crawled', 'tests']:
-            content = f'Invalid source'
+            content = 'Invalid source'
             logger.info(paste_source)
             return content, 400
 
@@ -150,9 +146,9 @@ def submit():
 
     submitted_tag = 'infoleak:submission="manual"'
 
-    #active taxonomies
+    # active taxonomies
     active_taxonomies = Tag.get_active_taxonomies()
-    #active galaxies
+    # active galaxies
     active_galaxies = Tag.get_active_galaxies()
 
     if ltags or ltagsgalaxies:
@@ -179,16 +175,12 @@ def submit():
             # get UUID
             UUID = str(uuid.uuid4())
 
-            '''if paste_name:
-                # clean file name
-                UUID = clean_filename(paste_name)'''
-
             # create submitted dir
             if not os.path.exists(UPLOAD_FOLDER):
                 logger.debug('create folder')
                 os.makedirs(UPLOAD_FOLDER)
 
-            if not '.' in file_import.filename:
+            if '.' not in file_import.filename:
                 logger.debug('add UUID to path')
                 full_path = os.path.join(UPLOAD_FOLDER, UUID)
             else:
@@ -202,22 +194,21 @@ def submit():
                 full_path = os.path.join(UPLOAD_FOLDER, name)
                 logger.debug(f'full path {full_path}')
 
-            #Flask verify the file size
+            # Flask verify the file size
             file_import.save(full_path)
             logger.debug('file saved')
 
             Import_helper.create_import_queue(ltags, ltagsgalaxies, full_path, UUID, password, True)
 
             return render_template("submit_items.html",
-                                        active_taxonomies = active_taxonomies,
-                                        active_galaxies = active_galaxies,
-                                        UUID = UUID)
+                                   active_taxonomies=active_taxonomies,
+                                   active_galaxies=active_galaxies,
+                                   UUID=UUID)
 
         else:
             content = f'wrong file type, allowed_extensions: {allowed_extensions} or remove the extension'
             logger.info(content)
             return content, 400
-
 
     elif paste_content != '':
         logger.debug(f'entering text paste management')
@@ -241,7 +232,6 @@ def submit():
         content = 'submit aborded'
         logger.error(content)
         return content, 400
-
 
     return PasteSubmit_page()
 
@@ -278,10 +268,7 @@ def submit_status():
             else:
                 prog = 0
 
-            if error:
-                isError = True
-            else:
-                isError = False
+            isError = bool(error)
 
             if end == '0':
                 end = False
@@ -327,6 +314,8 @@ def submit_status():
 @login_required
 @login_analyst
 def edit_tag_export():
+    return abort(404)
+
     misp_auto_events = r_serv_db.get('misp:auto-events')
     hive_auto_alerts = r_serv_db.get('hive:auto-alerts')
 
@@ -393,6 +382,9 @@ def edit_tag_export():
 @login_required
 @login_analyst
 def tag_export_edited():
+    return abort(404)
+
+
     tag_enabled_misp = request.form.getlist('tag_enabled_misp')
     tag_enabled_hive = request.form.getlist('tag_enabled_hive')
 
@@ -419,6 +411,8 @@ def tag_export_edited():
 @login_required
 @login_analyst
 def enable_misp_auto_event():
+    return abort(404)
+
     r_serv_db.set('misp:auto-events', 1)
     return edit_tag_export()
 
@@ -426,6 +420,8 @@ def enable_misp_auto_event():
 @login_required
 @login_analyst
 def disable_misp_auto_event():
+    return abort(404)
+
     r_serv_db.set('misp:auto-events', 0)
     return edit_tag_export()
 
@@ -433,6 +429,8 @@ def disable_misp_auto_event():
 @login_required
 @login_analyst
 def enable_hive_auto_alert():
+    return abort(404)
+
     r_serv_db.set('hive:auto-alerts', 1)
     return edit_tag_export()
 
@@ -440,6 +438,8 @@ def enable_hive_auto_alert():
 @login_required
 @login_analyst
 def disable_hive_auto_alert():
+    return abort(404)
+
     r_serv_db.set('hive:auto-alerts', 0)
     return edit_tag_export()
 
@@ -447,6 +447,8 @@ def disable_hive_auto_alert():
 @login_required
 @login_analyst
 def add_push_tag():
+    return abort(404)
+
     tag = request.args.get('tag')
     if tag is not None:
 
@@ -466,6 +468,9 @@ def add_push_tag():
 @login_required
 @login_analyst
 def delete_push_tag():
+    return abort(404)
+
+
     tag = request.args.get('tag')
 
     infoleak_tags = Taxonomies().get('infoleak').machinetags()

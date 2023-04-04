@@ -84,10 +84,10 @@ sudo make install
 popd
 
 # ARDB #
-test ! -d ardb/ && git clone https://github.com/ail-project/ardb.git
-pushd ardb/
-make
-popd
+#test ! -d ardb/ && git clone https://github.com/ail-project/ardb.git
+#pushd ardb/
+#make
+#popd
 
 DEFAULT_HOME=$(pwd)
 
@@ -148,8 +148,8 @@ echo "AIL current version:"
 git describe --abbrev=0 --tags
 popd
 
-# LAUNCH ARDB
-bash ${AIL_BIN}/LAUNCH.sh -lav &
+# LAUNCH Kvrocks
+bash ${AIL_BIN}/LAUNCH.sh -lkv &
 wait
 echo ""
 

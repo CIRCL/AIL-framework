@@ -17,7 +17,6 @@ from lib import Tag
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
@@ -180,21 +179,21 @@ def get_all_domain_node_by_item_id(item_id, l_nodes=[]):
 # FIXME:
 #### UNKNOW SECTION ####
 
-def get_obj_id_item_id(parent_type, parent_id):
-    all_parents_type = ['twitter_id', 'jabber_id', 'telegram_id']
-    if parent_type in all_parents_type:
-        return r_serv_metadata.hget('map:{}:item_id'.format(parent_type), parent_id)
-    else:
-        return None
+# def get_obj_id_item_id(parent_type, parent_id):
+#     all_parents_type = ['twitter_id', 'jabber_id', 'telegram_id']
+#     if parent_type in all_parents_type:
+#         return r_serv_metadata.hget('map:{}:item_id'.format(parent_type), parent_id)
+#     else:
+#         return None
 
-# # TODO: # FIXME: TO MIGRATE ??????
-def add_map_obj_id_item_id(obj_id, item_id, obj_type):
-    if obj_type == 'twitter_id':
-        r_serv_metadata.hset('map:twitter_id:item_id', obj_id, item_id)
-    if obj_type == 'jabber_id':
-        r_serv_metadata.hset('map:jabber_id:item_id', obj_id, item_id)
-    if obj_type == 'telegram_id':
-        r_serv_metadata.hset('map:telegram_id:item_id', obj_id, item_id)
+# # # TODO: # FIXME: TO MIGRATE ??????
+# def add_map_obj_id_item_id(obj_id, item_id, obj_type):
+#     if obj_type == 'twitter_id':
+#         r_serv_metadata.hset('map:twitter_id:item_id', obj_id, item_id)
+#     if obj_type == 'jabber_id':
+#         r_serv_metadata.hset('map:jabber_id:item_id', obj_id, item_id)
+#     if obj_type == 'telegram_id':
+#         r_serv_metadata.hset('map:telegram_id:item_id', obj_id, item_id)
 
 # delete twitter id
 

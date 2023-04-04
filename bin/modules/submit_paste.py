@@ -5,8 +5,6 @@
 The Submit paste module
 ================
 
-This module is taking paste in redis queue ARDB_DB and submit to global
-
 """
 
 ##################################
@@ -15,7 +13,6 @@ This module is taking paste in redis queue ARDB_DB and submit to global
 import os
 import sys
 import gzip
-import io
 import base64
 import datetime
 import time
@@ -51,11 +48,8 @@ class SubmitPaste(AbstractModule):
         super(SubmitPaste, self).__init__(queue_name='submit_paste')
 
         # TODO KVROCKS
-        self.r_serv_db = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_DB")
+        self.r_serv_db = ConfigLoader.ConfigLoader().get_redis_conn("Kvrocks_DB")
         self.r_serv_log_submit = ConfigLoader.ConfigLoader().get_redis_conn("Redis_Log_submit")
-        self.r_serv_tags = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Tags")
-        self.r_serv_metadata = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Metadata")
-        self.serv_statistics = ConfigLoader.ConfigLoader().get_redis_conn("ARDB_Statistics")
 
         self.pending_seconds = 3
 
@@ -305,7 +299,6 @@ class SubmitPaste(AbstractModule):
                 self.r_serv_log_submit.sadd(f'{uuid}:paste_submit_link', rel_item_path)
 
                 curr_date = datetime.date.today()
-                self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"),'submit_paste', 1)
                 self.redis_logger.debug("paste submitted")
         else:
             self.addError(uuid, f'File: {save_path} already exist in submitted pastes')
@@ -335,7 +328,6 @@ class SubmitPaste(AbstractModule):
         self.addError(uuid, errorMessage)
         self.r_serv_log_submit.set(f'{uuid}:end', 1)
         curr_date = datetime.date.today()
-        self.serv_statistics.hincrby(curr_date.strftime("%Y%m%d"), 'submit_abord', 1)
         self.remove_submit_uuid(uuid)
 
     # # TODO: use Item function

@@ -3,7 +3,7 @@
 
 import os
 import sys
-import redis
+from uuid import uuid4
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -19,6 +19,9 @@ AIL_OBJECTS = sorted({'cve', 'cryptocurrency', 'decoded', 'domain', 'item', 'pgp
 
 def get_ail_uuid():
     return r_serv_db.get('ail:uuid')
+
+def generate_uuid():
+    return str(uuid4())
 
 #### AIL OBJECTS ####
 

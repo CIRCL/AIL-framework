@@ -215,6 +215,8 @@ function launching_scripts {
     # sleep 0.1
     echo -e $GREEN"\t* Launching scripts"$DEFAULT
 
+    screen -S "Script_AIL" -X screen -t "Mixer" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Mixer.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Global" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Global.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Categ.py; read x"
@@ -310,10 +312,8 @@ function launching_scripts {
     ##################################
     screen -S "Script_AIL" -X screen -t "ModuleInformation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./ModulesInformationV2.py -k 0 -c 1; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Mixer" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Mixer.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./MISP_The_Hive_feeder.py; read x"
-    sleep 0.1
+#    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./MISP_The_Hive_feeder.py; read x"
+#    sleep 0.1
     screen -S "Script_AIL" -X screen -t "IPAddress" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./IPAddress.py; read x"
 
 
@@ -610,7 +610,6 @@ function launch_all {
     checking_configuration;
     update;
     launch_redis;
-    launch_ardb;
     launch_kvrocks;
     launch_logs;
     launch_queues;

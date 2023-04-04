@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import os
-import sys
-import uuid
-
-sys.path.append(os.environ['AIL_BIN'])
-##################################
-# Import Project packages
-##################################
-from lib.ConfigLoader import ConfigLoader
+# import os
+# import sys
+# import uuid
+#
+# sys.path.append(os.environ['AIL_BIN'])
+# ##################################
+# # Import Project packages
+# ##################################
+# from lib.ConfigLoader import ConfigLoader
 
 ## LOAD CONFIG ##
-config_loader = ConfigLoader()
-
-r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")  ######################################
-config_loader = None
+# config_loader = ConfigLoader()
+#
+# r_serv_metadata = config_loader.get_redis_conn("ARDB_Metadata")  ######################################
+# config_loader = None
 ## -- ##
 
-sys.path.append('../../configs/keys')
+# sys.path.append('../../configs/keys')
 ##################################
 # Import Keys
 ##################################
