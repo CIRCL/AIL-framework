@@ -97,18 +97,6 @@ max_execution_time = 180
 [PgpDump]
 max_execution_time = 60
 
-[Base64]
-path = Base64/
-max_execution_time = 60
-
-[Binary]
-path = Base64/
-max_execution_time = 60
-
-[Hex]
-path = Base64/
-max_execution_time = 60
-
 [Modules_Duplicates]
 #Number of month to look back
 maximum_month_range = 3
@@ -162,71 +150,49 @@ host = localhost
 port = 6381
 db = 1
 
-##### ARDB #####
-
-[ARDB_DB]
-host = localhost
-port = 6382
-db = 0
-
-[DB_Tracking]
-host = localhost
-port = 6382
-db = 2
-
-[ARDB_Sentiment]
-host = localhost
-port = 6382
-db = 4
-
-[ARDB_TermCred]
-host = localhost
-port = 6382
-db = 5
-
-[ARDB_Trending]
-host = localhost
-port = 6382
-db = 3
-
-[ARDB_Tracker]
-host = localhost
-port = 6382
-db = 3
-
-[ARDB_Hashs]
-host = localhost
-db = 1
-
-[ARDB_Tags]
-host = localhost
-port = 6382
-db = 6
-
-[ARDB_Metadata]
-host = localhost
-port = 6382
-db = 7
-
-[ARDB_Statistics]
-host = localhost
-port = 6382
-db = 8
-
-[ARDB_Onion]
-host = localhost
-port = 6382
-db = 9
-
-[ARDB_Objects]
-host = localhost
-port = 6382
-db = 10
+##### KVROCKS #####
 
 [Kvrocks_DB]
 host = localhost
 port = 6383
-db = 0
+password = ail
+
+[Kvrocks_Duplicates]
+host = localhost
+port = 6383
+password = ail_dups
+
+[Kvrocks_Correlations]
+host = localhost
+port = 6383
+password = ail_correls
+
+[Kvrocks_Crawler]
+host = localhost
+port = 6383
+password = ail_crawlers
+
+[Kvrocks_Objects]
+host = localhost
+port = 6383
+password = ail_objs
+
+[Kvrocks_Stats]
+host = localhost
+port = 6383
+password = ail_stats
+
+[Kvrocks_Tags]
+host = localhost
+port = 6383
+password = ail_tags
+
+[Kvrocks_Trackers]
+host = localhost
+port = 6383
+password = ail_trackers
+
+##### - #####
 
 [Url]
 cc_critical = DE
@@ -237,9 +203,6 @@ cc_tld = r'\.de$'
 dns = 8.8.8.8
 
 [Mail]
-dns = 8.8.8.8
-
-[Web]
 dns = 8.8.8.8
 
 # Indexer configuration
@@ -258,15 +221,10 @@ maxDuplicateToPushToMISP=10
 # For multiple feed, add them with "," without space
 # e.g.: tcp://127.0.0.1:5556,tcp://127.0.0.1:5557
 [ZMQ_Global]
-#address = tcp://crf.circl.lu:5556
 # address = tcp://127.0.0.1:5556,tcp://crf.circl.lu:5556
 address = tcp://127.0.0.1:5556
 channel = 102
 bind = tcp://127.0.0.1:5556
-
-[ZMQ_FetchedOnion]
-address = tcp://127.0.0.1:5005
-channel = FetchedOnion
 
 [RedisPubSub]
 host = localhost

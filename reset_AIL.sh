@@ -70,7 +70,7 @@ function reset_dir {
   if [ -d CRAWLED_SCREESHOT/ ]; then
     pushd CRAWLED_SCREESHOT/
     rm -r *
-    echo 'cleaned CRAWLED_SCREESHOT'
+    echo 'cleaned CRAWLED_SCREENSHOT'
     popd
   fi
 
@@ -92,20 +92,18 @@ function reset_dir {
 }
 
 function flush_DB_keep_user {
-  bash ${AIL_BIN}LAUNCH.sh -lav &
+  bash ${AIL_BIN}LAUNCH.sh -lkv &
   wait
   echo ""
   pushd redis/src
-    ./redis-cli -p 6382 -n 1 FLUSHDB;
-    ./redis-cli -p 6382 -n 2 FLUSHDB;
-    ./redis-cli -p 6382 -n 3 FLUSHDB;
-    ./redis-cli -p 6382 -n 4 FLUSHDB;
-    ./redis-cli -p 6382 -n 5 FLUSHDB;
-    ./redis-cli -p 6382 -n 6 FLUSHDB;
-    ./redis-cli -p 6382 -n 7 FLUSHDB;
-    ./redis-cli -p 6382 -n 8 FLUSHDB;
-    ./redis-cli -p 6382 -n 9 FLUSHDB;
-    echo "ARDB FLUSHED"
+    ./redis-cli -p 6383 -a ail_correls FLUSHDB;
+    ./redis-cli -p 6383 -a ail_crawlers FLUSHDB;
+    ./redis-cli -p 6383 -a ail_dups FLUSHDB;
+    ./redis-cli -p 6383 -a ail_objs FLUSHDB;
+    ./redis-cli -p 6383 -a ail_stats FLUSHDB;
+    ./redis-cli -p 6383 -a ail_tags FLUSHDB;
+    ./redis-cli -p 6383 -a ail_trackers FLUSHDB;
+    echo "KVROCKS FLUSHED"
   popd
   bash ${AIL_BIN}LAUNCH.sh -k
 }
@@ -113,7 +111,7 @@ function flush_DB_keep_user {
 function validate_reset {
   echo -e $RED"WARNING: DELETE AIL DATA"$DEFAULT
 
-  # Make sure the reseting is intentional
+  # Make sure the reset is intentional
   num=$(( ( RANDOM % 100 )  + 1 ))
 
   echo -e $RED"To reset the platform, enter the following number: "$DEFAULT $num
@@ -121,7 +119,7 @@ function validate_reset {
 
   if [ $userInput -eq $num ]
   then
-      echo "Reseting AIL..."
+      echo "Resetting AIL..."
   else
       echo "Wrong number"
       exit 1;
@@ -146,10 +144,10 @@ function soft_reset {
 
     if [ $userInput -eq $num ]
     then
-      if [ -d DATA_ARDB/ ]; then
-        pushd DATA_ARDB/
+      if [ -d DATA_KVROCKS/ ]; then
+        pushd DATA_KVROCKS/
         rm -r *
-        echo 'cleaned DATA_ARDB'
+        echo 'cleaned DATA_KVROCKS'
         popd
       fi
     fi
