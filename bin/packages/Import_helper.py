@@ -16,7 +16,7 @@ from lib import ConfigLoader
 
 
 config_loader = ConfigLoader.ConfigLoader()
-r_serv_db = config_loader.get_redis_conn("Kvrocks_DB")
+r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
 config_loader = None
 
