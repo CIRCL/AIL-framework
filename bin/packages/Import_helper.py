@@ -46,7 +46,7 @@ def create_import_queue(tags, galaxy, paste_content, UUID, password=None, isfile
     if source:
         r_serv_db.set(UUID + ':source', source)
 
-    r_serv_db.set(UUID + ':isfile', isfile)
+    r_serv_db.set(UUID + ':isfile', str(isfile))
 
     r_serv_log_submit.set(UUID + ':end', 0)
     r_serv_log_submit.set(UUID + ':processing', 0)
