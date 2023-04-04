@@ -111,7 +111,7 @@ class SubmitPaste(AbstractModule):
                 try:
                     uuid = self.r_serv_db.srandmember('submitted:uuid')
                     if isinstance(uuid, list):
-                        return uuid[0]
+                        uuid = uuid[0]
                     # Module processing with the message from the queue
                     self.redis_logger.debug(uuid)
                     self.compute(uuid)
