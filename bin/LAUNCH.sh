@@ -459,14 +459,14 @@ function launch_queues {
 function launch_scripts {
     if [[ ! $isscripted ]]; then ############################# is core
       sleep 1
-        if checking_ardb && checking_redis && checking_kvrocks; then
+        if checking_redis && checking_kvrocks; then
             launching_scripts;
         else
             no_script_launched=true
             while $no_script_launched; do
                 echo -e $YELLOW"\tScript not started, waiting 5 more secondes"$DEFAULT
                 sleep 5
-                if checking_redis && checking_ardb && checking_kvrocks; then
+                if checking_redis && checking_kvrocks; then
                     launching_scripts;
                     no_script_launched=false
                 else
@@ -597,7 +597,7 @@ function launch_tests() {
 
 function reset_password() {
   echo -e "\t* Reseting UI admin password..."
-  if checking_ardb && checking_redis; then
+  if checking_kvrocks && checking_redis; then
       python ${AIL_HOME}/var/www/create_default_user.py &
       wait
   else
