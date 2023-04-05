@@ -58,7 +58,11 @@ class Crawler(AbstractModule):
 
     def refresh_lacus_status(self):
         try:
+            lacus_up = self.is_lacus_up
             self.is_lacus_up = crawlers.get_lacus().is_up
+            # refresh lacus
+            if not lacus_up and self.is_lacus_up
+                self.lacus = crawlers.get_lacus()
         except:
             self.is_lacus_up = False
         if not self.is_lacus_up:

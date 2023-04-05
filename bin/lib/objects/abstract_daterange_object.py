@@ -115,7 +115,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
     # if hash already in item
     def _add(self, date, item_id):
         if not self.exists():
-            self._add_create(date)
+            self._add_create()
             self.set_first_seen(date)
             self.set_last_seen(date)
         else:
