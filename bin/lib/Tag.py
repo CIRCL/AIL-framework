@@ -90,7 +90,12 @@ load_taxonomies()
 def get_taxonomies():
     return TAXONOMIES.keys()
 
-# r_tags.sadd(f'active_taxonomies', taxonomy)
+# TODO rename me to get enabled_taxonomies
+def get_active_taxonomies():
+    return r_tags.smembers('taxonomies:enabled')
+
+'active_taxonomies'
+
 def is_taxonomy_enabled(taxonomy):
     # enabled = r_tags.sismember('taxonomies:enabled', taxonomy)
     try:
@@ -299,13 +304,16 @@ load_galaxies()
 def get_galaxies():
     return GALAXIES.keys()
 
+# TODO RENAME ME
+def get_active_galaxies():
+    return r_tags.smembers('galaxies:enabled')
+
 def get_galaxy(galaxy_name):
     return GALAXIES.get(galaxy_name)
 
 def exists_galaxy(galaxy):
     return CLUSTERS.get(galaxy) is not None
 
-# r_tags.sadd('active_galaxies', galaxy)
 def is_galaxy_enabled(galaxy):
     try:
         enabled = r_tags.sismember('galaxies:enabled', galaxy)
@@ -822,18 +830,6 @@ def is_taxonomie(taxonomie, taxonomies=[]):
     if not taxonomies:
         taxonomies = get_taxonomies()
     return taxonomie in taxonomies
-
-def get_active_taxonomies(r_set=False):
-    res = r_tags.smembers('active_taxonomies')
-    if r_set:
-        return set(res)
-    return res
-
-def get_active_galaxies(r_set=False):
-    res = r_tags.smembers('active_galaxies')
-    if r_set:
-        return set(res)
-    return res
 
 def get_all_taxonomies_tags(): # # TODO: add + REMOVE + Update
     return r_tags.smembers('active_taxonomies_tags')
