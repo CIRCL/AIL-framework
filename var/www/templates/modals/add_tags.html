@@ -70,7 +70,7 @@
 var ltags;
 var ltagsgalaxies;
 
-$.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+$.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
     function(data) {
 
       ltags = $('#ltags').tagSuggest({
@@ -80,7 +80,7 @@ $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
       });
     });
 
-$.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+$.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
   function(data) {
 
     ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
@@ -92,14 +92,14 @@ $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
 
 jQuery("#all-tags-taxonomies").click(function(e){
         //change input tags list
-      $.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+      $.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
         function(data) {
           ltags.setData(data)
       });
     });
 
 jQuery("#all-tags-galaxies").click(function(e){
-      $.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+      $.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
         function(data) {
           ltagsgalaxies.setData(data)
       });
@@ -107,7 +107,7 @@ jQuery("#all-tags-galaxies").click(function(e){
 
 {% for taxo in modal_add_tags['active_taxonomies'] %}
     jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
-      $.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
+      $.getJSON("{{ url_for('tags_ui.tag_taxonomie_tags_enabled_json') }}?taxonomie={{ taxo }}",
         function(data) {
           ltags.setData(data)
   });
@@ -116,7 +116,7 @@ jQuery("#all-tags-galaxies").click(function(e){
 
 {% for galaxy in modal_add_tags['active_galaxies'] %}
     jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
-      $.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
+      $.getJSON("{{ url_for('tags_ui.tag_galaxy_tags_enabled_json') }}?galaxy={{ galaxy }}",
         function(data) {
           ltagsgalaxies.setData(data)
   });

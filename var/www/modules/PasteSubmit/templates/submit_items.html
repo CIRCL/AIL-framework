@@ -256,7 +256,7 @@
 	$(document).ready(function () {
 		$("#page-items-submit").addClass("active");
 
-		$.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+		$.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
 			function (data) {
 
 				ltags = $('#ltags').tagSuggest({
@@ -267,7 +267,7 @@
 				});
 			});
 
-		$.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+		$.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
 			function (data) {
 
 				ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
@@ -306,7 +306,7 @@
 <script>
 	jQuery("#all-tags-taxonomies").on("click", function (e) {
 		//change input tags list
-		$.getJSON("{{ url_for('Tags.get_all_tags_taxonomies') }}",
+		$.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
 			function (data) {
 				ltags.setData(data)
 			});
@@ -315,7 +315,7 @@
 </script>
 <script>
 	jQuery("#all-tags-galaxies").on("click", function (e) {
-		$.getJSON("{{ url_for('Tags.get_all_tags_galaxy') }}",
+		$.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
 			function (data) {
 				ltagsgalaxies.setData(data)
 			});
@@ -323,7 +323,7 @@
 
 	{% for taxo in active_taxonomies %}
 		jQuery("#{{ taxo }}-id{{ loop.index0 }}").on("click", function (e) {
-			$.getJSON("{{ url_for('Tags.get_tags_taxonomie') }}?taxonomie={{ taxo }}",
+			$.getJSON("{{ url_for('tags_ui.tag_taxonomie_tags_enabled_json') }}?taxonomie={{ taxo }}",
 				function (data) {
 					ltags.setData(data)
 				});
@@ -333,7 +333,7 @@
 <script>
 	{% for galaxy in active_galaxies %}
 		jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").on("click", function (e) {
-			$.getJSON("{{ url_for('Tags.get_tags_galaxy') }}?galaxy={{ galaxy }}",
+			$.getJSON("{{ url_for('tags_ui.tag_galaxy_tags_enabled_json') }}?galaxy={{ galaxy }}",
 				function (data) {
 					ltagsgalaxies.setData(data)
 				});
