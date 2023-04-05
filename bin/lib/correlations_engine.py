@@ -118,6 +118,33 @@ def delete_obj_correlation(obj1_type, subtype1, obj1_id, obj2_type, subtype2, ob
     r_metadata.srem(f'correlation:obj:{obj1_type}:{subtype1}:{obj2_type}:{obj1_id}', f'{subtype2}:{obj2_id}')
     r_metadata.srem(f'correlation:obj:{obj2_type}:{subtype2}:{obj1_type}:{obj2_id}', f'{subtype1}:{obj1_id}')
 
+# # bypass max result/objects ???
+# def get_correlation_depht(obj_type, subtype, obj_id, filter_types=[], level=1, nb_max=300):
+#     objs = set()
+#     _get_correlation_depht(objs, obj_type, subtype, obj_id, filter_types, level, nb_max)
+#     return objs
+#
+# def _get_correlation_depht(objs, obj_type, subtype, obj_id, filter_types, level, nb_max, previous_str_obj=''):
+#     obj_str_id = get_obj_str_id(obj_type, subtype, obj_id)
+#     objs.add(obj_str_id)
+#
+#     obj_correlations = get_correlations(obj_type, subtype, obj_id, filter_types=filter_types)
+#     for correl_type in obj_correlations:
+#         for str_obj in obj_correlations[correl_type]:
+#             subtype2, obj2_id = str_obj.split(':', 1)
+#             obj2_str_id = get_obj_str_id(correl_type, subtype2, obj2_id)
+#
+#             if obj2_str_id == previous_str_obj:
+#                 continue
+#
+#             if len(nodes) > nb_max:
+#                 break
+#             objs.add(obj2_str_id)
+#
+#             if level > 0:
+#                 next_level = level - 1
+#                 _get_correlation_depht(objs, correl_type, subtype2, obj2_id, filter_types, next_level, nb_max,
+#                                        previous_str_obj=obj_str_id)
 
 def get_obj_str_id(obj_type, subtype, obj_id):
     if subtype is None:

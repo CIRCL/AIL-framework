@@ -273,27 +273,31 @@ def get_obj_correlations(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
     return obj.get_correlations()
 
-def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, lvl=0):
-    if lvl > 0 and (obj_type, subtype, obj_id) not in objs:  # Avoid looking for the same correlation
-        objs.add((obj_type, subtype, obj_id))
-        lvl = lvl - 1
-        obj = get_object(obj_type, subtype, obj_id)
-        correlations = obj.get_correlations()
-        # print('--------------------------')
-        # print( obj_id, correlations)
-        # print(lvl)
-        # print('--------------------------')
-        for obj2_type in correlations:
-            for str_obj in correlations[obj2_type]:
-                obj2_subtype, obj2_id = str_obj.split(':', 1)
-                _get_obj_correlations_objs(objs, obj2_type, obj2_subtype, obj2_id, lvl=lvl)
-    # print(len(objs))
-    objs.add((obj_type, subtype, obj_id))
+def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max):
+    if len(objs) < nb_max or nb_max == -1:
+        if lvl == 0:
+            objs.add((obj_type, subtype, obj_id))
+
+        elif lvl > 0 and (obj_type, subtype, obj_id) not in objs:  # Avoid looking for the same correlation
+            objs.add((obj_type, subtype, obj_id))
+            obj = get_object(obj_type, subtype, obj_id)
+            correlations = obj.get_correlations(filter_types=filter_types)
+            lvl = lvl - 1
+            for obj2_type in correlations:
+                for str_obj in correlations[obj2_type]:
+                    obj2_subtype, obj2_id = str_obj.split(':', 1)
+                    _get_obj_correlations_objs(objs, obj2_type, obj2_subtype, obj2_id, filter_types, lvl, nb_max)
+
+def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0, nb_max=300):
+    objs = set()
+    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max)
     return objs
 
-def get_obj_correlations_objs(obj_type, subtype, obj_id, lvl=0):
-    objs = set()
-    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, lvl=lvl)
+def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300):
+    objs = get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=filter_types, lvl=lvl, nb_max=nb_max)
+    for obj_tuple in objs:
+        obj1_type, subtype1, id1 = obj_tuple
+        add_obj_tags(obj1_type, subtype1, id1, tags)
     return objs
 
 ################################################################################

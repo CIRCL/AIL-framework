@@ -213,11 +213,11 @@ class AbstractObject(ABC):
         """
         return get_correlations(self.type, self.subtype, self.id, filter_types=[obj_type])
 
-    def get_correlations(self):
+    def get_correlations(self, filter_types=[]):
         """
         Get object correlations
         """
-        return get_correlations(self.type, self.subtype, self.id)
+        return get_correlations(self.type, self.subtype, self.id, filter_types=filter_types)
 
     def get_nb_correlation(self, correl_type):
         return get_nb_correlation_by_correl_type(self.type, self.get_subtype(r_str=True), self.id, correl_type)

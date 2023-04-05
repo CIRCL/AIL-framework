@@ -24,21 +24,16 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects import ail_objects
+from lib import Tag
 
 bootstrap_label = Flask_config.bootstrap_label
 vt_enabled = Flask_config.vt_enabled
 
 # ============ BLUEPRINT ============
-correlation = Blueprint('correlation', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/correlation'))
+correlation = Blueprint('correlation', __name__,
+                        template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/correlation'))
 
 # ============ VARIABLES ============
-
-######
-### graph_line_json
-### 'hashDecoded.pgpdump_graph_line_json'
-### 'hashDecoded.cryptocurrency_graph_line_json'
-###
-######
 
 # ============ FUNCTIONS ============
 
@@ -53,12 +48,12 @@ def sanitise_nb_max_nodes(nb_max_nodes):
         nb_max_nodes = int(nb_max_nodes)
         if nb_max_nodes < 2:
             nb_max_nodes = 300
-    except:
+    except (TypeError, ValueError):
         nb_max_nodes = 300
     return nb_max_nodes
 
 # ============= ROUTES ==============
-@correlation.route('/correlation/show', methods=['GET', 'POST']) # GET + POST
+@correlation.route('/correlation/show', methods=['GET', 'POST'])
 @login_required
 @login_read_only
 def show_correlation():
@@ -106,7 +101,7 @@ def show_correlation():
 
         # redirect to keep history and bookmark
         return redirect(url_for('correlation.show_correlation', type=object_type, subtype=subtype, id=obj_id, mode=mode,
-                                            max_nodes=max_nodes, filter=filter_types))
+                                max_nodes=max_nodes, filter=filter_types))
 
     # request.method == 'GET'
     else:
@@ -120,13 +115,9 @@ def show_correlation():
 
         filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
 
-        # # TODO: remove me, rename screenshot to image
-        if obj_type == 'image':
-            obj_type = 'screenshot'
-
         # check if obj_id exist
         if not ail_objects.exists_obj(obj_type, subtype, obj_id):
-            abort(404) # return 404
+            return abort(404)
         # object exist
         else:
             dict_object = {"object_type": obj_type,
@@ -138,7 +129,8 @@ def show_correlation():
             if subtype:
                 dict_object["metadata"]['type_id'] = subtype
             dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
-            return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label)
+            return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
+                                   tags_selector_data=Tag.get_tags_selector_data())
 
 @correlation.route('/correlation/get/description')
 @login_required
@@ -157,7 +149,6 @@ def get_description():
         correlation_id = object_id[1]
     else:
         return jsonify({})
-
 
     # check if correlation_id exist
     # # TODO: return error json
@@ -179,11 +170,48 @@ def graph_node_json():
 
     filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
 
-    # # TODO: remove me, rename screenshot
-    if obj_type == 'image':
-        obj_type = 'screenshot'
-
     json_graph = ail_objects.get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=filter_types, max_nodes=max_nodes, level=2, flask_context=True)
     #json_graph = Correlate_object.get_graph_node_object_correlation(obj_type, obj_id, 'union', correlation_names, correlation_objects, requested_correl_type=subtype, max_nodes=max_nodes)
     return jsonify(json_graph)
 
+@correlation.route('/correlation/tags/add', methods=['POST'])
+@login_required
+@login_read_only
+def correlation_tags_add():
+    obj_id = request.form.get('tag_obj_id')
+    subtype = request.form.get('tag_subtype', '')
+    obj_type = request.form.get('tag_obj_type')
+    nb_max = sanitise_nb_max_nodes(request.form.get('tag_nb_max'))
+    filter_types = ail_objects.sanitize_objs_types(request.form.get('tag_filter', '').split(','))
+
+    if not ail_objects.exists_obj(obj_type, subtype, obj_id):
+        return abort(404)
+
+    # tags
+    taxonomies_tags = request.form.get('taxonomies_tags')
+    if taxonomies_tags:
+        try:
+            taxonomies_tags = json.loads(taxonomies_tags)
+        except Exception:
+            taxonomies_tags = []
+    else:
+        taxonomies_tags = []
+    galaxies_tags = request.form.get('galaxies_tags')
+    if galaxies_tags:
+        try:
+            galaxies_tags = json.loads(galaxies_tags)
+        except Exception:
+            galaxies_tags = []
+    if taxonomies_tags or galaxies_tags:
+        if not Tag.is_valid_tags_taxonomies_galaxy(taxonomies_tags, galaxies_tags):
+            return {'error': 'Invalid tag(s)'}, 400
+        tags = taxonomies_tags + galaxies_tags
+    else:
+        tags = []
+
+    if tags:
+        ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types, lvl=2, nb_max=nb_max)
+
+    return redirect(url_for('correlation.show_correlation',
+                            type=obj_type, subtype=subtype, id=obj_id,
+                            filter=",".join(filter_types)))
