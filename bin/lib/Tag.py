@@ -846,14 +846,15 @@ def get_all_custom_tags(): # # TODO: add + REMOVE + Update
 
 def get_taxonomies_enabled_tags(r_list=False):
     l_tag_keys = []
-    for taxonomie in get_active_taxonomies():
-        l_tag_keys.append(f'active_tag_{taxonomie}')
+    for taxonomy in get_active_taxonomies():
+        l_tag_keys.append(f'taxonomy:tags:enabled:{taxonomy}')
     if len(l_tag_keys) > 1:
         res = r_tags.sunion(l_tag_keys[0], *l_tag_keys[1:])
     elif l_tag_keys:
         res = r_tags.smembers(l_tag_keys[0])
+    else:
+        res = []
     #### # WARNING: # TODO: DIRTY FIX, REPLACE WITH LOCAL TAGS ####
-
 
     if r_list:
         return list(res)
@@ -863,7 +864,7 @@ def get_taxonomies_enabled_tags(r_list=False):
 def get_galaxies_enabled_tags():
     l_tag_keys = []
     for galaxy in get_active_galaxies():
-        l_tag_keys.append(f'active_tag_galaxies_{galaxy}')
+        l_tag_keys.append(f'galaxy:tags:enabled:{galaxy}')
     if len(l_tag_keys) > 1:
         return r_tags.sunion(l_tag_keys[0], *l_tag_keys[1:])
     elif l_tag_keys:
@@ -884,19 +885,29 @@ def get_taxonomies_customs_tags(r_list=False):
         tags = list(tags)
     return tags
 
-def get_taxonomie_enabled_tags(taxonomie, r_list=False):
-    res = r_tags.smembers(f'active_tag_{taxonomie}')
+# TODO MOVE ME
+# TODO MOVE ME
+# TODO MOVE ME
+# TODO MOVE ME
+def get_taxonomie_enabled_tags(taxonomy, r_list=False):
+    res = get_taxonomy_tags_enabled(taxonomy)
     if r_list:
         return list(res)
     else:
         return res
 
+# TODO MOVE ME
+# TODO MOVE ME
+# TODO MOVE ME
+# TODO MOVE ME
 def get_galaxy_enabled_tags(galaxy, r_list=False):
-    res = r_tags.smembers(f'active_tag_galaxies_{galaxy}')
+    res = get_galaxy_tags_enabled(galaxy)
     if r_list:
         return list(res)
     else:
         return res
+
+
 
 def is_taxonomie_tag_enabled(taxonomie, tag):
     if tag in r_tags.smembers('active_tag_' + taxonomie):
