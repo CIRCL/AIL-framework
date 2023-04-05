@@ -278,6 +278,7 @@ def api_disable_taxonomy_tags(data):
 # var galaxy = galaxy type
 #
 
+# TODO Synonyms
 
 GALAXIES = {}
 CLUSTERS = {}
@@ -678,7 +679,7 @@ def update_tag_global_by_obj_type(tag, obj_type, subtype=''):
             r_tags.srem(f'list_tags:{obj_type}:{subtype}', tag)
             # Iterate on all subtypes
             delete_global_obj_tag = True
-            for obj_subtype in ail_core.get_object_all_subtypes():
+            for obj_subtype in ail_core.get_object_all_subtypes(obj_type):
                 if r_tags.exists(f'list_tags:{obj_type}:{obj_subtype}'):
                     delete_global_obj_tag = False
                     break
@@ -905,11 +906,6 @@ def get_galaxy_enabled_tags(galaxy, r_list=False):
 
 
 
-def is_taxonomie_tag_enabled(taxonomie, tag):
-    if tag in r_tags.smembers('active_tag_' + taxonomie):
-        return True
-    else:
-        return False
 
 # def is_galaxy_tag_enabled(galaxy, tag):
 #     if tag in r_tags.smembers('active_tag_galaxies_' + galaxy):
@@ -931,7 +927,7 @@ def is_valid_tags_taxonomies_galaxy(list_tags, list_tags_galaxy):
                 return False
             if taxonomie not in active_taxonomies:
                 return False
-            if not is_taxonomie_tag_enabled(taxonomie, tag):
+            if not is_taxonomy_tag_enabled(taxonomie, tag):
                 return False
 
     if list_tags_galaxy:
@@ -996,7 +992,7 @@ def is_enabled_taxonomie_tag(tag, enabled_taxonomies=None):
         return False
     if taxonomie not in enabled_taxonomies:
         return False
-    if not is_taxonomie_tag_enabled(taxonomie, tag):
+    if not is_taxonomy_tag_enabled(taxonomie, tag):
         return False
     return True
 
@@ -1030,7 +1026,7 @@ def is_tag_in_all_tag(tag):
     else:
         return False
 
-def get_tag_synonyms(tag):
+def get_tag_synonyms(tag): #####################################3
     return r_tags.smembers(f'synonym_tag_{tag}')
 
 def get_tag_dislay_name(tag):
@@ -1047,7 +1043,7 @@ def get_tags_selector_dict(tags):
     return list_tags
 
 def get_tag_selector_dict(tag):
-    return {'name':get_tag_dislay_name(tag),'id':tag}
+    return {'name': get_tag_dislay_name(tag), 'id': tag}
 
 def get_tags_selector_data():
     dict_selector = {}
@@ -1228,7 +1224,7 @@ def add_obj_tags(object_id, object_subtype, object_type, tags=[], galaxy_tags=[]
     for tag in tags:
         if tag:
             taxonomy = get_taxonomie_from_tag(tag)
-            if is_taxonomie_tag_enabled(taxonomy, tag):
+            if is_taxonomy_tag_enabled(taxonomy, tag):
                 add_object_tag(tag, object_type, object_id, object_subtype)
             else:
                 return {'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400
