@@ -97,7 +97,7 @@ class Credential(AbstractModule):
             nb_cred = len(all_credentials)
             message = f'Checked {nb_cred} credentials found.'
 
-            all_sites = self.regex_findall(self.regex_web, item.get_id(), item_content)
+            all_sites = self.regex_findall(self.regex_web, item.get_id(), item_content, r_set=True)
             if all_sites:
                 discovered_sites = ', '.join(all_sites)
                 message += f' Related websites: {discovered_sites}'
