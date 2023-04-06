@@ -118,6 +118,13 @@ def delete_obj_correlation(obj1_type, subtype1, obj1_id, obj2_type, subtype2, ob
     r_metadata.srem(f'correlation:obj:{obj1_type}:{subtype1}:{obj2_type}:{obj1_id}', f'{subtype2}:{obj2_id}')
     r_metadata.srem(f'correlation:obj:{obj2_type}:{subtype2}:{obj1_type}:{obj2_id}', f'{subtype1}:{obj1_id}')
 
+def delete_obj_correlations(obj_type, subtype, obj_id):
+    obj_correlations = get_correlations(obj_type, subtype, obj_id)
+    for correl_type in obj_correlations:
+        for str_obj in obj_correlations[correl_type]:
+            subtype2, obj2_id = str_obj.split(':', 1)
+            delete_obj_correlation(obj_type, subtype, obj_id, correl_type, subtype2, obj2_id)
+
 # # bypass max result/objects ???
 # def get_correlation_depht(obj_type, subtype, obj_id, filter_types=[], level=1, nb_max=300):
 #     objs = set()

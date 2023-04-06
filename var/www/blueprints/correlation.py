@@ -174,9 +174,23 @@ def graph_node_json():
     #json_graph = Correlate_object.get_graph_node_object_correlation(obj_type, obj_id, 'union', correlation_names, correlation_objects, requested_correl_type=subtype, max_nodes=max_nodes)
     return jsonify(json_graph)
 
+@correlation.route('/correlation/delete', methods=['GET'])
+@login_required
+@login_admin
+def correlation_delete():
+    obj_type = request.args.get('type')
+    subtype = request.args.get('subtype', '')
+    obj_id = request.args.get('id')
+
+    if not ail_objects.exists_obj(obj_type, subtype, obj_id):
+        return abort(404)
+
+    ail_objects.delete_obj_correlations(obj_type, subtype, obj_id)
+    return redirect(url_for('correlation.show_correlation', type=obj_type, subtype=subtype, id=obj_id))
+
 @correlation.route('/correlation/tags/add', methods=['POST'])
 @login_required
-@login_read_only
+@login_analyst
 def correlation_tags_add():
     obj_id = request.form.get('tag_obj_id')
     subtype = request.form.get('tag_subtype', '')

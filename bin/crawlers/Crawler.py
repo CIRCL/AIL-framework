@@ -108,7 +108,7 @@ class Crawler(AbstractModule):
         if capture:
             try:
                 status = self.lacus.get_capture_status(capture.uuid)
-                if status != crawlers.CaptureStatus.DONE:  # TODO ADD GLOBAL TIMEOUT-> Save start time
+                if status != crawlers.CaptureStatus.DONE:  # TODO ADD GLOBAL TIMEOUT-> Save start time ### print start time
                     capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
                 else:
@@ -248,9 +248,11 @@ class Crawler(AbstractModule):
                 if 'png' in entries and entries['png']:
                     screenshot = Screenshots.create_screenshot(entries['png'], b64=False)
                     if screenshot:
-                        # Create Correlations
-                        screenshot.add_correlation('item', '', item_id)
-                        screenshot.add_correlation('domain', '', self.domain.id)
+                        # Remove Errors pages # TODO Replace with warning list ???
+                        if screenshot.id not in ['27e14ace10b0f96acd2bd919aaa98a964597532c35b6409dff6cc8eec8214748']:
+                            # Create Correlations
+                            screenshot.add_correlation('item', '', item_id)
+                            screenshot.add_correlation('domain', '', self.domain.id)
             # HAR
             if self.har:
                 if 'har' in entries and entries['har']:

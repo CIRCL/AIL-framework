@@ -28,8 +28,6 @@ config_loader = ConfigLoader()
 config_loader = None
 
 
-
-
 def is_valid_object_type(obj_type):
     return obj_type in get_all_objects()
 
@@ -138,7 +136,7 @@ def get_object_meta(obj_type, subtype, id, options=set(), flask_context=False):
     return meta
 
 
-def get_objects_meta(objs, options=[], flask_context=False):
+def get_objects_meta(objs, options=set(), flask_context=False):
     metas = []
     for obj_dict in objs:
         metas.append(get_object_meta(obj_dict['type'], obj_dict['subtype'], obj_dict['id'], options=options,
@@ -166,9 +164,9 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
 
 
 def get_ui_obj_tag_table_keys(obj_type):
-    '''
+    """
     Warning: use only in flask (dynamic templates)
-    '''
+    """
     if obj_type == "domain":
         return ['id', 'first_seen', 'last_check', 'status']  # # TODO: add root screenshot
 
@@ -303,6 +301,11 @@ def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types
 ################################################################################
 ################################################################################
 ################################################################################
+
+def delete_obj_correlations(obj_type, subtype, obj_id):
+    obj = get_object(obj_type, subtype, obj_id)
+    if obj.exists():
+        return correlations_engine.delete_obj_correlations(obj_type, subtype, obj_id)
 
 def delete_obj(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
