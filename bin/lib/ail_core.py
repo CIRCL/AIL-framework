@@ -38,6 +38,7 @@ def get_object_all_subtypes(obj_type):
         return ['key', 'mail', 'name']
     if obj_type == 'username':
         return ['telegram', 'twitter', 'jabber']
+    return []
 
 def get_all_objects_with_subtypes_tuple():
     str_objs = []
