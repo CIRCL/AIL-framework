@@ -158,7 +158,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
         meta["vt"] = obj.get_meta_vt()
         meta["vt"]["status"] = obj.is_vt_enabled()
     # TAGS MODAL
-    if obj.get_type() == 'screenshot' or obj.get_type() == 'decoded':
+    if obj.get_type() == 'screenshot' or obj.get_type() == 'decoded' or obj.get_type() == 'cve':
         meta["add_tags_modal"] = Tag.get_modal_add_tags(obj.id, obj.get_type(), obj.get_subtype(r_str=True))
     return meta
 

@@ -124,7 +124,8 @@ def show_correlation():
                            "correlation_id": obj_id,
                            "max_nodes": max_nodes, "mode": mode,
                            "filter": filter_types, "filter_str": ",".join(filter_types),
-                           "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, flask_context=True)
+                           "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id,
+                                                                   options={'tags'}, flask_context=True)
                            }
             if subtype:
                 dict_object["metadata"]['type_id'] = subtype
@@ -156,7 +157,9 @@ def get_description():
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # object exist
     else:
-        res = ail_objects.get_object_meta(object_type, type_id, correlation_id, flask_context=True)
+        res = ail_objects.get_object_meta(object_type, type_id, correlation_id, options={'tags'}, flask_context=True)
+        if 'tags' in res:
+            res['tags'] = list(res['tags'])
         return jsonify(res)
 
 @correlation.route('/correlation/graph_node_json')
