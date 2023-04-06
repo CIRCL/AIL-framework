@@ -79,7 +79,7 @@ def subtypes_objects_dashboard(obj_type, f_request):
                                                                                subtype=subtype)
         if subtypes_objs:
             for obj_t, obj_subtype, obj_id in subtypes_objs:
-                objs.append(ail_objects.get_object_meta(obj_t, obj_subtype, obj_id, options={'sparkline'}))
+                objs.append(ail_objects.get_object_meta(obj_t, obj_subtype, obj_id, options={'sparkline'}, flask_context=True))
 
     endpoint_dashboard = f'objects_subtypes.objects_dashboard_{obj_type}'
     return render_template('subtypes_objs_dashboard.html', date_from=date_from, date_to=date_to,
