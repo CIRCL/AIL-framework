@@ -111,7 +111,7 @@ def show_correlation():
         max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
         mode = sanitise_graph_mode(request.args.get('mode'))
 
-        related_btc = bool(request.args.get('expand_card', False))
+        related_btc = bool(request.args.get('related_btc', False))
 
         filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
 
