@@ -61,7 +61,7 @@ class Crawler(AbstractModule):
             lacus_up = self.is_lacus_up
             self.is_lacus_up = crawlers.get_lacus().is_up
             # refresh lacus
-            if not lacus_up and self.is_lacus_up
+            if not lacus_up and self.is_lacus_up:
                 self.lacus = crawlers.get_lacus()
         except:
             self.is_lacus_up = False
