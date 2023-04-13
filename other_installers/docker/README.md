@@ -2,10 +2,8 @@ Docker Quick Start (Ubuntu 18.04 LTS)
 ------------
 
 :warning:
-Not maintained at the moment.
-If you are interested to get this running, please:
-
-Fork -> Branch -> PR
+This Docker is not maintained at the moment.
+If you are interested to contribute, please submit a Pull Request
 
 
 1. Install Docker
