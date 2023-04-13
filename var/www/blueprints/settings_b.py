@@ -40,9 +40,9 @@ def create_json_response(data, status_code):
 def settings_page():
     git_metadata = git_status.get_git_metadata()
     ail_version = ail_updates.get_ail_version()
-    #admin_level = current_user.is_in_role('admin')
+    admin_level = current_user.is_in_role('admin')
     return render_template("settings_index.html", git_metadata=git_metadata,
-                            ail_version=ail_version)
+                           ail_version=ail_version, admin_level=admin_level)
 
 @settings_b.route("/settings/background_update/json", methods=['GET'])
 @login_required
@@ -50,6 +50,12 @@ def settings_page():
 def get_background_update_metadata_json():
     return jsonify(ail_updates.get_update_background_metadata())
 
+@settings_b.route("/settings/modules", methods=['GET'])
+@login_required
+@login_read_only
+def settings_modules():
+    admin_level = current_user.is_in_role('admin')
+    return render_template("settings/modules.html", admin_level=admin_level)
 
 
 

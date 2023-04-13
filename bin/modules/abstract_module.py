@@ -85,6 +85,9 @@ class AbstractModule(ABC):
         self.queue.send_message(message, queue_name)
         # add to new set_module
 
+    def get_available_queues(self):
+        return self.queue.get_out_queues()
+
     def regex_search(self, regex, obj_id, content):
         return regex_helper.regex_search(self.r_cache_key, regex, obj_id, content, max_time=self.max_execution_time)
 

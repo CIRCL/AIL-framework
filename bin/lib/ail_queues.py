@@ -50,6 +50,9 @@ class AILQueue:
                                 subscribers[queue_name].add(module)
         self.subscribers_modules = subscribers
 
+    def get_out_queues(self):
+        return list(self.subscribers_modules.keys())
+
     def get_nb_messages(self):
         return r_queues.llen(f'queue:{self.name}:in')
 
@@ -205,11 +208,12 @@ def save_queue_digraph():
     digraph = get_queue_digraph()
     dot_file = os.path.join(os.environ['AIL_HOME'], 'doc/ail_queues.dot')
     svg_file = os.path.join(os.environ['AIL_HOME'], 'doc/ail_queues.svg')
+    svg_static = os.path.join(os.environ['AIL_HOME'], 'var/www/static/image/ail_queues.svg')
     with open(dot_file, 'w') as f:
         f.write(digraph)
 
     print('dot', '-Tsvg', dot_file, '-o', svg_file)
-    process = subprocess.run(['dot', '-Tsvg', dot_file, '-o', svg_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.run(['dot', '-Tsvg', dot_file, '-o', svg_file, '-o', svg_static], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         # modified_files = process.stdout
         # print(process.stdout)
