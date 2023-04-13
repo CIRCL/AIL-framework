@@ -44,8 +44,8 @@ class Tracker_Term(AbstractModule):
     Tracker_Term module for AIL framework
     """
 
-    def __init__(self):
-        super(Tracker_Term, self).__init__()
+    def __init__(self, queue=True):
+        super(Tracker_Term, self).__init__(queue=queue)
 
         config_loader = ConfigLoader()
 

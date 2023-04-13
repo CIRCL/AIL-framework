@@ -29,8 +29,8 @@ class Tracker_Regex(AbstractModule):
     """
     Tracker_Regex module for AIL framework
     """
-    def __init__(self):
-        super(Tracker_Regex, self).__init__()
+    def __init__(self, queue=True):
+        super(Tracker_Regex, self).__init__(queue=queue)
 
         config_loader = ConfigLoader()
 

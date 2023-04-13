@@ -56,9 +56,9 @@ class PgpDump(AbstractModule):
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
-        self.tracker_term = Tracker_Term()
-        self.tracker_regex = Tracker_Regex()
-        self.tracker_yara = Tracker_Yara()
+        self.tracker_term = Tracker_Term(queue=False)
+        self.tracker_regex = Tracker_Regex(queue=False)
+        self.tracker_yara = Tracker_Yara(queue=False)
 
         # init
         self.item_id = None

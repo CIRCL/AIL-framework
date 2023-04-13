@@ -30,8 +30,8 @@ class Tracker_Yara(AbstractModule):
     """
     Tracker_Yara module for AIL framework
     """
-    def __init__(self):
-        super(Tracker_Yara, self).__init__()
+    def __init__(self, queue=True):
+        super(Tracker_Yara, self).__init__(queue=queue)
         self.pending_seconds = 5
 
         # Load Yara rules
