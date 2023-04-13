@@ -346,9 +346,11 @@ function create_queue_table() {
             // - j=1: queueLength
             // - j=2: LastProcessedPasteTime
             // - j=3: Number of the module belonging in the same category
-            if (parseInt(glob_tabvar.row1[i][2]) > window.threshold_stucked_module && parseInt(glob_tabvar.row1[i][1]) > 2)
+            if (glob_tabvar.row1[i][3]==="Not Launched")
+                tr.className += " bg-danger text-white";
+            else if (parseInt(glob_tabvar.row1[i][2]) > window.threshold_stucked_module && parseInt(glob_tabvar.row1[i][1]) > 2)
                 tr.className += " table-danger";
-            else if (parseInt(glob_tabvar.row1[i][1]) == 0)
+            else if (parseInt(glob_tabvar.row1[i][1]) === 0)
                 tr.className += " table-disabled";
             else
                 tr.className += " table-success";

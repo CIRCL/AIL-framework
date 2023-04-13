@@ -395,8 +395,8 @@ class Tools(AbstractModule):
     Tools module for AIL framework
     """
 
-    def __init__(self):
-        super(Tools, self).__init__()
+    def __init__(self, queue=True):
+        super(Tools, self).__init__(queue=queue)
 
         self.max_execution_time = 30
         # Waiting time in seconds between to message processed
@@ -426,7 +426,7 @@ class Tools(AbstractModule):
                 print(f'{item.id} found: {tool_name}')
                 # Tag Item
                 msg = f"{tool['tag']};{item.id}"
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
                 # TODO ADD LOGS
 
 

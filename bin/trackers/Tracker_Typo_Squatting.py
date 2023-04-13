@@ -79,7 +79,7 @@ class Tracker_Typo_Squatting(AbstractModule):
 
             for tag in tracker.get_tags():
                 msg = f'{tag};{item_id}'
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
 
             if tracker.mail_export():
                 self.exporters['mail'].export(tracker, item)

@@ -135,13 +135,13 @@ class Cryptocurrencies(AbstractModule, ABC):
                 # Check private key
                 if is_valid_address:
                     msg = f'{currency["tag"]};{item_id}'
-                    self.send_message_to_queue(msg, 'Tags')
+                    self.add_message_to_queue(msg, 'Tags')
 
                     if currency.get('private_key'):
                         private_keys = self.regex_findall(currency['private_key']['regex'], item_id, content)
                         if private_keys:
                             msg = f'{currency["private_key"]["tag"]};{item_id}'
-                            self.send_message_to_queue(msg, 'Tags')
+                            self.add_message_to_queue(msg, 'Tags')
 
                             # debug
                             print(private_keys)

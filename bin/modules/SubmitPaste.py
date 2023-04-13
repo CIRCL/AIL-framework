@@ -24,6 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib.objects.Items import ITEMS_FOLDER
 from lib import ConfigLoader
 from lib import Tag
 
@@ -45,7 +46,7 @@ class SubmitPaste(AbstractModule):
         """
         init
         """
-        super(SubmitPaste, self).__init__(queue_name='submit_paste')
+        super(SubmitPaste, self).__init__()
 
         # TODO KVROCKS
         self.r_serv_db = ConfigLoader.ConfigLoader().get_db_conn("Kvrocks_DB")
@@ -262,8 +263,7 @@ class SubmitPaste(AbstractModule):
         source = source if source else 'submitted'
         save_path = source + '/' + now.strftime("%Y") + '/' + now.strftime("%m") + '/' + now.strftime("%d") + '/submitted_' + name + '.gz'
 
-        full_path = os.path.join(os.environ['AIL_HOME'],
-                                 self.process.config.get("Directories", "pastes"), save_path)
+        full_path = os.path.join(ITEMS_FOLDER, save_path)
 
         self.redis_logger.debug(f'file path of the paste {full_path}')
 
@@ -281,7 +281,7 @@ class SubmitPaste(AbstractModule):
 
                 # send paste to Global module
                 relay_message = f"submitted {rel_item_path} {gzip64encoded}"
-                self.process.populate_set_out(relay_message)
+                self.add_message_to_queue(relay_message)
 
                 # add tags
                 for tag in ltags:

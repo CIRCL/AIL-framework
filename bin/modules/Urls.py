@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
 
 # # TODO: Faup packages: Add new binding: Check TLD
@@ -37,11 +38,13 @@ class Urls(AbstractModule):
         """
         super(Urls, self).__init__()
 
+        config_loader = ConfigLoader()
+
         self.faup = Faup()
 
         # Protocol file path
         protocolsfile_path = os.path.join(os.environ['AIL_HOME'],
-                                          self.process.config.get("Directories", "protocolsfile"))
+                                          config_loader.get_config_str("Directories", "protocolsfile"))
         # Get all uri from protocolsfile (Used for Curve)
         uri_scheme = ""
         with open(protocolsfile_path, 'r') as scheme_file:
@@ -78,7 +81,7 @@ class Urls(AbstractModule):
 
             to_send = f"{url} {item.get_id()}"
             print(to_send)
-            self.send_message_to_queue(to_send, 'Url')
+            self.add_message_to_queue(to_send, 'Url')
             self.redis_logger.debug(f"url_parsed: {to_send}")
 
         if len(l_urls) > 0:

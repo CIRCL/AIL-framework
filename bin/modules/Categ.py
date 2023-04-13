@@ -43,6 +43,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
 
 
@@ -59,8 +60,10 @@ class Categ(AbstractModule):
 
         self.categ_files_dir = categ_files_dir
 
+        config_loader = ConfigLoader()
+
         # default = 1 string
-        self.matchingThreshold = self.process.config.getint("Categ", "matchingThreshold")
+        self.matchingThreshold = config_loader.get_config_int("Categ", "matchingThreshold")
 
         self.reload_categ_words()
         self.redis_logger.info("Script Categ started")
@@ -95,19 +98,12 @@ class Categ(AbstractModule):
 
                 # Export message to categ queue
                 print(msg, categ)
-                self.send_message_to_queue(msg, categ)
+                self.add_message_to_queue(msg, categ)
 
                 self.redis_logger.info(
                     f'Categ;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {lenfound} as {categ};{item.get_id()}')
         if r_result:
             return categ_found
-
-        # DIRTY FIX AIL SYNC
-        # # FIXME:  DIRTY FIX
-        message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
-        print(message)
-        self.send_message_to_queue(message, 'SyncModule')
-
 
 if __name__ == '__main__':
 

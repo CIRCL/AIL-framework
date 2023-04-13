@@ -123,7 +123,7 @@ class Decoder(AbstractModule):
 
                 # Send to Tags
                 msg = f'infoleak:automatic-detection="{dname}";{item.id}'
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
 
 
 if __name__ == '__main__':

@@ -36,10 +36,10 @@ r_key = regex_helper.generate_redis_cache_key('extractor')
 # TODO UI Link
 
 MODULES = {
-    'infoleak:automatic-detection="credit-card"': CreditCards(),
-    'infoleak:automatic-detection="iban"': Iban(),
-    'infoleak:automatic-detection="mail"': Mail(),
-    'infoleak:automatic-detection="onion"': Onion(),
+    'infoleak:automatic-detection="credit-card"': CreditCards(queue=False),
+    'infoleak:automatic-detection="iban"': Iban(queue=False),
+    'infoleak:automatic-detection="mail"': Mail(queue=False),
+    'infoleak:automatic-detection="onion"': Onion(queue=False),
     # APIkey ???
     # Credentials
     # Zerobins
@@ -47,7 +47,7 @@ MODULES = {
     # SQL Injetction / Libinjection ???
 
 }
-tools = Tools()
+tools = Tools(queue=False)
 for tool_name in tools.get_tools():
     MODULES[f'infoleak:automatic-detection="{tool_name}-tool"'] = tools
 

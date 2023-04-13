@@ -54,7 +54,7 @@ class Phone(AbstractModule):
             self.redis_logger.warning(f'{item.get_id()} contains PID (phone numbers)')
 
             msg = f'infoleak:automatic-detection="phone-number";{item.get_id()}'
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
 
             stats = {}
             for phone_number in results:

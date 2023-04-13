@@ -232,11 +232,11 @@ class Crawler(AbstractModule):
             gzip64encoded = crawlers.get_gzipped_b64_item(item_id, entries['html'])
             # send item to Global
             relay_message = f'crawler {item_id} {gzip64encoded}'
-            self.send_message_to_queue(relay_message, 'Import')
+            self.add_message_to_queue(relay_message, 'Importers')
 
             # Tag
             msg = f'infoleak:submission="crawler";{item_id}'
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
 
             crawlers.create_item_metadata(item_id, last_url, parent_id)
             if self.root_item is None:

@@ -62,7 +62,7 @@ class Hosts(AbstractModule):
                 # print(host)
 
                 msg = f'{host} {item.get_id()}'
-                self.send_message_to_queue(msg, 'Host')
+                self.add_message_to_queue(msg, 'Host')
 
 
 if __name__ == '__main__':

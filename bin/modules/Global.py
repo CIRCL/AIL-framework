@@ -39,8 +39,10 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ail_core import get_ail_uuid
+from lib.ConfigLoader import ConfigLoader
 from lib.data_retention_engine import update_obj_date
-from lib import item_basic
+from lib.objects.Items import Item
+
 # from lib import Statistics
 
 class Global(AbstractModule):
@@ -54,11 +56,12 @@ class Global(AbstractModule):
         self.processed_item = 0
         self.time_last_stats = time.time()
 
+        config_loader = ConfigLoader()
+
         # Get and sanitize ITEM DIRECTORY
         # # TODO: rename PASTE => ITEM
-        self.PASTES_FOLDER = os.path.join(os.environ['AIL_HOME'], self.process.config.get("Directories", "pastes"))
-        self.PASTES_FOLDERS = self.PASTES_FOLDER + '/'
-        self.PASTES_FOLDERS = os.path.join(os.path.realpath(self.PASTES_FOLDERS), '')
+        self.ITEMS_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
+        self.ITEMS_FOLDER = os.path.join(os.path.realpath(self.ITEMS_FOLDER), '')
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 0.5
@@ -85,9 +88,9 @@ class Global(AbstractModule):
         if len(splitted) == 2:
             item, gzip64encoded = splitted
 
-            # Remove PASTES_FOLDER from item path (crawled item + submitted)
-            if self.PASTES_FOLDERS in item:
-                item = item.replace(self.PASTES_FOLDERS, '', 1)
+            # Remove ITEMS_FOLDER from item path (crawled item + submitted)
+            if self.ITEMS_FOLDER in item:
+                item = item.replace(self.ITEMS_FOLDER, '', 1)
 
             file_name_item = item.split('/')[-1]
             if len(file_name_item) > 255:
@@ -95,11 +98,11 @@ class Global(AbstractModule):
                 item = self.rreplace(item, file_name_item, new_file_name_item, 1)
 
             # Creating the full filepath
-            filename = os.path.join(self.PASTES_FOLDER, item)
+            filename = os.path.join(self.ITEMS_FOLDER, item)
             filename = os.path.realpath(filename)
 
             # Incorrect filename
-            if not os.path.commonprefix([filename, self.PASTES_FOLDER]) == self.PASTES_FOLDER:
+            if not os.path.commonprefix([filename, self.ITEMS_FOLDER]) == self.ITEMS_FOLDER:
                 self.redis_logger.warning(f'Global; Path traversal detected {filename}')
                 print(f'Global; Path traversal detected {filename}')
 
@@ -121,14 +124,23 @@ class Global(AbstractModule):
                             f.write(decoded)
 
                         item_id = filename
-                        # remove self.PASTES_FOLDER from
-                        if self.PASTES_FOLDERS in item_id:
-                            item_id = item_id.replace(self.PASTES_FOLDERS, '', 1)
+                        # remove self.ITEMS_FOLDER from
+                        if self.ITEMS_FOLDER in item_id:
+                            item_id = item_id.replace(self.ITEMS_FOLDER, '', 1)
 
-                        update_obj_date(item_basic.get_item_date(item_id), 'item')
+                        item = Item(item_id)
 
-                        self.send_message_to_queue(item_id)
+                        update_obj_date(item.get_date(), 'item')
+
+                        self.add_message_to_queue(item_id, 'Item')
                         self.processed_item += 1
+
+                        # DIRTY FIX AIL SYNC - SEND TO SYNC MODULE
+                        # # FIXME:  DIRTY FIX
+                        message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
+                        print(message)
+                        self.add_message_to_queue(message, 'Sync')
+
                         print(item_id)
                         if r_result:
                             return item_id

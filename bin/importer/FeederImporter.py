@@ -113,7 +113,7 @@ class FeederModuleImporter(AbstractModule):
         # TODO HANDLE Invalid JSON
         json_data = json.loads(message)
         relay_message = self.importer.importer(json_data)
-        self.send_message_to_queue(relay_message)
+        self.add_message_to_queue(relay_message)
 
 
 # Launch Importer

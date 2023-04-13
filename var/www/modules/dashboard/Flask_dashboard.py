@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib import queues_modules
+from lib import ail_queues
 from lib import ail_updates
 
 from packages.Date import Date
@@ -57,7 +57,7 @@ def event_stream():
 
 def get_queues():
     # We may want to put the llen in a pipeline to do only one query.
-    return queues_modules.get_all_modules_queues_stats()
+    return ail_queues.get_modules_queues_stats()
 
 def get_date_range(date_from, num_day):
     date = Date(str(date_from[0:4])+str(date_from[4:6]).zfill(2)+str(date_from[6:8]).zfill(2))

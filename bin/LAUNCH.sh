@@ -35,7 +35,6 @@ isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
 isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
 iskvrocks=`screen -ls | egrep '[0-9]+.KVROCKS_AIL' | cut -d. -f1`
 islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
-isqueued=`screen -ls | egrep '[0-9]+.Queue_AIL' | cut -d. -f1`
 is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
 is_ail_2_ail=`screen -ls | egrep '[0-9]+.AIL_2_AIL' | cut -d. -f1`
 isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
@@ -152,14 +151,6 @@ function launching_logs {
     screen -S "Logging_AIL" -X screen -t "LogCrawler" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Crawler -l ../logs/ ${syslog_cmd}; read x"
 }
 
-function launching_queues {
-    screen -dmS "Queue_AIL"
-    sleep 0.1
-
-    echo -e $GREEN"\t* Launching all the queues"$DEFAULT
-    screen -S "Queue_AIL" -X screen -t "Queues" bash -c "cd ${AIL_BIN}; ${ENV_PY} launch_queues.py; read x"
-}
-
 function checking_configuration {
     bin_dir=${AIL_HOME}/bin
     echo -e "\t* Checking configuration"
@@ -185,12 +176,16 @@ function launching_scripts {
     # sleep 0.1
     echo -e $GREEN"\t* Launching core scripts ..."$DEFAULT
 
-    # TODO: IMPORTER SCREEN ????
+    # Clear Queue Stats
+    pushd ${AIL_BIN}
+    ${ENV_PY} ./AIL_Init.py
+    popd
 
+    # TODO: IMPORTER SCREEN ????
     #### SYNC ####
-    screen -S "Script_AIL" -X screen -t "Sync_importer" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_importer.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "ail_2_ail_server" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./ail_2_ail_server.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Sync_importer" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_importer.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Sync_manager" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./Sync_manager.py; read x"
     sleep 0.1
@@ -225,7 +220,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./submit_paste.py; read x"
+    screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SubmitPaste.py; read x"
     sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "Crawler" bash -c "cd ${AIL_BIN}/crawlers; ${ENV_PY} ./Crawler.py; read x"
@@ -448,14 +443,6 @@ function launch_logs {
     fi
 }
 
-function launch_queues {
-    if [[ ! $isqueued ]]; then
-        launching_queues;
-    else
-        echo -e $RED"\t* A screen is already launched"$DEFAULT
-    fi
-}
-
 function launch_scripts {
     if [[ ! $isscripted ]]; then ############################# is core
       sleep 1
@@ -505,19 +492,19 @@ function launch_feeder {
 }
 
 function killscript {
-    if [[ $islogged || $isqueued || $is_ail_core || $isscripted || $isflasked || $isfeeded || $is_ail_2_ail ]]; then
+    if [[ $islogged || $is_ail_core || $isscripted || $isflasked || $isfeeded || $is_ail_2_ail ]]; then
         echo -e $GREEN"Killing Script"$DEFAULT
-        kill $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail
+        kill $islogged $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail killed."$DEFAULT
+        echo -e $GREEN"\t* $islogged $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail killed."$DEFAULT
     else
         echo -e $RED"\t* No script to kill"$DEFAULT
     fi
 }
 
 function killall {
-    if [[ $isredis || $isardb || $iskvrocks || $islogged || $isqueued || $is_ail_2_ail || $isscripted || $isflasked || $isfeeded || $is_ail_core || $is_ail_2_ail ]]; then
+    if [[ $isredis || $isardb || $iskvrocks || $islogged || $is_ail_2_ail || $isscripted || $isflasked || $isfeeded || $is_ail_core || $is_ail_2_ail ]]; then
         if [[ $isredis ]]; then
             echo -e $GREEN"Gracefully closing redis servers"$DEFAULT
             shutting_down_redis;
@@ -532,10 +519,10 @@ function killall {
             shutting_down_kvrocks;
         fi
         echo -e $GREEN"Killing all"$DEFAULT
-        kill $isredis $isardb $iskvrocks $islogged $isqueued $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail
+        kill $isredis $isardb $iskvrocks $islogged $is_ail_core $isscripted $isflasked $isfeeded $is_ail_2_ail
         sleep 0.2
         echo -e $ROSE`screen -ls`$DEFAULT
-        echo -e $GREEN"\t* $isredis $isardb $iskvrocks $islogged $isqueued $isscripted $is_ail_2_ail $isflasked $isfeeded $is_ail_core killed."$DEFAULT
+        echo -e $GREEN"\t* $isredis $isardb $iskvrocks $islogged $isscripted $is_ail_2_ail $isflasked $isfeeded $is_ail_core killed."$DEFAULT
     else
         echo -e $RED"\t* No screen to kill"$DEFAULT
     fi
@@ -612,14 +599,13 @@ function launch_all {
     launch_redis;
     launch_kvrocks;
     launch_logs;
-    launch_queues;
     launch_scripts;
     launch_flask;
 }
 
 function menu_display {
 
-  options=("Redis" "Ardb" "Kvrocks" "Logs" "Queues" "Scripts" "Flask" "Killall" "Update" "Update-config" "Update-thirdparty")
+  options=("Redis" "Ardb" "Kvrocks" "Logs" "Scripts" "Flask" "Killall" "Update" "Update-config" "Update-thirdparty")
 
   menu() {
       echo "What do you want to Launch?:"
@@ -655,9 +641,6 @@ function menu_display {
                   ;;
               Logs)
                   launch_logs;
-                  ;;
-              Queues)
-                  launch_queues;
                   ;;
               Scripts)
                   launch_scripts;

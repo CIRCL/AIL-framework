@@ -78,7 +78,7 @@ class LibInjection(AbstractModule):
 
             # Add tag
             msg = f'infoleak:automatic-detection="sql-injection";{item_id}'
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
 
             # statistics
             # # # TODO: # FIXME: remove me

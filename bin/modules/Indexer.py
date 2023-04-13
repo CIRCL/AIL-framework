@@ -25,6 +25,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
 
 
@@ -42,14 +43,13 @@ class Indexer(AbstractModule):
         """
         super(Indexer, self).__init__()
 
+        config_loader = ConfigLoader()
+
         # Indexer configuration - index dir and schema setup
-        self.baseindexpath = join(os.environ['AIL_HOME'],
-                                  self.process.config.get("Indexer", "path"))
-        self.indexRegister_path = join(os.environ['AIL_HOME'],
-                                       self.process.config.get("Indexer", "register"))
-        self.indexertype = self.process.config.get("Indexer", "type")
-        self.INDEX_SIZE_THRESHOLD = self.process.config.getint(
-            "Indexer", "index_max_size")
+        self.baseindexpath = join(os.environ['AIL_HOME'], config_loader.get_config_str("Indexer", "path"))
+        self.indexRegister_path = join(os.environ['AIL_HOME'], config_loader.get_config_str("Indexer", "register"))
+        self.indexertype = config_loader.get_config_str("Indexer", "type")
+        self.INDEX_SIZE_THRESHOLD = config_loader.get_config_int("Indexer", "index_max_size")
 
         self.indexname = None
         self.schema = None

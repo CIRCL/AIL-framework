@@ -173,7 +173,7 @@ class Mixer(AbstractModule):
                 self.r_cache.expire(digest, self.ttl_key)
 
                 self.increase_stat_processed(feeder_name)
-                self.send_message_to_queue(relay_message)
+                self.add_message_to_queue(relay_message)
 
         # Need To Be Fixed, Currently doesn't check the source (-> same as operation 1)
         # # Keep duplicate coming from different sources
@@ -189,7 +189,7 @@ class Mixer(AbstractModule):
         #         self.r_cache.expire(item_id, self.ttl_key)
         #         self.r_cache.expire(f'HASH_{item_id}', self.ttl_key)
         #
-        #         self.send_message_to_queue(relay_message)
+        #         self.add_message_to_queue(relay_message)
         #
         #     else:
         #         if digest != older_digest:
@@ -199,7 +199,7 @@ class Mixer(AbstractModule):
         #             self.r_cache.sadd(item_id, feeder_name)
         #             self.r_cache.expire(item_id, ttl_key)
         #
-        #             self.send_message_to_queue(relay_message)
+        #             self.add_message_to_queue(relay_message)
         #
         #         else:
         #             # Already processed
@@ -210,7 +210,7 @@ class Mixer(AbstractModule):
         # No Filtering
         else:
             self.increase_stat_processed(feeder_name)
-            self.send_message_to_queue(relay_message)
+            self.add_message_to_queue(relay_message)
 
 
 if __name__ == "__main__":

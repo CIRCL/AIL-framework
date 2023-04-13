@@ -79,7 +79,7 @@ class Sync_importer(AbstractModule):
 
         message = f'sync {item_id} {b64_gzip_content}'
         print(item_id)
-        self.send_message_to_queue(message, 'Mixer')
+        self.add_message_to_queue(message, 'Importers')
 
 
 if __name__ == '__main__':

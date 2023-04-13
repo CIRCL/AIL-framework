@@ -112,7 +112,7 @@ class Credential(AbstractModule):
                 self.redis_logger.warning(to_print)
 
                 msg = f'infoleak:automatic-detection="credential";{item.get_id()}'
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
 
                 site_occurrence = self.regex_findall(self.regex_site_for_stats, item.get_id(), item_content)
 
@@ -138,11 +138,11 @@ class Credential(AbstractModule):
                     else:
                         creds_sites[domain] = 1
 
-                for site, num in creds_sites.items(): # Send for each different site to moduleStats
-
-                    mssg = f'credential;{num};{site};{item.get_date()}'
-                    print(mssg)
-                    self.send_message_to_queue(mssg, 'ModuleStats')
+                # for site, num in creds_sites.items(): # Send for each different site to moduleStats
+                #
+                #     mssg = f'credential;{num};{site};{item.get_date()}'
+                #     print(mssg)
+                #     self.add_message_to_queue(mssg, 'ModuleStats')
 
                 if all_sites:
                     discovered_sites = ', '.join(all_sites)

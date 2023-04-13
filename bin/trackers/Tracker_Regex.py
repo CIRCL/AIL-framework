@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.objects.Items import Item
+from lib.ConfigLoader import ConfigLoader
 from packages import Term
 from lib import Tracker
 
@@ -31,9 +32,11 @@ class Tracker_Regex(AbstractModule):
     def __init__(self):
         super(Tracker_Regex, self).__init__()
 
+        config_loader = ConfigLoader()
+
         self.pending_seconds = 5
 
-        self.max_execution_time = self.process.config.getint(self.module_name, "max_execution_time")
+        self.max_execution_time = config_loader.get_config_int(self.module_name, "max_execution_time")
 
         # refresh Tracked Regex
         self.dict_regex_tracked = Term.get_regex_tracked_words_dict()
@@ -85,7 +88,7 @@ class Tracker_Regex(AbstractModule):
 
             for tag in tracker.get_tags():
                 msg = f'{tag};{item_id}'
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
 
             if tracker.mail_export():
                 # TODO add matches + custom subjects

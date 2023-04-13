@@ -50,10 +50,10 @@ class Tags(AbstractModule):
             print(f'{item.get_id()}: Tagged {tag}')
 
             # Forward message to channel
-            self.send_message_to_queue(message, 'MISP_The_Hive_feeder')
+            self.add_message_to_queue(message, 'Tag_feed')
 
             message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
-            self.send_message_to_queue(message, 'SyncModule')
+            self.add_message_to_queue(message, 'Sync')
 
         else:
             # Malformed message

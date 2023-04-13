@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
 from packages import Date
 from lib import Tracker
@@ -34,9 +35,10 @@ class Retro_Hunt(AbstractModule):
     """
     def __init__(self):
         super(Retro_Hunt, self).__init__()
+        config_loader = ConfigLoader()
         self.pending_seconds = 5
 
-        self.full_item_url = self.process.config.get("Notifications", "ail_domain") + "/object/item?id="
+        self.full_item_url = config_loader.get_config_str("Notifications", "ail_domain") + "/object/item?id="
 
         # reset on each loop
         self.task_uuid = None
@@ -149,7 +151,7 @@ class Retro_Hunt(AbstractModule):
         # Tags
         for tag in self.tags:
             msg = f'{tag};{id}'
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
 
         # # Mails
         # mail_to_notify = Tracker.get_tracker_mails(tracker_uuid)

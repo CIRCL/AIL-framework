@@ -63,7 +63,7 @@ class CveModule(AbstractModule):
 
             msg = f'infoleak:automatic-detection="cve";{item_id}'
             # Send to Tags Queue
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
 
 
 if __name__ == '__main__':

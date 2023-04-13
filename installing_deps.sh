@@ -130,9 +130,6 @@ cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}/server.key
 
 mkdir -p $AIL_HOME/PASTES
 
-#Create the file all_module and update the graph in doc
-$AIL_HOME/doc/generate_modules_data_flow_graph.sh
-
 #### DB SETUP ####
 
 # init update version

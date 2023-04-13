@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.objects.Items import Item
+from lib.ConfigLoader import ConfigLoader
 from lib import d4
 
 
@@ -34,15 +35,17 @@ class DomClassifier(AbstractModule):
     def __init__(self):
         super(DomClassifier, self).__init__()
 
+        config_loader = ConfigLoader()
+
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
-        addr_dns = self.process.config.get("DomClassifier", "dns")
+        addr_dns = config_loader.get_config_str("DomClassifier", "dns")
 
         self.c = DomainClassifier.domainclassifier.Extract(rawtext="", nameservers=[addr_dns])
 
-        self.cc = self.process.config.get("DomClassifier", "cc")
-        self.cc_tld = self.process.config.get("DomClassifier", "cc_tld")
+        self.cc = config_loader.get_config_str("DomClassifier", "cc")
+        self.cc_tld = config_loader.get_config_str("DomClassifier", "cc_tld")
 
         # Send module state to logs
         self.redis_logger.info(f"Module: {self.module_name} Launched")
@@ -66,7 +69,7 @@ class DomClassifier(AbstractModule):
 
             if self.c.vdomain and d4.is_passive_dns_enabled():
                 for dns_record in self.c.vdomain:
-                    self.send_message_to_queue(dns_record)
+                    self.add_message_to_queue(dns_record)
 
             localizeddomains = self.c.include(expression=self.cc_tld)
             if localizeddomains:

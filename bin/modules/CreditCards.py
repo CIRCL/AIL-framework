@@ -31,8 +31,8 @@ class CreditCards(AbstractModule):
     CreditCards module for AIL framework
     """
 
-    def __init__(self):
-        super(CreditCards, self).__init__()
+    def __init__(self, queue=True):
+        super(CreditCards, self).__init__(queue=queue)
 
         # Source: http://www.richardsramblings.com/regex/credit-card-numbers/
         cards = [
@@ -90,7 +90,7 @@ class CreditCards(AbstractModule):
                 self.redis_logger.warning(mess)
 
                 msg = f'infoleak:automatic-detection="credit-card";{item.id}'
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
 
                 if r_result:
                     return creditcard_set

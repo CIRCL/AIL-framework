@@ -56,6 +56,9 @@ class ConfigLoader(object):
             directory_path = os.path.join(os.environ['AIL_HOME'], directory_path)
             return directory_path
 
+    def get_config_sections(self):
+        return self.cfg.sections()
+
     def get_config_str(self, section, key_name):
         return self.cfg.get(section, key_name)
 

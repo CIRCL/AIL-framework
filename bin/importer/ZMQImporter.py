@@ -73,7 +73,7 @@ class ZMQModuleImporter(AbstractModule):
         for message in messages:
             message = message.decode()
             print(message.split(' ', 1)[0])
-            self.send_message_to_queue(message)
+            self.add_message_to_queue(message)
 
 
 if __name__ == '__main__':

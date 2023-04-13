@@ -37,8 +37,8 @@ class Iban(AbstractModule):
                           enumerate(string.ascii_lowercase, 10))
     LETTERS_IBAN = {ord(d): str(i) for i, d in _LETTERS_IBAN}
 
-    def __init__(self):
-        super(Iban, self).__init__()
+    def __init__(self, queue=True):
+        super(Iban, self).__init__(queue=queue)
 
         # Waiting time in secondes between to message proccessed
         self.pending_seconds = 10
@@ -98,7 +98,7 @@ class Iban(AbstractModule):
                 self.redis_logger.warning(f'{to_print}Checked found {len(valid_ibans)} IBAN;{item_id}')
                 # Tags
                 msg = f'infoleak:automatic-detection="iban";{item_id}'
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
 
 
 if __name__ == '__main__':

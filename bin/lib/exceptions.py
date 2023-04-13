@@ -13,3 +13,6 @@ class UpdateInvestigationError(AIL_ERROR):
 
 class NewTagError(AIL_ERROR):
     pass
+
+class ModuleQueueError(AIL_ERROR):
+    pass

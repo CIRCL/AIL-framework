@@ -20,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
 from packages import Term
 from lib import Tracker
@@ -46,9 +47,11 @@ class Tracker_Term(AbstractModule):
     def __init__(self):
         super(Tracker_Term, self).__init__()
 
+        config_loader = ConfigLoader()
+
         self.pending_seconds = 5
 
-        self.max_execution_time = self.process.config.getint('Tracker_Term', "max_execution_time")
+        self.max_execution_time = config_loader.get_config_int('Tracker_Term', "max_execution_time")
 
         # loads tracked words
         self.list_tracked_words = Term.get_tracked_words_list()
@@ -137,7 +140,7 @@ class Tracker_Term(AbstractModule):
             # Tags
             for tag in tracker.get_tags():
                 msg = f'{tag};{item_id}'
-                self.send_message_to_queue(msg, 'Tags')
+                self.add_message_to_queue(msg, 'Tags')
 
             # Mail
             if tracker.mail_export():

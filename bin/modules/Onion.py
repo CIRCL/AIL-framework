@@ -29,8 +29,8 @@ from lib import crawlers
 class Onion(AbstractModule):
     """docstring for Onion module."""
 
-    def __init__(self):
-        super(Onion, self).__init__()
+    def __init__(self, queue=True):
+        super(Onion, self).__init__(queue=queue)
 
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -101,7 +101,7 @@ class Onion(AbstractModule):
 
             # TAG Item
             msg = f'infoleak:automatic-detection="onion";{item.get_id()}'
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
 
 
 if __name__ == "__main__":

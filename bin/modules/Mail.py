@@ -36,8 +36,8 @@ class Mail(AbstractModule):
     Module Mail module for AIL framework
     """
 
-    def __init__(self):
-        super(Mail, self).__init__()
+    def __init__(self, queue=True):
+        super(Mail, self).__init__(queue=queue)
 
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -158,8 +158,8 @@ class Mail(AbstractModule):
             num_valid_email += nb_mails
 
             # Create domain_mail stats
-            msg = f'mail;{nb_mails};{domain_mx};{item_date}'
-            self.send_message_to_queue(msg, 'ModuleStats')
+            # msg = f'mail;{nb_mails};{domain_mx};{item_date}'
+            # self.add_message_to_queue(msg, 'ModuleStats')
 
             # Create country stats
             self.faup.decode(domain_mx)
@@ -178,7 +178,7 @@ class Mail(AbstractModule):
             self.redis_logger.warning(msg)
             # Tags
             msg = f'infoleak:automatic-detection="mail";{item_id}'
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
         else:
             self.redis_logger.info(msg)
 

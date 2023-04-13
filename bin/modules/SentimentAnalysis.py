@@ -78,7 +78,6 @@ class SentimentAnalysis(AbstractModule):
         try:
             self.analyse(message)
         except TimeoutException:
-            self.process.incr_module_timeout_statistic()
             self.redis_logger.debug(f"{message} processing timeout")
         else:
             signal.alarm(0)

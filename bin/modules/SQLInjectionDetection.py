@@ -59,7 +59,7 @@ class SQLInjectionDetection(AbstractModule):
 
             # Tag
             msg = f'infoleak:automatic-detection="sql-injection";{item_id}'
-            self.send_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(msg, 'Tags')
 
             # statistics
             # tld = url_parsed['tld']

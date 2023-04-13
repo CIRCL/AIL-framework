@@ -68,4 +68,6 @@ doc/all_modules.txt
 # auto generated
 doc/module-data-flow.png
 doc/data-flow.png
+doc/ail_queues.dot
+doc/ail_queues.svg
 doc/statistics
