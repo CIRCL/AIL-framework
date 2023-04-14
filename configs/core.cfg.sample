@@ -18,9 +18,13 @@ tldsfile = faup/src/data/mozilla.tlds
 
 domainstrending_csv = var/www/static/csv/domainstrendingdata
 
-pystemonpath = /home/pystemon/pystemon/
-
 sentiment_lexicon_file = sentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt
+
+[Pystemon]
+dir = /home/pystemon/pystemon/
+redis_host = localhost
+redis_port = 6379
+redis_db = 10
 
 ##### Logs ######
 [Logs]

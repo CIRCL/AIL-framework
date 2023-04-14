@@ -483,7 +483,7 @@ function launch_feeder {
         screen -dmS "Feeder_Pystemon"
         sleep 0.1
         echo -e $GREEN"\t* Launching Pystemon feeder"$DEFAULT
-        screen -S "Feeder_Pystemon" -X screen -t "Pystemon_feeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./feeder/pystemon-feeder.py; read x"
+        screen -S "Feeder_Pystemon" -X screen -t "Pystemon_feeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./importer/PystemonImporter.py; read x"
         sleep 0.1
         screen -S "Feeder_Pystemon" -X screen -t "Pystemon" bash -c "cd ${AIL_HOME}/../pystemon; ${ENV_PY} ./pystemon.py; read x"
     else
