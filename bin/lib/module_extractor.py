@@ -71,30 +71,34 @@ def get_correl_match(extract_type, obj_id, content):
     return extracted
 
 def _get_yara_match(data):
-    for row in data.get('strings'):
-        start, i, value = row
-        value = value.decode()
-        end = start + len(value)
-        r_cache.sadd(f'extractor:yara:match:{r_key}', f'{start}:{end}:{value}')
-        r_cache.expire(f'extractor:yara:match:{r_key}', 300)
+    for string_match in data.get('strings'):
+        for string_match_instance in string_match.instances:
+            start = string_match_instance.offset
+            value = string_match_instance.matched_data.decode()
+            end = start + string_match_instance.matched_length
+            r_cache.sadd(f'extractor:yara:match:{r_key}', f'{start}:{end}:{value}')
+            r_cache.expire(f'extractor:yara:match:{r_key}', 300)
     return yara.CALLBACK_CONTINUE
 
 def _get_word_regex(word):
     return '(?:^|(?<=[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]))' + word + '(?:$|(?=[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]))'
 
+def convert_byte_offset_to_string(b_content, offset):
+    byte_chunk = b_content[:offset + 1]
+    string_chunk = byte_chunk.decode()
+    offset = len(string_chunk) - 1
+    return offset
+
+
 # TODO RETRO HUNTS
 # TODO TRACKER TYPE IN UI
 def get_tracker_match(obj_id, content):
-    cached = r_cache.get(f'extractor:cache:{obj_id}')
-    if cached:
-        r_cache.expire(f'extractor:cache:{obj_id}', 300)
-        return json.loads(cached)
-
     extracted = []
+    extracted_yara = []
     trackers = Tracker.get_obj_all_trackers('item', '', obj_id)
     for tracker_uuid in trackers:
         tracker_type = Tracker.get_tracker_type(tracker_uuid)
-        print(tracker_type)
+        # print(tracker_type)
         tracker = Tracker.get_tracker_by_uuid(tracker_uuid)
         if tracker_type == 'regex':  # TODO Improve word detection -> word delimiter
             regex_match = regex_helper.regex_finditer(r_key, tracker, obj_id, content)
@@ -102,14 +106,14 @@ def get_tracker_match(obj_id, content):
                 extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker_uuid}'])
         elif tracker_type == 'yara':
             rule = Tracker.get_yara_rule_by_uuid(tracker_uuid)
-            rule.match(data=content, callback=_get_yara_match,
+            rule.match(data=content.encode(), callback=_get_yara_match,
                        which_callbacks=yara.CALLBACK_MATCHES, timeout=30)
             yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')
             r_cache.delete(f'extractor:yara:match:{r_key}')
             extracted = []
             for match in yara_match:
                 start, end, value = match.split(':', 2)
-                extracted.append([int(start), int(end), value, f'tracker:{tracker_uuid}'])
+                extracted_yara.append([int(start), int(end), value, f'tracker:{tracker_uuid}'])
 
         elif tracker_type == 'word' or tracker_type == 'set':
             if tracker_type == 'set':
@@ -120,15 +124,20 @@ def get_tracker_match(obj_id, content):
             for word in words:
                 regex = _get_word_regex(word)
                 regex_match = regex_helper.regex_finditer(r_key, regex, obj_id, content)
-                print(regex_match)
+                # print(regex_match)
                 for match in regex_match:
                     extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker_uuid}'])
 
-    # Save In Cache
-    if extracted:
-        extracted_dump = json.dumps(extracted)
-        r_cache.set(f'extractor:cache:{obj_id}', extracted_dump)
-        r_cache.expire(f'extractor:cache:{obj_id}', 300)  # TODO Reduce CACHE ???????????????
+    # Convert byte offset to string offset
+    if extracted_yara:
+        b_content = content.encode()
+        if len(b_content) == len(content):
+            extracted[0:0] = extracted_yara
+        else:
+            for yara_m in extracted_yara:
+                start = convert_byte_offset_to_string(b_content, yara_m[0])
+                end = convert_byte_offset_to_string(b_content, yara_m[1])
+                extracted.append([int(start), int(end), yara_m[2], yara_m[3]])
 
     return extracted
 
@@ -138,6 +147,15 @@ def get_tracker_match(obj_id, content):
 
 def extract(obj_id, content=None):
     item = Item(obj_id)
+    if not item.exists():
+        return []
+
+    # CHECK CACHE
+    cached = r_cache.get(f'extractor:cache:{obj_id}')
+    if cached:
+        r_cache.expire(f'extractor:cache:{obj_id}', 300)
+        return json.loads(cached)
+
     if not content:
         content = item.get_content()
 
@@ -160,6 +178,13 @@ def extract(obj_id, content=None):
     # SORT By Start Pos
     extracted = sorted(extracted, key=itemgetter(0))
     # print(extracted)
+
+    # Save In Cache
+    if extracted:
+        extracted_dump = json.dumps(extracted)
+        r_cache.set(f'extractor:cache:{obj_id}', extracted_dump)
+        r_cache.expire(f'extractor:cache:{obj_id}', 300)  # TODO Reduce CACHE ???????????????
+
     return extracted
 
 # TODO ADD LINK UI
