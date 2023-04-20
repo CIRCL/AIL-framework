@@ -973,8 +973,8 @@ def is_enabled_tag(tag, enabled_namespace=None):
         return is_enabled_galaxy_tag(tag, enabled_galaxies=enabled_namespace)
 
 def are_enabled_tags(tags):
-    enabled_taxonomies = get_active_taxonomies(r_set=True)
-    enabled_galaxies = get_active_galaxies(r_set=True)
+    enabled_taxonomies = get_active_taxonomies()
+    enabled_galaxies = get_active_galaxies()
     for tag in tags:
         if is_taxonomie_tag(tag):
             res = is_enabled_taxonomie_tag(tag, enabled_taxonomies=enabled_taxonomies)

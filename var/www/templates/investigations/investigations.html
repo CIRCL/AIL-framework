@@ -35,38 +35,42 @@
 				</h3>
 
 				<table id="table_investigation" class="table table-striped border-primary">
-          <thead class="bg-dark text-white">
-            <tr>
-								<th>Name</th>
-                <th>Date</th>
-								<th>last modified</th>
-								<td>Info</td>
-                <th>Nb Objects</th>
-            </tr>
-          </thead>
-          <tbody style="font-size: 15px;">
-            {% for dict_investigation in investigations %}
-              <tr class="border-color: blue;">
-								<td>
-									<a href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
-										{{ dict_investigation['info']}}
-										<div>
-											{% for tag in dict_investigation['tags'] %}
-												<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-											{% endfor %}
-										</div>
-									</a>
-								</td>
-								<td>{{ dict_investigation['date']}}</td>
-								<td>{{ dict_investigation['last_change']}}</td>
-								<td>{{ dict_investigation['info']}}</td>
-								<td>{{ dict_investigation['nb_objects']}}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                    <thead class="bg-dark text-white">
+                    <tr>
+                        <th>Name</th>
+                        <th>Date</th>
+                        <th>last modified</th>
+                        <td>Info</td>
+                        <th>Nb Objects</th>
+                    </tr>
+                    </thead>
+                    <tbody style="font-size: 15px;">
+                    {% for dict_investigation in investigations %}
+                        <tr class="border-color: blue;">
+                            <td>
+                                <a href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
+                                    {{ dict_investigation['info']}}
+                                    <div>
+                                        {% for tag in dict_investigation['tags'] %}
+                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </a>
+                            </td>
+                            <td>{{ dict_investigation['date']}}</td>
+                            <td>{{ dict_investigation['last_change']}}</td>
+                            <td>{{ dict_investigation['info']}}</td>
+                            <td>{{ dict_investigation['nb_objects']}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
 
-			</div>
+                <a class="btn btn-primary mt-2" href="{{ url_for('investigations_b.add_investigation') }}">
+                    <i class="fas fa-plus"></i> Create Investigation
+                </a>
+
+            </div>
 
 		</div>
 	</div>
