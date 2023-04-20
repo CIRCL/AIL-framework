@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from exporter import MISPExporter
 from exporter import TheHiveExporter
+from lib.exceptions import MISPConnectionError
 from lib.objects import ail_objects
 from lib.Investigations import Investigation
 
@@ -43,6 +44,9 @@ thehive_exporter_item = TheHiveExporter.TheHiveExporterItem()
 
 
 # ============ FUNCTIONS ============
+
+def create_json_response(data, status_code):
+    return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 
 # ============= ROUTES ==============
@@ -151,14 +155,18 @@ def objects_misp_export_post():
     publish = request.form.get('misp_event_info', False)
 
     objs = ail_objects.get_objects(objects)
-    event = misp_exporter_objects.create_event(objs, distribution=distribution, threat_level=threat_level,
+    try:
+        event = misp_exporter_objects.create_event(objs, distribution=distribution, threat_level=threat_level,
                                                analysis=analysis, info=info, export=export, publish=publish)
+    except MISPConnectionError as e:
+        return create_json_response({"error": e.message}, 400)
 
     MISPExporter.delete_user_misp_objects_to_export(user_id)
-
     if not export:
-        return send_file(io.BytesIO(event['event'].encode()), as_attachment=True,
-                         download_name=f'ail_export_{event["uuid"]}.json')
+        event_uuid = event[10:46]
+        # TODO ADD JAVASCRIPT REFRESH PAGE IF RESP == 200
+        return send_file(io.BytesIO(event.encode()), as_attachment=True,
+                         download_name=f'ail_export_{event_uuid}.json')
     else:
         object_types = ail_objects.get_all_objects_with_subtypes_tuple()
         return render_template("export_object.html", object_types=object_types,

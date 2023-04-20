@@ -13,7 +13,7 @@ import uuid
 
 from abc import ABC
 
-from pymisp import MISPEvent, PyMISP
+from pymisp import MISPEvent, PyMISP, PyMISPError
 from urllib3 import disable_warnings as urllib3_disable_warnings
 
 sys.path.append('../../configs/keys')
@@ -22,9 +22,11 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 #################################
 from exporter.abstract_exporter import AbstractExporter
+from lib.exceptions import MISPConnectionError
 from lib.ConfigLoader import ConfigLoader
 from lib.Investigations import Investigation
 from lib.objects.abstract_object import AbstractObject
+from lib.objects import ail_objects
 
 # from lib.Tracker import Tracker
 
@@ -61,7 +63,7 @@ def delete_user_misp_objects_to_export(user_id):
 # --- FUNCTIONS --- #
 
 # MISPExporter -> return correct exporter by type ????
-class MISPExporter(AbstractExporter, ABC): # <- AbstractMISPExporter ???????
+class MISPExporter(AbstractExporter, ABC):
     """MISP Exporter
 
     :param url: URL of the MISP instance you want to connect to
@@ -97,7 +99,11 @@ class MISPExporter(AbstractExporter, ABC): # <- AbstractMISPExporter ???????
                 self.ssl = None
 
     def get_misp(self):
-        return PyMISP(self.url, self.key, self.ssl)
+        try:
+            misp = PyMISP(self.url, self.key, self.ssl)
+        except PyMISPError as e:
+            raise MISPConnectionError(e.message)
+        return misp
 
     # TODO catch exception
     def get_misp_uuid(self):
@@ -151,6 +157,9 @@ class MISPExporter(AbstractExporter, ABC): # <- AbstractMISPExporter ???????
     # TODO EVENT REPORT ???????
     def create_event(self, objs, export=False, event_uuid=None, date=None, publish=False, info=None, tags=None,
                      analysis=0, distribution=0, threat_level=4):
+        # Test Connection
+        if export:
+            self.get_misp()
         if tags is None:
             tags = []
         event = MISPEvent()
@@ -197,9 +206,9 @@ class MISPExporter(AbstractExporter, ABC): # <- AbstractMISPExporter ???????
 class MISPExporterAILObjects(MISPExporter):
     """MISPExporter AILObjects
 
-    :param url: URL of the MISP instance you want to connect to
-    :param key: API key of the user you want to use
-    :param ssl: can be True or False (to check or to not check the validity of the certificate. Or a CA_BUNDLE in case of self signed or other certificate (the concatenation of all the crt of the chain)
+    :param url: URL of the MISP instance you want to connect to :param key: API key of the user you want to use
+    :param ssl: can be True or False (to check or to not check the validity of the certificate. Or a CA_BUNDLE in
+    case of self signed or other certificate (the concatenation of all the crt of the chain)
     """
 
     def __init__(self, url='', key='', ssl=False):
@@ -222,9 +231,9 @@ class MISPExporterAILObjects(MISPExporter):
 class MISPExporterInvestigation(MISPExporter):
     """MISPExporter Investigation
 
-    :param url: URL of the MISP instance you want to connect to
-    :param key: API key of the user you want to use
-    :param ssl: can be True or False (to check or to not check the validity of the certificate. Or a CA_BUNDLE in case of self signed or other certificate (the concatenation of all the crt of the chain)
+    :param url: URL of the MISP instance you want to connect to :param key: API key of the user you want to use
+    :param ssl: can be True or False (to check or to not check the validity of the certificate. Or a CA_BUNDLE in
+    case of self signed or other certificate (the concatenation of all the crt of the chain)
     """
 
     def __init__(self, url='', key='', ssl=False):
