@@ -191,7 +191,7 @@
                         <tbody>
                           {% for decoded in dict_domain['decoded']%}
                             <tr>
-                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=decoded&id={{ decoded }}">{{ decoded }}</a></td>
+                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=decoded&id={{ decoded[1] }}">{{ decoded[1] }}</a></td>
                             </tr>
                           {% endfor %}
                         </tbody>
@@ -230,26 +230,21 @@
                           </tr>
                          </thead>
                         <tbody>
-                          {% for dict_key in dict_domain['pgp']%}
-                            {% if dict_key != "nb" %}
-                              {% if dict_key=="mail" %}
+                        {% for row in dict_domain['pgp']%}
+                            {% if row[0] != "mail" %}
                                 {% set var_icon = "fas fa-at" %}
-                              {% elif dict_key=="name" %}
+                            {% elif row[0]=="name" %}
                                 {% set var_icon = "fas fa-user-tag" %}
-                              {% else %}
+                            {% else %}
                                 {% set var_icon = "fas fa-key" %}
-                              {% endif %}
-                              {% for key_id in dict_domain['pgp'][dict_key]%}
-                                <tr>
-                                  <td>
-                                    <i class="{{ var_icon }}"></i>
-                                    &nbsp;&nbsp;{{ dict_key }}
-                                  </td>
-                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=pgp&subtype={{ dict_key }}&id={{ key_id }}">{{ key_id }}</a></td>
-                                </tr>
-                              {% endfor %}
                             {% endif %}
-                          {% endfor %}
+                            <tr>
+                                <td>
+                                    <i class="{{ var_icon }}"></i>&nbsp;&nbsp;{{ row[0] }}
+                                </td>
+                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=pgp&subtype={{ row[0] }}&id={{ row[1] }}">{{ row[1] }}</a></td>
+                            </tr>
+                        {% endfor %}
                         </tbody>
                       </table>
                     </div>
@@ -257,8 +252,6 @@
                 </div>
               </div>
             {% endif %}
-
-            {{dict_domain['cryptocurrency']}}
 
             {% if dict_domain['cryptocurrency']%}
               <div id="accordioncurrency" class="mt-3">
@@ -288,27 +281,23 @@
                           </tr>
                          </thead>
                         <tbody>
-                          {% for dict_key in dict_domain['cryptocurrency']%}
-                          
-                            {% if dict_key != "nb" %}
-                              {% if dict_key=="bitcoin" %}
+                        {% for row in dict_domain['cryptocurrency']%}
+                            {% if dict_key=="bitcoin" %}
                                 {% set var_icon = "fab fa-bitcoin" %}
-                              {% elif dict_key=="monero" %}
+                            {% elif dict_key=="monero" %}
                                 {% set var_icon = "fab fa-monero" %}
-                              {% else %}
+                            {% else %}
                                 {% set var_icon = "fas fa-coins" %}
-                              {% endif %}
-                              {% for key_id in dict_domain['cryptocurrency'][dict_key]%}
-                                <tr>
-                                  <td>
-                                    <i class="{{ var_icon }}"></i>
-                                    &nbsp;&nbsp;{{ dict_key }}
-                                  </td>
-                                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=cryptocurrency&subtype={{ dict_key }}&id={{ key_id }}">{{ key_id }}</a></td>
-                                </tr>
-                              {% endfor %}
                             {% endif %}
-                          {% endfor %}
+                            <tr>
+                                <td>
+                                    <i class="{{ var_icon }}"></i>&nbsp;&nbsp;{{ row[0] }}
+                                </td>
+                                <td>
+                                    <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=cryptocurrency&subtype={{ row[0] }}&id={{ row[1] }}">{{ row[1] }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
                         </tbody>
                       </table>
                     </div>
@@ -345,9 +334,9 @@
                           </tr>
                          </thead>
                         <tbody>
-                          {% for screenshot in dict_domain['screenshot']%}
+                          {% for row in dict_domain['screenshot']%}
                             <tr>
-                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=screenshot&id={{ screenshot }}">{{ screenshot }}</a></td>
+                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=screenshot&id={{ row[1] }}">{{ row[1] }}</a></td>
                             </tr>
                           {% endfor %}
                         </tbody>

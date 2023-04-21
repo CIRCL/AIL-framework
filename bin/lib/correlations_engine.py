@@ -74,16 +74,24 @@ def get_nb_correlations(obj_type, subtype, obj_id, filter_types=[]):
         obj_correlations[correl_type] = get_nb_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type)
     return obj_correlations
 
-def get_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type):
-    return r_metadata.smembers(f'correlation:obj:{obj_type}:{subtype}:{correl_type}:{obj_id}')
+def get_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type, unpack=False):
+    correl = r_metadata.smembers(f'correlation:obj:{obj_type}:{subtype}:{correl_type}:{obj_id}')
+    if unpack:
+        unpacked = []
+        for str_correl in correl:
+            unpacked.append(str_correl.split(':', 1))
+        return unpacked
+    else:
+        return correl
 
-def get_correlations(obj_type, subtype, obj_id, filter_types=[]):
+def get_correlations(obj_type, subtype, obj_id, filter_types=[], unpack=False):
     if subtype is None:
         subtype = ''
     obj_correlations = {}
     filter_types = sanityze_obj_correl_types(obj_type, filter_types)
     for correl_type in filter_types:
-        obj_correlations[correl_type] = get_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type)
+        obj_correlations[correl_type] = get_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type,
+                                                                       unpack=unpack)
     return obj_correlations
 
 def exists_obj_correlation(obj_type, subtype, obj_id, obj2_type):

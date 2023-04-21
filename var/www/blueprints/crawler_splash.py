@@ -61,8 +61,8 @@ def create_json_response(data, status_code):
 def crawlers_dashboard():
     is_manager_connected = crawlers.get_lacus_connection_metadata()
     crawlers_status = crawlers.get_captures_status()
-    # print(crawlers_status)
     crawlers_latest_stats = crawlers.get_crawlers_stats()
+    # print(crawlers_status)
     # print(crawlers_latest_stats)
     date = crawlers.get_current_date()
     return render_template("dashboard_crawler.html", date=date,
@@ -290,7 +290,7 @@ def showDomain():
     dict_domain = domain.get_meta(options=['last_origin', 'languages'])
     dict_domain['domain'] = domain.id
     if domain.was_up():
-        dict_domain = {**dict_domain, **domain.get_correlations()}
+        dict_domain = {**dict_domain, **domain.get_correlations(unpack=True)}
         dict_domain['correlation_nb'] = len(dict_domain['decoded']) + len(dict_domain['username']) + len(
             dict_domain['pgp']) + len(dict_domain['cryptocurrency']) + len(dict_domain['screenshot'])
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])

@@ -284,7 +284,7 @@
        // On click, get html content from url and update the corresponding modal
        $("[data-toggle='modal']").off('click.openmodal').on("click.openmodal", function (event) {
            var modal=$(this);
-           var url = " {{ url_for('showsavedpastes.showpreviewpaste')  }}?paste=" + $(this).attr('data-path') + "&num=" + $(this).attr('data-num');
+           var url = " {{ url_for('objects_item.item_preview')  }}?id=" + $(this).attr('data-path');
            last_clicked_paste =  $(this).attr('data-num');
            $.get(url, function (data) {
 
