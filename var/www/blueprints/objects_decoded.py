@@ -100,7 +100,7 @@ def decoded_download():
     if decoded.exists():
         filename = f'{decoded.id}.zip'
         zip_content = decoded.get_zip_content()
-        return send_file(zip_content, attachment_filename=filename, as_attachment=True)
+        return send_file(zip_content, download_name=filename, as_attachment=True)
     else:
         abort(404)
 
