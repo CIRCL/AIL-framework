@@ -542,10 +542,14 @@ if (d.popover) {
 					}
 
 					if (data["img"]) {
-						desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}" + data["img"] +" class=\"img-thumbnail\" />";
+                        if (data["tags_safe"]) {
+						    desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}" + data["img"] +" class=\"img-thumbnail\" />";
+                        } else {
+                            desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
+                        }
 					}
 
-					desc = desc + "</div>"
+					desc = desc + "</div></div>"
 					div.html(desc)
 					 	.style("left", (d3_pageX) + "px")
 					 	.style("top", (d3_pageY - 28) + "px");

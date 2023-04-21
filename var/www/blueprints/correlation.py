@@ -157,7 +157,8 @@ def get_description():
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # object exist
     else:
-        res = ail_objects.get_object_meta(object_type, type_id, correlation_id, options={'tags'}, flask_context=True)
+        res = ail_objects.get_object_meta(object_type, type_id, correlation_id, options={'tags', 'tags_safe'},
+                                          flask_context=True)
         if 'tags' in res:
             res['tags'] = list(res['tags'])
         return jsonify(res)

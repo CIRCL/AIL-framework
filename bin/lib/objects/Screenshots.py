@@ -86,8 +86,8 @@ class Screenshot(AbstractObject):
         meta = {'id': self.id}
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
-        # TODO: ADD IN ABSTRACT CLASS
-        #meta['is_tags_safe'] = Tag.is_tags_safe(metadata_dict['tags']) ################## # TODO: ADD IN ABSTRACT CLASS
+        if 'tags_safe' in options:
+            meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
 
 def get_screenshot_dir():
