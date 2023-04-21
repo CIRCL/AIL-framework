@@ -86,7 +86,9 @@ class Urls(AbstractModule):
 
         if len(l_urls) > 0:
             to_print = f'Urls;{item.get_source()};{item.get_date()};{item.get_basename()};'
-            self.redis_logger.info(f'{to_print}Detected {len(l_urls)} URL;{item.get_id()}')
+            print(to_print)
+            # .debug ???
+            # self.redis_logger.info(f'{to_print}Detected {len(l_urls)} URL;{item.get_id()}')
 
 
 if __name__ == '__main__':

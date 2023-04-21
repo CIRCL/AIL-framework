@@ -179,7 +179,7 @@ class Mail(AbstractModule):
             # Tags
             msg = f'infoleak:automatic-detection="mail";{item_id}'
             self.add_message_to_queue(msg, 'Tags')
-        else:
+        elif num_valid_email > 0:
             self.redis_logger.info(msg)
 
 

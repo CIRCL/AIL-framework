@@ -100,10 +100,11 @@ class Categ(AbstractModule):
                 print(msg, categ)
                 self.add_message_to_queue(msg, categ)
 
-                self.redis_logger.info(
+                self.redis_logger.debug(
                     f'Categ;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {lenfound} as {categ};{item.get_id()}')
         if r_result:
             return categ_found
+
 
 if __name__ == '__main__':
 
