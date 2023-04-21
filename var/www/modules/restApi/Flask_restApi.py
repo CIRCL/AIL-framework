@@ -10,38 +10,42 @@ import re
 import sys
 import uuid
 import json
-import datetime
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.ConfigLoader import ConfigLoader
 from lib import crawlers
 from lib import Users
-from lib.objects.Items import Item
+from lib.objects import Items
 from lib import Tag
 from lib import Tracker
 
-from packages import Term
+from packages import Term  # TODO REMOVE ME
 
 from packages import Import_helper
 
 from importer.FeederImporter import api_add_json_feeder_to_queue
 
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, escape
-from flask_login import login_required
+from flask import jsonify, request, Blueprint, redirect, url_for, Response, escape
 
 from functools import wraps
 
 # ============ VARIABLES ============
+config_loader = ConfigLoader()
+baseUrl = config_loader.get_config_str("Flask", "baseurl")
+baseUrl = baseUrl.replace('/', '')
+if baseUrl != '':
+    baseUrl = '/' + baseUrl
+
+r_cache = config_loader.get_redis_conn("Redis_Cache")
+
+config_loader = None
+
 import Flask_config
-
-
 app = Flask_config.app
-baseUrl = Flask_config.baseUrl
-r_cache = Flask_config.r_cache
-
 
 restApi = Blueprint('restApi', __name__, template_folder='templates')
 
@@ -51,7 +55,7 @@ def check_token_format(token, search=re.compile(r'[^a-zA-Z0-9_-]').search):
     return not bool(search(token))
 
 def verify_token(token):
-    if len(token) != 41:
+    if len(token) != 55:
         return False
 
     if not check_token_format(token):
@@ -76,7 +80,7 @@ def token_required(user_role):
     def actual_decorator(funct):
         @wraps(funct)
         def api_token(*args, **kwargs):
-            data = authErrors(user_role)
+            data = auth_errors(user_role)
             if data:
                 return Response(json.dumps(data[0], indent=2, sort_keys=True), mimetype='application/json'), data[1]
             else:
@@ -85,10 +89,10 @@ def token_required(user_role):
     return actual_decorator
 
 def get_auth_from_header():
-    token = request.headers.get('Authorization').replace(' ', '') # remove space
+    token = request.headers.get('Authorization').replace(' ', '')  # remove space
     return token
 
-def authErrors(user_role):
+def auth_errors(user_role):
     # Check auth
     if not request.headers.get('Authorization'):
         return {'status': 'error', 'reason': 'Authentication needed'}, 401
@@ -98,16 +102,18 @@ def authErrors(user_role):
 
     # brute force protection
     current_ip = request.remote_addr
-    login_failed_ip = r_cache.get('failed_login_ip_api:{}'.format(current_ip))
+    login_failed_ip = r_cache.get(f'failed_login_ip_api:{current_ip}')
     # brute force by ip
     if login_failed_ip:
         login_failed_ip = int(login_failed_ip)
         if login_failed_ip >= 5:
-            return {'status': 'error', 'reason': 'Max Connection Attempts reached, Please wait {}s'.format(r_cache.ttl('failed_login_ip_api:{}'.format(current_ip)))}, 401
+            return {'status': 'error',
+                    'reason': 'Max Connection Attempts reached, Please wait {}s'.format(r_cache.ttl('failed_login_ip_api:{}'.format(current_ip)))
+                    }, 401
 
     try:
         authenticated = False
-        if verify_token(token):
+        if verify_token(token): # TODO Improve Returned error
             authenticated = True
 
             # check user role
@@ -115,8 +121,8 @@ def authErrors(user_role):
                 data = ({'status': 'error', 'reason': 'Access Forbidden'}, 403)
 
         if not authenticated:
-            r_cache.incr('failed_login_ip_api:{}'.format(current_ip))
-            r_cache.expire('failed_login_ip_api:{}'.format(current_ip), 300)
+            r_cache.incr(f'failed_login_ip_api:{current_ip}')
+            r_cache.expire(f'failed_login_ip_api:{current_ip}', 300)
             data = ({'status': 'error', 'reason': 'Authentication failed'}, 401)
     except Exception as e:
         print(e)
@@ -141,7 +147,7 @@ def get_mandatory_fields(json_data, required_fields):
 
 def is_valid_uuid_v4(header_uuid):
     try:
-        header_uuid=header_uuid.replace('-', '')
+        header_uuid = header_uuid.replace('-', '')
         uuid_test = uuid.UUID(hex=header_uuid, version=4)
         return uuid_test.hex == header_uuid
     except:
@@ -160,7 +166,6 @@ def is_valid_uuid_v4(header_uuid):
 # {
 #   "id": item_id,      mandatory
 #   "content": true,
-#   "tags": true,
 #
 #
 # }
@@ -175,17 +180,7 @@ def is_valid_uuid_v4(header_uuid):
 @token_required('read_only')
 def get_item_id():
     data = request.get_json()
-    res = Item.get_item(data)
-    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
-
-@restApi.route("api/v1/get/item/default", methods=['POST'])
-@token_required('read_only')
-def get_item_id_basic():
-
-    data = request.get_json()
-    item_id = data.get('id', None)
-    req_data = {'id': item_id, 'date': True, 'content': True, 'tags': True}
-    res = Item.get_item(req_data)
+    res = Items.api_get_item(data)
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -197,6 +192,7 @@ def get_item_id_basic():
 #
 # response: {
 #               "id": "item_id",
+#               "date": "date",
 #               "tags": [],
 #           }
 #
@@ -204,7 +200,6 @@ def get_item_id_basic():
 @restApi.route("api/v1/get/item/tag", methods=['POST'])
 @token_required('read_only')
 def get_item_tag():
-
     data = request.get_json()
     item_id = data.get('id', None)
     req_data = {'id': item_id, 'date': False, 'tags': True}
@@ -309,17 +304,6 @@ def get_item_sources():
     res = Item.api_get_items_sources()
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
-
-
-# @restApi.route("api/v1/get/item/source/check", methods=['POST'])
-# @token_required('read_only')
-# def get_check_item_source():
-#     data = request.get_json()
-#     source = data.get('source', None)
-#     req_data = {'source': source}
-#     res = Item.check_item_source(req_data)
-#     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
-
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -389,6 +373,8 @@ def get_tracker_metadata_api():
     req_data = {'tracker_uuid': tracker_uuid}
     res = Tracker.get_tracker_metadata_api(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=False), mimetype='application/json'), res[1]
+
+'''
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # #        CRYPTOCURRENCY       # # # # # # # # # # # # # #
@@ -476,8 +462,6 @@ def get_pgp_name_item():
     res = 0
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
-'''
-
 
 
 @restApi.route("api/v1/get/item/cryptocurrency/key", methods=['POST'])
@@ -511,25 +495,19 @@ def get_item_cryptocurrency_bitcoin():
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        CRAWLER      # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/crawl/domain", methods=['POST'])
+# # TODO: ADD RESULT JSON Response
+@restApi.route("api/v1/add/crawler/task", methods=['POST'])
 @token_required('analyst')
-def crawl_domain():
+def add_crawler_task():
     data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = Users.get_token_user(user_token)
+    res = crawlers.api_add_crawler_task(data, user_id=user_id)
+    if res:
+        return create_json_response(res[0], res[1])
 
-    url = data.get('url', None)
-    screenshot = data.get('screenshot', None)
-    har = data.get('har', None)
-    depth_limit = data.get('depth_limit', None)
-    max_pages = data.get('max_pages', None)
-    auto_crawler = data.get('auto_crawler', None)
-    crawler_delta = data.get('crawler_delta', None)
-    crawler_type = data.get('url', None)
-    cookiejar_uuid = data.get('url', None)
-    user_agent = data.get('url', None)
-
-    res = crawlers.api_create_crawler_task(json_dict)
-    res[0]['domain'] = domain
-    return create_json_response(res[0], res[1])
+    dict_res = {'url': data['url']}
+    return create_json_response(dict_res, 200)
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -574,25 +552,9 @@ def get_crawled_domain_list():
     dict_res['domain_type'] = domain_type
     return create_json_response(dict_res, res[1])
 
-# # TODO: ADD RESULT JSON Response
-@restApi.route("api/v1/add/crawler/task", methods=['POST'])
-@token_required('analyst')
-def add_crawler_task():
-    data = request.get_json()
-    user_token = get_auth_from_header()
-    user_id = get_user_from_token(user_token)
-    res = crawlers.api_add_crawler_task(data, user_id=user_id)
-    if res:
-        return create_json_response(res[0], res[1])
-
-    dict_res = {'url': data['url']}
-    return create_json_response(dict_res, 200)
-
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -616,12 +578,12 @@ def import_item():
 
     data = request.get_json()
     if not data:
-        return Response(json.dumps({'status': 'error', 'reason': 'Malformed JSON'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+        return create_json_response({'status': 'error', 'reason': 'Malformed JSON'}, 400)
 
     # unpack json
     text_to_import = data.get('text', None)
     if not text_to_import:
-        return Response(json.dumps({'status': 'error', 'reason': 'No text supplied'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+        return create_json_response({'status': 'error', 'reason': 'No text supplied'}, 400)
 
     tags = data.get('tags', [])
     if not type(tags) is list:
@@ -631,19 +593,19 @@ def import_item():
         galaxy = []
 
     if not Tag.is_valid_tags_taxonomies_galaxy(tags, galaxy):
-        return Response(json.dumps({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, indent=2, sort_keys=True), mimetype='application/json'), 400
+        return create_json_response({'status': 'error', 'reason': 'Tags or Galaxy not enabled'}, 400)
 
     default_tags = data.get('default_tags', True)
     if default_tags:
         tags.append('infoleak:submission="manual"')
 
     if sys.getsizeof(text_to_import) > 900000:
-        return Response(json.dumps({'status': 'error', 'reason': 'Size exceeds default'}, indent=2, sort_keys=True), mimetype='application/json'), 413
+        return create_json_response({'status': 'error', 'reason': 'Size exceeds default'}, 413)
 
-    UUID = str(uuid.uuid4())
-    Import_helper.create_import_queue(tags, galaxy, text_to_import, UUID)
+    import_uuid = str(uuid.uuid4())
+    Import_helper.create_import_queue(tags, galaxy, text_to_import, import_uuid)
 
-    return Response(json.dumps({'uuid': UUID}, indent=2, sort_keys=True), mimetype='application/json')
+    return Response(json.dumps({'uuid': import_uuid}, indent=2, sort_keys=True), mimetype='application/json')
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # GET
@@ -662,13 +624,13 @@ def import_item():
 @token_required('analyst')
 def import_item_uuid():
     data = request.get_json()
-    UUID = data.get('uuid', None)
+    import_uuid = data.get('uuid', None)
 
     # Verify uuid
-    if not is_valid_uuid_v4(UUID):
+    if not is_valid_uuid_v4(import_uuid):
         return Response(json.dumps({'status': 'error', 'reason': 'Invalid uuid'}), mimetype='application/json'), 400
 
-    data = Import_helper.check_import_status(UUID)
+    data = Import_helper.check_import_status(import_uuid)
     if data:
         return Response(json.dumps(data[0]), mimetype='application/json'), data[1]
 
@@ -699,6 +661,7 @@ def import_json_item():
 @token_required('read_only')
 def v1_ping():
     return Response(json.dumps({'status': 'pong'}), mimetype='application/json'), 200
+
 
 # ========= REGISTRATION =========
 app.register_blueprint(restApi, url_prefix=baseUrl)

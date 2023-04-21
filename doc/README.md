@@ -1239,62 +1239,34 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 
 
 
-
-
-
-
 # FUTURE endpoints
 
-### Text search by daterange
-##### ``api/search/textIndexer/item`` POST
+<details>
+<summary>Endpoints</summary>
 
-### Get tagged items by daterange
-##### ``api/search/tag/item`` POST
+### Submit a domain to crawl TODO
+##### ``api/add/crawler/task`` POST
 
-### Submit a domain to crawl
-##### ``api/add/crawler/domain`` POST
+### Create a term/set/regex/yara tracker
+##### ``api/add/tracker/`` POST
 
-### Create a term/set/regex tracker
-##### ``api/add/termTracker/`` POST
-
-### Get tracker items list
-##### ``api/get/termTracker/item`` POST
+### Get tracker
+##### ``api/get/tracker`` POST
 
 -----
 
-### Check if a tor/regular domain have been crawled
-##### ``api/get/crawler/domain/`` POST
 
-### Check if a tor/regular domain have been crawled
-##### ``api/get/crawler/domain/metadata/ <domain><port>`` POST
 
 ### Get domain tags
-##### ``api/get/crawler/domain/tag/ <domain><port>`` POST
+##### ``api/get/domain/tags/<domain>`` POST
 
 ### Get domain history
-##### ``api/get/crawler/domain/history/ <domain><port>`` POST
-
-### Get domain list of items
-##### ``api/get/crawler/domain/item/ <domain><port>`` POST
+##### ``api/get/domain/history/<domain>`` POST
 
 -----
-
-### Create auto-crawlers
-##### ``api/add/crawler/autoCrawler/`` POST
-
------
-
-### get item by mime type/ decoded type
-##### ``api/get/decoded`` POST
-
-### Check if a decoded item exists (via sha1)
-##### ``api/get/decoded/exist/<sha1>`` POST
 
 ### Get decoded item metadata
 ### Check if a decoded item exists (via sha1)
-##### ``api/get/decoded/metadata/<sha1>`` POST
-
-### Get decoded item correlation (1 depth)
 ##### ``api/get/decoded/metadata/<sha1>`` POST
 
 -----
@@ -1304,18 +1276,20 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 ##### ``api/get/cryptocurrency`` POST
 
 ### Check if a cryptocurrency address (bitcoin, ..) exists
-##### ``api/get/cryptocurrency/exist/<bitcoin_address>`` POST
+##### ``api/get/cryptocurrency/<bitcoin_address>`` POST
 
 ### Get cryptocurrency address metadata
-##### ``api/get/cryptocurrency/metadata/<bitcoin_address>`` POST
+##### ``api/get/cryptocurrency/metadata/<coin_address>`` POST
 
 -----
 
-### Item correlation (1 depth)
-##### ``api/get/item/correlation/`` POST
+### Object correlation (1 depth)
+##### ``api/get/correlation/`` POST
 
-### Create MISP event from item
-##### ``api/export/item/misp`` POST
+### Create MISP event from object
+##### ``api/export/misp`` POST
 
-### Create TheHive case from item
-##### ``api/export/item/thehive`` POST
+</details>
+
+-----
+

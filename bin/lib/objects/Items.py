@@ -406,9 +406,43 @@ def _manual_set_items_date_first_last():
     if last != 0:
         update_obj_date(last, 'item')
 
+#### API ####
+
+def api_get_item(data):
+    item_id = data.get('id', None)
+    if not item_id:
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+    item = Item(item_id)
+    if not item.exists():
+        return {'status': 'error', 'reason': 'Item not found'}, 404
+
+    options = set()
+    if data.get('content'):
+        options.add('content')
+    if data.get('crawler'):
+        options.add('crawler')
+    if data.get('duplicates'):
+        options.add('duplicates')
+    if data.get('lines'):
+        options.add('lines')
+    if data.get('mimetype'):
+        options.add('mimetype')
+    if data.get('parent'):
+        options.add('parent')
+    if data.get('size'):
+        options.add('size')
+
+    # TODO correlation
+
+    return item.get_meta(options=options), 200
+
+
+# -- API -- #
+
 ################################################################################
 ################################################################################
 ################################################################################
+
             # TODO
 
 def exist_item(item_id):
