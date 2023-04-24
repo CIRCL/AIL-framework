@@ -31,20 +31,19 @@
 </div>
 
 <script>
-  function searchDomainName() {
-		var all_domain_types = ['onion', 'regular'] // TODO: load from flask
-		var l_domains_types = [];
+    function searchDomainName() {
+        var all_domain_types = ['onion', 'regular'] // TODO: load from flask
+        // var l_domains_types = [];
+        console.log(document.getElementById('in_search_name'));
 
-		console.log(document.getElementById('in_search_name'));
-
-  	var data = document.getElementById('in_search_name').value;
-		for (var i = 0; i < all_domain_types.length; i++) {
-			if (document.getElementById('domain_'+ all_domain_types[i] +'_switch').checked) {
-				l_domains_types.push(all_domain_types[i])
+        var data = document.getElementById('in_search_name').value;
+        for (var i = 0; i < all_domain_types.length; i++) {
+            if (document.getElementById('domain_'+ all_domain_types[i] +'_switch').checked) {
+                l_domains_types.push(all_domain_types[i])
 			}
 		}
 
-		var parameter = "?name=" + data + "&domain_types=" + l_domains_types  +"{%if page%}&page={{ page }}{%endif%}";
+        var parameter = "?name=" + data + "&domain_types=" + l_domains_types  +"{%if page%}&page={{ page }}{%endif%}";
 		window.location.href = "{{ url_for('crawler_splash.domains_search_name') }}" + parameter;
   }
 </script>

@@ -3,11 +3,11 @@
         <div class="card-header">
             <div class="row">
                 <div class="col-6">
-                    <a href="{{ url_for('crawler_splash.domains_search_date') }}?service_type={{type}}&domains_up=True&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-success">{{ crawler_stats[type]['up'] }}</a> UP
-                    <a href="{{ url_for('crawler_splash.domains_search_date') }}?service_type={{type}}&domains_down=True&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-danger ml-md-3">{{ crawler_stats[type]['down'] }}</a> DOWN
+                    <a href="{{ url_for('crawler_splash.domains_search_date') }}?type={{type}}&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-success">{{ crawler_stats[type]['up'] }}</a> UP
+                    <a href="{{ url_for('crawler_splash.domains_search_date') }}?type={{type}}&down=True&up=False&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-danger ml-md-3">{{ crawler_stats[type]['down'] }}</a> DOWN
                 </div>
                 <div class="col-6">
-                    <a href="{{ url_for('crawler_splash.domains_search_date') }}?service_type={{type}}&domains_up=True&domains_down=True&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-success">{{ crawler_stats[type]['crawled'] }}</a> Crawled
+                    <a href="{{ url_for('crawler_splash.domains_search_date') }}?type={{type}}&up=True&down=True&date_from={{date_from}}&date_to={{date_to}}" class="badge badge-success">{{ crawler_stats[type]['crawled'] }}</a> Crawled
                     <span class="badge badge-warning ml-md-3">{{ crawler_stats[type]['queue'] }}</span> Queue
                 </div>
             </div>
@@ -18,7 +18,7 @@
     <form action="{{ url_for('crawler_splash.domains_search_date_post') }}" id="hash_selector_form" method='post'>
       <div class="row">
         <div class="col-6">
-          <input type="hidden" id="type" name="type" value="{{type}}">
+          <input type="hidden" id="type" name="type" value="{% if type %}{{type}}{% else %}all{% endif %}">
           <div class="input-group" id="date-range-from">
             <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
             <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from" autocomplete="off">
@@ -30,13 +30,13 @@
         </div>
         <div class="col-6">
           <div class="custom-control custom-switch">
-            <input class="custom-control-input" type="checkbox" name="domains_up" value="True" id="domains_up_id" checked>
+            <input class="custom-control-input" type="checkbox" name="up" value="True" id="domains_up_id" {% if filter_up is none or filter_up %}checked{% endif %}>
             <label class="custom-control-label" for="domains_up_id">
               <span class="badge badge-success"><i class="fas fa-check-circle"></i> Domains UP </span>
             </label>
           </div>
           <div class="custom-control custom-switch">
-            <input class="custom-control-input" type="checkbox" name="domains_down" value="True" id="domains_down_id">
+            <input class="custom-control-input" type="checkbox" name="down" value="True" id="domains_down_id" {% if filter_down %}checked{% endif %}>
             <label class="custom-control-label" for="domains_down_id">
               <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Domains DOWN</span>
             </label>

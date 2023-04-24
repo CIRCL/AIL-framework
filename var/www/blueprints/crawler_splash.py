@@ -68,6 +68,7 @@ def crawlers_dashboard():
     return render_template("dashboard_crawler.html", date=date,
                            is_manager_connected=is_manager_connected,
                            crawlers_status=crawlers_status,
+                           filter_up=True,
                            crawlers_latest_stats=crawlers_latest_stats)
 
 
@@ -471,6 +472,9 @@ def domains_search_name():
     except:
         page = 1
 
+    if not name:
+        return create_json_response({'error': 'Mandatory args name not provided'}, 400)
+
     domains_types = request.args.getlist('domain_types')
     if domains_types:
         domains_types = domains_types[0].split(',')
@@ -487,13 +491,25 @@ def domains_search_name():
 @login_analyst
 def domains_search_date():
     # TODO sanitize type + date
-    domain_type = request.args.get('type')
+    dom_types = request.args.get('type')
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
+    down = bool(request.args.get('down', False))
+    up = bool(request.args.get('up'))
     # page = request.args.get('page')
 
+    all_types = Domains.get_all_domains_types()
+    if dom_types == 'all':
+        domain_types = all_types
+    elif dom_types in Domains.get_all_domains_types():
+        domain_types = [dom_types]
+    else:
+        dom_types = 'all'
+        domain_types = all_types
+
     date = Date.sanitise_date_range(date_from, date_to)
-    domains_date = Domains.get_domains_dates_by_daterange(date['date_from'], date['date_to'], domain_type)
+    domains_date = Domains.get_domains_dates_by_daterange(date['date_from'], date['date_to'], domain_types,
+                                                          up=up, down=down)
     dict_domains = {}
     for d in domains_date:
         dict_domains[d] = Domains.get_domains_meta(domains_date[d])
@@ -502,7 +518,8 @@ def domains_search_date():
 
     return render_template("domains_daterange.html", date_from=date_from, date_to=date_to,
                            bootstrap_label=bootstrap_label,
-                           dict_domains=dict_domains, type=domain_type)
+                           filter_down=down, filter_up=up,
+                           dict_domains=dict_domains, type=dom_types)
 
 
 @crawler_splash.route('/domains/date/post', methods=['POST'])
@@ -512,7 +529,10 @@ def domains_search_date_post():
     domain_type = request.form.get('type')
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
-    return redirect(url_for('crawler_splash.domains_search_date', date_from=date_from, date_to=date_to, type=domain_type))
+    down = request.form.get('down')
+    up = request.form.get('up')
+    return redirect(url_for('crawler_splash.domains_search_date', date_from=date_from, date_to=date_to,
+                            type=domain_type, down=down, up=up))
 
 
 ##--  --##

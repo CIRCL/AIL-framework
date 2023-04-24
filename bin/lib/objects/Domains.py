@@ -531,16 +531,19 @@ def get_domains_by_daterange(date_from, date_to, domain_type, up=True, down=Fals
             domains.extend(get_domains_down_by_date(date, domain_type))
     return domains
 
-def get_domains_dates_by_daterange(date_from, date_to, domain_type, up=True, down=False):
+def get_domains_dates_by_daterange(date_from, date_to, domain_types, up=True, down=False):
+    if not domain_types:
+        domain_types = get_all_domains_types()
     date_domains = {}
     for date in Date.substract_date(date_from, date_to):
         domains = []
-        if up:
-            domains.extend(get_domains_up_by_date(date, domain_type))
-        if down:
-            domains.extend(get_domains_down_by_date(date, domain_type))
-        if domains:
-            date_domains[date] = list(domains)
+        for domain_type in domain_types:
+            if up:
+                domains.extend(get_domains_up_by_date(date, domain_type))
+            if down:
+                domains.extend(get_domains_down_by_date(date, domain_type))
+            if domains:
+                date_domains[date] = list(domains)
     return date_domains
 
 def get_domains_meta(domains):
