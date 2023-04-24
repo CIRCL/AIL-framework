@@ -9,37 +9,37 @@
       <div class="modal-body">
 
         <div class="input-group" >
-          <input id="ltags" type="text" class="form-control" autocomplete="off" style="width: 760px">
+          <input id="ltags_add_modal" type="text" class="form-control" autocomplete="off" style="width: 760px">
         </div>
 
         <div class="dropdown">
-          <button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-taxonomie">
+          <button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-taxonomie-add-modal">
              Taxonomie Selected
           </button>
-          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie"> <!-- TODO: make dropdown-scrollable -->
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie-add-modal"> <!-- TODO: make dropdown-scrollable -->
             <h6 class="dropdown-header">Taxonomie Tags</h6>
-            <button class="dropdown-item" type="button" id="all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
+            <button class="dropdown-item" type="button" id="add-modal-all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
             <div class="dropdown-divider"></div>
             {% for taxo in modal_add_tags['active_taxonomies'] %}
-                <button class="dropdown-item" type="button" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
+                <button class="dropdown-item" type="button" id="add-modal-{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
             {% endfor %}
           </div>
         </div>
 
         <div class="input-group">
-          <input id="ltagsgalaxies" type="text" class="form-control" autocomplete="off" style="width: 760px">
+          <input id="ltagsgalaxies_add_modal" type="text" class="form-control" autocomplete="off" style="width: 760px">
         </div>
 
         <div class="dropdown">
-          <button type="button" class="btn btn-info dropdown-toggle mt-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-galaxy">
+          <button type="button" class="btn btn-info dropdown-toggle mt-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-galaxy-add-modal">
              Galaxy Selected
           </button>
-          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-galaxy"> <!-- TODO: make dropdown-scrollable -->
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-galaxy-add-modal"> <!-- TODO: make dropdown-scrollable -->
             <h6 class="dropdown-header">Galaxy Tags</h6>
-            <button class="dropdown-item" type="button" id="all-tags-galaxies">All Tags <i class="fas fa-tags"></i></button>
+            <button class="dropdown-item" type="button" id="add-modal-all-tags-galaxies">All Tags <i class="fas fa-tags"></i></button>
             <div class="dropdown-divider"></div>
             {% for galaxy in modal_add_tags['active_galaxies'] %}
-                <button class="dropdown-item" type="button" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
+                <button class="dropdown-item" type="button" id="add-modal-{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
             {% endfor %}
           </div>
         </div>
@@ -67,65 +67,65 @@
 </div>
 
 <script> // TODO: add tags to PASTE or DOMAIN
-var ltags;
-var ltagsgalaxies;
+var ltags_modal_add;
+var ltagsgalaxies_modal_add;
 
 $.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
     function(data) {
 
-      ltags = $('#ltags').tagSuggest({
+      ltags_modal_add = $('#ltags_add_modal').tagSuggest({
         data: data,
         maxDropHeight: 200,
-        name: 'ltags'
+        name: 'ltags_modal_add'
       });
     });
 
 $.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
   function(data) {
 
-    ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
+    ltagsgalaxies_modal_add = $('#ltagsgalaxies_add_modal').tagSuggest({
       data: data,
       maxDropHeight: 200,
-      name: 'ltagsgalaxies'
+      name: 'ltagsgalaxies_modal_add'
     });
   });
 
-jQuery("#all-tags-taxonomies").click(function(e){
+jQuery("#add-modal-all-tags-taxonomies").click(function(e){
         //change input tags list
       $.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
         function(data) {
-          ltags.setData(data)
+          ltags_modal_add.setData(data)
       });
     });
 
-jQuery("#all-tags-galaxies").click(function(e){
+jQuery("#add-modal-all-tags-galaxies").click(function(e){
       $.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
         function(data) {
-          ltagsgalaxies.setData(data)
+          ltagsgalaxies_modal_add.setData(data)
       });
     });
 
 {% for taxo in modal_add_tags['active_taxonomies'] %}
-    jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
+    jQuery("#add-modal-{{ taxo }}-id{{ loop.index0 }}").click(function(e){
       $.getJSON("{{ url_for('tags_ui.tag_taxonomie_tags_enabled_json') }}?taxonomie={{ taxo }}",
         function(data) {
-          ltags.setData(data)
+          ltags_modal_add.setData(data)
   });
 });
 {% endfor %}
 
 {% for galaxy in modal_add_tags['active_galaxies'] %}
-    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
+    jQuery("#add-modal-{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
       $.getJSON("{{ url_for('tags_ui.tag_galaxy_tags_enabled_json') }}?galaxy={{ galaxy }}",
         function(data) {
-          ltagsgalaxies.setData(data)
+          ltagsgalaxies_modal_add.setData(data)
   });
 });
 {% endfor %}
 
 function addTags() {
-  var tags = ltags.getValue()
-  var tagsgalaxy = ltagsgalaxies.getValue()
+  var tags = ltags_modal_add.getValue()
+  var tagsgalaxy = ltagsgalaxies_modal_add.getValue()
   window.location.replace("{{ url_for('tags_ui.add_tags') }}?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy + "&type={{ modal_add_tags['object_type'] }}&subtype={{ modal_add_tags['object_subtype'] }}&id={{ modal_add_tags['object_id'] }}");
 }
 </script>
