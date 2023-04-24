@@ -478,7 +478,7 @@ def get_all_domains_languages():
 def get_domains_by_languages(languages, domain_types):
     if len(languages) == 1:
         if len(domain_types) == 1:
-            return r_crawler.smembers(f'language:domains:{domain_type[0]}:{languages[0]}')
+            return r_crawler.smembers(f'language:domains:{domain_types[0]}:{languages[0]}')
         else:
             l_keys = []
         for domain_type in domain_types:
@@ -523,6 +523,15 @@ def get_domains_down_by_date(date, domain_type):
     return r_crawler.smembers(f'{domain_type}_down:{date}')
 
 def get_domains_by_daterange(date_from, date_to, domain_type, up=True, down=False):
+    domains = []
+    for date in Date.substract_date(date_from, date_to):
+        if up:
+            domains.extend(get_domains_up_by_date(date, domain_type))
+        if down:
+            domains.extend(get_domains_down_by_date(date, domain_type))
+    return domains
+
+def get_domains_dates_by_daterange(date_from, date_to, domain_type, up=True, down=False):
     date_domains = {}
     for date in Date.substract_date(date_from, date_to):
         domains = []
@@ -541,21 +550,26 @@ def get_domains_meta(domains):
         metas.append(dom.get_meta())
     return metas
 
-# TODO HANDLE ALL MULTIPLE DOMAIN TYPES
 # TODO ADD TAGS FILTER
-def get_domains_up_by_filers(domain_type, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
+def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
+    if not domain_types:
+        domain_types = ['onion', 'web']
     if not tags:
+        domains = []
         if not date_from and not date_to:
-            domains = sorted(get_domains_up_by_type(domain_type))
+            for domain_type in domain_types:
+                domains[0:0] = get_domains_up_by_type(domain_type)
         else:
-            domains = sorted(get_domains_by_daterange(date_from, date_to, domain_type))
+            for domain_type in domain_types:
+                domains[0:0] = get_domains_by_daterange(date_from, date_to, domain_type)
+        domains = sorted(domains)
         domains = paginate_iterator(domains, nb_obj=nb_obj, page=page)
         meta = []
         for dom in domains['list_elem']:
             domain = Domain(dom)
             meta.append(domain.get_meta(options={'languages', 'screenshot', 'tags_safe'}))
         domains['list_elem'] = meta
-        domains['domain_type'] = domain_type
+        domains['domain_types'] = domain_types
         if date_from:
             domains['date_from'] = date_from
         if date_to:

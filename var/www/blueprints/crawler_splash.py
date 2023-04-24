@@ -358,12 +358,11 @@ def domains_explorer_post_filter():
         date_from = None
         date_to = None
 
-    # TODO SEARCH BOTH
-    # if domain_onion and domain_regular:
-    #     if date_from and date_to:
-    #         return redirect(url_for('crawler_splash.domains_explorer_all', date_from=date_from, date_to=date_to))
-    #     else:
-    #         return redirect(url_for('crawler_splash.domains_explorer_all'))
+    if domain_onion and domain_regular:
+        if date_from and date_to:
+            return redirect(url_for('crawler_splash.domains_explorer_all', date_from=date_from, date_to=date_to))
+        else:
+            return redirect(url_for('crawler_splash.domains_explorer_all'))
     if domain_regular:
         if date_from and date_to:
             return redirect(url_for('crawler_splash.domains_explorer_web', date_from=date_from, date_to=date_to))
@@ -376,22 +375,21 @@ def domains_explorer_post_filter():
             return redirect(url_for('crawler_splash.domains_explorer_onion'))
 
 
-# TODO TEMP DISABLE
-# @crawler_splash.route('/domains/explorer/all', methods=['GET'])
-# @login_required
-# @login_read_only
-# def domains_explorer_all():
-#     page = request.args.get('page')
-#     date_from = request.args.get('date_from')
-#     date_to = request.args.get('date_to')
-#     try:
-#         page = int(page)
-#     except:
-#         page = 1
-#
-#     dict_data = Domain.get_domains_up_by_filers('all', page=page, date_from=date_from, date_to=date_to)
-#     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
-#
+@crawler_splash.route('/domains/explorer/all', methods=['GET'])
+@login_required
+@login_read_only
+def domains_explorer_all():
+    page = request.args.get('page')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    try:
+        page = int(page)
+    except:
+        page = 1
+
+    dict_data = Domains.get_domains_up_by_filers(['onion', 'web'], page=page, date_from=date_from, date_to=date_to)
+    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
+
 
 @crawler_splash.route('/domains/explorer/onion', methods=['GET'])
 @login_required
@@ -405,7 +403,7 @@ def domains_explorer_onion():
     except:
         page = 1
 
-    dict_data = Domains.get_domains_up_by_filers('onion', page=page, date_from=date_from, date_to=date_to)
+    dict_data = Domains.get_domains_up_by_filers(['onion'], page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
                            domain_type='onion')
 
@@ -422,7 +420,7 @@ def domains_explorer_web():
     except:
         page = 1
 
-    dict_data = Domains.get_domains_up_by_filers('web', page=page, date_from=date_from, date_to=date_to)
+    dict_data = Domains.get_domains_up_by_filers(['web'], page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
                            domain_type='regular')
 
@@ -495,7 +493,7 @@ def domains_search_date():
     # page = request.args.get('page')
 
     date = Date.sanitise_date_range(date_from, date_to)
-    domains_date = Domains.get_domains_by_daterange(date['date_from'], date['date_to'], domain_type)
+    domains_date = Domains.get_domains_dates_by_daterange(date['date_from'], date['date_to'], domain_type)
     dict_domains = {}
     for d in domains_date:
         dict_domains[d] = Domains.get_domains_meta(domains_date[d])
