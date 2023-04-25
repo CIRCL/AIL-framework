@@ -65,6 +65,14 @@
 			color: #000000;
 		}
 
+        .pixelated {
+            image-rendering: pixelated;
+        }
+
+        .blured {
+            filter: blur(5px);
+        }
+
 		.graph_panel {
 			padding: unset;
 		}
@@ -116,13 +124,36 @@
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 									<span class="float-right">
+                                        <div class="card border-secondary">
+                                            <div class="card-body py-2">
+                                                <div class="row">
+                                                    <div class="col-md-3 text-center px-0">
+                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(0);blur_tooltip();">
+                                                            <i class="fas fa-eye-slash"></i>
+      										                <span class="label-icon">Hide</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="col-md-6 text-center pl-0 pt-1">
+                                                        <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider-correlation">
+                                                    </div>
+                                                    <div class="col-md-3 text-center">
+                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(15);blur_tooltip();">
+                                                            <i class="fas fa-image"></i>
+                                                            <span class="label-icon">Full</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </span>
+                                    <span class="float-right mx-1">
 										{% if dict_object["object_type"] != "" %}
 											{% with obj_type=dict_object["object_type"], obj_id=dict_object["correlation_id"], obj_subtype=dict_object["metadata"]["type_id"],obj_lvl=1%}
-					              {% include 'import_export/block_add_user_object_to_export.html' %}
-					            {% endwith %}
+                                                {% include 'import_export/block_add_user_object_to_export.html' %}
+                                            {% endwith %}
 										{% endif %}
-									</span>
-									<span class="float-right">
+                                    </span>
+                                    <span class="float-right mt-2">
 										<button class="btn btn-primary py-1" onclick="resize_graph();">
 											<i class="fas fa-sync"></i>&nbsp;Resize Graph
 										</button>
@@ -279,6 +310,7 @@
 		</div>
 
 <script>
+
 var all_graph = {};
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
@@ -293,6 +325,16 @@ $(document).ready(function(){
         {% endif %}
 		all_graph.onResize();
 });
+
+const blur_slider_correlation = $('#blur-slider-correlation');
+function blur_tooltip(){
+    var image = $('#tooltip_screenshot_correlation')[0];
+    if (image) {
+        var blurValue = $('#blur-slider-correlation').val();
+        blurValue = 15 - blurValue;
+        image.style.filter = "blur(" + blurValue + "px)";
+    }
+}
 
 $(window).on("resize", function() {
 		all_graph.onResize();
@@ -497,7 +539,8 @@ if (d.popover) {
 
 	div.transition()
 		.duration(200)
-		.style("opacity", .9);
+		.style("opacity", 1);
+    blur_tooltip();
 } else {
 
 		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"+ sanitize_text(d.text) +"</h6></div>"
@@ -509,7 +552,7 @@ if (d.popover) {
 
 		div.transition()
 			.duration(200)
-			.style("opacity", .9);
+			.style("opacity", 1);
 
 		$.getJSON("{{ url_for('correlation.get_description') }}?object_id="+ d.id,
 				function(data){
@@ -543,7 +586,7 @@ if (d.popover) {
 
 					if (data["img"]) {
                         if (data["tags_safe"]) {
-						    desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}" + data["img"] +" class=\"img-thumbnail\" />";
+						    desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}" + data["img"] +" class=\"img-thumbnail blured\" id=\"tooltip_screenshot_correlation\" style=\"\"/>";
                         } else {
                             desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
                         }
@@ -554,6 +597,11 @@ if (d.popover) {
 					 	.style("left", (d3_pageX) + "px")
 					 	.style("top", (d3_pageY - 28) + "px");
 					d.popover = desc
+
+                    if (data["img"]) {
+                        blur_tooltip();
+                    }
+
 				})
 				.fail(function(error) {
 					desc = pop_header + "<div class=\"card-body bg-dark pt-0\"><i class=\"fas fa-3x fa-times text-danger\"></i>"+ error.statusText +"</div>"
