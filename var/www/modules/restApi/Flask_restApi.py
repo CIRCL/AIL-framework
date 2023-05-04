@@ -22,8 +22,6 @@ from lib.objects import Items
 from lib import Tag
 from lib import Tracker
 
-from packages import Term  # TODO REMOVE ME
-
 from packages import Import_helper
 
 from importer.FeederImporter import api_add_json_feeder_to_queue
@@ -324,9 +322,10 @@ def get_all_tags():
     res = {'tags': Tag.get_all_tags()}
     return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # #        TRACKER       # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # TODO
+# # # # # # # # # # # # # #        TRACKER      # # # # # # # # # # # # # # # # # TODO
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # TODO
+'''
 @restApi.route("api/v1/add/tracker", methods=['POST'])
 @token_required('analyst')
 def add_tracker_term():
@@ -371,8 +370,21 @@ def get_tracker_metadata_api():
     data = request.get_json()
     tracker_uuid = data.get('tracker_uuid', None)
     req_data = {'tracker_uuid': tracker_uuid}
+    
+    tracker_uuid = request_dict.get('tracker_uuid', None)
+    if not request_dict:
+        return {'status': 'error', 'reason': 'Malformed JSON'}, 400
+    if not tracker_uuid:
+        return {'status': 'error', 'reason': 'Mandatory parameter(s) not provided'}, 400
+    if not is_valid_uuid_v4(tracker_uuid):
+        return {"status": "error", "reason": "Invalid Tracker UUID"}, 400
+    if not r_serv_tracker.exists(f'tracker:{tracker_uuid}'):
+        return {'status': 'error', 'reason': 'Tracker not found'}, 404
+        
     res = Tracker.get_tracker_metadata_api(req_data)
     return Response(json.dumps(res[0], indent=2, sort_keys=False), mimetype='application/json'), res[1]
+    
+'''
 
 '''
 
@@ -530,27 +542,27 @@ def get_domain_status_minimal():
     res[0]['domain'] = domain
     return create_json_response(res[0], res[1])
 
-@restApi.route("api/v1/get/crawled/domain/list", methods=['POST'])
-@token_required('analyst')
-def get_crawled_domain_list():
-    data = request.get_json()
-    res = get_mandatory_fields(data, ['date_from', 'date_to'])
-    if res:
-        return create_json_response(res[0], res[1])
-
-    date_from = data.get('date_from', None)
-    date_to = data.get('date_to', None)
-    domain_type = data.get('domain_type', None)
-    domain_status = 'UP'
-    # TODO TO MIGRATE
-    raise Exception('TO MIGRATE')
-    # res = Domain.api_get_domains_by_status_daterange(date_from, date_to, domain_type)
-    dict_res = res[0]
-    dict_res['date_from'] = date_from
-    dict_res['date_to'] = date_to
-    dict_res['domain_status'] = domain_status
-    dict_res['domain_type'] = domain_type
-    return create_json_response(dict_res, res[1])
+# @restApi.route("api/v1/get/crawled/domain/list", methods=['POST'])
+# @token_required('analyst')
+# def get_crawled_domain_list():
+#     data = request.get_json()
+#     res = get_mandatory_fields(data, ['date_from', 'date_to'])
+#     if res:
+#         return create_json_response(res[0], res[1])
+#
+#     date_from = data.get('date_from', None)
+#     date_to = data.get('date_to', None)
+#     domain_type = data.get('domain_type', None)
+#     domain_status = 'UP'
+#     # TODO TO MIGRATE
+#     raise Exception('TO MIGRATE')
+#     # res = Domain.api_get_domains_by_status_daterange(date_from, date_to, domain_type)
+#     dict_res = res[0]
+#     dict_res['date_from'] = date_from
+#     dict_res['date_to'] = date_to
+#     dict_res['domain_status'] = domain_status
+#     dict_res['domain_type'] = domain_type
+#     return create_json_response(dict_res, res[1])
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # #        IMPORT     # # # # # # # # # # # # # # # # # #

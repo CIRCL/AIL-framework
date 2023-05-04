@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import sys
 
 from flask import url_for
@@ -100,5 +101,35 @@ def get_all_pgps():
 def get_all_pgps_by_subtype(subtype):
     return get_all_id('pgp', subtype)
 
+# TODO FILTER NAME + Key + mail
+def sanitize_pgp_name_to_search(name_to_search, subtype): # TODO FILTER NAME + Key + mail
+    if subtype == 'key':
+        pass
+    elif subtype == 'name':
+        pass
+    elif subtype == 'mail':
+        pass
+    return name_to_search
+
+def search_pgps_by_name(name_to_search, subtype, r_pos=False):
+    pgps = {}
+    # for subtype in subtypes:
+    r_name = sanitize_pgp_name_to_search(name_to_search, subtype)
+    if not name_to_search or isinstance(r_name, dict):
+        # break
+        return pgps
+    r_name = re.compile(r_name)
+    for pgp_name in get_all_pgps_by_subtype(subtype):
+        res = re.search(r_name, pgp_name)
+        if res:
+            pgps[pgp_name] = {}
+            if r_pos:
+                pgps[pgp_name]['hl-start'] = res.start()
+                pgps[pgp_name]['hl-end'] = res.end()
+    return pgps
+
 
 # if __name__ == '__main__':
+#     name_to_search = 'ex'
+#     subtype = 'name'
+#     print(search_pgps_by_name(name_to_search, subtype))

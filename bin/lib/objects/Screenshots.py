@@ -3,6 +3,7 @@
 
 import base64
 import os
+import re
 import sys
 
 from hashlib import sha256
@@ -71,6 +72,9 @@ class Screenshot(AbstractObject):
             file_content = BytesIO(f.read())
         return file_content
 
+    def get_content(self):
+        return self.get_file_content()
+
     def get_misp_object(self):
         obj_attrs = []
         obj = MISPObject('file')
@@ -129,4 +133,26 @@ def create_screenshot(content, size_limit=5000000, b64=True, force=False):
         return screenshot
     return  None
 
-#if __name__ == '__main__':
+def sanitize_screenshot_name_to_search(name_to_search): # TODO FILTER NAME
+    return name_to_search
+
+def search_screenshots_by_name(name_to_search, r_pos=False):
+    screenshots = {}
+    # for subtype in subtypes:
+    r_name = sanitize_screenshot_name_to_search(name_to_search)
+    if not name_to_search or isinstance(r_name, dict):
+        return screenshots
+    r_name = re.compile(r_name)
+    for screenshot_name in get_all_screenshots():
+        res = re.search(r_name, screenshot_name)
+        if res:
+            screenshots[screenshot_name] = {}
+            if r_pos:
+                screenshots[screenshot_name]['hl-start'] = res.start()
+                screenshots[screenshot_name]['hl-end'] = res.end()
+    return screenshots
+
+
+# if __name__ == '__main__':
+#     name_to_search = '29ba'
+#     print(search_screenshots_by_name(name_to_search))

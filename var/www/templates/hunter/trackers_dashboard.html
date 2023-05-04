@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trackers - AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+    <!-- Core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js') }}"></script>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+
+<div class="container-fluid">
+    <div class="row">
+
+        {% include 'hunter/menu_sidebar.html' %}
+
+        <div class="col-12 col-lg-10" id="core_content">
+
+                <div class="d-flex justify-content-around my-2">
+                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu') }}">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-ruler-combined"></i>
+                                All Trackers&nbsp;&nbsp;&nbsp;&nbsp;<span class="badge badge-light">{{ stats['all'] }}</span>
+                            </h5>
+                        </div>
+                    </a>
+                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_word') }}">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-font"></i>
+                                Words&nbsp;&nbsp;&nbsp;&nbsp;<span class="badge badge-light">{{ stats['word'] }}</span>
+                            </h5>
+                        </div>
+                    </a>
+                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_set') }}">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-layer-group"></i>
+                                Set&nbsp;&nbsp;&nbsp;&nbsp;<span class="badge badge-light">{{ stats['set'] }}</span>
+                            </h5>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="d-flex justify-content-around my-2">
+                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_regex') }}">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-drafting-compass"></i>
+                                Regex&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="badge badge-light">{{ stats['regex'] }}</span>
+                            </h5>
+                        </div>
+                    </a>
+                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_typosquatting') }}">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fa fa-clone"></i>
+                                Typo Squatting&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="badge badge-light">{{ stats['typosquatting'] }}</span>
+                            </h5>
+                        </div>
+                    </a>
+                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_yara') }}">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>
+                                Yara&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="badge badge-light">{{ stats['yara'] }}</span>
+                            </h5>
+                        </div>
+                    </a>
+                </div>
+
+        {# TODO Buttons#}
+
+            <div class="card my-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title"><b>Trackers Last Matches</b></h5>
+                </div>
+                <div class="card-body">
+                    <table id="table_global_trackers" class="table table-striped table-borderless table-condensed">
+                        <tbody style="font-size: 15px;">
+                        {% for meta in trackers %}
+                            <tr>
+                                <td>{{ meta['type'] }}</td>
+                                <td>
+                                    <span>
+                                        <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ meta['uuid'] }}">
+                                            {% if meta['tracked'] %}
+                                                {% if meta['tracked']|length > 256 %}
+                                                    {{ meta['tracked'][0:256] }}...
+                                                {% else %}
+                                                    {{ meta['tracked'] }}
+                                                {% endif %}
+                                            {% endif %}
+                                        </a>
+                                    </span>
+                                </td>
+                                <td>
+                                    {% for tag in meta['tags'] %}
+                                        <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                        </a>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if meta['first_seen'] %}
+                                        {{ meta['first_seen'][0:4] }}/{{ meta['first_seen'][4:6] }}/{{ meta['first_seen'][6:8] }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ meta['timestamp'] }}
+                                </td>
+{#                                <td id="sparklines_{{ dict_uuid['uuid'] }}" style="text-align:center;"></td>#}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <a class="btn btn-primary my-4" href="{{ url_for('hunters.add_tracked_menu') }}">
+                <i class="fas fa-plus-circle ml-auto"></i>
+                Create New Tracker
+            </a>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#page-Tracker").addClass("active");
+        $("#nav_tracker_{{tracker_type}}").addClass("active");
+
+{#        {% for dict_uuid in global_trackers %}#}
+{#            sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});#}
+{#        {% endfor %}#}
+
+    });
+
+    function toggle_sidebar() {
+        if ($('#nav_menu').is(':visible')) {
+            $('#nav_menu').hide();
+            $('#side_menu').removeClass('border-right')
+            $('#side_menu').removeClass('col-lg-2')
+            $('#core_content').removeClass('col-lg-10')
+        } else {
+            $('#nav_menu').show();
+            $('#side_menu').addClass('border-right')
+            $('#side_menu').addClass('col-lg-2')
+            $('#core_content').addClass('col-lg-10')
+        }
+    }
+</script>
+
+</body>
+</html>

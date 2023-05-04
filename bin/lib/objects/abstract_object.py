@@ -19,9 +19,9 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import Tag
 from lib import Duplicate
-from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type
+from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
-from lib.Tracker import is_obj_tracked, get_obj_all_trackers, delete_obj_trackers
+from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 
 class AbstractObject(ABC):
@@ -85,6 +85,13 @@ class AbstractObject(ABC):
 
     #- Tags -#
 
+    @abstractmethod
+    def get_content(self):
+        """
+        Get Object Content
+        """
+        pass
+
     ## Duplicates ##
     def get_duplicates(self):
         return Duplicate.get_obj_duplicates(self.type, self.get_subtype(r_str=True), self.id)
@@ -125,7 +132,7 @@ class AbstractObject(ABC):
         return is_obj_tracked(self.type, self.subtype, self.id)
 
     def get_trackers(self):
-        return get_obj_all_trackers(self.type, self.subtype, self.id)
+        return get_obj_trackers(self.type, self.subtype, self.id)
 
     def delete_trackers(self):
         return delete_obj_trackers(self.type, self.subtype, self.id)
@@ -134,13 +141,14 @@ class AbstractObject(ABC):
 
     def _delete(self):
         # DELETE TAGS
-        Tag.delete_obj_all_tags(self.id, self.type)  # ########### # TODO: # TODO: # FIXME:
+        Tag.delete_object_tags(self.type, self.get_subtype(r_str=True), self.id)
         # remove from tracker
         self.delete_trackers()
+        # remove from retro hunt currently item only TODO
         # remove from investigations
         self.delete_investigations()
-
-        # # TODO: remove from correlation
+        # Delete Correlations
+        delete_obj_correlations(self.type, self.get_subtype(r_str=True), self.id)
 
     @abstractmethod
     def delete(self):

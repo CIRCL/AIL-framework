@@ -71,11 +71,11 @@
                                 <td>
                       <span>
                         <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
-                        {% if dict_uuid['tracker'] %}
-                            {% if dict_uuid['tracker']|length > 256 %}
-                                {{ dict_uuid['tracker'][0:256] }}...
+                        {% if dict_uuid['tracked'] %}
+                            {% if dict_uuid['tracked']|length > 256 %}
+                                {{ dict_uuid['tracked'][0:256] }}...
                             {% else %}
-                                {{ dict_uuid['tracker'] }}
+                                {{ dict_uuid['tracked'] }}
                             {% endif %}
                         {% endif %}
                         </a>
@@ -136,11 +136,11 @@
                                 <td>
                       <span>
                         <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
-                        {% if dict_uuid['tracker'] %}
-                            {% if dict_uuid['tracker']|length > 256 %}
-                                {{ dict_uuid['tracker'][0:256] }}...
+                        {% if dict_uuid['tracked'] %}
+                            {% if dict_uuid['tracked']|length > 256 %}
+                                {{ dict_uuid['tracked'][0:256] }}...
                             {% else %}
-                                {{ dict_uuid['tracker'] }}
+                                {{ dict_uuid['tracked'] }}
                             {% endif %}
                         {% endif %}
                         </a>
@@ -178,7 +178,7 @@
             </div>
 
 
-            <a class="btn btn-info my-4" href="{{ url_for('hunter.add_tracked_menu') }}">
+            <a class="btn btn-info my-4" href="{{ url_for('hunters.add_tracked_menu') }}">
                 <i class="fas fa-plus-circle ml-auto"></i>
                 Create New Tracker
             </a>

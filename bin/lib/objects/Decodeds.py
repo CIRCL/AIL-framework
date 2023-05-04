@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import sys
 import magic
 import requests
@@ -9,6 +10,7 @@ import zipfile
 
 from flask import url_for
 from io import BytesIO
+
 from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -114,11 +116,15 @@ class Decoded(AbstractDaterangeObject):
     def get_filepath(self, mimetype=None):
         return os.path.join(os.environ['AIL_HOME'], self.get_rel_path(mimetype=mimetype))
 
-    def get_content(self, mimetype=None):
+    def get_content(self, mimetype=None, r_str=False):
         filepath = self.get_filepath(mimetype=mimetype)
-        with open(filepath, 'rb') as f:
-            file_content = BytesIO(f.read())
-        return file_content
+        if r_str:
+            with open(filepath, 'r') as f:
+                content = f.read()
+        else:
+            with open(filepath, 'rb') as f:
+                content = BytesIO(f.read())
+        return content
 
     def get_zip_content(self):
         # mimetype = self.get_estimated_type()
@@ -347,6 +353,25 @@ def sanitise_mimetype(mimetype):
         else:
             return None
 
+def sanitize_decoded_name_to_search(name_to_search): # TODO FILTER NAME
+    return name_to_search
+
+def search_decodeds_by_name(name_to_search, r_pos=False):
+    decodeds = {}
+    # for subtype in subtypes:
+    r_name = sanitize_decoded_name_to_search(name_to_search)
+    if not name_to_search or isinstance(r_name, dict):
+        return decodeds
+    r_name = re.compile(r_name)
+    for decoded_name in get_all_decodeds():
+        res = re.search(r_name, decoded_name)
+        if res:
+            decodeds[decoded_name] = {}
+            if r_pos:
+                decodeds[decoded_name]['hl-start'] = res.start()
+                decodeds[decoded_name]['hl-end'] = res.end()
+    return decodeds
+
 ############################################################################
 
 def sanityze_decoder_names(decoder_name):
@@ -512,4 +537,7 @@ def get_all_decodeds_files():
             decodeds.append(file)
     return decodeds
 
+
 # if __name__ == '__main__':
+#     name_to_search = '4d36'
+#     print(search_decodeds_by_name(name_to_search))

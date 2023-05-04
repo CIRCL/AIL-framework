@@ -138,9 +138,14 @@ def get_object_meta(obj_type, subtype, id, options=set(), flask_context=False):
 
 def get_objects_meta(objs, options=set(), flask_context=False):
     metas = []
-    for obj_dict in objs:
-        metas.append(get_object_meta(obj_dict['type'], obj_dict['subtype'], obj_dict['id'], options=options,
-                                     flask_context=flask_context))
+    for obj in objs:
+        if isinstance(obj, dict):
+            obj_type = obj['type']
+            subtype = obj['subtype']
+            obj_id = obj['id']
+        else:
+            obj_type, subtype, obj_id = obj.split(':', 2)
+        metas.append(get_object_meta(obj_type, subtype, obj_id, options=options, flask_context=flask_context))
     return metas
 
 
@@ -162,12 +167,31 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     return meta
 
 
-def get_ui_obj_tag_table_keys(obj_type):
+#### OBJ FILTERS ####
+
+def is_filtered(obj, filters):
+    if 'mimetypes' in filters:
+        mimetype = obj.get_mimetype()
+        if mimetype not in filters['mimetypes']:
+            return True
+    if 'sources' in filters:
+        obj_source = obj.get_source()
+        if obj_source not in filters['sources']:
+            return True
+    if 'subtypes' in filters:
+        subtype = obj.get_subtype(r_str=True)
+        if subtype not in filters['subtypes']:
+            return True
+    return False
+
+
+def get_ui_obj_tag_table_keys(obj_type): # TODO REMOVE ME
     """
     Warning: use only in flask (dynamic templates)
     """
     if obj_type == "domain":
         return ['id', 'first_seen', 'last_check', 'status']  # # TODO: add root screenshot
+
 
 
 # # # # MISP OBJECTS # # # #
@@ -265,6 +289,7 @@ def api_sanitize_object_type(obj_type):
     if not is_valid_object_type(obj_type):
         return {'status': 'error', 'reason': 'Incorrect object type'}, 400
 
+#### CORRELATION ####
 
 def get_obj_correlations(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
@@ -292,13 +317,14 @@ def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0,
 
 def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300):
     objs = get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=filter_types, lvl=lvl, nb_max=nb_max)
+    # print(objs)
     for obj_tuple in objs:
         obj1_type, subtype1, id1 = obj_tuple
         add_obj_tags(obj1_type, subtype1, id1, tags)
     return objs
 
 ################################################################################
-################################################################################
+################################################################################ TODO
 ################################################################################
 
 def delete_obj_correlations(obj_type, subtype, obj_id):
@@ -357,7 +383,7 @@ def get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=[], max_
             "links": create_correlation_graph_links(links)}
 
 
-###############
+# --- CORRELATION --- #
 
 
 # if __name__ == '__main__':

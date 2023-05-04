@@ -186,9 +186,9 @@ class Investigation(object):
     def set_threat_level(self, threat_level):
         try:
             threat_level = int(threat_level)
-        except:
+        except TypeError:
             raise UpdateInvestigationError('threat_level Not an integer')
-        if threat_level >= 1 and threat_level <= 4:
+        if 1 <= threat_level <= 4:
             r_tracking.hset(f'investigations:data:{self.uuid}', 'threat_level', threat_level)
         else:
             raise UpdateInvestigationError(f'Invalid threat_level: {threat_level}')
@@ -196,9 +196,9 @@ class Investigation(object):
     def set_analysis(self, analysis):
         try:
             analysis = int(analysis)
-        except:
+        except TypeError:
             raise UpdateInvestigationError('analysis Not an integer')
-        if analysis >= 0 and analysis <= 2:
+        if 0 <= analysis <= 2:
             r_tracking.hset(f'investigations:data:{self.uuid}', 'analysis', analysis)
         else:
             raise UpdateInvestigationError(f'Invalid analysis: {analysis}')

@@ -23,6 +23,9 @@ from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Items import Item
 from lib.objects.Decodeds import Decoded
+from trackers.Tracker_Term import Tracker_Term
+from trackers.Tracker_Regex import Tracker_Regex
+from trackers.Tracker_Yara import Tracker_Yara
 
 config_loader = ConfigLoader()
 hex_max_execution_time = config_loader.get_config_int("Decoder", "max_execution_time_hexadecimal")
@@ -76,6 +79,10 @@ class Decoder(AbstractModule):
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
+        self.tracker_term = Tracker_Term(queue=False)
+        self.tracker_regex = Tracker_Regex(queue=False)
+        self.tracker_yara = Tracker_Yara(queue=False)
+
         # Send module state to logs
         self.redis_logger.info(f'Module {self.module_name} initialized')
 
@@ -84,6 +91,7 @@ class Decoder(AbstractModule):
         item = Item(message)
         content = item.get_content()
         date = item.get_date()
+        new_decodeds = []
 
         for decoder in self.decoder_order:
             find = False
@@ -96,8 +104,8 @@ class Decoder(AbstractModule):
             encodeds = set(encodeds)
 
             for encoded in encodeds:
-                find = False
                 if len(encoded) >= decoder['encoded_min_size']:
+                    find = True
                     decoded_file = self.decoder_function[dname](encoded)
 
                     sha1_string = sha1(decoded_file).hexdigest()
@@ -109,6 +117,7 @@ class Decoder(AbstractModule):
                             print(sha1_string, item.id)
                             raise Exception(f'Invalid mimetype: {decoded.id} {item.id}')
                         decoded.save_file(decoded_file, mimetype)
+                        new_decodeds.append(decoded.id)
                     else:
                         mimetype = decoded.get_mimetype()
                     decoded.add(dname, date, item.id, mimetype=mimetype)
@@ -124,6 +133,13 @@ class Decoder(AbstractModule):
                 # Send to Tags
                 msg = f'infoleak:automatic-detection="{dname}";{item.id}'
                 self.add_message_to_queue(msg, 'Tags')
+
+                ####################
+                # TRACKERS DECODED
+                for decoded_id in new_decodeds:
+                    self.tracker_term.compute(decoded_id, obj_type='decoded')
+                    self.tracker_regex.compute(decoded_id, obj_type='decoded')
+                    self.tracker_yara.compute(decoded_id, obj_type='decoded')
 
 
 if __name__ == '__main__':

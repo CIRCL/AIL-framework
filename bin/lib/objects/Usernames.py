@@ -3,12 +3,10 @@
 
 import os
 import sys
-import redis
+import re
 
 from flask import url_for
 from pymisp import MISPObject
-
-# sys.path.append(os.path.join(os.environ['AIL_BIN'], 'packages/'))
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -61,7 +59,7 @@ class Username(AbstractSubtypeObject):
         else:
             style = 'fas'
             icon = '\uf007'
-        return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius':5}
+        return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
     def get_meta(self, options=set()):
         meta = self._get_meta(options=options)
@@ -74,15 +72,15 @@ class Username(AbstractSubtypeObject):
         obj_attrs = []
         if self.subtype == 'telegram':
             obj = MISPObject('telegram-account', standalone=True)
-            obj_attrs.append( obj.add_attribute('username', value=self.id) )
+            obj_attrs.append(obj.add_attribute('username', value=self.id))
 
         elif self.subtype == 'twitter':
             obj = MISPObject('twitter-account', standalone=True)
-            obj_attrs.append( obj.add_attribute('name', value=self.id) )
+            obj_attrs.append(obj.add_attribute('name', value=self.id))
 
         else:
             obj = MISPObject('user-account', standalone=True)
-            obj_attrs.append( obj.add_attribute('username', value=self.id) )
+            obj_attrs.append(obj.add_attribute('username', value=self.id))
 
         obj.first_seen = self.get_first_seen()
         obj.last_seen = self.get_last_seen()
@@ -107,9 +105,30 @@ def get_all_usernames():
 def get_all_usernames_by_subtype(subtype):
     return get_all_id('username', subtype)
 
+# TODO FILTER NAME + Key + mail
+def sanitize_username_name_to_search(name_to_search, subtype): # TODO FILTER NAME
+
+    return name_to_search
+
+def search_usernames_by_name(name_to_search, subtype, r_pos=False):
+    usernames = {}
+    # for subtype in subtypes:
+    r_name = sanitize_username_name_to_search(name_to_search, subtype)
+    if not name_to_search or isinstance(r_name, dict):
+        # break
+        return usernames
+    r_name = re.compile(r_name)
+    for user_name in get_all_usernames_by_subtype(subtype):
+        res = re.search(r_name, user_name)
+        if res:
+            usernames[user_name] = {}
+            if r_pos:
+                usernames[user_name]['hl-start'] = res.start()
+                usernames[user_name]['hl-end'] = res.end()
+    return usernames
 
 
-if __name__ == '__main__':
-
-    obj = Username('ninechantw', 'telegram')
-    print(obj.get_misp_object().to_json())
+# if __name__ == '__main__':
+#     name_to_search = 'co'
+#     subtype = 'telegram'
+#     print(search_usernames_by_name(name_to_search, subtype))

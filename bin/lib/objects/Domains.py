@@ -96,6 +96,9 @@ class Domain(AbstractObject):
         elif int(last_check) < date:
             self._set_last_check(date)
 
+    def get_content(self):
+        return self.id
+
     def get_last_origin(self, obj=False):
         origin = {'item': r_crawler.hget(f'domain:meta:{self.id}', 'last_origin')}
         if obj and origin['item']:

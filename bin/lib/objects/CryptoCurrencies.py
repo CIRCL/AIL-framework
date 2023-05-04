@@ -2,12 +2,13 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import sys
 
 from flask import url_for
 from hashlib import sha256
 
-from pymisp import MISPObject, MISPAttribute
+from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -175,31 +176,57 @@ def get_all_cryptocurrencies():
         cryptos[subtype] = get_all_cryptocurrencies_by_subtype(subtype)
     return cryptos
 
-
 def get_all_cryptocurrencies_by_subtype(subtype):
     return get_all_id('cryptocurrency', subtype)
 
+def sanitize_cryptocurrency_name_to_search(name_to_search, subtype): # TODO FILTER NAME + Key + mail
+    if subtype == '':
+        pass
+    elif subtype == 'name':
+        pass
+    elif subtype == 'mail':
+        pass
+    return name_to_search
 
-# TODO save object
-def import_misp_object(misp_obj):
-    """
-    :type misp_obj: MISPObject
-    """
-    obj_id = None
-    obj_subtype = None
-    for attribute in misp_obj.attributes:
-        if attribute.object_relation == 'address':  # TODO: handle xmr address field
-            obj_id = attribute.value
-        elif attribute.object_relation == 'symbol':
-            obj_subtype = get_subtype_by_symbol(attribute.value)
-    if obj_id and obj_subtype:
-        obj = CryptoCurrency(obj_id, obj_subtype)
-        first_seen, last_seen = obj.get_misp_object_first_last_seen(misp_obj)
-        tags = obj.get_misp_object_tags(misp_obj)
-        # for tag in tags:
-        #     obj.add_tag()
+def search_cryptocurrency_by_name(name_to_search, subtype, r_pos=False):
+    cryptocurrencies = {}
+    # for subtype in subtypes:
+    r_name = sanitize_cryptocurrency_name_to_search(name_to_search, subtype)
+    if not name_to_search or isinstance(r_name, dict):
+        # break
+        return cryptocurrencies
+    r_name = re.compile(r_name)
+    for crypto_name in get_all_cryptocurrencies_by_subtype(subtype):
+        res = re.search(r_name, crypto_name)
+        if res:
+            cryptocurrencies[crypto_name] = {}
+            if r_pos:
+                cryptocurrencies[crypto_name]['hl-start'] = res.start()
+                cryptocurrencies[crypto_name]['hl-end'] = res.end()
+    return cryptocurrencies
 
 
-if __name__ == '__main__':
-    res = get_all_cryptocurrencies()
-    print(res)
+# # TODO save object
+# def import_misp_object(misp_obj):
+#     """
+#     :type misp_obj: MISPObject
+#     """
+#     obj_id = None
+#     obj_subtype = None
+#     for attribute in misp_obj.attributes:
+#         if attribute.object_relation == 'address':  # TODO: handle xmr address field
+#             obj_id = attribute.value
+#         elif attribute.object_relation == 'symbol':
+#             obj_subtype = get_subtype_by_symbol(attribute.value)
+#     if obj_id and obj_subtype:
+#         obj = CryptoCurrency(obj_id, obj_subtype)
+#         first_seen, last_seen = obj.get_misp_object_first_last_seen(misp_obj)
+#         tags = obj.get_misp_object_tags(misp_obj)
+#         # for tag in tags:
+#         #     obj.add_tag()
+
+
+# if __name__ == '__main__':
+#     name_to_search = '3c'
+#     subtype = 'bitcoin'
+#     print(search_cryptocurrency_by_name(name_to_search, subtype))

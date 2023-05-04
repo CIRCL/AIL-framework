@@ -8,43 +8,43 @@
       	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
       		<h5 class="d-flex text-muted w-100" id="nav_title_trackers">
       		  <span>Trackers </span>
-      			<a class="ml-auto" href="{{url_for('hunter.add_tracked_menu')}}">
+      			<a class="ml-auto" href="{{url_for('hunters.add_tracked_menu')}}">
       				<i class="fas fa-plus-circle ml-auto"></i>
       			</a>
       		</h5>
       	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
             <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu')}}" id="nav_tracker_">
+      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu')}}" id="nav_tracker_">
                 <i class="fas fa-ruler-combined"></i>
       	        <span>All Trackers</span>
       	      </a>
       	    </li>
       	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_word')}}" id="nav_tracker_word">
+      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_word')}}" id="nav_tracker_word">
                 <i class="fas fa-font"></i>
       	        <span>Words</span>
       	      </a>
       	    </li>
             <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_set')}}" id="nav_tracker_set">
+      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_set')}}" id="nav_tracker_set">
       	        <i class="fas fa-layer-group"></i>
       	        <span>Set</span>
       	      </a>
       	    </li>
             <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_regex')}}" id="nav_tracker_regex">
+      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_regex')}}" id="nav_tracker_regex">
       	        <i class="fas fa-drafting-compass"></i>
                 <span>Regex</span>
       	      </a>
       	    </li>
             <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_yara')}}" id="nav_tracker_yara">
+      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_yara')}}" id="nav_tracker_yara">
                 <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>
                 <span>&nbsp;YARA</span>
       	      </a>
       	    </li>
 			<li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunter.tracked_menu_typosquatting')}}" id="nav_tracker_typosquatting">
+      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_typosquatting')}}" id="nav_tracker_typosquatting">
                 <i class="fa fa-clone"></i>
                 <span>Typo-squatting</span>
       	      </a>

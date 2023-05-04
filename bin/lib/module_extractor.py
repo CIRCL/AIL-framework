@@ -95,17 +95,18 @@ def convert_byte_offset_to_string(b_content, offset):
 def get_tracker_match(obj_id, content):
     extracted = []
     extracted_yara = []
-    trackers = Tracker.get_obj_all_trackers('item', '', obj_id)
+    trackers = Tracker.get_obj_trackers('item', '', obj_id)
     for tracker_uuid in trackers:
-        tracker_type = Tracker.get_tracker_type(tracker_uuid)
+        tracker = Tracker.Tracker(tracker_uuid)
+        tracker_type = tracker.get_type()
         # print(tracker_type)
-        tracker = Tracker.get_tracker_by_uuid(tracker_uuid)
+        tracked = tracker.get_tracked()
         if tracker_type == 'regex':  # TODO Improve word detection -> word delimiter
-            regex_match = regex_helper.regex_finditer(r_key, tracker, obj_id, content)
+            regex_match = regex_helper.regex_finditer(r_key, tracked, obj_id, content)
             for match in regex_match:
-                extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker_uuid}'])
+                extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
         elif tracker_type == 'yara':
-            rule = Tracker.get_yara_rule_by_uuid(tracker_uuid)
+            rule = tracker.get_rule()
             rule.match(data=content.encode(), callback=_get_yara_match,
                        which_callbacks=yara.CALLBACK_MATCHES, timeout=30)
             yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')
@@ -113,20 +114,20 @@ def get_tracker_match(obj_id, content):
             extracted = []
             for match in yara_match:
                 start, end, value = match.split(':', 2)
-                extracted_yara.append([int(start), int(end), value, f'tracker:{tracker_uuid}'])
+                extracted_yara.append([int(start), int(end), value, f'tracker:{tracker.uuid}'])
 
         elif tracker_type == 'word' or tracker_type == 'set':
             if tracker_type == 'set':
-                tracker = tracker.rsplit(';', 1)[0]
-                words = tracker.split(',')
+                tracked = tracked.rsplit(';', 1)[0]
+                words = tracked.split(',')
             else:
-                words = [tracker]
+                words = [tracked]
             for word in words:
                 regex = _get_word_regex(word)
                 regex_match = regex_helper.regex_finditer(r_key, regex, obj_id, content)
                 # print(regex_match)
                 for match in regex_match:
-                    extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker_uuid}'])
+                    extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
 
     # Convert byte offset to string offset
     if extracted_yara:

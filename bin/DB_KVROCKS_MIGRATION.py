@@ -233,17 +233,61 @@ def ail_2_ail_migration():
     # item in queue
     ail_2_ail.set_last_updated_sync_config()
 
+###############################
+#                             #
+#      TRACKER MIGRATION      #
+#                             #
+###############################
+
+def get_tracker_level(tracker_uuid):
+    level = r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'level')
+    if not level:
+        level = 0
+    return int(level)
+
+def get_tracker_metadata(tracker_uuid):
+    meta = {'uuid': tracker_uuid,
+            'tracked': r_serv_tracker.hget('tracker:{tracker_uuid}', 'tracked'),
+            'type': r_serv_tracker.hget('tracker:{tracker_uuid}', 'type'),
+            'date': r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'date'),
+            'first_seen': r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'first_seen'),
+            'last_seen': r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'last_seen'),
+            'user_id': r_serv_tracker.hget('tracker:{tracker_uuid}', 'user_id'),
+            'level': get_tracker_level(tracker_uuid),
+            'mails': list(r_serv_tracker.smembers('tracker:mail:{tracker_uuid}')),
+            'sources': list(r_serv_tracker.smembers(f'tracker:sources:{tracker_uuid}')),
+            'tags': list(r_serv_tracker.smembers(f'tracker:tags:{tracker_uuid}')),
+            'description': r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'description'),
+            'webhook': r_serv_tracker.hget(f'tracker:{tracker_uuid}', 'webhook')}
+    return meta
+
+def get_tracker_items_by_daterange(tracker_uuid, date_from, date_to):
+    all_item_id = set()
+    if date_from and date_to:
+        l_date_match = r_serv_tracker.zrange(f'tracker:stat:{tracker_uuid}', 0, -1, withscores=True)
+        if l_date_match:
+            dict_date_match = dict(l_date_match)
+            for date_day in Date.substract_date(date_from, date_to):
+                if date_day in dict_date_match:
+                    all_item_id |= r_serv_tracker.smembers(f'tracker:item:{tracker_uuid}:{date_day}')
+    return all_item_id
+
 # trackers + retro_hunts
 def trackers_migration():
     print('TRACKERS MIGRATION...')
     for tracker_uuid in old_Tracker.get_all_tracker_uuid():
-        meta = old_Tracker.get_tracker_metadata(tracker_uuid, user_id=True, description=True, level=True, tags=True, mails=True, sources=True, sparkline=False, webhook=True)
-        Tracker._re_create_tracker(meta['tracker'], meta['type'], meta['user_id'], meta['level'], meta['tags'], meta['mails'], meta['description'], meta['webhook'], 0, meta['uuid'], meta['sources'], meta['first_seen'], meta['last_seen'])
+        meta = get_tracker_metadata(tracker_uuid)
+        Tracker._re_create_tracker(meta['type'], meta['uuid'], meta['tracked'], meta['user_id'], meta['level'],
+                                   tags=meta['tags'], mails=meta['mails'], description=meta['description'],
+                                   webhook=meta['webhook'], sources=meta['sources'],
+                                   first_seen=meta['first_seen'], last_seen=meta['last_seen'])
 
+        tracker = Tracker.Tracker(tracker_uuid)
         # object migration # # TODO: in background
         for item_id in old_Tracker.get_tracker_items_by_daterange(tracker_uuid, meta['first_seen'], meta['last_seen']):
             print(item_id)
-            Tracker.add_tracked_item(tracker_uuid, item_id)
+            item_date = get_item_date(item_id)
+            tracker.add('item', '', item_id, date=item_date)
 
     print('RETRO HUNT MIGRATION...')
 
@@ -929,13 +973,13 @@ if __name__ == '__main__':
     # user_migration()
     #tags_migration()
     # items_migration()
-    crawler_migration()
+    # crawler_migration()
     # domain_migration()                      # TO TEST ###########################
     # decodeds_migration()
     # screenshots_migration()
     # subtypes_obj_migration()
     # ail_2_ail_migration()
-    # trackers_migration()
+    trackers_migration()
     # investigations_migration()
     ## statistics_migration()
 

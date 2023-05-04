@@ -72,7 +72,7 @@
                                             <tr>
                                                 <th>Type</th>
                                                 <th>Tracker</th>
-                                                <th>Date added</th>
+                                                <th>Created</th>
                                                 <th>Access Level</th>
                                                 <th>Created by</th>
                                                 <th>First seen</th>
@@ -94,7 +94,7 @@
                                             {% if tracker_metadata['type'] == 'typosquatting' %}
                                                 <td>
                                                     <a class="btn btn-primary" data-toggle="collapse" href="#collapseTypo" role="button" aria-expanded="false" aria-controls="collapseTypo">
-                                                        {{ tracker_metadata['tracker'].split(",")[0] }}
+                                                        {{ tracker_metadata['tracked'].split(",")[0] }}
                                                     </a>
                                                     <div class="collapse" id="collapseTypo">
                                                         <div class="card card-body">
@@ -108,7 +108,7 @@
                                                     </div>
                                                 </td>
                                             {% else %}
-                                                <td>{{ tracker_metadata['tracker'] }}</td>
+                                                <td>{{ tracker_metadata['tracked'] }}</td>
                                             {% endif %}
                                             <td>{{ tracker_metadata['date'][0:4] }}/{{ tracker_metadata['date'][4:6] }}/{{ tracker_metadata['date'][6:8] }}</td>
                                             <td>
@@ -118,19 +118,15 @@
                                                     Global
                                                 {% endif %}
                                             </td>
-                                            <td>{{ tracker_metadata['user_id'] }}</td>
+                                            <td>{{ tracker_metadata['user'] }}</td>
                                             <td>
                                                 {% if tracker_metadata['first_seen'] %}
-                                                    {{ tracker_metadata['first_seen'][0:4] }}/
-                                                    {{ tracker_metadata['first_seen'][4:6] }}/
-                                                    {{ tracker_metadata['first_seen'][6:8] }}
+                                                    {{ tracker_metadata['first_seen'][0:4] }}/{{ tracker_metadata['first_seen'][4:6] }}/{{ tracker_metadata['first_seen'][6:8] }}
                                                 {% endif %}
                                             </td>
                                             <td>
                                                 {% if tracker_metadata['last_seen'] %}
-                                                    {{ tracker_metadata['last_seen'][0:4] }}/
-                                                    {{ tracker_metadata['last_seen'][4:6] }}/
-                                                    {{ tracker_metadata['last_seen'][6:8] }}
+                                                    {{ tracker_metadata['last_seen'][0:4] }}/{{ tracker_metadata['last_seen'][4:6] }}/{{ tracker_metadata['last_seen'][6:8] }}
                                                 {% endif %}
                                             </td>
                                             {% if tracker_metadata['webhook'] %}
@@ -159,14 +155,22 @@
                                     <div id="sparkline"></div>
                                 </div>
                             </div>
-                            <h6>Sources:</h6>
-                            {% if tracker_metadata['sources'] %}
-                                {% for sources in tracker_metadata['sources'] %}
-                                    <span class="badge badge-secondary">{{ sources }}</span><br>
-                                {% endfor %}
+
+                            <h6>Filters:</h6>
+                            {% if tracker_metadata['filters'] %}
+                                <pre>{{ tracker_metadata['filters'] }}</pre>
                             {% else %}
-                                <span class="badge badge-secondary">All Souces</span><br>
+                                <span class="badge badge-secondary">No Filters</span><br>
                             {% endif %}
+
+{#                            <h6>Sources:</h6>#}
+{#                            {% if tracker_metadata['sources'] %}#}
+{#                                {% for sources in tracker_metadata['sources'] %}#}
+{#                                    <span class="badge badge-secondary">{{ sources }}</span><br>#}
+{#                                {% endfor %}#}
+{#                            {% else %}#}
+{#                                <span class="badge badge-secondary">All Sources</span><br>#}
+{#                            {% endif %}#}
                         </li>
                     </ul>
 
@@ -232,7 +236,7 @@
                     </div>
 
                     <div class="d-flex flex-row-reverse">
-                        <a href="{{ url_for('hunter.delete_tracker') }}?uuid={{ tracker_metadata['uuid'] }}"
+                        <a href="{{ url_for('hunters.tracker_delete') }}?uuid={{ tracker_metadata['uuid'] }}"
                            style="font-size: 15px">
                             <button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
                         </a>
@@ -262,8 +266,9 @@
                                         class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
                                 <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd"
                                        name="date_from" autocomplete="off"
-                                       {% if tracker_metadata['date_from'] %}value="{{ tracker_metadata['date_from'] }}"
-                                       {% else %}value="{{ tracker_metadata['first_seen'] }}"{% endif %}>
+                                       {% if tracker_metadata['date_from'] %}value="{{ tracker_metadata['date_from'][0:4] }}-{{ tracker_metadata['date_from'][4:6] }}-{{ tracker_metadata['date_from'][6:8] }}"
+                                       {% elif tracker_metadata['first_seen'] %}value="{{ tracker_metadata['first_seen'][0:4] }}-{{ tracker_metadata['first_seen'][4:6] }}-{{ tracker_metadata['first_seen'][6:8] }}"
+                                       {% endif %}>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -272,8 +277,9 @@
                                         class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
                                 <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd"
                                        name="date_to" autocomplete="off"
-                                       {% if tracker_metadata['date_to'] %}value="{{ tracker_metadata['date_to'] }}"
-                                       {% else %}value="{{ tracker_metadata['last_seen'] }}"{% endif %}>
+                                       {% if tracker_metadata['date_to'] %}value="{{ tracker_metadata['date_to'][0:4] }}-{{ tracker_metadata['date_to'][4:6] }}-{{ tracker_metadata['date_to'][6:8] }}"
+                                       {% elif tracker_metadata['last_seen'] %}value="{{ tracker_metadata['last_seen'][0:4] }}-{{ tracker_metadata['last_seen'][4:6] }}-{{ tracker_metadata['last_seen'][6:8] }}"
+                                       {% endif %}>
                             </div>
                         </div>
                     </div>
@@ -285,40 +291,52 @@
                 </div>
             </div>
 
-            {% if tracker_metadata['items'] %}
+            {% if tracker_metadata['objs'] %}
                 <div class="mt-4">
-                    <table class="table table-bordered table-hover" id="myTable_">
-                        <thead class="thead-dark">
+                    <table id="myTable_" class="table table-striped border-primary">
+                        <thead class="bg-dark text-white">
                         <tr>
-                            <th>Date</th>
-                            <th>Item Id</th>
-                        </tr>
-                        </thead>
-                        <tbody>
+                            <th>Type</th>
+			      	        <th></th>
+							<th>Id</th>
+				     	    <th>Tags</th>
+							<th></th>
+				   	    </tr>
+					    </thead>
+					    <tbody style="font-size: 15px;">
+						{% for object in tracker_metadata['objs'] %}
+							<tr class="border-color: blue;">
+								<td>
+									{% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
+										{% include 'objects/obj_svg_block.html' %}
+									{% endwith %}
+									{{ object['type']}}
+								</td>
+								<td>
+									{% if object['subtype'] %}
+										{{ object['subtype']}}
+									{% endif %}
+								</td>
+								<td>
+									<a href="{{ object['link'] }}">
+										{{ object['id']}}
+									</a>
+								</td>
+								<td>
+									{% for tag in object['tags'] %}
+										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+									{% endfor %}
+								</td>
+								<td class="text-right">
+{#									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ tracker_metadata['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">#}
+{#										<button type="button" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>#}
+{#									</a>#}
+								</td>
+							</tr>
+						{% endfor %}
+					    </tbody>
+				    </table>
 
-                        {% for item in tracker_metadata['items'] %}
-                            <tr>
-                                <td>
-                                    {{ item['date'][0:4] }}/{{ item['date'][4:6] }}/{{ item['date'][6:8] }}
-                                </td>
-                                <td>
-                                    <a class="text-secondary" target="_blank"
-                                       href="{{ url_for('objects_item.showItem') }}?id={{ item['id'] }}">
-                                        <div style="line-height:0.9;">{{ item['id'] }}</div>
-                                    </a>
-                                    <div class="mb-2">
-                                        {% for tag in item['tags'] %}
-                                            <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
-                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-
-                        </tbody>
-                    </table>
                 </div>
             {% endif %}
 
@@ -331,7 +349,7 @@
         $('#div_edit_mails').hide();
         $('#div_edit_tags').hide();
         $('#div_edit_description').hide();
-        $("#page-Decoded").addClass("active");
+        $("#page-Tracker").addClass("active");
 
         $('#date-range-from').dateRangePicker({
             separator: ' to ',

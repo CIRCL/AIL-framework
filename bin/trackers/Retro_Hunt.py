@@ -61,15 +61,17 @@ class Retro_Hunt(AbstractModule):
         self.progress = 0
         # First launch
         # restart
-        rule = Tracker.get_retro_hunt_task_rule(task_uuid, r_compile=True)
+        retro_hunt = Tracker.RetroHunt(task_uuid) # TODO SELF
 
-        timeout = Tracker.get_retro_hunt_task_timeout(task_uuid)
+        rule = retro_hunt.get_rule(r_compile=True)
+
+        timeout = retro_hunt.get_timeout()
         self.redis_logger.debug(f'{self.module_name}, Retro Hunt rule {task_uuid} timeout {timeout}')
-        sources = Tracker.get_retro_hunt_task_sources(task_uuid, r_sort=True)
+        sources = retro_hunt.get_sources(r_sort=True)
 
-        self.date_from = Tracker.get_retro_hunt_task_date_from(task_uuid)
-        self.date_to = Tracker.get_retro_hunt_task_date_to(task_uuid)
-        self.tags = Tracker.get_retro_hunt_task_tags(task_uuid)
+        self.date_from = retro_hunt.get_date_from()
+        self.date_to = retro_hunt.get_date_to()
+        self.tags = retro_hunt.get_tags()
         curr_date = Tracker.get_retro_hunt_task_current_date(task_uuid)
         self.nb_src_done = Tracker.get_retro_hunt_task_nb_src_done(task_uuid, sources=sources)
         self.update_progress(sources, curr_date)
@@ -106,11 +108,10 @@ class Retro_Hunt(AbstractModule):
 
                     # PAUSE
                     self.update_progress(sources, curr_date)
-                    if Tracker.check_retro_hunt_pause(task_uuid):
+                    if retro_hunt.to_pause():
                         Tracker.set_retro_hunt_last_analyzed(task_uuid, id)
                         # self.update_progress(sources, curr_date, save_db=True)
-                        Tracker.pause_retro_hunt_task(task_uuid)
-                        Tracker.clear_retro_hunt_task_cache(task_uuid)
+                        retro_hunt.pause()
                         return None
 
                 self.nb_src_done += 1
@@ -120,9 +121,7 @@ class Retro_Hunt(AbstractModule):
 
         self.update_progress(sources, curr_date)
 
-        Tracker.set_retro_hunt_task_state(task_uuid, 'completed')
-        Tracker.set_retro_hunt_nb_match(task_uuid)
-        Tracker.clear_retro_hunt_task_cache(task_uuid)
+        retro_hunt.complete()
 
         print(f'Retro Hunt {task_uuid} completed')
         self.redis_logger.warning(f'{self.module_name}, Retro Hunt {task_uuid} completed')
@@ -130,10 +129,11 @@ class Retro_Hunt(AbstractModule):
         # # TODO: stop
 
     def update_progress(self, sources, curr_date, save_db=False):
-        progress = Tracker.compute_retro_hunt_task_progress(self.task_uuid, date_from=self.date_from, date_to=self.date_to,
-                                                            sources=sources, curr_date=curr_date, nb_src_done=self.nb_src_done)
+        retro_hunt = Tracker.RetroHunt(retro_hubt) # TODO USE SELF
+        progress = retro_hunt.compute_progress(date_from=self.date_from, date_to=self.date_to,
+                                               sources=sources, curr_date=curr_date, nb_src_done=self.nb_src_done)
         if self.progress != progress:
-            Tracker.set_cache_retro_hunt_task_progress(self.task_uuid, progress)
+            retro_hunt.set_progress(progress)
             self.progress = progress
         # if save_db:
         #     Tracker.set_retro_hunt_task_progress(task_uuid, progress)

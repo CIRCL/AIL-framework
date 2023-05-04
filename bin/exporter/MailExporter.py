@@ -105,7 +105,7 @@ class MailExporterTracker(MailExporter):
 
     def export(self, tracker, obj):  # TODO match
         tracker_type = tracker.get_type()
-        tracker_name = tracker.get_tracker()
+        tracker_name = tracker.get_tracked()
         subject = f'AIL Framework Tracker: {tracker_name}'  # TODO custom subject
         body = f"AIL Framework, New occurrence for {tracker_type} tracker: {tracker_name}\n"
         body += f'Item: {obj.id}\nurl:{obj.get_link()}'

@@ -19,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.objects.Items import Item
+from lib.objects import ail_objects
 from lib import Tracker
 
 from exporter.MailExporter import MailExporterTracker
@@ -36,8 +36,8 @@ class Tracker_Typo_Squatting(AbstractModule):
         self.pending_seconds = 5
 
         # Refresh typo squatting
-        self.typosquat_tracked_words_list = Tracker.get_typosquatting_tracked_words_list()
-        self.last_refresh_typosquat = time.time()
+        self.tracked_typosquattings = Tracker.get_tracked_typosquatting()
+        self.last_refresh_typosquatting = time.time()
 
         # Exporter
         self.exporters = {'mail': MailExporterTracker(),
@@ -45,50 +45,62 @@ class Tracker_Typo_Squatting(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, message):
+    def compute(self, message, obj_type='item', subtype=''):
         # refresh Tracked typo
-        if self.last_refresh_typosquat < Tracker.get_tracker_last_updated_by_type('typosquatting'):
-            self.typosquat_tracked_words_list = Tracker.get_typosquatting_tracked_words_list()
-            self.last_refresh_typosquat = time.time()
+        if self.last_refresh_typosquatting < Tracker.get_tracker_last_updated_by_type('typosquatting'):
+            self.tracked_typosquattings = Tracker.get_tracked_typosquatting()
+            self.last_refresh_typosquatting = time.time()
             self.redis_logger.debug('Tracked typosquatting refreshed')
             print('Tracked typosquatting refreshed')
 
-        host, item_id = message.split()
+        host, obj_id = message.split()
+        obj = ail_objects.get_object(obj_type, subtype, obj_id)
+        obj_type = obj.get_type()
 
-        # Cast message as Item
-        for tracker in self.typosquat_tracked_words_list:
-            if host in self.typosquat_tracked_words_list[tracker]:
-                item = Item(item_id)
-                self.new_tracker_found(tracker, 'typosquatting', item)
+        # Object Filter
+        if obj_type not in self.tracked_typosquattings:
+            return None
 
-    def new_tracker_found(self, tracker, tracker_type, item):
-        item_id = item.get_id()
-        item_source = item.get_source()
-        print(f'new tracked typosquatting found: {tracker} in {item_id}')
-        self.redis_logger.warning(f'tracker typosquatting: {tracker} in {item_id}')
+        for typo in self.tracked_typosquattings[obj_type]:
+            if host in typo['domains']:
+                self.new_tracker_found(typo['tracked'], 'typosquatting', obj)
 
-        for tracker_uuid in Tracker.get_tracker_uuid_list(tracker, tracker_type):
+    def new_tracker_found(self, tracked, tracker_type, obj):
+        obj_id = obj.get_id()
+        for tracker_uuid in Tracker.get_trackers_by_tracked_obj_type(tracker_type, obj.get_type(), tracked):
             tracker = Tracker.Tracker(tracker_uuid)
 
-            # Source Filtering
-            tracker_sources = tracker.get_sources()
-            if tracker_sources and item_source not in tracker_sources:
+            # Filter Object
+            filters = tracker.get_filters()
+            if ail_objects.is_filtered(obj, filters):
                 continue
 
-            Tracker.add_tracked_item(tracker_uuid, item_id)
+            print(f'new tracked typosquatting found: {tracked} in {obj_id}')
+            self.redis_logger.warning(f'tracker typosquatting: {tracked} in {obj_id}')
 
+            if obj.get_type() == 'item':
+                date = obj.get_date()
+            else:
+                date = None
+
+            tracker.add(obj.get_type(), obj.get_subtype(r_str=True), obj_id, date=date)
+
+            # Tags
             for tag in tracker.get_tags():
-                msg = f'{tag};{item_id}'
-                self.add_message_to_queue(msg, 'Tags')
+                if obj.get_type() == 'item':
+                    msg = f'{tag};{obj_id}'
+                    self.add_message_to_queue(msg, 'Tags')
+                else:
+                    obj.add_tag(tag)
 
             if tracker.mail_export():
-                self.exporters['mail'].export(tracker, item)
+                self.exporters['mail'].export(tracker, obj)
 
             if tracker.webhook_export():
-                self.exporters['webhook'].export(tracker, item)
+                self.exporters['webhook'].export(tracker, obj)
 
 
 if __name__ == '__main__':
     module = Tracker_Typo_Squatting()
     module.run()
-    #module.compute('g00gle.com tests/2020/01/01/test.gz')
+    # module.compute('g00gle.com tests/2020/01/01/test.gz')

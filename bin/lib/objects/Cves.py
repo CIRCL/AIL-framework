@@ -2,9 +2,11 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import sys
 
 from flask import url_for
+
 from pymisp import MISPObject
 
 import requests
@@ -110,6 +112,25 @@ def get_cves_meta(cves_id, options=set()):
         dict_cve[cve_id] = cve.get_meta(options=options)
     return dict_cve
 
+def sanitize_cve_name_to_search(name_to_search): # TODO FILTER NAME
+    return name_to_search
+
+def search_cves_by_name(name_to_search, r_pos=False):
+    cves = {}
+    # for subtype in subtypes:
+    r_name = sanitize_cve_name_to_search(name_to_search)
+    if not name_to_search or isinstance(r_name, dict):
+        return cves
+    r_name = re.compile(r_name)
+    for cve_name in get_all_cves():
+        res = re.search(r_name, cve_name)
+        if res:
+            cves[cve_name] = {}
+            if r_pos:
+                cves[cve_name]['hl-start'] = res.start()
+                cves[cve_name]['hl-end'] = res.end()
+    return cves
+
 def api_get_cves_range_by_daterange(date_from, date_to):
     cves = []
     for date in Date.substract_date(date_from, date_to):
@@ -133,3 +154,5 @@ def get_cve_graphline(cve_id):
 
 
 # if __name__ == '__main__':
+#     name_to_search = '98'
+#     print(search_cves_by_name(name_to_search))

@@ -3,8 +3,6 @@
 import os
 import string
 
-from pubsublogger import publisher
-
 import calendar
 from datetime import date
 from dateutil.rrule import rrule, DAILY

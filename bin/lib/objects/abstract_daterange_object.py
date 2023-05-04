@@ -108,6 +108,9 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             sparkline.append(self.get_nb_seen_by_date(date))
         return sparkline
 
+    def get_content(self):
+        return self.id
+
     def _add_create(self):
         r_object.sadd(f'{self.type}:all', self.id)
 

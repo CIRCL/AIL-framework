@@ -40,6 +40,9 @@ def get_object_all_subtypes(obj_type):
         return ['telegram', 'twitter', 'jabber']
     return []
 
+def get_objects_tracked():
+    return ['decoded', 'item', 'pgp']
+
 def get_all_objects_with_subtypes_tuple():
     str_objs = []
     for obj_type in get_all_objects():

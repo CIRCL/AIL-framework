@@ -53,7 +53,7 @@ class WebHookExporterTracker(WebHookExporter):
         data = {'trackerId': tracker.get_uuid(),
                 'trackerType': tracker.get_type(),
                 'tags': tracker.get_tags(),
-                'tracker': tracker.get_tracker(),
+                'tracker': tracker.get_tracked(),
                 # object
                 'itemId': obj.get_id(),
                 'itemURL': obj.get_link()}

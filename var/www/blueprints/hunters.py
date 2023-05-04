@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-'''
+"""
     Blueprint Flask: crawler splash endpoints: dashboard, onion crawler ...
-'''
+"""
 
 import os
 import sys
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, make_response
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
@@ -22,8 +22,10 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_core
 from lib import item_basic
 from lib import Tracker
+from lib import Tag
 
 
 bootstrap_label = Flask_config.bootstrap_label
@@ -32,7 +34,6 @@ bootstrap_label = Flask_config.bootstrap_label
 hunters = Blueprint('hunters', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/hunter'))
 
 # ============ VARIABLES ============
-
 
 
 # ============ FUNCTIONS ============
@@ -45,11 +46,203 @@ def create_json_response(data, status_code):
 
 # ============= ROUTES ==============
 
+##################
+#    TRACKERS    #
+##################
+
+@hunters.route('/trackers', methods=['GET'])
+@login_required
+@login_read_only
+def trackers_dashboard():
+    user_id = current_user.get_id()  # TODO
+    trackers = Tracker.get_trackers_dashboard()
+    stats = Tracker.get_trackers_stats(user_id)
+    return render_template("trackers_dashboard.html", trackers=trackers, stats=stats, bootstrap_label=bootstrap_label)
+
+@hunters.route("/trackers/all")
+@login_required
+@login_read_only
+def tracked_menu():
+    user_id = current_user.get_id()
+    user_trackers = Tracker.get_user_trackers_meta(user_id)
+    global_trackers = Tracker.get_global_trackers_meta()
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label)
+
+@hunters.route("/trackers/word")
+@login_required
+@login_read_only
+def tracked_menu_word():
+    tracker_type = 'word'
+    user_id = current_user.get_id()
+    user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type='word')
+    global_trackers = Tracker.get_global_trackers_meta(tracker_type='word')
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+
+@hunters.route("/trackers/set")
+@login_required
+@login_read_only
+def tracked_menu_set():
+    tracker_type = 'set'
+    user_id = current_user.get_id()
+    user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
+    global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+
+@hunters.route("/trackers/regex")
+@login_required
+@login_read_only
+def tracked_menu_regex():
+    tracker_type = 'regex'
+    user_id = current_user.get_id()
+    user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
+    global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+
+@hunters.route("/trackers/yara")
+@login_required
+@login_read_only
+def tracked_menu_yara():
+    tracker_type = 'yara'
+    user_id = current_user.get_id()
+    user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
+    global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+
+@hunters.route("/trackers/typosquatting")
+@login_required
+@login_read_only
+def tracked_menu_typosquatting():
+    tracker_type = 'typosquatting'
+    user_id = current_user.get_id()
+    user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
+    global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers,
+                           bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+
+@hunters.route("/tracker/add", methods=['GET', 'POST'])
+@login_required
+@login_analyst
+def add_tracked_menu():
+    if request.method == 'POST':
+        to_track = request.form.get("tracker")
+        tracker_uuid = request.form.get("tracker_uuid")
+        tracker_type = request.form.get("tracker_type")
+        nb_words = request.form.get("nb_word", 1)
+        description = request.form.get("description", '')
+        webhook = request.form.get("webhook", '')
+        level = request.form.get("level", 0)
+        mails = request.form.get("mails", [])
+
+        # TAGS
+        tags = request.form.get("tags", [])
+        taxonomies_tags = request.form.get('taxonomies_tags')
+        if taxonomies_tags:
+            try:
+                taxonomies_tags = json.loads(taxonomies_tags)
+            except:
+                taxonomies_tags = []
+        else:
+            taxonomies_tags = []
+        galaxies_tags = request.form.get('galaxies_tags')
+        if galaxies_tags:
+            try:
+                galaxies_tags = json.loads(galaxies_tags)
+            except:
+                galaxies_tags = []
+        # custom tags
+        if tags:
+            tags = tags.split()
+        else:
+            tags = []
+        tags = tags + taxonomies_tags + galaxies_tags
+
+        # YARA #
+        if tracker_type == 'yara':
+            yara_default_rule = request.form.get("yara_default_rule")
+            yara_custom_rule = request.form.get("yara_custom_rule")
+            if yara_custom_rule:
+                to_track = yara_custom_rule
+                tracker_type = 'yara_custom'
+            else:
+                to_track = yara_default_rule
+                tracker_type = 'yara_default'
+
+        if level == 'on':
+            level = 1
+        else:
+            level = 0
+        if mails:
+            mails = mails.split()
+        else:
+            tags = []
+            
+        # FILTERS
+        filters = {}
+        for obj_type in Tracker.get_objects_tracked():
+            new_filter = request.form.get(f'{obj_type}_obj')
+            if new_filter == 'on':
+                filters[obj_type] = {}
+                # Mimetypes
+                mimetypes = request.form.get(f'mimetypes_{obj_type}', [])
+                if mimetypes:
+                    mimetypes = json.loads(mimetypes)
+                    filters[obj_type]['mimetypes'] = mimetypes
+                # Sources
+                sources = request.form.get(f'sources_{obj_type}', [])
+                if sources:
+                    sources = json.loads(sources)
+                    filters[obj_type]['sources'] = sources
+                # Subtypes
+                for obj_subtype in ail_core.get_object_all_subtypes(obj_type):
+                    subtype = request.form.get(f'filter_{obj_type}_{obj_subtype}')
+                    if subtype == 'on':
+                        if 'subtypes' not in filters[obj_type]:
+                            filters[obj_type]['subtypes'] = []
+                        filters[obj_type]['subtypes'].append(obj_subtype)
+
+        input_dict = {"tracked": to_track, "type": tracker_type,
+                      "tags": tags, "mails": mails, "filters": filters,
+                      "level": level, "description": description, "webhook": webhook}
+        if tracker_type == 'set':
+            try:
+                input_dict['nb_words'] = int(nb_words)
+            except TypeError:
+                input_dict['nb_words'] = 1
+
+        user_id = current_user.get_id()
+        res = Tracker.api_add_tracker(input_dict, user_id)
+        if res[1] == 200:
+            return redirect(url_for('hunters.trackers_dashboard'))
+        else:
+            return create_json_response(res[0], res[1])
+    else:
+        return render_template("tracker_add.html",
+                                all_sources=item_basic.get_all_items_sources(r_list=True),
+                                tags_selector_data=Tag.get_tags_selector_data(),
+                                all_yara_files=Tracker.get_all_default_yara_files())
+
+@hunters.route('/tracker/delete', methods=['GET'])
+@login_required
+@login_analyst
+def tracker_delete():
+    user_id = current_user.get_id()
+    tracker_uuid = request.args.get('uuid')
+    res = Tracker.api_delete_tracker({'uuid': tracker_uuid}, user_id)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        return redirect(url_for('hunter.tracked_menu'))
+
+
+####################
+#    RETRO HUNT    #
+####################
+
 @hunters.route('/retro_hunt/tasks', methods=['GET'])
 @login_required
 @login_read_only
 def retro_hunt_all_tasks():
-    retro_hunts = Tracker.get_all_retro_hunt_tasks_with_metadata()
+    retro_hunts = Tracker.get_retro_hunt_tasks_metas()
     return render_template("retro_hunt_tasks.html", retro_hunts=retro_hunts, bootstrap_label=bootstrap_label)
 
 @hunters.route('/retro_hunt/task/show', methods=['GET'])
@@ -69,8 +262,8 @@ def retro_hunt_show_task():
     if res:
         return create_json_response(res[0], res[1])
 
-    dict_task = Tracker.get_retro_hunt_task_metadata(task_uuid, date=True, progress=True, creator=True,
-                                                        sources=True, tags=True, description=True)
+    retro_hunt = Tracker.RetroHunt(task_uuid)
+    dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'progress', 'sources', 'tags'})
     rule_content = Tracker.get_yara_rule_content(dict_task['rule'])
 
     if date_from:
@@ -177,7 +370,7 @@ def retro_hunt_delete_task():
 
 #### JSON ####
 
-@hunters.route("/tracker/get_json_retro_hunt_nb_items_by_date", methods=['GET'])
+@hunters.route("/retro_hunt/nb_items/date/json", methods=['GET'])
 @login_required
 @login_read_only
 def get_json_retro_hunt_nb_items_by_date():

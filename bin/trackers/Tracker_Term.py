@@ -21,8 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
-from packages import Term
+from lib.objects import ail_objects
 from lib import Tracker
 
 from exporter.MailExporter import MailExporterTracker
@@ -54,9 +53,9 @@ class Tracker_Term(AbstractModule):
         self.max_execution_time = config_loader.get_config_int('Tracker_Term', "max_execution_time")
 
         # loads tracked words
-        self.list_tracked_words = Term.get_tracked_words_list()
+        self.tracked_words = Tracker.get_tracked_words()
         self.last_refresh_word = time.time()
-        self.set_tracked_words_list = Term.get_set_tracked_words_list()
+        self.tracked_sets = Tracker.get_tracked_sets()
         self.last_refresh_set = time.time()
 
         # Exporter
@@ -65,93 +64,94 @@ class Tracker_Term(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, item_id, item_content=None):
+    def compute(self, obj_id, obj_type='item', subtype=''):
         # refresh Tracked term
-        if self.last_refresh_word < Term.get_tracked_term_last_updated_by_type('word'):
-            self.list_tracked_words = Term.get_tracked_words_list()
+        if self.last_refresh_word < Tracker.get_tracker_last_updated_by_type('word'):
+            self.tracked_words = Tracker.get_tracked_words()
             self.last_refresh_word = time.time()
             self.redis_logger.debug('Tracked word refreshed')
             print('Tracked word refreshed')
 
-        if self.last_refresh_set < Term.get_tracked_term_last_updated_by_type('set'):
-            self.set_tracked_words_list = Term.get_set_tracked_words_list()
+        if self.last_refresh_set < Tracker.get_tracker_last_updated_by_type('set'):
+            self.tracked_sets = Tracker.get_tracked_sets()
             self.last_refresh_set = time.time()
             self.redis_logger.debug('Tracked set refreshed')
             print('Tracked set refreshed')
 
-        # Cast message as Item
-        item = Item(item_id)
-        if not item_content:
-            item_content = item.get_content()
+        obj = ail_objects.get_object(obj_type, subtype, obj_id)
+        obj_type = obj.get_type()
+
+        # Object Filter
+        if obj_type not in self.tracked_words and obj_type not in self.tracked_sets:
+            return None
+
+        content = obj.get_content(r_str=True)
 
         signal.alarm(self.max_execution_time)
 
         dict_words_freq = None
         try:
-            dict_words_freq = Term.get_text_word_frequency(item_content)
+            dict_words_freq = Tracker.get_text_word_frequency(content)
         except TimeoutException:
-            self.redis_logger.warning(f"{item.get_id()} processing timeout")
+            self.redis_logger.warning(f"{obj.get_id()} processing timeout")
         else:
             signal.alarm(0)
 
         if dict_words_freq:
-            # create token statistics
-            # for word in dict_words_freq:
-            #    Term.create_token_statistics(item_date, word, dict_words_freq[word])
 
             # check solo words
-            # ###### # TODO: check if source needed #######
-            for word in self.list_tracked_words:
+            for word in self.tracked_words[obj_type]:
                 if word in dict_words_freq:
-                    self.new_term_found(word, 'word', item)
+                    self.new_tracker_found(word, 'word', obj)
 
             # check words set
-            for elem in self.set_tracked_words_list:
-                list_words = elem[0]
-                nb_words_threshold = elem[1]
-                word_set = elem[2]
+            for tracked_set in self.tracked_sets[obj_type]:
                 nb_uniq_word = 0
-
-                for word in list_words:
+                for word in tracked_set['words']:
                     if word in dict_words_freq:
                         nb_uniq_word += 1
-                if nb_uniq_word >= nb_words_threshold:
-                    self.new_term_found(word_set, 'set', item)
+                if nb_uniq_word >= tracked_set['nb']:
+                    self.new_tracker_found(tracked_set['tracked'], 'set', obj)
 
-    def new_term_found(self, tracker_name, tracker_type, item):
-        uuid_list = Tracker.get_tracker_uuid_list(tracker_name, tracker_type)
+    def new_tracker_found(self, tracker_name, tracker_type, obj):  # TODO FILTER
+        obj_id = obj.get_id()
 
-        item_id = item.get_id()
-        item_source = item.get_source()
-
-        for tracker_uuid in uuid_list:
+        for tracker_uuid in Tracker.get_trackers_by_tracked_obj_type(tracker_type, obj.get_type(), tracker_name):
             tracker = Tracker.Tracker(tracker_uuid)
 
-            # Source Filtering
-            tracker_sources = tracker.get_sources()
-            if tracker_sources and item_source not in tracker_sources:
+            # Filter Object
+            filters = tracker.get_filters()
+            if ail_objects.is_filtered(obj, filters):
                 continue
 
-            print(f'new tracked term found: {tracker_name} in {item_id}')
-            self.redis_logger.warning(f'new tracked term found: {tracker_name} in {item_id}')
-            # TODO
-            Tracker.add_tracked_item(tracker_uuid, item_id)
+            print(f'new tracked term found: {tracker_name} in {obj_id}')
+            self.redis_logger.warning(f'new tracked term found: {tracker_name} in {obj_id}')
+
+            if obj.get_type() == 'item':
+                date = obj.get_date()
+            else:
+                date = None
+            tracker.add(obj.get_type(), obj.get_subtype(), obj_id, date=date)
 
             # Tags
             for tag in tracker.get_tags():
-                msg = f'{tag};{item_id}'
-                self.add_message_to_queue(msg, 'Tags')
+                if obj.get_type() == 'item':
+                    msg = f'{tag};{obj_id}'
+                    self.add_message_to_queue(msg, 'Tags')
+                else:
+                    obj.add_tag(tag)
 
             # Mail
             if tracker.mail_export():
                 # TODO add matches + custom subjects
-                self.exporters['mail'].export(tracker, item)
+                self.exporters['mail'].export(tracker, obj)
 
             # Webhook
             if tracker.webhook_export():
-                self.exporters['webhook'].export(tracker, item)
+                self.exporters['webhook'].export(tracker, obj)
 
 
 if __name__ == '__main__':
     module = Tracker_Term()
     module.run()
+    # module.compute('submitted/2023/05/02/submitted_b1e518f1-703b-40f6-8238-d1c22888197e.gz')

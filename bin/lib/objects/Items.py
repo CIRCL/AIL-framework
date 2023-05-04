@@ -79,7 +79,7 @@ class Item(AbstractObject):
         else:
             return filename
 
-    def get_content(self, binary=False):
+    def get_content(self, r_str=True, binary=False):
         """
         Returns Item content
         """

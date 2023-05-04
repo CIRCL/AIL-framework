@@ -116,6 +116,9 @@ class AbstractSubtypeObject(AbstractObject, ABC):
             if date > last_seen:
                 self.set_last_seen(date)
 
+    def get_content(self):
+        return self.id
+
     def get_sparkline(self):
         sparkline = []
         for date in Date.get_previous_date_list(6):
