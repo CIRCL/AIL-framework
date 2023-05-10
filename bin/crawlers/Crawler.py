@@ -15,6 +15,7 @@ from modules.abstract_module import AbstractModule
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
+from lib.objects.Items import Item
 from lib.objects import Screenshots
 
 
@@ -52,6 +53,9 @@ class Crawler(AbstractModule):
         self.har_dir = None
         self.items_dir = None
         self.domain = None
+
+        # TODO Replace with warning list ???
+        self.placeholder_screenshots = {'27e14ace10b0f96acd2bd919aaa98a964597532c35b6409dff6cc8eec8214748'}
 
         # Send module state to logs
         self.redis_logger.info('Crawler initialized')
@@ -248,8 +252,13 @@ class Crawler(AbstractModule):
                 if 'png' in entries and entries['png']:
                     screenshot = Screenshots.create_screenshot(entries['png'], b64=False)
                     if screenshot:
-                        # Remove Errors pages # TODO Replace with warning list ???
-                        if screenshot.id not in ['27e14ace10b0f96acd2bd919aaa98a964597532c35b6409dff6cc8eec8214748']:
+                        if not screenshot.is_tags_safe():
+                            unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
+                            self.domain.add_tag(unsafe_tag)
+                            item = Item(item_id)
+                            item.add_tag(unsafe_tag)
+                        # Remove Placeholder pages # TODO Replace with warning list ???
+                        if screenshot.id not in self.placeholder_screenshots:
                             # Create Correlations
                             screenshot.add_correlation('item', '', item_id)
                             screenshot.add_correlation('domain', '', self.domain.id)
