@@ -9,16 +9,16 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.ail_core import get_all_objects, get_object_all_subtypes, get_all_objects_with_subtypes_tuple
+from lib.ail_core import get_all_objects, get_object_all_subtypes
 from lib import correlations_engine
 from lib import btc_ail
 from lib import Tag
 
 from lib.objects import CryptoCurrencies
 from lib.objects.Cves import Cve
-from lib.objects.Decodeds import Decoded
+from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decodeds_objects
 from lib.objects.Domains import Domain
-from lib.objects.Items import Item
+from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
 from lib.objects import Usernames
@@ -114,6 +114,9 @@ def get_obj_tags(obj_type, subtype, id):
     obj = get_object(obj_type, subtype, id)
     return obj.get_tags()
 
+def is_obj_tags_safe(obj_type, subtype, id):
+    obj = get_object(obj_type, subtype, id)
+    return obj.is_tags_safe()
 
 def add_obj_tag(obj_type, subtype, id, tag):
     obj = get_object(obj_type, subtype, id)
@@ -143,6 +146,10 @@ def get_objects_meta(objs, options=set(), flask_context=False):
             obj_type = obj['type']
             subtype = obj['subtype']
             obj_id = obj['id']
+        elif isinstance(obj, tuple):
+            obj_type = obj[0]
+            subtype = obj[1]
+            obj_id = obj[2]
         else:
             obj_type, subtype, obj_id = obj.split(':', 2)
         metas.append(get_object_meta(obj_type, subtype, obj_id, options=options, flask_context=flask_context))
@@ -184,6 +191,27 @@ def is_filtered(obj, filters):
             return True
     return False
 
+def obj_iterator(obj_type, filters):
+    if obj_type == 'decoded':
+        return get_all_decodeds_objects(filters=filters)
+    elif obj_type == 'item':
+        return get_all_items_objects(filters=filters)
+    elif obj_type == 'pgp':
+        return Pgps.get_all_pgps_objects(filters=filters)
+
+def card_objs_iterators(filters):
+    nb = 0
+    for obj_type in filters:
+        nb += int(card_obj_iterator(obj_type, filters.get(obj_type, {})))
+    return nb
+
+def card_obj_iterator(obj_type, filters):
+    if obj_type == 'decoded':
+        return get_nb_decodeds_objects(filters=filters)
+    elif obj_type == 'item':
+        return get_nb_items_objects(filters=filters)
+    elif obj_type == 'pgp':
+        return Pgps.nb_all_pgps_objects(filters=filters)
 
 def get_ui_obj_tag_table_keys(obj_type): # TODO REMOVE ME
     """

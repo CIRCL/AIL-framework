@@ -13,7 +13,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id, get_all_id_iterator
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -128,8 +128,22 @@ def search_pgps_by_name(name_to_search, subtype, r_pos=False):
                 pgps[pgp_name]['hl-end'] = res.end()
     return pgps
 
+def get_all_pgps_objects(filters={}):
+    if 'subtypes' in filters:
+        subtypes = filters['subtypes']
+    else:
+        subtypes = get_all_subtypes()
+    for subtype in subtypes:
+        for z_tuple in get_all_id_iterator('pgp', subtype):
+            obj_id, _ = z_tuple
+            yield Pgp(obj_id, subtype)
 
-# if __name__ == '__main__':
+
+if __name__ == '__main__':
 #     name_to_search = 'ex'
 #     subtype = 'name'
 #     print(search_pgps_by_name(name_to_search, subtype))
+    gen = get_all_pgps_objects(filters={'subtypes': ['key']})
+    for f in gen:
+        print(f)
+

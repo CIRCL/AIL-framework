@@ -372,6 +372,67 @@ def search_decodeds_by_name(name_to_search, r_pos=False):
                 decodeds[decoded_name]['hl-end'] = res.end()
     return decodeds
 
+
+############################################################################
+
+def get_decodeds_dir():
+    decodeds_dir = os.path.join(os.environ['AIL_HOME'], HASH_DIR)
+    if not decodeds_dir.endswith("/"):
+        decodeds_dir = f"{decodeds_dir}/"
+    return decodeds_dir
+
+# Generator
+
+def get_nb_decodeds_objects(filters={}):
+    nb = 0
+    if 'mimetypes' in filters:
+        mimetypes = filters['mimetypes']
+    else:
+        mimetypes = get_all_mimetypes()
+    d_dir = get_decodeds_dir()
+    for mimetype in mimetypes:
+        for root, dirs, files in os.walk(os.path.join(d_dir, mimetype)):
+            nb += len(files)
+    return nb
+
+def get_all_decodeds_objects(filters={}):
+    if 'mimetypes' in filters:
+        # TODO sanityze mimetype
+        mimetypes = filters['mimetypes']
+    else:
+        mimetypes = get_all_mimetypes()
+    mimetypes = sorted(mimetypes)
+
+    if filters.get('start'):
+        _, start_id = filters['start'].split(':', 1)
+        decoded = Decoded(start_id)
+        # remove sources
+        start_mimetype = decoded.get_mimetype()
+        i = 0
+        while start_mimetype and len(mimetypes) > i:
+            if mimetypes[i] == start_mimetype:
+                mimetypes = mimetypes[i:]
+                start_mimetype = None
+            i += 1
+    else:
+        start_id = None
+
+    d_dir = get_decodeds_dir()
+    for mimetype in mimetypes:
+        for root, dirs, files in os.walk(os.path.join(d_dir, mimetype)):
+            if start_id:
+                i = 0
+                while start_id and len(files) > i:
+                    if files[i] == start_id:
+                        files = files[i:]
+                        start_id = None
+                    i += 1
+                if i >= len(files):
+                    files = []
+            for file in files:
+                yield Decoded(file).id
+
+
 ############################################################################
 
 def sanityze_decoder_names(decoder_name):
@@ -538,6 +599,12 @@ def get_all_decodeds_files():
     return decodeds
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 #     name_to_search = '4d36'
 #     print(search_decodeds_by_name(name_to_search))
+#     filters = {'mimetypes': ['text/html']}
+    filters = {'start': ':1a005f82a4ae0940205c8fd81fd14838845696be'}
+    # filters = {}
+    gen = get_all_decodeds_objects(filters=filters)
+    for f in gen:
+        print(f)

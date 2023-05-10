@@ -79,8 +79,11 @@ class Date(object):
         comp_day = str(computed_date.day).zfill(2)
         return comp_year + comp_month + comp_day
 
-def get_today_date_str():
-    return datetime.date.today().strftime("%Y%m%d")
+def get_today_date_str(separator=False):
+    if separator:
+        datetime.date.today().strftime("%Y/%m/%d")
+    else:
+        return datetime.date.today().strftime("%Y%m%d")
 
 def date_add_day(date, num_day=1):
     new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) + datetime.timedelta(num_day)

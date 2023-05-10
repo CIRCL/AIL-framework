@@ -19,149 +19,122 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib.ail_core import get_objects_retro_hunted
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
-from packages import Date
+from lib.objects import ail_objects
 from lib import Tracker
 
-import NotificationHelper # # TODO: refractor
-
-class Retro_Hunt(AbstractModule):
-
-    # mail_body_template = "AIL Framework,\nNew YARA match: {}\nitem id: {}\nurl: {}{}"
+class Retro_Hunt_Module(AbstractModule):
 
     """
     Retro_Hunt module for AIL framework
     """
     def __init__(self):
-        super(Retro_Hunt, self).__init__()
+        super(Retro_Hunt_Module, self).__init__()
         config_loader = ConfigLoader()
         self.pending_seconds = 5
 
-        self.full_item_url = config_loader.get_config_str("Notifications", "ail_domain") + "/object/item?id="
-
         # reset on each loop
-        self.task_uuid = None
-        self.date_from = 0
-        self.date_to = 0
-        self.nb_src_done = 0
+        self.retro_hunt = None
+        self.nb_objs = 0
+        self.nb_done = 0
         self.progress = 0
-        self.item = None
+        self.obj = None
         self.tags = []
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    # # TODO: send mails
-    # # TODO:   # start_time # end_time
-
+    # # TODO:   # start_time
+    #           # end_time
     def compute(self, task_uuid):
         self.redis_logger.warning(f'{self.module_name}, starting Retro hunt task {task_uuid}')
         print(f'starting Retro hunt task {task_uuid}')
-        self.task_uuid = task_uuid
         self.progress = 0
         # First launch
         # restart
-        retro_hunt = Tracker.RetroHunt(task_uuid) # TODO SELF
+        self.retro_hunt = Tracker.RetroHunt(task_uuid)
 
-        rule = retro_hunt.get_rule(r_compile=True)
+        rule = self.retro_hunt.get_rule(r_compile=True)
+        timeout = self.retro_hunt.get_timeout()
+        self.tags = self.retro_hunt.get_tags()
 
-        timeout = retro_hunt.get_timeout()
         self.redis_logger.debug(f'{self.module_name}, Retro Hunt rule {task_uuid} timeout {timeout}')
-        sources = retro_hunt.get_sources(r_sort=True)
 
-        self.date_from = retro_hunt.get_date_from()
-        self.date_to = retro_hunt.get_date_to()
-        self.tags = retro_hunt.get_tags()
-        curr_date = Tracker.get_retro_hunt_task_current_date(task_uuid)
-        self.nb_src_done = Tracker.get_retro_hunt_task_nb_src_done(task_uuid, sources=sources)
-        self.update_progress(sources, curr_date)
-        # iterate on date
-        filter_last = True
-        while int(curr_date) <= int(self.date_to):
-            print(curr_date)
-            dirs_date = Tracker.get_retro_hunt_dir_day_to_analyze(task_uuid, curr_date, filter_last=filter_last, sources=sources)
-            filter_last = False
-            nb_id = 0
-            self.nb_src_done = 0
-            self.update_progress(sources, curr_date)
-            # # TODO: Filter previous item
-            for dir in dirs_date:
-                print(dir)
-                self.redis_logger.debug(f'{self.module_name}, Retro Hunt searching in directory {dir}')
-                l_obj = Tracker.get_items_to_analyze(dir)
-                for id in l_obj:
-                    # print(f'{dir} / {id}')
-                    self.item = Item(id)
-                    # save current item in cache
-                    Tracker.set_cache_retro_hunt_task_id(task_uuid, id)
+        # Filters
+        filters = self.retro_hunt.get_filters()
+        if not filters:
+            filters = {}
+            for obj_type in get_objects_retro_hunted():
+                filters[obj_type] = {}
 
-                    self.redis_logger.debug(f'{self.module_name}, Retro Hunt rule {task_uuid}, searching item {id}')
+        self.nb_objs = ail_objects.card_objs_iterators(filters)
 
-                    yara_match = rule.match(data=self.item.get_content(), callback=self.yara_rules_match,
-                                            which_callbacks=yara.CALLBACK_MATCHES, timeout=timeout)
+        # Resume
+        last_obj = self.retro_hunt.get_last_analyzed()
+        if last_obj:
+            last_obj_type, last_obj_subtype, last_obj_id = last_obj.split(':', 2)
+        else:
+            last_obj_type = None
+            last_obj_subtype = None
+            last_obj_id = None
 
-                    # save last item
-                    if nb_id % 10 == 0: # # TODO: Add nb before save in DB
-                        Tracker.set_retro_hunt_last_analyzed(task_uuid, id)
-                    nb_id += 1
-                    self.update_progress(sources, curr_date)
+        self.nb_done = 0
+        self.update_progress()
 
-                    # PAUSE
-                    self.update_progress(sources, curr_date)
-                    if retro_hunt.to_pause():
-                        Tracker.set_retro_hunt_last_analyzed(task_uuid, id)
-                        # self.update_progress(sources, curr_date, save_db=True)
-                        retro_hunt.pause()
-                        return None
+        for obj_type in filters:
+            if last_obj_type:
+                filters['start'] = f'{last_obj_subtype}:{last_obj_id}'
+                last_obj_type = None
+            for obj in ail_objects.obj_iterator(obj_type, filters):
+                self.obj = obj
+                content = obj.get_content(r_str=True)
+                rule.match(data=content, callback=self.yara_rules_match,
+                           which_callbacks=yara.CALLBACK_MATCHES, timeout=timeout)
 
-                self.nb_src_done += 1
-                self.update_progress(sources, curr_date)
-            curr_date = Date.date_add_day(curr_date)
-            print('-----')
+                self.nb_done += 1
+                if self.nb_done % 10 == 0:
+                    self.retro_hunt.set_last_analyzed(obj.get_type(), obj.get_subtype(r_str=True), obj.get_id())
+                self.retro_hunt.set_last_analyzed_cache(obj.get_type(), obj.get_subtype(r_str=True), obj.get_id())
 
-        self.update_progress(sources, curr_date)
+                # update progress
+                self.update_progress()
 
-        retro_hunt.complete()
+                # PAUSE
+                if self.retro_hunt.to_pause():
+                    self.retro_hunt.set_last_analyzed(obj.get_type(), obj.get_subtype(r_str=True), obj.get_id())
+                    self.retro_hunt.pause()
+                    return None
 
+        # Completed
+        self.retro_hunt.complete()
         print(f'Retro Hunt {task_uuid} completed')
         self.redis_logger.warning(f'{self.module_name}, Retro Hunt {task_uuid} completed')
 
-        # # TODO: stop
-
-    def update_progress(self, sources, curr_date, save_db=False):
-        retro_hunt = Tracker.RetroHunt(retro_hubt) # TODO USE SELF
-        progress = retro_hunt.compute_progress(date_from=self.date_from, date_to=self.date_to,
-                                               sources=sources, curr_date=curr_date, nb_src_done=self.nb_src_done)
-        if self.progress != progress:
-            retro_hunt.set_progress(progress)
-            self.progress = progress
-        # if save_db:
-        #     Tracker.set_retro_hunt_task_progress(task_uuid, progress)
+    def update_progress(self):
+        new_progress = self.nb_done * 100 / self.nb_objs
+        if int(self.progress) != int(new_progress):
+            print(new_progress)
+            self.retro_hunt.set_progress(new_progress)
+            self.progress = new_progress
 
     def yara_rules_match(self, data):
-        id = self.item.get_id()
+        obj_id = self.obj.get_id()
         # print(data)
         task_uuid = data['namespace']
 
-        self.redis_logger.info(f'{self.module_name}, Retro hunt {task_uuid} match found:    {id}')
-        print(f'Retro hunt {task_uuid} match found:    {id}')
+        self.redis_logger.info(f'{self.module_name}, Retro hunt {task_uuid} match found:    {obj_id}')
+        print(f'Retro hunt {task_uuid} match found:   {self.obj.get_type()} {obj_id}')
 
-        Tracker.save_retro_hunt_match(task_uuid, id)
+        self.retro_hunt.add(self.obj.get_type(), self.obj.get_subtype(), obj_id)
 
+        # TODO FILTER Tags
         # Tags
         for tag in self.tags:
             msg = f'{tag};{id}'
             self.add_message_to_queue(msg, 'Tags')
 
         # # Mails
-        # mail_to_notify = Tracker.get_tracker_mails(tracker_uuid)
-        # if mail_to_notify:
-        #     mail_subject = Tracker.get_email_subject(tracker_uuid)
-        #     mail_body = Tracker_Yara.mail_body_template.format(data['rule'], item_id, self.full_item_url, item_id)
-        # for mail in mail_to_notify:
-        #     self.redis_logger.debug(f'Send Mail {mail_subject}')
-        #     print(f'Send Mail {mail_subject}')
-        #     NotificationHelper.sendEmailNotification(mail, mail_subject, mail_body)
+        # EXPORTER MAILS
         return yara.CALLBACK_CONTINUE
 
     def run(self):
@@ -188,6 +161,5 @@ class Retro_Hunt(AbstractModule):
 
 
 if __name__ == '__main__':
-
-    module = Retro_Hunt()
+    module = Retro_Hunt_Module()
     module.run()

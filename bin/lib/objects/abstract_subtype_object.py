@@ -17,7 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_object import AbstractObject
-from lib.ail_core import get_object_all_subtypes
+from lib.ail_core import get_object_all_subtypes, zscan_iter
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
 from lib.data_retention_engine import update_obj_date
@@ -175,6 +175,9 @@ class AbstractSubtypeObject(AbstractObject, ABC):
 
 def get_all_id(obj_type, subtype):
     return r_object.zrange(f'{obj_type}_all:{subtype}', 0, -1)
+
+def get_all_id_iterator(obj_type, subtype):
+    return zscan_iter(r_object, f'{obj_type}_all:{subtype}')
 
 def get_subtypes_objs_by_date(obj_type, subtype, date):
     return r_object.hkeys(f'{obj_type}:{subtype}:{date}')

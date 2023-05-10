@@ -127,6 +127,7 @@ def show_tracker():
     meta['date_to'] = date_to
     print(meta['filters'])
     meta['item_sources'] = sorted(meta['filters'].get('item', {}).get('sources', []))
+    # meta['filters'] = json.dumps(meta['filters'], indent=4)
 
     return render_template("showTracker.html", tracker_metadata=meta,
                            yara_rule_content=yara_rule_content,

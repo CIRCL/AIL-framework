@@ -43,6 +43,9 @@ def get_object_all_subtypes(obj_type):
 def get_objects_tracked():
     return ['decoded', 'item', 'pgp']
 
+def get_objects_retro_hunted():
+    return ['decoded', 'item']
+
 def get_all_objects_with_subtypes_tuple():
     str_objs = []
     for obj_type in get_all_objects():
@@ -55,6 +58,21 @@ def get_all_objects_with_subtypes_tuple():
     return str_objs
 
 ##-- AIL OBJECTS --##
+
+####    Redis     ####
+
+def _parse_zscan(response):
+    cursor, r = response
+    it = iter(r)
+    return str(cursor), list(it)
+
+def zscan_iter(r_redis, name):  # count ???
+    cursor = 0
+    while cursor != "0":
+        cursor, data = _parse_zscan(r_redis.zscan(name, cursor=cursor))
+        yield from data
+
+## --    Redis     -- ##
 
 def paginate_iterator(iter_elems, nb_obj=50, page=1):
     dict_page = {'nb_all_elem': len(iter_elems)}

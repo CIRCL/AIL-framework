@@ -22,7 +22,8 @@ from lib.ail_core import get_ail_uuid
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import item_basic
-from lib.data_retention_engine import update_obj_date
+from lib.data_retention_engine import update_obj_date, get_obj_date_first
+from packages import Date
 
 
 from flask import url_for
@@ -405,6 +406,115 @@ def _manual_set_items_date_first_last():
         update_obj_date(first, 'item')
     if last != 0:
         update_obj_date(last, 'item')
+
+################################################################################
+################################################################################
+################################################################################
+
+def get_nb_items_objects(filters={}):
+    nb = 0
+    date_from = filters.get('date_from')
+    date_to = filters.get('date_to')
+    if 'sources' in filters:
+        sources = filters['sources']
+    else:
+        sources = get_all_sources()
+    sources = sorted(sources)
+
+    # date
+    if date_from and date_to:
+        daterange = Date.get_daterange(date_from, date_to)
+    elif date_from:
+        daterange = Date.get_daterange(date_from, Date.get_today_date_str())
+    elif date_to:
+        date_from = get_obj_date_first('item')
+        daterange = Date.get_daterange(date_from, date_to)
+    else:
+        date_from = get_obj_date_first('item')
+        daterange = Date.get_daterange(date_from, Date.get_today_date_str())
+
+    for source in sources:
+        for date in daterange:
+            date = f'{date[0:4]}/{date[4:6]}/{date[6:8]}'
+            full_dir = os.path.join(ITEMS_FOLDER, source, date)
+            if not os.path.isdir(full_dir):
+                continue
+            nb += len(os.listdir(full_dir))
+    return nb
+
+def get_all_items_objects(filters={}):
+    date_from = filters.get('date_from')
+    date_to = filters.get('date_to')
+    if 'sources' in filters:
+        sources = filters['sources']
+    else:
+        sources = get_all_sources()
+    sources = sorted(sources)
+    if filters.get('start'):
+        _, start_id = filters['start'].split(':', 1)
+        item = Item(start_id)
+        # remove sources
+        start_source = item.get_source()
+        i = 0
+        while start_source and len(sources) > i:
+            if sources[i] == start_source:
+                sources = sources[i:]
+                start_source = None
+            i += 1
+        start_date = item.get_date()
+    else:
+        start_id = None
+        start_date = None
+
+    # date
+    if date_from and date_to:
+        daterange = Date.get_daterange(date_from, date_to)
+    elif date_from:
+        daterange = Date.get_daterange(date_from, Date.get_today_date_str())
+    elif date_to:
+        date_from = get_obj_date_first('item')
+        daterange = Date.get_daterange(date_from, date_to)
+    else:
+        date_from = get_obj_date_first('item')
+        daterange = Date.get_daterange(date_from, Date.get_today_date_str())
+    if start_date:
+        if int(start_date) > int(date_from):
+            i = 0
+            while start_date and len(daterange) > i:
+                if daterange[i] == start_date:
+                    daterange = daterange[i:]
+                    start_date = None
+                i += 1
+
+    for source in sources:
+        for date in daterange:
+            date = f'{date[0:4]}/{date[4:6]}/{date[6:8]}'
+            full_dir = os.path.join(ITEMS_FOLDER, source, date)
+            s_dir = os.path.join(source, date)
+            if not os.path.isdir(full_dir):
+                continue
+
+            # TODO replace by os.scandir() ????
+            all_items = sorted([os.path.join(s_dir, f)
+                                for f in os.listdir(full_dir)
+                                if os.path.isfile(os.path.join(full_dir, f))])
+            # start obj id
+            if start_id:
+                i = 0
+                while start_id and len(all_items) > i:
+                    if all_items[i] == start_id:
+                        if i == len(all_items):
+                            all_items = []
+                        else:
+                            all_items = all_items[i+1:]
+                        start_id = None
+                    i += 1
+            for obj_id in all_items:
+                yield Item(obj_id)
+
+################################################################################
+################################################################################
+################################################################################
 
 #### API ####
 
@@ -810,9 +920,13 @@ def create_item(obj_id, obj_metadata, io_content):
 #         delete_item(child_id)
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 #     content = 'test file content'
 #     duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
 #
 #     item = Item('tests/2020/01/02/test_save.gz')
 #     item.create(content, _save=False)
+    filters = {'date_from': '20230101', 'date_to': '20230501', 'sources': ['crawled', 'submitted'], 'start': ':submitted/2023/04/28/submitted_2b3dd861-a75d-48e4-8cec-6108d41450da.gz'}
+    gen = get_all_items_objects(filters=filters)
+    for obj_id in gen:
+        print(obj_id.id)

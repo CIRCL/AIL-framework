@@ -31,28 +31,22 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-						<div class="card my-3">
-						  <div class="card-header bg-dark text-white">
-								<h5 class="card-title">Create a new Retro Hunt task</h5>
-							</div>
-						  <div class="card-body">
+                <div class="card my-3">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="card-title">Create a new Retro Hunt task</h5>
+                    </div>
+                    <div class="card-body">
 
-								<form action="{{ url_for('hunters.retro_hunt_add_task') }}" method='post'>
+                        <form action="{{ url_for('hunters.retro_hunt_add_task') }}" method='post'>
 
-									<div class="row">
-										<div class="col-12 col-xl-9">
-											<div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-quote-right"></i></div>
-										    </div>
-												<input id="name" name="name" class="form-control" placeholder="Retro Hunt Name" type="text" required>
-										  </div>
-											<div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-										      <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-										    </div>
-												<input id="tags" name="tags" class="form-control" placeholder="Tags to add on match (optional, space separated)" type="text">
-										  </div>
+                            <div class="row">
+                                <div class="col-12 col-xl-9">
+                                    <div class="input-group mb-2 mr-sm-2">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text bg-secondary text-white"><i class="fas fa-quote-right"></i></div>
+                                        </div>
+                                        <input id="name" name="name" class="form-control" placeholder="Retro Hunt Name" type="text" required>
+                                    </div>
 
 											<!-- <div class="input-group mb-2 mr-sm-2">
 										    <div class="input-group-prepend">
@@ -60,85 +54,168 @@
 										    </div>
 												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text"}>
 										  </div> -->
-											<div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-										      <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
-										    </div>
-												<textarea id="description" name="description" class="form-control" placeholder="Retro Hunt Description (optional)" rows="3"></textarea>
-										  </div>
+                                    <div class="input-group mb-2 mr-sm-2">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
+                                        </div>
+                                        <textarea id="description" name="description" class="form-control" placeholder="Retro Hunt Description (optional)" rows="3"></textarea>
+                                    </div>
 
-											<div class="input-group mb-2 mr-sm-2">
-												<div class="input-group-prepend">
-										      <div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
-										    </div>
-												<input id="sources" class="form-control" type="text" name="sources" placeholder="Sources to track (ALL IF EMPTY)" autocomplete="off">
-											</div>
-
-											<h6>Date range:</h6>
-											<div class="row mb-2">
-												<div class="col-lg-6">
-													<div class="input-group" id="date-range-from">
-														<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-														<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from" autocomplete="off" required>
-													</div>
-												</div>
-												<div class="col-lg-6">
-													<div class="input-group" id="date-range-to">
-														<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-														<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to" autocomplete="off" required>
-													</div>
-												</div>
-											</div>
-
-										</div>
-										<div class="col-12 col-xl-3">
-
-										</div>
-									</div>
-
-
-
-
-									<div class="mb-2" id="yara_rule">
-										<div class="" id="yara_default_rules">
-
-											<h6>Default YARA rules:</h6>
-											<select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
-											  <option selected>Select a default rule</option>
-												{% for yara_types in all_yara_files %}
-													{% for yara_file_name in all_yara_files[yara_types] %}
-													<option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
-													{% endfor %}
-												{% endfor %}
-											</select>
-
-											<pre class="border bg-light" id="default_yara_rule_content"></pre>
-
-										</div>
-
-										<hr>
-
-										<h6>Custom YARA rules:</h6>
-										<div class="row" id="textarea">
-											<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
-										</div>
-									</div>
-
-									<br>
-									<button class="btn btn-primary mt-2">
-										<i class="fas fa-plus"></i> Create Retro Hunt Task
-									</button>
-
-								</form>
+                                    <div class="card my-4">
+                                        <div class="card-header bg-info text-white">
+                                            <b>Objects to Track:</b>
+                                        </div>
+                                        <div class="card-body">
+{#                                                    <div class="custom-control custom-switch mt-1">#}
+{#                                                        <input class="custom-control-input" type="checkbox" name="cve_obj" id="cve_obj" checked="">#}
+{#                                                        <label class="custom-control-label" for="cve_obj"><i class="fas fa-bug"></i>&nbsp;CVE</label>#}
+{#                                                    </div>#}
+{#                                                    <div class="custom-control custom-switch mt-1">#}
+{#                                                        <input class="custom-control-input" type="checkbox" name="crypto_obj" id="crypto_obj" checked="">#}
+{#                                                        <label class="custom-control-label" for="crypto_obj"><i class="fas fa-coins"></i>&nbsp;Cryptocurrency</label>#}
+{#                                                    </div>#}
+                                            <div class="custom-control custom-switch mt-1">
+                                                <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj">
+                                                <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded</label>
+                                            </div>
+{#                                                    <div class="custom-control custom-switch mt-1">#}
+{#                                                        <input class="custom-control-input" type="checkbox" name="domain_obj" id="domain_obj" checked="">#}
+{#                                                        <label class="custom-control-label" for="domain_obj"><i class="fas fa-spider"></i>&nbsp;Domain</label>#}
+{#                                                    </div>#}
+                                            <div class="custom-control custom-switch mt-1">
+                                                <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" checked="">
+                                                <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item</label>
+                                            </div>
+                                            <div class="card border-dark mb-4" id="sources_item_div">
+                                                <div class="card-body">
+                                                    <h5>Filter Item by sources</h5>
+                                                    <div class="input-group mb-2 mr-sm-2">
+                                                        <div class="input-group-prepend">
+                                                            <div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
+                                                        </div>
+                                                        <input id="sources_item" class="form-control" type="text" name="sources_item" placeholder="Item Sources to track (ALL IF EMPTY)" autocomplete="off">
+                                                    </div>
+                                                    <h5>Date range:</h5>
+                                                    <div class="row mb-2">
+                                                        <div class="col-lg-6">
+                                                            <div class="input-group" id="date-range-from">
+                                                                <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                                                <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from_item" autocomplete="off">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <div class="input-group" id="date-range-to">
+                                                                <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                                                <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to_item" autocomplete="off">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
 
+{#                                            <div class="custom-control custom-switch mt-1">#}
+{#                                                <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" checked="">#}
+{#                                                <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP</label>#}
+{#                                            </div>#}
+{#                                            <div class="card border-dark mb-4" id="sources_pgp_div">#}
+{#                                                <div class="card-body">#}
+{#                                                    <h6>Filter PGP by subtype:</h6>#}
+{#                                                    <div class="custom-control custom-switch mt-1">#}
+{#                                                        <input class="custom-control-input" type="checkbox" name="filter_pgp_name" id="filter_pgp_name" checked="">#}
+{#                                                        <label class="custom-control-label" for="filter_pgp_name">#}
+{#                                                            <svg height="26" width="26">#}
+{#                                                                <g class="nodes">#}
+{#                                                                    <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>#}
+{#                                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon fas" font-size="16px">&#xf507;</text>#}
+{#                                                                </g>#}
+{#                                                            </svg>#}
+{#                                                            name#}
+{#                                                        </label>#}
+{#                                                    </div>#}
+{#                                                    <div class="custom-control custom-switch mt-1">#}
+{#                                                        <input class="custom-control-input" type="checkbox" name="filter_pgp_mail" id="filter_pgp_mail" checked="">#}
+{#                                                        <label class="custom-control-label" for="filter_pgp_mail">#}
+{#                                                            <svg height="26" width="26">#}
+{#                                                                <g class="nodes">#}
+{#                                                                    <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>#}
+{#                                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="fas" font-size="16px">&#xf1fa;</text>#}
+{#                                                                </g>#}
+{#                                                            </svg>#}
+{#                                                            mail#}
+{#                                                        </label>#}
+{#                                                    </div>#}
+{#                                                </div>#}
+{#                                            </div>#}
 
-						  </div>
-						</div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="card my-4">
+                                        <div class="card-header bg-secondary text-white">
+                                            <b>Tags</b>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="input-group mb-2 mr-sm-2">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+                                                </div>
+                                                <input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text">
+                                            </div>
+                                            {% include 'tags/block_tags_selector.html' %}
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                                <div class="col-12 col-xl-3">
+
+                                </div>
+                            </div>
+
+
+
+
+                            <div class="mb-2" id="yara_rule">
+                                <div class="" id="yara_default_rules">
+
+                                    <h6>Default YARA rules:</h6>
+                                    <select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
+                                        <option selected>Select a default rule</option>
+                                        {% for yara_types in all_yara_files %}
+                                            {% for yara_file_name in all_yara_files[yara_types] %}
+                                                <option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </select>
+
+                                    <pre class="border bg-light" id="default_yara_rule_content"></pre>
+
+                                </div>
+
+                                <hr>
+
+                                <h6>Custom YARA rules:</h6>
+                                <div class="row" id="textarea">
+                                    <textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5"></textarea>
+                                </div>
+                            </div>
+
+                            <br>
+                            <button class="btn btn-primary mt-2">
+                                <i class="fas fa-plus"></i> Create Retro Hunt Task
+                            </button>
+
+                        </form>
+
+
+
+                    </div>
+                </div>
 
 
 			</div>
-
 		</div>
 	</div>
 
@@ -177,22 +254,21 @@ $(document).ready(function(){
 			}
 	});
 
-	sources = $('#sources').tagSuggest({
-		data: {{all_sources|safe}},
-		{%if dict_tracker%}{%if dict_tracker['sources']%}value: {{dict_tracker['sources']|safe}},{%endif%}{%endif%}
+	sources_item = $('#sources_item').tagSuggest({
+		data: {{items_sources|safe}},
 		sortOrder: 'name',
 		maxDropHeight: 200,
-		name: 'sources',
-		emptyText: 'Sources to track (ALL IF EMPTY)',
+		name: 'sources_item',
+		emptyText: 'Item Sources to track (ALL IF EMPTY)',
 		});
 
-	{%if dict_tracker%}
-		$('#tracker_type').val('{{dict_tracker['type']}}').change();
+    $('#item_obj').on("change", function () {
+		item_source_input_controller();
+	});
+    /*$('#pgp_obj').on("change", function () {
+		pgp_source_input_controller();
+	});*/
 
-		{%if dict_tracker['type']=='yara' and dict_tracker['yara_file']%}
-			$('#yara_default_rule').val('{{dict_tracker['yara_file']}}').change();
-		{%endif%}
-	{%endif%}
 
 });
 
@@ -210,7 +286,21 @@ function toggle_sidebar(){
 	}
 }
 
+function item_source_input_controller() {
+	if($('#item_obj').is(':checked')){
+		$("#sources_item_div").show();
+	}else{
+		$("#sources_item_div").hide();
+	}
+}
 
+function pgp_source_input_controller() {
+	if($('#pgp_obj').is(':checked')){
+		$("#sources_pgp_div").show();
+	}else{
+		$("#sources_pgp_div").hide();
+	}
+}
 
 function get_default_rule_content(selector){
 	var yara_name = selector.value
