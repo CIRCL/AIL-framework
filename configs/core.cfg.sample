@@ -259,4 +259,4 @@ TEXT_MAX_SIZE = 1000000
 FILE_MAX_SIZE = 1000000000
 # Managed file extenions for file submission, comma separated
 # TODO add zip, gz and tar.gz
-FILE_ALLOWED_EXTENSIONS = txt,sh,pdf
+FILE_ALLOWED_EXTENSIONS = txt,sh,pdf,html,json

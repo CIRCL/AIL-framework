@@ -78,7 +78,6 @@ def allowed_file(filename):
     else:
         file_ext = filename.rsplit('.', 1)[1].lower()
         logger.debug(file_ext)
-        logger.debug(Flask_config.SUBMIT_PASTE_FILE_ALLOWED_EXTENSIONS)
         return file_ext in Flask_config.SUBMIT_PASTE_FILE_ALLOWED_EXTENSIONS
 
 def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
