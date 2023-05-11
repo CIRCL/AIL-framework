@@ -307,7 +307,7 @@ function get_default_rule_content(selector){
 	if (yara_name === "Select a default rule") {
 		jQuery("#default_yara_rule_content").text("")
 	} else {
-		$.getJSON("{{ url_for('hunter.get_default_yara_rule_content') }}?rule_name=" + yara_name,
+		$.getJSON("{{ url_for('hunters.get_default_yara_rule_content') }}?rule=" + yara_name,
 			function(data) {
 				jQuery("#default_yara_rule_content").text(data['content'])
 		});

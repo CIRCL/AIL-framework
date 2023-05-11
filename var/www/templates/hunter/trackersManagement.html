@@ -70,7 +70,7 @@
                                 <td>{{ dict_uuid['type'] }}</td>
                                 <td>
                       <span>
-                        <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
+                        <a target="_blank" href="{{ url_for('hunters.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
                         {% if dict_uuid['tracked'] %}
                             {% if dict_uuid['tracked']|length > 256 %}
                                 {{ dict_uuid['tracked'][0:256] }}...
@@ -135,7 +135,7 @@
                                 <td>{{ dict_uuid['type'] }}</td>
                                 <td>
                       <span>
-                        <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
+                        <a target="_blank" href="{{ url_for('hunters.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
                         {% if dict_uuid['tracked'] %}
                             {% if dict_uuid['tracked']|length > 256 %}
                                 {{ dict_uuid['tracked'][0:256] }}...

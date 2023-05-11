@@ -97,23 +97,26 @@ class Tracker:
     def exists(self):
         return r_tracker.exists(f'tracker:{self.uuid}')
 
+    def _get_field(self, field):
+        return r_tracker.hget(f'tracker:{self.uuid}', field)
+
     def _set_field(self, field, value):
         r_tracker.hset(f'tracker:{self.uuid}', field, value)
 
     def get_date(self):
-        return r_tracker.hget(f'tracker:{self.uuid}', 'date')
+        return self._get_field('date')
 
     def get_last_change(self, r_str=False):
-        last_change = r_tracker.hget(f'tracker:{self.uuid}', 'last_change')
+        last_change = self._get_field('last_change')
         if r_str and last_change:
             last_change = datetime.datetime.fromtimestamp(float(last_change)).strftime('%Y-%m-%d %H:%M:%S')
         return last_change
 
     def get_first_seen(self):
-        return r_tracker.hget(f'tracker:{self.uuid}', 'first_seen')
+        return self._get_field('first_seen')
 
     def get_last_seen(self):
-        return r_tracker.hget(f'tracker:{self.uuid}', 'last_seen')
+        return self._get_field('last_seen')
 
     def _set_first_seen(self, date):
         self._set_field('first_seen', date)
@@ -166,10 +169,10 @@ class Tracker:
                     r_tracker.hdel(f'tracker:{self.uuid}', 'last_seen')
 
     def get_description(self):
-        return r_tracker.hget(f'tracker:{self.uuid}', 'description')
+        return self._get_field('description')
 
     def get_level(self):
-        level = r_tracker.hget(f'tracker:{self.uuid}', 'level')
+        level = self._get_field('level')
         if not level:
             level = 0
         return int(level)
@@ -194,7 +197,7 @@ class Tracker:
         self._set_field('level', level)
 
     def get_filters(self):
-        filters = r_tracker.hget(f'tracker:{self.uuid}', 'filters')
+        filters = self._get_field('filters')
         if not filters:
             return {}
         else:
@@ -205,19 +208,21 @@ class Tracker:
             self._set_field('filters', json.dumps(filters))
 
     def get_tracked(self):
-        return r_tracker.hget(f'tracker:{self.uuid}', 'tracked')
+        return self._get_field('tracked')
 
     def get_type(self):
-        return r_tracker.hget(f'tracker:{self.uuid}', 'type')
+        return self._get_field('type')
 
     def get_tags(self):
         return r_tracker.smembers(f'tracker:tags:{self.uuid}')
 
     def _set_tags(self, tags):
         for tag in tags:
-            tag = escape(tag)
             r_tracker.sadd(f'tracker:tags:{self.uuid}', tag)
             Tag.create_custom_tag(tag)  # TODO CUSTOM TAGS
+
+    def _del_tags(self):
+        return r_tracker.delete(f'tracker:tags:{self.uuid}')
 
     def mail_export(self):
         return r_tracker.exists(f'tracker:mail:{self.uuid}')
@@ -229,8 +234,11 @@ class Tracker:
         for mail in mails:
             r_tracker.sadd(f'tracker:mail:{self.uuid}', escape(mail))
 
+    def _del_mails(self):
+        r_tracker.delete(f'tracker:mail:{self.uuid}')
+
     def get_user(self):
-        return r_tracker.hget(f'tracker:{self.uuid}', 'user_id')
+        return self._get_field('user_id')
 
     def webhook_export(self):
         return r_tracker.hexists(f'tracker:mail:{self.uuid}', 'webhook')
@@ -267,6 +275,8 @@ class Tracker:
             meta['level'] = self.get_level()
         if 'description' in options:
             meta['description'] = self.get_description()
+        if 'nb_objs' in options:
+            meta['nb_objs'] = self.get_nb_objs()
         if 'tags' in options:
             meta['tags'] = self.get_tags()
         if 'filters' in options:
@@ -289,38 +299,27 @@ class Tracker:
             r_tracker.lpush('trackers:dashboard', mess)
             r_tracker.ltrim(f'trackers:dashboard', 0, 9)
 
-    # - TODO Data Retention TO Implement - #
-    # Or Daily/Monthly Global DB Cleanup:
-    #    Iterate on each tracker:
-    #       Iterate on each Obj:
-    #           Iterate on each date:
-    #               Delete from tracker range if date limit exceeded
-    # - TODO
-    def add(self, obj_type, subtype, obj_id, date=None):
-        if not subtype:
-            subtype = ''
-        if not date:
-            date = Date.get_today_date_str()
-
-        new_obj_date = r_tracker.sadd(f'tracker:objs:{self.uuid}:{date}', f'{obj_type}:{subtype}:{obj_id}')
-        new_obj = r_tracker.sadd(f'obj:trackers:{obj_type}:{subtype}:{obj_id}', self.uuid)
-        # MATCHES
-        if new_obj:
-            r_tracker.zincrby(f'tracker:match:{self.uuid}', 1, 'total')
-            r_tracker.zincrby(f'tracker:match:{self.uuid}', 1, obj_type)
-
-        # Only save date for daterange objects - Needed for the DB Cleaner
-        if obj_type != 'item':  # not obj_date:
-            r_tracker.sadd(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}', date)
-            r_tracker.sadd(f'tracker:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
-
-        if new_obj_date:
-            self.update_daterange(date)
-
-        self._add_to_dashboard(obj_type, subtype, obj_id)
+    def get_nb_objs_by_type(self, obj_type):
+        return r_tracker.scard(f'tracker:objs:{self.uuid}:{obj_type}')
 
     def get_objs_by_type(self, obj_type):
         return r_tracker.smembers(f'tracker:objs:{self.uuid}:{obj_type}')
+
+    def get_nb_objs(self):
+        objs = {}
+        for obj_type in get_objects_tracked():
+            nb = self.get_nb_objs_by_type(obj_type)
+            if nb:
+                objs[obj_type] = nb
+        return objs
+
+    def get_objs(self):
+        objs = []
+        for obj_type in get_objects_tracked():
+            for obj in self.get_objs_by_type(obj_type):
+                subtype, obj_id = obj.split(':', 1)
+                objs.append((obj_type, subtype, obj_id))
+        return objs
 
     def get_nb_objs_by_date(self, date):
         return r_tracker.scard(f'tracker:objs:{self.uuid}:{date}')
@@ -335,10 +334,32 @@ class Tracker:
         return objs
 
     def get_obj_dates(self, obj_type, subtype, obj_id):
-        if obj_type == 'item':
-            return [item_basic.get_item_date(obj_id)]
-        else:
-            return r_tracker.smembers(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}')
+        return r_tracker.smembers(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}')
+
+    # - TODO Data Retention TO Implement - #
+    # Or Daily/Monthly Global DB Cleanup:
+    #    Iterate on each tracker:
+    #       Iterate on each Obj:
+    #           Iterate on each date:
+    #               Delete from tracker range if date limit exceeded
+    # - TODO
+    def add(self, obj_type, subtype, obj_id, date=None):
+        if not subtype:
+            subtype = ''
+        if not date:
+            date = Date.get_today_date_str()
+
+        new_obj_date = r_tracker.sadd(f'tracker:objs:{self.uuid}:{date}', f'{obj_type}:{subtype}:{obj_id}')
+        r_tracker.sadd(f'obj:trackers:{obj_type}:{subtype}:{obj_id}', self.uuid)
+
+        # Only save object match date - Needed for the DB Cleaner
+        r_tracker.sadd(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}', date)
+        r_tracker.sadd(f'tracker:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
+
+        if new_obj_date:
+            self.update_daterange(date)
+
+        self._add_to_dashboard(obj_type, subtype, obj_id)
 
     def remove(self, obj_type, subtype, obj_id):
         if not subtype:
@@ -350,9 +371,6 @@ class Tracker:
 
         r_tracker.srem(f'obj:trackers:{obj_type}:{subtype}:{obj_id}', self.uuid)
         r_tracker.srem(f'tracker:objs:{self.uuid}', f'{obj_type}:{subtype}:{obj_id}')
-        # MATCHES
-        r_tracker.zincrby(f'tracker:match:{self.uuid}', -1, 'total')
-        r_tracker.zincrby(f'tracker:match:{self.uuid}', -1, obj_type)
         self.update_daterange()
 
     # TODO escape custom tags
@@ -483,19 +501,28 @@ class Tracker:
         # Tags
         nb_old_tags = r_tracker.scard(f'tracker:tags:{self.uuid}')
         if nb_old_tags > 0 or tags:
-            r_tracker.delete(f'tracker:tags:{self.uuid}')
+            self._del_tags()
             self._set_tags(tags)
 
         # Mails
         nb_old_mails = r_tracker.scard(f'tracker:mail:{self.uuid}')
         if nb_old_mails > 0 or mails:
-            r_tracker.delete(f'tracker:mail:{self.uuid}')
+            self._del_mails()
             self._set_mails(mails)
 
-        nb_old_sources = r_tracker.scard(f'tracker:sources:{self.uuid}') # TODO FILTERS
-        if nb_old_sources > 0 or sources:
-            r_tracker.delete(f'tracker:sources:{self.uuid}')
-            self._set_sources(sources)
+        # Filters
+        if not filters:
+            filters = {}
+            for obj_type in get_objects_tracked():
+                filters[obj_type] = {}
+        else:
+            self.set_filters(filters)
+        for obj_type in filters:
+            r_tracker.sadd(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
+            r_tracker.sadd(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
+            if tracker_type != old_type:
+                r_tracker.srem(f'trackers:objs:{old_type}:{obj_type}', old_to_track)
+                r_tracker.srem(f'trackers:uuid:{old_type}:{old_to_track}', f'{self.uuid}:{obj_type}')
 
         # Refresh Trackers
         trigger_trackers_refresh(tracker_type)
@@ -506,7 +533,37 @@ class Tracker:
         return self.uuid
 
     def delete(self):
-        pass
+        for obj in self.get_objs():
+            self.remove(obj[0], obj[1], obj[2])
+
+        tracker_type = self.get_type()
+        tracked = self.get_tracked()
+        r_tracker.srem(f'all:tracker:{tracker_type}', tracked)
+        # tracker - uuid map
+        r_tracker.srem(f'all:tracker_uuid:{tracker_type}:{tracked}', self.uuid)
+        r_tracker.srem('trackers:all', self.uuid)
+        r_tracker.srem(f'trackers:all:{tracker_type}', self.uuid)
+
+        if tracker_type == 'typosquatting':
+            r_tracker.delete(f'tracker:typosquatting:{tracked}')
+        elif tracker_type == 'yara':
+            if not is_default_yara_rule(tracked):
+                filepath = get_yara_rule_file_by_tracker_name(tracked)
+                if filepath:
+                    os.remove(filepath)
+
+        # Filters
+        filters = self.get_filters()
+        if not filters:
+            filters = get_objects_tracked()
+        for obj_type in filters:
+            r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', tracked)
+            r_tracker.srem(f'trackers:uuid:{tracker_type}:{tracked}', f'{self.uuid}:{obj_type}')
+
+        self._del_mails()
+        self._del_tags()
+        # meta
+        r_tracker.delete(f'tracker:{self.uuid}')
 
 
 def create_tracker(tracker_type, to_track, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, tracker_uuid=None):
@@ -612,12 +669,14 @@ def get_trackers_dashboard():
         tracker_uuid, timestamp, obj_type, subtype, obj_id = raw.split(':', 4)
         tracker = Tracker(tracker_uuid)
         meta = tracker.get_meta(options={'tags'})
+        if not meta.get('type'):
+            meta['type'] = 'Tracker DELETED'
         timestamp = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
         meta['timestamp'] = timestamp
         trackers.append(meta)
     return trackers
 
-def get_user_dashboard(user_id):  # TODO SORT + REMOVE OLDER ROWS
+def get_user_dashboard(user_id):  # TODO SORT + REMOVE OLDER ROWS (trim)
     trackers = []
     for raw in r_tracker.lrange(f'trackers:user:{user_id}', 0, -1):
         tracker_uuid, timestamp, obj_type, subtype, obj_id = raw.split(':', 4)
@@ -822,8 +881,8 @@ def api_add_tracker(dict_input, user_id):
     description = escape(description)
     webhook = dict_input.get('webhook', '')
     webhook = escape(webhook)
-    res = api_validate_tracker_to_add(to_track , tracker_type, nb_words=nb_words)
-    if res[1]!=200:
+    res = api_validate_tracker_to_add(to_track, tracker_type, nb_words=nb_words)
+    if res[1] != 200:
         return res
     to_track = res[0]['tracked']
     tracker_type = res[0]['type']
@@ -878,23 +937,81 @@ def api_add_tracker(dict_input, user_id):
 
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
-# TODO
 def api_edit_tracker(dict_input, user_id):
-    pass
-    # tracker_uuid = dict_input.get('uuid', None)
-    # # check edit ACL
-    # if tracker_uuid:
-    #     res = api_is_allowed_to_edit_tracker(tracker_uuid, user_id)
-    #     if res[1] != 200:
-    #         return res
-    # else:
-    #     # check if tracker already tracked in global
-    #     if level==1:
-    #         if is_tracked_in_global_level(to_track, tracker_type) and not tracker_uuid:
-    #             return {"status": "error", "reason": "Tracker already exist"}, 409
-    #     else:
-    #         if is_tracked_in_user_level(to_track, tracker_type, user_id) and not tracker_uuid:
-    #             return {"status": "error", "reason": "Tracker already exist"}, 409
+    tracker_uuid = dict_input.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_id)
+    if res:
+        return res
+
+    tracker = Tracker(tracker_uuid)
+
+    to_track = dict_input.get('tracked', None)
+    if not to_track:
+        return {"status": "error", "reason": "Tracker not provided"}, 400
+    tracker_type = dict_input.get('type', None)
+    if not tracker_type:
+        return {"status": "error", "reason": "Tracker type not provided"}, 400
+    nb_words = dict_input.get('nb_words', 1)
+    description = dict_input.get('description', '')
+    description = escape(description)
+    webhook = dict_input.get('webhook', '')
+    webhook = escape(webhook)
+    res = api_validate_tracker_to_add(to_track, tracker_type, nb_words=nb_words)
+    if res[1] != 200:
+        return res
+    to_track = res[0]['tracked']
+    tracker_type = res[0]['type']
+
+    tags = dict_input.get('tags', [])
+    mails = dict_input.get('mails', [])
+    res = verify_mail_list(mails)
+    if res:
+        return res
+
+    # Filters # TODO MOVE ME
+    filters = dict_input.get('filters', {})
+    if filters:
+        if filters.keys() == {'decoded', 'item', 'pgp'} and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+            if not filters['decoded'] and not filters['item']:
+                filters = {}
+        for obj_type in filters:
+            if obj_type not in get_objects_tracked():
+                return {"status": "error", "reason": "Invalid Tracker Object type"}, 400
+
+            if obj_type == 'pgp':
+                if set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+                    filters['pgp'].pop('subtypes')
+
+            for filter_name in filters[obj_type]:
+                if filter_name not in {'mimetypes', 'sources', 'subtypes'}:
+                    return {"status": "error", "reason": "Invalid Filter"}, 400
+                elif filter_name == 'mimetypes':  # TODO
+                    pass
+                elif filter_name == 'sources':
+                    if obj_type == 'item':
+                        res = item_basic.verify_sources_list(filters['item']['sources'])
+                        if res:
+                            return res
+                    else:
+                        return {"status": "error", "reason": "Invalid Filter sources"}, 400
+                elif filter_name == 'subtypes':
+                    obj_subtypes = set(get_object_all_subtypes(obj_type))
+                    for subtype in filters[obj_type]['subtypes']:
+                        if subtype not in obj_subtypes:
+                            return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
+
+    level = dict_input.get('level', 1)
+    try:
+        level = int(level)
+    except TypeError:
+        level = 1
+    if level not in range(0, 1):
+        level = 1
+
+    tracker.edit(tracker_type, to_track, level, description=description, filters=filters,
+                 tags=tags, mails=mails, webhook=webhook)
+    return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
+
 
 def api_delete_tracker(data, user_id):
     tracker_uuid = data.get('uuid')
@@ -1073,7 +1190,7 @@ def save_yara_rule(yara_rule_type, yara_rule, tracker_uuid=None):
         filename = os.path.join('custom-rules', tracker_uuid + '.yar')
         with open(os.path.join(get_yara_rules_dir(), filename), 'w') as f:
             f.write(str(yara_rule))
-    if yara_rule_type == 'yara_default':
+    elif yara_rule_type == 'yara_default':
         filename = os.path.join('ail-yara-rules', 'rules', yara_rule)
     return filename
 
@@ -1316,7 +1433,9 @@ class RetroHunt:
     def get_nb_objs(self):
         objs = {}
         for obj_type in get_objects_retro_hunted():
-            objs[obj_type] = self.get_nb_objs_by_type(obj_type)
+            nb = self.get_nb_objs_by_type(obj_type)
+            if nb:
+                objs[obj_type] = nb
         return objs
 
     def get_objs(self):
@@ -1363,12 +1482,6 @@ class RetroHunt:
         for mail in mails:
             r_tracker.sadd(f'retro_hunt:mails:{self.uuid}', escape(mail))
 
-        # TODO Delete filters - SAVE DEFAULT OBJECTS ???
-        # Filters
-        # if not filters:
-        #     filters = {}
-        #     for obj_type in get_objects_tracked():
-        #         filters[obj_type] = {}
         if filters:
             self.set_filters(filters)
 
@@ -1379,10 +1492,16 @@ class RetroHunt:
             state = 'pending'
         self._set_state(state)
 
-    # TODO Delete Rule custom
     def delete(self):
-        if self.is_running():
+        if self.is_running() and self.get_state() != 'completed':
             return None
+
+        # Delete custom rule
+        rule = self.get_rule()
+        if not is_default_yara_rule(rule):
+            filepath = get_yara_rule_file_by_tracker_name(rule)
+            if filepath:
+                os.remove(filepath)
 
         r_tracker.srem('retro_hunts:pending', self.uuid)
         r_tracker.delete(f'retro_hunts:{self.uuid}')
@@ -1580,7 +1699,7 @@ def api_delete_retro_hunt_task(task_uuid):
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
-    if retro_hunt.is_running():
+    if retro_hunt.is_running() and retro_hunt.get_state() != 'completed':
         return {"status": "error", "reason": "You can't delete a running task"}, 400
     else:
         return retro_hunt.delete(), 200

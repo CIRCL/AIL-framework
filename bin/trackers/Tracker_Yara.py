@@ -84,12 +84,7 @@ class Tracker_Yara(AbstractModule):
             if ail_objects.is_filtered(self.obj, filters):
                 continue
 
-            if self.obj.get_type() == 'item':
-                date = self.obj.get_date()
-            else:
-                date = None
-
-            tracker.add(self.obj.get_type(), self.obj.get_subtype(r_str=True), obj_id, date=date)
+            tracker.add(self.obj.get_type(), self.obj.get_subtype(r_str=True), obj_id)
 
             # Tags
             for tag in tracker.get_tags():

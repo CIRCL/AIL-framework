@@ -78,12 +78,7 @@ class Tracker_Typo_Squatting(AbstractModule):
             print(f'new tracked typosquatting found: {tracked} in {obj_id}')
             self.redis_logger.warning(f'tracker typosquatting: {tracked} in {obj_id}')
 
-            if obj.get_type() == 'item':
-                date = obj.get_date()
-            else:
-                date = None
-
-            tracker.add(obj.get_type(), obj.get_subtype(r_str=True), obj_id, date=date)
+            tracker.add(obj.get_type(), obj.get_subtype(r_str=True), obj_id)
 
             # Tags
             for tag in tracker.get_tags():

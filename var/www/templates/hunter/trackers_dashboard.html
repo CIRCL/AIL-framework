@@ -100,7 +100,7 @@
                                 <td>{{ meta['type'] }}</td>
                                 <td>
                                     <span>
-                                        <a target="_blank" href="{{ url_for('hunter.show_tracker') }}?uuid={{ meta['uuid'] }}">
+                                        <a target="_blank" href="{{ url_for('hunters.show_tracker') }}?uuid={{ meta['uuid'] }}">
                                             {% if meta['tracked'] %}
                                                 {% if meta['tracked']|length > 256 %}
                                                     {{ meta['tracked'][0:256] }}...

@@ -35,7 +35,7 @@
 							</div>
 						  <div class="card-body">
 
-								<form action="{{ url_for('hunters.add_tracked_menu') }}" method='post'>
+								<form action="{%if dict_tracker%}{{ url_for('hunters.tracker_edit') }}{%else%}{{ url_for('hunters.add_tracked_menu') }}{%endif%}" method='post'>
 									{%if dict_tracker%}
 										<input id="tracker_uuid" name="tracker_uuid" class="form-control" type="text" value="{{dict_tracker['uuid']}}" hidden>
 									{%endif%}
@@ -46,7 +46,7 @@
 										    <div class="input-group-prepend">
                                                 <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
 										    </div>
-												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['mails']%}value="{{dict_tracker['mails']}}"{%endif%}{%endif%}>
+												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['mails']%}value="{%for mail in dict_tracker['mails'] %}{{mail}} {%endfor%}"{%endif%}{%endif%}>
 										    </div>
 											<div class="input-group mb-2 mr-sm-2">
 										        <div class="input-group-prepend">
@@ -191,7 +191,7 @@
 														<div class="input-group-prepend">
 													  	    <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
 													    </div>
-														<input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{{dict_tracker['tags']}}"{%endif%}{%endif%}>
+														<input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{%for tag in dict_tracker['tags']%}{{tag}} {%endfor%}"{%endif%}{%endif%}>
 													</div>
 													{% include 'tags/block_tags_selector.html' %}
 												</div>
@@ -224,7 +224,7 @@
 
 									<div class="row" id="simple_input">
 										<div class="col-12 col-lg-10">
-											<input id="tracker" name="tracker" class="form-control" placeholder="Terms to track (space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tracker']!='yara'%}value="{{dict_tracker['tracker']}}"{%endif%}{%endif%}>
+											<input id="tracker" name="tracker" class="form-control" placeholder="Terms to track (space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['type'] != 'yara' and dict_tracker['type'] != 'typosquatting'%}value="{{dict_tracker['tracked']}}"{%endif%}{%endif%}>
 										</div>
 										<div class="col-12 col-lg-2">
 											<input type="number" id="nb_word" name="nb_word" name="quantity" min="1" placeholder="Nb of keywords" {%if dict_tracker%}{%if dict_tracker['nb_words']%}value="{{dict_tracker['nb_words']}}"{%endif%}{%endif%}>
@@ -291,7 +291,7 @@ $(document).ready(function(){
 
 	sources_item = $('#sources_item').tagSuggest({
 		data: {{all_sources|safe}},
-		{%if dict_tracker%}{%if dict_tracker['item_sources']%}value: {{dict_tracker['item_sources']|safe}},{%endif%}{%endif%}
+		{%if dict_tracker%}{%if dict_tracker['filters']%}{%if dict_tracker['filters']['item']%}{%if dict_tracker['filters']['item']['sources']%}value: {{dict_tracker['filters']['item']['sources']|safe}},{%endif%}{%endif%}{%endif%}{%endif%}
 		sortOrder: 'name',
 		maxDropHeight: 200,
 		name: 'sources_item',
@@ -335,9 +335,10 @@ $(document).ready(function(){
 
 	{%if dict_tracker%}
 		$('#tracker_type').val('{{dict_tracker['type']}}').change();
-
-		{%if dict_tracker['type']=='yara' and dict_tracker['yara_file']%}
-			$('#yara_default_rule').val('{{dict_tracker['yara_file']}}').change();
+		{%if dict_tracker['type']=='yara'%}
+            {% if dict_tracker['tracked'][0:21] == 'ail-yara-rules/rules/' %}
+			    $('#yara_default_rule').val('{{dict_tracker['tracked'][21:]}}').change();
+            {%endif%}
 		{%endif%}
 	{%endif%}
 
@@ -386,7 +387,7 @@ function get_default_rule_content(selector){
 	if (yara_name === "Select a default rule") {
 		jQuery("#default_yara_rule_content").text("")
 	} else {
-		$.getJSON("{{ url_for('hunter.get_default_yara_rule_content') }}?rule_name=" + yara_name,
+		$.getJSON("{{ url_for('hunters.get_default_yara_rule_content') }}?rule=" + yara_name,
 			function(data) {
 				jQuery("#default_yara_rule_content").text(data['content'])
 		});

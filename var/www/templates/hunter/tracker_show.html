@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <title>AIL Framework - AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+    <!-- Core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/graphlinesgroup.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+
+    <style>
+        .btn-link {
+            color: #17a2b8
+        }
+
+        .btn-link:hover {
+            color: blue;
+        }
+
+        .mouse_pointer {
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+
+<div class="container-fluid">
+    <div class="row">
+        {% include 'hunter/menu_sidebar.html' %}
+        <div class="col-12 col-lg-10" id="core_content">
+
+
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="card my-2">
+                        <div class="card-header bg-dark text-white">
+                            <span class="badge badge-light lex-row-reverse float-right">
+                                <span id="sparkline"></span>
+                            </span>
+                            <h4 class="card-title">
+                                {% if meta['description'] %}
+                                    {{ meta['description'] }}
+                                {% else %}
+                                    {{ meta['uuid'] }}
+                                {% endif %}
+                            </h4>
+                        </div>
+                        <div class="card-body bg-light pt-2">
+                            <table class="table table-borderless">
+                                <tbody>
+                                <tr>
+                                    <td class="text-right"><b>Type</b></td>
+                                    <td>
+                                        {% if meta['type'] == 'word' %}
+                                            <i class="fas fa-font"></i>&nbsp;
+                                        {% elif meta['type'] == 'set' %}
+                                            <i class="fas fa-layer-group"></i>&nbsp;
+                                        {% elif meta['type'] == 'regex' %}
+                                            <i class="fas fa-compass"></i>&nbsp;
+                                        {% elif meta['type'] == 'typosquatting' %}
+                                            <i class="fas fa-clone"></i>&nbsp;
+                                        {% elif meta['type'] == 'yara' %}
+                                            <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>&nbsp;
+                                        {% endif %}
+                                        {{ meta['type'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Tracked</b></td>
+                                    <td>
+                                        {% if meta['type'] == 'typosquatting' %}
+                                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseTypo" role="button" aria-expanded="false" aria-controls="collapseTypo">
+                                                {{ meta['tracked'] }}
+                                            </a>
+                                            <div class="collapse" id="collapseTypo">
+                                                <div class="card card-body">
+                                                    {% if typo_squatting %}
+                                                        {% for typo in typo_squatting %}
+                                                            {{typo}}
+                                                            <br/>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            {{ meta['tracked'] }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Date</b></td>
+                                    <td>
+                                        {{meta['date'][0:4]}}/{{meta['date'][4:6]}}/{{meta['date'][6:8]}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Level</b></td>
+                                    <td>
+                                        {% if meta['level'] == 0 %}
+                                            Private
+                                        {% else %}
+                                            Global
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Creator</b></td>
+                                    <td>{{meta['user']}}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>First Seen</b></td>
+                                    <td>
+                                        {% if meta['first_seen'] %}
+                                            {{ meta['first_seen'][0:4] }} / {{ meta['first_seen'][4:6] }} / {{ meta['first_seen'][6:8] }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Last Seen</b></td>
+                                    <td>
+                                        {% if meta['last_seen'] %}
+                                            {{ meta['last_seen'][0:4] }} / {{ meta['last_seen'][4:6] }} / {{ meta['last_seen'][6:8] }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Tags</b></td>
+                                    <td>
+                                        {%for tag in meta['tags']%}
+                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                        {%endfor%}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Mails</b></td>
+                                    <td>
+                                        {% for mail in meta['mails'] %}
+                                            <div>{{ mail }}</div>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Webhook</b></td>
+                                    <td>{{meta['webhook']}}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Filters</b></td>
+                                    <td>
+                                        <div class="">
+                                            {% if meta['filters'] %}
+                                                <pre>{{ meta['filters'] }}</pre>
+                                            {% else %}
+                                                <span class="badge badge-secondary">No Filters</span><br>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Objects Match</b></td>
+                                    <td>
+                                        {%for obj_type in meta['nb_objs']%}
+                                            <h4><span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">
+                                                {{ obj_type }}
+                                                <span class="badge badge-light">{{ meta['nb_objs'][obj_type] }}</span>
+                                            </span></h4>
+                                        {%endfor%}
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="d-flex flex-row-reverse">
+                                <a href="{{ url_for('hunters.tracker_delete') }}?uuid={{ meta['uuid'] }}" style="font-size: 15px">
+                                    <button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
+                                </a>
+                                <a href="{{ url_for('hunters.tracker_edit') }}?uuid={{ meta['uuid'] }}" class="mx-2" style="font-size: 15px">
+                                    <button class='btn btn-info'>Edit Tracker <i class="fas fa-pencil-alt"></i></button>
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 mt-1">
+
+                    {% if rule_content %}
+                        <h5 class="mb-0">Yara Rule:</h5>
+                        <p class="my-0">
+                            <pre class="border bg-light">{{ rule_content }}</pre>
+                        </p>
+                    {% endif %}
+
+                    <div class="card mb-5 mt-1">
+                        <div class="card-body">
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="input-group" id="date-range-from">
+                                        <div class="input-group-prepend"><span class="input-group-text"><i
+                                                class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                        <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd"
+                                               name="date_from" autocomplete="off"
+                                               {% if meta['date_from'] %}value="{{ meta['date_from'][0:4] }}-{{ meta['date_from'][4:6] }}-{{ meta['date_from'][6:8] }}"
+                                               {% elif meta['first_seen'] %}value="{{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}"
+                                               {% endif %}>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group" id="date-range-to">
+                                        <div class="input-group-prepend"><span class="input-group-text"><i
+                                                class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                        <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd"
+                                               name="date_to" autocomplete="off"
+                                               {% if meta['date_to'] %}value="{{ meta['date_to'][0:4] }}-{{ meta['date_to'][4:6] }}-{{ meta['date_to'][6:8] }}"
+                                               {% elif meta['last_seen'] %}value="{{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}"
+                                               {% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-info" type="button" id="button-search-tags" onclick="getItems();">
+                                <i class="fas fa-search"></i> Tracked Objects
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            {% if meta['objs'] %}
+                <hr>
+                <div class="mt-4">
+                    <table id="myTable_" class="table table-striped border-primary">
+                        <thead class="bg-dark text-white">
+                        <tr>
+                            <th>Type</th>
+			      	        <th></th>
+							<th>Id</th>
+				     	    <th>Tags</th>
+							<th></th>
+				   	    </tr>
+					    </thead>
+					    <tbody style="font-size: 15px;">
+						{% for object in meta['objs'] %}
+							<tr class="border-color: blue;">
+								<td>
+									{% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
+										{% include 'objects/obj_svg_block.html' %}
+									{% endwith %}
+									{{ object['type']}}
+								</td>
+								<td>
+									{% if object['subtype'] %}
+										{{ object['subtype']}}
+									{% endif %}
+								</td>
+								<td>
+									<a href="{{ object['link'] }}">
+										{{ object['id']}}
+									</a>
+								</td>
+								<td>
+									{% for tag in object['tags'] %}
+										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+									{% endfor %}
+								</td>
+								<td class="text-right">
+{#									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ meta['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">#}
+{#										<button type="button" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>#}
+{#									</a>#}
+								</td>
+							</tr>
+						{% endfor %}
+					    </tbody>
+				    </table>
+                </div>
+                <hr>
+            {% endif %}
+
+            <div id="graphline" class="text-center mb-4"></div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#div_edit_mails').hide();
+        $('#div_edit_tags').hide();
+        $('#div_edit_description').hide();
+        $("#page-Tracker").addClass("active");
+
+        $('#date-range-from').dateRangePicker({
+            separator: ' to ',
+            getValue: function () {
+                if ($('#date-range-from-input').val() && $('#date-range-to-input').val())
+                    return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+                else
+                    return '';
+            },
+            setValue: function (s, s1, s2) {
+                $('#date-range-from-input').val(s1);
+                $('#date-range-to-input').val(s2);
+            }
+        });
+        $('#date-range-to').dateRangePicker({
+            separator: ' to ',
+            getValue: function () {
+                if ($('#date-range-from-input').val() && $('#date-range-to-input').val())
+                    return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+                else
+                    return '';
+            },
+            setValue: function (s, s1, s2) {
+                $('#date-range-from-input').val(s1);
+                $('#date-range-to-input').val(s2);
+            }
+        });
+
+        $('#myTable_').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[0, "asc"]]
+        });
+
+        sparkline("sparkline", {{ meta['sparkline'] }}, {});
+        let div_width = $("#graphline").width();
+        $.getJSON("{{ url_for('hunters.get_json_tracker_graph') }}?uuid={{ meta['uuid'] }}{%if meta['date_from']%}&date_from={{ meta['date_from'] }}{%endif%}{%if meta['date_to']%}&date_to={{ meta['date_to'] }}{%endif%}",
+            function (data) {
+                multilines_group("graphline", data, {"width": div_width});
+            }
+        );
+
+    });
+
+    function toggle_sidebar() {
+        if ($('#nav_menu').is(':visible')) {
+            $('#nav_menu').hide();
+            $('#side_menu').removeClass('border-right')
+            $('#side_menu').removeClass('col-lg-2')
+            $('#core_content').removeClass('col-lg-10')
+        } else {
+            $('#nav_menu').show();
+            $('#side_menu').addClass('border-right')
+            $('#side_menu').addClass('col-lg-2')
+            $('#core_content').addClass('col-lg-10')
+        }
+    }
+
+    function edit_tags() {
+        $('#div_edit_mails').hide();
+        $('#div_edit_description').hide();
+        $('#div_edit_tags').show();
+    }
+
+    function edit_mails() {
+        $('#div_edit_tags').hide();
+        $('#div_edit_description').hide();
+        $('#div_edit_mails').show();
+    }
+
+    function edit_description() {
+        $('#div_edit_tags').hide();
+        $('#div_edit_mails').hide();
+        $('#div_edit_description').show();
+    }
+
+    function getItems() {
+        var date_from = $('#date-range-from-input').val();
+        var date_to = $('#date-range-to-input').val();
+        window.location.replace("{{ url_for('hunters.show_tracker') }}?uuid={{ meta['uuid'] }}&date_from=" + date_from + "&date_to=" + date_to);
+    }
+
+</script>
+
+
+</body>
+
+</html>

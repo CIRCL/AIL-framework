@@ -83,12 +83,7 @@ class Tracker_Regex(AbstractModule):
             print(f'new tracked regex found: {tracker_name} in {obj_id}')
             self.redis_logger.warning(f'new tracked regex found: {tracker_name} in {obj_id}')
 
-            if obj.get_type() == 'item':
-                date = obj.get_date()
-            else:
-                date = None
-
-            tracker.add(obj.get_type(), obj.get_subtype(r_str=True), obj_id, date=date)
+            tracker.add(obj.get_type(), obj.get_subtype(r_str=True), obj_id)
 
             for tag in tracker.get_tags():
                 if obj.get_type() == 'item':

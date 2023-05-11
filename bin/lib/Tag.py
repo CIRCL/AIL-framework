@@ -710,6 +710,13 @@ def delete_object_tag(tag, obj_type, id, subtype=''):
         r_tags.srem(f'tag:{obj_type}:{subtype}:{id}', tag)
         update_tag_global_by_obj_type(tag, obj_type, subtype=subtype)
 
+def delete_object_tags(obj_type, subtype, obj_id):
+    if not subtype:
+        subtype = ''
+    for tag in get_object_tags(obj_type, obj_id, subtype=subtype):
+        delete_object_tag(tag, obj_type, obj_id, subtype=subtype)
+
+
 ################################################################################################################
 
 # TODO: REWRITE OLD
@@ -960,7 +967,10 @@ def is_galaxy_tag(tag, namespace=None):
         return False
 
 def is_custom_tag(tag):
-    return r_tags.sismember('tags:custom', tag)
+    try:
+        return r_tags.sismember('tags:custom', tag)
+    except:
+        return False
 
 # # TODO:
 # def is_valid_tag(tag):
@@ -1017,6 +1027,20 @@ def sort_tags_taxonomies_galaxies(tags):
         else:
             galaxies_tags.append(tag)
     return taxonomies_tags, galaxies_tags
+
+def sort_tags_taxonomies_galaxies_customs(tags):
+    taxonomies_tags = []
+    galaxies_tags = []
+    customs_tags = []
+    for tag in tags:
+        if is_taxonomie_tag(tag):
+            taxonomies_tags.append(tag)
+        elif is_custom_tag(tag):
+            print()
+            customs_tags.append(tag)
+        else:
+            galaxies_tags.append(tag)
+    return taxonomies_tags, galaxies_tags, customs_tags
 
 ##-- Taxonomies - Galaxies --##
 
@@ -1089,8 +1113,9 @@ def get_modal_add_tags(object_id, object_type='item', object_subtype=''):
 
 ######## NEW VERSION ########
 def create_custom_tag(tag):
-    r_tags.sadd('tags:custom', tag)
-    r_tags.sadd('tags:custom:enabled_tags', tag)
+    if not is_taxonomie_tag(tag) and not is_galaxy_tag(tag):
+        r_tags.sadd('tags:custom', tag)
+        r_tags.sadd('tags:custom:enabled_tags', tag)
 
 # # TODO: ADD color
 def get_tag_metadata(tag, r_int=False):
