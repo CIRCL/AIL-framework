@@ -471,6 +471,8 @@ class Tracker:
                     filepath = get_yara_rule_file_by_tracker_name(old_to_track)
                     if filepath:
                         os.remove(filepath)
+            if old_type == 'typosquatting':
+                r_tracker.delete(f'tracker:typosquatting:{old_to_track}')
             self._set_field('type', tracker_type)
 
             # create all tracker set
