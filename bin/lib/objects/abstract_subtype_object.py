@@ -116,8 +116,11 @@ class AbstractSubtypeObject(AbstractObject, ABC):
             if date > last_seen:
                 self.set_last_seen(date)
 
-    def get_content(self):
-        return self.id
+    def get_content(self, r_type='str'):
+        if r_type == 'str':
+            return self.id
+        if r_type == 'bytes':
+            return self.id.encode()
 
     def get_sparkline(self):
         sparkline = []
