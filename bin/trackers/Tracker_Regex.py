@@ -63,7 +63,7 @@ class Tracker_Regex(AbstractModule):
         if obj_type not in self.tracked_regexs:
             return None
 
-        content = obj.get_content(r_str=True)
+        content = obj.get_content()
 
         for dict_regex in self.tracked_regexs[obj_type]:
             matched = self.regex_findall(dict_regex['regex'], obj_id, content)

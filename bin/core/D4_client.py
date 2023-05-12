@@ -36,7 +36,7 @@ class D4Client(AbstractModule):
         self.last_refresh = time.time()
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} initialized')
+        self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, dns_record):
         # Refresh D4 Client

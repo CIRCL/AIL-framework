@@ -67,8 +67,8 @@ class Global(AbstractModule):
         self.pending_seconds = 0.5
 
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
-        # Send module state to logs
+        self.logger.info(f"Module {self.module_name} initialized")
+        # Send module state to logs # TODO MOVE ME IN INIT SCRIPT
         self.redis_logger.critical(f"AIL {get_ail_uuid()} started")
 
     def computeNone(self):
@@ -103,7 +103,7 @@ class Global(AbstractModule):
 
             # Incorrect filename
             if not os.path.commonprefix([filename, self.ITEMS_FOLDER]) == self.ITEMS_FOLDER:
-                self.redis_logger.warning(f'Global; Path traversal detected {filename}')
+                self.logger.warning(f'Global; Path traversal detected {filename}')
                 print(f'Global; Path traversal detected {filename}')
 
             else:
@@ -146,7 +146,7 @@ class Global(AbstractModule):
                             return item_id
 
         else:
-            self.redis_logger.debug(f"Empty Item: {message} not processed")
+            self.logger.debug(f"Empty Item: {message} not processed")
             print(f"Empty Item: {message} not processed")
 
     def check_filename(self, filename, new_file_content):
@@ -157,7 +157,7 @@ class Global(AbstractModule):
 
         # check if file exist
         if os.path.isfile(filename):
-            self.redis_logger.warning(f'File already exist {filename}')
+            self.logger.warning(f'File already exist {filename}')
             print(f'File already exist {filename}')
 
             # Check that file already exists but content differs
@@ -174,17 +174,17 @@ class Global(AbstractModule):
                         filename = f'{filename[:-3]}_{new_file_md5}.gz'
                     else:
                         filename = f'{filename}_{new_file_md5}'
-                    self.redis_logger.debug(f'new file to check: {filename}')
+                    self.logger.debug(f'new file to check: {filename}')
 
                     if os.path.isfile(filename):
                         # Ignore duplicate
-                        self.redis_logger.debug(f'ignore duplicated file {filename}')
+                        self.logger.debug(f'ignore duplicated file {filename}')
                         print(f'ignore duplicated file {filename}')
                         filename = None
 
                 else:
                     # Ignore duplicate checksum equals
-                    self.redis_logger.debug(f'ignore duplicated file {filename}')
+                    self.logger.debug(f'ignore duplicated file {filename}')
                     print(f'ignore duplicated file {filename}')
                     filename = None
 
@@ -205,13 +205,13 @@ class Global(AbstractModule):
             with gzip.open(filename, 'rb') as f:
                 curr_file_content = f.read()
         except EOFError:
-            self.redis_logger.warning(f'Global; Incomplete file: {filename}')
+            self.logger.warning(f'Global; Incomplete file: {filename}')
             print(f'Global; Incomplete file: {filename}')
             # save daily stats
             # self.r_stats.zincrby('module:Global:incomplete_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
             # Statistics.
         except OSError:
-            self.redis_logger.warning(f'Global; Not a gzipped file: {filename}')
+            self.logger.warning(f'Global; Not a gzipped file: {filename}')
             print(f'Global; Not a gzipped file: {filename}')
             # save daily stats
             # self.r_stats.zincrby('module:Global:invalid_file', 1, datetime.datetime.now().strftime('%Y%m%d'))
@@ -229,7 +229,7 @@ class Global(AbstractModule):
             with gzip.GzipFile(fileobj=in_, mode='rb') as fo:
                 gunzipped_bytes_obj = fo.read()
         except Exception as e:
-            self.redis_logger.warning(f'Global; Invalid Gzip file: {filename}, {e}')
+            self.logger.warning(f'Global; Invalid Gzip file: {filename}, {e}')
             print(f'Global; Invalid Gzip file: {filename}, {e}')
 
         return gunzipped_bytes_obj

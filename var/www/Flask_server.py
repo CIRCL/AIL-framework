@@ -7,10 +7,9 @@ import ssl
 import json
 import time
 import uuid
-
 import random
 import logging
-import logging.handlers
+import logging.config
 
 from flask import Flask, render_template, jsonify, request, Request, Response, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
@@ -30,6 +29,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 from lib.Users import User
 from lib import Tag
+from lib import ail_logger
 
 # Import config
 import Flask_config
@@ -49,7 +49,6 @@ from blueprints.settings_b import settings_b
 from blueprints.objects_cve import objects_cve
 from blueprints.objects_decoded import objects_decoded
 from blueprints.objects_subtypes import objects_subtypes
-
 
 Flask_dir = os.environ['AIL_FLASK']
 
@@ -74,15 +73,7 @@ log_dir = os.path.join(os.environ['AIL_HOME'], 'logs')
 if not os.path.isdir(log_dir):
     os.makedirs(log_dir)
 
-# log_filename = os.path.join(log_dir, 'flask_server.logs')
-# logger = logging.getLogger()
-# formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-# handler_log = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", interval=1)
-# handler_log.suffix = '%Y-%m-%d.log'
-# handler_log.setFormatter(formatter)
-# handler_log.setLevel(30)
-# logger.addHandler(handler_log)
-# logger.setLevel(30)
+logging.config.dictConfig(ail_logger.get_config(name='flask'))
 
 # =========       =========#
 

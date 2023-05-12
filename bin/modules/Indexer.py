@@ -63,12 +63,11 @@ class Indexer(AbstractModule):
             # create the index register if not present
             time_now = int(time.time())
             if not os.path.isfile(self.indexRegister_path):  # index are not organised
-                self.redis_logger.debug("Indexes are not organized")
-                self.redis_logger.debug(
-                    "moving all files in folder 'old_index' ")
+                self.logger.debug("Indexes are not organized")
+                self.logger.debug("moving all files in folder 'old_index' ")
                 # move all files to old_index folder
                 self.move_index_into_old_index_folder()
-                self.redis_logger.debug("Creating new index")
+                self.logger.debug("Creating new index")
                 # create all_index.txt
                 with open(self.indexRegister_path, 'w') as f:
                     f.write(str(time_now))
@@ -100,7 +99,7 @@ class Indexer(AbstractModule):
         item_id = item.get_id()
         item_content = item.get_content()
 
-        self.redis_logger.debug(f"Indexing - {self.indexname}: {docpath}")
+        self.logger.debug(f"Indexing - {self.indexname}: {docpath}")
         print(f"Indexing - {self.indexname}: {docpath}")
 
         try:
@@ -109,7 +108,7 @@ class Indexer(AbstractModule):
                 self.last_refresh = time.time()
                 if self.check_index_size() >= self.INDEX_SIZE_THRESHOLD*(1000*1000):
                     timestamp = int(time.time())
-                    self.redis_logger.debug(f"Creating new index {timestamp}")
+                    self.logger.debug(f"Creating new index {timestamp}")
                     print(f"Creating new index {timestamp}")
                     self.indexpath = join(self.baseindexpath, str(timestamp))
                     self.indexname = str(timestamp)
@@ -129,9 +128,9 @@ class Indexer(AbstractModule):
                 indexwriter.commit()
 
         except IOError:
-            self.redis_logger.debug(f"CRC Checksum Failed on: {item_id}")
+            self.logger.debug(f"CRC Checksum Failed on: {item_id}")
             print(f"CRC Checksum Failed on: {item_id}")
-            self.redis_logger.error(f'Duplicate;{item.get_source()};{item.get_date()};{item.get_basename()};CRC Checksum Failed')
+            self.logger.error(f'{item_id} CRC Checksum Failed')
 
     def check_index_size(self):
         """

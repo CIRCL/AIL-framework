@@ -80,7 +80,7 @@ class MailExporter(AbstractExporter, ABC):
         return smtp_server
         # except Exception as err:
         # traceback.print_tb(err.__traceback__)
-        # publisher.warning(err)
+        # logger.warning(err)
 
     def _export(self, recipient, subject, body):
         mime_msg = MIMEMultipart()
@@ -95,7 +95,7 @@ class MailExporter(AbstractExporter, ABC):
         smtp_client.quit()
         # except Exception as err:
         # traceback.print_tb(err.__traceback__)
-        # publisher.warning(err)
+        # logger.warning(err)
         print(f'Send notification: {subject} to {recipient}')
 
 class MailExporterTracker(MailExporter):

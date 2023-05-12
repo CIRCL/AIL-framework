@@ -148,18 +148,18 @@ class Credential(AbstractModule):
                     discovered_sites = ', '.join(all_sites)
                     print(f"=======> Probably on : {discovered_sites}")
 
-                date = datetime.now().strftime("%Y%m")
-                nb_tlds = {}
-                for cred in all_credentials:
-                    maildomains = re.findall(r"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
-                    self.faup.decode(maildomains)
-                    tld = self.faup.get()['tld']
-                    # # TODO: # FIXME: remove me
-                    try:
-                        tld = tld.decode()
-                    except:
-                        pass
-                    nb_tlds[tld] = nb_tlds.get(tld, 0) + 1
+                # date = datetime.now().strftime("%Y%m")
+                # nb_tlds = {}
+                # for cred in all_credentials:
+                #     maildomains = re.findall(r"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
+                #     self.faup.decode(maildomains)
+                #     tld = self.faup.get()['tld']
+                #     # # TODO: # FIXME: remove me
+                #     try:
+                #         tld = tld.decode()
+                #     except:
+                #         pass
+                #     nb_tlds[tld] = nb_tlds.get(tld, 0) + 1
                 # for tld in nb_tlds:
                 #     Statistics.add_module_tld_stats_by_date('credential', date, tld, nb_tlds[tld])
             else:

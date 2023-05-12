@@ -60,7 +60,7 @@ class SubmitPaste(AbstractModule):
         """
         Main method of the Module to implement
         """
-        self.redis_logger.debug(f'compute UUID {uuid}')
+        self.logger.debug(f'compute UUID {uuid}')
 
         # get temp value save on disk
         ltags = self.r_serv_db.smembers(f'{uuid}:ltags')
@@ -73,9 +73,9 @@ class SubmitPaste(AbstractModule):
         if source in ['crawled', 'tests']:
             source = 'submitted'
 
-        self.redis_logger.debug(f'isfile UUID {isfile}')
-        self.redis_logger.debug(f'source UUID {source}')
-        self.redis_logger.debug(f'paste_content UUID {paste_content}')
+        self.logger.debug(f'isfile UUID {isfile}')
+        self.logger.debug(f'source UUID {source}')
+        self.logger.debug(f'paste_content UUID {paste_content}')
 
         # needed if redis is restarted
         self.r_serv_log_submit.set(f'{uuid}:end', 0)
@@ -114,15 +114,15 @@ class SubmitPaste(AbstractModule):
                     if isinstance(uuid, list):
                         uuid = uuid[0]
                     # Module processing with the message from the queue
-                    self.redis_logger.debug(uuid)
+                    self.logger.debug(uuid)
                     self.compute(uuid)
                 except Exception as err:
-                    self.redis_logger.error(f'Error in module {self.module_name}: {err}')
+                    self.logger.critical(err)
                     # Remove uuid ref
                     self.remove_submit_uuid(uuid)
             else:
                 # Wait before next process
-                self.redis_logger.debug(f'{self.module_name}, waiting for new message, Idling {self.pending_seconds}s')
+                self.logger.debug(f'{self.module_name}, waiting for new message, Idling {self.pending_seconds}s')
                 time.sleep(self.pending_seconds)
 
     def _manage_text(self, uuid, paste_content, ltags, ltagsgalaxies, source):

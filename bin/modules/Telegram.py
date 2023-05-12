@@ -38,7 +38,7 @@ class Telegram(AbstractModule):
         self.max_execution_time = 60
 
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
+        self.logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message, r_result=False):
         item = Item(message)

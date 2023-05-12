@@ -3,6 +3,7 @@
 
 import json
 import os
+import logging.config
 import sys
 import uuid
 
@@ -15,20 +16,19 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from pubsublogger import publisher
+from lib import ail_logger
 from core import ail_2_ail
 from lib.ConfigLoader import ConfigLoader
+
+
+logging.config.dictConfig(ail_logger.get_config(name='syncs'))
+logger = logging.getLogger()
+
 
 config_loader = ConfigLoader()
 host = config_loader.get_config_str('AIL_2_AIL', 'server_host')
 port = config_loader.get_config_int('AIL_2_AIL', 'server_port')
 config_loader = None
-
-# # TODO: refactor logging
-#### LOGS ####
-redis_logger = publisher
-redis_logger.port = 6380
-redis_logger.channel = 'Sync'
 
 #############################
 
@@ -80,7 +80,7 @@ async def server_controller():
                 connected_clients = CONNECTED_CLIENTS[ail_uuid].copy()
                 for c_websocket in connected_clients:
                     await c_websocket.close(code=1000)
-                    redis_logger.info(f'Server Command Connection closed: {ail_uuid}')
+                    logger.info(f'Server Command Connection closed: {ail_uuid}')
                     print(f'Server Command Connection closed: {ail_uuid}')
 
         await asyncio.sleep(10)
@@ -91,7 +91,7 @@ async def register(websocket):
     ail_uuid = websocket.ail_uuid
     remote_address = websocket.remote_address
     sync_mode = websocket.sync_mode
-    redis_logger.info(f'Client Connected: {ail_uuid} {remote_address}')
+    logger.info(f'Client Connected: {ail_uuid} {remote_address}')
     print(f'Client Connected: {ail_uuid} {remote_address}')
 
     if not ail_uuid in CONNECTED_CLIENTS:
@@ -201,7 +201,7 @@ async def ail_to_ail_serv(websocket, path):
         if sync_mode == 'pull':
             await pull(websocket, websocket.ail_uuid)
             await websocket.close()
-            redis_logger.info(f'Connection closed: {ail_uuid} {remote_address}')
+            logger.info(f'Connection closed: {ail_uuid} {remote_address}')
             print(f'Connection closed: {ail_uuid} {remote_address}')
 
         elif sync_mode == 'push':
@@ -210,7 +210,7 @@ async def ail_to_ail_serv(websocket, path):
         elif sync_mode == 'api':
             await api(websocket, websocket.ail_uuid, path['api'])
             await websocket.close()
-            redis_logger.info(f'Connection closed: {ail_uuid} {remote_address}')
+            logger.info(f'Connection closed: {ail_uuid} {remote_address}')
             print(f'Connection closed: {ail_uuid} {remote_address}')
 
     finally:
@@ -234,12 +234,12 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
         # API TOKEN
         api_key = request_headers.get('Authorization', '')
         if api_key is None:
-            redis_logger.warning(f'Missing token: {self.remote_address}')
+            logger.warning(f'Missing token: {self.remote_address}')
             print(f'Missing token: {self.remote_address}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Missing token\n"
 
         if not ail_2_ail.is_allowed_ail_instance_key(api_key):
-            redis_logger.warning(f'Invalid token: {self.remote_address}')
+            logger.warning(f'Invalid token: {self.remote_address}')
             print(f'Invalid token: {self.remote_address}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Invalid token\n"
 
@@ -247,20 +247,20 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
         try:
             dict_path = unpack_path(path)
         except Exception as e:
-            redis_logger.warning(f'Invalid path: {self.remote_address}')
+            logger.warning(f'Invalid path: {self.remote_address}')
             print(f'Invalid path: {self.remote_address}')
             return http.HTTPStatus.BAD_REQUEST, [], b"Invalid path\n"
 
 
         ail_uuid = ail_2_ail.get_ail_instance_by_key(api_key)
         if ail_uuid != dict_path['ail_uuid']:
-            redis_logger.warning(f'Invalid token: {self.remote_address} {ail_uuid}')
+            logger.warning(f'Invalid token: {self.remote_address} {ail_uuid}')
             print(f'Invalid token: {self.remote_address} {ail_uuid}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Invalid token\n"
 
 
         if not api_key != ail_2_ail.get_ail_instance_key(api_key):
-            redis_logger.warning(f'Invalid token: {self.remote_address} {ail_uuid}')
+            logger.warning(f'Invalid token: {self.remote_address} {ail_uuid}')
             print(f'Invalid token: {self.remote_address} {ail_uuid}')
             return http.HTTPStatus.UNAUTHORIZED, [], b"Invalid token\n"
 
@@ -288,7 +288,7 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
             # SYNC MODE
             if not ail_2_ail.is_ail_instance_sync_enabled(self.ail_uuid, sync_mode=self.sync_mode):
                 sync_mode = self.sync_mode
-                redis_logger.warning(f'SYNC mode disabled: {self.remote_address} {ail_uuid} {sync_mode}')
+                logger.warning(f'SYNC mode disabled: {self.remote_address} {ail_uuid} {sync_mode}')
                 print(f'SYNC mode disabled: {self.remote_address} {ail_uuid} {sync_mode}')
                 return http.HTTPStatus.FORBIDDEN, [], b"SYNC mode disabled\n"
 
@@ -298,7 +298,7 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
 
         else:
             print(f'Invalid path: {self.remote_address}')
-            redis_logger.info(f'Invalid path: {self.remote_address}')
+            logger.info(f'Invalid path: {self.remote_address}')
             return http.HTTPStatus.BAD_REQUEST, [], b"Invalid path\n"
 
 ###########################################
@@ -310,7 +310,7 @@ class AIL_2_AIL_Protocol(websockets.WebSocketServerProtocol):
 if __name__ == '__main__':
 
     print('Launching Server...')
-    redis_logger.info('Launching Server...')
+    logger.info('Launching Server...')
 
     ail_2_ail.clear_server_connected_clients()
 
@@ -321,7 +321,7 @@ if __name__ == '__main__':
     start_server = websockets.serve(ail_to_ail_serv, host, port, ssl=ssl_context, create_protocol=AIL_2_AIL_Protocol, max_size=None)
 
     print(f'Server Launched:    wss://{host}:{port}')
-    redis_logger.info(f'Server Launched:    wss://{host}:{port}')
+    logger.info(f'Server Launched:    wss://{host}:{port}')
 
     loop = asyncio.get_event_loop()
     # server command

@@ -44,7 +44,7 @@ class ApiKey(AbstractModule):
         re.compile(self.re_google_api_key)
 
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
+        self.logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message, r_result=False):
         item_id, score = message.split()

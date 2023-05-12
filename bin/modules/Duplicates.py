@@ -47,7 +47,7 @@ class Duplicates(AbstractModule):
                         "tlsh": {"threshold": THRESHOLD_TLSH}
                      }
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         # IOError: "CRC Checksum Failed on : {id}"
@@ -65,7 +65,7 @@ class Duplicates(AbstractModule):
         x = time.time()
 
         # Get Hashs
-        content = item.get_content(binary=True)
+        content = item.get_content(r_type='bytes')
         self.algos['ssdeep']['hash'] = Duplicate.get_ssdeep_hash(content)
         self.algos['tlsh']['hash'] = Duplicate.get_tlsh_hash(content)
 

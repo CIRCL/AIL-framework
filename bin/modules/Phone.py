@@ -50,7 +50,7 @@ class Phone(AbstractModule):
 
         # If the list is greater than 4, we consider the Item may contain a list of phone numbers
         if len(results) > 4:
-            self.redis_logger.debug(results)
+            self.logger.debug(results)
             self.redis_logger.warning(f'{item.get_id()} contains PID (phone numbers)')
 
             msg = f'infoleak:automatic-detection="phone-number";{item.get_id()}'

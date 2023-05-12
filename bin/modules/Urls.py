@@ -56,7 +56,7 @@ class Urls(AbstractModule):
             ")\://(?:[a-zA-Z0-9\.\-]+(?:\:[a-zA-Z0-9\.&%\$\-]+)*@)*(?:(?:25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(?:25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(?:25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(?:25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?:[a-zA-Z]{2,15}))(?:\:[0-9]+)*(?:/?(?:[a-zA-Z0-9\.\,\?'\\+&%\$#\=~_\-]+))*)"
 
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
+        self.logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message):
         """
@@ -82,7 +82,7 @@ class Urls(AbstractModule):
             to_send = f"{url} {item.get_id()}"
             print(to_send)
             self.add_message_to_queue(to_send, 'Url')
-            self.redis_logger.debug(f"url_parsed: {to_send}")
+            self.logger.debug(f"url_parsed: {to_send}")
 
         if len(l_urls) > 0:
             to_print = f'Urls;{item.get_source()};{item.get_date()};{item.get_basename()};'

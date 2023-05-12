@@ -36,7 +36,7 @@ class Tags(AbstractModule):
         self.pending_seconds = 10
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} initialized')
+        self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
         #  Extract item ID and tag from message

@@ -34,19 +34,19 @@ class Template(AbstractModule):
         self.pending_seconds = 10
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} initialized')
+        self.logger.info(f'Module {self.module_name} initialized')
 
     # def computeNone(self):
     #     """
     #     Do something when there is no message in the queue
     #     """
-    #     self.redis_logger.debug("No message in queue")
+    #     self.logger.debug("No message in queue")
 
     def compute(self, message):
         """
         Compute a message in queue / process the message (item_id, ...)
         """
-        self.redis_logger.debug("Compute message in queue")
+        self.logger.debug("Compute message in queue")
         # # if message is an item_id:
         # item = Item(message)
         # content = item.get_content()

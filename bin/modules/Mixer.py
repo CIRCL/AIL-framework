@@ -71,7 +71,7 @@ class Mixer(AbstractModule):
         self.feeders_processed = {}
         self.feeders_duplicate = {}
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     # TODO Save stats in cache
     # def get_feeders(self):
@@ -154,7 +154,7 @@ class Mixer(AbstractModule):
             feeder_name, item_id, gzip64encoded = splitted
         else:
             print('Invalid message: not processed')
-            self.redis_logger.debug('Invalid Item: {message} not processed')
+            self.logger.debug(f'Invalid Item: {item_id} not processed')
             return None
 
         # remove absolute path

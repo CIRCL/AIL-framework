@@ -39,13 +39,13 @@ class Zerobins(AbstractModule):
         self.pending_seconds = 10
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} initialized')
+        self.logger.info(f'Module {self.module_name} initialized')
 
     def computeNone(self):
         """
         Compute when no message in queue
         """
-        self.redis_logger.debug("No message in queue")
+        self.logger.debug("No message in queue")
 
     def compute(self, message):
         """
@@ -63,7 +63,7 @@ class Zerobins(AbstractModule):
                 crawlers.create_task(bin_url, depth=0, har=False, screenshot=False, proxy='force_tor',
                                      parent='manual', priority=60)
 
-        self.redis_logger.debug("Compute message in queue")
+        self.logger.debug("Compute message in queue")
 
 
 if __name__ == '__main__':

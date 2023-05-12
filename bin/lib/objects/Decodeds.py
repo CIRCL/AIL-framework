@@ -116,15 +116,20 @@ class Decoded(AbstractDaterangeObject):
     def get_filepath(self, mimetype=None):
         return os.path.join(os.environ['AIL_HOME'], self.get_rel_path(mimetype=mimetype))
 
-    def get_content(self, mimetype=None, r_str=False):
+    def get_content(self, mimetype=None, r_type='str'):
         filepath = self.get_filepath(mimetype=mimetype)
-        if r_str:
+        if r_type == 'str':
             with open(filepath, 'r') as f:
                 content = f.read()
-        else:
+            return content
+        elif r_type == 'bytes':
+            with open(filepath, 'rb') as f:
+                content = f.read()
+            return content
+        elif r_str == 'bytesio':
             with open(filepath, 'rb') as f:
                 content = BytesIO(f.read())
-        return content
+            return content
 
     def get_zip_content(self):
         # mimetype = self.get_estimated_type()

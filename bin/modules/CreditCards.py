@@ -51,7 +51,7 @@ class CreditCards(AbstractModule):
         self.pending_seconds = 10
 
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
+        self.logger.info(f"Module {self.module_name} initialized")
 
     def get_valid_card(self, card):
         clean_card = re.sub(self.re_clean_card, '', card)
@@ -74,7 +74,7 @@ class CreditCards(AbstractModule):
         all_cards = self.regex_findall(self.regex, item.id, content)
 
         if len(all_cards) > 0:
-            # self.redis_logger.debug(f'All matching {all_cards}')
+            # self.logger.debug(f'All matching {all_cards}')
             creditcard_set = set()
             for card in all_cards:
                 print(card)

@@ -8,6 +8,8 @@ Base Class for AIL Modules
 ##################################
 from abc import ABC, abstractmethod
 import os
+import logging
+import logging.config
 import sys
 import time
 import traceback
@@ -17,22 +19,27 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from pubsublogger import publisher
+from lib import ail_logger
 from lib.ail_queues import AILQueue
 from lib import regex_helper
 from lib.exceptions import ModuleQueueError
+
+logging.config.dictConfig(ail_logger.get_config(name='modules'))
 
 class AbstractModule(ABC):
     """
     Abstract Module class
     """
 
-    def __init__(self, module_name=None, logger_channel='Script', queue=True):
+    def __init__(self, module_name=None, queue=True):
         """
         Init Module
         module_name: str; set the module name if different from the instance ClassName
         queue_name: str; set the queue name if different from the instance ClassName
         logger_channel: str; set the logger channel name, 'Script' by default
         """
+        self.logger = logging.getLogger(f'{self.__class__.__name__}')
+
         # Module name if provided else instance className
         self.module_name = module_name if module_name else self._module_name()
 
@@ -44,14 +51,12 @@ class AbstractModule(ABC):
 
         # Init Redis Logger
         self.redis_logger = publisher
-
         # Port of the redis instance used by pubsublogger
         self.redis_logger.port = 6380
-
         # Channel name to publish logs
         # # TODO: refactor logging
         # If provided could be a namespaced channel like script:<ModuleName>
-        self.redis_logger.channel = logger_channel
+        self.redis_logger.channel = 'Script'
 
         # Cache key
         self.r_cache_key = regex_helper.generate_redis_cache_key(self.module_name)
@@ -127,14 +132,9 @@ class AbstractModule(ABC):
                     # LOG ERROR
                     trace = traceback.format_tb(err.__traceback__)
                     trace = ''.join(trace)
-                    self.redis_logger.critical(f"Error in module {self.module_name}: {err}")
-                    self.redis_logger.critical(f"Module {self.module_name} input message: {message}")
-                    self.redis_logger.critical(trace)
-                    print()
-                    print(f"ERROR: {err}")
-                    print(f'MESSAGE: {message}')
-                    print('TRACEBACK:')
-                    print(trace)
+                    self.logger.critical(f"Error in module {self.module_name}: {__name__} : {err}")
+                    self.logger.critical(f"Module {self.module_name} input message: {message}")
+                    self.logger.critical(trace)
 
                     if isinstance(err, ModuleQueueError):
                         self.queue.error()
@@ -145,7 +145,7 @@ class AbstractModule(ABC):
             else:
                 self.computeNone()
                 # Wait before next process
-                self.redis_logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
+                self.logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
                 time.sleep(self.pending_seconds)
 
     def _module_name(self):

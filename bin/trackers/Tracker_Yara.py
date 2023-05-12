@@ -61,7 +61,7 @@ class Tracker_Yara(AbstractModule):
         if obj_type not in self.rules:
             return None
 
-        content = self.obj.get_content(r_str=True)
+        content = self.obj.get_content(r_type='bytes')
 
         try:
             yara_match = self.rules[obj_type].match(data=content, callback=self.yara_rules_match,
@@ -109,4 +109,3 @@ class Tracker_Yara(AbstractModule):
 if __name__ == '__main__':
     module = Tracker_Yara()
     module.run()
-    # module.compute('archive/gist.github.com/2023/04/13/chipzoller_d8d6d2d737d02ad4fe9d30a897170761.gz')

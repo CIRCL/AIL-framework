@@ -46,7 +46,7 @@ class Hosts(AbstractModule):
         self.host_regex = r'\b([a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)\b'
         re.compile(self.host_regex)
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         item = Item(message)

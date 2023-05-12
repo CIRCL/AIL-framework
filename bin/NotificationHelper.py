@@ -5,13 +5,14 @@ import os
 import sys
 
 import argparse
+import logging.config
 import traceback
 import smtplib
-from pubsublogger import publisher
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 sys.path.append(os.environ['AIL_BIN'])
+from lib import ail_logger
 from lib import ConfigLoader
 
 """
@@ -20,8 +21,8 @@ This module allows the global configuration and management of notification setti
 
 config_loader = ConfigLoader.ConfigLoader()
 
-publisher.port = 6380
-publisher.channel = "Script"
+logging.config.dictConfig(ail_logger.get_config())
+logger = logging.getLogger()
 
 def sendEmailNotification(recipient, mail_subject, mail_body):
 
@@ -34,10 +35,7 @@ def sendEmailNotification(recipient, mail_subject, mail_body):
         sender_pw = None
 
     # raise an exception if any of these is None
-    if (sender is None or
-        sender_host is None or
-        sender_port is None
-        ):
+    if sender is None or sender_host is None or sender_port is None:
         raise Exception('SMTP configuration (host, port, sender) is missing or incomplete!')
 
     try:
@@ -70,7 +68,7 @@ def sendEmailNotification(recipient, mail_subject, mail_body):
 
     except Exception as err:
         traceback.print_tb(err.__traceback__)
-        publisher.warning(err)
+        logger.warning(err)
 
 
 if __name__ == '__main__':

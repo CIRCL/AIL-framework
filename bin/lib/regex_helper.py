@@ -6,6 +6,7 @@ Regex Helper
 """
 
 import os
+import logging.config
 import re
 import sys
 import uuid
@@ -13,23 +14,23 @@ import uuid
 from multiprocessing import Process as Proc
 
 sys.path.append(os.environ['AIL_BIN'])
-from pubsublogger import publisher
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib import ConfigLoader
 # from lib import Statistics
+
+logging.config.dictConfig(ail_logger.get_config())
+logger = logging.getLogger()
 
 ## LOAD CONFIG ##
 config_loader = ConfigLoader.ConfigLoader()
 r_serv_cache = config_loader.get_redis_conn("Redis_Cache")
 config_loader = None
 ## -- ##
-
-publisher.port = 6380
-publisher.channel = "Script"
 
 def generate_redis_cache_key(module_name):
     new_uuid = str(uuid.uuid4())
@@ -65,7 +66,7 @@ def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time
             # Statistics.incr_module_timeout_statistic(module_name)
             err_mess = f"{module_name}: processing timeout: {item_id}"
             print(err_mess)
-            publisher.info(err_mess)
+            logger.info(err_mess)
             return []
         else:
             if r_set:
@@ -99,7 +100,7 @@ def regex_finditer(r_key, regex, item_id, content, max_time=30):
             # Statistics.incr_module_timeout_statistic(r_key)
             err_mess = f"{r_key}: processing timeout: {item_id}"
             print(err_mess)
-            publisher.info(err_mess)
+            logger.info(err_mess)
             return []
         else:
             res = r_serv_cache.lrange(r_key, 0, -1)
@@ -130,7 +131,7 @@ def regex_search(r_key, regex, item_id, content, max_time=30):
             # Statistics.incr_module_timeout_statistic(r_key)
             err_mess = f"{r_key}: processing timeout: {item_id}"
             print(err_mess)
-            publisher.info(err_mess)
+            logger.info(err_mess)
             return False
         else:
             if r_serv_cache.exists(r_key):

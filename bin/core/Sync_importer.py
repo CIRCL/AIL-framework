@@ -46,7 +46,7 @@ class Sync_importer(AbstractModule):
         # self.last_refresh = time.time()
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} Launched')
+        self.logger.info(f'Module {self.module_name} Launched')
 
     def run(self):
         while self.proceed:
@@ -63,7 +63,7 @@ class Sync_importer(AbstractModule):
             else:
                 self.computeNone()
                 # Wait before next process
-                self.redis_logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
+                self.logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
                 time.sleep(self.pending_seconds)
 
     def compute(self, ail_stream):

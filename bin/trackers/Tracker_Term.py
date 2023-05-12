@@ -85,7 +85,7 @@ class Tracker_Term(AbstractModule):
         if obj_type not in self.tracked_words and obj_type not in self.tracked_sets:
             return None
 
-        content = obj.get_content(r_str=True)
+        content = obj.get_content()
 
         signal.alarm(self.max_execution_time)
 

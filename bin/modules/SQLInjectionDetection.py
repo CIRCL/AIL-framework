@@ -41,7 +41,7 @@ class SQLInjectionDetection(AbstractModule):
 
         self.faup = Faup()
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         url, item_id = message.split()

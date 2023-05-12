@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import logging.config
 import sys
 import time
 
@@ -12,17 +13,21 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib import ail_logger
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
 from lib.objects import Screenshots
 
+logging.config.dictConfig(ail_logger.get_config(name='crawlers'))
 
 class Crawler(AbstractModule):
 
     def __init__(self):
-        super(Crawler, self, ).__init__(logger_channel='Crawler')
+        super(Crawler, self, ).__init__()
+
+        self.logger = logging.getLogger(f'{self.__class__.__name__}')
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
@@ -58,7 +63,7 @@ class Crawler(AbstractModule):
         self.placeholder_screenshots = {'27e14ace10b0f96acd2bd919aaa98a964597532c35b6409dff6cc8eec8214748'}
 
         # Send module state to logs
-        self.redis_logger.info('Crawler initialized')
+        self.logger.info('Crawler initialized')
 
     def refresh_lacus_status(self):
         try:
@@ -209,7 +214,7 @@ class Crawler(AbstractModule):
         print(entries.keys())
         if 'error' in entries:
             # TODO IMPROVE ERROR MESSAGE
-            self.redis_logger.warning(str(entries['error']))
+            self.logger.warning(str(entries['error']))
             print(entries['error'])
             if entries.get('html'):
                 print('retrieved content')
@@ -221,7 +226,7 @@ class Crawler(AbstractModule):
             current_domain = unpacked_last_url['domain']
             # REDIRECTION TODO CHECK IF TYPE CHANGE
             if current_domain != self.domain.id and not self.root_item:
-                self.redis_logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
+                self.logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
                 print(f'External redirection {self.domain.id} -> {current_domain}')
                 if not self.root_item:
                     self.domain = Domain(current_domain)

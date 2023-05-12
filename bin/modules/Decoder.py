@@ -84,7 +84,7 @@ class Decoder(AbstractModule):
         self.tracker_yara = Tracker_Yara(queue=False)
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} initialized')
+        self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
 
@@ -122,13 +122,11 @@ class Decoder(AbstractModule):
                         mimetype = decoded.get_mimetype()
                     decoded.add(dname, date, item.id, mimetype=mimetype)
 
-                    # DEBUG
-                    self.redis_logger.debug(f'{item.id} : {dname} - {decoded.id} - {mimetype}')
-                    print(f'{item.id} : {dname} - {decoded.id} - {mimetype}')
+                    # new_decodeds.append(decoded.id)
+                    self.logger.info(f'{item.id} : {dname} - {decoded.id} - {mimetype}')
 
             if find:
-                self.redis_logger.info(f'{item.id} - {dname}')
-                print(f'{item.id} - {dname}')
+                self.logger.info(f'{item.id} - {dname}')
 
                 # Send to Tags
                 msg = f'infoleak:automatic-detection="{dname}";{item.id}'
@@ -137,8 +135,11 @@ class Decoder(AbstractModule):
                 ####################
                 # TRACKERS DECODED
                 for decoded_id in new_decodeds:
-                    self.tracker_term.compute(decoded_id, obj_type='decoded')
-                    self.tracker_regex.compute(decoded_id, obj_type='decoded')
+                    try:
+                        self.tracker_term.compute(decoded_id, obj_type='decoded')
+                        self.tracker_regex.compute(decoded_id, obj_type='decoded')
+                    except UnicodeDecodeError:
+                        pass
                     self.tracker_yara.compute(decoded_id, obj_type='decoded')
 
 

@@ -70,7 +70,7 @@ class SentimentAnalysis(AbstractModule):
         self.pending_seconds = 1
 
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
+        self.logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message):
         # Max time to compute one entry
@@ -78,7 +78,7 @@ class SentimentAnalysis(AbstractModule):
         try:
             self.analyse(message)
         except TimeoutException:
-            self.redis_logger.debug(f"{message} processing timeout")
+            self.logger.debug(f"{message} processing timeout")
         else:
             signal.alarm(0)
 
@@ -114,7 +114,7 @@ class SentimentAnalysis(AbstractModule):
                 p_MimeType = "JSON"
 
         if p_MimeType in SentimentAnalysis.accepted_Mime_type:
-            self.redis_logger.debug(f'Accepted :{p_MimeType}')
+            self.logger.debug(f'Accepted :{p_MimeType}')
 
             the_date = datetime.date(int(p_date[0:4]), int(p_date[4:6]), int(p_date[6:8]))
             the_time = datetime.datetime.now()

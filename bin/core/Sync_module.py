@@ -42,7 +42,7 @@ class Sync_module(AbstractModule):
         print(self.dict_sync_queues)
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} Launched')
+        self.logger.info(f'Module {self.module_name} Launched')
 
     def compute(self, message):
 

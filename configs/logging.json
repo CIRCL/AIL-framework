@@ -1,0 +1,33 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "simple": {
+            "format": "%(asctime)s %(name)s %(levelname)s:%(message)s"
+        }
+    },
+    "handlers": {
+        "stdout": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "stream": "ext://sys.stdout"
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "WARNING",
+            "formatter": "simple",
+            "filename": "logs/flask_warning.log",
+            "mode": "a",
+            "maxBytes": 1000000,
+            "backupCount": 5
+        }
+    },
+    "root": {
+        "level": "DEBUG",
+        "handlers": [
+            "stdout",
+            "file"
+        ]
+    }
+}
+

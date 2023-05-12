@@ -69,7 +69,7 @@ class PgpDump(AbstractModule):
         self.symmetrically_encrypted = False
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} initialized')
+        self.logger.info(f'Module {self.module_name} initialized')
 
     def remove_html(self, pgp_block):
         try:
@@ -130,7 +130,7 @@ class PgpDump(AbstractModule):
         try:
             output = output.decode()
         except UnicodeDecodeError:
-            self.redis_logger.error(f'Error PgpDump UnicodeDecodeError: {self.item_id}')
+            self.logger.error(f'Error PgpDump UnicodeDecodeError: {self.item_id}')
             output = ''
         return output
 

@@ -4,10 +4,10 @@
 import argparse
 import json
 import os
+import logging.config
 import sys
 import time
 import traceback
-from pubsublogger import publisher
 from urllib.parse import urljoin
 
 import asyncio
@@ -19,8 +19,14 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from core import ail_2_ail
 from lib.ConfigLoader import ConfigLoader
+
+#### LOGS ####
+logging.config.dictConfig(ail_logger.get_config(name='syncs'))
+logger = logging.getLogger()
+
 
 config_loader = ConfigLoader()
 local_addr = config_loader.get_config_str('AIL_2_AIL', 'local_addr')
@@ -29,13 +35,6 @@ if not local_addr or local_addr == None:
 else:
     local_addr = (local_addr, 0)
 config_loader = None
-
-
-#### LOGS ####
-redis_logger = publisher
-redis_logger.port = 6380
-redis_logger.channel = 'Sync'
-##-- LOGS --##
 
 ####################################################################
 
@@ -154,29 +153,29 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=No
             error_message = str(e)
         if error_message:
             sys.stderr.write(error_message)
-            redis_logger.warning(f'{ail_uuid}: {error_message}')
+            logger.warning(f'{ail_uuid}: {error_message}')
             ail_2_ail.save_ail_server_error(ail_uuid, error_message)
     except websockets.exceptions.ConnectionClosedError as e:
         error_message = ail_2_ail.get_websockets_close_message(e.code)
         sys.stderr.write(error_message)
-        redis_logger.info(f'{ail_uuid}: {error_message}')
+        logger.info(f'{ail_uuid}: {error_message}')
         ail_2_ail.save_ail_server_error(ail_uuid, error_message)
 
     except websockets.exceptions.InvalidURI as e:
         error_message = f'Invalid AIL url: {e.uri}'
         sys.stderr.write(error_message)
-        redis_logger.warning(f'{ail_uuid}: {error_message}')
+        logger.warning(f'{ail_uuid}: {error_message}')
         ail_2_ail.save_ail_server_error(ail_uuid, error_message)
     except ConnectionError as e:
         error_message = str(e)
         sys.stderr.write(error_message)
-        redis_logger.info(f'{ail_uuid}: {error_message}')
+        logger.info(f'{ail_uuid}: {error_message}')
         ail_2_ail.save_ail_server_error(ail_uuid, error_message)
     # OSError: Multiple exceptions
     except OSError as e: # # TODO: check if we need to check if is connection error
         error_message = str(e)
         sys.stderr.write(error_message)
-        redis_logger.info(f'{ail_uuid}: {error_message}')
+        logger.info(f'{ail_uuid}: {error_message}')
         ail_2_ail.save_ail_server_error(ail_uuid, error_message)
     except websockets.exceptions.ConnectionClosedOK as e:
         print('connection closed')
@@ -186,7 +185,7 @@ async def ail_to_ail_client(ail_uuid, sync_mode, api, ail_key=None, client_id=No
         trace = str(trace)
         error_message = f'{trace}\n{str(err)}'
         sys.stderr.write(error_message)
-        redis_logger.critical(f'{ail_uuid}: {error_message}')
+        logger.critical(f'{ail_uuid}: {error_message}')
         ail_2_ail.save_ail_server_error(ail_uuid, error_message)
 
     ail_2_ail.delete_sync_client_cache(client_id)

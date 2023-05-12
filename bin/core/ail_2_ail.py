@@ -12,7 +12,6 @@ import uuid
 import subprocess
 
 from flask import escape
-from pubsublogger import publisher
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -46,11 +45,6 @@ WEBSOCKETS_CLOSE_CODES = {
                             1014: 'Bad Gateway',
                             1015: 'TLS Handshake',
                         }
-
-#### LOGS ####
-# redis_logger = publisher
-# redis_logger.port = 6380
-# redis_logger.channel = 'Sync'
 
 def get_websockets_close_message(code):
     if code in WEBSOCKETS_CLOSE_CODES:

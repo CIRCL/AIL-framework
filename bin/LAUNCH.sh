@@ -142,13 +142,7 @@ function launching_logs {
     screen -dmS "Logging_AIL"
     sleep 0.1
     echo -e $GREEN"\t* Launching logging process"$DEFAULT
-    screen -S "Logging_AIL" -X screen -t "LogQueue" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Queuing -l ../logs/ ${syslog_cmd}; read x"
-    sleep 0.1
     screen -S "Logging_AIL" -X screen -t "LogScript" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Script -l ../logs/ ${syslog_cmd}; read x"
-    sleep 0.1
-    screen -S "Logging_AIL" -X screen -t "LogSync" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Sync -l ../logs/ ${syslog_cmd}; read x"
-    sleep 0.1
-    screen -S "Logging_AIL" -X screen -t "LogCrawler" bash -c "cd ${AIL_BIN}; ${AIL_VENV}/bin/log_subscriber -p 6380 -c Crawler -l ../logs/ ${syslog_cmd}; read x"
 }
 
 function checking_configuration {
@@ -196,8 +190,6 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "FeederImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./FeederImporter.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "DbCleaner" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./DbCleaner.py; read x"
     sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"

@@ -4,8 +4,7 @@ import os
 import sys
 import dns.resolver
 import dns.exception
-
-from pubsublogger import publisher
+import logging.config
 
 from datetime import timedelta
 
@@ -13,7 +12,12 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib import ConfigLoader
+
+
+logging.config.dictConfig(ail_logger.get_config(name='modules'))
+logger = logging.getLogger()
 
 config_loader = ConfigLoader.ConfigLoader()
 dns_server = config_loader.get_config_str("DomClassifier", "dns")
@@ -73,24 +77,24 @@ def checking_MX_record(r_serv, MXdomains, addr_dns):
                             pass
 
                 except dns.resolver.NoNameservers:
-                    publisher.debug('NoNameserver, No non-broken nameservers are available to answer the query.')
+                    logger.debug('NoNameserver, No non-broken nameservers are available to answer the query.')
                     print('NoNameserver, No non-broken nameservers are available to answer the query.')
 
                 except dns.resolver.NoAnswer:
-                    publisher.debug('NoAnswer, The response did not contain an answer to the question.')
+                    logger.debug('NoAnswer, The response did not contain an answer to the question.')
                     print('NoAnswer, The response did not contain an answer to the question.')
 
                 except dns.name.EmptyLabel:
-                    publisher.debug('SyntaxError: EmptyLabel')
+                    logger.debug('SyntaxError: EmptyLabel')
                     print('SyntaxError: EmptyLabel')
 
                 except dns.resolver.NXDOMAIN:
                     r_serv.setex(MXdomain[1:], 1, timedelta(days=1))
-                    publisher.debug('The query name does not exist.')
+                    logger.debug('The query name does not exist.')
                     print('The query name does not exist.')
 
                 except dns.name.LabelTooLong:
-                    publisher.debug('The Label is too long')
+                    logger.debug('The Label is too long')
                     print('The Label is too long')
 
                 except dns.exception.Timeout:
@@ -100,7 +104,7 @@ def checking_MX_record(r_serv, MXdomains, addr_dns):
                 except Exception as e:
                     print(e)
 
-    publisher.debug("emails before: {0} after: {1} (valid)".format(num, score))
+    logger.debug("emails before: {0} after: {1} (valid)".format(num, score))
     #return (num, WalidMX)
     return (num, validMX)
 
@@ -133,23 +137,23 @@ def checking_A_record(r_serv, domains_set):
                     pass
 
         except dns.resolver.NoNameservers:
-            publisher.debug('NoNameserver, No non-broken nameservers are available to answer the query.')
+            logger.debug('NoNameserver, No non-broken nameservers are available to answer the query.')
 
         except dns.resolver.NoAnswer:
-            publisher.debug('NoAnswer, The response did not contain an answer to the question.')
+            logger.debug('NoAnswer, The response did not contain an answer to the question.')
 
         except dns.name.EmptyLabel:
-            publisher.debug('SyntaxError: EmptyLabel')
+            logger.debug('SyntaxError: EmptyLabel')
 
         except dns.resolver.NXDOMAIN:
             r_serv.setex(Adomain[1:], 1, timedelta(days=1))
-            publisher.debug('The query name does not exist.')
+            logger.debug('The query name does not exist.')
 
         except dns.name.LabelTooLong:
-            publisher.debug('The Label is too long')
+            logger.debug('The Label is too long')
 
         except Exception as e:
             print(e)
 
-    publisher.debug("URLs before: {0} after: {1} (valid)".format(num, score))
+    logger.debug("URLs before: {0} after: {1} (valid)".format(num, score))
     return (num, WalidA)

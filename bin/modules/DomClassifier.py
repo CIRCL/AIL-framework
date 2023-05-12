@@ -48,7 +48,7 @@ class DomClassifier(AbstractModule):
         self.cc_tld = config_loader.get_config_str("DomClassifier", "cc_tld")
 
         # Send module state to logs
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message, r_result=False):
         host, item_id = message.split()
@@ -62,7 +62,7 @@ class DomClassifier(AbstractModule):
             self.c.text(rawtext=host)
             print(self.c.domain)
             self.c.validdomain(passive_dns=True, extended=False)
-            # self.redis_logger.debug(self.c.vdomain)
+            # self.logger.debug(self.c.vdomain)
 
             print(self.c.vdomain)
             print()

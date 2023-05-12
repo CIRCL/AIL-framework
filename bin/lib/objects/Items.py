@@ -80,19 +80,19 @@ class Item(AbstractObject):
         else:
             return filename
 
-    def get_content(self, r_str=True, binary=False):
+    def get_content(self, r_type='str'):
         """
         Returns Item content
         """
-        if binary:
-            return item_basic.get_item_content_binary(self.id)
-        else:
+        if r_type == 'str':
             return item_basic.get_item_content(self.id)
+        elif r_type == 'bytes':
+            return item_basic.get_item_content_binary(self.id)
 
     def get_raw_content(self, decompress=False):
         filepath = self.get_filename()
         if decompress:
-            raw_content = BytesIO(self.get_content(binary=True))
+            raw_content = BytesIO(self.get_content(r_type='bytes'))
         else:
             with open(filepath, 'rb') as f:
                 raw_content = BytesIO(f.read())

@@ -49,7 +49,7 @@ class Onion(AbstractModule):
         re.compile(self.onion_regex)
         # re.compile(self.i2p_regex)
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
         # TEMP var: SAVE I2P Domain (future I2P crawler)
         # self.save_i2p = config_loader.get_config_boolean("Onion", "save_i2p")

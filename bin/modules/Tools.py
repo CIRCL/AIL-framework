@@ -402,7 +402,7 @@ class Tools(AbstractModule):
         # Waiting time in seconds between to message processed
         self.pending_seconds = 10
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
+        self.logger.info(f"Module {self.module_name} initialized")
 
     def get_tools(self):
         return TOOLS.keys()

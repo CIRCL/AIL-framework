@@ -170,7 +170,7 @@ class Keys(AbstractModule):
         # if find :
         #     # Send to duplicate
         #     self.add_message_to_queue(item.get_id(), 'Duplicate')
-        #     self.redis_logger.debug(f'{item.get_id()} has key(s)')
+        #     self.logger.debug(f'{item.get_id()} has key(s)')
         #     print(f'{item.get_id()} has key(s)')
 
 
