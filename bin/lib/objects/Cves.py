@@ -76,17 +76,21 @@ class Cve(AbstractDaterangeObject):
         self._add(date, item_id)
 
     def get_cve_search(self):
-        response = requests.get(f'https://cvepremium.circl.lu/api/cve/{self.id}', timeout=10)
-        if response.status_code == 200:
-            json_response = response.json()
-            # 'summary'
-            # 'references'
-            # 'last-modified'
-            # 'Published'
-            # 'Modified'
-            return json_response
-        else:
-            return {'error': f'{response.status_code}'}
+        try:
+            response = requests.get(f'https://cvepremium.circl.lu/api/cve/{self.id}', timeout=10)
+            if response.status_code == 200:
+                json_response = response.json()
+                # 'summary'
+                # 'references'
+                # 'last-modified'
+                # 'Published'
+                # 'Modified'
+                return json_response
+            else:
+                return {'error': f'{response.status_code}'}
+        except requests.exceptions.ConnectionError:
+            return {'error': f'Connection Error'}
+
 
 # TODO  ADD SEARCH FUNCTION
 
