@@ -129,6 +129,14 @@ def tracked_menu_typosquatting():
     return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers,
                            bootstrap_label=bootstrap_label, tracker_type=tracker_type)
 
+@hunters.route("/trackers/admin")
+@login_required
+@login_admin
+def tracked_menu_admin():
+    user_trackers = Tracker.get_users_trackers_meta()
+    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=[],
+                           bootstrap_label=bootstrap_label)
+
 
 @hunters.route("/tracker/show")
 @login_required
