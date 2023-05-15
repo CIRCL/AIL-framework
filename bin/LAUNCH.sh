@@ -237,6 +237,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Iban" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Iban.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "IPAddress" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./IPAddress.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Keys" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Keys.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Languages" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Languages.py; read x"
@@ -301,7 +303,6 @@ function launching_scripts {
     sleep 0.1
 #    screen -S "Script_AIL" -X screen -t "MISPtheHIVEfeeder" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./MISP_The_Hive_feeder.py; read x"
 #    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "IPAddress" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./IPAddress.py; read x"
 
 
 }
