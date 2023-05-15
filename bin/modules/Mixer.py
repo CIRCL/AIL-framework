@@ -154,7 +154,7 @@ class Mixer(AbstractModule):
             feeder_name, item_id, gzip64encoded = splitted
         else:
             print('Invalid message: not processed')
-            self.logger.debug(f'Invalid Item: {item_id} not processed')
+            self.logger.debug(f'Invalid Item: {splitted[0]} not processed')
             return None
 
         # remove absolute path

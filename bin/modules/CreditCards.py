@@ -76,6 +76,7 @@ class CreditCards(AbstractModule):
         if len(all_cards) > 0:
             # self.logger.debug(f'All matching {all_cards}')
             creditcard_set = set()
+            all_cards = set(all_cards)
             for card in all_cards:
                 print(card)
                 valid_card = self.get_valid_card(card)

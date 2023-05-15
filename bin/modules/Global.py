@@ -157,7 +157,7 @@ class Global(AbstractModule):
 
         # check if file exist
         if os.path.isfile(filename):
-            self.logger.warning(f'File already exist {filename}')
+            self.logger.info(f'File already exist {filename}')
             print(f'File already exist {filename}')
 
             # Check that file already exists but content differs

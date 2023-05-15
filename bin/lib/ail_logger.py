@@ -20,7 +20,7 @@ LOGGING_CONFIG = os.path.join(os.environ['AIL_HOME'], 'configs', 'logging.json')
 
 def get_config(name=None):
     if not name:
-        name = 'ail_warning.log'
+        name = 'ail.log'
     else:
         name = f'{name}.log'
     with open(LOGGING_CONFIG, 'r') as f:
