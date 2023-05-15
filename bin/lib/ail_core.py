@@ -18,7 +18,15 @@ config_loader = None
 AIL_OBJECTS = sorted({'cve', 'cryptocurrency', 'decoded', 'domain', 'item', 'pgp', 'screenshot', 'username'})
 
 def get_ail_uuid():
-    return r_serv_db.get('ail:uuid')
+    ail_uuid = r_serv_db.get('ail:uuid')
+    if not ail_uuid:
+        ail_uuid = _set_ail_uuid()
+    return ail_uuid
+
+def _set_ail_uuid():
+    ail_uuid = generate_uuid()
+    r_serv_db.set('ail:uuid', ail_uuid)
+    return ail_uuid
 
 def generate_uuid():
     return str(uuid4())

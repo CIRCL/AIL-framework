@@ -68,8 +68,6 @@ class Global(AbstractModule):
 
         # Send module state to logs
         self.logger.info(f"Module {self.module_name} initialized")
-        # Send module state to logs # TODO MOVE ME IN INIT SCRIPT
-        self.redis_logger.critical(f"AIL {get_ail_uuid()} started")
 
     def computeNone(self):
         difftime = time.time() - self.time_last_stats
