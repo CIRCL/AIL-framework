@@ -267,7 +267,11 @@ class Cookiejar:
         r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'level', level)
 
     def is_cookie_in_jar(self, cookie_uuid):
-        return r_crawler.sismember(f'cookiejar:cookies:{self.uuid}', cookie_uuid)
+        # kvrocks sismember TEMP fix
+        try:
+            return r_crawler.sismember(f'cookiejar:cookies:{self.uuid}', cookie_uuid)
+        except:
+            return False
 
     def get_cookies_uuid(self):
         return r_crawler.smembers(f'cookiejar:cookies:{self.uuid}')
@@ -677,7 +681,11 @@ def get_blacklist():
     return r_crawler.smembers('blacklist:domain')
 
 def is_blacklisted_domain(domain):
-    return r_crawler.sismember('blacklist:domain', domain)
+    # kvrocks sismember TEMP fix
+    try:
+        return r_crawler.sismember('blacklist:domain', domain)
+    except:
+        return False
 
 def blacklist_domain(domain):
     return r_crawler.sadd('blacklist:domain', domain)
