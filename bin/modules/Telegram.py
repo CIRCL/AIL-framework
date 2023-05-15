@@ -28,7 +28,7 @@ class Telegram(AbstractModule):
         super(Telegram, self).__init__()
 
         # https://github.com/LonamiWebs/Telethon/wiki/Special-links
-        self.re_telegram_link = r'(telegram\.me|t\.me|telegram\.dog|telesco\.pe)/([^\.\",\s]+)'
+        self.re_telegram_link = r'(telegram\.me|t\.me|telegram\.dog|telesco\.pe)/(\w+)'
         self.re_tg_link = r'tg://.+'
 
         re.compile(self.re_telegram_link)
@@ -49,9 +49,10 @@ class Telegram(AbstractModule):
 
         # extract telegram links
         telegram_links = self.regex_findall(self.re_telegram_link, item.get_id(), item_content)
+        telegram_links = set(telegram_links)
         for telegram_link_tuple in telegram_links:
-            print(telegram_link_tuple)
-            print(telegram_link_tuple[2:-2].split("', '", 1))
+            # print(telegram_link_tuple)
+            # print(telegram_link_tuple[2:-2].split("', '", 1))
             base_url, url_path = telegram_link_tuple[2:-2].split("', '", 1)
             dict_url = telegram.get_data_from_telegram_url(base_url, url_path)
             user_id = dict_url.get('username')
