@@ -90,6 +90,8 @@ class Cve(AbstractDaterangeObject):
                 return {'error': f'{response.status_code}'}
         except requests.exceptions.ConnectionError:
             return {'error': f'Connection Error'}
+        except requests.exceptions.ReadTimeout:
+            return {'error': f'Timeout Error'}
 
 
 # TODO  ADD SEARCH FUNCTION
