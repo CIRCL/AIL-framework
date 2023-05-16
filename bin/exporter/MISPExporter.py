@@ -8,6 +8,7 @@ Import Content
 
 """
 import os
+import datetime
 import sys
 import uuid
 
@@ -154,6 +155,36 @@ class MISPExporter(AbstractExporter, ABC):
         except (TypeError, ValueError):
             return 0
 
+    def get_event_object_id(self, event_id, obj):
+        misp = self.get_misp()
+        resp = misp.search(controller='attributes', eventid=event_id, value=obj.get_id())
+        attribute = resp.get('Attribute', [])
+        if attribute:
+            return attribute[0]['object_id']
+
+    def add_event_object_tag(self, obj_id, tag):
+        misp = self.get_misp()
+        misp_obj = misp.get_object(obj_id, pythonify=True)
+        for attribute in misp_obj.attributes:
+            attribute.add_tag(tag)
+            misp.update_attribute(attribute)
+
+    def add_event_object(self, event_id, obj):
+        misp_object = obj.get_misp_object()
+        misp = self.get_misp()
+        misp.add_object(event_id, misp_object)
+
+    def get_daily_event_id(self):
+        misp = self.get_misp()
+        event_info = f'Daily AIL-leaks {datetime.date.today()}'
+        resp = misp.search(controller='events', eventinfo=event_info, metadata=True)
+        if resp:
+            return resp[0]['Event']['id']
+        else:
+            misp_event = self.create_event([], info=event_info, threat_level=3, export=True)
+            return misp_event['Event']['id']
+
+
     # TODO EVENT REPORT ???????
     def create_event(self, objs, export=False, event_uuid=None, date=None, publish=False, info=None, tags=None,
                      analysis=0, distribution=0, threat_level=4):
@@ -277,18 +308,57 @@ class MISPExporterTrackerMatch(MISPExporter):
         pass
 
 
-if __name__ == '__main__':
-    exporter = MISPExporterAILObjects()
+class MISPExporterAutoDaily(MISPExporter):
+    """MISPExporter AILObjects
 
+    :param url: URL of the MISP instance you want to connect to :param key: API key of the user you want to use
+    :param ssl: can be True or False (to check or to not check the validity of the certificate. Or a CA_BUNDLE in
+    case of self signed or other certificate (the concatenation of all the crt of the chain)
+    """
+
+    def __init__(self, url='', key='', ssl=False):
+        super().__init__(url=url, key=key, ssl=ssl)
+
+        # create event if don't exists
+        try:
+            self.event_id = self.get_daily_event_id()
+        except MISPConnectionError:
+            self.event_id = - 1
+        self.date = datetime.date.today()
+
+    def export(self, obj, tag):
+        """Export a list of AILObjects as a MISP event
+
+        :param obj: AIL Object to export
+        :type obj: AbstractObject
+        """
+        try:
+            if self.date != datetime.date.today() or int(self.event_id) < 0:
+                self.date = datetime.date.today()
+                self.event_id = self.get_daily_event_id()
+
+            obj_id = self.get_event_object_id(self.event_id, obj)
+            # Object already in event
+            if obj_id:
+                self.add_event_object_tag(obj_id, tag)
+            else:
+                self.add_event_object(self.event_id, obj)
+
+        except MISPConnectionError:
+            return -1
+
+
+if __name__ == '__main__':
+    # exporter = MISPExporterAILObjects()
     # from lib.objects.Cves import Cve
-    # from lib.objects.Items import Item
+    from lib.objects.Items import Item
     # objs_t = [Item('crawled/2020/09/14/circl.lu0f4976a4-dda4-4189-ba11-6618c4a8c951'),
     #           Cve('CVE-2020-16856'), Cve('CVE-2014-6585'), Cve('CVE-2015-0383'),
     #           Cve('CVE-2015-0410')]
     # r = exporter.export(objs_t, export=False)
     # print(r)
 
-    r = exporter.get_misp_uuid()
+    # r = exporter.get_misp_uuid()
     # r = misp.server_settings()
     # for item in r['finalSettings']:
     #     print()
@@ -297,4 +367,8 @@ if __name__ == '__main__':
     #     # print()
     #     print()
 
-    print(r)
+    obj = Item('submitted/2023/05/15/submitted_aed90c6f-c620-4437-93d7-5ff17d1a8eef.gz')
+    obj = Item('submitted/2023/05/15/submitted_8a6136c2-c7f2-4c9e-8f29-e1a62315b482.gz')
+    tag = 'infoleak:automatic-detection="credit-card"'
+    exporter = MISPExporterAutoDaily()
+    exporter.export(obj, tag)

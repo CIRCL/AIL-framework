@@ -31,7 +31,7 @@ from lib import regex_helper
 # TODO REWRITE ME -> PERF + IPV6 + Tracker ?
 
 class IPAddress(AbstractModule):
-    """Telegram module for AIL framework"""
+    """IPAddress module for AIL framework"""
 
     def __init__(self):
         super(IPAddress, self).__init__()

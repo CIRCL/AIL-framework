@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
+import time
 
 import redis
 import datetime
@@ -24,6 +25,7 @@ from pymispgalaxies import Galaxies, Clusters
 
 config_loader = ConfigLoader()
 r_tags = config_loader.get_db_conn("Kvrocks_Tags")
+r_cache = config_loader.get_redis_conn("Redis_Cache")
 config_loader = None
 
 #### CORE FUNCTIONS ####
@@ -1239,6 +1241,89 @@ class Tag:
                 'local': self.is_local()}
         return meta
 
+
+#### TAG AUTO PUSH ####
+
+def get_auto_push_status():
+    meta = {}
+    for name in ['misp', 'thehive']:
+        meta[name] = r_cache.hget('auto:push:status', name)
+    return meta
+
+def set_auto_push_status(name, status):
+    return r_cache.hset('auto:push:status', name, status)
+
+def get_last_auto_push_refreshed():
+    last = r_cache.get('auto:push:refreshed')
+    if not last:
+        return -1
+    else:
+        return int(last)
+
+def _set_last_auto_push_refreshed():
+    return r_cache.set('auto:push:refreshed', int(time.time()))
+
+def is_auto_push_enabled(name):
+    enabled = r_tags.hget('auto:push', name)
+    if enabled:
+        return int(enabled) == 1
+    else:
+        disable_auto_push(name)
+        return False
+
+def enable_auto_push(name):
+    r_tags.hset('auto:push', name, 1)
+
+def disable_auto_push(name):
+    r_tags.hset('auto:push', name, 0)
+
+def get_auto_push_enabled_tags(name):
+    return r_tags.smembers(f'auto:push:tags:{name}')
+
+def _add_auto_push_enabled_tags(name, tag):
+    return r_tags.sadd(f'auto:push:tags:{name}', tag)
+
+def _del_auto_push_enabled_tags(name):
+    return r_tags.delete(f'auto:push:tags:{name}')
+
+def api_add_auto_push_enabled_tags(data):
+    misp_tags = data.get('misp_tags', [])
+    thehive_tags = data.get('thehive_tags', [])
+    for tag in misp_tags:
+        if not is_taxonomie_tag(tag, 'infoleak') and not is_custom_tag(tag):
+            return {'error': f'Invalid Tag: {tag}'}, 400
+    for tag in thehive_tags:
+        if not is_taxonomie_tag(tag, 'infoleak') and not is_custom_tag(tag):
+            return {'error': f'Invalid Tag: {tag}'}, 400
+
+    _del_auto_push_enabled_tags('misp')
+    for tag in misp_tags:
+        _add_auto_push_enabled_tags('misp', tag)
+    _del_auto_push_enabled_tags('thehive')
+    for tag in thehive_tags:
+        _add_auto_push_enabled_tags('thehive', tag)
+
+def get_auto_push_tags():
+    tags = get_taxonomie_enabled_tags('infoleak', r_list=True)
+    tags[0:0] = list(get_all_custom_tags())
+    return tags
+
+def get_auto_push_enabled_meta():
+    meta = {}
+    for name in ['misp', 'thehive']:
+        meta[name] = {'enabled': is_auto_push_enabled(name)}
+        meta[name]['tags'] = get_auto_push_enabled_tags(name)
+    return meta
+
+def refresh_auto_push():
+    meta = {}
+    for name in ['misp', 'thehive']:
+        if is_auto_push_enabled(name):
+            meta[name] = get_auto_push_enabled_tags(name)
+        _set_last_auto_push_refreshed()
+    return meta
+
+# --- TAG AUTO PUSH --- #
 
 ###################################################################################
 ###################################################################################

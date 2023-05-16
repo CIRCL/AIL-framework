@@ -366,3 +366,56 @@ def get_obj_by_tags():
         dict_tagged['date'] = dict_obj['date']
 
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
+
+@tags_ui.route("/tags/auto_push")
+@login_required
+@login_analyst
+def auto_push():
+
+    # TODO CHECK if misp or the hive connected
+
+    meta = Tag.get_auto_push_enabled_meta()
+    auto_push_tags = Tag.get_auto_push_tags()
+    return render_template("tags_auto_push.html",
+                           auto_push_tags=auto_push_tags,
+                           meta=meta,
+                           auto_push_status=Tag.get_auto_push_status())
+
+@tags_ui.route("/tags/auto_push_post", methods=['POST'])
+@login_required
+@login_analyst
+def auto_push_post():
+    tag_enabled_misp = request.form.getlist('tag_enabled_misp')
+    tag_enabled_hive = request.form.getlist('tag_enabled_hive')
+
+    Tag.api_add_auto_push_enabled_tags({'misp_tags': tag_enabled_misp, 'thehive_tags': tag_enabled_hive})
+    return redirect(url_for('tags_ui.auto_push'))
+
+@tags_ui.route("/tags/auto_push/misp/enable")
+@login_required
+@login_analyst
+def enable_misp_auto_push():
+    Tag.enable_auto_push('misp')
+    return redirect(url_for('tags_ui.auto_push'))
+
+@tags_ui.route("/tags/auto_push/misp/disable")
+@login_required
+@login_analyst
+def disable_misp_auto_push():
+    Tag.disable_auto_push('misp')
+    return redirect(url_for('tags_ui.auto_push'))
+
+@tags_ui.route("/tags/auto_push/thehive/enable")
+@login_required
+@login_analyst
+def enable_hive_auto_push():
+    Tag.enable_auto_push('thehive')
+    return redirect(url_for('tags_ui.auto_push'))
+
+@tags_ui.route("/tags/auto_push/thehive/disable")
+@login_required
+@login_analyst
+def disable_hive_auto_push():
+    Tag.disable_auto_push('thehive')
+    return redirect(url_for('tags_ui.auto_push'))

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tags Export - AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+    <!-- Core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+
+<div class="container-fluid">
+    <div class="row">
+
+        {% include 'hunter/menu_sidebar.html' %}
+
+        <div class="col-12 col-lg-10" id="core_content">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card my-2">
+                        <div class="card-header bg-dark text-white">
+                            <div class="row">
+                                <div class="col-9">
+                                    <span class="card-title">MISP Auto Event Creation</span>
+                                </div>
+                                <div class="col-3">
+                                    {% if meta['misp']['enabled'] %}
+                                        <span class="badge badge-success pull-right"> Enabled</span>
+                                    {% else %}
+                                        <span class="badge badge-danger pull-right"> Disabled</span>
+                                    {% endif %}
+                                </div>
+                             </div>
+                        </div>
+                        <div class="card-body">
+
+                            <div class="text-center">
+                                <img id="misp-logo" src="{{url_for('static', filename='image/misp-logo.png') }}" class="text-center" >
+
+                                <br><br>
+
+                                {% if meta['misp']['enabled'] %}
+                                    <a href="{{ url_for('tags_ui.disable_misp_auto_push') }}" class="btn btn-danger pull-right">
+                                        <i class="fas fa-times"></i> Disable Event Creation
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('tags_ui.enable_misp_auto_push') }}" class="btn btn-success pull-right">
+                                        <i class="fas fa-check-square-o"></i> Enable Event Creation
+                                    </a>
+                                {% endif %}
+                            </div>
+
+                            {% if auto_push_status['misp'] %}
+                                <button class="btn btn-danger pull-right disabled">
+                                    Error: <i class="fa fa-times fa"></i> {{ auto_push_status['misp'] }}
+                                </button>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card my-2">
+                        <div class="card-header bg-dark text-white">
+                            <div class="row">
+                                <div class="col-9">
+                                    <span class="card-title">The hive Auto Alert Creation</span>
+                                </div>
+                                <div class="col-3">
+                                    {% if meta['thehive']['enabled'] %}
+                                        <span class="badge badge-success pull-right"> Enabled</span>
+                                    {% else %}
+                                        <span class="badge badge-danger pull-right"> Disabled</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+
+                            <div class="text-center">
+                                <img id="misp-logo" src="{{url_for('static', filename='image/thehive-logo.png') }}" width="500">
+                                <br>
+
+                                {% if meta['thehive']['enabled'] %}
+                                    <a href="{{ url_for('tags_ui.disable_hive_auto_push') }}" class="btn btn-danger pull-right">
+                                        <i class="fas fa-times"></i> Disable Alert Creation
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('tags_ui.enable_hive_auto_push') }}" class="btn btn-success mr-right">
+                                        <i class="fas fa-check-square-o"></i> Enable Alert Creation
+                                    </a>
+                                {% endif %}
+                            </div>
+
+                            {% if auto_push_status['thehive'] %}
+                                <button class="btn btn-danger pull-right disabled">
+                                    Error: <i class="fa fa-times fa"></i> {{ auto_push_status['thehive'] }}
+                                </button>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <form action="{{ url_for('tags_ui.auto_push_post') }}" id="checkboxForm" method='post'>
+                <div class="row">
+
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                MISP Tags To Push :
+                                <span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
+                                <span class="badge badge-secondary">{{ meta['misp']['tags']|length }} / {{ auto_push_tags|length }}</span>
+							 	<ul class="list-group">
+                                    <li class="list-group-item">
+                                        <table class="table table-striped table-bordered table-hover" id="myTable_misp">
+                                            <thead>
+                                                <tr>
+                                                    <th>Enabled</th>
+                                                    <th>Tag</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for tag in auto_push_tags %}
+                                                    <tr>
+                                                        <td class="text-center">
+                                                            {% if tag in meta['misp']['tags'] %}
+                                                                <div style="display:none;">Enabled</div>
+                                                                <input type="checkbox" value="{{ tag }}" name="tag_enabled_misp" checked>
+                                                            {% else %}
+                                                                <div style="display:none;">Disabled</div>
+                                                                <input type="checkbox" value="{{ tag }}" name="tag_enabled_misp" >
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {{ tag }}
+                                                        </td>
+                                                    </tr>
+                                                {%  endfor %}
+
+                                            </tbody>
+                                        </table>
+								    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                The Hive Tags To Push :
+                                <span class="pull-right">&nbsp;&nbsp;&nbsp;</span>
+                                <span class="badge badge-secondary">{{ meta['thehive']['tags']|length }} / {{ auto_push_tags|length }}</span>
+							 	<ul class="list-group">
+                                    <li class="list-group-item">
+                                        <table class="table table-striped table-bordered table-hover" id="myTable_hive">
+                                            <thead>
+                                                <tr>
+                                                    <th>Enabled</th>
+                                                    <th>Tag</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for tag in auto_push_tags %}
+                                                    <tr>
+                                                        <td class="text-center">
+                                                            {% if tag in meta['thehive']['tags'] %}
+                                                                <div style="display:none;">Enabled</div>
+                                                                <input type="checkbox" value="{{ tag }}" name="tag_enabled_hive" checked>
+                                                            {% else %}
+                                                                <div style="display:none;">Disabled</div>
+                                                                <input type="checkbox" value="{{ tag }}" name="tag_enabled_hive" >
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {{ tag }}
+                                                        </td>
+                                                    </tr>
+                                                {%  endfor %}
+
+                                            </tbody>
+                                        </table>
+								    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="text-center my-4">
+                    <button class="btn btn-primary btn-lg" onclick="submitActiveTags()">
+                        <i class="fas fa-check-square"></i> Update Tags
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+var table_misp
+var table_hive
+$(document).ready(function(){
+
+		table_misp = $('#myTable_misp').DataTable(
+			{
+				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+				"iDisplayLength": 10,
+				"order": [[ 1, "asc" ]]
+			}
+		);
+
+		table_hive = $('#myTable_hive').DataTable(
+			{
+				"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+				"iDisplayLength": 10,
+				"order": [[ 1, "asc" ]]
+			}
+		);
+
+});
+
+  function submitActiveTags(){
+		table_misp.destroy()
+		table_misp = $('#myTable_misp').DataTable(
+			{
+				"iDisplayLength": -1,
+			}
+		);
+		table_hive.destroy()
+		table_hive = $('#myTable_hive').DataTable(
+			{
+				"iDisplayLength": -1,
+			}
+		);
+  }
+</script>
+
+</html>

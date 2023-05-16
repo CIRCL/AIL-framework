@@ -292,14 +292,17 @@ def trackers_migration():
     print('RETRO HUNT MIGRATION...')
 
     for task_uuid in old_Tracker.get_all_retro_hunt_tasks():
-        meta = old_Tracker.get_retro_hunt_task_metadata(task_uuid, date=True, progress=True, creator=True, sources=True, tags=True, description=True, nb_match=True)
+        retro_hunt = Tracker.RetroHunt(retro_hunt)
+        # TODO Create filters
+        # TODO GET OLD META
+        meta = retro_hunt.get_meta(options={'creator', 'date', 'description', 'filter', 'progress', 'tags'})
         last_id = old_Tracker.get_retro_hunt_last_analyzed(task_uuid)
         timeout = old_Tracker.get_retro_hunt_task_timeout(task_uuid)
         Tracker._re_create_retro_hunt_task(meta['name'], meta['rule'], meta['date'], meta['date_from'], meta['date_to'], meta['creator'], meta['sources'], meta['tags'], [], timeout, meta['description'], task_uuid, state=meta['state'], nb_match=meta['nb_match'], last_id=last_id)
 
         # # TODO: IN background ?
-        for id in old_Tracker.get_retro_hunt_items_by_daterange(task_uuid, meta['date_from'], meta['date_to']):
-            Tracker.save_retro_hunt_match(task_uuid, id)
+        for obj_id in old_Tracker.get_retro_hunt_items_by_daterange(task_uuid, meta['date_from'], meta['date_to']):
+            retro_hunt.add('item', '', obj_id)
 
     Tracker._fix_db_custom_tags()
 

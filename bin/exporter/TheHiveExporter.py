@@ -143,14 +143,16 @@ class TheHiveExporter(AbstractExporter, ABC):
             if req.status_code == 201:
                 # print(json.dumps(req.json(), indent=4, sort_keys=True))
                 print('Alert Created')
-                print(req.json())
+                # print(req.json())
                 alert_id = req.json()['id']
             else:
                 # TODO LOGS
                 print(f'ko: {req.status_code}/{req.text}')
-                return 0
-        except:
+                return -2
+        except Exception as e:
+            print(e)
             print('hive connection error')
+            return -1
         return alert_id
 
     def create_case(self, observables, description=None, tags=None, title=None, threat_level=2, tlp=2):
@@ -187,8 +189,8 @@ class TheHiveExporter(AbstractExporter, ABC):
         return f'<{self.__class__.__name__}(url={self.url})'
 
 
-class TheHiveExporterTagTrigger(TheHiveExporter):
-    """TheHiveExporter TagTrigger
+class TheHiveExporterAlertTag(TheHiveExporter):
+    """TheHiveExporterAlertTag TagTrigger
 
     :param url: URL of the Hive instance you want to connect to
     :param key: API key of the user you want to use
@@ -198,9 +200,9 @@ class TheHiveExporterTagTrigger(TheHiveExporter):
     def __init__(self, url='', key='', ssl=False):
         super().__init__(url=url, key=key, ssl=ssl)
 
-    def export(self, item_id, tag):
-        item = Item(item_id)
-        tags = item.get_tags()
+    def export(self, item, tag):
+        item_id = item.get_id()
+        tags = list(item.get_tags())
 
         # remove .gz from submitted path to TheHive because content is decompressed
         if item_id.endswith(".gz"):
