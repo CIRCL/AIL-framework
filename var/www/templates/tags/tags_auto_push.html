@@ -26,7 +26,7 @@
 <div class="container-fluid">
     <div class="row">
 
-        {% include 'hunter/menu_sidebar.html' %}
+        {% include 'tags/menu_sidebar.html' %}
 
         <div class="col-12 col-lg-10" id="core_content">
 
@@ -222,6 +222,9 @@
 var table_misp
 var table_hive
 $(document).ready(function(){
+    $("#navbar-tags").addClass("active");
+    $("#nav_tags_export").removeClass("text-muted");
+    $("#nav_auto_push").addClass("active");
 
 		table_misp = $('#myTable_misp').DataTable(
 			{
