@@ -16,7 +16,11 @@ import argparse
 
 import subprocess
 
-sys.path.append(os.environ['AIL_BIN']) # # TODO: move other functions
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+# TODO: move other functions
 from packages import git_status
 
 
@@ -157,7 +161,7 @@ def get_git_current_tag(path_current_version):
         with open(path_current_version, 'r') as version_content:
             version = version_content.read()
     except FileNotFoundError:
-        version = 'v1.4'
+        version = 'v5.0' # TODO Replace with VERSION.json
         with open(path_current_version, 'w') as version_content:
             version_content.write(version)
 
@@ -230,9 +234,14 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                     except ValueError:
                         continue
 
-                    # add tag with last commit
-                    if float(tag_val) >= float(current_tag_val):
-                        dict_tags_commit[tag] = commit
+                    if float(current_tag) < 4.2:
+                        # add tag with last commit
+                        if float(current_tag_val) <= float(tag_val) < float(4.2):
+                            dict_tags_commit[tag] = commit
+                    else:
+                        # add tag with last commit
+                        if float(tag_val) >= float(current_tag_val):
+                            dict_tags_commit[tag] = commit
                 list_upper_tags = [('v{}'.format(key), dict_tags_commit[key]) for key in dict_tags_commit]
                 # force update order
                 list_upper_tags.sort()
@@ -444,3 +453,7 @@ if __name__ == "__main__":
         print('               {}AIL Auto update is disabled{}'.format(TERMINAL_RED, TERMINAL_DEFAULT))
         aborting_update()
         sys.exit(0)
+
+
+    # r = get_git_upper_tags_remote('4.2.1', False)
+    # print(r)
