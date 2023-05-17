@@ -78,21 +78,6 @@ If you want to add a new processing or analysis module in AIL, follow these simp
 2. Use [./bin/template.py](./bin/template.py) as a sample module and create a new file in bin/ with the module name used in the modules.cfg configuration.
 
 
-How to create a new webpage
----------------------------
-
-If you want to add a new webpage for a module in AIL, follow these simple steps:
-
-1. Launch [./var/www/create_new_web_module.py](./var/www/create_new_web_module.py) and enter the name to use for your webpage (Usually, your newly created python module).
-
-2. A template and flask skeleton has been created for your new webpage in [./var/www/modules/](./var/www/modules/)
-
-3. Edit the created html files under the template folder as well as the Flask_* python script so that they fit your needs.
-
-4. You can change the order of your module in the top navigation header in the file [./var/www/templates/header_base.html](./var/www/templates/header_base.html)
-
-5. You can ignore module, and so, not display them in the top navigation header by adding the module name in the file [./var/www/templates/ignored_modules.txt](./var/www/templates/ignored_modules.txt)
-
 How to contribute a module
 --------------------------
 
@@ -103,30 +88,6 @@ To contribute your module, feel free to pull your contribution.
 
 Additional information
 ======================
-
-Manage modules: ModulesInformationV2.py
----------------------------------------
-
-You can do a lots of things easily with the [./bin/ModulesInformationV2](./bin/ModulesInformationV2) script:
-
-- Monitor the health of other modules
-- Monitor the ressources comsumption of other modules
-- Start one or more modules
-- Kill running modules
-- Restart automatically stuck modules
-- Show the paste currently processed by a module
-
-### Navigation
-
-You can navigate into the interface by using arrow keys. In order to perform an action on a selected module, you can either press <ENTER> or <SPACE> to show the dialog box.
-
-To change list, you can press the <TAB> key.
-
-Also, you can quickly stop or start modules by clicking on the ``<K>`` or ``<S>`` symbol respectively. These are located in the _Action_ column.
-
-Finally, you can quit this program by pressing either ``<q>`` or ``<C-c>``.
-
-
 
 Crawler
 ---------------------
@@ -145,6 +106,7 @@ In AIL, you can crawl websites and Tor hidden services. Don't forget to review t
 1. Lacus URL:  
 In the webinterface, go to ``Crawlers>Settings`` and click on the Edit button
 
+
 ![Splash Manager Config](./doc/screenshots/lacus_config.png?raw=true "AIL Lacus Config")
 
 ![Splash Manager Config](./doc/screenshots/lacus_config_edit.png?raw=true "AIL Lacus Config")
@@ -156,9 +118,26 @@ Choose the number of crawlers you want to launch
 ![Splash Manager Nb Crawlers Config](./doc/screenshots/crawler_nb_captures_edit.png?raw=true "AIL Lacus Nb Crawlers Config")
 
 
+Kvrocks Migration
+---------------------
+**Important Note:
+We are currently working on a [migration script](https://github.com/ail-project/ail-framework/blob/master/bin/DB_KVROCKS_MIGRATION.py) to facilitate the migration to Kvrocks. 
+Once this script is ready, AIL version 5.0 will be released.**
 
-#### Old updates
+Please note that the current version of this migration script only supports migrating the database on the same server.
+(If you plan to migrate to another server, we will provide additional instructions in this section once the migration script is completed)
 
-##### Python 3 Upgrade
-
-To upgrade from an existing AIL installation, you have to launch [python3_upgrade.sh](./python3_upgrade.sh), this script will delete and create a new virtual environment. The script **will upgrade the packages but won't keep your previous data** (neverthless the data is copied into a directory called `old`). If you install from scratch, you don't require to launch the [python3_upgrade.sh](./python3_upgrade.sh).
+To migrate your database to Kvrocks:
+1. Launch ARDB and Kvrocks
+2. Pull from remote
+	```
+	git checkout master
+	git pull
+ 	```
+3. Launch the migration script:
+	```
+	git checkout master
+	git pull
+	cd bin/
+	./DB_KVROCKS_MIGRATION.py
+	```
