@@ -118,15 +118,15 @@ if [ -z "$VIRTUAL_ENV" ]; then
     . ./AILENV/bin/activate
 fi
 
-pushd ${AIL_BIN}/helper/gen_cert
+pushd ${AIL_HOME}/tools/gen_cert
 ./gen_root.sh
 wait
 ./gen_cert.sh
 wait
 popd
 
-cp ${AIL_BIN}/helper/gen_cert/server.crt ${AIL_FLASK}/server.crt
-cp ${AIL_BIN}/helper/gen_cert/server.key ${AIL_FLASK}/server.key
+cp ${AIL_HOME}/tools/gen_cert/server.crt ${AIL_FLASK}/server.crt
+cp ${AIL_HOME}/tools/gen_cert/server.key ${AIL_FLASK}/server.key
 
 mkdir -p $AIL_HOME/PASTES
 

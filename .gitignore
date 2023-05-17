@@ -6,7 +6,6 @@
 
 # Install Dirs
 AILENV
-redis-leveldb
 redis
 ardb
 kvrocks
@@ -42,8 +41,6 @@ var/www/server.key
 
 # Local config
 configs/keys
-bin/packages/core.cfg
-bin/packages/config.cfg.backup
 configs/core.cfg
 configs/core.cfg.backup
 configs/update.cfg
@@ -55,8 +52,8 @@ configs/d4client_passiveDNS_conf/uuid
 bin/trackers/yara/custom-rules/*
 
 # Helper
-bin/helper/gen_cert/rootCA.*
-bin/helper/gen_cert/server.*
+tools/gen_cert/rootCA.*
+tools/gen_cert/server.*
 
 
 # Pystemon archives
