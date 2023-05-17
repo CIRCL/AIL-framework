@@ -273,7 +273,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
             temp_current_tag = ''.join(temp_current_tag)
 
         if float(temp_current_tag) < 5.0:
-            roll_back_update('01f459109fa36473f66cc9c400c27a4cebf77858')
+            roll_back_update('2c65194b94dab95df9b8da19c88d65239f398355')
             pulled = True
         else:
             print('{}git pull:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
