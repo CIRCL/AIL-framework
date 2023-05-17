@@ -33,6 +33,7 @@ def auto_update_enabled(cfg):
 
 # check if files are modify locally
 def check_if_files_modified():
+    # return True
     process = subprocess.run(['git', 'ls-files' ,'-m'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         modified_files = process.stdout
@@ -57,6 +58,7 @@ def check_if_files_modified():
         sys.exit(1)
 
 def repo_is_fork():
+    # return False
     print('Check if this repository is a fork:')
     process = subprocess.run(['git', 'remote', '-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -155,7 +157,7 @@ def get_git_current_tag(current_version_path):
         with open(current_version_path, 'r') as version_content:
             version = version_content.read()
     except FileNotFoundError:
-        version = 'v1.4'
+        version = 'v5.0'
         with open(current_version_path, 'w') as version_content:
             version_content.write(version)
 
@@ -229,9 +231,14 @@ def get_git_upper_tags_remote(current_tag, is_fork):
                     except ValueError:
                         continue
 
-                    # add tag with last commit
-                    if float(tag_val) >= float(current_tag_val):
-                        dict_tags_commit[tag] = commit
+                    if float(current_tag) < 5.0:
+                        # add tag with last commit
+                        if float(current_tag_val) <= float(tag_val) < float(5.0):
+                            dict_tags_commit[tag] = commit
+                    else:
+                        # add tag with last commit
+                        if float(tag_val) >= float(current_tag_val):
+                            dict_tags_commit[tag] = commit
                 list_upper_tags = [('v{}'.format(key), dict_tags_commit[key]) for key in dict_tags_commit]
                 # force update order
                 list_upper_tags.sort()
@@ -260,13 +267,28 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
 
         update_submodules()
 
-        print('{}git pull:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
-        process = subprocess.run(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        temp_current_tag = current_tag.replace('v', '')
+        if temp_current_tag.count('.') > 1:
+            temp_current_tag = temp_current_tag.rsplit('.', 1)
+            temp_current_tag = ''.join(temp_current_tag)
 
-        if process.returncode == 0:
-            output = process.stdout.decode()
-            print(output)
+        if float(temp_current_tag) < 5.0:
+            roll_back_update('01f459109fa36473f66cc9c400c27a4cebf77858')
+            pulled = True
+        else:
+            print('{}git pull:{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
+            process = subprocess.run(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if process.returncode == 0:
+                output = process.stdout.decode()
+                print(output)
+                pulled = True
+            else:
+                print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
+                aborting_update()
+                pulled = False
+                sys.exit(1)
 
+        if pulled:
             # CHECK IF UPDATER Update
             if float(os.stat(UPDATER_FILENAME).st_mtime) > UPDATER_LAST_MODIFICATION:
                 # request updater relauch
@@ -310,10 +332,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                 print('{}****************  AIL Sucessfully Updated  *****************{}'.format(TERMINAL_YELLOW, TERMINAL_DEFAULT))
                 print()
                 sys.exit(0)
-        else:
-            print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
-            aborting_update()
-            sys.exit(1)
+
     else:
         print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
         aborting_update()
