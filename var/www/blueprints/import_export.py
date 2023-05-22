@@ -27,11 +27,6 @@ from lib.exceptions import MISPConnectionError
 from lib.objects import ail_objects
 from lib.Investigations import Investigation
 
-# TODO REMOVE ME
-from export import MispImport  # TODO REMOVE ME
-
-# TODO REMOVE ME
-
 # ============ BLUEPRINT ============
 import_export = Blueprint('import_export', __name__,
                           template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/import_export'))
