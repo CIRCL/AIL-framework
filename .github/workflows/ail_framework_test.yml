@@ -19,7 +19,7 @@ jobs:
 
     strategy:
        matrix:
-         python-version: [3.7, 3.8, 3.9, 3.10]
+         python-version: ['3.7', '3.8', '3.9', '3.10']
 
 
     # Steps represent a sequence of tasks that will be executed as part of the job
