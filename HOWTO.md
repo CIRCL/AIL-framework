@@ -11,7 +11,7 @@ For the moment, there are three different ways to feed AIL with data:
 
 2. You can setup [pystemon](https://github.com/cvandeplas/pystemon) and use the custom feeder provided by AIL (see below).
 
-3. You can feed your own data using the [./bin/import_dir.py](./bin/import_dir.py) script.
+3. You can feed your own data using the [./bin/file_dir_importer.py](./bin/import_dir.py) script.
 
 ### Feeding AIL with pystemon
 
