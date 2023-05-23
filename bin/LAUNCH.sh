@@ -573,7 +573,7 @@ function update_thirdparty {
 function launch_tests() {
   tests_dir=${AIL_HOME}/tests
   bin_dir=${AIL_BIN}
-  python3 `which nosetests` -w $tests_dir --with-coverage --cover-package=$bin_dir -d --cover-erase --exclude=test-zmq.py
+  python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage testApi test_modules
 }
 
 function reset_password() {

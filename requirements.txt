@@ -75,7 +75,7 @@ bcrypt>3.1.6
 ail_typo_squatting
 
 # Tests
-nose>=1.3.7
+nose2>=0.12.0
 coverage>=5.5
 
 # # # #
