@@ -3,6 +3,7 @@
 *.pyc
 *.swo
 .idea
+.coverage
 
 # Install Dirs
 AILENV

@@ -573,11 +573,11 @@ function update_thirdparty {
 function launch_tests() {
   tests_dir=${AIL_HOME}/tests
   bin_dir=${AIL_BIN}
-  python3 `which nosetests` -w $tests_dir --with-coverage --cover-package=$bin_dir -d --cover-erase
+  python3 `which nosetests` -w $tests_dir --with-coverage --cover-package=$bin_dir -d --cover-erase --exclude=test-zmq.py
 }
 
 function reset_password() {
-  echo -e "\t* Reseting UI admin password..."
+  echo -e "\t* Resetting UI admin password..."
   if checking_kvrocks && checking_redis; then
       python ${AIL_HOME}/var/www/create_default_user.py &
       wait

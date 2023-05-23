@@ -51,10 +51,10 @@ class ApiKey(AbstractModule):
         item = Item(item_id)
         item_content = item.get_content()
 
-        google_api_key = self.regex_findall(self.re_google_api_key, item.get_id(), item_content)
-        aws_access_key = self.regex_findall(self.re_aws_access_key, item.get_id(), item_content)
+        google_api_key = self.regex_findall(self.re_google_api_key, item.get_id(), item_content, r_set=True)
+        aws_access_key = self.regex_findall(self.re_aws_access_key, item.get_id(), item_content, r_set=True)
         if aws_access_key:
-            aws_secret_key = self.regex_findall(self.re_aws_secret_key, item.get_id(), item_content)
+            aws_secret_key = self.regex_findall(self.re_aws_secret_key, item.get_id(), item_content, r_set=True)
 
         if aws_access_key or google_api_key:
             to_print = f'ApiKey;{item.get_source()};{item.get_date()};{item.get_basename()};'
@@ -74,7 +74,7 @@ class ApiKey(AbstractModule):
                     print(f'found AWS secret key')
                     self.redis_logger.warning(f'{to_print}Checked {len(aws_secret_key)} found AWS secret Key;{item.get_id()}')
 
-                msg = 'infoleak:automatic-detection="aws-key";{}'.format(item.get_id())
+                msg = f'infoleak:automatic-detection="aws-key";{item.get_id()}'
                 self.add_message_to_queue(msg, 'Tags')
 
             # Tags

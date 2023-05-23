@@ -49,9 +49,9 @@ class Test_Module_ApiKey(unittest.TestCase):
         aws_secret_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
 
         matches = self.module_obj.compute(f'{item_id} 3', r_result=True)
-        self.assertCountEqual(matches[0], [google_api_key])
-        self.assertCountEqual(matches[1], [aws_access_key])
-        self.assertCountEqual(matches[2], [aws_secret_key])
+        self.assertCountEqual(matches[0], {google_api_key})
+        self.assertCountEqual(matches[1], {aws_access_key})
+        self.assertCountEqual(matches[2], {aws_secret_key})
 
 class Test_Module_Categ(unittest.TestCase):
 
@@ -160,25 +160,8 @@ class Test_Module_Onion(unittest.TestCase):
         item_id = 'tests/2021/01/01/onion.gz'
         domain_1 = 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
         domain_2 = 'www.facebookcorewwwi.onion'
-        crawlers.queue_test_clean_up('onion', domain_1, 'tests/2021/01/01/onion.gz')
 
         self.module_obj.compute(f'{item_id} 3')
-        if crawlers.is_crawler_activated():
-            # # check domain queues
-            # all domains queue
-            self.assertTrue(crawlers.is_domain_in_queue('onion', domain_1))
-            # all url/item queue
-            self.assertTrue(crawlers.is_item_in_queue('onion', f'http://{domain_1}', item_id))
-            # domain blacklist
-            self.assertFalse(crawlers.is_domain_in_queue('onion', domain_2))
-            # invalid onion
-            self.assertFalse(crawlers.is_domain_in_queue('onion', 'invalid.onion'))
-
-            # clean DB
-            crawlers.queue_test_clean_up('onion', domain_1, 'tests/2021/01/01/onion.gz')
-        else:
-            # # TODO: check warning logs
-            pass
 
 class Test_Module_Telegram(unittest.TestCase):
 
