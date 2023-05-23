@@ -3,18 +3,15 @@
 # halt on errors
 set -e
 
-## bash debug mode togle below
+## bash debug mode toggle below
 #set -x
 
 sudo apt-get update
 
 sudo apt-get install python3-pip virtualenv python3-dev python3-tk libfreetype6-dev \
-    screen g++ python-tk unzip libsnappy-dev cmake -qq
+    screen g++ unzip libsnappy-dev cmake -qq
 
-# update virtualenv
-# python3-dev | python3-nose
-
-# python3-tk | python3-numpy??????
+sudo apt-get install automake libtool make gcc pkg-config -qq
 
 #Needed for downloading jemalloc
 sudo apt-get install wget -qq
@@ -22,14 +19,14 @@ sudo apt-get install wget -qq
 #Needed for bloom filters
 sudo apt-get install libssl-dev libfreetype6-dev python3-numpy -qq
 
-#pyMISP
-#sudo apt-get -y install python3-pip
+# pycld3
+sudo apt-get install protobuf-compiler libprotobuf-dev -qq
 
 # DNS deps
 sudo apt-get install libadns1 libadns1-dev -qq
 
 #Needed for redis-lvlDB
-sudo apt-get install libev-dev libgmp-dev -qq
+sudo apt-get install libev-dev libgmp-dev -qq # TODO NEED REVIEW
 
 #Need for generate-data-flow graph
 sudo apt-get install graphviz -qq
@@ -39,10 +36,10 @@ sudo apt-get install python3-nose -qq
 
 # ssdeep
 sudo apt-get install libfuzzy-dev -qq
-sudo apt-get install build-essential libffi-dev automake autoconf libtool -qq
+sudo apt-get install build-essential libffi-dev autoconf -qq
 
 # sflock, gz requirement
-sudo apt-get install p7zip-full -qq
+sudo apt-get install p7zip-full -qq # TODO REMOVE ME
 
 # SUBMODULES #
 git submodule update --init
@@ -110,7 +107,7 @@ if [ ! -f configs/core.cfg ]; then
     cp configs/core.cfg.sample configs/core.cfg
 fi
 
-# create AILENV + intall python packages
+# create AILENV + install python packages
 ./install_virtualenv.sh
 
 # force virtualenv activation
