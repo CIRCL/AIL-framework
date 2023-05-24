@@ -53,7 +53,7 @@ class Phone(AbstractModule):
         content = item.get_content()
 
         # TODO use language detection to choose the country code ?
-        results = self.regex_phone_iter('US', item.id, content)
+        results = self.regex_phone_iter('ZZ', item.id, content)
         for phone in results:
             print(phone[2])
 
