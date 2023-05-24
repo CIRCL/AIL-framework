@@ -19,8 +19,8 @@
 					</label>
 				</div>
 				<div class="custom-control custom-switch">
-					<input class="custom-control-input" type="checkbox" name="domain_regular_switch" value="True" id="domain_regular_switch"{%if domains_types%}{%if 'regular' in domains_types%}checked{%endif%}{%endif%}>
-					<label class="custom-control-label" for="domain_regular_switch">
+					<input class="custom-control-input" type="checkbox" name="domain_web_switch" value="True" id="domain_web_switch"{%if domains_types%}{%if 'web' in domains_types%}checked{%endif%}{%endif%}>
+					<label class="custom-control-label" for="domain_web_switch">
 						<span class="badge badge-warning"><i class="fab fa-html5"></i> Web Domains</span>
 					</label>
 				</div>
@@ -32,8 +32,8 @@
 
 <script>
     function searchDomainName() {
-        var all_domain_types = ['onion', 'regular'] // TODO: load from flask
-        // var l_domains_types = [];
+        var all_domain_types = ['onion', 'web'] // TODO: load from flask
+        var l_domains_types = [];
         console.log(document.getElementById('in_search_name'));
 
         var data = document.getElementById('in_search_name').value;
