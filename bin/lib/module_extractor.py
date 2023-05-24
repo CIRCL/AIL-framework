@@ -25,6 +25,7 @@ from modules.CreditCards import CreditCards
 from modules.Iban import Iban
 from modules.Mail import Mail
 from modules.Onion import Onion
+from modules.Phone import Phone
 from modules.Tools import Tools
 
 config_loader = ConfigLoader()
@@ -40,6 +41,7 @@ MODULES = {
     'infoleak:automatic-detection="iban"': Iban(queue=False),
     'infoleak:automatic-detection="mail"': Mail(queue=False),
     'infoleak:automatic-detection="onion"': Onion(queue=False),
+    'infoleak:automatic-detection="phone-number"': Phone(queue=False),
     # APIkey ???
     # Credentials
     # Zerobins

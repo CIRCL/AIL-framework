@@ -249,6 +249,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "PgpDump" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./PgpDump.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Phone.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Telegram" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Telegram.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tools" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Tools.py; read x"
@@ -290,8 +292,6 @@ function launching_scripts {
     ##################################
     #       DISABLED MODULES         #
     ##################################
-    # screen -S "Script_AIL" -X screen -t "Phone" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Phone.py; read x"
-    # sleep 0.1
     # screen -S "Script_AIL" -X screen -t "SentimentAnalysis" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SentimentAnalysis.py; read x"
     # sleep 0.1
     # screen -S "Script_AIL" -X screen -t "Release" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Release.py; read x"

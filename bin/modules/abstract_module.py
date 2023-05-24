@@ -110,6 +110,17 @@ class AbstractModule(ABC):
         return regex_helper.regex_findall(self.module_name, self.r_cache_key, regex, obj_id, content,
                                           max_time=self.max_execution_time, r_set=r_set)
 
+    def regex_phone_iter(self, country_code, obj_id, content):
+        """
+        regex findall helper (force timeout)
+        :param regex: compiled regex
+        :param obj_id: object id
+        :param content: object content
+        :param r_set: return result as set
+        """
+        return regex_helper.regex_phone_iter(self.r_cache_key, country_code, obj_id, content,
+                                             max_time=self.max_execution_time)
+
     def run(self):
         """
         Run Module endless process

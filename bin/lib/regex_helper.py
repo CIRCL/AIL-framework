@@ -7,13 +7,12 @@ Regex Helper
 
 import os
 import logging.config
+import phonenumbers
 import re
 import sys
 import uuid
 
 from multiprocessing import Process as Proc
-
-sys.path.append(os.environ['AIL_BIN'])
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -65,7 +64,6 @@ def regex_findall(module_name, redis_key, regex, item_id, item_content, max_time
             proc.terminate()
             # Statistics.incr_module_timeout_statistic(module_name)
             err_mess = f"{module_name}: processing timeout: {item_id}"
-            print(err_mess)
             logger.info(err_mess)
             return []
         else:
@@ -99,7 +97,6 @@ def regex_finditer(r_key, regex, item_id, content, max_time=30):
             proc.terminate()
             # Statistics.incr_module_timeout_statistic(r_key)
             err_mess = f"{r_key}: processing timeout: {item_id}"
-            print(err_mess)
             logger.info(err_mess)
             return []
         else:
@@ -130,7 +127,6 @@ def regex_search(r_key, regex, item_id, content, max_time=30):
             proc.terminate()
             # Statistics.incr_module_timeout_statistic(r_key)
             err_mess = f"{r_key}: processing timeout: {item_id}"
-            print(err_mess)
             logger.info(err_mess)
             return False
         else:
@@ -140,6 +136,43 @@ def regex_search(r_key, regex, item_id, content, max_time=30):
             else:
                 r_serv_cache.delete(r_key)
                 return False
+    except KeyboardInterrupt:
+        print("Caught KeyboardInterrupt, terminating regex worker")
+        proc.terminate()
+        sys.exit(0)
+
+## Phone Regexs ##
+def _regex_phone_iter(r_key, country_code, content):
+    iterator = phonenumbers.PhoneNumberMatcher(content, country_code)
+    for match in iterator:
+        value = match.raw_string
+        # PhoneNumberFormat.E164
+        # value = phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+        start = match.start
+        end = match.end
+        r_serv_cache.rpush(r_key, f'{start}:{end}:{value}')
+    r_serv_cache.expire(r_key, 360)
+
+def regex_phone_iter(r_key, country_code, item_id, content, max_time=30):
+    proc = Proc(target=_regex_phone_iter, args=(r_key, country_code, content))
+    try:
+        proc.start()
+        proc.join(max_time)
+        if proc.is_alive():
+            proc.terminate()
+            # Statistics.incr_module_timeout_statistic(r_key)
+            err_mess = f"{r_key}: processing timeout: {item_id}"
+            logger.info(err_mess)
+            return []
+        else:
+            res = r_serv_cache.lrange(r_key, 0, -1)
+            r_serv_cache.delete(r_key)
+            proc.terminate()
+            all_match = []
+            for match in res:
+                start, end, value = match.split(':', 2)
+                all_match.append((int(start), int(end), value))
+            return all_match
     except KeyboardInterrupt:
         print("Caught KeyboardInterrupt, terminating regex worker")
         proc.terminate()
