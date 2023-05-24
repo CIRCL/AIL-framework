@@ -467,7 +467,7 @@ def sanitize_domains_types(types):
     types_domains = []
     for type_d in types:
         if type_d in domains_types:
-            domains_types.append(type_d)
+            types_domains.append(type_d)
     if not types_domains:
         return domains_types
     return types_domains
