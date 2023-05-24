@@ -45,7 +45,7 @@ class MISP_Thehive_Auto_Push(AbstractModule):
             self.last_refresh = time.time()
             self.redis_logger.info('Tags Auto Push refreshed')
 
-        item_id, tag = message.split(' ', 1)
+        item_id, tag = message.split(';', 1)
         item = Item(item_id)
 
         # enabled
