@@ -93,5 +93,4 @@ class Phone(AbstractModule):
 
 if __name__ == '__main__':
     module = Phone()
-    # module.run()
-    module.compute('crawled/2023/02/21/circl.luc90be694-a559-4d77-bfa4-9c54ea8bc2f7')
+    module.run()
