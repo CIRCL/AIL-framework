@@ -356,6 +356,10 @@ def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types
         add_obj_tags(obj1_type, subtype1, id1, tags)
     return objs
 
+def get_obj_nb_correlations(obj_type, subtype, obj_id, filter_types=[]):
+    obj = get_object(obj_type, subtype, obj_id)
+    return obj.get_nb_correlations(filter_types=filter_types)
+
 ################################################################################
 ################################################################################ TODO
 ################################################################################

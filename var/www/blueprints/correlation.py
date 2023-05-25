@@ -125,7 +125,8 @@ def show_correlation():
                            "max_nodes": max_nodes, "mode": mode,
                            "filter": filter_types, "filter_str": ",".join(filter_types),
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id,
-                                                                   options={'tags'}, flask_context=True)
+                                                                   options={'tags'}, flask_context=True),
+                           "nb_correl": ail_objects.get_obj_nb_correlations(obj_type, subtype, obj_id)
                            }
             if subtype:
                 dict_object["metadata"]['type_id'] = subtype

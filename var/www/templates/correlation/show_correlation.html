@@ -262,6 +262,21 @@
                                             </p>
                                         </li>
                                     </ul>
+                                    <ul class="list-group">
+                                        <li class="list-group-item list-group-item-secondary"><i class="fas fa-project-diagram"></i> Direct Correlations</li>
+                                        <li class="list-group-item text-left">
+                                            {% for obj_type in  dict_object['nb_correl'] %}
+                                                <div class="row">
+                                                    <div class="col-8">
+                                                        {{ obj_type }}
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <span class="badge badge-primary">{{ dict_object['nb_correl'][obj_type] }}</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </li>
+                                    </ul>
 
 								</div>
 							</div>
