@@ -187,7 +187,7 @@ class AbstractObject(ABC):
         pass
 
     @staticmethod
-    def get_misp_object_first_last_seen(misp_obj):
+    def get_misp_object_first_last_seen(misp_obj): # TODO REMOVE ME ????
         """
         :type misp_obj: MISPObject
         """

@@ -183,6 +183,47 @@ def extract_favicon_from_html(html, url):
 
 # # # - - # # #
 
+# # # # # # # #
+#             #
+#    TITLE    #
+#             #
+# # # # # # # #
+
+def extract_title_from_html(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    title = soup.title
+    if title:
+        return str(title.string)
+    return ''
+
+def extract_description_from_html(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    description = soup.find('meta', attrs={'name': 'description'})
+    if description:
+        return description['content']
+    return ''
+
+def extract_description_from_html(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    description = soup.find('meta', attrs={'name': 'description'})
+    if description:
+        return description['content']
+    return ''
+
+def extract_keywords_from_html(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    keywords = soup.find('meta', attrs={'name': 'keywords'})
+    if keywords:
+        return keywords['content']
+    return ''
+
+def extract_author_from_html(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    keywords = soup.find('meta', attrs={'name': 'author'})
+    if keywords:
+        return keywords['content']
+    return ''
+# # # - - # # #
 
 ################################################################################
 
@@ -1711,7 +1752,7 @@ def test_ail_crawlers():
 load_blacklist()
 
 # if __name__ == '__main__':
-    # task = CrawlerTask('2dffcae9-8f66-4cfa-8e2c-de1df738a6cd')
-    # print(task.get_meta())
-    # _clear_captures()
-
+#     item = Item('crawled/2023/03/06/foo.bec50a87b5-0c21-4ed4-9cb2-2d717a7a6507')
+#     content = item.get_content()
+#     r = extract_author_from_html(content)
+#     print(r)

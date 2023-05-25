@@ -49,6 +49,7 @@ from blueprints.settings_b import settings_b
 from blueprints.objects_cve import objects_cve
 from blueprints.objects_decoded import objects_decoded
 from blueprints.objects_subtypes import objects_subtypes
+from blueprints.objects_title import objects_title
 
 Flask_dir = os.environ['AIL_FLASK']
 
@@ -102,6 +103,7 @@ app.register_blueprint(settings_b, url_prefix=baseUrl)
 app.register_blueprint(objects_cve, url_prefix=baseUrl)
 app.register_blueprint(objects_decoded, url_prefix=baseUrl)
 app.register_blueprint(objects_subtypes, url_prefix=baseUrl)
+app.register_blueprint(objects_title, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========

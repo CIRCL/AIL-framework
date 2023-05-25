@@ -21,6 +21,7 @@ from lib.objects.Domains import Domain
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
+from lib.objects import Titles
 from lib.objects import Usernames
 
 config_loader = ConfigLoader()
@@ -59,6 +60,8 @@ def get_object(obj_type, subtype, id):
         return CryptoCurrencies.CryptoCurrency(id, subtype)
     elif obj_type == 'pgp':
         return Pgps.Pgp(id, subtype)
+    elif obj_type == 'title':
+        return Titles.Title(id)
     elif obj_type == 'username':
         return Usernames.Username(id, subtype)
 
@@ -160,10 +163,12 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
     meta = obj.get_meta()
     meta['icon'] = obj.get_svg_icon()
-    if subtype or obj_type == 'cve':
+    if subtype or obj_type == 'cve' or obj_type == 'title':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
             meta['cve_search'] = obj.get_cve_search()
+        # if obj_type == 'title':
+        #     meta['cve_search'] = obj.get_cve_search()
     if subtype == 'bitcoin' and related_btc:
         meta["related_btc"] = btc_ail.get_bitcoin_info(obj.id)
     if obj.get_type() == 'decoded':

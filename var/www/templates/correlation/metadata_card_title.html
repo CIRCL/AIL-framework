@@ -9,7 +9,8 @@
 
 <div class="card my-3">
 	<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-		<h4 class="text-secondary">{{ dict_object["correlation_id"] }} :</h4>
+        <h4>{{ dict_object["metadata"]["content"] }}</h4>
+        <div class="text-secondary">{{ dict_object["correlation_id"] }}</div>
 		<ul class="list-group mb-2">
 			<li class="list-group-item py-0">
 				<div class="row">
@@ -25,7 +26,6 @@
 							</thead>
 							<tbody>
 								<tr>
-									<td>{{ dict_object["object_type"] }}</td>
 									<td>
 										<svg height="26" width="26">
 											<g class="nodes">
@@ -33,6 +33,7 @@
 												<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ dict_object["metadata_card"]["icon"]["style"] }}" font-size="16px">{{ dict_object["metadata_card"]["icon"]["icon"] }}</text>
 											</g>
 										</svg>
+                                        {{ dict_object["object_type"] }}
 									</td>
 									<td>{{ dict_object["metadata"]['first_seen'] }}</td>
 									<td>{{ dict_object["metadata"]['last_seen'] }}</td>
@@ -46,69 +47,14 @@
 					</div>
 				</div>
 			</li>
-            {% if dict_object["metadata_card"]["cve_search"] %}
-                {% if 'error' in dict_object["metadata_card"]["cve_search"] %}
-                    <b class="text-danger my-2"><i class="fas fa-exclamation-triangle"></i> CVE Search Error: {{ dict_object["metadata_card"]["cve_search"]["error"] }}</b>
-                {% else %}
-                    <li class="list-group-item py-0">
-                        <table class="table table-sm table-hover">
-                            <tbody>
-                            <tr>
-                                <td><b>Summary</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("summary") }}</td>
-                            </tr>
-                            <tr>
-                                <td><b>Published</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("Published") }}</td>
-                            </tr>
-                            <tr>
-                                <td><b>Modified</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("Modified") }}</td>
-                            </tr>
-                            <tr>
-                                <td><b>last-modified</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("last-modified") }}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </li>
 
-                    {% if dict_object["metadata_card"]["cve_search"].get("references") %}
-                        <div id="accordion" class="mb-2">
-                            <div class="card">
-                                <div class="card-header bg-dark" id="headingRefs">
-                                    <h5 class="mb-0">
-                                        <button class="btn btn-link collapsed w-100" data-toggle="collapse" data-target="#collapseRefs" aria-expanded="false" aria-controls="collapseRefs">
-                                            <span class="row">
-                                                <div class="col-10 text-left">
-                                                    References <span class="badge badge-primary badge-pill">{{ dict_object["metadata_card"]["cve_search"]["references"] | length }}</span>
-                                                </div>
-                                                <div class="col-2 text-right"><i class="fas fa-chevron-circle-down"></i></div>
-                                            </span>
-                                        </button>
-                                    </h5>
-                                </div>
-                                <div id="collapseRefs" class="collapse" aria-labelledby="headingRefs" data-parent="#accordion">
-                                    <div class="card-body">
-                                        <ul>
-                                            {% for ref in dict_object["metadata_card"]["cve_search"].get("references") %}
-                                                <li>{{ ref }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endif %}
-            {% endif %}
             <li class="list-group-item py-0">
 				<br>
 				<div class="mb-3">
 					Tags:
 					{% for tag in dict_object["metadata"]['tags'] %}
 						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-						data-tagid="{{ tag }}" data-objtype="cve" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
+						data-tagid="{{ tag }}" data-objtype="title" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
 							{{ tag }}
 						</button>
 					{%  endfor %}
@@ -119,7 +65,7 @@
 			</li>
 		</ul>
 
-		{% with obj_type='cve', obj_id=dict_object['correlation_id'], obj_subtype='' %}
+		{% with obj_type='title', obj_id=dict_object['correlation_id'], obj_subtype='' %}
 			{% include 'modals/investigations_register_obj.html' %}
 		{% endwith %}
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">

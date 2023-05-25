@@ -347,6 +347,46 @@
               </div>
             {% endif %}
 
+            {% if 'title' in dict_domain%}
+              <div id="accordiontitle" class="mt-3">
+                <div class="card">
+                  <div class="card-header" id="headingtitle">
+                    <div class="row">
+                      <div class="col-11">
+                        <div class="mt-2">
+                          <i class="fas fa-heading"></i> Titles&nbsp;&nbsp;
+                          <div class="badge badge-warning">{{dict_domain['title']|length}}</div>
+                        </div>
+                      </div>
+                      <div class="col-1">
+                        <button class="btn btn-link collapsed rotate" data-toggle="collapse" data-target="#collapsetitle" aria-expanded="false" aria-controls="collapsetitle">
+                          <i class="fas fa-chevron-circle-down"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="collapsetitle" class="collapse" aria-labelledby="headingtitle" data-parent="#accordiontitle">
+                    <div class="card-body">
+                      <table id="tabletitle" class="table table-striped">
+                        <thead class="thead-dark">
+                          <tr>
+                           <th>Tilte</th>
+                          </tr>
+                         </thead>
+                        <tbody>
+                          {% for title in dict_domain['title']%}
+                            <tr>
+                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=title&id={{ title[1] }}">{{ title[1] }}</a></td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
             {% if dict_domain["history"] %}
                 <hr class="my-4">
                 <div class="card mb-1">
@@ -489,6 +529,9 @@
     {% endif %}
     {% if 'cryptocurrency' in dict_domain%}
       $('#tablecurrency').DataTable({});
+    {% endif %}
+    {% if 'title' in dict_domain%}
+      $('#tabletitle').DataTable({});
     {% endif %}
   	table = $('#myTable_1').DataTable(
   	{

@@ -3,7 +3,6 @@
 import json
 import os
 import sys
-import time
 
 import yara
 
@@ -15,6 +14,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects import ail_objects
 from lib.objects.Items import Item
+from lib.objects.Titles import Title
 from lib import correlations_engine
 from lib import regex_helper
 from lib.ConfigLoader import ConfigLoader
@@ -58,18 +58,25 @@ def get_correl_match(extract_type, obj_id, content):
     correl = correlations_engine.get_correlation_by_correl_type('item', '', obj_id, extract_type)
     to_extract = []
     map_subtype = {}
+    map_value_id = {}
     for c in correl:
         subtype, value = c.split(':', 1)
-        map_subtype[value] = subtype
-        to_extract.append(value)
+        if extract_type == 'title':
+            title = Title(value).get_content()
+            to_extract.append(title)
+            map_value_id[title] = value
+        else:
+            map_subtype[value] = subtype
+            to_extract.append(value)
+            map_value_id[value] = value
     if to_extract:
         objs = regex_helper.regex_finditer(r_key, '|'.join(to_extract), obj_id, content)
         for obj in objs:
-            if map_subtype[obj[2]]:
+            if map_subtype.get(obj[2]):
                 subtype = map_subtype[obj[2]]
             else:
                 subtype = ''
-            extracted.append([obj[0], obj[1], obj[2], f'{extract_type}:{subtype}:{obj[2]}'])
+            extracted.append([obj[0], obj[1], obj[2], f'{extract_type}:{subtype}:{map_value_id[obj[2]]}'])
     return extracted
 
 def _get_yara_match(data):
@@ -173,7 +180,7 @@ def extract(obj_id, content=None):
             if matches:
                 extracted = extracted + matches
 
-    for obj_t in ['cve', 'cryptocurrency', 'username']:  # Decoded, PGP->extract bloc
+    for obj_t in ['cve', 'cryptocurrency', 'title', 'username']:  # Decoded, PGP->extract bloc
         matches = get_correl_match(obj_t, obj_id, content)
         if matches:
             extracted = extracted + matches

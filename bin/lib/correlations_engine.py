@@ -44,11 +44,12 @@ CORRELATION_TYPES_BY_OBJ = {
     "cryptocurrency": ["domain", "item"],
     "cve": ["domain", "item"],
     "decoded": ["domain", "item"],
-    "domain": ["cve", "cryptocurrency", "decoded", "item", "pgp", "username", "screenshot"],
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "pgp", "username", "screenshot"],
+    "domain": ["cve", "cryptocurrency", "decoded", "item", "pgp", "title", "screenshot", "username"],
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "pgp", "screenshot", "title", "username"],
     "pgp": ["domain", "item"],
-    "username": ["domain", "item"],
     "screenshot": ["domain", "item"],
+    "title": ["domain", "item"],
+    "username": ["domain", "item"],
 }
 
 def get_obj_correl_types(obj_type):

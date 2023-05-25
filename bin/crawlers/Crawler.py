@@ -19,6 +19,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
 from lib.objects import Screenshots
+from lib.objects import Titles
 
 logging.config.dictConfig(ail_logger.get_config(name='crawlers'))
 
@@ -252,6 +253,13 @@ class Crawler(AbstractModule):
                 self.root_item = item_id
             parent_id = item_id
 
+            item = Item(item_id)
+
+            title_content = crawlers.extract_title_from_html(entries['html'])
+            if title_content:
+                title = Titles.create_title(title_content)
+                title.add(item.get_date(), item_id)
+
             # SCREENSHOT
             if self.screenshot:
                 if 'png' in entries and entries['png']:
@@ -260,7 +268,6 @@ class Crawler(AbstractModule):
                         if not screenshot.is_tags_safe():
                             unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
                             self.domain.add_tag(unsafe_tag)
-                            item = Item(item_id)
                             item.add_tag(unsafe_tag)
                         # Remove Placeholder pages # TODO Replace with warning list ???
                         if screenshot.id not in self.placeholder_screenshots:

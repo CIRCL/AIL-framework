@@ -43,7 +43,7 @@ class Phone(AbstractModule):
 
     def extract(self, obj_id, content, tag):
         extracted = []
-        phones = self.regex_phone_iter('US', obj_id, content)
+        phones = self.regex_phone_iter('ZZ', obj_id, content)
         for phone in phones:
             extracted.append([phone[0], phone[1], phone[2], f'tag:{tag}'])
         return extracted

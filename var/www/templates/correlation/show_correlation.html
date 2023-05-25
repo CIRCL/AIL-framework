@@ -113,6 +113,8 @@
 						{% include 'correlation/metadata_card_domain.html' %}
 					{% elif dict_object["object_type"] == "screenshot" %}
 						{% include 'correlation/metadata_card_screenshot.html' %}
+                    {% elif dict_object["object_type"] == "title" %}
+						{% include 'correlation/metadata_card_title.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
 					{% endif %}
