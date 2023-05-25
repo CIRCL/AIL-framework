@@ -1091,7 +1091,10 @@ class CrawlerCapture:
         return self.get_task().get_start_time()
 
     def get_status(self):
-        return r_cache.hget(f'crawler:capture:{self.uuid}', 'status')
+        status = r_cache.hget(f'crawler:capture:{self.uuid}', 'status')
+        if not status:
+            status = -1
+        return status
 
     def is_ongoing(self):
         return self.get_status() == CaptureStatus.ONGOING
@@ -1109,7 +1112,7 @@ class CrawlerCapture:
     def update(self, status):
         # Error or Reload
         if not status:
-            r_cache.hset(f'crawler:capture:{self.uuid}', 'status', CaptureStatus.UNKNOWN)
+            r_cache.hset(f'crawler:capture:{self.uuid}', 'status', CaptureStatus.UNKNOWN.value)
             r_cache.zadd('crawler:captures', {self.uuid: 0})
         else:
             last_check = int(time.time())
