@@ -61,7 +61,8 @@ class Crawler(AbstractModule):
         self.domain = None
 
         # TODO Replace with warning list ???
-        self.placeholder_screenshots = {'27e14ace10b0f96acd2bd919aaa98a964597532c35b6409dff6cc8eec8214748'}
+        self.placeholder_screenshots = {'27e14ace10b0f96acd2bd919aaa98a964597532c35b6409dff6cc8eec8214748',
+                                        '3e66bf4cc250a68c10f8a30643d73e50e68bf1d4a38d4adc5bfc4659ca2974c0'}  # 404
 
         # Send module state to logs
         self.logger.info('Crawler initialized')

@@ -207,6 +207,10 @@
                                                 <label class="form-check-label" for="ScreenshotCheck">Screenshot</label>
                                             </div>
                                             <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="TitleCheck" name="TitleCheck" {%if "title" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="TitleCheck">Title</label>
+                                            </div>
+                                            <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="PgpCheck" name="PgpCheck" {%if "pgp" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="PgpCheck">PGP</label>
                                             </div>

@@ -95,6 +95,9 @@ def show_correlation():
         correl_option = request.form.get('ItemCheck')
         if correl_option:
             filter_types.append('item')
+        correl_option = request.form.get('TitleCheck')
+        if correl_option:
+            filter_types.append('title')
 
         # list as params
         filter_types = ",".join(filter_types)
