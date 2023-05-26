@@ -241,7 +241,7 @@ class Tracker:
         return self._get_field('user_id')
 
     def webhook_export(self):
-        return r_tracker.hexists(f'tracker:mail:{self.uuid}', 'webhook')
+        return r_tracker.hexists(f'tracker:{self.uuid}', 'webhook')
 
     def get_webhook(self):
         return r_tracker.hget(f'tracker:{self.uuid}', 'webhook')
