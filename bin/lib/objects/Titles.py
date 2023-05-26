@@ -51,9 +51,8 @@ class Title(AbstractDaterangeObject):
             url = f'{baseurl}/correlation/show?type={self.type}&id={self.id}'
         return url
 
-    # TODO # CHANGE COLOR
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': '\uf1dc', 'color': '#1E88E5', 'radius': 5}
+        return {'style': 'fas', 'icon': '\uf1dc', 'color': '#3C7CFF', 'radius': 5}
 
     def get_misp_object(self):
         obj_attrs = []
