@@ -564,8 +564,20 @@ class Tracker:
 
         self._del_mails()
         self._del_tags()
+
+        level = self.get_level()
+
+        if level == 0:  # user only
+            user = self.get_user()
+            r_tracker.srem(f'user:tracker:{user}', self.uuid)
+            r_tracker.srem(f'user:tracker:{user}:{tracker_type}', self.uuid)
+        elif level == 1:  # global
+            r_tracker.srem('global:tracker', self.uuid)
+            r_tracker.srem(f'global:tracker:{tracker_type}', self.uuid)
+
         # meta
         r_tracker.delete(f'tracker:{self.uuid}')
+        trigger_trackers_refresh(tracker_type)
 
 
 def create_tracker(tracker_type, to_track, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, tracker_uuid=None):
