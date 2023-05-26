@@ -52,6 +52,15 @@ def sanitise_nb_max_nodes(nb_max_nodes):
         nb_max_nodes = 300
     return nb_max_nodes
 
+def sanitise_level(level):
+    try:
+        level = int(level)
+        if level < 0:
+            level = 2
+    except (TypeError, ValueError):
+        level = 2
+    return level
+
 # ============= ROUTES ==============
 @correlation.route('/correlation/show', methods=['GET', 'POST'])
 @login_required
@@ -67,6 +76,7 @@ def show_correlation():
             mode = 'inter'
         else:
             mode = 'union'
+        level = sanitise_level(request.form.get('level'))
 
         ## get all selected correlations
         filter_types = []
@@ -104,7 +114,7 @@ def show_correlation():
 
         # redirect to keep history and bookmark
         return redirect(url_for('correlation.show_correlation', type=object_type, subtype=subtype, id=obj_id, mode=mode,
-                                max_nodes=max_nodes, filter=filter_types))
+                                max_nodes=max_nodes, level=level, filter=filter_types))
 
     # request.method == 'GET'
     else:
@@ -113,6 +123,7 @@ def show_correlation():
         obj_id = request.args.get('id')
         max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
         mode = sanitise_graph_mode(request.args.get('mode'))
+        level = sanitise_level(request.args.get('level'))
 
         related_btc = bool(request.args.get('related_btc', False))
 
@@ -125,7 +136,7 @@ def show_correlation():
         else:
             dict_object = {"object_type": obj_type,
                            "correlation_id": obj_id,
-                           "max_nodes": max_nodes, "mode": mode,
+                           "max_nodes": max_nodes, "mode": mode, "level": level,
                            "filter": filter_types, "filter_str": ",".join(filter_types),
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id,
                                                                    options={'tags'}, flask_context=True),
@@ -175,10 +186,11 @@ def graph_node_json():
     subtype = request.args.get('subtype')
     obj_type = request.args.get('type')
     max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
+    level = sanitise_level(request.args.get('level'))
 
     filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
 
-    json_graph = ail_objects.get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=filter_types, max_nodes=max_nodes, level=2, flask_context=True)
+    json_graph = ail_objects.get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=filter_types, max_nodes=max_nodes, level=level, flask_context=True)
     #json_graph = Correlate_object.get_graph_node_object_correlation(obj_type, obj_id, 'union', correlation_names, correlation_objects, requested_correl_type=subtype, max_nodes=max_nodes)
     return jsonify(json_graph)
 
@@ -204,6 +216,7 @@ def correlation_tags_add():
     subtype = request.form.get('tag_subtype', '')
     obj_type = request.form.get('tag_obj_type')
     nb_max = sanitise_nb_max_nodes(request.form.get('tag_nb_max'))
+    level = sanitise_level(request.form.get('tag_level'))
     filter_types = ail_objects.sanitize_objs_types(request.form.get('tag_filter', '').split(','))
 
     if not ail_objects.exists_obj(obj_type, subtype, obj_id):
@@ -232,8 +245,10 @@ def correlation_tags_add():
         tags = []
 
     if tags:
-        ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types, lvl=2, nb_max=nb_max)
+        ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types,
+                                                   lvl=level + 1, nb_max=nb_max)
 
     return redirect(url_for('correlation.show_correlation',
                             type=obj_type, subtype=subtype, id=obj_id,
+                            level=level,
                             filter=",".join(filter_types)))

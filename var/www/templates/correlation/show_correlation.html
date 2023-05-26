@@ -228,14 +228,23 @@
                                             </div>
 
                                     </li>
+{#                                    <li class="list-group-item text-left">#}
+{#                                        <div class="d-flex mt-1">#}
+{#                                            Union&nbsp;&nbsp;#}
+{#                                            <div class="custom-control custom-switch">#}
+{#                                                <input class="custom-control-input" type="checkbox" name="mode" value="True" id="mode" {%if dict_object["mode"]=="inter"%}checked{%endif%}>#}
+{#                                                <label class="custom-control-label" for="mode">Intersection</label>#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                    </li>#}
                                     <li class="list-group-item text-left">
-                                        <div class="d-flex mt-1">
-                                            Union&nbsp;&nbsp;
-                                            <div class="custom-control custom-switch">
-                                                <input class="custom-control-input" type="checkbox" name="mode" value="True" id="mode" {%if dict_object["mode"]=="inter"%}checked{%endif%}>
-                                                <label class="custom-control-label" for="mode">Intersection</label>
-                                            </div>
+
+                                        <div class="form-group">
+                                            <label for="max_nb_nodes_in">Correlation Depth:</label>
+                                            <input class="form-control" type="number" value="{{dict_object["level"]}}" min="0" id="level" name="level">
                                         </div>
+
+
                                     </li>
                                     <li class="list-group-item text-left">
 
@@ -316,6 +325,7 @@
                                 <input type="hidden" id="tag_obj_type" name="tag_obj_type" value="{{ dict_object["object_type"] }}">
                                 <input type="hidden" id="tag_subtype" name="tag_subtype" value="{{ dict_object["metadata"]["type_id"] }}">
                                 <input type="hidden" id="tag_obj_id" name="tag_obj_id" value="{{ dict_object["correlation_id"] }}">
+                                <input type="hidden" id="tag_level" name="tag_level" value="{{dict_object["level"]}}">
                                 <input type="hidden" id="tag_nb_max" name="tag_nb_max" value="{{dict_object["max_nodes"]}}">
                                 <input type="hidden" id="filter" name="tag_filter" value="{{dict_object["filter_str"]}}">
                                 {% include 'tags/block_tags_selector.html' %}
@@ -336,7 +346,7 @@ var all_graph = {};
 $(document).ready(function(){
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}");
+		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}");
 		{% if dict_object["object_type"] in ["cryptocurrency", "pgp", "username"] %}
 			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_subtypes.objects_cve_graphline_json') }}?type={{ dict_object["object_type"] }}&subtype={{dict_object["metadata"]["type_id"]}}&id={{dict_object["correlation_id"]}}");
 		{% elif dict_object["object_type"] == "decoded" %}
