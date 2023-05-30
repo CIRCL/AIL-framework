@@ -30,15 +30,15 @@ class Template(AbstractModule):
     def __init__(self):
         super(Template, self).__init__()
 
-        # Pending time between two computation (computeNone) in seconds
-        self.pending_seconds = 10
+        # Pending time between two computation (computeNone) in seconds, 10 by default
+        # self.pending_seconds = 10
 
-        # Send module state to logs
+        # logs
         self.logger.info(f'Module {self.module_name} initialized')
 
     # def computeNone(self):
     #     """
-    #     Do something when there is no message in the queue
+    #     Do something when there is no message in the queue. Optional
     #     """
     #     self.logger.debug("No message in queue")
 
@@ -53,6 +53,5 @@ class Template(AbstractModule):
 
 
 if __name__ == '__main__':
-
     module = Template()
     module.run()
