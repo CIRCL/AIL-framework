@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 import json
+import logging
 import os
 import sys
 
 import yara
 
+from hashlib import sha256
 from operator import itemgetter
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -27,6 +29,8 @@ from modules.Mail import Mail
 from modules.Onion import Onion
 from modules.Phone import Phone
 from modules.Tools import Tools
+
+logger = logging.getLogger()
 
 config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -64,11 +68,12 @@ def get_correl_match(extract_type, obj_id, content):
         if extract_type == 'title':
             title = Title(value).get_content()
             to_extract.append(title)
-            map_value_id[title] = value
+            sha256_val = sha256(title.encode()).hexdigest()
         else:
             map_subtype[value] = subtype
             to_extract.append(value)
-            map_value_id[value] = value
+            sha256_val = sha256(value.encode()).hexdigest()
+        map_value_id[sha256_val] = value
     if to_extract:
         objs = regex_helper.regex_finditer(r_key, '|'.join(to_extract), obj_id, content)
         for obj in objs:
@@ -76,7 +81,12 @@ def get_correl_match(extract_type, obj_id, content):
                 subtype = map_subtype[obj[2]]
             else:
                 subtype = ''
-            extracted.append([obj[0], obj[1], obj[2], f'{extract_type}:{subtype}:{map_value_id[obj[2]]}'])
+                sha256_val = sha256(obj[2].encode()).hexdigest()
+            value_id = map_value_id.get(sha256_val)
+            if not value_id:
+                logger.critical(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
+                value_id = 'ERROR'
+            extracted.append([obj[0], obj[1], obj[2], f'{extract_type}:{subtype}:{value_id}'])
     return extracted
 
 def _get_yara_match(data):
@@ -162,6 +172,7 @@ def extract(obj_id, content=None):
 
     # CHECK CACHE
     cached = r_cache.get(f'extractor:cache:{obj_id}')
+    # cached = None
     if cached:
         r_cache.expire(f'extractor:cache:{obj_id}', 300)
         return json.loads(cached)
