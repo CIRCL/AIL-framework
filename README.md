@@ -1,8 +1,6 @@
 # AIL framework
 
-<p align="center">
-<img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="250" />
-</p>
+<img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="400" />
 
 <table>
 <tr>
@@ -26,8 +24,6 @@
   <td><img src="https://img.shields.io/github/license/ail-project/ail-framework.svg" /></td>
 </tr>
 </table>
-
-![Logo](./doc/logo/logo-small.png?raw=true "AIL logo")
 
 AIL framework - Framework for Analysis of Information Leaks
 
@@ -197,8 +193,6 @@ If you use or reference AIL in an academic paper, you can cite it using the foll
 ![tracker-yara](./doc/screenshots/tracker_yara.png?raw=true "AIL framework Yara tracker")
 
 ![retro-hunt](./doc/screenshots/retro_hunt.png?raw=true "AIL framework Retro Hunt")
-
-[AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
 
 ## License
 
