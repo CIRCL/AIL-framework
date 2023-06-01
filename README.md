@@ -1,5 +1,4 @@
-AIL
-===
+# AIL framework
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="250" />
@@ -34,53 +33,49 @@ AIL framework - Framework for Analysis of Information Leaks
 
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
 
-![Dashboard](./doc/screenshots/dashboard.png?raw=true "AIL framework dashboard")
+![Dashboard](./doc/screenshots/dashboard0.png?raw=true "AIL framework dashboard")
 
 
-![Finding webshells with AIL](./doc/screenshots/webshells.gif?raw=true "Finding websheels with AIL")
+![Finding webshells with AIL](./doc/screenshots/webshells.gif?raw=true "Finding webshells with AIL")
 
-Features
---------
+## Features
 
-* Modular architecture to handle streams of unstructured or structured information
-* Default support for external ZMQ feeds, such as provided by CIRCL or other providers
-* Multiple feed support
-* Each module can process and reprocess the information already processed by AIL
-* Detecting and extracting URLs including their geographical location (e.g. IP address location)
-* Extracting and validating potential leaks of credit card numbers, credentials, ...
-* Extracting and validating leaked email addresses, including DNS MX validation
-* Module for extracting Tor .onion addresses (to be further processed for analysis)
-* Keep tracks of duplicates (and diffing between each duplicate found)
-* Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
-* A full-text indexer module to index unstructured information
-* Statistics on modules and web
-* Real-time modules manager in terminal
-* Global sentiment analysis for each providers based on nltk vader module
-* Terms, Set of terms and Regex tracking and occurrence
-* Many more modules for extracting phone numbers, credentials and others
-* Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
-* Detect and decode encoded file (Base64, hex encoded or your own decoding scheme) and store files
-* Detect Amazon AWS and Google API keys
-* Detect Bitcoin address and Bitcoin private keys
-* Detect private keys, certificate, keys (including SSH, OpenVPN)
-* Detect IBAN bank accounts
-* Tagging system with [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies) tags
-* UI paste submission
-* Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
-* Automatic paste export at detection on [MISP](https://github.com/MISP/MISP) (events) and [The Hive](https://github.com/TheHive-Project/TheHive) (alerts) on selected tags
-* Extracted and decoded files can be searched by date range, type of file (mime-type) and encoding discovered
-* Graph relationships between decoded file (hashes), similar PGP UIDs and addresses of cryptocurrencies
-* Tor hidden services crawler to crawl and parse output
-* Tor onion availability is monitored to detect up and down of hidden services
-* Browser hidden services are screenshot and integrated in the analysed output including a blurring screenshot interface (to avoid "burning the eyes" of the security analysis with specific content)
-* Tor hidden services is part of the standard framework, all the AIL modules are available to the crawled hidden services
-* Generic web crawler to trigger crawling on demand or at regular interval URL or Tor hidden services
+- Modular architecture to handle streams of unstructured or structured information
+- Default support for external ZMQ feeds, such as provided by CIRCL or other providers
+- Multiple Importers and feeds support
+- Each module can process and reprocess the information already analyzed by AIL
+- Detecting and extracting URLs including their geographical location (e.g. IP address location)
+- Extracting and validating potential leaks of credit card numbers, credentials, ...
+- Extracting and validating leaked email addresses, including DNS MX validation
+- Module for extracting Tor .onion addresses for further analysis
+- Keep tracks of credentials duplicates (and diffing between each duplicate found)
+- Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
+- A full-text indexer module to index unstructured information
+- Terms, Set of terms, Regex, typo squatting and YARA tracking and occurrence
+- YARA Retro Hunt
+- Many more modules for extracting phone numbers, credentials, and more
+- Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
+- Detecting and decoding encoded file (Base64, hex encoded or your own decoding scheme) and storing files
+- Detecting Amazon AWS and Google API keys
+- Detecting Bitcoin address and Bitcoin private keys
+- Detecting private keys, certificate, keys (including SSH, OpenVPN)
+- Detecting IBAN bank accounts
+- Tagging system with [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies) tags
+- UI submission
+- Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
+- Automatic export on detection with [MISP](https://github.com/MISP/MISP) (events) and [The Hive](https://github.com/TheHive-Project/TheHive) (alerts) on selected tags
+- Extracted and decoded files can be searched by date range, type of file (mime-type) and encoding discovered
+- Correlations engine and Graph to visualize relationships between decoded files (hashes), PGP UIDs, domains, username, and cryptocurrencies addresses
+- Websites, Forums and Tor Hidden-Services hidden services crawler to crawl and parse output
+- Domain availability monitoring to detect up and down of websites and hidden services
+- Browsed hidden services are automatically captured and integrated into the analyzed output, including a blurring screenshot interface (to avoid "burning the eyes" of security analysts with sensitive content)
+- Tor hidden services is part of the standard framework, all the AIL modules are available to the crawled hidden services
+- Crawler scheduler to trigger crawling on demand or at regular intervals for URLs or Tor hidden services
 
 
-Installation
-------------
+## Installation
 
-Type these command lines for a fully automated installation and start AIL framework:
+To install the AIL framework, run the following commands:
 ```bash
 # Clone the repo first
 git clone https://github.com/ail-project/ail-framework.git
@@ -88,10 +83,6 @@ cd ail-framework
 
 # For Debian and Ubuntu based distributions
 ./installing_deps.sh
-
-# For Centos based distributions (Tested: Centos 8)
-chmod u+x centos_installing_deps.sh
-./centos_installing_deps.sh
 
 # Launch ail
 cd ~/ail-framework/
@@ -101,59 +92,52 @@ cd bin/
 
 The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distributions.
 
-There is also a [Travis file](.travis.yml) used for automating the installation that can be used to build and install AIL on other systems.
-
 Requirement:
-- Python 3.6+
+- Python 3.7+
 
-Installation Notes
-------------
+## Installation Notes
 
-In order to use AIL combined with **ZFS** or **unprivileged LXC** it's necessary to disable Direct I/O in `$AIL_HOME/configs/6382.conf` by changing the value of the directive `use_direct_io_for_flush_and_compaction` to `false`.
+For Lacus Crawler installation instructions, refer to the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler)
 
-Tor installation instructions can be found in the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#installationconfiguration)
+## Starting AIL
 
-Starting AIL
---------------------------
+To start AIL, use the following commands:
 
 ```bash
 cd bin/
 ./LAUNCH.sh -l
 ```
 
-Eventually you can browse the status of the AIL framework website at the following URL:
+You can access the AIL framework web interface at the following URL: 
 
 ```
 https://localhost:7000/
 ```
 
-The default credentials for the web interface are located in ``DEFAULT_PASSWORD``. This file is removed when you change your password.
+The default credentials for the web interface are located in the ``DEFAULT_PASSWORD``file, which is deleted when you change your password.
 
-Training
---------
+## Training
 
-CIRCL organises training on how to use or extend the AIL framework. AIL training materials are available at [https://www.circl.lu/services/ail-training-materials/](https://www.circl.lu/services/ail-training-materials/).
+CIRCL organises training on how to use or extend the AIL framework. AIL training materials are available at [https://github.com/ail-project/ail-training](https://github.com/ail-project/ail-training).
 
 
-API
------
+## API
 
 The API documentation is available in [doc/README.md](doc/README.md)
 
-HOWTO
------
+## HOWTO
 
 HOWTO are available in [HOWTO.md](HOWTO.md)
 
-Privacy and GDPR
-----------------
+## Privacy and GDPR
 
-[AIL information leaks analysis and the GDPR in the context of collection, analysis and sharing information leaks](https://www.circl.lu/assets/files/information-leaks-analysis-and-gdpr.pdf) document provides an overview how to use AIL in a lawfulness context especially in the scope of General Data Protection Regulation.
+For information on AIL's compliance with GDPR and privacy considerations, refer to the [AIL information leaks analysis and the GDPR in the context of collection, analysis and sharing information leaks](https://www.circl.lu/assets/files/information-leaks-analysis-and-gdpr.pdf) document.
 
-Research using AIL
-------------------
+this document provides an overview how to use AIL in a lawfulness context especially in the scope of General Data Protection Regulation.
 
-If you write academic paper, relying or using AIL, it can be cited with the following BibTeX:
+## Research using AIL
+
+If you use or reference AIL in an academic paper, you can cite it using the following BibTeX:
 
 ~~~~
 @inproceedings{mokaddem2018ail,
@@ -166,75 +150,66 @@ If you write academic paper, relying or using AIL, it can be cited with the foll
 }
 ~~~~
 
-Screenshots
-===========
+## Screenshots
 
 
-Tor hidden service crawler
---------------------------
+### Websites, Forums and Tor Hidden-Services
 
-![Tor hidden service](./doc/screenshots/ail-bitcoinmixer.png?raw=true "Tor hidden service crawler")
+![Domain CIRCL](./doc/screenshots/domain_circl.png?raw=true "Tor hidden service crawler")
 
-Trending charts
----------------
+#### Login protected, pre-recorded session cookies:
+![Domain cookiejar](./doc/screenshots/crawler-cookiejar-domain-crawled.png?raw=true "Tor hidden service crawler")
 
-![Trending-Modules](./doc/screenshots/trending-module.png?raw=true "AIL framework modulestrending")
+### Extracted encoded files from items
 
-Extracted encoded files from pastes
------------------------------------
+![Extracted files](./doc/screenshots/decodeds_dashboard.png?raw=true "AIL extracted decoded files statistics")
 
-![Extracted files from pastes](./doc/screenshots/ail-hashedfiles.png?raw=true "AIL extracted decoded files statistics")
-![Relationships between extracted files from encoded file in unstructured data](./doc/screenshots/hashedfile-graph.png?raw=true "Relationships between extracted files from encoded file in unstructured data")
+### Correlation Engine
 
-Browsing
---------
+![Correlation decoded image](./doc/screenshots/correlation_decoded_image.png?raw=true "Correlation decoded image")
 
-![Browse-Pastes](./doc/screenshots/browse-important.png?raw=true "AIL framework browseImportantPastes")
+### Investigation
 
-Tagging system
---------
+![Investigation](./doc/screenshots/investigation_mixer.png?raw=true "AIL framework cookiejar")
 
-![Tags](./doc/screenshots/tags.png?raw=true "AIL framework tags")
+### Tagging system
 
-MISP and The Hive, automatic events and alerts creation
---------
+![Tags](./doc/screenshots/tags_search.png?raw=true "AIL framework tags")
 
-![paste_submit](./doc/screenshots/tag_auto_export.png?raw=true "AIL framework MISP and Hive auto export")
+![Tags search](./doc/screenshots/tags_search_items.png?raw=true "AIL framework tags items search")
 
-Paste submission
---------
+### MISP Export
 
-![paste_submit](./doc/screenshots/paste_submit.png?raw=true "AIL framework paste submission")
+![misp_export](./doc/screenshots/misp_export.png?raw=true "AIL framework MISP Export")
 
-Sentiment analysis
-------------------
+### MISP and The Hive, automatic events and alerts creation
 
-![Sentiment](./doc/screenshots/sentiment.png?raw=true "AIL framework sentimentanalysis")
+![tags_misp_auto](./doc/screenshots/tags_misp_auto.png?raw=true "AIL framework MISP and Hive auto export")
 
-Terms tracker
----------------------------
+### UI submission
 
-![Term-tracker](./doc/screenshots/term-tracker.png?raw=true "AIL framework termManager")
+![ui_submit](./doc/screenshots/ui_submit.png?raw=true "AIL framework UI importer")
 
+### Trackers
+
+![tracker-create](./doc/screenshots/tracker_create.png?raw=true "AIL framework create tracker")
+
+![tracker-yara](./doc/screenshots/tracker_yara.png?raw=true "AIL framework Yara tracker")
+
+![retro-hunt](./doc/screenshots/retro_hunt.png?raw=true "AIL framework Retro Hunt")
 
 [AIL framework screencast](https://www.youtube.com/watch?v=1_ZrZkRKmNo)
 
-Command line module manager
----------------------------
-
-![Module-Manager](./doc/screenshots/module_information.png?raw=true "AIL framework ModuleInformationV2.py")
-
-License
-=======
+## License
 
 ```
     Copyright (C) 2014 Jules Debra
-    Copyright (C) 2014-2021 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
-    Copyright (c) 2014-2021 Raphaël Vinot
-    Copyright (c) 2014-2021 Alexandre Dulaunoy
-    Copyright (c) 2016-2021 Sami Mokaddem
-    Copyright (c) 2018-2021 Thirion Aurélien
     Copyright (c) 2021 Olivier Sagit
+    Copyright (C) 2014-2023 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014-2023 Raphaël Vinot
+    Copyright (c) 2014-2023 Alexandre Dulaunoy
+    Copyright (c) 2016-2023 Sami Mokaddem
+    Copyright (c) 2018-2023 Thirion Aurélien
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
