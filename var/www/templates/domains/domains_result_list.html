@@ -175,9 +175,12 @@ blocks.addEventListener('change', pixelate_all, false);
     {% if dict_domain['is_tags_safe'] %}
         {% if 'screenshot' in dict_domain %}
             var screenshot_url = "{{ url_for('objects_item.screenshot', filename="") }}{{dict_domain['screenshot']}}";
-            init_canevas_blurr_img("canvas_{{loop.index0}}", screenshot_url);
+        {% else %}
+            var screenshot_url = "{{ url_for('static', filename='image/AIL.png') }}";
         {% endif %}
+        init_canevas_blurr_img("canvas_{{loop.index0}}", screenshot_url);
     {% endif %}
+
 {% endfor %}
 
 </script>
