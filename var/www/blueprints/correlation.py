@@ -247,8 +247,8 @@ def correlation_tags_add():
     if tags:
         ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types,
                                                    lvl=level + 1, nb_max=nb_max)
-
     return redirect(url_for('correlation.show_correlation',
                             type=obj_type, subtype=subtype, id=obj_id,
                             level=level,
+                            max_nodes=nb_max,
                             filter=",".join(filter_types)))
