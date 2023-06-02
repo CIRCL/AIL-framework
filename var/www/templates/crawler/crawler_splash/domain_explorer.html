@@ -213,7 +213,7 @@ blocks.addEventListener('change', pixelate_all, false);
 
 {% for dict_domain in dict_data['list_elem']  %}
     {% if dict_domain['is_tags_safe'] %}
-        {% if 'screenshot' in dict_domain %}
+        {% if dict_domain['screenshot'] %}
             var screenshot_url = "{{ url_for('objects_item.screenshot', filename="") }}{{dict_domain['screenshot']}}";
         {% else %}
             var screenshot_url = "{{ url_for('static', filename='image/AIL.png') }}";
