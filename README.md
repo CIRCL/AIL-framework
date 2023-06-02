@@ -9,7 +9,7 @@
 </tr>
 <tr>
   <td>CI</td>
-  <td><a href="https://github.com/CIRCL/AIL-framework/actions/workflows/ail_framework_test.yml"><img src="https://github.com/CIRCL/AIL-framework/actions/workflows/ail_framework_test.yml/badge.svg"></a></td>
+  <td><a href="https://github.com/ail-project/ail-framework/actions/workflows/ail_framework_test.yml"><img src="https://github.com/ail-project/ail-framework/actions/workflows/ail_framework_test.yml/badge.svg"></a></td>
 </tr>
 <tr>
   <td>Gitter</td>
