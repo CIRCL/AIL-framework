@@ -311,6 +311,9 @@ class Domain(AbstractObject):
             root_item = self.get_last_item_root()
         if root_item:
             return self.get_crawled_items(root_item)
+        else:
+            return []
+
 
     # TODO FIXME
     def get_all_urls(self, date=False, epoch=None):
