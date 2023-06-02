@@ -172,14 +172,12 @@ function img_error(canevas_id) {
 blocks.addEventListener('change', pixelate_all, false);
 
 {% for dict_domain in l_dict_domains['list_elem'] %}
-  {% if 'screenshot' in dict_domain %}
     {% if dict_domain['is_tags_safe'] %}
-      var screenshot_url = "{{ url_for('objects_item.screenshot', filename="") }}{{dict_domain['screenshot']}}";
-    {% else %}
-    var screenshot_url = "{{ url_for('static', filename='image/AIL.png') }}";
+        {% if 'screenshot' in dict_domain %}
+            var screenshot_url = "{{ url_for('objects_item.screenshot', filename="") }}{{dict_domain['screenshot']}}";
+            init_canevas_blurr_img("canvas_{{loop.index0}}", screenshot_url);
+        {% endif %}
     {% endif %}
-    init_canevas_blurr_img("canvas_{{loop.index0}}", screenshot_url);
-  {% endif %}
 {% endfor %}
 
 </script>
