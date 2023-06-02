@@ -33,10 +33,9 @@ class AbstractModule(ABC):
 
     def __init__(self, module_name=None, queue=True):
         """
-        Init Module
+        AIL Module,
         module_name: str; set the module name if different from the instance ClassName
-        queue_name: str; set the queue name if different from the instance ClassName
-        logger_channel: str; set the logger channel name, 'Script' by default
+        :param queue: Allow to push messages to other modules
         """
         self.logger = logging.getLogger(f'{self.__class__.__name__}')
 

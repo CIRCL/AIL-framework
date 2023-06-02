@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import base64
 import datetime
-import gzip
 import logging.config
 import magic
 import os
@@ -181,15 +179,3 @@ def create_item_id(feeder_name, path):
     item_id = os.path.join(feeder_name, date, basename)
     # TODO check if already exists
     return item_id
-
-def create_b64(b_content):
-    return base64.standard_b64encode(b_content).decode()
-
-def create_gzipped_b64(b_content):
-    try:
-        gzipencoded = gzip.compress(b_content)
-        gzip64encoded = create_b64(gzipencoded)
-        return gzip64encoded
-    except Exception as e:
-        logger.warning(e)
-        return ''

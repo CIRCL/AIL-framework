@@ -10,9 +10,7 @@
 # https://github.com/cvandeplas/pystemon/blob/master/pystemon.yaml#L52
 #
 
-import base64
 import os
-import gzip
 import sys
 import redis
 
@@ -32,10 +30,6 @@ class PystemonImporter(AbstractImporter):
         self.r_pystemon = redis.StrictRedis(host=host, port=port, db=db, decode_responses=True)
         self.dir_pystemon = pystemon_dir
 
-    # # TODO: add exception
-    def encode_and_compress_data(self, content):
-        return base64.b64encode(gzip.compress(content)).decode()
-
     def importer(self):
         item_id = self.r_pystemon.lpop("pastes")
         print(item_id)
@@ -53,9 +47,8 @@ class PystemonImporter(AbstractImporter):
                 if not content:
                     return None
 
-                b64_gzipped_content = self.encode_and_compress_data(content)
-                print(item_id, b64_gzipped_content)
-                return f'{item_id} {b64_gzipped_content}'
+                return self.create_message(item_id, content, source='pystemon')
+
             except IOError as e:
                 print(f'Error: {full_item_path}, IOError')
         return None
@@ -81,8 +74,7 @@ class PystemonModuleImporter(AbstractModule):
         return self.importer.importer()
 
     def compute(self, message):
-        relay_message = f'pystemon {message}'
-        self.add_message_to_queue(relay_message)
+        self.add_message_to_queue(message)
 
 
 if __name__ == '__main__':

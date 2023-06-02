@@ -642,7 +642,7 @@ def domain_migration():
             domain = Domains.Domain(dom)
             domain.update_daterange(first_seen)
             domain.update_daterange(last_check)
-            domain._set_ports(ports) # TODO ############################################################################
+            # domain._set_ports(ports)
             if last_origin:
                 domain.set_last_origin(last_origin)
             for language in languages:

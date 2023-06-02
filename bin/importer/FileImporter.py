@@ -24,37 +24,29 @@ from lib import ail_files  # TODO RENAME ME
 
 logging.config.dictConfig(ail_logger.get_config(name='modules'))
 
-# TODO Clean queue one object destruct
-
 class FileImporter(AbstractImporter):
     def __init__(self, feeder='file_import'):
-        super().__init__()
+        super().__init__(queue=True)
         self.logger = logging.getLogger(f'{self.__class__.__name__}')
 
         self.feeder_name = feeder  # TODO sanityze feeder name
-
-        # Setup the I/O queues
-        self.queue = AILQueue('FileImporter', 'manual')
 
     def importer(self, path):
         if os.path.isfile(path):
             with open(path, 'rb') as f:
                 content = f.read()
-            mimetype = ail_files.get_mimetype(content)
-            if ail_files.is_text(mimetype):
+            if content:
+                mimetype = ail_files.get_mimetype(content)
                 item_id = ail_files.create_item_id(self.feeder_name, path)
-                content = ail_files.create_gzipped_b64(content)
-                if content:
-                    message = f'dir_import {item_id} {content}'
-                    self.logger.info(message)
-                    self.queue.send_message(message)
-            elif mimetype == 'application/gzip':
-                item_id = ail_files.create_item_id(self.feeder_name, path)
-                content = ail_files.create_b64(content)
-                if content:
-                    message = f'dir_import {item_id} {content}'
-                    self.logger.info(message)
-                    self.queue.send_message(message)
+                gzipped = False
+                if mimetype == 'application/gzip':
+                    gzipped = True
+                elif not ail_files.is_text(mimetype):
+                    return None
+
+                message = self.create_message(item_id, content, gzipped=gzipped, source='dir_import')
+                if message:
+                    self.add_message_to_queue(message)
 
 class DirImporter(AbstractImporter):
     def __init__(self):
