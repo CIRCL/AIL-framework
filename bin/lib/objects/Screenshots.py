@@ -9,6 +9,7 @@ import sys
 from hashlib import sha256
 from io import BytesIO
 from flask import url_for
+from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################

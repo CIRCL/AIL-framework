@@ -72,7 +72,10 @@ class AbstractSubtypeObject(AbstractObject, ABC):
             return last_seen
 
     def get_nb_seen(self):
-        return int(r_object.zscore(f'{self.type}_all:{self.subtype}', self.id))
+        nb = r_object.zscore(f'{self.type}_all:{self.subtype}', self.id)
+        if not nb:
+            nb = 0
+        return int(nb)
 
     # # TODO: CHECK RESULT
     def get_nb_seen_by_date(self, date_day):

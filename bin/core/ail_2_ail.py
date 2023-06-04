@@ -141,7 +141,10 @@ def is_server_client_sync_mode_connected(ail_uuid, sync_mode):
     return res == 1
 
 def is_server_client_connected(ail_uuid):
-    return r_cache.sismember('ail_2_ail:server:all_clients', ail_uuid)
+    try:
+        return r_cache.sismember('ail_2_ail:server:all_clients', ail_uuid)
+    except:
+        return False
 
 def clear_server_connected_clients():
     for ail_uuid in get_server_all_connected_clients():
@@ -398,7 +401,10 @@ def get_all_ail_instance_keys():
     return r_serv_sync.smembers(f'ail:instance:key:all')
 
 def is_allowed_ail_instance_key(key):
-    return r_serv_sync.sismember(f'ail:instance:key:all', key)
+    try:
+        return r_serv_sync.sismember(f'ail:instance:key:all', key)
+    except:
+        return False
 
 def get_ail_instance_key(ail_uuid):
     return r_serv_sync.hget(f'ail:instance:{ail_uuid}', 'api_key')
@@ -427,7 +433,10 @@ def get_ail_instance_all_sync_queue(ail_uuid):
     return r_serv_sync.smembers(f'ail:instance:sync_queue:{ail_uuid}')
 
 def is_ail_instance_queue(ail_uuid, queue_uuid):
-    return r_serv_sync.sismember(f'ail:instance:sync_queue:{ail_uuid}', queue_uuid)
+    try:
+        return r_serv_sync.sismember(f'ail:instance:sync_queue:{ail_uuid}', queue_uuid)
+    except:
+        return False
 
 def exists_ail_instance(ail_uuid):
     return r_serv_sync.exists(f'ail:instance:{ail_uuid}')
@@ -439,7 +448,10 @@ def get_ail_instance_description(ail_uuid):
     return r_serv_sync.hget(f'ail:instance:{ail_uuid}', 'description')
 
 def exists_ail_instance(ail_uuid):
-    return r_serv_sync.sismember('ail:instance:all', ail_uuid)
+    try:
+        return r_serv_sync.sismember('ail:instance:all', ail_uuid)
+    except:
+        return False
 
 def is_ail_instance_push_enabled(ail_uuid):
     res = r_serv_sync.hget(f'ail:instance:{ail_uuid}', 'push')
@@ -935,7 +947,10 @@ def get_all_sync_queue_dict():
     return dict_sync_queues
 
 def is_queue_registred_by_ail_instance(queue_uuid, ail_uuid):
-    return r_serv_sync.sismember(f'ail:instance:sync_queue:{ail_uuid}', queue_uuid)
+    try:
+        return r_serv_sync.sismember(f'ail:instance:sync_queue:{ail_uuid}', queue_uuid)
+    except:
+        return False
 
 def register_ail_to_sync_queue(ail_uuid, queue_uuid):
     is_linked = is_ail_instance_linked_to_sync_queue(ail_uuid)

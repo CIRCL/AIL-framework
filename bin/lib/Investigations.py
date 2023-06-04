@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_core
 from lib import ConfigLoader
 from lib import Tag
 from lib.exceptions import UpdateInvestigationError
@@ -445,7 +446,7 @@ def api_register_object(json_dict):
     investigation = Investigation(investigation_uuid)
 
     obj_type = json_dict.get('type', '').replace(' ', '')
-    if not exists_obj_type(obj_type):
+    if obj_type not in ail_core.get_all_objects():
         return {"status": "error", "reason": f"Invalid Object Type: {obj_type}"}, 400
 
     subtype = json_dict.get('subtype', '')

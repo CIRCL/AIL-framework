@@ -25,6 +25,7 @@ from exporter import MISPExporter
 from exporter import TheHiveExporter
 from lib.exceptions import MISPConnectionError
 from lib.objects import ail_objects
+from lib import ail_core
 from lib.Investigations import Investigation
 
 # ============ BLUEPRINT ============
@@ -91,7 +92,7 @@ def import_object_file():
 @login_analyst
 def objects_misp_export():
     user_id = current_user.get_id()
-    object_types = ail_objects.get_all_objects_with_subtypes_tuple()
+    object_types = ail_core.get_all_objects_with_subtypes_tuple()
     to_export = MISPExporter.get_user_misp_objects_to_export(user_id)
     return render_template("export_object.html", object_types=object_types, to_export=to_export)
 
