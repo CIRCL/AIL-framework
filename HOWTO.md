@@ -1,73 +1,18 @@
 
 # Feeding, adding new features and contributing
 
+## [Documentation AIL Importers](./doc/README.md#ail-importers)
+
+[Documentation AIL Importers](./doc/README.md#ail-importers)
+
 ## How to feed the AIL framework
-
-Currently, there are three different ways to feed data into AIL:
-
-1. Be a collaborator of CIRCL and ask to access our feed. It will be sent to the static IP you are using for AIL.
-
-2. You can setup [pystemon](https://github.com/cvandeplas/pystemon) and use the custom feeder provided by AIL (see below).
-
-3. You can feed your own data using the [./tool/file_dir_importer.py](./tool/file_dir_importer.py) script.
-
-### Feeding AIL with pystemon
 
 AIL is an analysis tool, not a collector!
 However, if you want to collect some pastes and feed them to AIL, the procedure is described below. Nevertheless, moderate your queries!
 
-Feed data to AIL:
+1. [AIL Importers](./doc/README.md#ail-importers)
 
-1. Clone the [pystemon's git repository](https://github.com/cvandeplas/pystemon):
-	```
-	git clone https://github.com/cvandeplas/pystemon.git
- 	```
-
-2. Edit configuration file for pystemon ```pystemon/pystemon.yaml```: 
-	- Configure the storage section according to your needs:
-		```
-		storage:  
-			archive:  
-				storage-classname:  FileStorage  
-				save: yes  
-				save-all: yes  
-				dir: "alerts"  
-				dir-all: "archive"  
-				compress: yes
-			
-			redis:  
-				storage-classname:  RedisStorage  
-				save: yes  
-				save-all: yes  
-				server: "localhost"  
-				port: 6379  
-				database: 10  
-				lookup: no
-		```
-	- Adjust the configuration for paste-sites based on your requirements (remember to throttle download and update times).
-   
-3. Install python dependencies inside the virtual environment:
-	```shell
-	cd ail-framework/
-	. ./AILENV/bin/activate
-	cd pystemon/
-	pip install -U -r requirements.txt
-	``` 
-4. Edit the configuration file ```ail-framework/configs/core.cfg```:
-	- Modify the "pystemonpath" path accordingly.
-
-5. Launch ail-framework, pystemon and PystemonImporter.py (all within the virtual environment):
-	 - Option 1 (recommended): 
-		``` 
-		 ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
-		 ./ail-framework/bin/LAUNCH.py -f #starts pystemon and the PystemonImporter.py
-		```
-     - Option 2 (may require two terminal windows): 
-        ``` 
-        ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
-        ./pystemon/pystemon.py
-        ./ail-framework/bin/importer/PystemonImporter.py
-        ```
+2. ZMQ: Be a collaborator of CIRCL and ask to access our feed. It will be sent to the static IP you are using for AIL.
 
 ## How to create a new module
 

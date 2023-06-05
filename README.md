@@ -34,6 +34,25 @@ AIL is a modular framework to analyse potential information leaks from unstructu
 
 ![Finding webshells with AIL](./doc/screenshots/webshells.gif?raw=true "Finding webshells with AIL")
 
+## AIL V5.0 Version:
+
+AIL v5.0 introduces significant improvements and new features:
+
+- **Codebase Rewrite**: The codebase has undergone a substantial rewrite, 
+resulting in enhanced performance and speed improvements.
+- **Database Upgrade**: The database has been migrated from ARDB to Kvrocks.
+- **New Correlation Engine**: AIL v5.0 introduces a new powerful correlation engine with two new correlation types: CVE and Title.
+- **Enhanced Logging**: The logging system has been improved to provide better troubleshooting capabilities.
+- **Tagging Support**: [AIL objects](./doc/README.md#ail-objects) now support tagging, 
+allowing users to categorize and label extracted information for easier analysis and organization.
+- **Trackers**: Improved objects filtering, PGP and decoded tracking added.
+- **UI Content Visualization**: The user interface has been upgraded to visualize extracted and tracked information.
+- **New Crawler Lacus**: improve crawling capabilities.
+- **Modular Importers and Exporters**: New importers (ZMQ, AIL Feeders) and exporters (MISP, Mail, TheHive) modular design.
+Allow easy creation and customization by extending an abstract class.
+- **Module Queues**: improved the queuing mechanism between detection modules.
+- **New Object CVE and Title**: Extract an correlate CVE IDs and web page titles.
+
 ## Features
 
 - Modular architecture to handle streams of unstructured or structured information

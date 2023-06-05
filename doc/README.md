@@ -1,1295 +1,223 @@
-#  API DOCUMENTATION
 
-## General
 
-### Automation key
+# AIL objects
+
+AIL is using different types of objects to classify, correlate and describe extracted information:
+
+- **Cryptocurrency**: Represents extracted cryptocurrency addresses.
+    - bitcoin
+    - bitcoin-cash
+    - dash
+    - ethereum
+    - litecoin
+    - monero
+    - zcash
+- **Cve**: Represents extracted CVE (Common Vulnerabilities and Exposures) IDs.
+- **Decoded**: Represents information that has been decoded from an encoded format, such as base64.
+- **Domain**: Represents crawled domains and includes metadata related to them.
+- **Item**: Represents a piece of text that has been processed by AIL. It can include various types of extracted information.
+- **Pgp**: Represents PGP key/block metadata.
+    - key: PGP key IDs
+    - mail: email addresses associated with PGP keys
+    - name: names associated with PGP keys.
+- **Screenshot**: Represents screenshots captured from crawled domains.
+- **Title**: Represents the HTML title extracted from web pages.
+- **Username**:
+    - telegram: telegram username handles
+    - twitter: twitter username handles
+    - jabber: Jabber (XMPP) username handles
+
+
+# AIL Importers
+
+AIL Importers play a crucial role in the AIL ecosystem, 
+enabling the import of various types of data into the framework. 
+
+These importers are located in the `/bin/importer` directory.
+The modular design of importers allows for easy expansion and customization, 
+ensuring that AIL can adapt to new types of data.
+
+Available Importers:
+- [AIL Feeders](#ail-feeders): Extract and feed JSON data from external sources via The API.
+- ZMQ
+- [pystemon](https://github.com/cvandeplas/pystemon)
+- File: Import files and directories.
+(Manually Feed File/Dir: [./tool/file_dir_importer.py](./tool/file_dir_importer.py)).
+
+[//]: # (### ZMQ Importer:)
+
+### pystemon:
+
+1. Clone the [pystemon's git repository](https://github.com/cvandeplas/pystemon):
+	```
+	git clone https://github.com/cvandeplas/pystemon.git
+ 	```
+
+2. Edit configuration file for pystemon ```pystemon/pystemon.yaml```: 
+	- Configure the storage section according to your needs:
+		```
+		storage:  
+			archive:  
+				storage-classname:  FileStorage  
+				save: yes  
+				save-all: yes  
+				dir: "alerts"  
+				dir-all: "archive"  
+				compress: yes
+			
+			redis:  
+				storage-classname:  RedisStorage  
+				save: yes  
+				save-all: yes  
+				server: "localhost"  
+				port: 6379  
+				database: 10  
+				lookup: no
+		```
+	- Adjust the configuration for paste-sites based on your requirements (remember to throttle download and update times).
+   
+3. Install python dependencies inside the virtual environment:
+	```shell
+	cd ail-framework/
+	. ./AILENV/bin/activate
+	cd pystemon/
+	pip install -U -r requirements.txt
+	``` 
+4. Edit the configuration file ```ail-framework/configs/core.cfg```:
+	- Modify the "pystemonpath" path accordingly.
+
+5. Launch ail-framework, pystemon and PystemonImporter.py (all within the virtual environment):
+	 - Option 1 (recommended): 
+		``` 
+		 ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
+		 ./ail-framework/bin/LAUNCH.py -f #starts pystemon and the PystemonImporter.py
+		```
+     - Option 2 (may require two terminal windows): 
+        ``` 
+        ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
+        ./pystemon/pystemon.py
+        ./ail-framework/bin/importer/PystemonImporter.py
+        ```
+
+### File Importer `importer/FileImporter.py`:
+
+Manually import File and Directory with the [./tool/file_dir_importer.py](./tool/file_dir_importer.py) script:
+
+- Import Files:
+  ```shell
+  . ./AILENV/bin/activate
+  cd tools/
+  ./file_dir_importer.py -f MY_FILE_PAT
+  ```
+  
+- Import Dirs:
+  ```shell
+  . ./AILENV/bin/activate
+  cd tools/
+  ./file_dir_importer.py -d MY_DIR_PATH
+  ```
+
+### Create a New Importer:
+
+```python
+from importer.abstract_importer import AbstractImporter
+from modules.abstract_module import AbstractModule
+
+class MyNewImporter(AbstractImporter):
+
+    def __init__(self):
+        super().__init__()
+        # super().__init__(queue=True)   # if it's an one-time run importer
+        self.logger.info(f'Importer {self.name} initialized')
+
+    def importer(self, my_var):
+        # Process my_var and get content to import
+        content = GET_MY_CONTENT_TO_IMPORT
+        # if content is not gzipped and/or not b64 encoded,
+        # set gzipped and/or b64 to False
+        message = self.create_message(item_id, content, b64=False, gzipped=False)
+        return message
+        # if it's an one-time run, otherwise create an AIL Module
+        # self.add_message_to_queue(message)
+
+class MyNewModuleImporter(AbstractModule):
+    def __init__(self):
+        super().__init__()
+        # init module ...
+        self.importer = MyNewImporter()
+
+    def get_message(self):
+        return self.importer.importer()
+
+    def compute(self, message):
+        self.add_message_to_queue(message)
+
+if __name__ == '__main__':
+    module = MyNewModuleImporter()
+    module.run()
+
+    # if it's an one-time run:
+    # importer = MyImporter()
+    # importer.importer(my_var)
+```
+
+## AIL Feeders
+
+AIL Feeders are a special type of Importer within AIL, specifically designed 
+to *extract* and *feed* data from external sources into the framework.
+
+- **Extract Data**: AIL Feeders extract data from external sources, such as APK files, 
+certificate transparency logs, GitHub archives, repositories, ActivityPub sources, 
+leaked files, Atom/RSS feeds, JSON logs, Discord, and Telegram, ...
+- **Run Independently**: Feeders can run on separate systems or infrastructure, 
+providing flexibility and scalability. They operate independently from the core AIL framework.
+- **Internal Logic**: Each feeder can implement its own custom logic and processing 
+to extract and transform data and metadata from the source into JSON.
+- **Push to AIL API**: The generated JSON is then pushed to the AIL API 
+for ingestion and further analysis within the AIL framework.
+
+[//]: # (- Customize medata parsing)
+
+
+### AIL Feeders List:
+- [ail-feeder-apk](https://github.com/ail-project/ail-feeder-apk): Pushes annotated APK to an AIL instance for yara detection.
+- [ail-feeder-ct](https://github.com/ail-project/ail-feeder-ct): AIL feeder for certificate transparency.
+- [ail-feeder-github-gharchive](https://github.com/ail-project/ail-feeder-gharchive): extract informations 
+from GHArchive, collect and feed AIL
+- [ail-feeder-github-repo](https://github.com/ail-project/ail-feeder-github-repo): Pushes github repositories to AIL.
+- [ail-feeder-activity-pub](https://github.com/ail-project/ail-feeder-activity-pub) ActivityPub feeder.
+- [ail-feeder-leak](https://github.com/ail-project/ail-feeder-leak): Automates the process of feeding files to AIL, using data chunking to handle large files.
+- [ail-feeder-atom-rss](https://github.com/ail-project/ail-feeder-atom-rss) Atom and RSS feeder for AIL.
+- [ail-feeder-jsonlogs](https://github.com/ail-project/ail-feeder-jsonlogs) Aggregate JSON log lines and pushes them  to AIL. 
+- [ail-feeder-discord](https://github.com/ail-project/ail-feeder-discord) Discord Feeder.
+- [ail-feeder-telegram](https://github.com/ail-project/ail-feeder-telegram) Telegram Channels and User Feeder.
+
+#### Example: Feeding AIL with Conti leaks
+
+```python
+from pyail import PyAIL
+pyail = PyAIL(URL, API_KEY, ssl=verifycert)
+
+#. . . imports
+#. . . setup code
+
+for content in sys.stdin:
+    elm = json.loads(content)
+    tmp = elm['body']
+    meta = {}
+    meta['jabber:to'] = elm['to']
+    meta['jabber:from'] = elm['from']
+    meta['jabber:ts]' = elm['ts']
+    pyail.feed_json_item(tmp , meta, feeder_name, feeder_uuid)
+```
+
+# AIL SYNC
+
+The synchronisation mechanism allow the sync from one AIL instance to another AIL using a standard WebSocket 
+using [AIL JSON protocol](https://github.com/ail-project/ail-exchange-format/blob/main/ail-stream.md). 
+The synchronisation allows to filter and sync specific collected items including crawled items or 
+specific tagged items matching defined rules. 
+This feature can be very useful to limit the scope of analysis in specific fields or resource intensive activity. 
+This sync can be also used to share filtered streams with other partners.
 
-The authentication of the automation is performed via a secure key available in the AIL UI interface. Make sure you keep that key secret. It gives access to the entire database! The API key is available in the ``Server Management`` menu under ``My Profile``.
-
-The authorization is performed by using the following header:
-
-~~~~
-Authorization: YOUR_API_KEY
-~~~~
-### Accept and Content-Type headers
-
-When submitting data in a POST, PUT or DELETE operation you need to specify in what content-type you encoded the payload. This is done by setting the below Content-Type headers:
-
-~~~~
-Content-Type: application/json
-~~~~
-
-Example:
-
-~~~~
-curl --header "Authorization: YOUR_API_KEY" --header "Content-Type: application/json" https://AIL_URL/
-~~~~
-
-## Item management
-
-### Get item: `api/v1/get/item/default`<a name="get_item_default"></a>
-
-#### Description
-Get item default info.
-
-**Method** : `POST`
-
-#### Parameters
-- `id`
-  - item id
-  - *str - relative item path*
-  - mandatory
-
-#### JSON response
-- `content`
-  - item content
-  - *str*
-- `id`
-  - item id
-  - *str*
-- `date`
-  - item date
-  - *str - YYMMDD*
-- `tags`
-  - item tags list
-  - *list*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/item/default --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "content": "item content test",
-    "date": "20190726",
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-    "tags":
-      [
-        "misp-galaxy:backdoor=\"Rosenbridge\"",
-        "infoleak:automatic-detection=\"pgp-message\"",
-        "infoleak:automatic-detection=\"encrypted-private-key\"",
-        "infoleak:submission=\"manual\"",
-        "misp-galaxy:backdoor=\"SLUB\""
-      ]
-  }
-```
-
-#### Expected Fail Response
-
-**HTTP Status Code** : `400`
-```json
-  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
-```
-**HTTP Status Code** : `404`
-```json
-  {"status": "error", "reason": "Item not found"}
-```
-
-
-
-
-### Get item content: `api/v1/get/item/content`<a name="get_item_content"></a>
-
-#### Description
-Get a specific item content.
-
-**Method** : `POST`
-
-#### Parameters
-- `id`
-  - item id
-  - *str - relative item path*
-  - mandatory
-
-#### JSON response
-- `content`
-  - item content
-  - *str*
-- `id`
-  - item id
-  - *str*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/item/content --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "content": "item content test",
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
-  }
-```
-
-#### Expected Fail Response
-
-**HTTP Status Code** : `400`
-```json
-  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
-```
-**HTTP Status Code** : `404`
-```json
-  {"status": "error", "reason": "Item not found"}
-```
-
-
-
-### Get item content: `api/v1/get/item/tag`<a name="get_item_tag"></a>
-
-#### Description
-Get all tags from an item.
-
-**Method** : `POST`
-
-#### Parameters
-- `id`
-  - item id
-  - *str - relative item path*
-  - mandatory
-
-#### JSON response
-- `content`
-  - item content
-  - *str*
-- `tags`
-  - item tags list
-  - *list*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/item/tag --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-    "tags":
-      [
-        "misp-galaxy:backdoor=\"Rosenbridge\"",
-        "infoleak:automatic-detection=\"pgp-message\"",
-        "infoleak:automatic-detection=\"encrypted-private-key\"",
-        "infoleak:submission=\"manual\"",
-        "misp-galaxy:backdoor=\"SLUB\""
-      ]
-  }
-```
-
-#### Expected Fail Response
-
-**HTTP Status Code** : `400`
-```json
-  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
-```
-**HTTP Status Code** : `404`
-```json
-  {"status": "error", "reason": "Item not found"}
-```
-
-
-
-### Advanced Get item: `api/v1/get/item`<a name="get_item"></a>
-
-#### Description
-Get item. Filter requested field.
-
-**Method** : `POST`
-
-#### Parameters
-- `id`
-  - item id
-  - *str - relative item path*
-  - mandatory
-- `date`
-  - get item date
-  - *boolean*
-  - default: `true`
-- `tags`
-  - get item tags
-  - *boolean*
-  - default: `true`
-- `content`
-  - get item content
-  - *boolean*
-  - default: `false`
-- `size`
-  - get item size
-  - *boolean*
-  - default: `false`
-- `lines`
-  - get item lines info
-  - *boolean*
-  - default: `false`
-- `cryptocurrency`
-  - `bitcoin`
-    - get item bitcoin adress
-    - *boolean*
-    - default: `false`
-- `pgp`
-  - `key`
-    - get item pgp key
-    - *boolean*
-    - default: `false`
-  - `mail`
-    - get item pgp mail
-    - *boolean*
-    - default: `false`
-  - `name`
-    - get item pgp name
-    - *boolean*
-    - default: `false`
-
-
-#### JSON response
-- `content`
-  - item content
-  - *str*
-- `id`
-  - item id
-  - *str*
-- `date`
-  - item date
-  - *str - YYMMDD*
-- `tags`
-  - item tags list
-  - *list*
-- `size`
-  - item size (Kb)
-  - *int*
-- `lines`
-  - item lines info
-  - *{}*
-      - `max_length`
-        -  line max length line
-        - *int*
-      - `nb`
-        - nb lines item
-        - *int*
-- `cryptocurrency`
-  - `bitcoin`
-    - item bitcoin adress
-    - *list*
-- `pgp`
-  - `key`
-    - item pgp keys
-    - *list*
-  - `mail`
-    - item pgp mails
-    - *list*
-  - `name`
-    - item pgp name
-    - *list*
-
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-{
-  "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-  "content": true,
-  "lines_info": true,
-  "tags": true,
-  "size": true
-}
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-```json
-  {
-    "content": "dsvcdsvcdsc vvvv",
-    "cryptocurrency": {
-      "bitcoin": [
-        "132M1aGTGodHkQNh1augLeMjEXH51wgoCc"
-      ]
-    },
-    "date": "20190726",
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-    "lines": {
-      "max_length": 19,
-      "nb": 1
-    },
-    "pgp": {
-      "key": [
-        "0x5180D21F4C20F975"
-      ],
-      "mail": [
-        "mail@test.test"
-      ],
-      "name": [
-        "user_test"
-      ]
-    },
-    "size": 0.03,
-    "tags": [
-      "misp-galaxy:stealer=\"Vidar\"",
-      "infoleak:submission=\"manual\""
-    ]
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `400`
-```json
-  {"status": "error", "reason": "Mandatory parameter(s) not provided"}
-```
-**HTTP Status Code** : `404`
-```json
-  {"status": "error", "reason": "Item not found"}
-```
-
-
-
-
-
-### Add item tags: `api/v1/add/item/tag`<a name="add_item_tag"></a>
-
-#### Description
-Add tags to an item.
-
-**Method** : `POST`
-
-#### Parameters
-- `id`
-  - item id
-  - *str - relative item path*
-  - mandatory
-- `tags`
-  - list of tags
-  - *list*
-  - default: `[]`
-- `galaxy`
-  - list of galaxy
-  - *list*
-  - default: `[]`
-
-#### JSON response
-- `id`
-  - item id
-  - *str - relative item path*
-- `tags`
-  - list of item tags added
-  - *list*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-    "tags": [
-      "infoleak:analyst-detection=\"private-key\"",
-      "infoleak:analyst-detection=\"api-key\""
-    ],
-    "galaxy": [
-      "misp-galaxy:stealer=\"Vidar\""
-    ]
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-    "tags": [
-      "infoleak:analyst-detection=\"private-key\"",
-      "infoleak:analyst-detection=\"api-key\"",
-      "misp-galaxy:stealer=\"Vidar\""
-    ]
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `400`
-
-```json
-  {"status": "error", "reason": "Item id not found"}
-  {"status": "error", "reason": "Tags or Galaxy not specified"}
-  {"status": "error", "reason": "Tags or Galaxy not enabled"}
-```
-
-
-
-
-### Delete item tags: `api/v1/delete/item/tag`<a name="delete_item_tag"></a>
-
-#### Description
-Delete tags from an item.
-
-**Method** : `DELETE`
-
-#### Parameters
-- `id`
-  - item id
-  - *str - relative item path*
-  - mandatory
-- `tags`
-  - list of tags
-  - *list*
-  - default: `[]`
-
-#### JSON response
-- `id`
-  - item id
-  - *str - relative item path*
-- `tags`
-  - list of item tags deleted
-  - *list*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/delete/item/tag --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X DELETE
-```
-
-#### input.json Example
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-    "tags": [
-      "infoleak:analyst-detection=\"private-key\"",
-      "infoleak:analyst-detection=\"api-key\"",
-      "misp-galaxy:stealer=\"Vidar\""
-    ]
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "id": "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz",
-    "tags": [
-      "infoleak:analyst-detection=\"private-key\"",
-      "infoleak:analyst-detection=\"api-key\"",
-      "misp-galaxy:stealer=\"Vidar\""
-    ]
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `400`
-
-```json
-  {"status": "error", "reason": "Item id not found"}
-  {"status": "error", "reason": "No Tag(s) specified"}
-```
-
-
-
-
-
-
-## Tag management
-
-
-### Get all AIL tags: `api/v1/get/tag/all`<a name="get_tag_all"></a>
-
-#### Description
-Get all tags used in AIL.
-
-**Method** : `GET`
-
-#### JSON response
-- `tags`
-  - list of tag
-  - *list*
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/tag/all --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json"
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-```json
-  {
-    "tags": [
-      "misp-galaxy:backdoor=\"Rosenbridge\"",
-      "infoleak:automatic-detection=\"pgp-private-key\"",
-      "infoleak:automatic-detection=\"pgp-signature\"",
-      "infoleak:automatic-detection=\"base64\"",
-      "infoleak:automatic-detection=\"encrypted-private-key\"",
-      "infoleak:submission=\"crawler\"",
-      "infoleak:automatic-detection=\"binary\"",
-      "infoleak:automatic-detection=\"pgp-public-key-block\"",
-      "infoleak:automatic-detection=\"hexadecimal\"",
-      "infoleak:analyst-detection=\"private-key\"",
-      "infoleak:submission=\"manual\"",
-      "infoleak:automatic-detection=\"private-ssh-key\"",
-      "infoleak:automatic-detection=\"iban\"",
-      "infoleak:automatic-detection=\"pgp-message\"",
-      "infoleak:automatic-detection=\"certificate\"",
-      "infoleak:automatic-detection=\"credential\"",
-      "infoleak:automatic-detection=\"cve\"",
-      "infoleak:automatic-detection=\"google-api-key\"",
-      "infoleak:automatic-detection=\"phone-number\"",
-      "infoleak:automatic-detection=\"rsa-private-key\"",
-      "misp-galaxy:backdoor=\"SLUB\"",
-      "infoleak:automatic-detection=\"credit-card\"",
-      "misp-galaxy:stealer=\"Vidar\"",
-      "infoleak:automatic-detection=\"private-key\"",
-      "infoleak:automatic-detection=\"api-key\"",
-      "infoleak:automatic-detection=\"mail\""
-    ]
-  }
-```
-
-
-
-
-### Get tag metadata: `api/v1/get/tag/metadata`<a name="get_tag_metadata"></a>
-
-#### Description
-Get tag metadata.
-
-**Method** : `POST`
-
-#### Parameters
-- `tag`
-  - tag name
-  - *str*
-  - mandatory
-
-#### JSON response
-- `tag`
-  - tag name
-  - *str*
-- `first_seen`
-  - date: first seen
-  - *str - YYYYMMDD*
-- `last_seen`
-  - date: last seen
-  - *str - YYYYMMDD*
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/tag/metadata --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "tag": "infoleak:submission=\"manual\""
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-```json
-  {
-    "first_seen": "20190605",
-    "last_seen": "20190726",
-    "tag": "infoleak:submission=\"manual\""
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `404`
-```json
-  {"status": "error", "reason": "Tag not found"}
-```
-
-
-
-
-## Cryptocurrency
-
-
-
-### Get bitcoin metadata: `api/v1/get/cryptocurrency/bitcoin/metadata`<a name="get_cryptocurrency_bitcoin_metadata"></a>
-
-#### Description
-Get all metdata from a bitcoin address.
-
-**Method** : `POST`
-
-#### Parameters
-- `bitcoin`
-  - bitcoin address
-  - *str*
-  - mandatory
-
-#### JSON response
-- `bitcoin`
-  - bitcoin address
-  - *str*
-- `first_seen`
-  - date: first seen
-  - *str - YYYYMMDD*
-- `last_seen`
-  - date: last seen
-  - *str - YYYYMMDD*
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/cryptocurrency/bitcoin/metadata --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-```json
-  {
-    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y",
-    "first_seen": "20190605",
-    "last_seen": "20190726"
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `404`
-```json
-  {"status": "error", "reason": "Item not found"}
-```
-
-
-
-### Get bitcoin metadata: `api/v1/get/cryptocurrency/bitcoin/item`<a name="get_cryptocurrency_bitcoin_item"></a>
-
-#### Description
-Get all items related to a bitcoin address.
-
-**Method** : `POST`
-
-#### Parameters
-- `bitcoin`
-  - bitcoin address
-  - *str*
-  - mandatory
-
-#### JSON response
-- `bitcoin`
-  - bitcoin address
-  - *str*
-- `items`
-  - list of item id
-  - *list*
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/cryptocurrency/bitcoin/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-```json
-  {
-    "bitcoin": "3DZfm5TQaJKcJm9PsuaWmSz9XmHMLxVv3y",
-    "items": [
-      "archive/2019/08/26/test_bitcoin001",
-      "archive/2019/08/26/test_bitcoin002",
-      "submitted/2019/07/26/3efb8a79-08e9-4776-94ab-615eb370b6d4.gz"
-    ]
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `404`
-```json
-  {"status": "error", "reason": "Item not found"}
-```
-
-
-
-
-
-
-
-## Tracker
-
-
-
-### Add term tracker: `api/v1/add/tracker`<a name="add_tracker"></a>
-
-#### Description
-Create a new tracker (word, set, regex).
-
-You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\
-
-
-**Method** : `POST`
-
-#### Parameters
-- `term`
-  - term to add
-  - *str - word(s)*
-  - mandatory
-- `nb_words`
-  - number of words in set
-  - *int*
-  - default: `1`
-- `type`
-  - term type
-  - *str*
-  - mandatory: `word`, `set`, `regex`
-- `tags`
-  - list of tags
-  - *list*
-  - default: `[]`
-- `mails`
-  - list of mails to notify
-  - *list*
-  - default: `[]`
-- `level`
-  - tracker visibility
-  - *int - 0: user only, 1: all users*
-  - default: `1`
-- `description`
-  - tracker description
-  - *str*
-
-#### JSON response
-- `uuid`
-  - import uuid
-  - *uuid4*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/add/tracker --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "term": "test test2 test3",
-    "type": "set",
-    "nb_words": 2,
-    "tags": [
-      "mytags",
-      "othertags"
-    ],
-    "mails": [
-      "mail@mail.test",
-      "othermail@mail.test"
-    ],
-    "level": 1
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8"
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : 400
-
-```json
-  {"status": "error", "reason": "Term not provided"}
-  {"status": "error", "reason": "Term type not provided"}
-  {"status": "error", "reason": "special character not allowed", "message": "Please use a regex or remove all special characters"}
-  {"status": "error", "reason": "Incorrect type"}
-```
-**HTTP Status Code** : 409
-
-```json
-  {"status": "error", "reason": "Term already tracked"}
-```
-
-
-
-### Delete term tracker: `api/v1/delete/tracker`<a name="delete_tracker"></a>
-
-#### Description
-Delete a tracker
-
-**Method** : `DELETE`
-
-#### Parameters
-- `uuid`
-  - tracked term uuid
-  - *uuid4*
-  - mandatory
-
-#### JSON response
-- `uuid`
-  - deleted uuid
-  - *uuid4*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/delete/tracker --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8"
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `400`
-
-```json
-  {"status": "error", "reason": "Invalid uuid"}
-
-```
-
-**HTTP Status Code** : `404`
-
-```json
-  ({"status": "error", "reason": "Unknown uuid"}
-
-```
-
-
-### Delete term tracker: `api/v1/get/tracker/item`<a name="get_tracker_item"></a>
-
-#### Description
-Get tracked items by date-range
-
-**Method** : `POST`
-
-#### Parameters
-- `uuid`
-  - tracked term uuid
-  - *uuid4*
-  - mandatory
-- `date_from`
-  - date from
-  - *str - YYMMDD*
-  - default: last tracked items date
-- `date_to`
-  - date to
-  - *str - YYMMDD*
-  - default: `None`
-
-#### JSON response
-- `uuid`
-  - term uuid
-  - *uuid4*
-- `date_from`
-  - date from
-  - *str - YYMMDD*
-- `date_to`
-  - date to
-  - *str - YYMMDD*
-- `items`
-  - list of item id
-  - *list*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/tracker/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "uuid": "6a16b06e-38e5-41e1-904d-3960610647e8",
-    "date_from": "20190823",
-    "date_to": "20190829",
-    "items": [
-      {
-        "id": "submitted/2019/08/25/4f929998-3921-4be3-b448-be3bf1722d6b.gz",
-        "date": 20190825,
-        "tags": [
-          "infoleak:automatic-detection=\"credential\"",
-          "mytags",
-          "othertags",
-        ]
-      }
-    ]
-  }
-```
-
-**HTTP Status Code** : `400`
-
-```json
-  {"status": "error", "reason": "Invalid uuid"}
-
-```
-
-**HTTP Status Code** : `404`
-
-```json
-  ({"status": "error", "reason": "Unknown uuid"}
-
-```
-
-
-
-## Domain
-
-
-### Get min domain metadata: `api/v1/get/crawled/domain/list`<a name="get_crawled_domain_list"></a>
-
-#### Description
-Get crawled domain by date-range and status (default status = *UP*)
-
-**Method** : `POST`
-
-#### Parameters
-- `domain_type`
-  - domain type: *onion* or *regular*
-  - *str*
-  - default: *regular*
-- `date_from`
-  - date from
-  - *str - YYYYMMDD*
-  - mandatory
-- `date_to`
-  - date to
-  - *str - YYYYMMDD*
-  - mandatory
-
-#### JSON response
-- `domain_type`
-  - domain type: *onion* or *regular*
-  - *str*
-- `date_from`
-  - date from
-  - *str - YYYYMMDD*
-- `date_to`
-  - date to
-  - *str - YYYYMMDD*
-- `domains`
-  - list of domains
-  - *list - list of domains*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/crawled/domain/list --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "date_from": "20191001",
-    "date_to": "20191222",
-    "domain_type": "onion"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "date_from": "20191001",
-    "date_to": "20191222",
-    "domain_status": "UP",
-    "domain_type": "onion",
-    "domains": [
-      "2222222222222222.onion"
-    ]
-  }
-```
-
-
-
-
-### Get min domain metadata: `api/v1/get/domain/status/minimal`<a name="get_domain_status_minimal"></a>
-
-#### Description
-Get min domain metadata
-
-**Method** : `POST`
-
-#### Parameters
-- `domain`
-  - domain name
-  - *str*
-  - mandatory
-
-#### JSON response
-- `domain`
-  - domain
-  - *str*
-- `first_seen`
-  - domain first up time
-  - *epoch*
-- `last_seen`
-  - domain last up time
-  - *epoch*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/get/domain/status/minimal --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "domain": "2222222222222222.onion",
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "domain": "2222222222222222.onion",
-    "first_seen": 1571314000,
-    "last_seen": 1571314000
-  }
-```
-
-**HTTP Status Code** : `404`
-
-```json
-  ({"status": "error", "reason": "Domain not found"}
-
-```
-
-
-
-## Import management
-
-
-
-### Import item (currently: text only): `api/v1/import/item`<a name="import_item"></a>
-
-#### Description
-Allows users to import new items. asynchronous function.
-
-**Method** : `POST`
-
-#### Parameters
-- `type`
-  - import type
-  - *str*
-  - default: `text`
-- `text`
-  - text to import
-  - *str*
-  - mandatory if type = text
-- `default_tags`
-  - add default import tag
-  - *boolean*
-  - default: True
-- `tags`
-  - list of tags
-  - *list*
-  - default: `[]`
-- `galaxy`
-  - list of galaxy
-  - *list*
-  - default: `[]`
-
-#### JSON response
-- `uuid`
-  - import uuid
-  - *uuid4*
-
-#### Example
-```
-curl https://127.0.0.1:7000/api/v1/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "type": "text",
-    "tags": [
-      "infoleak:analyst-detection=\"private-key\""
-    ],
-    "text": "text to import"
-  }
-```
-
-#### Expected Success Response
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "uuid": "0c3d7b34-936e-4f01-9cdf-2070184b6016"
-  }
-```
-
-#### Expected Fail Response
-**HTTP Status Code** : `400`
-
-```json
-  {"status": "error", "reason": "Malformed JSON"}
-  {"status": "error", "reason": "No text supplied"}
-  {"status": "error", "reason": "Tags or Galaxy not enabled"}
-  {"status": "error", "reason": "Size exceeds default"}
-```
-
-
-
-
-
-### GET Import item info: `api/v1/get/import/item/`<a name="get_import_item"></a>
-
-#### Description
-
-Get import status and all items imported by uuid
-
-**Method** : `POST`
-
-#### Parameters
-
-- `uuid`
-  - import uuid
-  - *uuid4*
-  - mandatory
-
-#### JSON response
-
-- `status`
-  - import status
-  - *str*
-  - values: `in queue`, `in progress`, `imported`
-- `items`
-  - list of imported items id
-  - *list*
-  - The full list of imported items is not complete until `status` = `"imported"`
-
-#### Example
-
-```
-curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: iHc1_ChZxj1aXmiFiF1mkxxQkzawwriEaZpPqyTQj " -H "Content-Type: application/json" --data @input.json -X POST
-```
-
-#### input.json Example
-```json
-  {
-    "uuid": "0c3d7b34-936e-4f01-9cdf-2070184b6016"
-  }
-```
-
-#### Expected Success Response
-
-**HTTP Status Code** : `200`
-
-```json
-  {
-    "items": [
-      "submitted/2019/07/26/b20a69f1-99ad-4cb3-b212-7ce24b763b50.gz"
-    ],
-    "status": "imported"
-  }
-```
-
-#### Expected Fail Response
-
-**HTTP Status Code** : `400`
-
-```json
-  {"status": "error", "reason": "Invalid uuid"}
-  {"status": "error", "reason": "Unknown uuid"}
-```
-
-
-
-
-# FUTURE endpoints
-
-<details>
-<summary>Endpoints</summary>
-
-### Submit a domain to crawl TODO
-##### ``api/add/crawler/task`` POST
-
-### Create a term/set/regex/yara tracker
-##### ``api/add/tracker/`` POST
-
-### Get tracker
-##### ``api/get/tracker`` POST
-
------
-
-
-
-### Get domain tags
-##### ``api/get/domain/tags/<domain>`` POST
-
-### Get domain history
-##### ``api/get/domain/history/<domain>`` POST
-
------
-
-### Get decoded item metadata
-### Check if a decoded item exists (via sha1)
-##### ``api/get/decoded/metadata/<sha1>`` POST
-
------
-
-
------
-##### ``api/get/cryptocurrency`` POST
-
-### Check if a cryptocurrency address (bitcoin, ..) exists
-##### ``api/get/cryptocurrency/<bitcoin_address>`` POST
-
-### Get cryptocurrency address metadata
-##### ``api/get/cryptocurrency/metadata/<coin_address>`` POST
-
------
-
-### Object correlation (1 depth)
-##### ``api/get/correlation/`` POST
-
-### Create MISP event from object
-##### ``api/export/misp`` POST
-
-</details>
-
------
 
