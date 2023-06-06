@@ -6,7 +6,7 @@ d4-pyclient>=0.1.6
 thehive4py
 
 # Core
-redis>4.4.0
+redis>4.4.4
 python-magic>0.4.15
 yara-python>4.0.2
 
