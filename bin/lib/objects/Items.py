@@ -283,6 +283,8 @@ class Item(AbstractObject):
         if 'mimetype' in options:
             content = meta.get('content')
             meta['mimetype'] = self.get_mimetype(content=content)
+        if 'investigations' in options:
+            meta['investigations'] = self.get_investigations()
 
         # meta['encoding'] = None
         return meta

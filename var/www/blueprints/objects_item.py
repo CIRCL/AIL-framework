@@ -25,6 +25,7 @@ from lib.objects.Items import Item
 from lib.objects.Screenshots import Screenshot
 from lib import Tag
 
+from lib import Investigations
 from lib import module_extractor
 
 
@@ -66,7 +67,7 @@ def showItem():  # # TODO: support post
         abort(404)
 
     item = Item(item_id)
-    meta = item.get_meta(options={'content', 'crawler', 'duplicates', 'lines', 'size'})
+    meta = item.get_meta(options={'content', 'crawler', 'duplicates', 'investigations', 'lines', 'size'})
 
     meta['name'] = meta['id'].replace('/', ' / ')
     meta['father'] = item_basic.get_item_parent(item_id)
@@ -74,6 +75,15 @@ def showItem():  # # TODO: support post
     # # TODO: ADD in Export SECTION
     # meta['hive_case'] = Export.get_item_hive_cases(item_id)
     meta['hive_case'] = None
+
+    if meta.get('investigations'):
+        invests = []
+        for investigation_uuid in meta['investigations']:
+            inv = Investigations.Investigation(investigation_uuid)
+            invests.append(inv.get_metadata(r_str=True))
+        meta['investigations'] = invests
+    else:
+        meta['investigations'] = []
 
     extracted = module_extractor.extract(item.id, content=meta['content'])
     extracted_matches = module_extractor.get_extracted_by_match(extracted)

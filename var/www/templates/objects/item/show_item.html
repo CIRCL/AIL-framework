@@ -145,7 +145,117 @@
     </div>
   {% endif %}
 
-  {% if  meta['duplicates'] != 0 %}
+  {% if meta['investigations'] %}
+    <div id="accordionInvestigation" class="mb-2 mx-3">
+      <div class="card">
+        <div class="card-header py-1" id="headingInvestigation">
+          <div class="row">
+            <div class="col-11">
+              <div class="mt-2">
+                <i class="fas fa-microscope"></i> Investigations&nbsp;&nbsp;
+                <div class="badge badge-warning">{{meta['investigations']|length}}</div>
+              </div>
+            </div>
+            <div class="col-1">
+              <button class="btn btn-link btn-lg py-2 float-right rotate" data-toggle="collapse" data-target="#collapseInvestigation" aria-expanded="true" aria-controls="collapseInvestigation">
+                <i class="fas fa-chevron-circle-down"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="collapseInvestigation" class="collapse" aria-labelledby="headingInvestigation" data-parent="#accordionInvestigation">
+          <div class="card-body">
+
+              <table id="table_investigation" class="table table-striped border-primary">
+                        <thead class="bg-dark text-white">
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>last modified</th>
+                            <td>Info</td>
+                            <th>Nb Objects</th>
+                        </tr>
+                        </thead>
+                        <tbody style="font-size: 15px;">
+                        {% for dict_investigation in meta['investigations'] %}
+                            <tr class="border-color: blue;">
+                                <td>
+                                    <a href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
+                                        {{ dict_investigation['info']}}
+                                        <div>
+                                            {% for tag in dict_investigation['tags'] %}
+                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </a>
+                                </td>
+                                <td>{{ dict_investigation['date']}}</td>
+                                <td>{{ dict_investigation['last_change']}}</td>
+                                <td>{{ dict_investigation['info']}}</td>
+                                <td>{{ dict_investigation['nb_objects']}}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  {% endif %}
+
+
+  {% if  l_64|length != 0 %}
+  <div id="accordionDecoded" class="mb-3">
+    <div class="card">
+      <div class="card-header py-1" id="headingDecoded">
+        <div class="row">
+          <div class="col-11">
+            <div class="mt-2">
+              <i class="fas fa-lock-open"></i> Decoded Files&nbsp;&nbsp;
+              <div class="badge badge-warning">{{l_64|length}}</div>
+            </div>
+          </div>
+          <div class="col-1">
+            <button class="btn btn-link  py-2 float-right rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="true" aria-controls="collapseDecoded">
+              <i class="fas fa-chevron-circle-down"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="collapseDecoded" class="collapse show" aria-labelledby="headingDecoded" data-parent="#accordionDecoded">
+        <div class="card-body">
+
+          <table id="tableb64" class="red_table table table-striped">
+            <thead>
+              <tr>
+                <th>estimated type</th>
+                <th>hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b64 in l_64 %}
+                <tr>
+                  <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
+                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=decoded&id={{ b64[2] }}"> {{b64[2]}} ({{ b64[4] }})</a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  {% endif %}
+
+  {% if  meta['duplicates'] %}
     <div id="accordionDuplicate" class="mb-2 mx-3">
       <div class="card">
         <div class="card-header py-1" id="headingDuplicate">
@@ -219,52 +329,52 @@
   {% endif %}
 
 
-  {% if  l_64|length != 0 %}
-  <div id="accordionDecoded" class="mb-3">
-    <div class="card">
-      <div class="card-header py-1" id="headingDecoded">
-        <div class="row">
-          <div class="col-11">
-            <div class="mt-2">
-              <i class="fas fa-lock-open"></i> Decoded Files&nbsp;&nbsp;
-              <div class="badge badge-warning">{{l_64|length}}</div>
-            </div>
-          </div>
-          <div class="col-1">
-            <button class="btn btn-link  py-2 float-right rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="true" aria-controls="collapseDecoded">
-              <i class="fas fa-chevron-circle-down"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="collapseDecoded" class="collapse show" aria-labelledby="headingDecoded" data-parent="#accordionDecoded">
-        <div class="card-body">
-
-          <table id="tableb64" class="red_table table table-striped">
-            <thead>
-              <tr>
-                <th>estimated type</th>
-                <th>hash</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for b64 in l_64 %}
-                <tr>
-                  <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>
-                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=decoded&id={{ b64[2] }}"> {{b64[2]}} ({{ b64[4] }})</a></td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-
-        </div>
-      </div>
-
-
-    </div>
-  </div>
-  {% endif %}
+{#  {% if  l_64|length != 0 %}#}
+{#  <div id="accordionDecoded" class="mb-3">#}
+{#    <div class="card">#}
+{#      <div class="card-header py-1" id="headingDecoded">#}
+{#        <div class="row">#}
+{#          <div class="col-11">#}
+{#            <div class="mt-2">#}
+{#              <i class="fas fa-lock-open"></i> Decoded Files&nbsp;&nbsp;#}
+{#              <div class="badge badge-warning">{{l_64|length}}</div>#}
+{#            </div>#}
+{#          </div>#}
+{#          <div class="col-1">#}
+{#            <button class="btn btn-link  py-2 float-right rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="true" aria-controls="collapseDecoded">#}
+{#              <i class="fas fa-chevron-circle-down"></i>#}
+{#            </button>#}
+{#          </div>#}
+{#        </div>#}
+{#      </div>#}
+{##}
+{#      <div id="collapseDecoded" class="collapse show" aria-labelledby="headingDecoded" data-parent="#accordionDecoded">#}
+{#        <div class="card-body">#}
+{##}
+{#          <table id="tableb64" class="red_table table table-striped">#}
+{#            <thead>#}
+{#              <tr>#}
+{#                <th>estimated type</th>#}
+{#                <th>hash</th>#}
+{#              </tr>#}
+{#            </thead>#}
+{#            <tbody>#}
+{#              {% for b64 in l_64 %}#}
+{#                <tr>#}
+{#                  <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>#}
+{#                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=decoded&id={{ b64[2] }}"> {{b64[2]}} ({{ b64[4] }})</a></td>#}
+{#                </tr>#}
+{#              {% endfor %}#}
+{#            </tbody>#}
+{#          </table>#}
+{##}
+{#        </div>#}
+{#      </div>#}
+{##}
+{##}
+{#    </div>#}
+{#  </div>#}
+{#  {% endif %}#}
 
 
   {% if meta['crawler'] %}
