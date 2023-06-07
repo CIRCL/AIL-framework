@@ -6,7 +6,6 @@
 """
 import os
 import sys
-import time
 
 import importlib.util
 
@@ -15,7 +14,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib import Statistics
 from lib import Tag
 from lib import Users
 from lib.objects import Decodeds
@@ -50,11 +48,6 @@ spec.loader.exec_module(old_ail_2_ail)
 old_ail_2_ail.r_serv_sync = r_serv_db
 
 from lib import Tracker
-spec = importlib.util.find_spec('lib.Tracker')
-old_Tracker = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(old_Tracker)
-
-old_Tracker.r_serv_tracker = r_serv_tracker
 
 from lib import Investigations
 spec = importlib.util.find_spec('lib.Investigations')
@@ -64,18 +57,6 @@ spec.loader.exec_module(old_Investigations)
 old_Investigations.r_tracking = r_serv_tracker
 
 from lib import crawlers
-# spec = importlib.util.find_spec('lib.crawlers')
-# old_crawlers = importlib.util.module_from_spec(spec)
-# spec.loader.exec_module(old_crawlers)
-#
-# old_crawlers.r_serv_onion = r_crawler
-
-# # TODO: disable features - credentials - stats ? - sentiment analysis
-
-# CREATE FUNCTION BY DB/FEATURES
-
-# /!\ TODO MIGRATE DUPLICATES
-
 
 def get_item_date(item_id):
     dirs = item_id.split('/')
@@ -90,7 +71,7 @@ def core_migration():
     ail_uuid = r_serv_db.get('ail:uuid')
     r_kvrocks.set('ail:uuid', ail_uuid)
 
-    # AIL update # # TODO: TO TEST
+    # AIL update #
     ail_version = r_serv_db.get('ail:version')
     r_kvrocks.set('ail:version', ail_version)
     dict_update = r_serv_db.hgetall('ail:update_date')
@@ -114,39 +95,6 @@ def core_migration():
     d4_update_time = r_serv_db.hget('d4:passivedns', 'update_time')
     r_kvrocks.hset('d4:passivedns', 'enabled', str(d4_enabled))
     r_kvrocks.hset('d4:passivedns', 'update_time', d4_update_time)
-
-    # Crawler Manager
-    # manager_url = old_crawlers.get_splash_manager_url()
-    # manager_api_key = old_crawlers.get_splash_api_key()
-    # crawlers.save_splash_manager_url_api(manager_url, manager_api_key)
-    # crawlers.reload_splash_and_proxies_list()
-
-    # Auto Export Migration
-    ail_misp = r_serv_db.get('ail:misp')
-    if ail_misp != 'True':
-        ail_misp = 'False'
-    r_kvrocks.set('ail:misp', ail_misp)
-    ail_thehive = r_serv_db.get('ail:thehive')
-    if ail_thehive != 'True':
-        ail_thehive = 'False'
-    r_kvrocks.set('ail:thehive', ail_thehive)
-
-
-    misp_auto_events = r_serv_db.get('misp:auto-events')
-    if misp_auto_events != '1':
-        misp_auto_events = '0'
-    r_kvrocks.set('misp:auto-events', misp_auto_events)
-
-    hive_auto_alerts = r_serv_db.get('hive:auto-alerts')
-    if hive_auto_alerts != '1':
-        hive_auto_alerts = '0'
-    r_kvrocks.set('hive:auto-alerts', hive_auto_alerts)
-
-    for tag in r_serv_db.smembers('whitelist_misp'):
-        r_kvrocks.sadd('whitelist_misp', tag)
-
-    for tag in r_serv_db.smembers('whitelist_hive'):
-        r_kvrocks.sadd('whitelist_hive', tag)
 
 
 # # # # # # # # # # # # # # # #
@@ -189,7 +137,7 @@ def ail_2_ail_migration():
 
     # AIL Queues
     for queue_uuid in old_ail_2_ail.get_all_sync_queue():
-        #print(queue_uuid)
+        # print(queue_uuid)
         meta = old_ail_2_ail.get_sync_queue_metadata(queue_uuid)
 
         name = meta['name']
@@ -200,8 +148,9 @@ def ail_2_ail_migration():
 
     # AIL Instances
     for ail_uuid in old_ail_2_ail.get_all_ail_instance():
-        #print(ail_uuid)
-        meta = old_ail_2_ail.get_ail_instance_metadata(ail_uuid, client_sync_mode=True, server_sync_mode=True, sync_queues=True)
+        # print(ail_uuid)
+        meta = old_ail_2_ail.get_ail_instance_metadata(ail_uuid, client_sync_mode=True,
+                                                       server_sync_mode=True, sync_queues=True)
         url = meta['url']
         api_key = meta['api_key']
         description = meta['description']
@@ -228,14 +177,11 @@ def ail_2_ail_migration():
             for dict_obj in reversed(old_ail_2_ail.get_sync_queue_objects_by_queue_uuid(queue_uuid, ail_uuid, push=False)):
                 ail_2_ail.add_object_to_sync_queue(queue_uuid, ail_uuid, dict_obj, push=False, pull=True, json_obj=False)
 
-    # server
-    # queue
-    # item in queue
     ail_2_ail.set_last_updated_sync_config()
 
 ###############################
 #                             #
-#      TRACKER MIGRATION      #
+#      TRACKER MIGRATION      # # TODO
 #                             #
 ###############################
 
@@ -283,7 +229,7 @@ def trackers_migration():
                                    first_seen=meta['first_seen'], last_seen=meta['last_seen'])
 
         tracker = Tracker.Tracker(tracker_uuid)
-        # object migration # # TODO: in background
+        # object migration
         for item_id in old_Tracker.get_tracker_items_by_daterange(tracker_uuid, meta['first_seen'], meta['last_seen']):
             print(item_id)
             item_date = get_item_date(item_id)
@@ -300,12 +246,17 @@ def trackers_migration():
         timeout = old_Tracker.get_retro_hunt_task_timeout(task_uuid)
         Tracker._re_create_retro_hunt_task(meta['name'], meta['rule'], meta['date'], meta['date_from'], meta['date_to'], meta['creator'], meta['sources'], meta['tags'], [], timeout, meta['description'], task_uuid, state=meta['state'], nb_match=meta['nb_match'], last_id=last_id)
 
-        # # TODO: IN background ?
         for obj_id in old_Tracker.get_retro_hunt_items_by_daterange(task_uuid, meta['date_from'], meta['date_to']):
             retro_hunt.add('item', '', obj_id)
 
     Tracker._fix_db_custom_tags()
 
+
+###############################
+#                             #
+#  INVESTIGATION MIGRATION    #
+#                             #
+###############################
 
 def investigations_migration():
     print('INVESTIGATION MIGRATION...')
@@ -317,10 +268,6 @@ def investigations_migration():
         for dict_obj in old_investigation.get_objects():
             new_investigation.register_object(dict_obj['id'], dict_obj['type'], dict_obj['subtype'])
         new_investigation.set_last_change(meta['last_change'])
-
-def item_submit_migration():
-    pass
-
 
 ###############################
 #                             #
@@ -357,8 +304,6 @@ def get_active_taxonomies():
 def get_active_galaxies():
     return r_serv_tags.smembers('active_galaxies')
 
-
-# # TODO: HANDLE LOCAL TAGS
 def tags_migration():
     for taxonomy in get_active_taxonomies():
         Tag.enable_taxonomy(taxonomy)
@@ -366,6 +311,7 @@ def tags_migration():
     for galaxy in get_active_galaxies():
         Tag.enable_galaxy(galaxy)
 
+    # Items tags
     for tag in get_all_items_tags():
         print(tag)
         tag_first = get_tag_first_seen(tag)
@@ -376,15 +322,6 @@ def tags_migration():
                     item = Items.Item(item_id)
                     item.add_tag(tag)
 
-
-
-
-
-
-
-
-
-# # TODO: MIGRATE item_basic.add_map_obj_id_item_id ??????????????????????
 # # TODO: BUILD FIRST/LAST object DATE
 ###############################
 #                             #
@@ -430,7 +367,7 @@ def items_migration():
             item.set_parent(father_id)
 
     # DUPLICATES
-    for tag in ['infoleak:automatic-detection="credential"']:  # Creditcards, Mail, Keys ???????????????????????????????
+    for tag in ['infoleak:automatic-detection="credential"']:
         print(f'Duplicate migration: {tag}')
         tag_first = get_tag_first_seen(tag)
         if tag_first:
@@ -447,10 +384,6 @@ def items_migration():
     # ITEM FIRST/LAST DATE
     Items._manual_set_items_date_first_last()
 
-
-
-# TODO: test cookies migration
-# TODO: migrate auto crawlers
 
 ###############################
 #                             #
@@ -502,34 +435,25 @@ def get_domains_blacklist(domain_type):
 def crawler_migration():
     print('CRAWLER MIGRATION...')
 
-    # for domain_type in ['onion', 'regular']:
-    #     for domain in get_domains_blacklist(domain_type):
-    #         crawlers.add_domain_blacklist(domain_type, domain)
+    for domain_type in ['onion', 'regular']:
+        for domain in get_domains_blacklist(domain_type):
+            crawlers.blacklist_domain(domain)
 
-    # for domain_type in ['onion', 'regular']:
-    #     for row in get_last_crawled_domains(domain_type):
-    #         dom_row, epoch = row.rsplit(';', 1)
-    #         domain, port = dom_row.rsplit(':', 1)
-    #         print(domain, port, epoch)
-    #         #crawlers.add_last_crawled_domain(domain_type, domain, port, epoch)
+    for cookiejar_uuid in get_all_cookiejar():
+        meta = get_cookiejar_metadata(cookiejar_uuid)
+        if meta:
+            # print(meta)
+            cookiejar = crawlers.Cookiejar(meta['uuid'])
+            if not cookiejar.exists():
+                crawlers.create_cookiejar(meta['user'], description=meta['description'], level=meta['level'],
+                                          cookiejar_uuid=meta['uuid'])
+                cookiejar._set_date(meta['date'])
 
-    # for cookiejar_uuid in get_all_cookiejar():
-    #     meta = get_cookiejar_metadata(cookiejar_uuid)
-    #     if meta:
-    #         # print(meta)
-    #         cookiejar = crawlers.Cookiejar(meta['uuid'])
-    #         if not cookiejar.exists():
-    #             crawlers.create_cookiejar(meta['user'], description=meta['description'], level=meta['level'],
-    #                                       cookiejar_uuid=meta['uuid'])
-    #             cookiejar._set_date(meta['date'])
-    #
-    #             for cookie_uuid in get_cookiejar_cookies_uuid(meta['uuid']):
-    #                 cookie_dict = get_cookie_dict(cookie_uuid)
-    #                 if cookie_dict:
-    #                     # print(cookie_dict)
-    #                     crawlers.api_create_cookie(meta['user'], cookiejar_uuid, cookie_dict)
-
-    # TODO: auto crawler -> to Fix / change
+                for cookie_uuid in get_cookiejar_cookies_uuid(meta['uuid']):
+                    cookie_dict = get_cookie_dict(cookie_uuid)
+                    if cookie_dict:
+                        # print(cookie_dict)
+                        crawlers.api_create_cookie(meta['user'], cookiejar_uuid, cookie_dict)
 
     auto_crawler_web = r_crawler.smembers('auto_crawler_url:regular')
     auto_crawler_onion = r_crawler.smembers('auto_crawler_url:onion')
@@ -541,15 +465,11 @@ def crawler_migration():
             for domain in auto_crawler_web:
                 f.write(f'{domain}\n')
 
-    # TODO: crawlers queues
-
 ###############################
 #                             #
 #      DOMAINS MIGRATION      #
 #                             #
 ###############################
-
-# # TODO: DOMAIN DOWN -> start onion_down:20190101
 
 # Start -> 2019-01-01
 
@@ -586,9 +506,9 @@ def get_domain_languages(dom):
     return r_crawler.smembers(f'domain:language:{dom}')
 
 def is_crawled_item(domain, item_id):
-    domain_lenght = len(domain)
-    if len(item_id) > (domain_lenght+48):
-        if item_id[-36-domain_lenght:-36] == domain:
+    domain_length = len(domain)
+    if len(item_id) > (domain_length+48):
+        if item_id[-36-domain_length:-36] == domain:
             return True
     return False
 
@@ -642,7 +562,6 @@ def domain_migration():
             domain = Domains.Domain(dom)
             domain.update_daterange(first_seen)
             domain.update_daterange(last_check)
-            # domain._set_ports(ports)
             if last_origin:
                 domain.set_last_origin(last_origin)
             for language in languages:
@@ -650,19 +569,10 @@ def domain_migration():
                 domain.add_language(language)
             for tag in get_domain_tags(domain):
                 domain.add_tag(tag)
-            #print('------------------')
-            #print('------------------')
-            #print('------------------')
-            #print('------------------')
-            #print('------------------')
+
             print(dom)
-            #print(first_seen)
-            #print(last_check)
-            #print(ports)
 
-            # # TODO: FIXME filter invalid hostname
-
-             # CREATE DOMAIN HISTORY
+            # CREATE DOMAIN HISTORY
             for port in ports:
                 for history in get_domain_history_by_port(domain_type, dom, port):
                     epoch = history['epoch']
@@ -685,10 +595,6 @@ def domain_migration():
                                     print(f'{url}    {item_id}')
                                     item.set_crawled(url, parent_id)
 
-
-                    #print()
-
-    # TODO REMOVE INVALID DOMAINS
     for domain_type in ['onion', 'regular']:
         for date in Date.get_date_range_today('20190101'):
             for dom in get_domain_down_by_date(domain_type, date):
@@ -764,9 +670,10 @@ def decodeds_migration():
 ###############################
 
 # old correlation
-def get_screenshot_items_list(screenshot_id): ######################### # TODO: DELETE SOLO SCREENSHOTS
+def get_screenshot_items_list(screenshot_id):
     print(f'screenshot:{screenshot_id}')
     return r_crawler.smembers(f'screenshot:{screenshot_id}')
+
 # old correlation
 def get_screenshot_domain(screenshot_id):
     return r_crawler.smembers(f'screenshot_domain:{screenshot_id}')
@@ -775,11 +682,9 @@ def get_screenshot_tags(screenshot_id):
     return r_serv_metadata.smembers(f'tag:{screenshot_id}')
 
 # Tags + Correlations
-# # TODO: save orphelin screenshot ?????
 def screenshots_migration():
     print('SCREENSHOTS MIGRATION...')
     screenshots = get_all_screenshots()
-    #screenshots = ['5fcc292ea8a699aa7a9ce93a704b78b8f493620ccdb2a5cebacb1069a4327211']
     for screenshot_id in screenshots:
         print(screenshot_id)
 
@@ -787,11 +692,9 @@ def screenshots_migration():
 
         for tag in get_screenshot_tags(screenshot_id):
             screenshot.add_tag(tag)
-
         # Correlations
         for item_id in get_screenshot_items_list(screenshot_id):
             print(item_id)
-            date = get_item_date(item_id)
             screenshot.add_correlation('item', '', item_id)
         for domain_id in get_screenshot_domain(screenshot_id):
             print(domain_id)
@@ -826,9 +729,6 @@ def get_subtype_object(obj_type, subtype, obj_id):
         return Username(obj_id, subtype)
 
 def migrate_subtype_obj(Obj, obj_type, subtype, obj_id):
-    # first_seen = get_obj_subtype_first_seen(obj_type, subtype, obj_id)
-    # last_seen = get_obj_subtype_last_seen(obj_type, subtype, obj_id)
-
     # dates
     for item_id in get_item_correlation_obj(obj_type, subtype, obj_id):
         date = get_item_date(item_id)
@@ -850,13 +750,13 @@ def subtypes_obj_migration():
                 if obj_type == 'pgp' and subtype == 'key' and obj_id == pgp_symmetrical_key:
                     pass
                 else:
-                    Obj = get_subtype_object(obj_type, subtype, obj_id)
-                    migrate_subtype_obj(Obj, obj_type, subtype, obj_id)
+                    pgp_obj = get_subtype_object(obj_type, subtype, obj_id)
+                    migrate_subtype_obj(pgp_obj, obj_type, subtype, obj_id)
 
     # ADD PGP Symmetrical tag to item
-    for item_id in get_item_correlation_obj('pgpdump', 'key', pgp_symmetrical_key):
-        item = Items.Item(item_id)
-        item.add_tag(f'infoleak:automatic-detection="pgp-symmetric";{item_id}')  # TODO SELECT TAG
+    # for item_id in get_item_correlation_obj('pgpdump', 'key', pgp_symmetrical_key):
+    #     item = Items.Item(item_id)
+    #     item.add_tag(f'infoleak:automatic-detection="pgp-symmetric";{item_id}')
 
 # # # # # # # # # # # # # # # #
 #       STATISTICS
@@ -864,91 +764,81 @@ def subtypes_obj_migration():
 # Credential:
 # HSET 'credential_by_tld:'+date, tld, 1
 
-def get_all_provider():
-    return r_serv_trend.smembers('all_provider_set')
-
-def get_item_source_stats_by_date(date, source):
-    stats = {'num': r_serv_trend.hget(f'{source}_num', date),
-             'size': r_serv_trend.hget(f'{source}_size', date),
-             'avg': r_serv_trend.hget(f'{source}_avg', date)}
-    return stats
-
-def get_item_stats_size_avg_by_date(date):
-    return r_serv_trend.zrange(f'top_avg_size_set_{date}', 0, -1, withscores=True)
-
-def get_item_stats_nb_by_date(date):
-    return r_serv_trend.zrange(f'providers_set_{date}', 0, -1, withscores=True)
-
-def get_top_stats_module(module_name, date):
-    return r_serv_trend.zrange(f'top_{module_name}_set_{date}', 0, -1, withscores=True)
-
-def get_module_tld_stats_by_date(module, date):
-    return r_serv_trend.hgetall(f'{module}_by_tld:{date}')
-
-def get_iban_country_stats_by_date(date):
-    return r_serv_trend.hgetall(f'iban_by_country:{date}')
-
-def statistics_migration():
-    # paste_by_modules_timeout
-
-    # Date full history => lot of keys
-
-
-    # top_size_set_{date}
-    # top_avg_size_set_{date}
-
-    # 'providers_set_{date}
-
-
-
-    sources = get_all_provider()
-    for date in Date.get_date_range_today('20180101'):
-
-        size_avg = get_item_stats_size_avg_by_date(date)
-
-        nb_items = get_item_stats_nb_by_date(date)
-
-        # top_size_set_{date}
-        # top_avg_size_set_{date}
-
-        # 'providers_set_{date}
-
-        # ITEM STATS
-        for source in sources:
-            source_stat = get_item_source_stats_by_date(date, source)
-            Statistics._create_item_stats_size_nb(date, source, source_stat['num'], source_stat['size'], source_stat['avg'])
-
-
-
-        # MODULE STATS
-        for module in ['credential', 'mail', 'SQLInjection']:
-            stats = get_module_tld_stats_by_date(module, date)
-            for tld in stats:
-                if tld:
-                    print(module, date, tld, stats[tld])
-                    Statistics.add_module_tld_stats_by_date(module, date, tld, stats[tld])
-        stats = get_iban_country_stats_by_date(date)
-        for tld in stats:
-            if tld:
-                print('iban', date, tld, stats[tld])
-                Statistics.add_module_tld_stats_by_date('iban', date, tld, stats[tld])
-        for module in ['credential']:
-            # TOP STATS
-            top_module = get_top_stats_module(module, date)
-            for keyword, total_sum in top_module:
-                print(date, module, keyword, total_sum)
-                Statistics._add_module_stats(module, total_sum, keyword, date)
-
-
-
-
-
-
-
-
-
-    pass
-
+# def get_all_provider():
+#     return r_serv_trend.smembers('all_provider_set')
+#
+# def get_item_source_stats_by_date(date, source):
+#     stats = {'num': r_serv_trend.hget(f'{source}_num', date),
+#              'size': r_serv_trend.hget(f'{source}_size', date),
+#              'avg': r_serv_trend.hget(f'{source}_avg', date)}
+#     return stats
+#
+# def get_item_stats_size_avg_by_date(date):
+#     return r_serv_trend.zrange(f'top_avg_size_set_{date}', 0, -1, withscores=True)
+#
+# def get_item_stats_nb_by_date(date):
+#     return r_serv_trend.zrange(f'providers_set_{date}', 0, -1, withscores=True)
+#
+# def get_top_stats_module(module_name, date):
+#     return r_serv_trend.zrange(f'top_{module_name}_set_{date}', 0, -1, withscores=True)
+#
+# def get_module_tld_stats_by_date(module, date):
+#     return r_serv_trend.hgetall(f'{module}_by_tld:{date}')
+#
+# def get_iban_country_stats_by_date(date):
+#     return r_serv_trend.hgetall(f'iban_by_country:{date}')
+#
+# def statistics_migration():
+#     # paste_by_modules_timeout
+#
+#     # Date full history => lot of keys
+#
+#
+#     # top_size_set_{date}
+#     # top_avg_size_set_{date}
+#
+#     # 'providers_set_{date}
+#
+#
+#
+#     sources = get_all_provider()
+#     for date in Date.get_date_range_today('20180101'):
+#
+#         size_avg = get_item_stats_size_avg_by_date(date)
+#
+#         nb_items = get_item_stats_nb_by_date(date)
+#
+#         # top_size_set_{date}
+#         # top_avg_size_set_{date}
+#
+#         # 'providers_set_{date}
+#
+#         # ITEM STATS
+#         for source in sources:
+#             source_stat = get_item_source_stats_by_date(date, source)
+#             Statistics._create_item_stats_size_nb(date, source, source_stat['num'],
+#                                                   source_stat['size'], source_stat['avg'])
+#
+#
+#
+#         # MODULE STATS
+#         for module in ['credential', 'mail', 'SQLInjection']:
+#             stats = get_module_tld_stats_by_date(module, date)
+#             for tld in stats:
+#                 if tld:
+#                     print(module, date, tld, stats[tld])
+#                     Statistics.add_module_tld_stats_by_date(module, date, tld, stats[tld])
+#         stats = get_iban_country_stats_by_date(date)
+#         for tld in stats:
+#             if tld:
+#                 print('iban', date, tld, stats[tld])
+#                 Statistics.add_module_tld_stats_by_date('iban', date, tld, stats[tld])
+#         for module in ['credential']:
+#             # TOP STATS
+#             top_module = get_top_stats_module(module, date)
+#             for keyword, total_sum in top_module:
+#                 print(date, module, keyword, total_sum)
+#                 Statistics._add_module_stats(module, total_sum, keyword, date)
 
 
 ###############################
@@ -972,26 +862,18 @@ def cves_migration():
 
 if __name__ == '__main__':
 
-    # core_migration()
-    # user_migration()
-    #tags_migration()
-    # items_migration()
-    # crawler_migration()
-    # domain_migration()                      # TO TEST ###########################
-    # decodeds_migration()
-    # screenshots_migration()
-    # subtypes_obj_migration()
-    # ail_2_ail_migration()
+    core_migration()
+    user_migration()
+    tags_migration()
+    items_migration()
+    crawler_migration()
+    domain_migration()                      # TO RE-TEST
+    decodeds_migration()
+    screenshots_migration()
+    subtypes_obj_migration()
+    ail_2_ail_migration()
     trackers_migration()
-    # investigations_migration()
-    ## statistics_migration()
+    investigations_migration()
 
-    # cves_migration()
-
-    # custom tags
-    # crawler queues + auto_crawlers
-    # stats - Cred - Mail - Provider
-
-# TODO FEEDER IMPORT -> return r_serv_db.lpop('importer:json:item')
-
-    ##########################################################
+    # Create CVE Correlation
+    cves_migration()
