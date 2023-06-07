@@ -50,8 +50,8 @@ def is_passive_dns_enabled(cache=True):
 def change_passive_dns_state(new_state):
     old_state = is_passive_dns_enabled(cache=False)
     if old_state != new_state:
-        r_serv_db.hset('d4:passivedns', 'enabled', bool(new_state))
-        r_cache.set('d4:passivedns:enabled', bool(new_state))
+        r_serv_db.hset('d4:passivedns', 'enabled', str(new_state))
+        r_cache.set('d4:passivedns:enabled', str(new_state))
         update_time = time.time()
         r_serv_db.hset('d4:passivedns', 'update_time', update_time)
         r_cache.set('d4:passivedns:last_update_time', update_time)
