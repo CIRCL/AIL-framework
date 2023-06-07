@@ -60,8 +60,8 @@ Choose the number of crawlers you want to launch
 ### Kvrocks Migration
 ---------------------
 **Important Note:
-We are currently working on a [migration script](https://github.com/ail-project/ail-framework/blob/master/bin/DB_KVROCKS_MIGRATION.py) to facilitate the migration to Kvrocks. 
-Once this script is ready, AIL version 5.0 will be released.**
+We are currently working on a [migration script](https://github.com/ail-project/ail-framework/blob/master/update/v5.0/DB_KVROCKS_MIGRATION.py) to facilitate the migration to Kvrocks. 
+**
 
 Please note that the current version of this migration script only supports migrating the database on the same server.
 (If you plan to migrate to another server, we will provide additional instructions in this section once the migration script is completed)
@@ -77,6 +77,6 @@ To migrate your database to Kvrocks:
 	```shell
 	git checkout master
 	git pull
-	cd bin/
+	cd update/v5.0
 	./DB_KVROCKS_MIGRATION.py
 	```
