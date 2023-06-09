@@ -7,6 +7,7 @@ Base Class for AIL Objects
 # Import External packages
 ##################################
 import os
+import logging.config
 import sys
 from abc import ABC, abstractmethod
 from pymisp import MISPObject
@@ -17,22 +18,19 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib import Tag
 from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
+logging.config.dictConfig(ail_logger.get_config(name='ail'))
 
 class AbstractObject(ABC):
     """
     Abstract Object
     """
-
-    # first seen last/seen ??
-    # # TODO: - tags
-    #         - handle + refactor correlations
-    #         - creates others objects
 
     def __init__(self, obj_type, id, subtype=None):
         """ Abstract for all the AIL object
@@ -43,6 +41,8 @@ class AbstractObject(ABC):
         self.id = id
         self.type = obj_type
         self.subtype = subtype
+
+        self.logger = logging.getLogger(f'{self.__class__.__name__}')
 
     def get_id(self):
         return self.id
@@ -74,7 +74,6 @@ class AbstractObject(ABC):
             tags = list(tags)
         return tags
 
-    ## ADD TAGS ????
     def add_tag(self, tag):
         Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
 
@@ -83,7 +82,7 @@ class AbstractObject(ABC):
             tags = self.get_tags()
         return Tag.is_tags_safe(tags)
 
-    #- Tags -#
+    ## -Tags- ##
 
     @abstractmethod
     def get_content(self):
@@ -98,10 +97,9 @@ class AbstractObject(ABC):
 
     def add_duplicate(self, algo, similarity, id_2):
         return Duplicate.add_obj_duplicate(algo, similarity, self.type, self.get_subtype(r_str=True), self.id, id_2)
-    # -Duplicates -#
+    ## -Duplicates- ##
 
     ## Investigations ##
-    # # TODO: unregister =====
 
     def is_investigated(self):
         if not self.subtype:
@@ -124,7 +122,7 @@ class AbstractObject(ABC):
             unregistered = delete_obj_investigations(self.id, self.type, self.subtype)
         return unregistered
 
-    #- Investigations -#
+    ## -Investigations- ##
 
     ## Trackers ##
 
@@ -137,7 +135,7 @@ class AbstractObject(ABC):
     def delete_trackers(self):
         return delete_obj_trackers(self.type, self.subtype, self.id)
 
-    #- Trackers -#
+    ## -Trackers- ##
 
     def _delete(self):
         # DELETE TAGS
@@ -185,15 +183,6 @@ class AbstractObject(ABC):
     @abstractmethod
     def get_misp_object(self):
         pass
-
-    @staticmethod
-    def get_misp_object_first_last_seen(misp_obj): # TODO REMOVE ME ????
-        """
-        :type misp_obj: MISPObject
-        """
-        first_seen = misp_obj.get('first_seen')
-        last_seen = misp_obj.get('last_seen')
-        return first_seen, last_seen
 
     @staticmethod
     def get_misp_object_tags(misp_obj):
@@ -264,8 +253,3 @@ class AbstractObject(ABC):
         Get object correlations
         """
         delete_obj_correlation(self.type, self.subtype, self.id, type2, subtype2, id2)
-
-
-    # # TODO: get favicon
-    # # TODO: get url
-    # # TODO: get metadata

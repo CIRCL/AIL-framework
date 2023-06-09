@@ -80,8 +80,8 @@ class Screenshot(AbstractObject):
         obj_attrs = []
         obj = MISPObject('file')
 
-        obj_attrs.append( obj.add_attribute('sha256', value=self.id) )
-        obj_attrs.append( obj.add_attribute('attachment', value=self.id, data=self.get_file_content()) )
+        obj_attrs.append(obj.add_attribute('sha256', value=self.id))
+        obj_attrs.append(obj.add_attribute('attachment', value=self.id, data=self.get_file_content()))
         for obj_attr in obj_attrs:
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)

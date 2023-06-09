@@ -82,8 +82,16 @@ class Username(AbstractSubtypeObject):
             obj = MISPObject('user-account', standalone=True)
             obj_attrs.append(obj.add_attribute('username', value=self.id))
 
-        obj.first_seen = self.get_first_seen()
-        obj.last_seen = self.get_last_seen()
+        first_seen = self.get_first_seen()
+        last_seen = self.get_last_seen()
+        if first_seen:
+            obj.first_seen = first_seen
+        if last_seen:
+            obj.last_seen = last_seen
+        if not first_seen or not last_seen:
+            self.logger.warning(
+                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
+
         for obj_attr in obj_attrs:
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)

@@ -344,8 +344,15 @@ class Domain(AbstractObject):
         # create domain-ip obj
         obj_attrs = []
         obj = MISPObject('domain-crawled', standalone=True)
-        obj.first_seen = self.get_first_seen()
-        obj.last_seen = self.get_last_check()
+        first_seen = self.get_first_seen()
+        last_seen = self.get_last_check()
+        if first_seen:
+            obj.first_seen = first_seen
+        if last_seen:
+            obj.last_seen = last_seen
+        if not first_seen or not last_seen:
+            self.logger.warning(
+                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
 
         obj_attrs.append(obj.add_attribute('domain', value=self.id))
         urls = self.get_all_urls(date=True, epoch=epoch)

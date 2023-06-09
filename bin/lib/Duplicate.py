@@ -85,18 +85,18 @@ def add_obj_duplicate(algo, similarity, obj_type, subtype, obj_id, id_2):
     r_serv_db.sadd(f'obj:duplicates:{obj_type}:{subtype}:{obj_id}', f'{similarity}:{algo}:{id_2}')
 
 
-def add_duplicate(algo, hash_, similarity, obj_type, subtype, id, date_ymonth):
+def add_duplicate(algo, hash_, similarity, obj_type, subtype, obj_id, date_ymonth):
     obj2_id = get_object_id_by_hash(algo, hash_, date_ymonth)
     # same content
     if similarity == 100:
-        dups = get_obj_duplicates(obj_type, subtype, id)
+        dups = get_obj_duplicates(obj_type, subtype, obj_id)
         for dup_id in dups:
             for algo_dict in dups[dup_id]:
                 if algo_dict['similarity'] == 100 and algo_dict['algo'] == algo:
-                    add_obj_duplicate(algo, similarity, obj_type, subtype, id, dups[dup_id])
-                    add_obj_duplicate(algo, similarity, obj_type, subtype, dups[dup_id], id)
-    add_obj_duplicate(algo, similarity, obj_type, subtype, id, obj2_id)
-    add_obj_duplicate(algo, similarity, obj_type, subtype, obj2_id, id)
+                    add_obj_duplicate(algo, similarity, obj_type, subtype, obj_id, dups[dup_id])
+                    add_obj_duplicate(algo, similarity, obj_type, subtype, dups[dup_id], obj_id)
+    add_obj_duplicate(algo, similarity, obj_type, subtype, obj_id, obj2_id)
+    add_obj_duplicate(algo, similarity, obj_type, subtype, obj2_id, obj_id)
 
 # TODO
 def delete_obj_duplicates():

@@ -107,8 +107,15 @@ class CryptoCurrency(AbstractSubtypeObject):
     def get_misp_object(self):
         obj_attrs = []
         obj = MISPObject('coin-address')
-        obj.first_seen = self.get_first_seen()
-        obj.last_seen = self.get_last_seen()
+        first_seen = self.get_first_seen()
+        last_seen = self.get_last_seen()
+        if first_seen:
+            obj.first_seen = first_seen
+        if last_seen:
+            obj.last_seen = last_seen
+        if not first_seen or not last_seen:
+            self.logger.warning(
+                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
 
         obj_attrs.append(obj.add_attribute('address', value=self.id))
         crypto_symbol = self.get_currency_symbol()

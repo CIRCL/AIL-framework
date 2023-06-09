@@ -211,9 +211,13 @@ class Item(AbstractObject):
         return {'style': '', 'icon': '', 'color': color, 'radius': 5}
 
     def get_misp_object(self):
-        obj_date = self.get_date()
         obj = MISPObject('ail-leak', standalone=True)
-        obj.first_seen = obj_date
+        obj_date = self.get_date()
+        if obj_date:
+            obj.first_seen = obj_date
+        else:
+            self.logger.warning(
+                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={obj_date}')
 
         obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
                      obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),

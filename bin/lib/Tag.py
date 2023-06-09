@@ -96,8 +96,6 @@ def get_taxonomies():
 def get_active_taxonomies():
     return r_tags.smembers('taxonomies:enabled')
 
-'active_taxonomies'
-
 def is_taxonomy_enabled(taxonomy):
     # enabled = r_tags.sismember('taxonomies:enabled', taxonomy)
     try:
@@ -641,23 +639,23 @@ def get_tag_objects(tag, obj_type, subtype='', date=''):
 def get_object_tags(obj_type, obj_id, subtype=''):
     return r_tags.smembers(f'tag:{obj_type}:{subtype}:{obj_id}')
 
-def add_object_tag(tag, obj_type, id, subtype=''):
-    if r_tags.sadd(f'tag:{obj_type}:{subtype}:{id}', tag) == 1:
+def add_object_tag(tag, obj_type, obj_id, subtype=''):
+    if r_tags.sadd(f'tag:{obj_type}:{subtype}:{obj_id}', tag) == 1:
         r_tags.sadd('list_tags', tag)
         r_tags.sadd(f'list_tags:{obj_type}', tag)
         r_tags.sadd(f'list_tags:{obj_type}:{subtype}', tag)
         if obj_type == 'item':
-            date = item_basic.get_item_date(id)
-            r_tags.sadd(f'{obj_type}:{subtype}:{tag}:{date}', id)
+            date = item_basic.get_item_date(obj_id)
+            r_tags.sadd(f'{obj_type}:{subtype}:{tag}:{date}', obj_id)
 
             # add domain tag
-            if item_basic.is_crawled(id) and tag != 'infoleak:submission="crawler"' and tag != 'infoleak:submission="manual"':
-                domain = item_basic.get_item_domain(id)
+            if item_basic.is_crawled(obj_id) and tag != 'infoleak:submission="crawler"' and tag != 'infoleak:submission="manual"':
+                domain = item_basic.get_item_domain(obj_id)
                 add_object_tag(tag, "domain", domain)
 
             update_tag_metadata(tag, date)
         else:
-            r_tags.sadd(f'{obj_type}:{subtype}:{tag}', id)
+            r_tags.sadd(f'{obj_type}:{subtype}:{tag}', obj_id)
 
         r_tags.hincrby(f'daily_tags:{datetime.date.today().strftime("%Y%m%d")}', tag, 1)
 
