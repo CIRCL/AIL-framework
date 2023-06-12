@@ -18,6 +18,7 @@ from lib.objects import CryptoCurrencies
 from lib.objects.Cves import Cve
 from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decodeds_objects
 from lib.objects.Domains import Domain
+from lib.objects.Favicons import Favicon
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
@@ -54,6 +55,8 @@ def get_object(obj_type, subtype, id):
         return Decoded(id)
     elif obj_type == 'cve':
         return Cve(id)
+    elif obj_type == 'favicon':
+        return Favicon(id)
     elif obj_type == 'screenshot':
         return Screenshot(id)
     elif obj_type == 'cryptocurrency':
@@ -163,7 +166,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
     meta = obj.get_meta()
     meta['icon'] = obj.get_svg_icon()
-    if subtype or obj_type == 'cve' or obj_type == 'title':
+    if subtype or obj_type == 'cve' or obj_type == 'title' or obj_type == 'favicon':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
             meta['cve_search'] = obj.get_cve_search()

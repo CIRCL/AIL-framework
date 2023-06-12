@@ -44,8 +44,9 @@ CORRELATION_TYPES_BY_OBJ = {
     "cryptocurrency": ["domain", "item"],
     "cve": ["domain", "item"],
     "decoded": ["domain", "item"],
-    "domain": ["cve", "cryptocurrency", "decoded", "item", "pgp", "title", "screenshot", "username"],
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "pgp", "screenshot", "title", "username"],
+    "domain": ["cve", "cryptocurrency", "decoded", "favicon", "item", "pgp", "title", "screenshot", "username"],
+    "favicon": ["domain", "item"],  # TODO Decoded
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],
     "pgp": ["domain", "item"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],

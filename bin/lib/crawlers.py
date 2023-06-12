@@ -141,9 +141,11 @@ def get_favicon_from_html(html, domain, url):
     return favicon_urls
 
 def extract_favicon_from_html(html, url):
-    favicon_urls = set()
+    favicons = set()
+    favicons_urls = set()
+
     soup = BeautifulSoup(html, 'html.parser')
-    set_icons = set()
+    all_icons = set()
     # If there are multiple <link rel="icon">s, the browser uses their media,
     # type, and sizes attributes to select the most appropriate icon.
     # If several icons are equally appropriate, the last one is used.
@@ -159,27 +161,65 @@ def extract_favicon_from_html(html, url):
     #   - <meta name="msapplication-TileColor" content="#aaaaaa"> <meta name="theme-color" content="#ffffff">
     #   - <meta name="msapplication-config" content="/icons/browserconfig.xml">
 
-    # desktop browser 'shortcut icon' (older browser), 'icon'
-    for favicon_tag in ['icon', 'shortcut icon']:
-        if soup.head:
-            for icon in soup.head.find_all('link', attrs={'rel': lambda x : x and x.lower() == favicon_tag, 'href': True}):
-                set_icons.add(icon)
 
-    # # TODO: handle base64 favicon
-    for tag in set_icons:
+    # Root Favicon
+    f = get_faup()
+    f.decode(url)
+    url_decoded = f.get()
+    root_domain = f"{url_decoded['scheme']}://{url_decoded['domain']}"
+    default_icon = f'{root_domain}/favicon.ico'
+    favicons_urls.add(default_icon)
+    # print(default_icon)
+
+    # shortcut
+    for shortcut in soup.find_all('link', rel='shortcut icon'):
+        all_icons.add(shortcut)
+    # icons
+    for icon in soup.find_all('link', rel='icon'):
+        all_icons.add(icon)
+
+    for mask_icon in soup.find_all('link', rel='mask-icon'):
+        all_icons.add(mask_icon)
+    for apple_touche_icon in soup.find_all('link', rel='apple-touch-icon'):
+        all_icons.add(apple_touche_icon)
+    for msapplication in soup.find_all('meta', attrs={'name': 'msapplication-TileImage'}):  # msapplication-TileColor
+        all_icons.add(msapplication)
+
+    # msapplication-TileImage
+
+    # print(all_icons)
+    for tag in all_icons:
         icon_url = tag.get('href')
         if icon_url:
-            if icon_url.startswith('//'):
-                icon_url = icon_url.replace('//', '/')
             if icon_url.startswith('data:'):
-                # # TODO: handle base64 favicon
-                pass
+                data = icon_url.split(',', 1)
+                if len(data) > 1:
+                    data = ''.join(data[1].split())
+                    favicon = base64.b64decode(data)
+                    if favicon:
+                        favicons.add(favicon)
             else:
-                icon_url = urljoin(url, icon_url)
-                icon_url = urlparse(icon_url, scheme=urlparse(url).scheme).geturl()
-                favicon_urls.add(icon_url)
-    return favicon_urls
+                favicon_url = urljoin(url, icon_url)
+                favicons_urls.add(favicon_url)
+        elif tag.get('name') == 'msapplication-TileImage':
+            icon_url = tag.get('content')
+            if icon_url:
+                if icon_url.startswith('data:'):
+                    data = icon_url.split(',', 1)
+                    if len(data) > 1:
+                        data = ''.join(data[1].split())
+                        favicon = base64.b64decode(data)
+                        if favicon:
+                            favicons.add(favicon)
+                else:
+                    favicon_url = urljoin(url, icon_url)
+                    favicons_urls.add(favicon_url)
+                    print(favicon_url)
 
+    # print(favicons_urls)
+    return favicons_urls, favicons
+
+# mmh3.hash(favicon)
 
 # # # - - # # #
 
@@ -1755,7 +1795,9 @@ def test_ail_crawlers():
 load_blacklist()
 
 # if __name__ == '__main__':
-#     item = Item('crawled/2023/03/06/foo.bec50a87b5-0c21-4ed4-9cb2-2d717a7a6507')
+#     item_id = 'crawled/2023/02/20/data.gz'
+#     item = Item(item_id)
 #     content = item.get_content()
-#     r = extract_author_from_html(content)
+#     temp_url = ''
+#     r = extract_favicon_from_html(content, temp_url)
 #     print(r)
