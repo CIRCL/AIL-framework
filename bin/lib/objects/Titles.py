@@ -7,6 +7,8 @@ import sys
 from hashlib import sha256
 from flask import url_for
 
+# import warnings
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
 from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -100,21 +102,24 @@ class Titles(AbstractDaterangeObjects):
         Titles Objects
     """
     def __init__(self):
-        super().__init__('title')
+        super().__init__('title', Title)
 
-    def get_metas(self, obj_ids, options=set()):
-        return self._get_metas(Title, obj_ids, options=options)
-
-    def sanitize_name_to_search(self, name_to_search):
+    def sanitize_id_to_search(self, name_to_search):
         return name_to_search
 
 
 # if __name__ == '__main__':
-#     from lib import crawlers
-#     from lib.objects import Items
-#     for item in Items.get_all_items_objects(filters={'sources': ['crawled']}):
-#         title_content = crawlers.extract_title_from_html(item.get_content())
-#         if title_content:
-#             print(item.id, title_content)
-#             title = create_title(title_content)
-#             title.add(item.get_date(), item.id)
+#     # from lib import crawlers
+#     # from lib.objects import Items
+#     # for item in Items.get_all_items_objects(filters={'sources': ['crawled']}):
+#     #     title_content = crawlers.extract_title_from_html(item.get_content())
+#     #     if title_content:
+#     #         print(item.id, title_content)
+#     #         title = create_title(title_content)
+#     #         title.add(item.get_date(), item.id)
+#     titles = Titles()
+#     # for r in titles.get_ids_iterator():
+#     #     print(r)
+#     r = titles.search_by_id('f7d57B', r_pos=True, case_sensitive=False)
+#     print(r)
+

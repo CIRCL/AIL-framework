@@ -163,15 +163,20 @@ class AbstractDaterangeObjects(ABC):
     Abstract Daterange Objects
     """
 
-    def __init__(self, obj_type):
+    def __init__(self, obj_type, obj_class):
         """ Abstract for Daterange Objects
 
         :param obj_type: object type (item, ...)
+        :param obj_class: object python class (Item, ...)
         """
         self.type = obj_type
+        self.obj_class = obj_class
 
-    def get_all(self):
+    def get_ids(self):
         return r_object.smembers(f'{self.type}:all')
+
+    # def get_ids_iterator(self):
+    #     return r_object.sscan_iter(r_object, f'{self.type}:all')
 
     def get_by_date(self, date):
         return r_object.zrange(f'{self.type}:date:{date}', 0, -1)
@@ -185,35 +190,61 @@ class AbstractDaterangeObjects(ABC):
             obj_ids = obj_ids | set(self.get_by_date(date))
         return obj_ids
 
-    @abstractmethod
     def get_metas(self, obj_ids, options=set()):
-        pass
-
-    def _get_metas(self, obj_class_ref, obj_ids, options=set()):
         dict_obj = {}
         for obj_id in obj_ids:
-            obj = obj_class_ref(obj_id)
+            obj = self.obj_class(obj_id)
             dict_obj[obj_id] = obj.get_meta(options=options)
         return dict_obj
 
     @abstractmethod
-    def sanitize_name_to_search(self, name_to_search):
-        return name_to_search
+    def sanitize_id_to_search(self, id_to_search):
+        return id_to_search
 
-    def search_by_name(self, name_to_search, r_pos=False):
+    def search_by_id(self, name_to_search, r_pos=False, case_sensitive=True):
         objs = {}
+        if case_sensitive:
+            flags = 0
+        else:
+            flags = re.IGNORECASE
         # for subtype in subtypes:
-        r_name = self.sanitize_name_to_search(name_to_search)
+        r_name = self.sanitize_id_to_search(name_to_search)
         if not name_to_search or isinstance(r_name, dict):
             return objs
-        r_name = re.compile(r_name)
-        for title_name in self.get_all():
-            res = re.search(r_name, title_name)
+        r_name = re.compile(r_name, flags=flags)
+        for obj_id in self.get_ids():   # TODO REPLACE ME WITH AN ITERATOR
+            res = re.search(r_name, obj_id)
             if res:
-                objs[title_name] = {}
+                objs[obj_id] = {}
                 if r_pos:
-                    objs[title_name]['hl-start'] = res.start()
-                    objs[title_name]['hl-end'] = res.end()
+                    objs[obj_id]['hl-start'] = res.start()
+                    objs[obj_id]['hl-end'] = res.end()
+        return objs
+
+    def sanitize_content_to_search(self, content_to_search):
+        return content_to_search
+
+    def search_by_content(self, content_to_search, r_pos=False, case_sensitive=True):
+        objs = {}
+        if case_sensitive:
+            flags = 0
+        else:
+            flags = re.IGNORECASE
+        # for subtype in subtypes:
+        r_search = self.sanitize_content_to_search(content_to_search)
+        if not r_search or isinstance(r_search, dict):
+            return objs
+        r_search = re.compile(r_search, flags=flags)
+        for obj_id in self.get_ids():  # TODO REPLACE ME WITH AN ITERATOR
+            obj = self.obj_class(obj_id)
+            content = obj.get_content()
+            res = re.search(r_search, content)
+            if res:
+                objs[obj_id] = {}
+                if r_pos:  # TODO ADD CONTENT ????
+                    objs[obj_id]['hl-start'] = res.start()
+                    objs[obj_id]['hl-end'] = res.end()
+                    objs[obj_id]['content'] = content
         return objs
 
     def api_get_chart_nb_by_daterange(self, date_from, date_to):
@@ -227,4 +258,3 @@ class AbstractDaterangeObjects(ABC):
     def api_get_meta_by_daterange(self, date_from, date_to):
         date = Date.sanitise_date_range(date_from, date_to)
         return self.get_metas(self.get_by_daterange(date['date_from'], date['date_to']), options={'sparkline'})
-

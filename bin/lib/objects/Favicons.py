@@ -105,19 +105,14 @@ def create_favicon(content, url=None):  # TODO URL ????
         favicon.create(content)
 
 
-# TODO  ADD SEARCH FUNCTION
-
 class Favicons(AbstractDaterangeObjects):
     """
         Favicons Objects
     """
     def __init__(self):
-        super().__init__('favicon')
+        super().__init__('favicon', Favicon)
 
-    def get_metas(self, obj_ids, options=set()):
-        return self._get_metas(Favicon, obj_ids, options=options)
-
-    def sanitize_name_to_search(self, name_to_search):
+    def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 
 
