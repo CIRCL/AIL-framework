@@ -156,7 +156,8 @@ def delete_user(user_id):
         for role_id in get_all_roles():
             r_serv_db.srem(f'ail:users:role:{role_id}', user_id)
         user_token = get_user_token(user_id)
-        r_serv_db.hdel('ail:users:tokens', user_token)
+        if user_token:
+            r_serv_db.hdel('ail:users:tokens', user_token)
         r_serv_db.delete(f'ail:user:metadata:{user_id}')
         r_serv_db.hdel('ail:users:all', user_id)
 
