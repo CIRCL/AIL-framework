@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from  lib.ail_core import paginate_iterator
 from lib.objects import Titles
 from packages import Date
 
@@ -72,14 +73,37 @@ def objects_title_range_json():
     date_to = date['date_to']
     return jsonify(Titles.Titles().api_get_chart_nb_by_daterange(date_from, date_to))
 
-@objects_title.route("/objects/title/search", methods=['POST'])
+@objects_title.route("/objects/title/search_post", methods=['POST'])
 @login_required
-@login_read_only
-def objects_title_search():
+@login_analyst
+def objects_title_search_post():
     to_search = request.form.get('to_search')
-    type_to_search = request.form.get('search_type', 'id')
+    search_type = request.form.get('search_type', 'id')
     case_sensitive = request.form.get('case_sensitive')
     case_sensitive = bool(case_sensitive)
+    page = request.form.get('page', 1)
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+    return redirect(
+        url_for('objects_title.objects_title_search', search=to_search, page=page,
+                search_type=search_type, case_sensitive=case_sensitive))
+
+@objects_title.route("/objects/title/search", methods=['GET'])
+@login_required
+@login_analyst
+def objects_title_search():
+    to_search = request.args.get('search')
+    type_to_search = request.args.get('search_type', 'id')
+    case_sensitive = request.args.get('case_sensitive')
+    case_sensitive = bool(case_sensitive)
+    page = request.args.get('page', 1)
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+
     titles = Titles.Titles()
 
     if type_to_search == 'id':
@@ -97,9 +121,12 @@ def objects_title_search():
         return create_json_response({'error': 'Unknown search type'}, 400)
 
     if search_result:
-        dict_objects = titles.get_metas(search_result.keys(), options={'sparkline'})
+        ids = sorted(search_result.keys())
+        dict_page = paginate_iterator(ids, nb_obj=500, page=page)
+        dict_objects = titles.get_metas(dict_page['list_elem'], options={'sparkline'})
     else:
         dict_objects = {}
 
     return render_template("search_title_result.html", dict_objects=dict_objects, search_result=search_result,
+                           dict_page=dict_page,
                            to_search=to_search, case_sensitive=case_sensitive, type_to_search=type_to_search)
