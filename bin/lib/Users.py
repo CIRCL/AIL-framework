@@ -81,7 +81,7 @@ def get_user_passwd_hash(user_id):
     return r_serv_db.hget('ail:users:all', user_id)
 
 def get_user_token(user_id):
-    return r_serv_db.hget(f'ail:users:metadata:{user_id}', 'token')
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'token')
 
 def get_token_user(token):
     return r_serv_db.hget('ail:users:tokens', token)
