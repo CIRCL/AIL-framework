@@ -16,6 +16,7 @@ from modules.abstract_module import AbstractModule
 from lib import ail_logger
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
+from lib.objects import CookiesNames
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
 from lib.objects import Screenshots
@@ -56,7 +57,7 @@ class Crawler(AbstractModule):
         self.har = None
         self.screenshot = None
         self.root_item = None
-        self.har_dir = None
+        self.date = None
         self.items_dir = None
         self.domain = None
 
@@ -191,15 +192,14 @@ class Crawler(AbstractModule):
         # DEBUG
         # self.har = True
         # self.screenshot = True
-        str_date = crawlers.get_current_date(separator=True)
-        self.har_dir = crawlers.get_date_har_dir(str_date)
-        self.items_dir = crawlers.get_date_crawled_items_source(str_date)
+        self.date = crawlers.get_current_date(separator=True)
+        self.items_dir = crawlers.get_date_crawled_items_source(self.date)
         self.root_item = None
 
         # Save Capture
         self.save_capture_response(parent_id, entries)
 
-        self.domain.update_daterange(str_date.replace('/', ''))
+        self.domain.update_daterange(self.date.replace('/', ''))
         # Origin + History
         if self.root_item:
             self.domain.set_last_origin(parent_id)
@@ -279,7 +279,13 @@ class Crawler(AbstractModule):
             # HAR
             if self.har:
                 if 'har' in entries and entries['har']:
-                    crawlers.save_har(self.har_dir, item_id, entries['har'])
+                    har_id = crawlers.create_har_id(self.date, item_id)
+                    crawlers.save_har(har_id, entries['har'])
+                    for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
+                        print(cookie_name)
+                        cookie = CookiesNames.create(cookie_name)
+                        cookie.add(self.date.replace('/', ''), self.domain.id)
+
         # Next Children
         entries_children = entries.get('children')
         if entries_children:

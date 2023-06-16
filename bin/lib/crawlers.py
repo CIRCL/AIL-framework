@@ -36,6 +36,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from packages import git_status
+from packages import Date
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
@@ -74,8 +75,8 @@ def get_current_date(separator=False):
 def get_date_crawled_items_source(date):
     return os.path.join('crawled', date)
 
-def get_date_har_dir(date):
-    return os.path.join(HAR_DIR, date)
+def get_har_dir():
+    return HAR_DIR
 
 def is_valid_onion_domain(domain):
     if not domain.endswith('.onion'):
@@ -263,6 +264,88 @@ def extract_author_from_html(html):
     if keywords:
         return keywords['content']
     return ''
+# # # - - # # #
+
+
+# # # # # # # #
+#             #
+#     HAR     #
+#             #
+# # # # # # # #
+
+def create_har_id(date, item_id):
+    item_id = item_id.split('/')[-1]
+    return os.path.join(date, f'{item_id}.json')
+
+def save_har(har_id, har_content):
+    # create dir
+    har_dir = os.path.dirname(os.path.join(get_har_dir(), har_id))
+    if not os.path.exists(har_dir):
+        os.makedirs(har_dir)
+    # save HAR
+    filename = os.path.join(get_har_dir(), har_id)
+    with open(filename, 'w') as f:
+        f.write(json.dumps(har_content))
+
+def get_all_har_ids():
+    har_ids = []
+    today_root_dir = os.path.join(HAR_DIR, Date.get_today_date_str(separator=True))
+    dirs_year = set()
+    for ydir in next(os.walk(HAR_DIR))[1]:
+        if len(ydir) == 4:
+            try:
+                int(ydir)
+                dirs_year.add(ydir)
+            except (TypeError, ValueError):
+                pass
+
+    for file in [f for f in os.listdir(today_root_dir) if os.path.isfile(os.path.join(today_root_dir, f))]:
+        har_id = os.path.relpath(os.path.join(today_root_dir, file), HAR_DIR)
+        har_ids.append(har_id)
+
+    for ydir in sorted(dirs_year, reverse=False):
+        search_dear = os.path.join(HAR_DIR, ydir)
+        for root, dirs, files in os.walk(search_dear):
+            for file in files:
+                if root != today_root_dir:
+                    har_id = os.path.relpath(os.path.join(root, file), HAR_DIR)
+                    har_ids.append(har_id)
+    return har_ids
+
+def extract_cookies_names_from_har_by_har_id(har_id):
+    har_path = os.path.join(HAR_DIR, har_id)
+    with open(har_path) as f:
+        try:
+            har_content = json.loads(f.read())
+        except json.decoder.JSONDecodeError:
+            har_content = {}
+    return extract_cookies_names_from_har(har_content)
+
+def extract_cookies_names_from_har(har):
+    cookies = set()
+    for entrie in har.get('log', {}).get('entries', []):
+        for cookie in entrie.get('request', {}).get('cookies', []):
+            name = cookie.get('name')
+            if name:
+                cookies.add(name)
+        for cookie in entrie.get('response', {}).get('cookies', []):
+            name = cookie.get('name')
+            if name:
+                cookies.add(name)
+    return cookies
+
+def _reprocess_all_hars():
+    from lib.objects import CookiesNames
+    for har_id in get_all_har_ids():
+        domain = har_id.split('/')[-1]
+        domain = domain[:-41]
+        date = har_id.split('/')
+        date = f'{date[-4]}{date[-3]}{date[-2]}'
+        for cookie_name in extract_cookies_names_from_har_by_har_id(har_id):
+            print(domain, date, cookie_name)
+            cookie = CookiesNames.create(cookie_name)
+            cookie.add(date, domain)
+
 # # # - - # # #
 
 ################################################################################
@@ -1555,14 +1638,6 @@ def create_item_id(item_dir, domain):
         UUID = domain+str(uuid.uuid4())
     return os.path.join(item_dir, UUID)
 
-def save_har(har_dir, item_id, har_content):
-    if not os.path.exists(har_dir):
-        os.makedirs(har_dir)
-    item_id = item_id.split('/')[-1]
-    filename = os.path.join(har_dir, item_id + '.json')
-    with open(filename, 'w') as f:
-        f.write(json.dumps(har_content))
-
 # # # # # # # # # # # #
 #                     #
 #   CRAWLER MANAGER   # TODO REFACTOR ME
@@ -1801,3 +1876,5 @@ load_blacklist()
 #     temp_url = ''
 #     r = extract_favicon_from_html(content, temp_url)
 #     print(r)
+#     _reprocess_all_hars()
+

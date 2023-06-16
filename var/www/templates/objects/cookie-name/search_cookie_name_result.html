@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Titles - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                {% with page=dict_page['page'] %}
+				    {% include 'title/block_titles_search.html' %}
+                {% endwith %}
+
+
+				<table id="table_objects" class="table table-striped table-bordered">
+                    <thead class="bg-dark text-white">
+                    <tr>
+                        <th></th>
+                        <th>First Seen</th>
+                        <th>Last Seen</th>
+                        <th>Total</th>
+                        <th>Last days</th>
+                    </tr>
+                    </thead>
+                    <tbody style="font-size: 15px;">
+                    {% for obj_id in dict_objects %}
+                        <tr>
+                            <td>
+                                <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=title&id={{ obj_id }}">
+                                    {% if type_to_search == 'content' %}
+                                        <span>{{ dict_objects[obj_id]['content'][:search_result[obj_id]['hl-start']] }}</span><span class="hg-text">{{dict_objects[obj_id]['content'][search_result[obj_id]['hl-start']:search_result[obj_id]['hl-end']]}}</span>{{ dict_objects[obj_id]['content'][search_result[obj_id]['hl-end']:] }}
+                                    {% else %}
+                                        <span>{{ dict_objects[obj_id]['content'] }}</span>
+                                    {% endif %}
+                                </a>
+                            </td>
+                            <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
+                            <td>{{ dict_objects[obj_id]['last_seen'] }}</td>
+                            <td>{{ dict_objects[obj_id]['nb_seen'] }}</td>
+                            <td id="sparklines_{{ obj_id }}" style="text-align:center;"></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'],  nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'] %}
+                    {% set target_url=url_for('objects_title.objects_title_search') + "?search=" + to_search + "&search_type=" + type_to_search + "&case_sensitive=" + case_sensitive|string %}
+                    {% include 'pagination.html' %}
+                {% endwith %}
+
+            </div>
+        </div>
+    </div>
+
+<script>
+    var chart = {};
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        $("#nav_title").addClass("active");
+
+        $('#table_objects').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 3, "desc" ]]
+        });
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+<script>
+	{% for obj_id in dict_objects %}
+    sparkline("sparklines_{{ obj_id }}", {{ dict_objects[obj_id]['sparkline'] }}, {});
+	{% endfor %}
+</script>
+
+
+</body>
+</html>

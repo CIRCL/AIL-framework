@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-import mmh3
 import os
 import sys
 
+from hashlib import sha256
 from flask import url_for
 
 from pymisp import MISPObject
@@ -21,14 +21,15 @@ r_objects = config_loader.get_db_conn("Kvrocks_Objects")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
+# TODO NEW ABSTRACT OBJECT -> daterange for all objects ????
 
-class Favicon(AbstractDaterangeObject):
+class CookieName(AbstractDaterangeObject):
     """
-    AIL Favicon Object.
+    AIL CookieName Object.
     """
 
-    def __init__(self, id):
-        super(Favicon, self).__init__('favicon', id)
+    def __init__(self, obj_id):
+        super(CookieName, self).__init__('cookie-name', obj_id)
 
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True),
@@ -53,11 +54,11 @@ class Favicon(AbstractDaterangeObject):
 
     # TODO # CHANGE COLOR
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': '\uf20a', 'color': '#1E88E5', 'radius': 5}  # f0c8 f45c
+        return {'style': 'fas', 'icon': '\uf564', 'color': '#BFD677', 'radius': 5}  # f563
 
     def get_misp_object(self):
         obj_attrs = []
-        obj = MISPObject('favicon')
+        obj = MISPObject('cookie')
         first_seen = self.get_first_seen()
         last_seen = self.get_last_seen()
         if first_seen:
@@ -68,25 +69,23 @@ class Favicon(AbstractDaterangeObject):
             self.logger.warning(
                 f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
 
-        obj_attrs.append(obj.add_attribute('favicon-mmh3', value=self.id))
-        obj_attrs.append(obj.add_attribute('favicon', value=self.get_content(r_type='bytes')))
+        obj_attrs.append(obj.add_attribute('cookie-name', value=self.get_content()))
         for obj_attr in obj_attrs:
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
         return obj
 
+    def get_nb_seen(self):
+        return self.get_nb_correlation('domain')
+
     def get_meta(self, options=set()):
         meta = self._get_meta(options=options)
         meta['id'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
-        if 'content' in options:
-            meta['content'] = self.get_content()
+        meta['content'] = self.get_content()
         return meta
 
-    # def get_links(self):
-    #     # TODO GET ALL URLS FROM CORRELATED ITEMS
-
-    def add(self, date, obj_id):  # TODO correlation base 64 -> calc md5
+    def add(self, date, obj_id):  # date = HAR Date
         self._add(date, 'domain', '', obj_id)
 
     def create(self, content, _first_seen=None, _last_seen=None):
@@ -96,21 +95,22 @@ class Favicon(AbstractDaterangeObject):
         self._create()
 
 
-def create_favicon(content, url=None):  # TODO URL ????
+def create(content):
     if isinstance(content, str):
         content = content.encode()
-    favicon_id = mmh3.hash_bytes(content)
-    favicon = Favicon(favicon_id)
-    if not favicon.exists():
-        favicon.create(content)
+    obj_id = sha256(content).hexdigest()
+    cookie = CookieName(obj_id)
+    if not cookie.exists():
+        cookie.create(content)
+    return cookie
 
 
-class Favicons(AbstractDaterangeObjects):
+class CookiesNames(AbstractDaterangeObjects):
     """
-        Favicons Objects
+        CookieName Objects
     """
     def __init__(self):
-        super().__init__('favicon', Favicon)
+        super().__init__('cookie-name', CookieName)
 
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO

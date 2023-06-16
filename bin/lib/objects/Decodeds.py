@@ -228,7 +228,7 @@ class Decoded(AbstractDaterangeObject):
         return True
 
     def add(self, algo_name, date, obj_id, mimetype=None):
-        self._add(date, obj_id)
+        self._add(date, 'item', '', obj_id)
         if not mimetype:
             mimetype = self.get_mimetype()
 

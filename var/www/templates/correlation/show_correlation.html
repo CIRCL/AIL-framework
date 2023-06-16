@@ -115,6 +115,8 @@
 						{% include 'correlation/metadata_card_screenshot.html' %}
                     {% elif dict_object["object_type"] == "title" %}
 						{% include 'correlation/metadata_card_title.html' %}
+                    {% elif dict_object["object_type"] == "cookie-name" %}
+						{% include 'correlation/metadata_card_cookie_name.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
 					{% endif %}
@@ -190,6 +192,10 @@
                                             <input type="hidden" id="obj_id" name="obj_id" value="{{ dict_object["correlation_id"] }}">
 
 
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="CookieNameCheck" name="CookieNameCheck" {%if "cookie-name" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="CookieNameCheck">Cookie Name</label>
+                                            </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="CveCheck" name="CveCheck" {%if "cve" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="CveCheck">Cve</label>

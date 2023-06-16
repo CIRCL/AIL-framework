@@ -15,6 +15,7 @@ from lib import btc_ail
 from lib import Tag
 
 from lib.objects import CryptoCurrencies
+from lib.objects import CookiesNames
 from lib.objects.Cves import Cve
 from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decodeds_objects
 from lib.objects.Domains import Domain
@@ -53,6 +54,8 @@ def get_object(obj_type, subtype, id):
         return Domain(id)
     elif obj_type == 'decoded':
         return Decoded(id)
+    elif obj_type == 'cookie-name':
+        return CookiesNames.CookieName(id)
     elif obj_type == 'cve':
         return Cve(id)
     elif obj_type == 'favicon':

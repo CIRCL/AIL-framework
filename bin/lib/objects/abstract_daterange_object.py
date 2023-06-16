@@ -126,7 +126,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
 
     # TODO don't increase nb if same hash in item with different encoding
     # if hash already in item
-    def _add(self, date, item_id):
+    def _add(self, date, obj_type, subtype, obj_id):
         if not self.exists():
             self._add_create()
             self.set_first_seen(date)
@@ -135,15 +135,22 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             self.update_daterange(date)
         update_obj_date(date, self.type)
 
-        # NB Object seen by day
-        if not self.is_correlated('item', '', item_id):  # if decoded not already in object
-            r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
-
         # Correlations
-        self.add_correlation('item', '', item_id)
-        if is_crawled(item_id):  # Domain
-            domain = get_item_domain(item_id)
-            self.add_correlation('domain', '', domain)
+        self.add_correlation(obj_type, subtype, obj_id)
+
+        if obj_type == 'item':
+            # NB Object seen by day TODO
+            if not self.is_correlated(obj_type, subtype, obj_id):  # nb seen by day
+                r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
+            if is_crawled(obj_id):  # Domain
+                domain = get_item_domain(obj_id)
+                self.add_correlation('domain', '', domain)
+        else:
+            # TODO Don't increase on reprocess
+            r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
+            # r_object.zincrby(f'{self.type}:obj:{obj_type}', 1, self.id)
+            #  1 Domain by day / 1 HAR by day
+            #  Domain check    / file created -> issue with scheduler
 
     # TODO:ADD objects + Stats
     def _create(self, first_seen=None, last_seen=None):

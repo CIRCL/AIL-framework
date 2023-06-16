@@ -83,7 +83,7 @@ class Title(AbstractDaterangeObject):
         return meta
 
     def add(self, date, item_id):
-        self._add(date, item_id)
+        self._add(date, 'item', '', item_id)
 
     def create(self, content, _first_seen=None, _last_seen=None):
         self._set_field('content', content)

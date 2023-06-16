@@ -41,10 +41,11 @@ config_loader = None
 ##################################
 
 CORRELATION_TYPES_BY_OBJ = {
+    "cookie-name": ["domain"],
     "cryptocurrency": ["domain", "item"],
     "cve": ["domain", "item"],
     "decoded": ["domain", "item"],
-    "domain": ["cve", "cryptocurrency", "decoded", "favicon", "item", "pgp", "title", "screenshot", "username"],
+    "domain": ["cve", "cookie-name", "cryptocurrency", "decoded", "favicon", "item", "pgp", "title", "screenshot", "username"],
     "favicon": ["domain", "item"],  # TODO Decoded
     "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],
     "pgp": ["domain", "item"],

@@ -81,7 +81,7 @@ class Date(object):
 
 def get_today_date_str(separator=False):
     if separator:
-        datetime.date.today().strftime("%Y/%m/%d")
+        return datetime.date.today().strftime("%Y/%m/%d")
     else:
         return datetime.date.today().strftime("%Y%m%d")
 

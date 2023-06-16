@@ -80,7 +80,7 @@ class Cve(AbstractDaterangeObject):
         return meta
 
     def add(self, date, item_id):
-        self._add(date, item_id)
+        self._add(date, 'item', '', item_id)
 
     def get_cve_search(self):
         try:

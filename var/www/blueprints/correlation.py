@@ -80,6 +80,9 @@ def show_correlation():
 
         ## get all selected correlations
         filter_types = []
+        correl_option = request.form.get('CookieNameCheck')
+        if correl_option:
+            filter_types.append('cookie-name')
         correl_option = request.form.get('CveCheck')
         if correl_option:
             filter_types.append('cve')
