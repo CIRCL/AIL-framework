@@ -186,7 +186,7 @@ class Crawler(AbstractModule):
         parent_id = task.get_parent()
 
         entries = self.lacus.get_capture(capture.uuid)
-        print(entries['status'])
+        print(entries.get('status'))
         self.har = task.get_har()
         self.screenshot = task.get_screenshot()
         # DEBUG
@@ -218,12 +218,12 @@ class Crawler(AbstractModule):
         if 'error' in entries:
             # TODO IMPROVE ERROR MESSAGE
             self.logger.warning(str(entries['error']))
-            print(entries['error'])
+            print(entries.get('error'))
             if entries.get('html'):
                 print('retrieved content')
                 # print(entries.get('html'))
 
-        if 'last_redirected_url' in entries and entries['last_redirected_url']:
+        if 'last_redirected_url' in entries and entries.get('last_redirected_url'):
             last_url = entries['last_redirected_url']
             unpacked_last_url = crawlers.unpack_url(last_url)
             current_domain = unpacked_last_url['domain']
@@ -238,7 +238,7 @@ class Crawler(AbstractModule):
         else:
             last_url = f'http://{self.domain.id}'
 
-        if 'html' in entries and entries['html']:
+        if 'html' in entries and entries.get('html'):
             item_id = crawlers.create_item_id(self.items_dir, self.domain.id)
             print(item_id)
             gzip64encoded = crawlers.get_gzipped_b64_item(item_id, entries['html'])
@@ -264,7 +264,7 @@ class Crawler(AbstractModule):
 
             # SCREENSHOT
             if self.screenshot:
-                if 'png' in entries and entries['png']:
+                if 'png' in entries and entries.get('png'):
                     screenshot = Screenshots.create_screenshot(entries['png'], b64=False)
                     if screenshot:
                         if not screenshot.is_tags_safe():
@@ -278,7 +278,7 @@ class Crawler(AbstractModule):
                             screenshot.add_correlation('domain', '', self.domain.id)
             # HAR
             if self.har:
-                if 'har' in entries and entries['har']:
+                if 'har' in entries and entries.get('har'):
                     har_id = crawlers.create_har_id(self.date, item_id)
                     crawlers.save_har(har_id, entries['har'])
                     for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
