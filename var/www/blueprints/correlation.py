@@ -46,7 +46,7 @@ def sanitise_graph_mode(graph_mode):
 def sanitise_nb_max_nodes(nb_max_nodes):
     try:
         nb_max_nodes = int(nb_max_nodes)
-        if nb_max_nodes < 2:
+        if nb_max_nodes < 2 and nb_max_nodes != 0:
             nb_max_nodes = 300
     except (TypeError, ValueError):
         nb_max_nodes = 300

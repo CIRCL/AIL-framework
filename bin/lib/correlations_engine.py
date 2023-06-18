@@ -193,7 +193,7 @@ def _get_correlations_graph_node(links, nodes, obj_type, subtype, obj_id, level,
             if obj2_str_id == previous_str_obj:
                 continue
 
-            if len(nodes) > max_nodes:
+            if len(nodes) > max_nodes != 0:
                 break
             nodes.add(obj2_str_id)
             links.add((obj_str_id, obj2_str_id))
