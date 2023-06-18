@@ -71,10 +71,12 @@
                     </tbody>
                 </table>
 
-                {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'],  nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'] %}
-                    {% set target_url=url_for('objects_title.objects_title_search') + "?search=" + to_search + "&search_type=" + type_to_search + "&case_sensitive=" + case_sensitive|string %}
-                    {% include 'pagination.html' %}
-                {% endwith %}
+                {% if dict_page %}
+                    {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'],  nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'] %}
+                        {% set target_url=url_for('objects_title.objects_title_search') + "?search=" + to_search + "&search_type=" + type_to_search + "&case_sensitive=" + case_sensitive|string %}
+                        {% include 'pagination.html' %}
+                    {% endwith %}
+                {% endif %}
 
             </div>
         </div>

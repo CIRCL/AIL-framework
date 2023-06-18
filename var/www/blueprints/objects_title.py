@@ -126,6 +126,7 @@ def objects_title_search():
         dict_objects = titles.get_metas(dict_page['list_elem'], options={'sparkline'})
     else:
         dict_objects = {}
+        dict_page = {}
 
     return render_template("search_title_result.html", dict_objects=dict_objects, search_result=search_result,
                            dict_page=dict_page,
