@@ -111,13 +111,25 @@ class Decoded(AbstractDaterangeObject):
     def get_rel_path(self, mimetype=None):
         if not mimetype:
             mimetype = self.get_mimetype()
+        if not mimetype:
+            self.logger.warning(f'Decoded {self.id}: Empty mimetype')
+            return None
         return os.path.join(HASH_DIR, mimetype, self.id[0:2], self.id)
 
     def get_filepath(self, mimetype=None):
-        return os.path.join(os.environ['AIL_HOME'], self.get_rel_path(mimetype=mimetype))
+        rel_path = self.get_rel_path(mimetype=mimetype)
+        if not rel_path:
+            return None
+        else:
+            return os.path.join(os.environ['AIL_HOME'], rel_path)
 
     def get_content(self, mimetype=None, r_type='str'):
         filepath = self.get_filepath(mimetype=mimetype)
+        if not filepath:
+            if r_type == 'str':
+                return ''
+            else:
+                return b''
         if r_type == 'str':
             with open(filepath, 'r') as f:
                 content = f.read()
@@ -442,7 +454,7 @@ def get_all_decodeds_objects(filters={}):
                 if i >= len(files):
                     files = []
             for file in files:
-                yield Decoded(file).id
+                yield Decoded(file)
 
 
 ############################################################################

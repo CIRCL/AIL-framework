@@ -128,10 +128,16 @@ class Retro_Hunt_Module(AbstractModule):
         self.retro_hunt.add(self.obj.get_type(), self.obj.get_subtype(), obj_id)
 
         # TODO FILTER Tags
+
+        # TODO refactor Tags module for all object type
         # Tags
-        for tag in self.tags:
-            msg = f'{tag};{id}'
-            self.add_message_to_queue(msg, 'Tags')
+        if self.obj.get_type() == 'item':
+            for tag in self.tags:
+                msg = f'{tag};{obj_id}'
+                self.add_message_to_queue(msg, 'Tags')
+        else:
+            for tag in self.tags:
+                self.obj.add_tag(tag)
 
         # # Mails
         # EXPORTER MAILS
