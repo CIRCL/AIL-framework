@@ -43,14 +43,15 @@ class IPAddress(AbstractModule):
         networks = config_loader.get_config_str("IP", "networks")
         if not networks:
             print('No IP ranges provided')
-            sys.exit(0)
-        try:
-            for network in networks.split(","):
-                self.ip_networks.add(IPv4Network(network))
-                print(f'IP Range To Search: {network}')
-        except:
-            print('Please provide a list of valid IP addresses')
-            sys.exit(0)
+            # sys.exit(0)
+        else:
+            try:
+                for network in networks.split(","):
+                    self.ip_networks.add(IPv4Network(network))
+                    print(f'IP Range To Search: {network}')
+            except:
+                print('Please provide a list of valid IP addresses')
+                sys.exit(0)
 
         self.re_ipv4 = r'(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
         re.compile(self.re_ipv4)
@@ -62,6 +63,9 @@ class IPAddress(AbstractModule):
         self.logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message, r_result=False):
+        if not self.ip_networks:
+            return None
+
         item = Item(message)
         content = item.get_content()
 
