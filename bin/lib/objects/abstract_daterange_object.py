@@ -135,17 +135,21 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             self.update_daterange(date)
         update_obj_date(date, self.type)
 
-        # Correlations
-        self.add_correlation(obj_type, subtype, obj_id)
-
         if obj_type == 'item':
             # NB Object seen by day TODO
             if not self.is_correlated(obj_type, subtype, obj_id):  # nb seen by day
                 r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
+
+            # Correlations
+            self.add_correlation(obj_type, subtype, obj_id)
+
             if is_crawled(obj_id):  # Domain
                 domain = get_item_domain(obj_id)
                 self.add_correlation('domain', '', domain)
         else:
+            # Correlations
+            self.add_correlation(obj_type, subtype, obj_id)
+
             # TODO Don't increase on reprocess
             r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
             # r_object.zincrby(f'{self.type}:obj:{obj_type}', 1, self.id)
