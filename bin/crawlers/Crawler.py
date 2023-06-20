@@ -200,10 +200,13 @@ class Crawler(AbstractModule):
         self.save_capture_response(parent_id, entries)
 
         self.domain.update_daterange(self.date.replace('/', ''))
-        # Origin + History
+        # Origin + History + tags
         if self.root_item:
             self.domain.set_last_origin(parent_id)
             self.domain.add_history(epoch, root_item=self.root_item)
+            # Tags
+            for tag in task.get_tags():
+                self.domain.add_tag(tag)
         elif self.domain.was_up():
             self.domain.add_history(epoch, root_item=epoch)
 

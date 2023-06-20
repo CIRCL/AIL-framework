@@ -45,7 +45,14 @@
                     <tbody id="tbody_last_crawled">
                     {% for meta in schedulers %}
                         <tr>
-                            <td><a href="{{ url_for('crawler_splash.schedule_show') }}?uuid={{ meta['uuid'] }}">{{ meta['url'] }}</a></td>
+                            <td>
+                                <a href="{{ url_for('crawler_splash.schedule_show') }}?uuid={{ meta['uuid'] }}">{{ meta['url'] }}</a>
+                                <div>
+                                    {% for tag in meta['tags'] %}
+                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                    {%endfor%}
+                                </div>
+                            </td>
                             <td>{{ meta['status'] }}</td>
                             <td>
                                 {% if not meta['next_run'] %}

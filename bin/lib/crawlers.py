@@ -967,6 +967,7 @@ class CrawlerScheduler:
             task_uuid = create_task(meta['url'], depth=meta['depth'], har=meta['har'], screenshot=meta['screenshot'],
                                     header=meta['header'],
                                     cookiejar=meta['cookiejar'], proxy=meta['proxy'],
+                                    tags=meta['tags'],
                                     user_agent=meta['user_agent'], parent='scheduler', priority=40)
             if task_uuid:
                 schedule.set_task(task_uuid)
@@ -1069,6 +1070,14 @@ class CrawlerSchedule:
     def _set_field(self, field, value):
         return r_crawler.hset(f'schedule:{self.uuid}', field, value)
 
+    def get_tags(self):
+        return r_crawler.smembers(f'schedule:tags:{self.uuid}')
+
+    def set_tags(self, tags=[]):
+        for tag in tags:
+            r_crawler.sadd(f'schedule:tags:{self.uuid}', tag)
+            # Tag.create_custom_tag(tag)
+
     def get_meta(self, ui=False):
         meta = {
             'uuid': self.uuid,
@@ -1083,6 +1092,7 @@ class CrawlerSchedule:
             'cookiejar': self.get_cookiejar(),
             'header': self.get_header(),
             'proxy': self.get_proxy(),
+            'tags': self.get_tags(),
         }
         status = self.get_status()
         if ui:
@@ -1098,6 +1108,7 @@ class CrawlerSchedule:
         meta = {'uuid': self.uuid,
                 'url': self.get_url(),
                 'user': self.get_user(),
+                'tags': self.get_tags(),
                 'next_run': self.get_next_run(r_str=True)}
         status = self.get_status()
         if isinstance(status, ScheduleStatus):
@@ -1106,7 +1117,7 @@ class CrawlerSchedule:
         return meta
 
     def create(self, frequency, user, url,
-               depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None):
+               depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None, tags=[]):
 
         if self.exists():
             raise Exception('Error: Monitor already exists')
@@ -1135,6 +1146,9 @@ class CrawlerSchedule:
         if user_agent:
             self._set_field('user_agent', user_agent)
 
+        if tags:
+            self.set_tags(tags)
+
         r_crawler.sadd('scheduler:schedules', self.uuid)
 
     def delete(self):
@@ -1148,12 +1162,13 @@ class CrawlerSchedule:
 
         # delete meta
         r_crawler.delete(f'schedule:{self.uuid}')
+        r_crawler.delete(f'schedule:tags:{self.uuid}')
         r_crawler.srem('scheduler:schedules', self.uuid)
 
-def create_schedule(frequency, user, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None):
+def create_schedule(frequency, user, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None, tags=[]):
     schedule_uuid = gen_uuid()
     schedule = CrawlerSchedule(schedule_uuid)
-    schedule.create(frequency, user, url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar, proxy=proxy, user_agent=user_agent)
+    schedule.create(frequency, user, url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar, proxy=proxy, user_agent=user_agent, tags=tags)
     return schedule_uuid
 
 # TODO sanityze UUID
@@ -1289,6 +1304,11 @@ def get_captures_status():
         status.append(meta)
     return status
 
+def delete_captures():
+    for capture_uuid in get_crawler_captures():
+        capture = CrawlerCapture(capture_uuid)
+        capture.delete()
+
 ##-- CRAWLER STATE --##
 
 
@@ -1371,6 +1391,14 @@ class CrawlerTask:
     def _set_field(self, field, value):
         return r_crawler.hset(f'crawler:task:{self.uuid}', field, value)
 
+    def get_tags(self):
+        return r_crawler.smembers(f'crawler:task:tags:{self.uuid}')
+
+    def set_tags(self, tags):
+        for tag in tags:
+            r_crawler.sadd(f'crawler:task:tags:{self.uuid}', tag)
+            # Tag.create_custom_tag(tag)
+
     def get_meta(self):
         meta = {
             'uuid': self.uuid,
@@ -1385,6 +1413,7 @@ class CrawlerTask:
             'header': self.get_header(),
             'proxy': self.get_proxy(),
             'parent': self.get_parent(),
+            'tags': self.get_tags(),
         }
         return meta
 
@@ -1392,7 +1421,7 @@ class CrawlerTask:
     # TODO SANITIZE PRIORITY
     # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
     def create(self, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-               user_agent=None, parent='manual', priority=0):
+               user_agent=None, tags=[], parent='manual', priority=0):
         if self.exists():
             raise Exception('Error: Task already exists')
 
@@ -1423,7 +1452,7 @@ class CrawlerTask:
         # TODO SANITIZE COOKIEJAR -> UUID
 
         # Check if already in queue
-        hash_query = get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header)
+        hash_query = get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header, tags)
         if r_crawler.hexists(f'crawler:queue:hash', hash_query):
             self.uuid = r_crawler.hget(f'crawler:queue:hash', hash_query)
             return self.uuid
@@ -1443,6 +1472,9 @@ class CrawlerTask:
             self._set_field('proxy', proxy)
         if user_agent:
             self._set_field('user_agent', user_agent)
+
+        if tags:
+            self.set_tags(tags)
 
         r_crawler.hset('crawler:queue:hash', hash_query, self.uuid)
         self._set_field('hash', hash_query)
@@ -1483,10 +1515,10 @@ class CrawlerTask:
 
 
 # TODO move to class ???
-def get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header):
+def get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header, tags):
     to_enqueue = {'domain': domain, 'depth': depth, 'har': har, 'screenshot': screenshot,
                   'priority': priority, 'proxy': proxy, 'cookiejar': cookiejar, 'user_agent': user_agent,
-                  'header': header}
+                  'header': header, 'tags': tags}
     if priority != 0:
         to_enqueue['url'] = url
     return hashlib.sha512(pickle.dumps(to_enqueue)).hexdigest()
@@ -1502,7 +1534,7 @@ def add_task_to_lacus_queue():
 
 # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
 def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-                user_agent=None, parent='manual', priority=0, task_uuid=None):
+                user_agent=None, tags=[], parent='manual', priority=0, task_uuid=None):
     if task_uuid:
         if CrawlerTask(task_uuid).exists():
             task_uuid = gen_uuid()
@@ -1510,7 +1542,7 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
         task_uuid = gen_uuid()
     task = CrawlerTask(task_uuid)
     task_uuid = task.create(url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar,
-                            proxy=proxy, user_agent=user_agent, parent=parent, priority=priority)
+                            proxy=proxy, user_agent=user_agent, tags=tags, parent=parent, priority=priority)
     return task_uuid
 
 
@@ -1586,15 +1618,17 @@ def api_add_crawler_task(data, user_id=None):
         if verify[1] != 200:
             return verify
 
+    tags = data.get('tags', [])
+
     if frequency:
         # TODO verify user
         return create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                               cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None), 200
+                               cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags), 200
     else:
         # TODO HEADERS
         # TODO USER AGENT
         return create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                           cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None,
+                           cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
                            parent='manual', priority=90), 200
 
 
@@ -1870,6 +1904,8 @@ def test_ail_crawlers():
 load_blacklist()
 
 # if __name__ == '__main__':
+#     delete_captures()
+
 #     item_id = 'crawled/2023/02/20/data.gz'
 #     item = Item(item_id)
 #     content = item.get_content()

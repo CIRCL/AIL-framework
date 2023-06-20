@@ -72,6 +72,14 @@
                                             {% endif %}
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <th>Tags</th>
+                                        <td>
+                                            {%for tag in meta['tags']%}
+                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                            {%endfor%}
+                                        </td>
+                                    </tr>
                                     </tbody>
                                 </table>
 

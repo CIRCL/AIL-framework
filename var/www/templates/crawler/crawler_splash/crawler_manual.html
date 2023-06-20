@@ -8,14 +8,16 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet">
 
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-	<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-	<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
-	<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 </head>
 
@@ -118,6 +120,21 @@
                                                 </div>
 
                                             </div>
+
+                                            <div class="card bg-light my-4">
+                                                <div class="card-header bg-dark text-white">
+													<b>Tags</b>
+												</div>
+                                                <div class="card-body">
+													<div class="input-group mb-2 mr-sm-2">
+														<div class="input-group-prepend">
+													  	    <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+													    </div>
+														<input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{%for tag in dict_tracker['tags']%}{{tag}} {%endfor%}"{%endif%}{%endif%}>
+													</div>
+													{% include 'tags/block_tags_selector.html' %}
+												</div>
+											</div>
 
 										</div>
 
