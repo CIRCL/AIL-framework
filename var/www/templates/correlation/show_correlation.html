@@ -162,6 +162,9 @@
 											<i class="fas fa-sync"></i>&nbsp;Resize Graph
 										</button>
 									</span>
+                                    <div id="incomplete_graph" class="text-danger mt-3">
+                                        <i class="fas fa-exclamation-triangle"></i>&nbsp;Graph Incomplete, Max Nodes Reached.
+                                    </div>
 								</div>
 								<div class="card-body graph_panel">
 									<div id="graph_loading" class="ml-3 mt-3">
@@ -350,6 +353,7 @@
 
 var all_graph = {};
 $(document).ready(function(){
+        $("#incomplete_graph").hide();
 		$("#page-Decoded").addClass("active");
 
 		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}");
@@ -525,6 +529,12 @@ d3.json(url)
 
 	// Loading ...
 	$("#graph_loading").remove();
+
+    if (!data.meta.complete){
+        $("#incomplete_graph").show();
+    }
+
+
 
 })
 .catch(function(error) {

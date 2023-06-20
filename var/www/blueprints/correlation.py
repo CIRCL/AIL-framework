@@ -156,7 +156,7 @@ def show_correlation():
 @login_read_only
 def get_description():
     object_id = request.args.get('object_id')
-    object_id = object_id.split(';')
+    object_id = object_id.split(':')
     # unpack object_id # # TODO: put me in lib
     if len(object_id) == 3:
         object_type = object_id[0]

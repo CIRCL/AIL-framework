@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-
 import os
 import sys
 
@@ -169,7 +168,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
     meta = obj.get_meta()
     meta['icon'] = obj.get_svg_icon()
-    if subtype or obj_type == 'cve' or obj_type == 'title' or obj_type == 'favicon':
+    if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'title' or obj_type == 'favicon':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
             meta['cve_search'] = obj.get_cve_search()
@@ -396,7 +395,7 @@ def create_correlation_graph_links(links_set):
 def create_correlation_graph_nodes(nodes_set, obj_str_id, flask_context=True):
     graph_nodes_list = []
     for node_id in nodes_set:
-        obj_type, subtype, obj_id = node_id.split(';', 2)
+        obj_type, subtype, obj_id = node_id.split(':', 2)
         dict_node = {'id': node_id}
         dict_node['style'] = get_object_svg(obj_type, subtype, obj_id)
 
@@ -418,12 +417,15 @@ def create_correlation_graph_nodes(nodes_set, obj_str_id, flask_context=True):
 
 def get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=[], max_nodes=300, level=1,
                                 flask_context=False):
-    obj_str_id, nodes, links = correlations_engine.get_correlations_graph_nodes_links(obj_type, subtype, obj_id,
-                                                                                      filter_types=filter_types,
-                                                                                      max_nodes=max_nodes, level=level,
-                                                                                      flask_context=flask_context)
+    obj_str_id, nodes, links, meta = correlations_engine.get_correlations_graph_nodes_links(obj_type, subtype, obj_id,
+                                                                                            filter_types=filter_types,
+                                                                                            max_nodes=max_nodes, level=level,
+                                                                                            flask_context=flask_context)
+    # print(meta)
+    meta['objs'] = list(meta['objs'])
     return {"nodes": create_correlation_graph_nodes(nodes, obj_str_id, flask_context=flask_context),
-            "links": create_correlation_graph_links(links)}
+            "links": create_correlation_graph_links(links),
+            "meta": meta}
 
 
 # --- CORRELATION --- #
