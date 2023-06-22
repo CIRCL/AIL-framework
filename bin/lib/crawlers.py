@@ -1239,7 +1239,8 @@ class CrawlerCapture:
 
     def create(self, task_uuid):
         if self.exists():
-            raise Exception(f'Error: Capture {self.uuid} already exists')
+            print(f'Capture {self.uuid} already exists')  # TODO LOGS
+            return None
         launch_time = int(time.time())
         r_crawler.hset(f'crawler:task:{task_uuid}', 'capture', self.uuid)
         r_crawler.hset('crawler:captures:tasks', self.uuid, task_uuid)
