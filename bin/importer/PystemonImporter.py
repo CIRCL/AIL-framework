@@ -35,7 +35,7 @@ class PystemonImporter(AbstractImporter):
         print(item_id)
         if item_id:
             print(item_id)
-            full_item_path = os.path.join(self.dir_pystemon, item_id) # TODO SANITIZE PATH
+            full_item_path = os.path.join(self.dir_pystemon, item_id)  # TODO SANITIZE PATH
             # Check if pystemon file exists
             if not os.path.isfile(full_item_path):
                 print(f'Error: {full_item_path}, file not found')
@@ -47,7 +47,12 @@ class PystemonImporter(AbstractImporter):
                 if not content:
                     return None
 
-                return self.create_message(item_id, content, source='pystemon')
+                if full_item_path[-3:] == '.gz':
+                    gzipped = True
+                else:
+                    gzipped = False
+
+                return self.create_message(item_id, content, gzipped=gzipped, source='pystemon')
 
             except IOError as e:
                 print(f'Error: {full_item_path}, IOError')
