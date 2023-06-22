@@ -52,7 +52,7 @@ class Duplicates(AbstractModule):
     def compute(self, message):
         # IOError: "CRC Checksum Failed on : {id}"
 
-        item = Item(message)
+        item = self.get_obj()
 
         # Check file size
         if item.get_size() < self.min_item_size:

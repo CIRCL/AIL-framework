@@ -66,7 +66,7 @@ class IPAddress(AbstractModule):
         if not self.ip_networks:
             return None
 
-        item = Item(message)
+        item = self.get_obj()
         content = item.get_content()
 
         # list of the regex results in the Item
@@ -86,8 +86,8 @@ class IPAddress(AbstractModule):
             self.redis_logger.warning(f'{item.get_id()} contains {item.get_id()} IPs')
 
             # Tag message with IP
-            msg = f'infoleak:automatic-detection="ip";{item.get_id()}'
-            self.add_message_to_queue(msg, 'Tags')
+            tag = 'infoleak:automatic-detection="ip"'
+            self.add_message_to_queue(message=tag, queue='Tags')
 
 
 if __name__ == "__main__":

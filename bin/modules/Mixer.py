@@ -173,7 +173,7 @@ class Mixer(AbstractModule):
                 self.r_cache.expire(digest, self.ttl_key)
 
                 self.increase_stat_processed(feeder_name)
-                self.add_message_to_queue(relay_message)
+                self.add_message_to_queue(message=relay_message)
 
         # Need To Be Fixed, Currently doesn't check the source (-> same as operation 1)
         # # Keep duplicate coming from different sources

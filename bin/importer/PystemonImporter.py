@@ -74,7 +74,7 @@ class PystemonModuleImporter(AbstractModule):
         return self.importer.importer()
 
     def compute(self, message):
-        self.add_message_to_queue(message)
+        self.add_message_to_queue(message=message)
 
 
 if __name__ == '__main__':

@@ -40,7 +40,8 @@ class LibInjection(AbstractModule):
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
-        url, item_id = message.split()
+        item = self.get_obj()
+        url = message
 
         self.faup.decode(url)
         url_parsed = self.faup.get()
@@ -68,7 +69,6 @@ class LibInjection(AbstractModule):
             # print(f'query is sqli : {result_query}')
 
         if result_path['sqli'] is True or result_query['sqli'] is True:
-            item = Item(item_id)
             item_id = item.get_id()
             print(f"Detected (libinjection) SQL in URL: {item_id}")
             print(unquote(url))
@@ -77,8 +77,8 @@ class LibInjection(AbstractModule):
             self.redis_logger.warning(to_print)
 
             # Add tag
-            msg = f'infoleak:automatic-detection="sql-injection";{item_id}'
-            self.add_message_to_queue(msg, 'Tags')
+            tag = 'infoleak:automatic-detection="sql-injection"'
+            self.add_message_to_queue(message=tag, queue='Tags')
 
             # statistics
             # # # TODO: # FIXME: remove me

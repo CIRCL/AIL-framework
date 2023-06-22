@@ -46,7 +46,7 @@ class FileImporter(AbstractImporter):
 
                 message = self.create_message(item_id, content, gzipped=gzipped, source='dir_import')
                 if message:
-                    self.add_message_to_queue(message)
+                    self.add_message_to_queue(message=message)
 
 class DirImporter(AbstractImporter):
     def __init__(self):

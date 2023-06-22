@@ -171,7 +171,7 @@ class PgpDump(AbstractModule):
                 print('symmetrically encrypted')
 
     def compute(self, message):
-        item = Item(message)
+        item = self.get_obj()
         self.item_id = item.get_id()
         content = item.get_content()
 
@@ -234,8 +234,8 @@ class PgpDump(AbstractModule):
                 print(f'    private key: {key}')
 
         if self.symmetrically_encrypted:
-            msg = f'infoleak:automatic-detection="pgp-symmetric";{self.item_id}'
-            self.add_message_to_queue(msg, 'Tags')
+            tag = 'infoleak:automatic-detection="pgp-symmetric"'
+            self.add_message_to_queue(message=tag, queue='Tags')
 
 
 if __name__ == '__main__':

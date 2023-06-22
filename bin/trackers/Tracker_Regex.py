@@ -47,7 +47,7 @@ class Tracker_Regex(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, obj_id, obj_type='item', subtype=''):
+    def compute(self, message):
         # refresh Tracked regex
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('regex'):
             self.tracked_regexs = Tracker.get_tracked_regexs()
@@ -55,7 +55,7 @@ class Tracker_Regex(AbstractModule):
             self.redis_logger.debug('Tracked regex refreshed')
             print('Tracked regex refreshed')
 
-        obj = ail_objects.get_object(obj_type, subtype, obj_id)
+        obj = self.get_obj()
         obj_id = obj.get_id()
         obj_type = obj.get_type()
 
@@ -87,8 +87,7 @@ class Tracker_Regex(AbstractModule):
 
             for tag in tracker.get_tags():
                 if obj.get_type() == 'item':
-                    msg = f'{tag};{obj_id}'
-                    self.add_message_to_queue(msg, 'Tags')
+                    self.add_message_to_queue(message=tag, queue='Tags')
                 else:
                     obj.add_tag(tag)
 

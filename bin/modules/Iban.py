@@ -73,7 +73,7 @@ class Iban(AbstractModule):
         return extracted
 
     def compute(self, message):
-        item = Item(message)
+        item = self.get_obj()
         item_id = item.get_id()
 
         ibans = self.regex_findall(self.iban_regex, item_id, item.get_content())
@@ -97,8 +97,8 @@ class Iban(AbstractModule):
                 to_print = f'Iban;{item.get_source()};{item.get_date()};{item.get_basename()};'
                 self.redis_logger.warning(f'{to_print}Checked found {len(valid_ibans)} IBAN;{item_id}')
                 # Tags
-                msg = f'infoleak:automatic-detection="iban";{item_id}'
-                self.add_message_to_queue(msg, 'Tags')
+                tag = 'infoleak:automatic-detection="iban"'
+                self.add_message_to_queue(message=tag, queue='Tags')
 
 
 if __name__ == '__main__':

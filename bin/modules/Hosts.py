@@ -49,7 +49,7 @@ class Hosts(AbstractModule):
         self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
-        item = Item(message)
+        item = self.get_obj()
 
         # mimetype = item_basic.get_item_mimetype(item.get_id())
         # if mimetype.split('/')[0] == "text":
@@ -60,9 +60,7 @@ class Hosts(AbstractModule):
             print(f'{len(hosts)} host     {item.get_id()}')
             for host in hosts:
                 # print(host)
-
-                msg = f'{host} {item.get_id()}'
-                self.add_message_to_queue(msg, 'Host')
+                self.add_message_to_queue(message=str(host), queue='Host')
 
 
 if __name__ == '__main__':

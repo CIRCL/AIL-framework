@@ -46,29 +46,29 @@ def sanitize_objs_types(objs):
     return l_types
 
 
-def get_object(obj_type, subtype, id):
+def get_object(obj_type, subtype, obj_id):
     if obj_type == 'item':
-        return Item(id)
+        return Item(obj_id)
     elif obj_type == 'domain':
-        return Domain(id)
+        return Domain(obj_id)
     elif obj_type == 'decoded':
-        return Decoded(id)
+        return Decoded(obj_id)
     elif obj_type == 'cookie-name':
-        return CookiesNames.CookieName(id)
+        return CookiesNames.CookieName(obj_id)
     elif obj_type == 'cve':
-        return Cve(id)
+        return Cve(obj_id)
     elif obj_type == 'favicon':
-        return Favicon(id)
+        return Favicon(obj_id)
     elif obj_type == 'screenshot':
-        return Screenshot(id)
+        return Screenshot(obj_id)
     elif obj_type == 'cryptocurrency':
-        return CryptoCurrencies.CryptoCurrency(id, subtype)
+        return CryptoCurrencies.CryptoCurrency(obj_id, subtype)
     elif obj_type == 'pgp':
-        return Pgps.Pgp(id, subtype)
+        return Pgps.Pgp(obj_id, subtype)
     elif obj_type == 'title':
-        return Titles.Title(id)
+        return Titles.Title(obj_id)
     elif obj_type == 'username':
-        return Usernames.Username(id, subtype)
+        return Usernames.Username(obj_id, subtype)
 
 def get_objects(objects):
     objs = set()

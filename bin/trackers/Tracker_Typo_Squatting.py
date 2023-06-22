@@ -45,7 +45,7 @@ class Tracker_Typo_Squatting(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, message, obj_type='item', subtype=''):
+    def compute(self, message):
         # refresh Tracked typo
         if self.last_refresh_typosquatting < Tracker.get_tracker_last_updated_by_type('typosquatting'):
             self.tracked_typosquattings = Tracker.get_tracked_typosquatting()
@@ -53,8 +53,8 @@ class Tracker_Typo_Squatting(AbstractModule):
             self.redis_logger.debug('Tracked typosquatting refreshed')
             print('Tracked typosquatting refreshed')
 
-        host, obj_id = message.split()
-        obj = ail_objects.get_object(obj_type, subtype, obj_id)
+        host = message
+        obj = self.get_obj()
         obj_type = obj.get_type()
 
         # Object Filter
@@ -84,7 +84,7 @@ class Tracker_Typo_Squatting(AbstractModule):
             for tag in tracker.get_tags():
                 if obj.get_type() == 'item':
                     msg = f'{tag};{obj_id}'
-                    self.add_message_to_queue(msg, 'Tags')
+                    self.add_message_to_queue(message=tag, queue='Tags')
                 else:
                     obj.add_tag(tag)
 

@@ -20,9 +20,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.objects.Items import Item
-from lib import Tag
-
 
 class Tags(AbstractModule):
     """
@@ -39,25 +36,17 @@ class Tags(AbstractModule):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-        #  Extract item ID and tag from message
-        mess_split = message.split(';')
-        if len(mess_split) == 2:
-            tag = mess_split[0]
-            item = Item(mess_split[1])
+        item = self.obj
+        tag = message
 
-            # Create a new tag
-            Tag.add_object_tag(tag, 'item', item.get_id())
-            print(f'{item.get_id()}: Tagged {tag}')
+        # Create a new tag
+        item.add_tag(tag)
+        print(f'{item.get_id()}: Tagged {tag}')
 
-            # Forward message to channel
-            self.add_message_to_queue(message, 'Tag_feed')
+        # Forward message to channel
+        self.add_message_to_queue(message=tag, queue='Tag_feed')
 
-            message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
-            self.add_message_to_queue(message, 'Sync')
-
-        else:
-            # Malformed message
-            raise Exception(f'too many values to unpack (expected 2) given {len(mess_split)} with message {message}')
+        self.add_message_to_queue(queue='Sync')
 
 
 if __name__ == '__main__':

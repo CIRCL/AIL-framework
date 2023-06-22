@@ -29,7 +29,6 @@ Redis organization:
 import os
 import sys
 import time
-import re
 from datetime import datetime
 from pyfaup.faup import Faup
 
@@ -85,8 +84,8 @@ class Credential(AbstractModule):
 
     def compute(self, message):
 
-        item_id, count = message.split()
-        item = Item(item_id)
+        count = message
+        item = self.get_obj()
 
         item_content = item.get_content()
 
@@ -111,8 +110,8 @@ class Credential(AbstractModule):
                 print(f"========> Found more than 10 credentials in this file : {item.get_id()}")
                 self.redis_logger.warning(to_print)
 
-                msg = f'infoleak:automatic-detection="credential";{item.get_id()}'
-                self.add_message_to_queue(msg, 'Tags')
+                tag = 'infoleak:automatic-detection="credential"'
+                self.add_message_to_queue(message=tag, queue='Tags')
 
                 site_occurrence = self.regex_findall(self.regex_site_for_stats, item.get_id(), item_content)
 

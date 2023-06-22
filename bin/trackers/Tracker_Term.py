@@ -64,7 +64,7 @@ class Tracker_Term(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, obj_id, obj_type='item', subtype=''):
+    def compute(self, message):
         # refresh Tracked term
         if self.last_refresh_word < Tracker.get_tracker_last_updated_by_type('word'):
             self.tracked_words = Tracker.get_tracked_words()
@@ -78,7 +78,7 @@ class Tracker_Term(AbstractModule):
             self.redis_logger.debug('Tracked set refreshed')
             print('Tracked set refreshed')
 
-        obj = ail_objects.get_object(obj_type, subtype, obj_id)
+        obj = self.get_obj()
         obj_type = obj.get_type()
 
         # Object Filter
@@ -132,8 +132,7 @@ class Tracker_Term(AbstractModule):
             # Tags
             for tag in tracker.get_tags():
                 if obj.get_type() == 'item':
-                    msg = f'{tag};{obj_id}'
-                    self.add_message_to_queue(msg, 'Tags')
+                    self.add_message_to_queue(message=tag, queue='Tags')
                 else:
                     obj.add_tag(tag)
 

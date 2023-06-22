@@ -47,8 +47,8 @@ class ApiKey(AbstractModule):
         self.logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message, r_result=False):
-        item_id, score = message.split()
-        item = Item(item_id)
+        score = message
+        item = self.get_obj()
         item_content = item.get_content()
 
         google_api_key = self.regex_findall(self.re_google_api_key, item.get_id(), item_content, r_set=True)
@@ -63,8 +63,8 @@ class ApiKey(AbstractModule):
                 print(f'found google api key: {to_print}')
                 self.redis_logger.warning(f'{to_print}Checked {len(google_api_key)} found Google API Key;{item.get_id()}')
 
-                msg = f'infoleak:automatic-detection="google-api-key";{item.get_id()}'
-                self.add_message_to_queue(msg, 'Tags')
+                tag = 'infoleak:automatic-detection="google-api-key"'
+                self.add_message_to_queue(message=tag, queue='Tags')
 
             # # TODO: # FIXME: AWS regex/validate/sanitize KEY + SECRET KEY
             if aws_access_key:
@@ -74,12 +74,12 @@ class ApiKey(AbstractModule):
                     print(f'found AWS secret key')
                     self.redis_logger.warning(f'{to_print}Checked {len(aws_secret_key)} found AWS secret Key;{item.get_id()}')
 
-                msg = f'infoleak:automatic-detection="aws-key";{item.get_id()}'
-                self.add_message_to_queue(msg, 'Tags')
+                tag = 'infoleak:automatic-detection="aws-key"'
+                self.add_message_to_queue(message=tag, queue='Tags')
 
             # Tags
-            msg = f'infoleak:automatic-detection="api-key";{item.get_id()}'
-            self.add_message_to_queue(msg, 'Tags')
+            tag = 'infoleak:automatic-detection="api-key"'
+            self.add_message_to_queue(message=tag, queue='Tags')
 
             if r_result:
                 return google_api_key, aws_access_key, aws_secret_key

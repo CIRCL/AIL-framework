@@ -416,7 +416,7 @@ class Tools(AbstractModule):
         return extracted
 
     def compute(self, message):
-        item = Item(message)
+        item = self.get_obj()
         content = item.get_content()
 
         for tool_name in TOOLS:
@@ -425,8 +425,8 @@ class Tools(AbstractModule):
             if match:
                 print(f'{item.id} found: {tool_name}')
                 # Tag Item
-                msg = f"{tool['tag']};{item.id}"
-                self.add_message_to_queue(msg, 'Tags')
+                tag = tool['tag']
+                self.add_message_to_queue(message=tag, queue='Tags')
                 # TODO ADD LOGS
 
 

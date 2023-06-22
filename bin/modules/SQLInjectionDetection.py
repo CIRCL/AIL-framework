@@ -44,22 +44,21 @@ class SQLInjectionDetection(AbstractModule):
         self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
-        url, item_id = message.split()
+        url = message
+        item = self.get_obj()
 
         if self.is_sql_injection(url):
             self.faup.decode(url)
             url_parsed = self.faup.get()
 
-            item = Item(item_id)
-            item_id = item.get_id()
             print(f"Detected SQL in URL: {item_id}")
             print(urllib.request.unquote(url))
             to_print = f'SQLInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{item_id}'
             self.redis_logger.warning(to_print)
 
             # Tag
-            msg = f'infoleak:automatic-detection="sql-injection";{item_id}'
-            self.add_message_to_queue(msg, 'Tags')
+            tag = f'infoleak:automatic-detection="sql-injection";{item_id}'
+            self.add_message_to_queue(message=tag, queue='Tags')
 
             # statistics
             # tld = url_parsed['tld']

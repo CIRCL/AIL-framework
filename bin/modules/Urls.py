@@ -62,10 +62,9 @@ class Urls(AbstractModule):
         """
         Search for Web links from given message
         """
-        # Extract item
-        item_id, score = message.split()
+        score = message
 
-        item = Item(item_id)
+        item = self.get_obj()
         item_content = item.get_content()
 
         # TODO Handle invalid URL
@@ -79,10 +78,9 @@ class Urls(AbstractModule):
             except AttributeError:
                 url = url_decoded['url']
 
-            to_send = f"{url} {item.get_id()}"
-            print(to_send)
-            self.add_message_to_queue(to_send, 'Url')
-            self.logger.debug(f"url_parsed: {to_send}")
+            print(url, item.get_id())
+            self.add_message_to_queue(message=str(url), queue='Url')
+            self.logger.debug(f"url_parsed: {url}")
 
         if len(l_urls) > 0:
             to_print = f'Urls;{item.get_source()};{item.get_date()};{item.get_basename()};'

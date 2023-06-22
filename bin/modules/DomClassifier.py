@@ -51,9 +51,9 @@ class DomClassifier(AbstractModule):
         self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message, r_result=False):
-        host, item_id = message.split()
+        host = message
 
-        item = Item(item_id)
+        item = self.get_obj()
         item_basename = item.get_basename()
         item_date = item.get_date()
         item_source = item.get_source()
@@ -69,7 +69,7 @@ class DomClassifier(AbstractModule):
 
             if self.c.vdomain and d4.is_passive_dns_enabled():
                 for dns_record in self.c.vdomain:
-                    self.add_message_to_queue(dns_record)
+                    self.add_message_to_queue(obj=None, message=dns_record)
 
             localizeddomains = self.c.include(expression=self.cc_tld)
             if localizeddomains:

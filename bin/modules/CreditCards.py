@@ -68,8 +68,8 @@ class CreditCards(AbstractModule):
         return extracted
 
     def compute(self, message, r_result=False):
-        item_id, score = message.split()
-        item = Item(item_id)
+        score = message
+        item = self.get_obj()
         content = item.get_content()
         all_cards = self.regex_findall(self.regex, item.id, content)
 
@@ -90,8 +90,8 @@ class CreditCards(AbstractModule):
                 print(mess)
                 self.redis_logger.warning(mess)
 
-                msg = f'infoleak:automatic-detection="credit-card";{item.id}'
-                self.add_message_to_queue(msg, 'Tags')
+                tag = 'infoleak:automatic-detection="credit-card"'
+                self.add_message_to_queue(message=tag, queue='Tags')
 
                 if r_result:
                     return creditcard_set

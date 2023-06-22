@@ -16,8 +16,6 @@ import gzip
 import base64
 import datetime
 import time
-# from sflock.main import unpack
-# import sflock
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -48,7 +46,6 @@ class SubmitPaste(AbstractModule):
         """
         super(SubmitPaste, self).__init__()
 
-        # TODO KVROCKS
         self.r_serv_db = ConfigLoader.ConfigLoader().get_db_conn("Kvrocks_DB")
         self.r_serv_log_submit = ConfigLoader.ConfigLoader().get_redis_conn("Redis_Log_submit")
 
@@ -281,7 +278,7 @@ class SubmitPaste(AbstractModule):
 
                 # send paste to Global module
                 relay_message = f"submitted {rel_item_path} {gzip64encoded}"
-                self.add_message_to_queue(relay_message)
+                self.add_message_to_queue(message=relay_message)
 
                 # add tags
                 for tag in ltags:

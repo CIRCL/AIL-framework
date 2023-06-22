@@ -82,7 +82,7 @@ class Categ(AbstractModule):
 
     def compute(self, message, r_result=False):
         # Create Item Object
-        item = Item(message)
+        item = self.get_obj()
         # Get item content
         content = item.get_content()
         categ_found = []
@@ -94,11 +94,11 @@ class Categ(AbstractModule):
             lenfound = len(found)
             if lenfound >= self.matchingThreshold:
                 categ_found.append(categ)
-                msg = f'{item.get_id()} {lenfound}'
+                msg = str(lenfound)
 
                 # Export message to categ queue
                 print(msg, categ)
-                self.add_message_to_queue(msg, categ)
+                self.add_message_to_queue(message=msg, queue=categ)
 
                 self.redis_logger.debug(
                     f'Categ;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {lenfound} as {categ};{item.get_id()}')

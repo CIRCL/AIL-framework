@@ -93,11 +93,11 @@ class Indexer(AbstractModule):
             self.last_refresh = time_now
 
     def compute(self, message):
-        docpath = message.split(" ", -1)[-1]
-
-        item = Item(message)
+        item = self.get_obj()
         item_id = item.get_id()
         item_content = item.get_content()
+
+        docpath = item_id
 
         self.logger.debug(f"Indexing - {self.indexname}: {docpath}")
         print(f"Indexing - {self.indexname}: {docpath}")

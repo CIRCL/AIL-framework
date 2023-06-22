@@ -44,9 +44,8 @@ class CveModule(AbstractModule):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-
-        item_id, count = message.split()
-        item = Item(item_id)
+        count = message
+        item = self.get_obj()
         item_id = item.get_id()
 
         cves = self.regex_findall(self.reg_cve, item_id, item.get_content())
@@ -61,9 +60,9 @@ class CveModule(AbstractModule):
             print(warning)
             self.redis_logger.warning(warning)
 
-            msg = f'infoleak:automatic-detection="cve";{item_id}'
+            tag = 'infoleak:automatic-detection="cve"'
             # Send to Tags Queue
-            self.add_message_to_queue(msg, 'Tags')
+            self.add_message_to_queue(message=tag, queue='Tags')
 
 
 if __name__ == '__main__':

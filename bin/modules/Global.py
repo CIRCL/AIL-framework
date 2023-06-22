@@ -130,14 +130,14 @@ class Global(AbstractModule):
 
                         update_obj_date(item.get_date(), 'item')
 
-                        self.add_message_to_queue(item_id, 'Item')
+                        self.add_message_to_queue(obj=item, queue='Item')
                         self.processed_item += 1
 
                         # DIRTY FIX AIL SYNC - SEND TO SYNC MODULE
                         # # FIXME:  DIRTY FIX
                         message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
                         print(message)
-                        self.add_message_to_queue(message, 'Sync')
+                        self.add_message_to_queue(obj=item, queue='Sync')
 
                         print(item_id)
                         if r_result:

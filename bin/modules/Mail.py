@@ -135,8 +135,8 @@ class Mail(AbstractModule):
 
     # # TODO: sanitize mails
     def compute(self, message):
-        item_id, score = message.split()
-        item = Item(item_id)
+        score = message
+        item = self.get_obj()
         item_date = item.get_date()
 
         mails = self.regex_findall(self.email_regex, item_id, item.get_content())
@@ -177,8 +177,8 @@ class Mail(AbstractModule):
             print(f'{item_id}    Checked {num_valid_email} e-mail(s)')
             self.redis_logger.warning(msg)
             # Tags
-            msg = f'infoleak:automatic-detection="mail";{item_id}'
-            self.add_message_to_queue(msg, 'Tags')
+            tag = 'infoleak:automatic-detection="mail"'
+            self.add_message_to_queue(message=tag, queue='Tags')
         elif num_valid_email > 0:
             self.redis_logger.info(msg)
 

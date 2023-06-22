@@ -87,8 +87,7 @@ class Decoder(AbstractModule):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-
-        item = Item(message)
+        item = self.get_obj()
         content = item.get_content()
         date = item.get_date()
         new_decodeds = []
@@ -129,8 +128,8 @@ class Decoder(AbstractModule):
                 self.logger.info(f'{item.id} - {dname}')
 
                 # Send to Tags
-                msg = f'infoleak:automatic-detection="{dname}";{item.id}'
-                self.add_message_to_queue(msg, 'Tags')
+                tag = f'infoleak:automatic-detection="{dname}"'
+                self.add_message_to_queue(message=tag, queue='Tags')
 
                 ####################
                 # TRACKERS DECODED

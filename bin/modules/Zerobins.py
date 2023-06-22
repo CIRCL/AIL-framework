@@ -51,10 +51,11 @@ class Zerobins(AbstractModule):
         """
         Compute a message in queue
         """
-        url, item_id = message.split()
+        url = message
+        item = self.get_obj()
 
         # Extract zerobins addresses
-        matching_binz = self.regex_findall(self.regex, item_id, url)
+        matching_binz = self.regex_findall(self.regex, item.get_id(), url)
 
         if len(matching_binz) > 0:
             for bin_url in matching_binz:

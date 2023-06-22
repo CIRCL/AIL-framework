@@ -46,7 +46,7 @@ class Tracker_Yara(AbstractModule):
 
         self.redis_logger.info(f"Module: {self.module_name} Launched")
 
-    def compute(self, obj_id, obj_type='item', subtype=''):
+    def compute(self, message):
         # refresh YARA list
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('yara'):
             self.rules = Tracker.get_tracked_yara_rules()
@@ -54,7 +54,7 @@ class Tracker_Yara(AbstractModule):
             self.redis_logger.debug('Tracked set refreshed')
             print('Tracked set refreshed')
 
-        self.obj = ail_objects.get_object(obj_type, subtype, obj_id)
+        self.obj = self.get_obj()
         obj_type = self.obj.get_type()
 
         # Object Filter
@@ -89,8 +89,7 @@ class Tracker_Yara(AbstractModule):
             # Tags
             for tag in tracker.get_tags():
                 if self.obj.get_type() == 'item':
-                    msg = f'{tag};{obj_id}'
-                    self.add_message_to_queue(msg, 'Tags')
+                    self.add_message_to_queue(message=tag, queue='Tags')
                 else:
                     self.obj.add_tag(tag)
 

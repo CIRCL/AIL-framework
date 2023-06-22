@@ -25,7 +25,7 @@ class Languages(AbstractModule):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-        item = Item(message)
+        item = self.get_obj()
         if item.is_crawled():
             domain = Domain(item.get_domain())
             for lang in item.get_languages(min_probability=0.8):

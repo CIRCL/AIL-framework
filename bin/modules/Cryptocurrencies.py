@@ -114,7 +114,7 @@ class Cryptocurrencies(AbstractModule, ABC):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-        item = Item(message)
+        item = self.get_obj()
         item_id = item.get_id()
         date = item.get_date()
         content = item.get_content()
@@ -134,14 +134,14 @@ class Cryptocurrencies(AbstractModule, ABC):
 
                 # Check private key
                 if is_valid_address:
-                    msg = f'{currency["tag"]};{item_id}'
-                    self.add_message_to_queue(msg, 'Tags')
+                    msg = f'{currency["tag"]}'
+                    self.add_message_to_queue(message=msg, queue='Tags')
 
                     if currency.get('private_key'):
                         private_keys = self.regex_findall(currency['private_key']['regex'], item_id, content)
                         if private_keys:
-                            msg = f'{currency["private_key"]["tag"]};{item_id}'
-                            self.add_message_to_queue(msg, 'Tags')
+                            msg = f'{currency["private_key"]["tag"]}'
+                            self.add_message_to_queue(message=msg, queue='Tags')
 
                             # debug
                             print(private_keys)

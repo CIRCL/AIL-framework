@@ -69,8 +69,8 @@ class Onion(AbstractModule):
         onion_urls = []
         domains = []
 
-        item_id, score = message.split()
-        item = Item(item_id)
+        score = message
+        item = self.get_obj()
         item_content = item.get_content()
 
         # max execution time on regex
@@ -100,8 +100,8 @@ class Onion(AbstractModule):
                 self.redis_logger.warning(f'{to_print}Detected {len(domains)} .onion(s);{item.get_id()}')
 
             # TAG Item
-            msg = f'infoleak:automatic-detection="onion";{item.get_id()}'
-            self.add_message_to_queue(msg, 'Tags')
+            tag = 'infoleak:automatic-detection="onion"'
+            self.add_message_to_queue(message=tag, queue='Tags')
 
 
 if __name__ == "__main__":
