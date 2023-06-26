@@ -12,8 +12,8 @@
 
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 
 </head>
@@ -125,11 +125,12 @@
 				<table id="table_sync_queues" class="table table-striped border-primary">
 			  	<thead class="bg-dark text-white">
 			    	<tr>
-							<th>Type</th>
-			      	<th></th>
-							<th>Id</th>
+                        <th>Type</th>
+			      	    <th></th>
+                        <th>Id</th>
 				     	<th>Tags</th>
-							<th></th>
+                        <th>Comment</th>
+                        <th></th>
 				   	</tr>
 					</thead>
 					<tbody style="font-size: 15px;">
@@ -155,6 +156,11 @@
 									{% for tag in object['tags'] %}
 										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
 									{% endfor %}
+								</td>
+                                <td>
+									{% if 'comment' in object %}
+										{{ object['comment']}}
+									{% endif %}
 								</td>
 								<td class="text-right">
 									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ metadata['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">

@@ -264,10 +264,9 @@ class Item(AbstractObject):
         """
         if options is None:
             options = set()
-        meta = {'id': self.id,
-                'date': self.get_date(separator=True),
-                'source': self.get_source(),
-                'tags': self.get_tags(r_list=True)}
+        meta = self.get_default_meta(tags=True)
+        meta['date'] = self.get_date(separator=True)
+        meta['source'] = self.get_source()
         # optional meta fields
         if 'content' in options:
             meta['content'] = self.get_content()

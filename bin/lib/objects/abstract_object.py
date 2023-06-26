@@ -62,7 +62,7 @@ class AbstractObject(ABC):
     def get_default_meta(self, tags=False):
         dict_meta = {'id': self.get_id(),
                      'type': self.get_type(),
-                     'subtype': self.get_subtype()}
+                     'subtype': self.get_subtype(r_str=True)}
         if tags:
             dict_meta['tags'] = self.get_tags()
         return dict_meta
