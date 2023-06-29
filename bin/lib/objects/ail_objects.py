@@ -336,7 +336,7 @@ def get_obj_correlations(obj_type, subtype, obj_id):
     return obj.get_correlations()
 
 def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max):
-    if len(objs) < nb_max or nb_max == -1:
+    if len(objs) < nb_max or nb_max == 0:
         if lvl == 0:
             objs.add((obj_type, subtype, obj_id))
 
@@ -356,6 +356,7 @@ def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0,
     return objs
 
 def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300):
+    print(nb_max)
     objs = get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=filter_types, lvl=lvl, nb_max=nb_max)
     # print(objs)
     for obj_tuple in objs:
