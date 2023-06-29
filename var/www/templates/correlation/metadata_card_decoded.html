@@ -35,12 +35,12 @@
 												<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ dict_object["metadata_card"]["icon"]["style"] }}" font-size="16px">{{ dict_object["metadata_card"]["icon"]["icon"] }}</text>
 											</g>
 										</svg>
-										{{ dict_object["metadata"]["mimetype"] }}
+										{{ dict_object["metadata_card"]["mimetype"] }}
 									</td>
-									<td>{{ dict_object["metadata"]['first_seen'] }}</td>
-									<td>{{ dict_object["metadata"]['last_seen'] }}</td>
-									<td>{{ dict_object["metadata"]['size'] }}</td>
-									<td>{{ dict_object["metadata"]['nb_seen'] }}</td>
+									<td>{{ dict_object["metadata_card"]['first_seen'] }}</td>
+									<td>{{ dict_object["metadata_card"]['last_seen'] }}</td>
+									<td>{{ dict_object["metadata_card"]['size'] }}</td>
+									<td>{{ dict_object["metadata_card"]['nb_seen'] }}</td>
 								</tr>
 							</tbody>
 						</table>
