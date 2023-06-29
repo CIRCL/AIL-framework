@@ -177,6 +177,8 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     if subtype == 'bitcoin' and related_btc:
         meta["related_btc"] = btc_ail.get_bitcoin_info(obj.id)
     if obj.get_type() == 'decoded':
+        meta['mimetype'] = obj.get_mimetype()
+        meta['size'] = obj.get_size()
         meta["vt"] = obj.get_meta_vt()
         meta["vt"]["status"] = obj.is_vt_enabled()
     # TAGS MODAL
