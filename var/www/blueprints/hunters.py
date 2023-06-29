@@ -172,7 +172,7 @@ def show_tracker():
         typo_squatting = set()
 
     if date_from:
-        date_from, date_to = Date.sanitise_daterange(meta['first_seen'], meta['last_seen'])
+        date_from, date_to = Date.sanitise_daterange(date_from, date_to)
         objs = tracker.get_objs_by_daterange(date_from, date_to)
         meta['objs'] = ail_objects.get_objects_meta(objs, flask_context=True)
     else:

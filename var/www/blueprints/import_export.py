@@ -163,6 +163,7 @@ def objects_misp_export_post():
     MISPExporter.delete_user_misp_objects_to_export(user_id)
     if not export:
         event_uuid = event[10:46]
+        event = f'{{"Event": {event}}}'
         # TODO ADD JAVASCRIPT REFRESH PAGE IF RESP == 200
         return send_file(io.BytesIO(event.encode()), as_attachment=True,
                          download_name=f'ail_export_{event_uuid}.json')

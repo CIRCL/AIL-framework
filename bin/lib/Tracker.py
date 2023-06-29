@@ -650,14 +650,14 @@ def get_user_trackers_meta(user_id, tracker_type=None):
     metas = []
     for tracker_uuid in get_user_trackers(user_id, tracker_type=tracker_type):
         tracker = Tracker(tracker_uuid)
-        metas.append(tracker.get_meta(options={'mails', 'sparkline', 'tags'}))
+        metas.append(tracker.get_meta(options={'description', 'mails', 'sparkline', 'tags'}))
     return metas
 
 def get_global_trackers_meta(tracker_type=None):
     metas = []
     for tracker_uuid in get_global_trackers(tracker_type=tracker_type):
         tracker = Tracker(tracker_uuid)
-        metas.append(tracker.get_meta(options={'mails', 'sparkline', 'tags'}))
+        metas.append(tracker.get_meta(options={'description', 'mails', 'sparkline', 'tags'}))
     return metas
 
 def get_users_trackers_meta():

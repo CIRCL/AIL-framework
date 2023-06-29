@@ -60,7 +60,7 @@
                             <th>Tracker</th>
                             <th>First seen</th>
                             <th>Last seen</th>
-                            <th>Email notification</th>
+                            <th>Emails</th>
                             <th>sparkline</th>
                         </tr>
                         </thead>
@@ -80,6 +80,10 @@
                         {% endif %}
                         </a>
                       </span>
+                                {% if dict_uuid['description'] %}
+                                    <div><i>{{ dict_uuid['description'] }}</i></div>
+                                {% endif  %}
+
                                     <div>
                                         {% for tag in dict_uuid['tags'] %}
                                             <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
@@ -145,6 +149,10 @@
                         {% endif %}
                         </a>
                       </span>
+                                {% if dict_uuid['description'] %}
+                                    <div><i>{{ dict_uuid['description'] }}</i></div>
+                                {% endif  %}
+
                                     <div>
                                         {% for tag in dict_uuid['tags'] %}
                                             <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
