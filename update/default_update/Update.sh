@@ -25,7 +25,7 @@ bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
 echo ""
-bash ${AIL_BIN}/LAUNCH.sh -lav
+bash ${AIL_BIN}/LAUNCH.sh -lkv
 wait
 
 echo ""

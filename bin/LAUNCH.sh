@@ -685,9 +685,6 @@ while [ "$1" != "" ]; do
         -lrv | --launchRedisVerify )    launch_redis;
                                         wait_until_redis_is_ready;
                                         ;;
-        -lav | --launchARDBVerify )     launch_ardb;
-                                        wait_until_ardb_is_ready;
-                                        ;;
         -lkv | --launchKVORCKSVerify )  launch_kvrocks;
                                         wait_until_kvrocks_is_ready;
                                         ;;
