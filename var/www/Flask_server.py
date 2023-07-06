@@ -51,6 +51,7 @@ from blueprints.objects_decoded import objects_decoded
 from blueprints.objects_subtypes import objects_subtypes
 from blueprints.objects_title import objects_title
 from blueprints.objects_cookie_name import objects_cookie_name
+from blueprints.objects_etag import objects_etag
 
 Flask_dir = os.environ['AIL_FLASK']
 
@@ -106,6 +107,7 @@ app.register_blueprint(objects_decoded, url_prefix=baseUrl)
 app.register_blueprint(objects_subtypes, url_prefix=baseUrl)
 app.register_blueprint(objects_title, url_prefix=baseUrl)
 app.register_blueprint(objects_cookie_name, url_prefix=baseUrl)
+app.register_blueprint(objects_etag, url_prefix=baseUrl)
 
 # =========       =========#
 

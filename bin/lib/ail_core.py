@@ -15,7 +15,7 @@ config_loader = ConfigLoader()
 r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
-AIL_OBJECTS = sorted({'cookie-name', 'cve', 'cryptocurrency', 'decoded', 'domain', 'favicon', 'item', 'pgp',
+AIL_OBJECTS = sorted({'cookie-name', 'cve', 'cryptocurrency', 'decoded', 'domain', 'etag', 'favicon', 'item', 'pgp',
                       'screenshot', 'title', 'username'})
 
 def get_ail_uuid():

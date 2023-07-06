@@ -17,6 +17,7 @@ from lib import ail_logger
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import CookiesNames
+from lib.objects import Etags
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
 from lib.objects import Screenshots
@@ -288,6 +289,10 @@ class Crawler(AbstractModule):
                         print(cookie_name)
                         cookie = CookiesNames.create(cookie_name)
                         cookie.add(self.date.replace('/', ''), self.domain.id)
+                    for etag_content in crawlers.extract_etag_from_har(entries['har']):
+                        print(etag_content)
+                        etag = Etags.create(etag_content)
+                        etag.add(self.date.replace('/', ''), self.domain.id)
 
         # Next Children
         entries_children = entries.get('children')

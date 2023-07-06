@@ -264,6 +264,7 @@ def extract_author_from_html(html):
     if keywords:
         return keywords['content']
     return ''
+
 # # # - - # # #
 
 
@@ -299,9 +300,10 @@ def get_all_har_ids():
             except (TypeError, ValueError):
                 pass
 
-    for file in [f for f in os.listdir(today_root_dir) if os.path.isfile(os.path.join(today_root_dir, f))]:
-        har_id = os.path.relpath(os.path.join(today_root_dir, file), HAR_DIR)
-        har_ids.append(har_id)
+    if os.path.exists(today_root_dir):
+        for file in [f for f in os.listdir(today_root_dir) if os.path.isfile(os.path.join(today_root_dir, f))]:
+            har_id = os.path.relpath(os.path.join(today_root_dir, file), HAR_DIR)
+            har_ids.append(har_id)
 
     for ydir in sorted(dirs_year, reverse=False):
         search_dear = os.path.join(HAR_DIR, ydir)
@@ -312,14 +314,13 @@ def get_all_har_ids():
                     har_ids.append(har_id)
     return har_ids
 
-def extract_cookies_names_from_har_by_har_id(har_id):
+def get_har_content(har_id):
     har_path = os.path.join(HAR_DIR, har_id)
     with open(har_path) as f:
         try:
-            har_content = json.loads(f.read())
+            return json.loads(f.read())
         except json.decoder.JSONDecodeError:
-            har_content = {}
-    return extract_cookies_names_from_har(har_content)
+            return {}
 
 def extract_cookies_names_from_har(har):
     cookies = set()
@@ -334,17 +335,40 @@ def extract_cookies_names_from_har(har):
                 cookies.add(name)
     return cookies
 
-def _reprocess_all_hars():
+def _reprocess_all_hars_cookie_name():
     from lib.objects import CookiesNames
     for har_id in get_all_har_ids():
         domain = har_id.split('/')[-1]
         domain = domain[:-41]
         date = har_id.split('/')
         date = f'{date[-4]}{date[-3]}{date[-2]}'
-        for cookie_name in extract_cookies_names_from_har_by_har_id(har_id):
+        for cookie_name in extract_cookies_names_from_har(get_har_content(har_id)):
             print(domain, date, cookie_name)
             cookie = CookiesNames.create(cookie_name)
             cookie.add(date, domain)
+
+def extract_etag_from_har(har): # TODO check response url
+    etags = set()
+    for entrie in har.get('log', {}).get('entries', []):
+        for header in entrie.get('response', {}).get('headers', []):
+            if header.get('name') == 'etag':
+                # print(header)
+                etag = header.get('value')
+                if etag:
+                    etags.add(etag)
+    return etags
+
+def _reprocess_all_hars_etag():
+    from lib.objects import Etags
+    for har_id in get_all_har_ids():
+        domain = har_id.split('/')[-1]
+        domain = domain[:-41]
+        date = har_id.split('/')
+        date = f'{date[-4]}{date[-3]}{date[-2]}'
+        for etag_content in extract_etag_from_har(get_har_content(har_id)):
+            print(domain, date, etag_content)
+            etag = Etags.create(etag_content)
+            etag.add(date, domain)
 
 # # # - - # # #
 
@@ -1913,5 +1937,5 @@ load_blacklist()
 #     temp_url = ''
 #     r = extract_favicon_from_html(content, temp_url)
 #     print(r)
-#     _reprocess_all_hars()
-
+#     _reprocess_all_hars_cookie_name()
+#     _reprocess_all_hars_etag()
