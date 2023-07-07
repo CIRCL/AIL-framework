@@ -338,7 +338,7 @@ def get_obj_correlations(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
     return obj.get_correlations()
 
-def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max):
+def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max, objs_hidden):
     if len(objs) < nb_max or nb_max == 0:
         if lvl == 0:
             objs.add((obj_type, subtype, obj_id))
@@ -351,16 +351,17 @@ def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lv
             for obj2_type in correlations:
                 for str_obj in correlations[obj2_type]:
                     obj2_subtype, obj2_id = str_obj.split(':', 1)
-                    _get_obj_correlations_objs(objs, obj2_type, obj2_subtype, obj2_id, filter_types, lvl, nb_max)
+                    if get_obj_global_id(obj2_type, obj2_subtype, obj2_id) in objs_hidden:
+                        continue  # filter object to hide
+                    _get_obj_correlations_objs(objs, obj2_type, obj2_subtype, obj2_id, filter_types, lvl, nb_max, objs_hidden)
 
-def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0, nb_max=300):
+def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0, nb_max=300, objs_hidden=set()):
     objs = set()
-    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max)
+    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max, objs_hidden)
     return objs
 
-def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300):
-    print(nb_max)
-    objs = get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=filter_types, lvl=lvl, nb_max=nb_max)
+def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300, objs_hidden=set()):
+    objs = get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=filter_types, lvl=lvl, nb_max=nb_max, objs_hidden=objs_hidden)
     # print(objs)
     for obj_tuple in objs:
         obj1_type, subtype1, id1 = obj_tuple
@@ -422,10 +423,12 @@ def create_correlation_graph_nodes(nodes_set, obj_str_id, flask_context=True):
 
 
 def get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=[], max_nodes=300, level=1,
+                                objs_hidden=set(),
                                 flask_context=False):
     obj_str_id, nodes, links, meta = correlations_engine.get_correlations_graph_nodes_links(obj_type, subtype, obj_id,
                                                                                             filter_types=filter_types,
                                                                                             max_nodes=max_nodes, level=level,
+                                                                                            objs_hidden=objs_hidden,
                                                                                             flask_context=flask_context)
     # print(meta)
     meta['objs'] = list(meta['objs'])
