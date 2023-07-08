@@ -1795,7 +1795,11 @@ def ping_lacus():
         ping = False
         req_error = {'error': 'Lacus URL undefined', 'status_code': 400}
     else:
-        ping = lacus.is_up
+        try:
+            ping = lacus.is_up
+        except:
+            req_error = {'error': 'Failed to connect Lacus URL', 'status_code': 400}
+            ping = False
     update_lacus_connection_status(ping, req_error=req_error)
     return ping
 
