@@ -99,7 +99,7 @@ class Crawler(AbstractModule):
         self.crawler_scheduler.update_queue()
         self.crawler_scheduler.process_queue()
 
-        self.refresh_lacus_status() # TODO LOG ERROR
+        self.refresh_lacus_status()  # TODO LOG ERROR
         if not self.is_lacus_up:
             return None
 
@@ -122,11 +122,19 @@ class Crawler(AbstractModule):
         if capture:
             try:
                 status = self.lacus.get_capture_status(capture.uuid)
-                if status != crawlers.CaptureStatus.DONE:  # TODO ADD GLOBAL TIMEOUT-> Save start time ### print start time
+                if status == crawlers.CaptureStatus.DONE:
+                    return capture
+                elif status == crawlers.CaptureStatus.UNKNOWN:
+                    capture_start = capture.get_start_time(r_str=False)
+                    if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
+                        task = capture.get_task()
+                        task.reset()
+                        capture.delete()
+                    else:
+                        capture.update(status)
+                else:
                     capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
-                else:
-                    return capture
 
             except ConnectionError:
                 print(capture.uuid)

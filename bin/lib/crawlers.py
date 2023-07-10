@@ -134,7 +134,7 @@ def unpack_url(url):
 # # # # # # # # TODO CREATE NEW OBJECT
 
 def get_favicon_from_html(html, domain, url):
-    favicon_urls = extract_favicon_from_html(html, url)
+    favicon_urls, favicons = extract_favicon_from_html(html, url)
     # add root favicon
     if not favicon_urls:
         favicon_urls.add(f'{urlparse(url).scheme}://{domain}/favicon.ico')
@@ -161,7 +161,6 @@ def extract_favicon_from_html(html, url):
     # Edge and IE 12:
     #   - <meta name="msapplication-TileColor" content="#aaaaaa"> <meta name="theme-color" content="#ffffff">
     #   - <meta name="msapplication-config" content="/icons/browserconfig.xml">
-
 
     # Root Favicon
     f = get_faup()
@@ -235,13 +234,6 @@ def extract_title_from_html(html):
     title = soup.title
     if title:
         return str(title.string)
-    return ''
-
-def extract_description_from_html(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    description = soup.find('meta', attrs={'name': 'description'})
-    if description:
-        return description['content']
     return ''
 
 def extract_description_from_html(html):
@@ -347,7 +339,7 @@ def _reprocess_all_hars_cookie_name():
             cookie = CookiesNames.create(cookie_name)
             cookie.add(date, domain)
 
-def extract_etag_from_har(har): # TODO check response url
+def extract_etag_from_har(har):  # TODO check response url
     etags = set()
     for entrie in har.get('log', {}).get('entries', []):
         for header in entrie.get('response', {}).get('headers', []):
@@ -686,8 +678,7 @@ class Cookie:
                 meta[field] = value
         if r_json:
             data = json.dumps(meta, indent=4, sort_keys=True)
-            meta = {'data': data}
-            meta['uuid'] = self.uuid
+            meta = {'data': data, 'uuid': self.uuid}
         return meta
 
     def edit(self, cookie_dict):
@@ -799,7 +790,7 @@ def unpack_imported_json_cookie(json_cookie):
 
 ##  - -  ##
 #### COOKIEJAR API ####
-def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str): # # TODO: add catch
+def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str):  # # TODO: add catch
     resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
     if resp:
         return resp
@@ -968,8 +959,8 @@ class CrawlerScheduler:
                     minutes = 0
                 current_time = datetime.now().timestamp()
                 time_next_run = (datetime.now() + relativedelta(months=int(months), weeks=int(weeks),
-                                                                         days=int(days), hours=int(hours),
-                                                                         minutes=int(minutes))).timestamp()
+                                                                days=int(days), hours=int(hours),
+                                                                minutes=int(minutes))).timestamp()
                 # Make sure the next capture is not scheduled for in a too short interval
                 interval_next_capture = time_next_run - current_time
                 if interval_next_capture < self.min_frequency:
@@ -1249,8 +1240,13 @@ class CrawlerCapture:
         if task_uuid:
             return CrawlerTask(task_uuid)
 
-    def get_start_time(self):
-        return self.get_task().get_start_time()
+    def get_start_time(self, r_str=True):
+        start_time = self.get_task().get_start_time()
+        if r_str:
+            return start_time
+        else:
+            start_time = datetime.strptime(start_time, "%Y/%m/%d  -  %H:%M.%S").timestamp()
+            return int(start_time)
 
     def get_status(self):
         status = r_cache.hget(f'crawler:capture:{self.uuid}', 'status')
@@ -1517,6 +1513,11 @@ class CrawlerTask:
     def start(self):
         self._set_field('start_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
+    def reset(self):
+        priority = 49
+        r_crawler.hdel(f'crawler:task:{self.uuid}', 'start_time')
+        self.add_to_db_crawler_queue(priority)
+
     # Crawler
     def remove(self):  # zrem cache + DB
         capture_uuid = self.get_capture()
@@ -1727,13 +1728,13 @@ class CrawlerProxy:
         self.uuid = proxy_uuid
 
     def get_description(self):
-        return r_crawler.hgrt(f'crawler:proxy:{self.uuif}', 'description')
+        return r_crawler.hget(f'crawler:proxy:{self.uuid}', 'description')
 
     # Host
     # Port
     # Type -> need test
     def get_url(self):
-        return r_crawler.hgrt(f'crawler:proxy:{self.uuif}', 'url')
+        return r_crawler.hget(f'crawler:proxy:{self.uuid}', 'url')
 
 #### CRAWLER LACUS ####
 
@@ -1816,7 +1817,7 @@ def api_save_lacus_url_key(data):
     # unpack json
     manager_url = data.get('url', None)
     api_key = data.get('api_key', None)
-    if not manager_url: # or not api_key:
+    if not manager_url:  # or not api_key:
         return {'status': 'error', 'reason': 'No url or API key supplied'}, 400
     # check if is valid url
     try:
@@ -1859,7 +1860,7 @@ def api_set_crawler_max_captures(data):
     save_nb_max_captures(nb_captures)
     return nb_captures, 200
 
- ## TEST ##
+## TEST ##
 
 def is_test_ail_crawlers_successful():
     return r_db.hget('crawler:tor:test', 'success') == 'True'
