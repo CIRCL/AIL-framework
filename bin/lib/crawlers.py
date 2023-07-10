@@ -268,7 +268,7 @@ def extract_author_from_html(html):
 
 def create_har_id(date, item_id):
     item_id = item_id.split('/')[-1]
-    return os.path.join(date, f'{item_id}.json')
+    return os.path.join(date, f'{item_id}.json.gz')
 
 def save_har(har_id, har_content):
     # create dir
@@ -277,8 +277,8 @@ def save_har(har_id, har_content):
         os.makedirs(har_dir)
     # save HAR
     filename = os.path.join(get_har_dir(), har_id)
-    with open(filename, 'w') as f:
-        f.write(json.dumps(har_content))
+    with gzip.open(filename, 'wb') as f:
+        f.write(json.dumps(har_content).encode())
 
 def get_all_har_ids():
     har_ids = []
@@ -308,11 +308,15 @@ def get_all_har_ids():
 
 def get_har_content(har_id):
     har_path = os.path.join(HAR_DIR, har_id)
-    with open(har_path) as f:
-        try:
-            return json.loads(f.read())
-        except json.decoder.JSONDecodeError:
-            return {}
+    try:
+        with gzip.open(har_path) as f:
+            try:
+                return json.loads(f.read())
+            except json.decoder.JSONDecodeError:
+                return {}
+    except Exception as e:
+        print(e) # TODO LOGS
+        return {}
 
 def extract_cookies_names_from_har(har):
     cookies = set()
@@ -361,6 +365,22 @@ def _reprocess_all_hars_etag():
             print(domain, date, etag_content)
             etag = Etags.create(etag_content)
             etag.add(date, domain)
+
+def _gzip_all_hars():
+    for har_id in get_all_har_ids():
+        har_path = os.path.join(HAR_DIR, har_id)
+        new_id = f'{har_path}.gz'
+        if not har_id.endswith('.gz'):
+            if not os.path.exists(new_id):
+                with open(har_path, 'rb') as f:
+                    content = f.read()
+                if content:
+                    with gzip.open(new_id, 'wb') as f:
+                        r = f.write(content)
+                        print(r)
+        if os.path.exists(new_id) and os.path.exists(har_path):
+            os.remove(har_path)
+            print('delete:', har_path)
 
 # # # - - # # #
 
@@ -1944,3 +1964,4 @@ load_blacklist()
 #     print(r)
 #     _reprocess_all_hars_cookie_name()
 #     _reprocess_all_hars_etag()
+#     _gzip_all_hars()

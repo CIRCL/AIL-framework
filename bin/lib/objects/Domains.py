@@ -389,7 +389,7 @@ class Domain(AbstractObject):
                 har = get_item_har(item_id)
                 if har:
                     print(har)
-                    _write_in_zip_buffer(zf, os.path.join(hars_dir, har), f'{basename}.json')
+                    _write_in_zip_buffer(zf, os.path.join(hars_dir, har), f'{basename}.json.gz')
                 # Screenshot
                 screenshot = self._get_external_correlation('item', '', item_id, 'screenshot')
                 if screenshot and screenshot['screenshot']:

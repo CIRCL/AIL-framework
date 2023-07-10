@@ -129,7 +129,7 @@ def get_item_url(item_id):
 
 def get_item_har(item_id):
     har = '/'.join(item_id.rsplit('/')[-4:])
-    har = f'{har}.json'
+    har = f'{har}.json.gz'
     path = os.path.join(ConfigLoader.get_hars_dir(), har)
     if os.path.isfile(path):
         return har

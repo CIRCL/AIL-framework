@@ -131,7 +131,7 @@ class Mixer(AbstractModule):
 
             self.last_refresh = time.time()
             self.clear_feeders_stat()
-        time.sleep(0.5)
+            time.sleep(0.5)
 
     def computeNone(self):
         self.refresh_stats()
