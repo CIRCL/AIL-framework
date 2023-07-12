@@ -167,10 +167,9 @@ def index():
     # Check if update in progress
     background_update = False
     update_message = ''
-    if ail_updates.get_current_background_update():
+    if ail_updates.is_update_background_running():
         background_update = True
-        # update_message = ail_updates.get_update_background_message()
-        update_message = None
+        update_message = ail_updates.AILBackgroundUpdate(ail_updates.get_update_background_version()).get_message()
 
     return render_template("index.html", default_minute = default_minute,
                            threshold_stucked_module=threshold_stucked_module,

@@ -366,21 +366,25 @@ def _reprocess_all_hars_etag():
             etag = Etags.create(etag_content)
             etag.add(date, domain)
 
+
+def _gzip_har(har_id):
+    har_path = os.path.join(HAR_DIR, har_id)
+    new_id = f'{har_path}.gz'
+    if not har_id.endswith('.gz'):
+        if not os.path.exists(new_id):
+            with open(har_path, 'rb') as f:
+                content = f.read()
+            if content:
+                with gzip.open(new_id, 'wb') as f:
+                    r = f.write(content)
+                    print(r)
+    if os.path.exists(new_id) and os.path.exists(har_path):
+        os.remove(har_path)
+        print('delete:', har_path)
+
 def _gzip_all_hars():
     for har_id in get_all_har_ids():
-        har_path = os.path.join(HAR_DIR, har_id)
-        new_id = f'{har_path}.gz'
-        if not har_id.endswith('.gz'):
-            if not os.path.exists(new_id):
-                with open(har_path, 'rb') as f:
-                    content = f.read()
-                if content:
-                    with gzip.open(new_id, 'wb') as f:
-                        r = f.write(content)
-                        print(r)
-        if os.path.exists(new_id) and os.path.exists(har_path):
-            os.remove(har_path)
-            print('delete:', har_path)
+        _gzip_har(har_id)
 
 # # # - - # # #
 
