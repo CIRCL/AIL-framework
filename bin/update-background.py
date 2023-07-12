@@ -19,13 +19,13 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib import ail_updates
 
 logging.config.dictConfig(ail_logger.get_config(name='updates'))
 def launch_background_upgrade(version):
     logger = logging.getLogger()
-    update.set_error('Error Updater Script')
-    print('launching background update', version)
+    logger.warning(f'launching background update {version}')
     update = ail_updates.AILBackgroundUpdate(version)
     nb_done = update.get_nb_scripts_done()
     update.start()
@@ -61,6 +61,7 @@ def launch_background_upgrade(version):
             sys.exit(0)
 
     update.end()
+    logger.warning(f'ending background update {version}')
 
 
 if __name__ == "__main__":
