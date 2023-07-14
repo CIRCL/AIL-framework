@@ -595,21 +595,22 @@ def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=[]
         return None
 
 def sanitize_domain_name_to_search(name_to_search, domain_type):
+    if not name_to_search:
+        return ""
     if domain_type == 'onion':
         r_name = r'[a-z0-9\.]+'
     else:
         r_name = r'[a-zA-Z0-9-_\.]+'
     # invalid domain name
     if not re.fullmatch(r_name, name_to_search):
-        res = re.match(r_name, name_to_search)
-        return {'search': name_to_search, 'error': res.string.replace( res[0], '')}
+        return ""
     return name_to_search.replace('.', '\.')
 
 def search_domain_by_name(name_to_search, domain_types, r_pos=False):
     domains = {}
     for domain_type in domain_types:
         r_name = sanitize_domain_name_to_search(name_to_search, domain_type)
-        if not name_to_search or isinstance(r_name, dict):
+        if not r_name:
             break
         r_name = re.compile(r_name)
         for domain in get_domains_up_by_type(domain_type):
