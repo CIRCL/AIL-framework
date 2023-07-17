@@ -89,12 +89,12 @@ Available Importers:
 5. Launch ail-framework, pystemon and PystemonImporter.py (all within the virtual environment):
 	 - Option 1 (recommended): 
 		``` 
-		 ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
-		 ./ail-framework/bin/LAUNCH.py -f #starts pystemon and the PystemonImporter.py
+		 ./ail-framework/bin/LAUNCH.sh -l #starts ail-framework
+		 ./ail-framework/bin/LAUNCH.sh -f #starts pystemon and the PystemonImporter.py
 		```
      - Option 2 (may require two terminal windows): 
         ``` 
-        ./ail-framework/bin/LAUNCH.py -l #starts ail-framework
+        ./ail-framework/bin/LAUNCH.sh -l #starts ail-framework
         ./pystemon/pystemon.py
         ./ail-framework/bin/importer/PystemonImporter.py
         ```
