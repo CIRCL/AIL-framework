@@ -20,6 +20,7 @@ from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decod
 from lib.objects.Domains import Domain
 from lib.objects import Etags
 from lib.objects.Favicons import Favicon
+from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
@@ -62,6 +63,8 @@ def get_object(obj_type, subtype, id):
         return Etags.Etag(id)
     elif obj_type == 'favicon':
         return Favicon(id)
+    elif obj_type == 'hhhash':
+        return HHHashs.HHHash(id)
     elif obj_type == 'screenshot':
         return Screenshot(id)
     elif obj_type == 'cryptocurrency':
@@ -104,9 +107,12 @@ def get_obj_global_id(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
     return obj.get_global_id()
 
+def get_obj_type_subtype_id_from_global_id(global_id):
+    obj_type, subtype, obj_id = global_id.split(':', 2)
+    return obj_type, subtype, obj_id
 
 def get_obj_from_global_id(global_id):
-    obj = global_id.split(':', 3)
+    obj = get_obj_type_subtype_id_from_global_id(global_id)
     return get_object(obj[0], obj[1], obj[2])
 
 
@@ -162,7 +168,7 @@ def get_objects_meta(objs, options=set(), flask_context=False):
             subtype = obj[1]
             obj_id = obj[2]
         else:
-            obj_type, subtype, obj_id = obj.split(':', 2)
+            obj_type, subtype, obj_id = get_obj_type_subtype_id_from_global_id(obj)
         metas.append(get_object_meta(obj_type, subtype, obj_id, options=options, flask_context=flask_context))
     return metas
 
@@ -171,7 +177,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
     meta = obj.get_meta()
     meta['icon'] = obj.get_svg_icon()
-    if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon':
+    if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
             meta['cve_search'] = obj.get_cve_search()
@@ -402,7 +408,7 @@ def create_correlation_graph_links(links_set):
 def create_correlation_graph_nodes(nodes_set, obj_str_id, flask_context=True):
     graph_nodes_list = []
     for node_id in nodes_set:
-        obj_type, subtype, obj_id = node_id.split(':', 2)
+        obj_type, subtype, obj_id = get_obj_type_subtype_id_from_global_id(node_id)
         dict_node = {'id': node_id}
         dict_node['style'] = get_object_svg(obj_type, subtype, obj_id)
 

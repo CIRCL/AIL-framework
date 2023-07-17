@@ -99,6 +99,9 @@ def show_correlation():
         correl_option = request.form.get('CryptocurrencyCheck')
         if correl_option:
             filter_types.append('cryptocurrency')
+        correl_option = request.form.get('HHHashCheck')
+        if correl_option:
+            filter_types.append('hhhash')
         correl_option = request.form.get('PgpCheck')
         if correl_option:
             filter_types.append('pgp')
@@ -177,26 +180,15 @@ def show_correlation():
 @login_read_only
 def get_description():
     object_id = request.args.get('object_id')
-    object_id = object_id.split(':')
-    # unpack object_id # # TODO: put me in lib
-    if len(object_id) == 3:
-        object_type = object_id[0]
-        type_id = object_id[1]
-        correlation_id = object_id[2]
-    elif len(object_id) == 2:
-        object_type = object_id[0]
-        type_id = None
-        correlation_id = object_id[1]
-    else:
-        return jsonify({})
+    obj_type, subtype, obj_id = ail_objects.get_obj_type_subtype_id_from_global_id(object_id)
 
-    # check if correlation_id exist
+    # check if obj exist
     # # TODO: return error json
-    if not ail_objects.exists_obj(object_type, type_id, correlation_id):
+    if not ail_objects.exists_obj(obj_type, subtype, obj_id):
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # object exist
     else:
-        res = ail_objects.get_object_meta(object_type, type_id, correlation_id, options={'tags', 'tags_safe'},
+        res = ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'tags_safe'},
                                           flask_context=True)
         if 'tags' in res:
             res['tags'] = list(res['tags'])

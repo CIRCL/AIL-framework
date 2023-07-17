@@ -39,6 +39,7 @@ from packages import git_status
 from packages import Date
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
+from lib.objects import HHHashs
 from lib.objects.Items import Item
 
 config_loader = ConfigLoader()
@@ -335,7 +336,7 @@ def _reprocess_all_hars_cookie_name():
     from lib.objects import CookiesNames
     for har_id in get_all_har_ids():
         domain = har_id.split('/')[-1]
-        domain = domain[:-41]
+        domain = domain[:-44]
         date = har_id.split('/')
         date = f'{date[-4]}{date[-3]}{date[-2]}'
         for cookie_name in extract_cookies_names_from_har(get_har_content(har_id)):
@@ -358,13 +359,63 @@ def _reprocess_all_hars_etag():
     from lib.objects import Etags
     for har_id in get_all_har_ids():
         domain = har_id.split('/')[-1]
-        domain = domain[:-41]
+        domain = domain[:-44]
         date = har_id.split('/')
         date = f'{date[-4]}{date[-3]}{date[-2]}'
         for etag_content in extract_etag_from_har(get_har_content(har_id)):
             print(domain, date, etag_content)
             etag = Etags.create(etag_content)
             etag.add(date, domain)
+
+def extract_hhhash_by_id(har_id, domain, date):
+    return extract_hhhash(get_har_content(har_id), domain, date)
+
+def extract_hhhash(har, domain, date):
+    hhhashs = set()
+    urls = set()
+    for entrie in har.get('log', {}).get('entries', []):
+        url = entrie.get('request').get('url')
+        if url not in urls:
+            # filter redirect
+            if entrie.get('response').get('status') == 200:  # != 301:
+                # print(url, entrie.get('response').get('status'))
+
+                f = get_faup()
+                f.decode(url)
+                domain_url = f.get().get('domain')
+                if domain_url == domain:
+
+                    headers = entrie.get('response').get('headers')
+
+                    hhhash_header = HHHashs.build_hhhash_headers(headers)
+                    hhhash = HHHashs.hhhash_headers(hhhash_header)
+
+                    if hhhash not in hhhashs:
+                        print('', url, hhhash)
+
+                        # -----
+                        obj = HHHashs.create(hhhash_header, hhhash)
+                        obj.add(date, domain)
+
+                    hhhashs.add(hhhash)
+                    urls.add(url)
+    print()
+    print()
+    print('HHHASH:')
+    for hhhash in hhhashs:
+        print(hhhash)
+    return hhhashs
+
+def _reprocess_all_hars_hhhashs():
+    for har_id in get_all_har_ids():
+        print()
+        print(har_id)
+        domain = har_id.split('/')[-1]
+        domain = domain[:-44]
+        date = har_id.split('/')
+        date = f'{date[-4]}{date[-3]}{date[-2]}'
+        extract_hhhash_by_id(har_id, domain, date)
+
 
 
 def _gzip_har(har_id):
@@ -1957,15 +2008,16 @@ def test_ail_crawlers():
 # TODO MOVE ME IN CRAWLER OR FLASK
 load_blacklist()
 
-# if __name__ == '__main__':
-#     delete_captures()
+if __name__ == '__main__':
+    # delete_captures()
 
-#     item_id = 'crawled/2023/02/20/data.gz'
-#     item = Item(item_id)
-#     content = item.get_content()
-#     temp_url = ''
-#     r = extract_favicon_from_html(content, temp_url)
-#     print(r)
-#     _reprocess_all_hars_cookie_name()
-#     _reprocess_all_hars_etag()
-#     _gzip_all_hars()
+    # item_id = 'crawled/2023/02/20/data.gz'
+    # item = Item(item_id)
+    # content = item.get_content()
+    # temp_url = ''
+    # r = extract_favicon_from_html(content, temp_url)
+    # print(r)
+    # _reprocess_all_hars_cookie_name()
+    # _reprocess_all_hars_etag()
+    # _gzip_all_hars()
+    _reprocess_all_hars_hhhashs()

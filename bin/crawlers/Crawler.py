@@ -301,6 +301,7 @@ class Crawler(AbstractModule):
                         print(etag_content)
                         etag = Etags.create(etag_content)
                         etag.add(self.date.replace('/', ''), self.domain.id)
+                    crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
 
         # Next Children
         entries_children = entries.get('children')

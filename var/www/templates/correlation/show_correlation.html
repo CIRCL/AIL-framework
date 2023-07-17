@@ -119,6 +119,8 @@
 						{% include 'correlation/metadata_card_cookie_name.html' %}
                     {% elif dict_object["object_type"] == "etag" %}
 						{% include 'correlation/metadata_card_etag.html' %}
+                    {% elif dict_object["object_type"] == "hhhash" %}
+						{% include 'correlation/metadata_card_hhhash.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
 					{% endif %}
@@ -229,6 +231,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="EtagCheck" name="EtagCheck" {%if "etag" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="EtagCheck">Etag</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="HHHashCheck" name="HHHashCheck" {%if "hhhash" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="HHHashCheck">HHHash</label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="ScreenshotCheck" name="ScreenshotCheck" {%if "screenshot" in dict_object["filter"]%}checked{%endif%}>
