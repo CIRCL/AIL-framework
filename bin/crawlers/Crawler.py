@@ -60,6 +60,7 @@ class Crawler(AbstractModule):
         self.root_item = None
         self.date = None
         self.items_dir = None
+        self.original_domain = None
         self.domain = None
 
         # TODO Replace with warning list ???
@@ -190,6 +191,7 @@ class Crawler(AbstractModule):
         print(domain)
 
         self.domain = Domain(domain)
+        self.original_domain = Domain(domain)
 
         epoch = int(time.time())
         parent_id = task.get_parent()
@@ -212,12 +214,20 @@ class Crawler(AbstractModule):
         # Origin + History + tags
         if self.root_item:
             self.domain.set_last_origin(parent_id)
-            self.domain.add_history(epoch, root_item=self.root_item)
             # Tags
             for tag in task.get_tags():
                 self.domain.add_tag(tag)
-        elif self.domain.was_up():
-            self.domain.add_history(epoch, root_item=epoch)
+        self.domain.add_history(epoch, root_item=self.root_item)
+
+        if self.domain != self.original_domain:
+            self.original_domain.update_daterange(self.date.replace('/', ''))
+            if self.root_item:
+                self.original_domain.set_last_origin(parent_id)
+                # Tags
+                for tag in task.get_tags():
+                    self.domain.add_tag(tag)
+            self.original_domain.add_history(epoch, root_item=self.root_item)
+            crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
 
         crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
         print('capture:', capture.uuid, 'completed')
