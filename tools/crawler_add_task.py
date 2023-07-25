@@ -46,7 +46,7 @@ if __name__ == "__main__":
     group.add_argument('--no-screenshot', dest='screenshot', action='store_false', help='Don\'t save screenshot')
     parser.set_defaults(screenshot=None)
 
-    group = parser.add_argument_group('Frequency, create a regular crawler/scheduler')
+    group = parser.add_argument_group('Frequency, create a regular crawler/scheduler. one shot if not specified')
     group.add_argument('-f', '--frequency', type=str, choices=['monthly', 'weekly', 'daily', 'hourly'],
                        help='monthly, weekly, daily or hourly frequency or specify a custom one with the others arguments')
     group.add_argument('--minutes', type=int, help='frequency in minutes')
