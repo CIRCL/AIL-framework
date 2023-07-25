@@ -1723,14 +1723,16 @@ def api_add_crawler_task(data, user_id=None):
 
     if frequency:
         # TODO verify user
-        return create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                               cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags), 200
+        task_uuid = create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
+                               cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
     else:
         # TODO HEADERS
         # TODO USER AGENT
-        return create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
+        task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
                            cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
-                           parent='manual', priority=90), 200
+                           parent='manual', priority=90)
+
+    return {'uuid': task_uuid}, 200
 
 
 #### ####

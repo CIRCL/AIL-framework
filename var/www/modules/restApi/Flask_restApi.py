@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-'''
+"""
     Flask functions and routes for the rest api
-'''
+"""
 
 import os
 import re
@@ -508,6 +508,7 @@ def get_item_cryptocurrency_bitcoin():
 # # # # # # # # # # # # # #        CRAWLER      # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # TODO: ADD RESULT JSON Response
+# @restApi.route("api/v1/crawler/task/add", methods=['POST'])
 @restApi.route("api/v1/add/crawler/task", methods=['POST'])
 @token_required('analyst')
 def add_crawler_task():
