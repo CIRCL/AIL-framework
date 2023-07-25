@@ -28,13 +28,13 @@ def check_frequency(value):
 if __name__ == "__main__":
 
     # TODO add c argument for config file
-    parser = argparse.ArgumentParser(description='Directory or file importer')
+    parser = argparse.ArgumentParser(description='Send an URL to the crawler - Create a crawler task')
     parser.add_argument('-u', '--url', type=str, help='URL to crawl', required=True)
     parser.add_argument('-k', '--key', type=str, help='AIL API Key', required=True)
     parser.add_argument('-a', '--ail', type=str, help='AIL URL')
     parser.add_argument('-d', '--depth', type=int, default=1, help='Depth limit')  # TODO improve me
     parser.add_argument('--cookiejar', type=str, help='Cookiejar uuid')
-    parser.add_argument('-p', '--proxy', type=str, help='Proxy address to use, "web" and "tor" can be used as shortcut (web is used by default is )')
+    parser.add_argument('-p', '--proxy', type=str, help='Proxy address to use, "web" and "tor" can be used as shortcut (web is used by default if the domain isn\'t an onion)')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--har', dest='har', action='store_true', help='Save HAR')
