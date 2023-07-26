@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-DIR/File Importer Helper
+Send an URL to the crawler - Create a crawler task
 ================
 
-Import Content
+Import URL to be crawled by AIL and then analysed
 
 """
 
