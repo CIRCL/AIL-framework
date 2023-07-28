@@ -8,9 +8,12 @@ Import Content
 
 """
 import os
+import logging
+import logging.config
 import sys
 
 from abc import ABC
+from ssl import create_default_context
 
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -22,16 +25,21 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from exporter.abstract_exporter import AbstractExporter
 from lib.ConfigLoader import ConfigLoader
 # from lib.objects.abstract_object import AbstractObject
 # from lib.Tracker import Tracker
 
+logging.config.dictConfig(ail_logger.get_config(name='modules'))
+
 
 class MailExporter(AbstractExporter, ABC):
-    def __init__(self, host=None, port=None, password=None, user='', sender=''):
+    def __init__(self, host=None, port=None, password=None, user='', sender='', cert_required=None, ca_file=None):
         super().__init__()
         config_loader = ConfigLoader()
+
+        self.logger = logging.getLogger(f'{self.__class__.__name__}')
 
         if host:
             self.host = host
@@ -45,6 +53,15 @@ class MailExporter(AbstractExporter, ABC):
             self.pw = config_loader.get_config_str("Notifications", "sender_pw")
             if self.pw == 'None':
                 self.pw = None
+        if cert_required is not None:
+            self.cert_required = bool(cert_required)
+            self.ca_file = ca_file
+        else:
+            self.cert_required = config_loader.get_config_boolean("Notifications", "cert_required")
+            if self.cert_required:
+                self.ca_file = config_loader.get_config_str("Notifications", "ca_file")
+            else:
+                self.ca_file = None
         if user:
             self.user = user
         else:
@@ -67,8 +84,12 @@ class MailExporter(AbstractExporter, ABC):
                 smtp_server = smtplib.SMTP(self.host, self.port)
                 smtp_server.starttls()
             except smtplib.SMTPNotSupportedError:
-                print("The server does not support the STARTTLS extension.")
-                smtp_server = smtplib.SMTP_SSL(self.host, self.port)
+                self.logger.info(f"The server {self.host}:{self.port} does not support the STARTTLS extension.")
+                if self.cert_required:
+                    context = create_default_context(cafile=self.ca_file)
+                else:
+                    context = None
+                smtp_server = smtplib.SMTP_SSL(self.host, self.port, context=context)
 
             smtp_server.ehlo()
             if self.user is not None:
@@ -80,7 +101,7 @@ class MailExporter(AbstractExporter, ABC):
         return smtp_server
         # except Exception as err:
         # traceback.print_tb(err.__traceback__)
-        # logger.warning(err)
+        # self.logger.warning(err)
 
     def _export(self, recipient, subject, body):
         mime_msg = MIMEMultipart()
@@ -95,8 +116,8 @@ class MailExporter(AbstractExporter, ABC):
         smtp_client.quit()
         # except Exception as err:
         # traceback.print_tb(err.__traceback__)
-        # logger.warning(err)
-        print(f'Send notification: {subject} to {recipient}')
+        # self.logger.warning(err)
+        self.logger.info(f'Send notification: {subject} to {recipient}')
 
 class MailExporterTracker(MailExporter):
 
