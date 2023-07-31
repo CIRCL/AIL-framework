@@ -45,9 +45,9 @@ sender = sender@example.com
 sender_host = smtp.example.com
 sender_port = 1337
 sender_pw = None
-# Only needed for SSL if the mail server don't support TLS (used by default). use this option to validate the server certificate.
+# Only needed for SMTP over SSL if the mail server don't support TLS (used by default). use this option to validate the server certificate.
 cert_required = False
-# Only needed for the SSL if you want to validate your self signed certificate for SSL
+# Only needed for SMTP over SSL if you want to validate your self signed certificate for SSL
 ca_file =
 # Only needed when the credentials for email server needs a username instead of an email address
 #sender_user = sender

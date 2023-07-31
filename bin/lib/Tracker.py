@@ -207,6 +207,13 @@ class Tracker:
         if filters:
             self._set_field('filters', json.dumps(filters))
 
+    def del_filters(self, tracker_type, to_track):
+        filters = self.get_filters()
+        for obj_type in filters:
+            r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
+            r_tracker.srem(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
+        r_tracker.hdel(f'tracker:{self.uuid}', 'filters')
+
     def get_tracked(self):
         return self._get_field('tracked')
 
@@ -513,6 +520,7 @@ class Tracker:
             self._set_mails(mails)
 
         # Filters
+        self.del_filters(old_type, old_to_track)
         if not filters:
             filters = {}
             for obj_type in get_objects_tracked():
