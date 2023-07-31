@@ -247,7 +247,10 @@ class User(UserMixin):
             self.id = "__anonymous__"
 
     def exists(self):
-        return self.id != "__anonymous__"
+        if self.id == "__anonymous__":
+            return False
+        else:
+            return r_serv_db.exists(f'ail:user:metadata:{self.id}')
 
     # return True or False
     # def is_authenticated():
@@ -287,3 +290,6 @@ class User(UserMixin):
             return True
         else:
             return False
+
+    def get_role(self):
+        return r_serv_db.hget(f'ail:user:metadata:{self.id}', 'role')

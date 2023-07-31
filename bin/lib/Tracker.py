@@ -530,9 +530,6 @@ class Tracker:
         for obj_type in filters:
             r_tracker.sadd(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
             r_tracker.sadd(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
-            if tracker_type != old_type:
-                r_tracker.srem(f'trackers:objs:{old_type}:{obj_type}', old_to_track)
-                r_tracker.srem(f'trackers:uuid:{old_type}:{old_to_track}', f'{self.uuid}:{obj_type}')
 
         # Refresh Trackers
         trigger_trackers_refresh(tracker_type)
