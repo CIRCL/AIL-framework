@@ -89,8 +89,8 @@
                                     <td class="text-right"><b>Tracked</b></td>
                                     <td>
                                         {% if meta['type'] == 'typosquatting' %}
-                                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseTypo" role="button" aria-expanded="false" aria-controls="collapseTypo">
-                                                {{ meta['tracked'] }}
+                                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseTypo" role="button" aria-expanded="false" aria-controls="collapseTypo" data-toggle="tooltip" title="Show Variations">
+                                                {{ meta['tracked'] }} &nbsp;<i class="fas fa-chevron-circle-down"></i>
                                             </a>
                                             <div class="collapse" id="collapseTypo">
                                                 <div class="card card-body">
