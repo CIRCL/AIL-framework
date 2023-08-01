@@ -272,6 +272,7 @@ def crawlers_last_domains():
         domain, epoch = domain_row.split(':', 1)
         dom = Domains.Domain(domain)
         meta = dom.get_meta()
+        meta['last'] = datetime.fromtimestamp(int(epoch)).strftime("%Y/%m/%d %H:%M.%S")
         meta['epoch'] = epoch
         meta['status_epoch'] = dom.is_up_by_epoch(epoch)
         domains.append(meta)
