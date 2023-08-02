@@ -29,8 +29,8 @@ class TelegramFeeder(DefaultFeeder):
     def get_item_id(self):
         # TODO use telegram message date
         date = datetime.date.today().strftime("%Y/%m/%d")
-        channel_id = str(self.json_data['meta']['channel_id'])
-        message_id = str(self.json_data['meta']['message_id'])
+        channel_id = str(self.json_data['meta']['chat']['id'])
+        message_id = str(self.json_data['meta']['id'])
         item_id = f'{channel_id}_{message_id}'
         item_id = os.path.join('telegram', date, item_id)
         self.item_id = f'{item_id}.gz'
@@ -40,17 +40,21 @@ class TelegramFeeder(DefaultFeeder):
         """
         Process JSON meta field.
         """
-        # channel_id = str(self.json_data['meta']['channel_id'])
-        # message_id = str(self.json_data['meta']['message_id'])
-        # telegram_id = f'{channel_id}_{message_id}'
-        # item_basic.add_map_obj_id_item_id(telegram_id, item_id, 'telegram_id') #########################################
-        user = None
-        if self.json_data['meta'].get('user'):
-            user = str(self.json_data['meta']['user'])
-        elif self.json_data['meta'].get('channel'):
-            user = str(self.json_data['meta']['channel'].get('username'))
-        if user:
-            date = item_basic.get_item_date(self.item_id)
-            username = Username(user, 'telegram')
-            username.add(date, self.item_id)
+        # message chat
+        meta = self.json_data['meta']
+        if meta.get('chat'):
+            if meta['chat'].get('username'):
+                user = meta['chat']['username']
+                if user:
+                    date = item_basic.get_item_date(self.item_id)
+                    username = Username(user, 'telegram')
+                    username.add(date, self.item_id)
+        # message sender
+        if meta.get('sender'):
+            if meta['sender'].get('username'):
+                user = meta['sender']['username']
+                if user:
+                    date = item_basic.get_item_date(self.item_id)
+                    username = Username(user, 'telegram')
+                    username.add(date, self.item_id)
         return None
