@@ -17,9 +17,6 @@ from flask_login import LoginManager, current_user, login_user, logout_user, log
 import importlib
 from os.path import join
 
-# # TODO: put me in lib/Tag
-from pytaxonomies import Taxonomies
-
 sys.path.append('./modules/')
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -255,6 +252,7 @@ for taxonomy in default_taxonomies:
     Tag.enable_taxonomy_tags(taxonomy)
 
 # ========== INITIAL tags auto export ============
+# from pytaxonomies import Taxonomies
 # taxonomies = Taxonomies()
 #
 # infoleak_tags = taxonomies.get('infoleak').machinetags()
