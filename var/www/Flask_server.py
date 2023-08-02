@@ -251,17 +251,6 @@ default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
 for taxonomy in default_taxonomies:
     Tag.enable_taxonomy_tags(taxonomy)
 
-# ========== INITIAL tags auto export ============
-# from pytaxonomies import Taxonomies
-# taxonomies = Taxonomies()
-#
-# infoleak_tags = taxonomies.get('infoleak').machinetags()
-# infoleak_automatic_tags = []
-# for tag in taxonomies.get('infoleak').machinetags():
-#     if tag.split('=')[0][:] == 'infoleak:automatic-detection':
-#         r_serv_db.sadd('list_export_tags', tag)
-#
-# r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":
