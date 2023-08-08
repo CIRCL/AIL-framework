@@ -107,8 +107,8 @@ def convert_byte_offset_to_string(b_content, offset):
     try:
         string_chunk = byte_chunk.decode()
     except UnicodeDecodeError as e:
-        logger.error(f'Yara offset coverter error, {e.reason}\n{b_content}\n{offset}')
-        string_chunk = b_content
+        logger.error(f'Yara offset converter error, {e.reason}\n{byte_chunk}\n{offset}')
+        string_chunk = byte_chunk
     offset = len(string_chunk) - 1
     return offset
 
