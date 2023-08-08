@@ -106,11 +106,11 @@ def convert_byte_offset_to_string(b_content, offset):
     byte_chunk = b_content[:offset + 1]
     try:
         string_chunk = byte_chunk.decode()
+        offset = len(string_chunk) - 1
+        return offset
     except UnicodeDecodeError as e:
-        logger.error(f'Yara offset converter error, {e.reason}\n{byte_chunk}\n{offset}')
-        string_chunk = byte_chunk
-    offset = len(string_chunk) - 1
-    return offset
+        logger.error(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
+        return convert_byte_offset_to_string(b_content, offset)
 
 
 # TODO RETRO HUNTS
