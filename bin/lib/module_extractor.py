@@ -104,7 +104,11 @@ def _get_word_regex(word):
 
 def convert_byte_offset_to_string(b_content, offset):
     byte_chunk = b_content[:offset + 1]
-    string_chunk = byte_chunk.decode()
+    try:
+        string_chunk = byte_chunk.decode()
+    except UnicodeDecodeError as e:
+        logger.error(f'Yara offset coverter error, {e.reason}\n{b_content}\n{offset}')
+        string_chunk = b_content
     offset = len(string_chunk) - 1
     return offset
 
