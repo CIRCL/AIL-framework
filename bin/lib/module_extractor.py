@@ -110,7 +110,7 @@ def convert_byte_offset_to_string(b_content, offset):
         return offset
     except UnicodeDecodeError as e:
         logger.error(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
-        return convert_byte_offset_to_string(b_content, offset)
+        return convert_byte_offset_to_string(b_content, offset - 1)
 
 
 # TODO RETRO HUNTS
