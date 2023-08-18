@@ -41,6 +41,7 @@ config_loader = None
 ##################################
 
 CORRELATION_TYPES_BY_OBJ = {
+    "chat": ["item", "username"],  # item ???
     "cookie-name": ["domain"],
     "cryptocurrency": ["domain", "item"],
     "cve": ["domain", "item"],
@@ -49,11 +50,11 @@ CORRELATION_TYPES_BY_OBJ = {
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
     "hhhash": ["domain"],
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],
+    "item": ["chat", "cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],
     "pgp": ["domain", "item"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],
-    "username": ["domain", "item"],
+    "username": ["chat", "domain", "item"],
 }
 
 def get_obj_correl_types(obj_type):
@@ -65,6 +66,8 @@ def sanityze_obj_correl_types(obj_type, correl_types):
         correl_types = set(correl_types).intersection(obj_correl_types)
     if not correl_types:
         correl_types = obj_correl_types
+        if not correl_types:
+            return []
     return correl_types
 
 def get_nb_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type):

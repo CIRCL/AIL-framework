@@ -20,12 +20,18 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_logger
 from lib import Tag
+from lib.ConfigLoader import ConfigLoader
 from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
+
+config_loader = ConfigLoader()
+# r_cache = config_loader.get_redis_conn("Redis_Cache")
+r_object = config_loader.get_db_conn("Kvrocks_Objects")
+config_loader = None
 
 class AbstractObject(ABC):
     """
@@ -66,6 +72,18 @@ class AbstractObject(ABC):
         if tags:
             dict_meta['tags'] = self.get_tags()
         return dict_meta
+
+    def _get_field(self, field):
+        if self.subtype is None:
+            return r_object.hget(f'meta:{self.type}:{self.id}', field)
+        else:
+            return r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
+
+    def _set_field(self, field, value):
+        if self.subtype is None:
+            return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
+        else:
+            return r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field, value)
 
     ## Tags ##
     def get_tags(self, r_list=False):
@@ -198,6 +216,8 @@ class AbstractObject(ABC):
         else:
             return []
 
+    ## Correlation ##
+
     def _get_external_correlation(self, req_type, req_subtype, req_id, obj_type):
         """
         Get object correlation
@@ -253,3 +273,39 @@ class AbstractObject(ABC):
         Get object correlations
         """
         delete_obj_correlation(self.type, self.subtype, self.id, type2, subtype2, id2)
+
+    ## -Correlation- ##
+
+    ## Parent ##
+
+    def is_parent(self):
+        return r_object.exists(f'child:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
+
+    def is_children(self):
+        return r_object.hexists(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent')
+
+    def get_parent(self):
+        return r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent')
+
+    def get_children(self):
+        return r_object.smembers(f'child:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
+
+    def set_parent(self, obj_type=None, obj_subtype=None, obj_id=None, obj_global_id=None): # TODO ######################
+        if not obj_global_id:
+            if obj_subtype is None:
+                obj_subtype = ''
+            obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
+        r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent', obj_global_id)
+
+    def add_children(self, obj_type=None, obj_subtype=None, obj_id=None, obj_global_id=None): # TODO ######################
+        if not obj_global_id:
+            if obj_subtype is None:
+                obj_subtype = ''
+            obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
+        r_object.sadd(f'child:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', obj_global_id)
+
+    def add_obj_children(self, parent_global_id, son_global_id):
+        r_object.sadd(f'child:{parent_global_id}', son_global_id)
+        r_object.hset(f'meta:{son_global_id}', 'parent', parent_global_id)
+
+    ## Parent ##

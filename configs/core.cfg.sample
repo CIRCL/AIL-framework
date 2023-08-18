@@ -190,6 +190,11 @@ host = localhost
 port = 6383
 password = ail_objs
 
+[Kvrocks_Timeline]
+host = localhost
+port = 6383
+password = ail_tls
+
 [Kvrocks_Stats]
 host = localhost
 port = 6383

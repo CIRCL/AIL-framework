@@ -15,8 +15,8 @@ config_loader = ConfigLoader()
 r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
-AIL_OBJECTS = sorted({'cookie-name', 'cve', 'cryptocurrency', 'decoded', 'domain', 'etag', 'favicon', 'hhhash', 'item',
-                      'pgp', 'screenshot', 'title', 'username'})
+AIL_OBJECTS = sorted({'chat', 'cookie-name', 'cve', 'cryptocurrency', 'decoded', 'domain', 'etag', 'favicon', 'hhhash', 'item',
+                      'pgp', 'screenshot', 'title', 'user-account', 'username'})
 
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
@@ -38,9 +38,11 @@ def get_all_objects():
     return AIL_OBJECTS
 
 def get_objects_with_subtypes():
-    return ['cryptocurrency', 'pgp', 'username']
+    return ['chat', 'cryptocurrency', 'pgp', 'username']
 
 def get_object_all_subtypes(obj_type):
+    if obj_type == 'chat':
+        return ['discord', 'jabber', 'telegram']
     if obj_type == 'cryptocurrency':
         return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash']
     if obj_type == 'pgp':
@@ -65,6 +67,14 @@ def get_all_objects_with_subtypes_tuple():
         else:
             str_objs.append((obj_type, ''))
     return str_objs
+
+def unpack_obj_global_id(global_id, r_type='tuple'):
+    if r_type == 'dict':
+        obj = global_id.split(':', 2)
+        return {'type': obj[0], 'subtype': obj[1], 'id': obj['2']}
+    else:  # tuple(type, subtype, id)
+        return global_id.split(':', 2)
+
 
 ##-- AIL OBJECTS --##
 

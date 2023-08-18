@@ -288,6 +288,8 @@ class Item(AbstractObject):
             meta['mimetype'] = self.get_mimetype(content=content)
         if 'investigations' in options:
             meta['investigations'] = self.get_investigations()
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=True)
 
         # meta['encoding'] = None
         return meta

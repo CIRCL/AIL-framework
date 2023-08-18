@@ -13,6 +13,7 @@ from lib import correlations_engine
 from lib import btc_ail
 from lib import Tag
 
+from lib.objects import Chats
 from lib.objects import CryptoCurrencies
 from lib.objects import CookiesNames
 from lib.objects.Cves import Cve
@@ -55,6 +56,8 @@ def get_object(obj_type, subtype, id):
         return Domain(id)
     elif obj_type == 'decoded':
         return Decoded(id)
+    elif obj_type == 'chat':
+        return Chats.Chat(id, subtype)
     elif obj_type == 'cookie-name':
         return CookiesNames.CookieName(id)
     elif obj_type == 'cve':
