@@ -113,6 +113,34 @@ def regex_finditer(r_key, regex, item_id, content, max_time=30):
         proc.terminate()
         sys.exit(0)
 
+def _regex_match(r_key, regex, content):
+    if re.match(regex, content):
+        r_serv_cache.set(r_key, 1)
+        r_serv_cache.expire(r_key, 360)
+
+def regex_match(r_key, regex, item_id, content, max_time=30):
+    proc = Proc(target=_regex_match, args=(r_key, regex, content))
+    try:
+        proc.start()
+        proc.join(max_time)
+        if proc.is_alive():
+            proc.terminate()
+            # Statistics.incr_module_timeout_statistic(r_key)
+            err_mess = f"{r_key}: processing timeout: {item_id}"
+            logger.info(err_mess)
+            return False
+        else:
+            if r_serv_cache.exists(r_key):
+                r_serv_cache.delete(r_key)
+                return True
+            else:
+                r_serv_cache.delete(r_key)
+                return False
+    except KeyboardInterrupt:
+        print("Caught KeyboardInterrupt, terminating regex worker")
+        proc.terminate()
+        sys.exit(0)
+
 def _regex_search(r_key, regex, content):
     if re.search(regex, content):
         r_serv_cache.set(r_key, 1)

@@ -92,6 +92,9 @@ class AbstractModule(ABC):
     def get_available_queues(self):
         return self.queue.get_out_queues()
 
+    def regex_match(self, regex, obj_id, content):
+        return regex_helper.regex_match(self.r_cache_key, regex, obj_id, content, max_time=self.max_execution_time)
+
     def regex_search(self, regex, obj_id, content):
         return regex_helper.regex_search(self.r_cache_key, regex, obj_id, content, max_time=self.max_execution_time)
 
