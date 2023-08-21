@@ -267,7 +267,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./LibInjection.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Zerobins" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Zerobins.py; read x"
+    screen -S "Script_AIL" -X screen -t "Pasties" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Pasties.py; read x"
     sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "MISP_Thehive_Auto_Push" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./MISP_Thehive_Auto_Push.py; read x"
