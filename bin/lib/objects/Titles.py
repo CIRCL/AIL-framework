@@ -45,6 +45,8 @@ class Title(AbstractDaterangeObject):
     def get_content(self, r_type='str'):
         if r_type == 'str':
             return self._get_field('content')
+        elif r_type == 'bytes':
+            return self._get_field('content').encode()
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -122,4 +124,3 @@ class Titles(AbstractDaterangeObjects):
 #     #     print(r)
 #     r = titles.search_by_id('f7d57B', r_pos=True, case_sensitive=False)
 #     print(r)
-

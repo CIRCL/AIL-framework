@@ -22,6 +22,7 @@ from lib.objects.Domains import Domain
 from lib.objects.Items import Item
 from lib.objects import Screenshots
 from lib.objects import Titles
+from trackers.Tracker_Yara import Tracker_Yara
 
 logging.config.dictConfig(ail_logger.get_config(name='crawlers'))
 
@@ -34,6 +35,8 @@ class Crawler(AbstractModule):
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
+
+        self.tracker_yara = Tracker_Yara(queue=False)
 
         config_loader = ConfigLoader()
 
@@ -283,6 +286,12 @@ class Crawler(AbstractModule):
             if title_content:
                 title = Titles.create_title(title_content)
                 title.add(item.get_date(), item_id)
+                # Tracker
+                self.tracker_yara.compute(title.get_id(), obj_type=title.get_type())
+                if not title.is_tags_safe():
+                    unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
+                    self.domain.add_tag(unsafe_tag)
+                    item.add_tag(unsafe_tag)
 
             # SCREENSHOT
             if self.screenshot:
