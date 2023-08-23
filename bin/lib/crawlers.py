@@ -234,7 +234,9 @@ def extract_title_from_html(html):
     soup = BeautifulSoup(html, 'html.parser')
     title = soup.title
     if title:
-        return str(title.string)
+        title = title.string
+        if title:
+            return str(title)
     return ''
 
 def extract_description_from_html(html):
@@ -2022,4 +2024,4 @@ if __name__ == '__main__':
     # _reprocess_all_hars_cookie_name()
     # _reprocess_all_hars_etag()
     # _gzip_all_hars()
-    _reprocess_all_hars_hhhashs()
+    # _reprocess_all_hars_hhhashs()
