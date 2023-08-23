@@ -117,9 +117,15 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
     def get_name(self):  # get username ????
         pass
 
-    # return username correlation
-    def get_users(self):  # get participants ??? -> passive users ???
-        pass
+    # users that send at least a message else participants/spectator
+    # correlation created by messages
+    def get_users(self):
+        users = set()
+        accounts = self.get_correlation('user-account').get('user-account', [])
+        for account in accounts:
+            users.add(account[1:])
+        return users
+
 
     # def get_last_message_id(self):
     #

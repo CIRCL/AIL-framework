@@ -91,7 +91,7 @@ class Message(AbstractObject):
         #     message_id = message_id[:-3]
         return message_id
 
-    def get_chat_id(self):  # TODO optimize
+    def get_chat_id(self):  # TODO optimize -> use me to tag Chat
         chat_id =  self.get_basename().rsplit('_', 1)[0]
         # if chat_id.endswith('.gz'):
         #     chat_id = chat_id[:-3]

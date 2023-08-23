@@ -87,9 +87,7 @@ class UserAccount(AbstractSubtypeObject):
 
     def get_usernames(self):
         usernames = []
-        correl = self.get_correlation('username')
-        for partial_id in correl.get('username', []):
-            usernames.append(f'username:{partial_id}')
+        # TODO TIMELINE
         return usernames
 
     def get_meta(self, options=set()):

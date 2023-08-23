@@ -79,7 +79,7 @@ class TelegramFeeder(DefaultFeeder):
         if meta.get('chat'):
             chat = Chat(meta['chat']['id'], 'telegram')
 
-            if meta['chat'].get('username'):  # TODO USE ID AND SAVE USERNAME
+            if meta['chat'].get('username'):  # SAVE USERNAME
                 chat_username = meta['chat']['username']
 
             # Chat---Message
@@ -99,7 +99,7 @@ class TelegramFeeder(DefaultFeeder):
             chat = None
 
         # message sender
-        if meta.get('sender'):  # TODO handle message channel forward
+        if meta.get('sender'):  # TODO handle message channel forward - check if is user
             user_id = meta['sender']['id']
             user_account = UsersAccount.UserAccount(user_id, 'telegram')
             # UserAccount---Message
@@ -117,10 +117,13 @@ class TelegramFeeder(DefaultFeeder):
             if meta['sender'].get('username'):
                 username = Username(meta['sender']['username'], 'telegram')
                 user_account.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
+                # TODO Update user_account<--->username timeline
 
                 # Username---Message
                 username.add(date, self.item_id) # TODO ####################################################################
+
                 if chat:
+                    # Chat---Username
                     chat.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
 
         # if meta.get('fwd_from'):
