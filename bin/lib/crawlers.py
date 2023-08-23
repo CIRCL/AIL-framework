@@ -2012,7 +2012,7 @@ def test_ail_crawlers():
 # TODO MOVE ME IN CRAWLER OR FLASK
 load_blacklist()
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # delete_captures()
 
     # item_id = 'crawled/2023/02/20/data.gz'
