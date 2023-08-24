@@ -248,7 +248,8 @@ class Tracker:
         return self._get_field('user_id')
 
     def webhook_export(self):
-        return r_tracker.hexists(f'tracker:{self.uuid}', 'webhook')
+        webhook = self.get_webhook()
+        return webhook is not None and webhook
 
     def get_webhook(self):
         return r_tracker.hget(f'tracker:{self.uuid}', 'webhook')
