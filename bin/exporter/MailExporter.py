@@ -145,5 +145,6 @@ class MailExporterTracker(MailExporter):
             body = f"AIL Framework, New occurrence for {tracker_type} tracker: {tracker_name}\n"
             body += f'Item: {obj.id}\nurl:{obj.get_link()}'
 
+        # print(body)
         for mail in tracker.get_mails():
             self._export(mail, subject, body)
