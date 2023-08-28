@@ -342,7 +342,7 @@ def _reprocess_all_hars_cookie_name():
         for cookie_name in extract_cookies_names_from_har(get_har_content(har_id)):
             print(domain, date, cookie_name)
             cookie = CookiesNames.create(cookie_name)
-            cookie.add(date, domain)
+            cookie.add(date, Domain(domain))
 
 def extract_etag_from_har(har):  # TODO check response url
     etags = set()
@@ -365,7 +365,7 @@ def _reprocess_all_hars_etag():
         for etag_content in extract_etag_from_har(get_har_content(har_id)):
             print(domain, date, etag_content)
             etag = Etags.create(etag_content)
-            etag.add(date, domain)
+            etag.add(date, Domain(domain))
 
 def extract_hhhash_by_id(har_id, domain, date):
     return extract_hhhash(get_har_content(har_id), domain, date)
@@ -395,7 +395,7 @@ def extract_hhhash(har, domain, date):
 
                         # -----
                         obj = HHHashs.create(hhhash_header, hhhash)
-                        obj.add(date, domain)
+                        obj.add(date, Domain(domain))
 
                     hhhashs.add(hhhash)
                     urls.add(url)

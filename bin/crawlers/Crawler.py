@@ -282,7 +282,7 @@ class Crawler(AbstractModule):
             title_content = crawlers.extract_title_from_html(entries['html'])
             if title_content:
                 title = Titles.create_title(title_content)
-                title.add(item.get_date(), item_id)
+                title.add(item.get_date(), item)
 
             # SCREENSHOT
             if self.screenshot:
@@ -306,11 +306,11 @@ class Crawler(AbstractModule):
                     for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
                         print(cookie_name)
                         cookie = CookiesNames.create(cookie_name)
-                        cookie.add(self.date.replace('/', ''), self.domain.id)
+                        cookie.add(self.date.replace('/', ''), self.domain)
                     for etag_content in crawlers.extract_etag_from_har(entries['har']):
                         print(etag_content)
                         etag = Etags.create(etag_content)
-                        etag.add(self.date.replace('/', ''), self.domain.id)
+                        etag.add(self.date.replace('/', ''), self.domain)
                     crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
 
         # Next Children

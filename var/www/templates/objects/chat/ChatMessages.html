@@ -120,14 +120,26 @@
 
                                 <div class="chat-message-left pb-0">
                                     <div>
-                                        <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ mess['username']['id'] }}" width="40" height="40">
+                                        <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ mess['user-account']['id'] }}" width="40" height="40">
                                         <div class="text-muted small text-nowrap mt-2">{{ mess['hour'] }}</div>
                                     </div>
                                     <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-4 pb-4" style="overflow-x: auto">
-                                        <div class="font-weight-bold mb-1">{{ mess['username']['id'] }}</div>
+                                        <div class="font-weight-bold mb-1">
+                                            {% if mess['user-account']['username'] %}
+                                            	{{ mess['user-account']['username']['id'] }}
+                                            {% else %}
+                                            	{{ mess['user-account']['id'] }}
+                                            {% endif %}
+                                        </div>
                                         {% if mess['reply_to'] %}
                                             <div class="flex-shrink-1 border rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
-                                                <div class="font-weight-bold mb-1">{{ mess['reply_to']['username']['id'] }}</div>
+                                                <div class="font-weight-bold mb-1">
+                                                    {% if mess['reply_to']['user-account']['username'] %}
+                                                        {{ mess['reply_to']['user-account']['username']['id'] }}
+                                                    {% else %}
+                                                        {{ mess['reply_to']['user-account']['id'] }}
+                                                    {% endif %}
+                                                </div>
                                                 <pre class="my-0">{{ mess['reply_to']['content'] }}</pre>
                                                 {% for tag in mess['reply_to']['tags'] %}
                                                     <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>

@@ -65,12 +65,14 @@ class AbstractObject(ABC):
     def get_global_id(self):
         return f'{self.get_type()}:{self.get_subtype(r_str=True)}:{self.get_id()}'
 
-    def get_default_meta(self, tags=False):
+    def get_default_meta(self, tags=False, link=False):
         dict_meta = {'id': self.get_id(),
                      'type': self.get_type(),
                      'subtype': self.get_subtype(r_str=True)}
         if tags:
             dict_meta['tags'] = self.get_tags()
+        if link:
+            dict_meta['link'] = self.get_link()
         return dict_meta
 
     def _get_field(self, field):

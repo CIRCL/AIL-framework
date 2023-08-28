@@ -27,7 +27,7 @@ from flask import url_for
 config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
-r_content = config_loader.get_db_conn("Kvrocks_Content")
+# r_content = config_loader.get_db_conn("Kvrocks_Content")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
@@ -61,7 +61,7 @@ class Message(AbstractObject):
         """
         Returns source/feeder name
         """
-        l_source = self.id.split('/')[:-4]
+        l_source = self.id.split('/')[:-2]
         return os.path.join(*l_source)
 
     def get_basename(self):
@@ -79,7 +79,7 @@ class Message(AbstractObject):
 
     def get_date(self):
         timestamp = self.get_timestamp()
-        return datetime.fromtimestamp(timestamp).strftime('%Y%m%d')
+        return datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d')
 
     def get_timestamp(self):
         dirs = self.id.split('/')
@@ -92,10 +92,15 @@ class Message(AbstractObject):
         return message_id
 
     def get_chat_id(self):  # TODO optimize -> use me to tag Chat
-        chat_id =  self.get_basename().rsplit('_', 1)[0]
+        chat_id = self.get_basename().rsplit('_', 1)[0]
         # if chat_id.endswith('.gz'):
         #     chat_id = chat_id[:-3]
         return chat_id
+
+    def get_user_account(self):
+        user_account = self.get_correlation('user-account')
+        if user_account.get('user-account'):
+            return f'user-account:{user_account["user-account"].pop()}'
 
     # Update value on import
     # reply to -> parent ?
@@ -139,7 +144,7 @@ class Message(AbstractObject):
         return url
 
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': 'fa-comment-dots', 'color': '#4dffff', 'radius': 5}
+        return {'style': 'fas', 'icon': '\uf4ad', 'color': '#4dffff', 'radius': 5}
 
     def get_misp_object(self):  # TODO
         obj = MISPObject('instant-message', standalone=True)
@@ -181,6 +186,8 @@ class Message(AbstractObject):
             meta['investigations'] = self.get_investigations()
         if 'link' in options:
             meta['link'] = self.get_link(flask_context=True)
+        if 'user-account' in options:
+            meta['user-account'] = self.get_user_account()
 
         # meta['encoding'] = None
         return meta
@@ -238,7 +245,7 @@ class Message(AbstractObject):
 
     def create(self, content, translation, tags):
         self._set_field('content', content)
-        r_content.get(f'content:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', content)
+        # r_content.get(f'content:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', content)
         if translation:
             self._set_translation(translation)
         for tag in tags:

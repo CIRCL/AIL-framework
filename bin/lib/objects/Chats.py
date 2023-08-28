@@ -18,7 +18,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 from lib.data_retention_engine import update_obj_date
 from lib.objects import ail_objects
-from lib import item_basic
+from lib.timeline_engine import Timeline
 
 from lib.correlations_engine import get_correlation_by_correl_type
 
@@ -126,6 +126,18 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
             users.add(account[1:])
         return users
 
+    def _get_timeline_username(self):
+        return Timeline(self.get_global_id(), 'username')
+
+    def get_username(self):
+        return self._get_timeline_username().get_last_obj_id()
+
+    def get_usernames(self):
+        return self._get_timeline_username().get_objs_ids()
+
+    def update_username_timeline(self, username_global_id, timestamp):
+        self._get_timeline_username().add_timestamp(timestamp, username_global_id)
+
 
     # def get_last_message_id(self):
     #
@@ -144,18 +156,21 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
 
     def get_message_meta(self, obj_global_id, parent=True, mess_datetime=None):
         obj = ail_objects.get_obj_from_global_id(obj_global_id)
-        mess_dict = obj.get_meta(options={'content', 'link', 'parent'})
+        mess_dict = obj.get_meta(options={'content', 'link', 'parent', 'user-account'})
         if mess_dict.get('parent') and parent:
             mess_dict['reply_to'] = self.get_message_meta(mess_dict['parent'], parent=False)
-        mess_dict['username'] = {}
-        user = obj.get_correlation('username').get('username')
-        if user:
-            subtype, user = user.pop().split(':', 1)
-            mess_dict['username']['type'] = 'telegram'
-            mess_dict['username']['subtype'] = subtype
-            mess_dict['username']['id'] = user
+        if mess_dict.get('user-account'):
+            user_account = ail_objects.get_obj_from_global_id(mess_dict['user-account'])
+            mess_dict['user-account'] = {}
+            mess_dict['user-account']['type'] = user_account.get_type()
+            mess_dict['user-account']['subtype'] = user_account.get_subtype(r_str=True)
+            mess_dict['user-account']['id'] = user_account.get_id()
+            username = user_account.get_username()
+            if username:
+                username = ail_objects.get_obj_from_global_id(username).get_default_meta(link=False)
+            mess_dict['user-account']['username'] = username  # TODO get username at the given timestamp ???
         else:
-            mess_dict['username']['id'] = 'UNKNOWN'
+            mess_dict['user-account']['id'] = 'UNKNOWN'
 
         if not mess_datetime:
             obj_mess_id = self._get_message_timestamp(obj_global_id)

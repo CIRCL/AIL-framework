@@ -41,20 +41,22 @@ config_loader = None
 ##################################
 
 CORRELATION_TYPES_BY_OBJ = {
-    "chat": ["item", "username"],  # item ???
+    "chat": ["user-account"],  # message or direct correlation like cve, bitcoin, ... ???
     "cookie-name": ["domain"],
-    "cryptocurrency": ["domain", "item"],
-    "cve": ["domain", "item"],
-    "decoded": ["domain", "item"],
+    "cryptocurrency": ["domain", "item", "message"],
+    "cve": ["domain", "item", "message"],
+    "decoded": ["domain", "item", "message"],
     "domain": ["cve", "cookie-name", "cryptocurrency", "decoded", "etag", "favicon", "hhhash", "item", "pgp", "title", "screenshot", "username"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
     "hhhash": ["domain"],
-    "item": ["chat", "cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],
-    "pgp": ["domain", "item"],
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
+    "message": ["cve", "cryptocurrency", "decoded", "pgp", "user-account"],  # chat ??
+    "pgp": ["domain", "item", "message"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],
-    "username": ["chat", "domain", "item"],
+    "user-account": ["chat", "message"],
+    "username": ["domain", "item", "message"],  # TODO chat-user/account
 }
 
 def get_obj_correl_types(obj_type):

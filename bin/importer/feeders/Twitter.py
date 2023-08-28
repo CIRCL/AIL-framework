@@ -17,7 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from importer.feeders.Default import DefaultFeeder
 from lib.objects.Usernames import Username
-from lib import item_basic
+from lib.objects.Items import Item
 
 class TwitterFeeder(DefaultFeeder):
 
@@ -40,9 +40,9 @@ class TwitterFeeder(DefaultFeeder):
         '''
         # tweet_id = str(self.json_data['meta']['twitter:tweet_id'])
         # item_basic.add_map_obj_id_item_id(tweet_id, item_id, 'twitter_id') ############################################
-
-        date = item_basic.get_item_date(self.item_id)
+        item = Item(self.item_id)
+        date = item.get_date()
         user = str(self.json_data['meta']['twitter:id'])
         username = Username(user, 'twitter')
-        username.add(date, item_id)
+        username.add(date, item)
         return None

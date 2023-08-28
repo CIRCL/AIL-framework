@@ -210,18 +210,18 @@ class PgpDump(AbstractModule):
             date = item.get_date()
             for key in self.keys:
                 pgp = Pgps.Pgp(key, 'key')
-                pgp.add(date, self.item_id)
+                pgp.add(date, item)
                 print(f'    key: {key}')
             for name in self.names:
                 pgp = Pgps.Pgp(name, 'name')
-                pgp.add(date, self.item_id)
+                pgp.add(date, item)
                 print(f'    name: {name}')
                 self.tracker_term.compute(name, obj_type='pgp', subtype='name')
                 self.tracker_regex.compute(name, obj_type='pgp', subtype='name')
                 self.tracker_yara.compute(name, obj_type='pgp', subtype='name')
             for mail in self.mails:
                 pgp = Pgps.Pgp(mail, 'mail')
-                pgp.add(date, self.item_id)
+                pgp.add(date, item)
                 print(f'    mail: {mail}')
                 self.tracker_term.compute(mail, obj_type='pgp', subtype='mail')
                 self.tracker_regex.compute(mail, obj_type='pgp', subtype='mail')

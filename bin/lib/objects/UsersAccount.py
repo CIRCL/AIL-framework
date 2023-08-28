@@ -3,7 +3,7 @@
 
 import os
 import sys
-import re
+# import re
 
 from flask import url_for
 from pymisp import MISPObject
@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
+from lib.timeline_engine import Timeline
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -80,15 +81,17 @@ class UserAccount(AbstractSubtypeObject):
     def set_phone(self, phone):
         return self._set_field('phone', phone)
 
-    # TODO REWRITE ADD FUNCTION
+    def _get_timeline_username(self):
+        return Timeline(self.get_global_id(), 'username')
 
     def get_username(self):
-        return ''
+        return self._get_timeline_username().get_last_obj_id()
 
     def get_usernames(self):
-        usernames = []
-        # TODO TIMELINE
-        return usernames
+        return self._get_timeline_username().get_objs_ids()
+
+    def update_username_timeline(self, username_global_id, timestamp):
+        self._get_timeline_username().add_timestamp(timestamp, username_global_id)
 
     def get_meta(self, options=set()):
         meta = self._get_meta(options=options)

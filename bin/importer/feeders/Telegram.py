@@ -21,7 +21,6 @@ from lib.objects.Chats import Chat
 from lib.objects import Messages
 from lib.objects import UsersAccount
 from lib.objects.Usernames import Username
-from lib import item_basic
 
 import base64
 import io
@@ -57,7 +56,7 @@ class TelegramFeeder(DefaultFeeder):
         #     date = datetime.date.today().strftime("%Y/%m/%d")
         chat_id = str(self.json_data['meta']['chat']['id'])
         message_id = str(self.json_data['meta']['id'])
-        self.item_id = Messages.create_obj_id('telegram', chat_id, message_id, timestamp)
+        self.item_id = Messages.create_obj_id('telegram', chat_id, message_id, timestamp)  # TODO rename self.item_id
         return self.item_id
 
     def process_meta(self):
@@ -68,7 +67,7 @@ class TelegramFeeder(DefaultFeeder):
         meta = self.json_data['meta']
         mess_id = self.json_data['meta']['id']
         if meta.get('reply_to'):
-            reply_to_id = meta['reply_to']
+            reply_to_id = meta['reply_to']['id']
         else:
             reply_to_id = None
 
@@ -76,25 +75,24 @@ class TelegramFeeder(DefaultFeeder):
         date = datetime.datetime.fromtimestamp(timestamp)
         date = date.strftime('%Y%m%d')
 
+        if self.json_data.get('translation'):
+            translation = self.json_data['translation']
+        else:
+            translation = None
+        decoded = base64.standard_b64decode(self.json_data['data'])
+        content = gunzip_bytes_obj(decoded)
+        message = Messages.create(self.item_id, content, translation=translation)
+
         if meta.get('chat'):
             chat = Chat(meta['chat']['id'], 'telegram')
 
-            if meta['chat'].get('username'):  # SAVE USERNAME
-                chat_username = meta['chat']['username']
+            if meta['chat'].get('username'):
+                chat_username = Username(meta['chat']['username'], 'telegram')
+                chat.update_username_timeline(chat_username.get_global_id(), timestamp)
 
             # Chat---Message
-            chat.add(date, self.item_id)  # TODO modify to accept file objects
-            # message meta ????? who is the user if two user ????
-
-            if self.json_data.get('translation'):
-                translation = self.json_data['translation']
-            else:
-                translation = None
-            decoded = base64.standard_b64decode(self.json_data['data'])
-            content = gunzip_bytes_obj(decoded)
-            Messages.create(self.item_id, content, translation=translation)
-
-            chat.add_message(self.item_id, timestamp, mess_id, reply_id=reply_to_id)
+            chat.add(date)
+            chat.add_message(message.get_global_id(), timestamp, mess_id, reply_id=reply_to_id)
         else:
             chat = None
 
@@ -103,7 +101,7 @@ class TelegramFeeder(DefaultFeeder):
             user_id = meta['sender']['id']
             user_account = UsersAccount.UserAccount(user_id, 'telegram')
             # UserAccount---Message
-            user_account.add(date, self.item_id)
+            user_account.add(date, obj=message)
             # UserAccount---Chat
             user_account.add_correlation(chat.type, chat.get_subtype(r_str=True), chat.id)
 
@@ -116,20 +114,22 @@ class TelegramFeeder(DefaultFeeder):
 
             if meta['sender'].get('username'):
                 username = Username(meta['sender']['username'], 'telegram')
+                # TODO timeline or/and correlation ????
                 user_account.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
-                # TODO Update user_account<--->username timeline
+                user_account.update_username_timeline(username.get_global_id(), timestamp)
 
                 # Username---Message
-                username.add(date, self.item_id) # TODO ####################################################################
+                username.add(date)  # TODO # correlation message ???
 
-                if chat:
-                    # Chat---Username
-                    chat.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
+                # if chat: # TODO Chat---Username correlation ???
+                #     # Chat---Username
+                #     chat.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
 
         # if meta.get('fwd_from'):
             # if meta['fwd_from'].get('post_author') # user first name
 
         # TODO reply threads ????
+        # message edit ????
 
 
         return None

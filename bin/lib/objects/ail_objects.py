@@ -23,9 +23,11 @@ from lib.objects import Etags
 from lib.objects.Favicons import Favicon
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
+from lib.objects.Messages import Message
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
 from lib.objects import Titles
+from lib.objects.UsersAccount import UserAccount
 from lib.objects import Usernames
 
 config_loader = ConfigLoader()
@@ -68,6 +70,8 @@ def get_object(obj_type, subtype, id):
         return Favicon(id)
     elif obj_type == 'hhhash':
         return HHHashs.HHHash(id)
+    elif obj_type == 'message':
+        return Message(id)
     elif obj_type == 'screenshot':
         return Screenshot(id)
     elif obj_type == 'cryptocurrency':
@@ -76,6 +80,8 @@ def get_object(obj_type, subtype, id):
         return Pgps.Pgp(id, subtype)
     elif obj_type == 'title':
         return Titles.Title(id)
+    elif obj_type == 'user-account':
+        return UserAccount(id, subtype)
     elif obj_type == 'username':
         return Usernames.Username(id, subtype)
 
