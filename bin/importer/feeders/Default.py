@@ -24,8 +24,12 @@ class DefaultFeeder:
         Return feeder name. first part of the item_id and display in the UI
         """
         if not self.name:
-            return self.get_source()
-        return self.name
+            name = self.get_source()
+        else:
+            name = self.name
+        if not name:
+            name = 'default'
+        return name
 
     def get_source(self):
         return self.json_data.get('source')
