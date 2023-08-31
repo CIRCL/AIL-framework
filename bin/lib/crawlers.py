@@ -1692,17 +1692,18 @@ def api_add_crawler_task(data, user_id=None):
                 return {'error': 'The access to this cookiejar is restricted'}, 403
         cookiejar_uuid = cookiejar.uuid
 
-    cookie = data.get('cookie', None)
-    if not cookiejar_uuid and cookie:
+    cookies = data.get('cookies', None)
+    if not cookiejar_uuid and cookies:
         # Create new cookiejar
         cookiejar_uuid = create_cookiejar(user_id, "single-shot cookiejar", 1, None)
         cookiejar = Cookiejar(cookiejar_uuid)
-        try:
-            name = cookie.get('name')
-            value = cookie.get('value')
-            cookiejar.add_cookie(name, value, None, None, None, None, None)
-        except KeyError:
-            return {'error': 'Invalid cookie key, please submit a valid JSON', 'cookiejar_uuid': cookiejar_uuid}, 400
+        for cookie in cookies:
+            try:
+                name = cookie.get('name')
+                value = cookie.get('value')
+                cookiejar.add_cookie(name, value, None, None, None, None, None)
+            except KeyError:
+                return {'error': 'Invalid cookie key, please submit a valid JSON', 'cookiejar_uuid': cookiejar_uuid}, 400
 
     frequency = data.get('frequency', None)
     if frequency:
