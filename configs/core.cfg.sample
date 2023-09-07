@@ -154,6 +154,11 @@ host = localhost
 port = 6381
 db = 0
 
+[Redis_Process]
+host = localhost
+port = 6381
+db = 2
+
 [Redis_Mixer_Cache]
 host = localhost
 port = 6381
