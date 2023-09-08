@@ -235,18 +235,27 @@ class Investigation(object):
             objs.append(dict_obj)
         return objs
 
+    def get_objects_comment(self, obj_global_id):
+        return r_tracking.hget(f'investigations:objs:comment:{self.uuid}', obj_global_id)
+
+    def set_objects_comment(self, obj_global_id, comment):
+        if comment:
+            r_tracking.hset(f'investigations:objs:comment:{self.uuid}', obj_global_id, comment)
+
     # # TODO:  def register_object(self, Object): in OBJECT CLASS
 
-    def register_object(self, obj_id, obj_type, subtype):
+    def register_object(self, obj_id, obj_type, subtype, comment=''):
         r_tracking.sadd(f'investigations:objs:{self.uuid}', f'{obj_type}:{subtype}:{obj_id}')
         r_tracking.sadd(f'obj:investigations:{obj_type}:{subtype}:{obj_id}', self.uuid)
+        if comment:
+            self.set_objects_comment(f'{obj_type}:{subtype}:{obj_id}', comment)
         timestamp = int(time.time())
         self.set_last_change(timestamp)
-
 
     def unregister_object(self, obj_id, obj_type, subtype):
         r_tracking.srem(f'investigations:objs:{self.uuid}', f'{obj_type}:{subtype}:{obj_id}')
         r_tracking.srem(f'obj:investigations:{obj_type}:{subtype}:{obj_id}', self.uuid)
+        r_tracking.hdel(f'investigations:objs:comment:{self.uuid}', f'{obj_type}:{subtype}:{obj_id}')
         timestamp = int(time.time())
         self.set_last_change(timestamp)
 
@@ -351,7 +360,7 @@ def get_investigations_selector():
     for investigation_uuid in get_all_investigations():
         investigation = Investigation(investigation_uuid)
         name = investigation.get_info()
-        l_investigations.append({"id":investigation_uuid, "name": name})
+        l_investigations.append({"id": investigation_uuid, "name": name})
     return l_investigations
 
     #{id:'8dc4b81aeff94a9799bd70ba556fa345',name:"Paris"}
@@ -453,7 +462,11 @@ def api_register_object(json_dict):
     if subtype == 'None':
         subtype = ''
     obj_id = json_dict.get('id', '').replace(' ', '')
-    res = investigation.register_object(obj_id, obj_type, subtype)
+
+    comment = json_dict.get('comment', '')
+    # if comment:
+    #     comment = escape(comment)
+    res = investigation.register_object(obj_id, obj_type, subtype, comment=comment)
     return res, 200
 
 def api_unregister_object(json_dict):

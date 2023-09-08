@@ -17,7 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from importer.feeders.Default import DefaultFeeder
 from lib.objects.Usernames import Username
-from lib import item_basic
+from lib.objects.Items import Item
 
 
 class JabberFeeder(DefaultFeeder):
@@ -36,7 +36,7 @@ class JabberFeeder(DefaultFeeder):
         self.item_id = f'{item_id}.gz'
         return self.item_id
 
-    def process_meta(self):
+    def process_meta(self): # TODO replace me by message
         """
         Process JSON meta field.
         """
@@ -44,10 +44,12 @@ class JabberFeeder(DefaultFeeder):
         # item_basic.add_map_obj_id_item_id(jabber_id, item_id, 'jabber_id') ##############################################
         to = str(self.json_data['meta']['jabber:to'])
         fr = str(self.json_data['meta']['jabber:from'])
-        date = item_basic.get_item_date(item_id)
+
+        item = Item(self.item_id)
+        date = item.get_date()
 
         user_to = Username(to, 'jabber')
         user_fr = Username(fr, 'jabber')
-        user_to.add(date, self.item_id)
-        user_fr.add(date, self.item_id)
+        user_to.add(date, item)
+        user_fr.add(date, item)
         return None

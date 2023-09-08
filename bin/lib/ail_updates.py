@@ -15,37 +15,14 @@ config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
 config_loader = None
 
-BACKGROUND_UPDATES = {
-    'v1.5': {
-        'nb_updates': 5,
-        'message': 'Tags and Screenshots'
-    },
-    'v2.4': {
-        'nb_updates': 1,
-        'message': ' Domains Tags and Correlations'
-    },
-    'v2.6': {
-        'nb_updates': 1,
-        'message': 'Domains Tags and Correlations'
-    },
-    'v2.7': {
-        'nb_updates': 1,
-        'message': 'Domains Tags'
-    },
-    'v3.4': {
-        'nb_updates': 1,
-        'message': 'Domains Languages'
-    },
-    'v3.7': {
-        'nb_updates': 1,
-        'message': 'Trackers first_seen/last_seen'
-    }
-}
-
+# # # # # # # #
+#             #
+#   UPDATE    #
+#             #
+# # # # # # # #
 
 def get_ail_version():
     return r_db.get('ail:version')
-
 
 def get_ail_float_version():
     version = get_ail_version()
@@ -55,6 +32,179 @@ def get_ail_float_version():
         version = 0
     return version
 
+# # # - - # # #
+
+# # # # # # # # # # # #
+#                     #
+#  UPDATE BACKGROUND  #
+#                     #
+# # # # # # # # # # # #
+
+
+BACKGROUND_UPDATES = {
+    'v5.2': {
+        'message': 'Compress HAR',
+        'scripts': ['compress_har.py']
+    },
+}
+
+class AILBackgroundUpdate:
+    """
+        AIL Background Update.
+    """
+
+    def __init__(self, version):
+        self.version = version
+
+    def _get_field(self, field):
+        return r_db.hget('ail:update:background', field)
+
+    def _set_field(self, field, value):
+        r_db.hset('ail:update:background', field, value)
+
+    def get_version(self):
+        return self.version
+
+    def get_message(self):
+        return BACKGROUND_UPDATES.get(self.version, {}).get('message', '')
+
+    def get_error(self):
+        return self._get_field('error')
+
+    def set_error(self, error):  # TODO ADD LOGS
+        self._set_field('error', error)
+
+    def get_nb_scripts(self):
+        return int(len(BACKGROUND_UPDATES.get(self.version, {}).get('scripts', [''])))
+
+    def get_scripts(self):
+        return BACKGROUND_UPDATES.get(self.version, {}).get('scripts', [])
+
+    def get_nb_scripts_done(self):
+        done = self._get_field('done')
+        try:
+            done = int(done)
+        except (TypeError, ValueError):
+            done = 0
+        return done
+
+    def inc_nb_scripts_done(self):
+        self._set_field('done', self.get_nb_scripts_done() + 1)
+
+    def get_script(self):
+        return self._get_field('script')
+
+    def get_script_path(self):
+        path = os.path.basename(self.get_script())
+        if path:
+            return os.path.join(os.environ['AIL_HOME'], 'update', self.version, path)
+
+    def get_nb_to_update(self):  # TODO use cache ?????
+        nb_to_update = self._get_field('nb_to_update')
+        if not nb_to_update:
+            nb_to_update = 1
+        return int(nb_to_update)
+
+    def set_nb_to_update(self, nb):
+        self._set_field('nb_to_update', int(nb))
+
+    def get_nb_updated(self):  # TODO use cache ?????
+        nb_updated = self._get_field('nb_updated')
+        if not nb_updated:
+            nb_updated = 0
+        return int(nb_updated)
+
+    def inc_nb_updated(self):  # TODO use cache ?????
+        r_db.hincrby('ail:update:background', 'nb_updated', 1)
+
+    def get_progress(self):  # TODO use cache ?????
+        return self._get_field('progress')
+
+    def set_progress(self, progress):
+        self._set_field('progress', progress)
+
+    def update_progress(self):
+        nb_updated = self.get_nb_updated()
+        nb_to_update = self.get_nb_to_update()
+        if nb_updated == nb_to_update:
+            progress = 100
+        elif nb_updated > nb_to_update:
+            progress = 99
+        else:
+            progress = int((nb_updated * 100) / nb_to_update)
+        self.set_progress(progress)
+        print(f'{nb_updated}/{nb_to_update}    updated    {progress}%')
+        return progress
+
+    def is_running(self):
+        return r_db.hget('ail:update:background', 'version') == self.version
+
+    def get_meta(self, options=set()):
+        meta = {'version': self.get_version(),
+                'error': self.get_error(),
+                'script': self.get_script(),
+                'script_progress': self.get_progress(),
+                'nb_update': self.get_nb_scripts(),
+                'nb_completed': self.get_nb_scripts_done()}
+        meta['progress'] = int(meta['nb_completed'] * 100 / meta['nb_update'])
+        if 'message' in options:
+            meta['message'] = self.get_message()
+        return meta
+
+    def start(self):
+        self._set_field('version', self.version)
+        r_db.hdel('ail:update:background', 'error')
+
+    def start_script(self, script):
+        self.clear()
+        self._set_field('script', script)
+        self.set_progress(0)
+
+    def end_script(self):
+        self.set_progress(100)
+        self.inc_nb_scripts_done()
+
+    def clear(self):
+        r_db.hdel('ail:update:background', 'error')
+        r_db.hdel('ail:update:background', 'progress')
+        r_db.hdel('ail:update:background', 'nb_updated')
+        r_db.hdel('ail:update:background', 'nb_to_update')
+
+    def end(self):
+        r_db.delete('ail:update:background')
+        r_db.srem('ail:updates:background', self.version)
+
+
+# To Add in update script
+def add_background_update(version):
+    r_db.sadd('ail:updates:background', version)
+
+def is_update_background_running():
+    return r_db.exists('ail:update:background')
+
+def get_update_background_version():
+    return r_db.hget('ail:update:background', 'version')
+
+def get_update_background_meta(options=set()):
+    version = get_update_background_version()
+    if version:
+        return AILBackgroundUpdate(version).get_meta(options=options)
+    else:
+        return {}
+
+def get_update_background_to_launch():
+    to_launch = []
+    updates = r_db.smembers('ail:updates:background')
+    for version in BACKGROUND_UPDATES:
+        if version in updates:
+            to_launch.append(version)
+    return to_launch
+
+# # # - - # # #
+
+##########################################################################################
+##########################################################################################
+##########################################################################################
 
 def get_ail_all_updates(date_separator='-'):
     dict_update = r_db.hgetall('ail:update_date')
@@ -85,111 +235,6 @@ def check_version(version):
     if '..' in version:
         return False
     return True
-
-
-#### UPDATE BACKGROUND ####
-
-def exits_background_update_to_launch():
-    return r_db.scard('ail:update:to_update') != 0
-
-
-def is_version_in_background_update(version):
-    return r_db.sismember('ail:update:to_update', version)
-
-
-def get_all_background_updates_to_launch():
-    return r_db.smembers('ail:update:to_update')
-
-
-def get_current_background_update():
-    return r_db.get('ail:update:update_in_progress')
-
-
-def get_current_background_update_script():
-    return r_db.get('ail:update:current_background_script')
-
-
-def get_current_background_update_script_path(version, script_name):
-    return os.path.join(os.environ['AIL_HOME'], 'update', version, script_name)
-
-
-def get_current_background_nb_update_completed():
-    return r_db.scard('ail:update:update_in_progress:completed')
-
-
-def get_current_background_update_progress():
-    progress = r_db.get('ail:update:current_background_script_stat')
-    if not progress:
-        progress = 0
-    return int(progress)
-
-
-def get_background_update_error():
-    return r_db.get('ail:update:error')
-
-
-def add_background_updates_to_launch(version):
-    return r_db.sadd('ail:update:to_update', version)
-
-
-def start_background_update(version):
-    r_db.delete('ail:update:error')
-    r_db.set('ail:update:update_in_progress', version)
-
-
-def set_current_background_update_script(script_name):
-    r_db.set('ail:update:current_background_script', script_name)
-    r_db.set('ail:update:current_background_script_stat', 0)
-
-
-def set_current_background_update_progress(progress):
-    r_db.set('ail:update:current_background_script_stat', progress)
-
-
-def set_background_update_error(error):
-    r_db.set('ail:update:error', error)
-
-
-def end_background_update_script():
-    r_db.sadd('ail:update:update_in_progress:completed')
-
-
-def end_background_update(version):
-    r_db.delete('ail:update:update_in_progress')
-    r_db.delete('ail:update:current_background_script')
-    r_db.delete('ail:update:current_background_script_stat')
-    r_db.delete('ail:update:update_in_progress:completed')
-    r_db.srem('ail:update:to_update', version)
-
-
-def clear_background_update():
-    r_db.delete('ail:update:error')
-    r_db.delete('ail:update:update_in_progress')
-    r_db.delete('ail:update:current_background_script')
-    r_db.delete('ail:update:current_background_script_stat')
-    r_db.delete('ail:update:update_in_progress:completed')
-
-
-def get_update_background_message(version):
-    return BACKGROUND_UPDATES[version]['message']
-
-
-# TODO: Detect error in subprocess
-def get_update_background_metadata():
-    dict_update = {}
-    version = get_current_background_update()
-    if version:
-        dict_update['version'] = version
-        dict_update['script'] = get_current_background_update_script()
-        dict_update['script_progress'] = get_current_background_update_progress()
-        dict_update['nb_update'] = BACKGROUND_UPDATES[dict_update['version']]['nb_updates']
-        dict_update['nb_completed'] = get_current_background_nb_update_completed()
-        dict_update['progress'] = int(dict_update['nb_completed'] * 100 / dict_update['nb_update'])
-        dict_update['error'] = get_background_update_error()
-    return dict_update
-
-
-##-- UPDATE BACKGROUND --##
 
 
 if __name__ == '__main__':

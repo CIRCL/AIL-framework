@@ -41,17 +41,22 @@ config_loader = None
 ##################################
 
 CORRELATION_TYPES_BY_OBJ = {
+    "chat": ["user-account"],  # message or direct correlation like cve, bitcoin, ... ???
     "cookie-name": ["domain"],
-    "cryptocurrency": ["domain", "item"],
-    "cve": ["domain", "item"],
-    "decoded": ["domain", "item"],
-    "domain": ["cve", "cookie-name", "cryptocurrency", "decoded", "favicon", "item", "pgp", "title", "screenshot", "username"],
+    "cryptocurrency": ["domain", "item", "message"],
+    "cve": ["domain", "item", "message"],
+    "decoded": ["domain", "item", "message"],
+    "domain": ["cve", "cookie-name", "cryptocurrency", "decoded", "etag", "favicon", "hhhash", "item", "pgp", "title", "screenshot", "username"],
+    "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],
-    "pgp": ["domain", "item"],
+    "hhhash": ["domain"],
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
+    "message": ["cve", "cryptocurrency", "decoded", "pgp", "user-account"],  # chat ??
+    "pgp": ["domain", "item", "message"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],
-    "username": ["domain", "item"],
+    "user-account": ["chat", "message"],
+    "username": ["domain", "item", "message"],  # TODO chat-user/account
 }
 
 def get_obj_correl_types(obj_type):
@@ -63,6 +68,8 @@ def sanityze_obj_correl_types(obj_type, correl_types):
         correl_types = set(correl_types).intersection(obj_correl_types)
     if not correl_types:
         correl_types = obj_correl_types
+        if not correl_types:
+            return []
     return correl_types
 
 def get_nb_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type):
@@ -169,18 +176,18 @@ def get_obj_str_id(obj_type, subtype, obj_id):
         subtype = ''
     return f'{obj_type}:{subtype}:{obj_id}'
 
-def get_correlations_graph_nodes_links(obj_type, subtype, obj_id, filter_types=[], max_nodes=300, level=1, flask_context=False):
+def get_correlations_graph_nodes_links(obj_type, subtype, obj_id, filter_types=[], max_nodes=300, level=1, objs_hidden=set(), flask_context=False):
     links = set()
     nodes = set()
     meta = {'complete': True, 'objs': set()}
 
     obj_str_id = get_obj_str_id(obj_type, subtype, obj_id)
 
-    _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, level, max_nodes, filter_types=filter_types, previous_str_obj='')
+    _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, level, max_nodes, filter_types=filter_types, objs_hidden=objs_hidden, previous_str_obj='')
     return obj_str_id, nodes, links, meta
 
 
-def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, level, max_nodes, filter_types=[], previous_str_obj=''):
+def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, level, max_nodes, filter_types=[], objs_hidden=set(), previous_str_obj=''):
     obj_str_id = get_obj_str_id(obj_type, subtype, obj_id)
     meta['objs'].add(obj_str_id)
     nodes.add(obj_str_id)
@@ -191,6 +198,10 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
         for str_obj in obj_correlations[correl_type]:
             subtype2, obj2_id = str_obj.split(':', 1)
             obj2_str_id = get_obj_str_id(correl_type, subtype2, obj2_id)
+            # filter objects to hide
+            if obj2_str_id in objs_hidden:
+                continue
+
             meta['objs'].add(obj2_str_id)
 
             if obj2_str_id == previous_str_obj:
@@ -204,5 +215,5 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
 
             if level > 0:
                 next_level = level - 1
-                _get_correlations_graph_node(links, nodes, meta, correl_type, subtype2, obj2_id, next_level, max_nodes, filter_types=filter_types, previous_str_obj=obj_str_id)
+                _get_correlations_graph_node(links, nodes, meta, correl_type, subtype2, obj2_id, next_level, max_nodes, filter_types=filter_types, objs_hidden=objs_hidden, previous_str_obj=obj_str_id)
 

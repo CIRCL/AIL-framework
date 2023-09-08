@@ -19,7 +19,6 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import d4
 from lib import Users
 
-
 # ============ VARIABLES ============
 import Flask_config
 
@@ -33,7 +32,6 @@ email_regex = Flask_config.email_regex
 settings = Blueprint('settings', __name__, template_folder='templates')
 
 
-
 # ============ FUNCTIONS ============
 
 def check_email(email):
@@ -42,6 +40,7 @@ def check_email(email):
         return True
     else:
         return False
+
 
 # ============= ROUTES ==============
 
@@ -52,7 +51,8 @@ def edit_profile():
     user_metadata = Users.get_user_metadata(current_user.get_id())
     admin_level = current_user.is_in_role('admin')
     return render_template("edit_profile.html", user_metadata=user_metadata,
-                            admin_level=admin_level)
+                           admin_level=admin_level)
+
 
 @settings.route("/settings/new_token", methods=['GET'])
 @login_required
@@ -60,6 +60,7 @@ def edit_profile():
 def new_token():
     Users.generate_new_token(current_user.get_id())
     return redirect(url_for('settings.edit_profile'))
+
 
 @settings.route("/settings/new_token_user", methods=['POST'])
 @login_required
@@ -70,6 +71,7 @@ def new_token_user():
         Users.generate_new_token(user_id)
     return redirect(url_for('settings.users_list'))
 
+
 @settings.route("/settings/create_user", methods=['GET'])
 @login_required
 @login_admin
@@ -78,14 +80,15 @@ def create_user():
     error = request.args.get('error')
     error_mail = request.args.get('error_mail')
     role = None
-    if r_serv_db.exists('user_metadata:{}'.format(user_id)):
-        role = r_serv_db.hget('user_metadata:{}'.format(user_id), 'role')
-    else:
-        user_id = None
+    if user_id:
+        user = Users.User(user_id)
+        if user.exists():
+            role = user.get_role()
     all_roles = Users.get_all_roles()
     return render_template("create_user.html", all_roles=all_roles, user_id=user_id, user_role=role,
-                                        error=error, error_mail=error_mail,
-                                        admin_level=True)
+                           error=error, error_mail=error_mail,
+                           admin_level=True)
+
 
 @settings.route("/settings/create_user_post", methods=['POST'])
 @login_required
@@ -98,17 +101,19 @@ def create_user_post():
 
     all_roles = Users.get_all_roles()
 
-    if email and len(email)< 300 and check_email(email) and role:
+    if email and len(email) < 300 and check_email(email) and role:
         if role in all_roles:
             # password set
             if password1 and password2:
-                if password1==password2:
+                if password1 == password2:
                     if Users.check_password_strength(password1):
                         password = password1
                     else:
-                        return render_template("create_user.html", all_roles=all_roles, error="Incorrect Password", admin_level=True)
+                        return render_template("create_user.html", all_roles=all_roles, error="Incorrect Password",
+                                               admin_level=True)
                 else:
-                    return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match", admin_level=True)
+                    return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match",
+                                           admin_level=True)
             # generate password
             else:
                 password = Users.gen_password()
@@ -127,6 +132,7 @@ def create_user_post():
     else:
         return render_template("create_user.html", all_roles=all_roles, error_mail=True, admin_level=True)
 
+
 @settings.route("/settings/users_list", methods=['GET'])
 @login_required
 @login_admin
@@ -140,12 +146,14 @@ def users_list():
         new_user_dict['password'] = request.args.get('new_user_password')
     return render_template("users_list.html", all_users=all_users, new_user=new_user_dict, admin_level=True)
 
+
 @settings.route("/settings/edit_user", methods=['POST'])
 @login_required
 @login_admin
 def edit_user():
     user_id = request.form.get('user_id')
     return redirect(url_for('settings.create_user', user_id=user_id))
+
 
 @settings.route("/settings/delete_user", methods=['POST'])
 @login_required
@@ -163,6 +171,7 @@ def passive_dns():
     passivedns_enabled = d4.is_passive_dns_enabled()
     return render_template("passive_dns.html", passivedns_enabled=passivedns_enabled)
 
+
 @settings.route("/settings/passivedns/change_state", methods=['GET'])
 @login_required
 @login_admin
@@ -171,11 +180,13 @@ def passive_dns_change_state():
     passivedns_enabled = d4.change_passive_dns_state(new_state)
     return redirect(url_for('settings.passive_dns'))
 
+
 @settings.route("/settings/ail", methods=['GET'])
 @login_required
 @login_admin
 def ail_configs():
     return render_template("ail_configs.html", passivedns_enabled=None)
+
 
 # ========= REGISTRATION =========
 app.register_blueprint(settings, url_prefix=baseUrl)

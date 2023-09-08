@@ -10,6 +10,8 @@ Update AIL in the background
 """
 
 import os
+import logging
+import logging.config
 import sys
 import subprocess
 
@@ -17,37 +19,55 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib import ail_updates
 
-def launch_background_upgrade(version, l_script_name):
-    if ail_updates.is_version_in_background_update(version):
-        ail_updates.start_background_update(version)
+logging.config.dictConfig(ail_logger.get_config(name='updates'))
+def launch_background_upgrade(version):
+    logger = logging.getLogger()
+    logger.warning(f'launching background update {version}')
+    update = ail_updates.AILBackgroundUpdate(version)
+    nb_done = update.get_nb_scripts_done()
+    update.start()
+    scripts = update.get_scripts()
+    scripts = scripts[nb_done:]
+    for script in scripts:
+        print('launching background script update', script)
+        # launch script
+        update.start_script(script)
+        script_path = update.get_script_path()
+        if script_path:
+            try:
+                process = subprocess.run(['python', script_path])
+                if process.returncode != 0:
+                    stderr = process.stderr
+                    if stderr:
+                        error = stderr.decode()
+                        logger.error(error)
+                        update.set_error(error)
+                    else:
+                        update.set_error('Error Updater Script')
+                        logger.error('Error Updater Script')
+                    sys.exit(0)
+            except Exception as e:
+                update.set_error(str(e))
+                logger.error(str(e))
+                sys.exit(0)
 
-        for script_name in l_script_name:
-            ail_updates.set_current_background_update_script(script_name)
-            update_file = ail_updates.get_current_background_update_script_path(version, script_name)
+        if not update.get_error():
+            update.end_script()
+        else:
+            logger.warning('Updater exited on error')
+            sys.exit(0)
 
-            # # TODO: Get error output
-            process = subprocess.run(['python', update_file])
-
-        update_progress = ail_updates.get_current_background_update_progress()
-        if update_progress == 100:
-            ail_updates.end_background_update_script()
-        # # TODO: Create Custom error
-        # 'Please relaunch the bin/update-background.py script'
-        # # TODO: Create Class background update
-
-        ail_updates.end_background_update(version)
+    update.end()
+    logger.warning(f'ending background update {version}')
 
 
 if __name__ == "__main__":
-
-    if not ail_updates.exits_background_update_to_launch():
-        ail_updates.clear_background_update()
+    if ail_updates.is_update_background_running():
+        v = ail_updates.get_update_background_version()
+        launch_background_upgrade(v)
     else:
-        launch_background_upgrade('v1.5', ['Update-ARDB_Onions.py', 'Update-ARDB_Metadata.py', 'Update-ARDB_Tags.py',
-                                           'Update-ARDB_Tags_background.py', 'Update-ARDB_Onions_screenshots.py'])
-        launch_background_upgrade('v2.6', ['Update_screenshots.py'])
-        launch_background_upgrade('v2.7', ['Update_domain_tags.py'])
-        launch_background_upgrade('v3.4', ['Update_domain.py'])
-        launch_background_upgrade('v3.7', ['Update_trackers.py'])
+        for ver in ail_updates.get_update_background_to_launch():
+            launch_background_upgrade(ver)

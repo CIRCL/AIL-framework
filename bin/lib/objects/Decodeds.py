@@ -138,7 +138,7 @@ class Decoded(AbstractDaterangeObject):
             with open(filepath, 'rb') as f:
                 content = f.read()
             return content
-        elif r_str == 'bytesio':
+        elif r_type == 'bytesio':
             with open(filepath, 'rb') as f:
                 content = BytesIO(f.read())
             return content
@@ -149,7 +149,7 @@ class Decoded(AbstractDaterangeObject):
         with zipfile.ZipFile(zip_content, "w") as zf:
             # TODO: Fix password
             # zf.setpassword(b"infected")
-            zf.writestr(self.id, self.get_content().getvalue())
+            zf.writestr(self.id, self.get_content(r_type='bytesio').getvalue())
         zip_content.seek(0)
         return zip_content
 

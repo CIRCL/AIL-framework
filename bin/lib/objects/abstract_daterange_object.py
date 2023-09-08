@@ -45,10 +45,10 @@ class AbstractDaterangeObject(AbstractObject, ABC):
     def exists(self):
         return r_object.exists(f'meta:{self.type}:{self.id}')
 
-    def _get_field(self, field):
+    def _get_field(self, field): # TODO remove me (NEW in abstract)
         return r_object.hget(f'meta:{self.type}:{self.id}', field)
 
-    def _set_field(self, field, value):
+    def _set_field(self, field, value): # TODO remove me (NEW in abstract)
         return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
 
     def get_first_seen(self, r_int=False):
@@ -82,9 +82,10 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             return int(nb)
 
     def _get_meta(self, options=[]):
-        meta_dict = {'first_seen': self.get_first_seen(),
-                     'last_seen': self.get_last_seen(),
-                     'nb_seen': self.get_nb_seen()}
+        meta_dict = self.get_default_meta()
+        meta_dict['first_seen'] = self.get_first_seen()
+        meta_dict['last_seen'] = self.get_last_seen()
+        meta_dict['nb_seen'] = self.get_nb_seen()
         if 'sparkline' in options:
             meta_dict['sparkline'] = self.get_sparkline()
         return meta_dict

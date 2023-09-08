@@ -130,7 +130,7 @@ class Cryptocurrencies(AbstractModule, ABC):
                     if crypto.is_valid_address():
                         # print(address)
                         is_valid_address = True
-                        crypto.add(date, item_id)
+                        crypto.add(date, item)
 
                 # Check private key
                 if is_valid_address:

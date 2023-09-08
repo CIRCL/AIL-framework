@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-'''
+"""
     Blueprint Flask: ail_investigations
-'''
+"""
 
 import os
 import sys
@@ -54,7 +54,13 @@ def show_investigation():
     investigation_uuid = request.args.get("uuid")
     investigation = Investigations.Investigation(investigation_uuid)
     metadata = investigation.get_metadata(r_str=True)
-    objs = ail_objects.get_objects_meta(investigation.get_objects(), flask_context=True)
+    objs = []
+    for obj in investigation.get_objects():
+        obj_meta = ail_objects.get_object_meta(obj["type"], obj["subtype"], obj["id"], flask_context=True)
+        comment = investigation.get_objects_comment(f'{obj["type"]}:{obj["subtype"]}:{obj["id"]}')
+        if comment:
+            obj_meta['comment'] = comment
+        objs.append(obj_meta)
     return render_template("view_investigation.html", bootstrap_label=bootstrap_label,
                                 metadata=metadata, investigation_objs=objs)
 
@@ -169,10 +175,13 @@ def register_investigation():
     object_type = request.args.get('type')
     object_subtype = request.args.get('subtype')
     object_id = request.args.get('id')
+    comment = request.args.get('comment')
 
     for investigation_uuid in investigations_uuid:
         input_dict = {"uuid": investigation_uuid, "id": object_id,
                       "type": object_type, "subtype": object_subtype}
+        if comment:
+            input_dict["comment"] = comment
         res = Investigations.api_register_object(input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])

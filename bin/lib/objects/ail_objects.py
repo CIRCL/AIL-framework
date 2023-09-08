@@ -13,16 +13,21 @@ from lib import correlations_engine
 from lib import btc_ail
 from lib import Tag
 
+from lib.objects import Chats
 from lib.objects import CryptoCurrencies
 from lib.objects import CookiesNames
 from lib.objects.Cves import Cve
 from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decodeds_objects
 from lib.objects.Domains import Domain
+from lib.objects import Etags
 from lib.objects.Favicons import Favicon
+from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
+from lib.objects.Messages import Message
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
 from lib.objects import Titles
+from lib.objects.UsersAccount import UserAccount
 from lib.objects import Usernames
 
 config_loader = ConfigLoader()
@@ -53,12 +58,20 @@ def get_object(obj_type, subtype, obj_id):
         return Domain(obj_id)
     elif obj_type == 'decoded':
         return Decoded(obj_id)
+    elif obj_type == 'chat':
+        return Chats.Chat(obj_id, subtype)
     elif obj_type == 'cookie-name':
         return CookiesNames.CookieName(obj_id)
     elif obj_type == 'cve':
         return Cve(obj_id)
+    elif obj_type == 'etag':
+        return Etags.Etag(obj_id)
     elif obj_type == 'favicon':
         return Favicon(obj_id)
+    elif obj_type == 'hhhash':
+        return HHHashs.HHHash(obj_id)
+    elif obj_type == 'message':
+        return Message(obj_id)
     elif obj_type == 'screenshot':
         return Screenshot(obj_id)
     elif obj_type == 'cryptocurrency':
@@ -67,6 +80,8 @@ def get_object(obj_type, subtype, obj_id):
         return Pgps.Pgp(obj_id, subtype)
     elif obj_type == 'title':
         return Titles.Title(obj_id)
+    elif obj_type == 'user-account':
+        return UserAccount(obj_id, subtype)
     elif obj_type == 'username':
         return Usernames.Username(obj_id, subtype)
 
@@ -101,9 +116,12 @@ def get_obj_global_id(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
     return obj.get_global_id()
 
+def get_obj_type_subtype_id_from_global_id(global_id):
+    obj_type, subtype, obj_id = global_id.split(':', 2)
+    return obj_type, subtype, obj_id
 
 def get_obj_from_global_id(global_id):
-    obj = global_id.split(':', 3)
+    obj = get_obj_type_subtype_id_from_global_id(global_id)
     return get_object(obj[0], obj[1], obj[2])
 
 
@@ -159,7 +177,7 @@ def get_objects_meta(objs, options=set(), flask_context=False):
             subtype = obj[1]
             obj_id = obj[2]
         else:
-            obj_type, subtype, obj_id = obj.split(':', 2)
+            obj_type, subtype, obj_id = get_obj_type_subtype_id_from_global_id(obj)
         metas.append(get_object_meta(obj_type, subtype, obj_id, options=options, flask_context=flask_context))
     return metas
 
@@ -168,7 +186,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
     meta = obj.get_meta()
     meta['icon'] = obj.get_svg_icon()
-    if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'title' or obj_type == 'favicon':
+    if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
             meta['cve_search'] = obj.get_cve_search()
@@ -177,6 +195,8 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     if subtype == 'bitcoin' and related_btc:
         meta["related_btc"] = btc_ail.get_bitcoin_info(obj.id)
     if obj.get_type() == 'decoded':
+        meta['mimetype'] = obj.get_mimetype()
+        meta['size'] = obj.get_size()
         meta["vt"] = obj.get_meta_vt()
         meta["vt"]["status"] = obj.is_vt_enabled()
     # TAGS MODAL
@@ -333,8 +353,8 @@ def get_obj_correlations(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
     return obj.get_correlations()
 
-def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max):
-    if len(objs) < nb_max or nb_max == -1:
+def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max, objs_hidden):
+    if len(objs) < nb_max or nb_max == 0:
         if lvl == 0:
             objs.add((obj_type, subtype, obj_id))
 
@@ -346,15 +366,17 @@ def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lv
             for obj2_type in correlations:
                 for str_obj in correlations[obj2_type]:
                     obj2_subtype, obj2_id = str_obj.split(':', 1)
-                    _get_obj_correlations_objs(objs, obj2_type, obj2_subtype, obj2_id, filter_types, lvl, nb_max)
+                    if get_obj_global_id(obj2_type, obj2_subtype, obj2_id) in objs_hidden:
+                        continue  # filter object to hide
+                    _get_obj_correlations_objs(objs, obj2_type, obj2_subtype, obj2_id, filter_types, lvl, nb_max, objs_hidden)
 
-def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0, nb_max=300):
+def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0, nb_max=300, objs_hidden=set()):
     objs = set()
-    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max)
+    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max, objs_hidden)
     return objs
 
-def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300):
-    objs = get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=filter_types, lvl=lvl, nb_max=nb_max)
+def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300, objs_hidden=set()):
+    objs = get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=filter_types, lvl=lvl, nb_max=nb_max, objs_hidden=objs_hidden)
     # print(objs)
     for obj_tuple in objs:
         obj1_type, subtype1, id1 = obj_tuple
@@ -395,7 +417,7 @@ def create_correlation_graph_links(links_set):
 def create_correlation_graph_nodes(nodes_set, obj_str_id, flask_context=True):
     graph_nodes_list = []
     for node_id in nodes_set:
-        obj_type, subtype, obj_id = node_id.split(':', 2)
+        obj_type, subtype, obj_id = get_obj_type_subtype_id_from_global_id(node_id)
         dict_node = {'id': node_id}
         dict_node['style'] = get_object_svg(obj_type, subtype, obj_id)
 
@@ -416,10 +438,12 @@ def create_correlation_graph_nodes(nodes_set, obj_str_id, flask_context=True):
 
 
 def get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=[], max_nodes=300, level=1,
+                                objs_hidden=set(),
                                 flask_context=False):
     obj_str_id, nodes, links, meta = correlations_engine.get_correlations_graph_nodes_links(obj_type, subtype, obj_id,
                                                                                             filter_types=filter_types,
                                                                                             max_nodes=max_nodes, level=level,
+                                                                                            objs_hidden=objs_hidden,
                                                                                             flask_context=flask_context)
     # print(meta)
     meta['objs'] = list(meta['objs'])

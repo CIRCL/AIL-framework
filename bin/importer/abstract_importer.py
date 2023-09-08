@@ -89,7 +89,7 @@ class AbstractImporter(ABC):  # TODO ail queues
         if not gzipped:
             content = self.b64_gzip(content)
         elif not b64:
-            content = self.b64(gzipped)
+            content = self.b64(content)
         if not content:
             return None
         if isinstance(content, bytes):

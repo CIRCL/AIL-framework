@@ -27,7 +27,7 @@ fi
 export PATH=$AIL_VENV/bin:$PATH
 export PATH=$AIL_HOME:$PATH
 export PATH=$AIL_REDIS:$PATH
-export PATH=$AIL_ARDB:$PATH
+export PATH=$AIL_KVROCKS:$PATH
 export PATH=$AIL_BIN:$PATH
 export PATH=$AIL_FLASK:$PATH
 
@@ -684,9 +684,6 @@ while [ "$1" != "" ]; do
                                         ;;
         -lrv | --launchRedisVerify )    launch_redis;
                                         wait_until_redis_is_ready;
-                                        ;;
-        -lav | --launchARDBVerify )     launch_ardb;
-                                        wait_until_ardb_is_ready;
                                         ;;
         -lkv | --launchKVORCKSVerify )  launch_kvrocks;
                                         wait_until_kvrocks_is_ready;

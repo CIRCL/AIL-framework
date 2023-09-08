@@ -39,6 +39,7 @@ from packages import git_status
 from packages import Date
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
+from lib.objects import HHHashs
 from lib.objects.Items import Item
 
 config_loader = ConfigLoader()
@@ -134,7 +135,7 @@ def unpack_url(url):
 # # # # # # # # TODO CREATE NEW OBJECT
 
 def get_favicon_from_html(html, domain, url):
-    favicon_urls = extract_favicon_from_html(html, url)
+    favicon_urls, favicons = extract_favicon_from_html(html, url)
     # add root favicon
     if not favicon_urls:
         favicon_urls.add(f'{urlparse(url).scheme}://{domain}/favicon.ico')
@@ -161,7 +162,6 @@ def extract_favicon_from_html(html, url):
     # Edge and IE 12:
     #   - <meta name="msapplication-TileColor" content="#aaaaaa"> <meta name="theme-color" content="#ffffff">
     #   - <meta name="msapplication-config" content="/icons/browserconfig.xml">
-
 
     # Root Favicon
     f = get_faup()
@@ -244,13 +244,6 @@ def extract_description_from_html(html):
         return description['content']
     return ''
 
-def extract_description_from_html(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    description = soup.find('meta', attrs={'name': 'description'})
-    if description:
-        return description['content']
-    return ''
-
 def extract_keywords_from_html(html):
     soup = BeautifulSoup(html, 'html.parser')
     keywords = soup.find('meta', attrs={'name': 'keywords'})
@@ -264,6 +257,7 @@ def extract_author_from_html(html):
     if keywords:
         return keywords['content']
     return ''
+
 # # # - - # # #
 
 
@@ -275,7 +269,7 @@ def extract_author_from_html(html):
 
 def create_har_id(date, item_id):
     item_id = item_id.split('/')[-1]
-    return os.path.join(date, f'{item_id}.json')
+    return os.path.join(date, f'{item_id}.json.gz')
 
 def save_har(har_id, har_content):
     # create dir
@@ -284,8 +278,8 @@ def save_har(har_id, har_content):
         os.makedirs(har_dir)
     # save HAR
     filename = os.path.join(get_har_dir(), har_id)
-    with open(filename, 'w') as f:
-        f.write(json.dumps(har_content))
+    with gzip.open(filename, 'wb') as f:
+        f.write(json.dumps(har_content).encode())
 
 def get_all_har_ids():
     har_ids = []
@@ -299,9 +293,10 @@ def get_all_har_ids():
             except (TypeError, ValueError):
                 pass
 
-    for file in [f for f in os.listdir(today_root_dir) if os.path.isfile(os.path.join(today_root_dir, f))]:
-        har_id = os.path.relpath(os.path.join(today_root_dir, file), HAR_DIR)
-        har_ids.append(har_id)
+    if os.path.exists(today_root_dir):
+        for file in [f for f in os.listdir(today_root_dir) if os.path.isfile(os.path.join(today_root_dir, f))]:
+            har_id = os.path.relpath(os.path.join(today_root_dir, file), HAR_DIR)
+            har_ids.append(har_id)
 
     for ydir in sorted(dirs_year, reverse=False):
         search_dear = os.path.join(HAR_DIR, ydir)
@@ -312,14 +307,17 @@ def get_all_har_ids():
                     har_ids.append(har_id)
     return har_ids
 
-def extract_cookies_names_from_har_by_har_id(har_id):
+def get_har_content(har_id):
     har_path = os.path.join(HAR_DIR, har_id)
-    with open(har_path) as f:
-        try:
-            har_content = json.loads(f.read())
-        except json.decoder.JSONDecodeError:
-            har_content = {}
-    return extract_cookies_names_from_har(har_content)
+    try:
+        with gzip.open(har_path) as f:
+            try:
+                return json.loads(f.read())
+            except json.decoder.JSONDecodeError:
+                return {}
+    except Exception as e:
+        print(e) # TODO LOGS
+        return {}
 
 def extract_cookies_names_from_har(har):
     cookies = set()
@@ -334,17 +332,110 @@ def extract_cookies_names_from_har(har):
                 cookies.add(name)
     return cookies
 
-def _reprocess_all_hars():
+def _reprocess_all_hars_cookie_name():
     from lib.objects import CookiesNames
     for har_id in get_all_har_ids():
         domain = har_id.split('/')[-1]
-        domain = domain[:-41]
+        domain = domain[:-44]
         date = har_id.split('/')
         date = f'{date[-4]}{date[-3]}{date[-2]}'
-        for cookie_name in extract_cookies_names_from_har_by_har_id(har_id):
+        for cookie_name in extract_cookies_names_from_har(get_har_content(har_id)):
             print(domain, date, cookie_name)
             cookie = CookiesNames.create(cookie_name)
-            cookie.add(date, domain)
+            cookie.add(date, Domain(domain))
+
+def extract_etag_from_har(har):  # TODO check response url
+    etags = set()
+    for entrie in har.get('log', {}).get('entries', []):
+        for header in entrie.get('response', {}).get('headers', []):
+            if header.get('name') == 'etag':
+                # print(header)
+                etag = header.get('value')
+                if etag:
+                    etags.add(etag)
+    return etags
+
+def _reprocess_all_hars_etag():
+    from lib.objects import Etags
+    for har_id in get_all_har_ids():
+        domain = har_id.split('/')[-1]
+        domain = domain[:-44]
+        date = har_id.split('/')
+        date = f'{date[-4]}{date[-3]}{date[-2]}'
+        for etag_content in extract_etag_from_har(get_har_content(har_id)):
+            print(domain, date, etag_content)
+            etag = Etags.create(etag_content)
+            etag.add(date, Domain(domain))
+
+def extract_hhhash_by_id(har_id, domain, date):
+    return extract_hhhash(get_har_content(har_id), domain, date)
+
+def extract_hhhash(har, domain, date):
+    hhhashs = set()
+    urls = set()
+    for entrie in har.get('log', {}).get('entries', []):
+        url = entrie.get('request').get('url')
+        if url not in urls:
+            # filter redirect
+            if entrie.get('response').get('status') == 200:  # != 301:
+                # print(url, entrie.get('response').get('status'))
+
+                f = get_faup()
+                f.decode(url)
+                domain_url = f.get().get('domain')
+                if domain_url == domain:
+
+                    headers = entrie.get('response').get('headers')
+
+                    hhhash_header = HHHashs.build_hhhash_headers(headers)
+                    hhhash = HHHashs.hhhash_headers(hhhash_header)
+
+                    if hhhash not in hhhashs:
+                        print('', url, hhhash)
+
+                        # -----
+                        obj = HHHashs.create(hhhash_header, hhhash)
+                        obj.add(date, Domain(domain))
+
+                    hhhashs.add(hhhash)
+                    urls.add(url)
+    print()
+    print()
+    print('HHHASH:')
+    for hhhash in hhhashs:
+        print(hhhash)
+    return hhhashs
+
+def _reprocess_all_hars_hhhashs():
+    for har_id in get_all_har_ids():
+        print()
+        print(har_id)
+        domain = har_id.split('/')[-1]
+        domain = domain[:-44]
+        date = har_id.split('/')
+        date = f'{date[-4]}{date[-3]}{date[-2]}'
+        extract_hhhash_by_id(har_id, domain, date)
+
+
+
+def _gzip_har(har_id):
+    har_path = os.path.join(HAR_DIR, har_id)
+    new_id = f'{har_path}.gz'
+    if not har_id.endswith('.gz'):
+        if not os.path.exists(new_id):
+            with open(har_path, 'rb') as f:
+                content = f.read()
+            if content:
+                with gzip.open(new_id, 'wb') as f:
+                    r = f.write(content)
+                    print(r)
+    if os.path.exists(new_id) and os.path.exists(har_path):
+        os.remove(har_path)
+        print('delete:', har_path)
+
+def _gzip_all_hars():
+    for har_id in get_all_har_ids():
+        _gzip_har(har_id)
 
 # # # - - # # #
 
@@ -662,8 +753,7 @@ class Cookie:
                 meta[field] = value
         if r_json:
             data = json.dumps(meta, indent=4, sort_keys=True)
-            meta = {'data': data}
-            meta['uuid'] = self.uuid
+            meta = {'data': data, 'uuid': self.uuid}
         return meta
 
     def edit(self, cookie_dict):
@@ -775,7 +865,7 @@ def unpack_imported_json_cookie(json_cookie):
 
 ##  - -  ##
 #### COOKIEJAR API ####
-def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str): # # TODO: add catch
+def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str):  # # TODO: add catch
     resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
     if resp:
         return resp
@@ -944,8 +1034,8 @@ class CrawlerScheduler:
                     minutes = 0
                 current_time = datetime.now().timestamp()
                 time_next_run = (datetime.now() + relativedelta(months=int(months), weeks=int(weeks),
-                                                                         days=int(days), hours=int(hours),
-                                                                         minutes=int(minutes))).timestamp()
+                                                                days=int(days), hours=int(hours),
+                                                                minutes=int(minutes))).timestamp()
                 # Make sure the next capture is not scheduled for in a too short interval
                 interval_next_capture = time_next_run - current_time
                 if interval_next_capture < self.min_frequency:
@@ -1225,8 +1315,13 @@ class CrawlerCapture:
         if task_uuid:
             return CrawlerTask(task_uuid)
 
-    def get_start_time(self):
-        return self.get_task().get_start_time()
+    def get_start_time(self, r_str=True):
+        start_time = self.get_task().get_start_time()
+        if r_str:
+            return start_time
+        else:
+            start_time = datetime.strptime(start_time, "%Y/%m/%d  -  %H:%M.%S").timestamp()
+            return int(start_time)
 
     def get_status(self):
         status = r_cache.hget(f'crawler:capture:{self.uuid}', 'status')
@@ -1239,7 +1334,8 @@ class CrawlerCapture:
 
     def create(self, task_uuid):
         if self.exists():
-            raise Exception(f'Error: Capture {self.uuid} already exists')
+            print(f'Capture {self.uuid} already exists')  # TODO LOGS
+            return None
         launch_time = int(time.time())
         r_crawler.hset(f'crawler:task:{task_uuid}', 'capture', self.uuid)
         r_crawler.hset('crawler:captures:tasks', self.uuid, task_uuid)
@@ -1492,6 +1588,11 @@ class CrawlerTask:
     def start(self):
         self._set_field('start_time', datetime.now().strftime("%Y/%m/%d  -  %H:%M.%S"))
 
+    def reset(self):
+        priority = 49
+        r_crawler.hdel(f'crawler:task:{self.uuid}', 'start_time')
+        self.add_to_db_crawler_queue(priority)
+
     # Crawler
     def remove(self):  # zrem cache + DB
         capture_uuid = self.get_capture()
@@ -1622,14 +1723,16 @@ def api_add_crawler_task(data, user_id=None):
 
     if frequency:
         # TODO verify user
-        return create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                               cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags), 200
+        task_uuid = create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
+                               cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
     else:
         # TODO HEADERS
         # TODO USER AGENT
-        return create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
+        task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
                            cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
-                           parent='manual', priority=90), 200
+                           parent='manual', priority=90)
+
+    return {'uuid': task_uuid}, 200
 
 
 #### ####
@@ -1702,13 +1805,13 @@ class CrawlerProxy:
         self.uuid = proxy_uuid
 
     def get_description(self):
-        return r_crawler.hgrt(f'crawler:proxy:{self.uuif}', 'description')
+        return r_crawler.hget(f'crawler:proxy:{self.uuid}', 'description')
 
     # Host
     # Port
     # Type -> need test
     def get_url(self):
-        return r_crawler.hgrt(f'crawler:proxy:{self.uuif}', 'url')
+        return r_crawler.hget(f'crawler:proxy:{self.uuid}', 'url')
 
 #### CRAWLER LACUS ####
 
@@ -1770,7 +1873,11 @@ def ping_lacus():
         ping = False
         req_error = {'error': 'Lacus URL undefined', 'status_code': 400}
     else:
-        ping = lacus.is_up
+        try:
+            ping = lacus.is_up
+        except:
+            req_error = {'error': 'Failed to connect Lacus URL', 'status_code': 400}
+            ping = False
     update_lacus_connection_status(ping, req_error=req_error)
     return ping
 
@@ -1787,7 +1894,7 @@ def api_save_lacus_url_key(data):
     # unpack json
     manager_url = data.get('url', None)
     api_key = data.get('api_key', None)
-    if not manager_url: # or not api_key:
+    if not manager_url:  # or not api_key:
         return {'status': 'error', 'reason': 'No url or API key supplied'}, 400
     # check if is valid url
     try:
@@ -1830,7 +1937,7 @@ def api_set_crawler_max_captures(data):
     save_nb_max_captures(nb_captures)
     return nb_captures, 200
 
- ## TEST ##
+## TEST ##
 
 def is_test_ail_crawlers_successful():
     return r_db.hget('crawler:tor:test', 'success') == 'True'
@@ -1903,14 +2010,16 @@ def test_ail_crawlers():
 # TODO MOVE ME IN CRAWLER OR FLASK
 load_blacklist()
 
-# if __name__ == '__main__':
-#     delete_captures()
+if __name__ == '__main__':
+    # delete_captures()
 
-#     item_id = 'crawled/2023/02/20/data.gz'
-#     item = Item(item_id)
-#     content = item.get_content()
-#     temp_url = ''
-#     r = extract_favicon_from_html(content, temp_url)
-#     print(r)
-#     _reprocess_all_hars()
-
+    # item_id = 'crawled/2023/02/20/data.gz'
+    # item = Item(item_id)
+    # content = item.get_content()
+    # temp_url = ''
+    # r = extract_favicon_from_html(content, temp_url)
+    # print(r)
+    # _reprocess_all_hars_cookie_name()
+    # _reprocess_all_hars_etag()
+    # _gzip_all_hars()
+    _reprocess_all_hars_hhhashs()

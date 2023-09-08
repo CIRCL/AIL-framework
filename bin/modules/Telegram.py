@@ -58,7 +58,7 @@ class Telegram(AbstractModule):
             user_id = dict_url.get('username')
             if user_id:
                 username = Username(user_id, 'telegram')
-                username.add(item_date, item.id)
+                username.add(item_date, item)
                 print(f'username: {user_id}')
             invite_hash = dict_url.get('invite_hash')
             if invite_hash:
@@ -73,7 +73,7 @@ class Telegram(AbstractModule):
             user_id = dict_url.get('username')
             if user_id:
                 username = Username(user_id, 'telegram')
-                username.add(item_date, item.id)
+                username.add(item_date, item)
                 print(f'username: {user_id}')
             invite_hash = dict_url.get('invite_hash')
             if invite_hash:

@@ -151,7 +151,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
 #
 #
 
-    def add(self, date, item_id):
+    def add(self, date, obj=None):
         self.update_daterange(date)
         update_obj_date(date, self.type, self.subtype)
         # daily
@@ -162,19 +162,21 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         #######################################################################
         #######################################################################
 
-        # Correlations
-        self.add_correlation('item', '', item_id)
-        # domain
-        if is_crawled(item_id):
-            domain = get_item_domain(item_id)
-            self.add_correlation('domain', '', domain)
+        if obj:
+            # Correlations
+            self.add_correlation(obj.type, obj.get_subtype(r_str=True), obj.get_id())
 
+            if obj.type == 'item': # TODO same for message->chat ???
+                item_id = obj.get_id()
+                # domain
+                if is_crawled(item_id):
+                    domain = get_item_domain(item_id)
+                    self.add_correlation('domain', '', domain)
 
     # TODO:ADD objects + Stats
     def create(self, first_seen, last_seen):
         self.set_first_seen(first_seen)
         self.set_last_seen(last_seen)
-
 
     def _delete(self):
         pass

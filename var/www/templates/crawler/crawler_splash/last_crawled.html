@@ -74,7 +74,7 @@
                                         data-content="epoch: {{domain['epoch']}}<br>last status: {{ domain['status'] }}">
                                         <td><a target="_blank" class="domain_name" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ domain['domain'] }}&epoch={{domain['epoch']}}">{{ domain['domain'] }}</a></td>
 								        <td>{{domain['first_seen']}}</td>
-                                        <td>{{domain['last_check']}}</td>
+                                        <td>{{domain['last']}}</td>
 								        <td>
                                             {% if domain['status_epoch'] %}
                                                 <div style="color:Green; display:inline-block">

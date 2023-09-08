@@ -76,7 +76,7 @@
 {#                                                    </div>#}
                                                     <div class="custom-control custom-switch mt-1">
                                                         <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" checked="">
-                                                        <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded</label>
+                                                        <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Content that has been decoded from an encoded format, such as base64"></i></label>
                                                     </div>
 {#                                                    <div class="custom-control custom-switch mt-1">#}
 {#                                                        <input class="custom-control-input" type="checkbox" name="domain_obj" id="domain_obj" checked="">#}
@@ -84,7 +84,7 @@
 {#                                                    </div>#}
                                                     <div class="custom-control custom-switch mt-1">
                                                         <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" checked="">
-                                                        <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item</label>
+                                                        <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Text that has been processed by AIL. It can include various types of extracted information"></i></label>
                                                     </div>
                                                     <div class="card border-dark mb-4" id="sources_item_div">
                                                         <div class="card-body">
@@ -101,7 +101,7 @@
 
                                                     <div class="custom-control custom-switch mt-1">
                                                         <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" checked="">
-                                                        <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP</label>
+                                                        <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="PGP key/block metadata"></i></label>
                                                     </div>
                                                     <div class="card border-dark mb-4" id="sources_pgp_div">
                                                         <div class="card-body">
@@ -350,6 +350,10 @@ $(document).ready(function(){
 	});
 
 });
+
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){

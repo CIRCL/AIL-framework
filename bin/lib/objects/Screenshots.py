@@ -88,7 +88,7 @@ class Screenshot(AbstractObject):
         return obj
 
     def get_meta(self, options=set()):
-        meta = {'id': self.id}
+        meta = self.get_default_meta()
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
         if 'tags_safe' in options:

@@ -45,8 +45,6 @@ def objects_cookies_names():
     else:
         dict_objects = {}
 
-    print(dict_objects)
-
     return render_template("CookieNameDaterange.html", date_from=date_from, date_to=date_to,
                            dict_objects=dict_objects, show_objects=show_objects)
 

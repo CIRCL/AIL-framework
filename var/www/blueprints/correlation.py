@@ -61,6 +61,13 @@ def sanitise_level(level):
         level = 2
     return level
 
+def sanitise_objs_hidden(objs_hidden):
+    if objs_hidden:
+        objs_hidden = set(objs_hidden.split(','))  # TODO sanitize objects
+    else:
+        objs_hidden = set()
+    return objs_hidden
+
 # ============= ROUTES ==============
 @correlation.route('/correlation/show', methods=['GET', 'POST'])
 @login_required
@@ -83,12 +90,18 @@ def show_correlation():
         correl_option = request.form.get('CookieNameCheck')
         if correl_option:
             filter_types.append('cookie-name')
+        correl_option = request.form.get('EtagCheck')
+        if correl_option:
+            filter_types.append('etag')
         correl_option = request.form.get('CveCheck')
         if correl_option:
             filter_types.append('cve')
         correl_option = request.form.get('CryptocurrencyCheck')
         if correl_option:
             filter_types.append('cryptocurrency')
+        correl_option = request.form.get('HHHashCheck')
+        if correl_option:
+            filter_types.append('hhhash')
         correl_option = request.form.get('PgpCheck')
         if correl_option:
             filter_types.append('pgp')
@@ -127,6 +140,10 @@ def show_correlation():
         max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
         mode = sanitise_graph_mode(request.args.get('mode'))
         level = sanitise_level(request.args.get('level'))
+        objs_hidden = sanitise_objs_hidden(request.args.get('hidden'))
+        obj_to_hide = request.args.get('hide')
+        if obj_to_hide:
+            objs_hidden.add(obj_to_hide)
 
         related_btc = bool(request.args.get('related_btc', False))
 
@@ -136,17 +153,24 @@ def show_correlation():
         if not ail_objects.exists_obj(obj_type, subtype, obj_id):
             return abort(404)
         # object exist
-        else:
-            dict_object = {"object_type": obj_type,
-                           "correlation_id": obj_id,
+        else: # TODO remove old dict key
+            dict_object = {"type": obj_type,
+                           "id": obj_id,
+                           "object_type": obj_type,
                            "max_nodes": max_nodes, "mode": mode, "level": level,
                            "filter": filter_types, "filter_str": ",".join(filter_types),
+                           "hidden": objs_hidden, "hidden_str": ",".join(objs_hidden),
+
+                           "correlation_id": obj_id,
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id,
                                                                    options={'tags'}, flask_context=True),
                            "nb_correl": ail_objects.get_obj_nb_correlations(obj_type, subtype, obj_id)
                            }
             if subtype:
+                dict_object["subtype"] = subtype
                 dict_object["metadata"]['type_id'] = subtype
+            else:
+                dict_object["subtype"] = ''
             dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
                                    tags_selector_data=Tag.get_tags_selector_data())
@@ -156,26 +180,15 @@ def show_correlation():
 @login_read_only
 def get_description():
     object_id = request.args.get('object_id')
-    object_id = object_id.split(':')
-    # unpack object_id # # TODO: put me in lib
-    if len(object_id) == 3:
-        object_type = object_id[0]
-        type_id = object_id[1]
-        correlation_id = object_id[2]
-    elif len(object_id) == 2:
-        object_type = object_id[0]
-        type_id = None
-        correlation_id = object_id[1]
-    else:
-        return jsonify({})
+    obj_type, subtype, obj_id = ail_objects.get_obj_type_subtype_id_from_global_id(object_id)
 
-    # check if correlation_id exist
+    # check if obj exist
     # # TODO: return error json
-    if not ail_objects.exists_obj(object_type, type_id, correlation_id):
+    if not ail_objects.exists_obj(obj_type, subtype, obj_id):
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # object exist
     else:
-        res = ail_objects.get_object_meta(object_type, type_id, correlation_id, options={'tags', 'tags_safe'},
+        res = ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'tags_safe'},
                                           flask_context=True)
         if 'tags' in res:
             res['tags'] = list(res['tags'])
@@ -191,9 +204,15 @@ def graph_node_json():
     max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
     level = sanitise_level(request.args.get('level'))
 
+    hidden = request.args.get('hidden')
+    if hidden:
+        hidden = set(hidden.split(','))
+    else:
+        hidden = set()
+
     filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
 
-    json_graph = ail_objects.get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=filter_types, max_nodes=max_nodes, level=level, flask_context=True)
+    json_graph = ail_objects.get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=filter_types, max_nodes=max_nodes, level=level, objs_hidden=hidden, flask_context=True)
     #json_graph = Correlate_object.get_graph_node_object_correlation(obj_type, obj_id, 'union', correlation_names, correlation_objects, requested_correl_type=subtype, max_nodes=max_nodes)
     return jsonify(json_graph)
 
@@ -221,6 +240,7 @@ def correlation_tags_add():
     nb_max = sanitise_nb_max_nodes(request.form.get('tag_nb_max'))
     level = sanitise_level(request.form.get('tag_level'))
     filter_types = ail_objects.sanitize_objs_types(request.form.get('tag_filter', '').split(','))
+    hidden = sanitise_objs_hidden(request.form.get('tag_hidden'))
 
     if not ail_objects.exists_obj(obj_type, subtype, obj_id):
         return abort(404)
@@ -249,9 +269,11 @@ def correlation_tags_add():
 
     if tags:
         ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types,
+                                                   objs_hidden=hidden,
                                                    lvl=level + 1, nb_max=nb_max)
     return redirect(url_for('correlation.show_correlation',
                             type=obj_type, subtype=subtype, id=obj_id,
                             level=level,
                             max_nodes=nb_max,
+                            hidden=hidden, hidden_str=",".join(hidden),
                             filter=",".join(filter_types)))

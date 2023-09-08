@@ -91,6 +91,12 @@ def subtypes_objects_dashboard(obj_type, f_request):
 
 # ============= ROUTES ==============
 
+@objects_subtypes.route("/objects/chats", methods=['GET'])
+@login_required
+@login_read_only
+def objects_dashboard_chat():
+    return subtypes_objects_dashboard('chat', request)
+
 @objects_subtypes.route("/objects/cryptocurrencies", methods=['GET'])
 @login_required
 @login_read_only

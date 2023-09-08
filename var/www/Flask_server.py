@@ -17,9 +17,6 @@ from flask_login import LoginManager, current_user, login_user, logout_user, log
 import importlib
 from os.path import join
 
-# # TODO: put me in lib/Tag
-from pytaxonomies import Taxonomies
-
 sys.path.append('./modules/')
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -51,6 +48,9 @@ from blueprints.objects_decoded import objects_decoded
 from blueprints.objects_subtypes import objects_subtypes
 from blueprints.objects_title import objects_title
 from blueprints.objects_cookie_name import objects_cookie_name
+from blueprints.objects_etag import objects_etag
+from blueprints.objects_hhhash import objects_hhhash
+from blueprints.objects_chat import objects_chat
 
 Flask_dir = os.environ['AIL_FLASK']
 
@@ -106,6 +106,9 @@ app.register_blueprint(objects_decoded, url_prefix=baseUrl)
 app.register_blueprint(objects_subtypes, url_prefix=baseUrl)
 app.register_blueprint(objects_title, url_prefix=baseUrl)
 app.register_blueprint(objects_cookie_name, url_prefix=baseUrl)
+app.register_blueprint(objects_etag, url_prefix=baseUrl)
+app.register_blueprint(objects_hhhash, url_prefix=baseUrl)
+app.register_blueprint(objects_chat, url_prefix=baseUrl)
 
 # =========       =========#
 
@@ -250,16 +253,6 @@ default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
 for taxonomy in default_taxonomies:
     Tag.enable_taxonomy_tags(taxonomy)
 
-# ========== INITIAL tags auto export ============
-# taxonomies = Taxonomies()
-#
-# infoleak_tags = taxonomies.get('infoleak').machinetags()
-# infoleak_automatic_tags = []
-# for tag in taxonomies.get('infoleak').machinetags():
-#     if tag.split('=')[0][:] == 'infoleak:automatic-detection':
-#         r_serv_db.sadd('list_export_tags', tag)
-#
-# r_serv_db.sadd('list_export_tags', 'infoleak:submission="manual"')
 # ============ MAIN ============
 
 if __name__ == "__main__":

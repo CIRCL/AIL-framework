@@ -141,6 +141,9 @@
 </body>
 
 <script>
+
+var to_refresh
+
 $(document).ready(function(){
   $("#nav_server_status").addClass("active");
 	$("#nav_server").removeClass("text-muted");
@@ -199,12 +202,12 @@ function refresh_update_status(){
   });
 
   if (to_refresh) {
-    setTimeout("refresh_crawler_status()", 10000);
+    setTimeout("refresh_update_status()", 10000);
 	}
 
 }
 
-update_progress();
+refresh_update_status();
 //Interval
 var progress_interval = setInterval(function(){
 	refresh_update_status()

@@ -20,7 +20,7 @@ class AIL_Updater(object):
         self.start_time = time.time()
 
         self.config = ConfigLoader()
-        self.r_serv = self.config.get_redis_conn("Kvrocks_DB")
+        self.r_serv = self.config.get_db_conn("Kvrocks_DB")
 
         self.f_version = float(self.version[1:])
         self.current_f_version = ail_updates.get_ail_float_version()
@@ -35,7 +35,7 @@ class AIL_Updater(object):
         """
         Update DB version
         """
-        ail_updates.add_ail_update(version)
+        ail_updates.add_ail_update(self.version)
 
     def run_update(self):
         self.update()

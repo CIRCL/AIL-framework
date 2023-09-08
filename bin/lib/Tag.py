@@ -338,7 +338,7 @@ def get_galaxy_meta(galaxy_name, nb_active_tags=False):
     else:
         meta['icon'] = f'fas fa-{icon}'
     if nb_active_tags:
-        meta['nb_active_tags'] = get_galaxy_nb_tags_enabled(galaxy)
+        meta['nb_active_tags'] = get_galaxy_nb_tags_enabled(galaxy.type)
         meta['nb_tags'] = len(get_galaxy_tags(galaxy.type))
     return meta
 

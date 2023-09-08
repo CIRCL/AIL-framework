@@ -41,7 +41,7 @@
                             <th>Version</th>
                             <th>Enabled</th>
                             <th>Active Tags</th>
-                            <th></th>
+                            <th><i class="fas fa-cogs fa-2x"></i></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -69,7 +69,7 @@
                                     </h5>
                                 </td>
                                 <td>
-                                    <a class="btn btn-outline-secondary" href="{{ url_for('tags_ui.tags_taxonomy') }}?taxonomy={{ taxonomy }}">
+                                    <a class="btn btn-outline-secondary" href="{{ url_for('tags_ui.tags_taxonomy') }}?taxonomy={{ taxonomy }}" data-toggle="tooltip" title="Show or Enable">
                                         <i class="fas fa-tag"></i>
                                     </a>
                                 </td>
@@ -98,7 +98,7 @@ $(document).ready(function(){
   $("#nav_taxonomies").addClass("active");
 
 
-  $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 15, "order": [[ 0, "asc" ]] });
+  $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 15, "order": [[ 3, "desc" ]] });
 
 });
 </script>

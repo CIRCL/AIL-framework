@@ -389,10 +389,10 @@ class Domain(AbstractObject):
                 har = get_item_har(item_id)
                 if har:
                     print(har)
-                    _write_in_zip_buffer(zf, os.path.join(hars_dir, har), f'{basename}.json')
+                    _write_in_zip_buffer(zf, os.path.join(hars_dir, har), f'{basename}.json.gz')
                 # Screenshot
                 screenshot = self._get_external_correlation('item', '', item_id, 'screenshot')
-                if screenshot:
+                if screenshot and screenshot['screenshot']:
                     screenshot = screenshot['screenshot'].pop()[1:]
                     screenshot = os.path.join(screenshot[0:2], screenshot[2:4], screenshot[4:6], screenshot[6:8],
                                               screenshot[8:10], screenshot[10:12], screenshot[12:])
@@ -595,21 +595,22 @@ def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=[]
         return None
 
 def sanitize_domain_name_to_search(name_to_search, domain_type):
+    if not name_to_search:
+        return ""
     if domain_type == 'onion':
         r_name = r'[a-z0-9\.]+'
     else:
         r_name = r'[a-zA-Z0-9-_\.]+'
     # invalid domain name
     if not re.fullmatch(r_name, name_to_search):
-        res = re.match(r_name, name_to_search)
-        return {'search': name_to_search, 'error': res.string.replace( res[0], '')}
+        return ""
     return name_to_search.replace('.', '\.')
 
 def search_domain_by_name(name_to_search, domain_types, r_pos=False):
     domains = {}
     for domain_type in domain_types:
         r_name = sanitize_domain_name_to_search(name_to_search, domain_type)
-        if not name_to_search or isinstance(r_name, dict):
+        if not r_name:
             break
         r_name = re.compile(r_name)
         for domain in get_domains_up_by_type(domain_type):

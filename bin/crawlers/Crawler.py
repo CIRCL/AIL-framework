@@ -17,6 +17,7 @@ from lib import ail_logger
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import CookiesNames
+from lib.objects import Etags
 from lib.objects.Domains import Domain
 from lib.objects.Items import Item
 from lib.objects import Screenshots
@@ -59,6 +60,7 @@ class Crawler(AbstractModule):
         self.root_item = None
         self.date = None
         self.items_dir = None
+        self.original_domain = None
         self.domain = None
 
         # TODO Replace with warning list ???
@@ -98,7 +100,7 @@ class Crawler(AbstractModule):
         self.crawler_scheduler.update_queue()
         self.crawler_scheduler.process_queue()
 
-        self.refresh_lacus_status() # TODO LOG ERROR
+        self.refresh_lacus_status()  # TODO LOG ERROR
         if not self.is_lacus_up:
             return None
 
@@ -121,11 +123,19 @@ class Crawler(AbstractModule):
         if capture:
             try:
                 status = self.lacus.get_capture_status(capture.uuid)
-                if status != crawlers.CaptureStatus.DONE:  # TODO ADD GLOBAL TIMEOUT-> Save start time ### print start time
+                if status == crawlers.CaptureStatus.DONE:
+                    return capture
+                elif status == crawlers.CaptureStatus.UNKNOWN:
+                    capture_start = capture.get_start_time(r_str=False)
+                    if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
+                        task = capture.get_task()
+                        task.reset()
+                        capture.delete()
+                    else:
+                        capture.update(status)
+                else:
                     capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
-                else:
-                    return capture
 
             except ConnectionError:
                 print(capture.uuid)
@@ -181,6 +191,7 @@ class Crawler(AbstractModule):
         print(domain)
 
         self.domain = Domain(domain)
+        self.original_domain = Domain(domain)
 
         epoch = int(time.time())
         parent_id = task.get_parent()
@@ -203,12 +214,20 @@ class Crawler(AbstractModule):
         # Origin + History + tags
         if self.root_item:
             self.domain.set_last_origin(parent_id)
-            self.domain.add_history(epoch, root_item=self.root_item)
             # Tags
             for tag in task.get_tags():
                 self.domain.add_tag(tag)
-        elif self.domain.was_up():
-            self.domain.add_history(epoch, root_item=epoch)
+        self.domain.add_history(epoch, root_item=self.root_item)
+
+        if self.domain != self.original_domain:
+            self.original_domain.update_daterange(self.date.replace('/', ''))
+            if self.root_item:
+                self.original_domain.set_last_origin(parent_id)
+                # Tags
+                for tag in task.get_tags():
+                    self.domain.add_tag(tag)
+            self.original_domain.add_history(epoch, root_item=self.root_item)
+            crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
 
         crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
         print('capture:', capture.uuid, 'completed')
@@ -263,7 +282,7 @@ class Crawler(AbstractModule):
             title_content = crawlers.extract_title_from_html(entries['html'])
             if title_content:
                 title = Titles.create_title(title_content)
-                title.add(item.get_date(), item_id)
+                title.add(item.get_date(), item)
 
             # SCREENSHOT
             if self.screenshot:
@@ -287,7 +306,12 @@ class Crawler(AbstractModule):
                     for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
                         print(cookie_name)
                         cookie = CookiesNames.create(cookie_name)
-                        cookie.add(self.date.replace('/', ''), self.domain.id)
+                        cookie.add(self.date.replace('/', ''), self.domain)
+                    for etag_content in crawlers.extract_etag_from_har(entries['har']):
+                        print(etag_content)
+                        etag = Etags.create(etag_content)
+                        etag.add(self.date.replace('/', ''), self.domain)
+                    crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
 
         # Next Children
         entries_children = entries.get('children')

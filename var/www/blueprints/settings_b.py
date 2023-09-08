@@ -48,7 +48,7 @@ def settings_page():
 @login_required
 @login_read_only
 def get_background_update_metadata_json():
-    return jsonify(ail_updates.get_update_background_metadata())
+    return jsonify(ail_updates.get_update_background_meta(options={}))
 
 @settings_b.route("/settings/modules", methods=['GET'])
 @login_required

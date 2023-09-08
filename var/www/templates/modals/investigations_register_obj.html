@@ -14,7 +14,10 @@
         <div class="input-group" >
           <input id="linvestigations" type="text" class="form-control" autocomplete="off" style="width: 760px">
         </div>
-
+        <div class="form- mt-2">
+            <label for="inv_obj_comment">Object Comment <i>(optional)</i>:</label>
+            <textarea class="form-control" id="inv_obj_comment" name="inv_obj_comment" rows="2"></textarea>
+        </div>
 
       </div>
 
@@ -55,8 +58,13 @@ $('#investigations_register_obj_modal').on('shown.bs.modal', function () {
 });
 
 function Register_Obj() {
-  var uuids = linvestigations.getValue();
-  // TODO: REQUEST
-  window.location.replace("{{ url_for('investigations_b.register_investigation') }}?uuids=" + uuids + "&type={{ obj_type }}&subtype={{ obj_subtype }}&id={{ obj_id }}");
+    var uuids = linvestigations.getValue();
+    var comment = $('#inv_obj_comment').val();
+    // TODO: REQUEST
+    var url = "{{ url_for('investigations_b.register_investigation') }}?uuids=" + uuids + "&type={{ obj_type }}&subtype={{ obj_subtype }}&id={{ obj_id }}"
+    if (comment) {
+        url += "&comment=" + comment;
+    }
+    window.location.replace(url);
 }
 </script>
