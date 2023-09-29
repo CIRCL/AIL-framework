@@ -2,6 +2,8 @@
 # -*-coding:UTF-8 -*
 import json
 import os
+import logging
+import logging.config
 import re
 import sys
 import time
@@ -24,10 +26,15 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from packages import Date
 from lib.ail_core import get_objects_tracked, get_object_all_subtypes, get_objects_retro_hunted
+from lib import ail_logger
 from lib import ConfigLoader
 from lib import item_basic
 from lib import Tag
 from lib.Users import User
+
+# LOGS
+logging.config.dictConfig(ail_logger.get_config(name='modules'))
+logger = logging.getLogger()
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -561,9 +568,7 @@ class Tracker:
                     os.remove(filepath)
 
         # Filters
-        filters = self.get_filters()
-        if not filters:
-            filters = get_objects_tracked()
+        filters = get_objects_tracked()
         for obj_type in filters:
             r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', tracked)
             r_tracker.srem(f'trackers:uuid:{tracker_type}:{tracked}', f'{self.uuid}:{obj_type}')
@@ -1152,7 +1157,11 @@ def get_tracked_yara_rules():
     for obj_type in get_objects_tracked():
         rules = {}
         for tracked in _get_tracked_by_obj_type('yara', obj_type):
-            rules[tracked] = os.path.join(get_yara_rules_dir(), tracked)
+            rule = os.path.join(get_yara_rules_dir(), tracked)
+            if not os.path.exists(rule):
+                logger.critical(f"Yara rule don't exists {tracked} : {obj_type}")
+            else:
+                rules[tracked] = rule
         to_track[obj_type] = yara.compile(filepaths=rules)
     print(to_track)
     return to_track
