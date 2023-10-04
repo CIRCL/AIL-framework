@@ -67,7 +67,7 @@ class TelegramFeeder(DefaultFeeder):
         meta = self.json_data['meta']
         mess_id = self.json_data['meta']['id']
         if meta.get('reply_to'):
-            reply_to_id = meta['reply_to']['id']
+            reply_to_id = int(meta['reply_to'])
         else:
             reply_to_id = None
 

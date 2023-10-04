@@ -118,7 +118,7 @@
                             <h2><span class="badge badge-secondary mb-2">{{ date }}</span></h2>
                             {% for mess in messages[date] %}
 
-                                <div class="chat-message-left pb-0">
+                                <div class="chat-message-left pb-1">
                                     <div>
                                         <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ mess['user-account']['id'] }}" width="40" height="40">
                                         <div class="text-muted small text-nowrap mt-2">{{ mess['hour'] }}</div>
