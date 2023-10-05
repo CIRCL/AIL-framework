@@ -56,6 +56,8 @@ class ZMQModuleImporter(AbstractModule):
         super().__init__()
 
         config_loader = ConfigLoader()
+        self.default_feeder_name = config_loader.get_config_str("Module_Mixer", "default_unnamed_feed_name")
+
         addresses = config_loader.get_config_str('ZMQ_Global', 'address')
         addresses = addresses.split(',')
         channel = config_loader.get_config_str('ZMQ_Global', 'channel')
@@ -63,7 +65,6 @@ class ZMQModuleImporter(AbstractModule):
         for address in addresses:
             self.zmq_importer.add(address.strip(), channel)
 
-    # TODO MESSAGE SOURCE - UI
     def get_message(self):
         for message in self.zmq_importer.importer():
             # remove channel from message
@@ -72,8 +73,19 @@ class ZMQModuleImporter(AbstractModule):
     def compute(self, messages):
         for message in messages:
             message = message.decode()
-            print(message.split(' ', 1)[0])
-            self.add_message_to_queue(message=message)
+
+            obj_id, gzip64encoded = message.split(' ', 1) # TODO ADD LOGS
+            splitted = obj_id.split('>>', 1)
+            if splitted == 2:
+                feeder_name, obj_id = splitted
+            else:
+                feeder_name = self.default_feeder_name
+
+            # f'{source} item::{obj_id} {content}'
+            relay_message = f'{feeder_name} item::{obj_id} {gzip64encoded}'
+
+            print(f'feeder_name item::{obj_id}')
+            self.add_message_to_queue(message=relay_message)
 
 
 if __name__ == '__main__':

@@ -98,5 +98,7 @@ class AbstractImporter(ABC):  # TODO ail queues
             source = self.name
         self.logger.info(f'{source} {obj_id}')
         # self.logger.debug(f'{source} {obj_id} {content}')
-        return f'{source} {obj_id} {content}'
+
+        # TODO handle multiple objects
+        return f'{source} item::{obj_id} {content}'
 

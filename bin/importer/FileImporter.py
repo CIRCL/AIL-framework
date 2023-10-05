@@ -19,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from importer.abstract_importer import AbstractImporter
 # from modules.abstract_module import AbstractModule
 from lib import ail_logger
-from lib.ail_queues import AILQueue
+# from lib.ail_queues import AILQueue
 from lib import ail_files  # TODO RENAME ME
 
 logging.config.dictConfig(ail_logger.get_config(name='modules'))
@@ -41,9 +41,10 @@ class FileImporter(AbstractImporter):
                 gzipped = False
                 if mimetype == 'application/gzip':
                     gzipped = True
-                elif not ail_files.is_text(mimetype):
+                elif not ail_files.is_text(mimetype):  # # # #
                     return None
 
+                # TODO handle multiple objects
                 message = self.create_message(item_id, content, gzipped=gzipped, source='dir_import')
                 if message:
                     self.add_message_to_queue(message=message)

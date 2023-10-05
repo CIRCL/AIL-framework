@@ -87,16 +87,16 @@ class FeederImporter(AbstractImporter):
         feeder_name = feeder.get_name()
         print(f'importing: {feeder_name} feeder')
 
-        item_id = feeder.get_item_id() # TODO replace me with object global id
+        obj = feeder.get_obj()  # TODO replace by a list of objects to import ????
         # process meta
         if feeder.get_json_meta():
             feeder.process_meta()
 
-        if feeder_name == 'telegram':
-            return item_id  # TODO support UI dashboard
-        else:
+        if obj.type == 'item':  # object save on disk as file (Items)
             gzip64_content = feeder.get_gzip64_content()
-            return f'{feeder_name} {item_id} {gzip64_content}'
+            return f'{feeder_name} {obj.get_global_id()} {gzip64_content}'
+        else:  # Messages save on DB
+            return f'{feeder_name} {obj.get_global_id()}'
 
 
 class FeederModuleImporter(AbstractModule):

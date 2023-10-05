@@ -277,7 +277,7 @@ class SubmitPaste(AbstractModule):
                 self.redis_logger.debug(f"relative path {rel_item_path}")
 
                 # send paste to Global module
-                relay_message = f"submitted {rel_item_path} {gzip64encoded}"
+                relay_message = f"submitted item::{rel_item_path} {gzip64encoded}"
                 self.add_message_to_queue(message=relay_message)
 
                 # add tags

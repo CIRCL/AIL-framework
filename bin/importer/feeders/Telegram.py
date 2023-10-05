@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from importer.feeders.Default import DefaultFeeder
 from lib.ConfigLoader import ConfigLoader
+from lib.objects import ail_objects
 from lib.objects.Chats import Chat
 from lib.objects import Messages
 from lib.objects import UsersAccount
@@ -25,6 +26,7 @@ from lib.objects.Usernames import Username
 import base64
 import io
 import gzip
+
 def gunzip_bytes_obj(bytes_obj):
     gunzipped_bytes_obj = None
     try:
@@ -45,8 +47,7 @@ class TelegramFeeder(DefaultFeeder):
         super().__init__(json_data)
         self.name = 'telegram'
 
-    # define item id
-    def get_item_id(self): # TODO rename self.item_id
+    def get_obj(self):  # TODO handle others objects -> images, pdf, ...
         # Get message date
         timestamp = self.json_data['meta']['date']['timestamp']  # TODO CREATE DEFAULT TIMESTAMP
         # if self.json_data['meta'].get('date'):
@@ -56,8 +57,10 @@ class TelegramFeeder(DefaultFeeder):
         #     date = datetime.date.today().strftime("%Y/%m/%d")
         chat_id = str(self.json_data['meta']['chat']['id'])
         message_id = str(self.json_data['meta']['id'])
-        self.item_id = Messages.create_obj_id('telegram', chat_id, message_id, timestamp)  # TODO rename self.item_id
-        return self.item_id
+        obj_id = Messages.create_obj_id('telegram', chat_id, message_id, timestamp)
+        obj_id = f'message:telegram:{obj_id}'
+        self.obj = ail_objects.get_obj_from_global_id(obj_id)
+        return self.obj
 
     def process_meta(self):
         """
@@ -81,7 +84,7 @@ class TelegramFeeder(DefaultFeeder):
             translation = None
         decoded = base64.standard_b64decode(self.json_data['data'])
         content = gunzip_bytes_obj(decoded)
-        message = Messages.create(self.item_id, content, translation=translation)
+        message = Messages.create(self.obj.id, content, translation=translation)
 
         if meta.get('chat'):
             chat = Chat(meta['chat']['id'], 'telegram')
@@ -130,6 +133,5 @@ class TelegramFeeder(DefaultFeeder):
 
         # TODO reply threads ????
         # message edit ????
-
 
         return None

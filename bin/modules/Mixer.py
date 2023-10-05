@@ -139,22 +139,19 @@ class Mixer(AbstractModule):
     def compute(self, message):
         self.refresh_stats()
         splitted = message.split()
-        # Old Feeder name "feeder>>item_id gzip64encoded"
-        if len(splitted) == 2:
-            item_id, gzip64encoded = splitted
-            try:
-                feeder_name, item_id = item_id.split('>>')
-                feeder_name.replace(" ", "")
-                if 'import_dir' in feeder_name:
-                    feeder_name = feeder_name.split('/')[1]
-            except ValueError:
-                feeder_name = self.default_feeder_name
-        # Feeder name in message: "feeder item_id gzip64encoded"
-        elif len(splitted) == 3:
-            feeder_name, item_id, gzip64encoded = splitted
+        # message -> # feeder_name - object - content
+        # or # message -> # feeder_name - object
+
+        # feeder_name - object
+        if len(splitted) == 2:  # feeder_name - object   (content already saved)
+            feeder_name, obj_id = splitted
+
+        # Feeder name in message: "feeder obj_id gzip64encoded"
+        elif len(splitted) == 3:  # gzip64encoded content
+            feeder_name, obj_id, gzip64encoded = splitted
         else:
             print('Invalid message: not processed')
-            self.logger.debug(f'Invalid Item: {splitted[0]} not processed')
+            self.logger.debug(f'Invalid Item: {splitted[0]} not processed') # TODO
             return None
 
         # remove absolute path

@@ -52,6 +52,7 @@ class PystemonImporter(AbstractImporter):
                 else:
                     gzipped = False
 
+                # TODO handle multiple objects
                 return self.create_message(item_id, content, gzipped=gzipped, source='pystemon')
 
             except IOError as e:
