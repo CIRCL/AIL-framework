@@ -11,6 +11,7 @@ import cld3
 import html2text
 
 from io import BytesIO
+from uuid import uuid4
 
 from pymisp import MISPObject
 
@@ -18,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.ail_core import get_ail_uuid
+from lib.ail_core import get_ail_uuid, rreplace
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import item_basic
@@ -137,9 +138,23 @@ class Item(AbstractObject):
 ####################################################################################
 ####################################################################################
 
-    def sanitize_id(self):
-        pass
+    # TODO ADD function to check if ITEM (content + file) already exists
 
+    def sanitize_id(self):
+        if ITEMS_FOLDER in self.id:
+            self.id = self.id.replace(ITEMS_FOLDER, '', 1)
+
+        # limit filename length
+        basename = self.get_basename()
+        if len(basename) > 255:
+            new_basename = f'{basename[:215]}{str(uuid4())}.gz'
+            self.id = rreplace(self.id, basename, new_basename, 1)
+
+
+
+
+
+        return self.id
 
     # # TODO: sanitize_id
     # # TODO: check if already exists ?

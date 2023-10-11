@@ -27,6 +27,7 @@ import base64
 import io
 import gzip
 
+# TODO remove compression ???
 def gunzip_bytes_obj(bytes_obj):
     gunzipped_bytes_obj = None
     try:

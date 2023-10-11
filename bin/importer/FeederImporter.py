@@ -94,9 +94,9 @@ class FeederImporter(AbstractImporter):
 
         if obj.type == 'item':  # object save on disk as file (Items)
             gzip64_content = feeder.get_gzip64_content()
-            return f'{feeder_name} {obj.get_global_id()} {gzip64_content}'
+            return obj, f'{feeder_name} {gzip64_content}'
         else:  # Messages save on DB
-            return f'{feeder_name} {obj.get_global_id()}'
+            return obj, f'{feeder_name}'
 
 
 class FeederModuleImporter(AbstractModule):
@@ -115,8 +115,10 @@ class FeederModuleImporter(AbstractModule):
     def compute(self, message):
         # TODO HANDLE Invalid JSON
         json_data = json.loads(message)
-        relay_message = self.importer.importer(json_data)
-        self.add_message_to_queue(message=relay_message)
+        # TODO multiple objs + messages
+        obj, relay_message = self.importer.importer(json_data)
+        ####
+        self.add_message_to_queue(obj=obj, message=relay_message)
 
 
 # Launch Importer

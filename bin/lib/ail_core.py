@@ -93,6 +93,10 @@ def zscan_iter(r_redis, name):  # count ???
 
 ## --    Redis     -- ##
 
+def rreplace(s, old, new, occurrence):
+    li = s.rsplit(old, occurrence)
+    return new.join(li)
+
 def paginate_iterator(iter_elems, nb_obj=50, page=1):
     dict_page = {'nb_all_elem': len(iter_elems)}
     nb_pages = dict_page['nb_all_elem'] / nb_obj

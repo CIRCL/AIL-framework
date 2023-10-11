@@ -79,73 +79,56 @@ class Global(AbstractModule):
             self.time_last_stats = time.time()
             self.processed_item = 0
 
-    def compute(self, message, r_result=False):
-        # Recovering the streamed message informations
-        splitted = message.split()
+    def compute(self, message, r_result=False): # TODO move OBJ ID sanitization to importer
+        # Recovering the streamed message infos
+        gzip64encoded = message
 
-        if len(splitted) == 2:
-            item, gzip64encoded = splitted
+        if self.obj.type == 'item':
+            if gzip64encoded:
 
-            # Remove ITEMS_FOLDER from item path (crawled item + submitted)
-            if self.ITEMS_FOLDER in item:
-                item = item.replace(self.ITEMS_FOLDER, '', 1)
+                # Creating the full filepath
+                filename = os.path.join(self.ITEMS_FOLDER, self.obj.id)
+                filename = os.path.realpath(filename)
 
-            file_name_item = item.split('/')[-1]
-            if len(file_name_item) > 255:
-                new_file_name_item = '{}{}.gz'.format(file_name_item[:215], str(uuid4()))
-                item = self.rreplace(item, file_name_item, new_file_name_item, 1)
+                # Incorrect filename
+                if not os.path.commonprefix([filename, self.ITEMS_FOLDER]) == self.ITEMS_FOLDER:
+                    self.logger.warning(f'Global; Path traversal detected {filename}')
+                    print(f'Global; Path traversal detected {filename}')
 
-            # Creating the full filepath
-            filename = os.path.join(self.ITEMS_FOLDER, item)
-            filename = os.path.realpath(filename)
+                else:
+                    # Decode compressed base64
+                    decoded = base64.standard_b64decode(gzip64encoded)
+                    new_file_content = self.gunzip_bytes_obj(filename, decoded)
 
-            # Incorrect filename
-            if not os.path.commonprefix([filename, self.ITEMS_FOLDER]) == self.ITEMS_FOLDER:
-                self.logger.warning(f'Global; Path traversal detected {filename}')
-                print(f'Global; Path traversal detected {filename}')
+                    # TODO REWRITE ME
+                    if new_file_content:
+                        filename = self.check_filename(filename, new_file_content)
+
+                        if filename:
+                            # create subdir
+                            dirname = os.path.dirname(filename)
+                            if not os.path.exists(dirname):
+                                os.makedirs(dirname)
+
+                            with open(filename, 'wb') as f:
+                                f.write(decoded)
+
+                            update_obj_date(self.obj.get_date(), 'item')
+
+                            self.add_message_to_queue(obj=self.obj, queue='Item')
+                            self.processed_item += 1
+
+                            print(self.obj.id)
+                            if r_result:
+                                return self.obj.id
 
             else:
-                # Decode compressed base64
-                decoded = base64.standard_b64decode(gzip64encoded)
-                new_file_content = self.gunzip_bytes_obj(filename, decoded)
-
-                if new_file_content:
-                    filename = self.check_filename(filename, new_file_content)
-
-                    if filename:
-                        # create subdir
-                        dirname = os.path.dirname(filename)
-                        if not os.path.exists(dirname):
-                            os.makedirs(dirname)
-
-                        with open(filename, 'wb') as f:
-                            f.write(decoded)
-
-                        item_id = filename
-                        # remove self.ITEMS_FOLDER from
-                        if self.ITEMS_FOLDER in item_id:
-                            item_id = item_id.replace(self.ITEMS_FOLDER, '', 1)
-
-                        item = Item(item_id)
-
-                        update_obj_date(item.get_date(), 'item')
-
-                        self.add_message_to_queue(obj=item, queue='Item')
-                        self.processed_item += 1
-
-                        # DIRTY FIX AIL SYNC - SEND TO SYNC MODULE
-                        # # FIXME:  DIRTY FIX
-                        message = f'{item.get_type()};{item.get_subtype(r_str=True)};{item.get_id()}'
-                        print(message)
-                        self.add_message_to_queue(obj=item, queue='Sync')
-
-                        print(item_id)
-                        if r_result:
-                            return item_id
-
+                self.logger.info(f"Empty Item: {message} not processed")
+        elif self.obj:
+            # TODO send to specific object queue => image, ...
+            self.add_message_to_queue(obj=self.obj, queue='Item')
         else:
-            self.logger.debug(f"Empty Item: {message} not processed")
-            print(f"Empty Item: {message} not processed")
+            self.logger.critical(f"Empty obj: {self.obj} {message} not processed")
 
     def check_filename(self, filename, new_file_content):
         """

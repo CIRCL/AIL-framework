@@ -25,7 +25,7 @@ from modules.abstract_module import AbstractModule
 from lib.objects.Items import ITEMS_FOLDER
 from lib import ConfigLoader
 from lib import Tag
-
+from lib.objects.Items import Item
 
 class SubmitPaste(AbstractModule):
     """
@@ -276,9 +276,11 @@ class SubmitPaste(AbstractModule):
                 rel_item_path = save_path.replace(self.PASTES_FOLDER, '', 1)
                 self.redis_logger.debug(f"relative path {rel_item_path}")
 
+                item = Item(rel_item_path)
+
                 # send paste to Global module
-                relay_message = f"submitted item::{rel_item_path} {gzip64encoded}"
-                self.add_message_to_queue(message=relay_message)
+                relay_message = f"submitted {gzip64encoded}"
+                self.add_message_to_queue(obj=item, message=relay_message)
 
                 # add tags
                 for tag in ltags:

@@ -23,7 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from core import ail_2_ail
 from modules.abstract_module import AbstractModule
-# from lib.ConfigLoader import ConfigLoader
+from lib.objects.Items import Item
 
 #### CONFIG ####
 # config_loader = ConfigLoader()
@@ -76,10 +76,11 @@ class Sync_importer(AbstractModule):
 
         # # TODO: create default id
         item_id = ail_stream['meta']['ail:id']
+        item = Item(item_id)
 
-        message = f'sync {item_id} {b64_gzip_content}'
-        print(item_id)
-        self.add_message_to_queue(message, 'Importers')
+        message = f'sync {b64_gzip_content}'
+        print(item.id)
+        self.add_message_to_queue(obj=item, message=message, queue='Importers')
 
 
 if __name__ == '__main__':

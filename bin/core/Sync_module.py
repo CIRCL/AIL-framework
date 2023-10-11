@@ -15,17 +15,20 @@ This module .
 import os
 import sys
 import time
+import traceback
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from core import ail_2_ail
-from lib.objects.Items import Item
+from lib.ail_queues import get_processed_end_obj
+from lib.exceptions import ModuleQueueError
+from lib.objects import ail_objects
 from modules.abstract_module import AbstractModule
 
 
-class Sync_module(AbstractModule):
+class Sync_module(AbstractModule): # TODO KEEP A QUEUE ???????????????????????????????????????????????
     """
     Sync_module module for AIL framework
     """
@@ -53,7 +56,7 @@ class Sync_module(AbstractModule):
             print('sync queues refreshed')
             print(self.dict_sync_queues)
 
-        obj = self.get_obj()
+        obj = ail_objects.get_obj_from_global_id(message)
 
         tags = obj.get_tags()
 
@@ -67,9 +70,51 @@ class Sync_module(AbstractModule):
                     obj_dict = obj.get_default_meta()
                     # send to queue push and/or pull
                     for dict_ail in self.dict_sync_queues[queue_uuid]['ail_instances']:
-                        print(f'ail_uuid: {dict_ail["ail_uuid"]} obj: {message}')
+                        print(f'ail_uuid: {dict_ail["ail_uuid"]} obj: {obj.type}:{obj.get_subtype(r_str=True)}:{obj.id}')
                         ail_2_ail.add_object_to_sync_queue(queue_uuid, dict_ail['ail_uuid'], obj_dict,
                                                            push=dict_ail['push'], pull=dict_ail['pull'])
+
+    def run(self):
+        """
+        Run Module endless process
+        """
+
+        # Endless loop processing messages from the input queue
+        while self.proceed:
+            # Get one message (paste) from the QueueIn (copy of Redis_Global publish)
+            global_id = get_processed_end_obj()
+            if global_id:
+                try:
+                    # Module processing with the message from the queue
+                    self.compute(global_id)
+                except Exception as err:
+                    if self.debug:
+                        self.queue.error()
+                        raise err
+
+                    # LOG ERROR
+                    trace = traceback.format_tb(err.__traceback__)
+                    trace = ''.join(trace)
+                    self.logger.critical(f"Error in module {self.module_name}: {__name__} : {err}")
+                    self.logger.critical(f"Module {self.module_name} input message: {global_id}")
+                    self.logger.critical(trace)
+
+                    if isinstance(err, ModuleQueueError):
+                        self.queue.error()
+                        raise err
+                # remove from set_module
+                ## check if item process == completed
+
+                if self.obj:
+                    self.queue.end_message(self.obj.get_global_id(), self.sha256_mess)
+                    self.obj = None
+                    self.sha256_mess = None
+
+            else:
+                self.computeNone()
+                # Wait before next process
+                self.logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
+                time.sleep(self.pending_seconds)
 
 
 if __name__ == '__main__':

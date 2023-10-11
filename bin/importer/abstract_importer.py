@@ -54,16 +54,22 @@ class AbstractImporter(ABC):  # TODO ail queues
         """
         return self.__class__.__name__
 
-    def add_message_to_queue(self, message, queue_name=None):
+    def add_message_to_queue(self, obj, message='', queue=None):
         """
         Add message to queue
+        :param obj: AILObject
         :param message: message to send in queue
-        :param queue_name: queue or module name
+        :param queue: queue name or module name
 
         ex: add_message_to_queue(item_id, 'Mail')
         """
-        if message:
-            self.queue.send_message(message, queue_name)
+        if not obj:
+            raise Exception(f'Invalid AIL object, {obj}')
+        obj_global_id = obj.get_global_id()
+        self.queue.send_message(obj_global_id, message, queue)
+
+    def get_available_queues(self):
+        return self.queue.get_out_queues()
 
     @staticmethod
     def b64(content):
@@ -85,20 +91,20 @@ class AbstractImporter(ABC):  # TODO ail queues
             self.logger.warning(e)
             return ''
 
-    def create_message(self, obj_id, content, b64=False, gzipped=False, source=None):
-        if not gzipped:
-            content = self.b64_gzip(content)
-        elif not b64:
-            content = self.b64(content)
-        if not content:
-            return None
-        if isinstance(content, bytes):
-            content = content.decode()
+    def create_message(self, content, b64=False, gzipped=False, source=None):
         if not source:
             source = self.name
-        self.logger.info(f'{source} {obj_id}')
-        # self.logger.debug(f'{source} {obj_id} {content}')
 
-        # TODO handle multiple objects
-        return f'{source} item::{obj_id} {content}'
+        if content:
+            if not gzipped:
+                content = self.b64_gzip(content)
+            elif not b64:
+                content = self.b64(content)
+            if not content:
+                return None
+            if isinstance(content, bytes):
+                content = content.decode()
+            return f'{source} {content}'
+        else:
+            return f'{source}'
 

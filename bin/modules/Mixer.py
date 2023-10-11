@@ -9,7 +9,7 @@ This module is consuming the Redis-list created by the ZMQ_Feed_Q Module.
 This module take all the feeds provided in the config.
 
 
-Depending on the configuration, this module will process the feed as follow:
+Depending on the configuration, this module will process the feed as follows:
     operation_mode 1: "Avoid any duplicate from any sources"
         - The module maintain a list of content for each item
             - If the content is new, process it
@@ -63,9 +63,6 @@ class Mixer(AbstractModule):
 
         self.ttl_key = config_loader.get_config_int("Module_Mixer", "ttl_duplicate")
         self.default_feeder_name = config_loader.get_config_str("Module_Mixer", "default_unnamed_feed_name")
-
-        self.ITEMS_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
-        self.ITEMS_FOLDER = os.path.join(os.path.realpath(self.ITEMS_FOLDER), '')
 
         self.nb_processed_items = 0
         self.feeders_processed = {}
@@ -138,27 +135,38 @@ class Mixer(AbstractModule):
 
     def compute(self, message):
         self.refresh_stats()
+        # obj = self.obj
+        # TODO CHECK IF NOT self.object -> get object global ID from message
+
         splitted = message.split()
-        # message -> # feeder_name - object - content
-        # or # message -> # feeder_name - object
+        # message    -> feeder_name - content
+        # or message -> feeder_name
 
         # feeder_name - object
-        if len(splitted) == 2:  # feeder_name - object   (content already saved)
-            feeder_name, obj_id = splitted
+        if len(splitted) == 1:  # feeder_name - object   (content already saved)
+            feeder_name = message
+            gzip64encoded = None
 
         # Feeder name in message: "feeder obj_id gzip64encoded"
-        elif len(splitted) == 3:  # gzip64encoded content
-            feeder_name, obj_id, gzip64encoded = splitted
+        elif len(splitted) == 2:  # gzip64encoded content
+            feeder_name, gzip64encoded = splitted
         else:
-            print('Invalid message: not processed')
-            self.logger.debug(f'Invalid Item: {splitted[0]} not processed') # TODO
+            self.logger.warning(f'Invalid Message: {splitted} not processed')
             return None
 
-        # remove absolute path
-        item_id = item_id.replace(self.ITEMS_FOLDER, '', 1)
+        if self.obj.type == 'item':
+            # Remove ITEMS_FOLDER from item path (crawled item + submitted)
+            # Limit basename length
+            obj_id = self.obj.id
+            self.obj.sanitize_id()
+            if self.obj.id != obj_id:
+                self.queue.rename_message_obj(self.obj.id, obj_id)
 
-        relay_message = f'{item_id} {gzip64encoded}'
 
+        relay_message = gzip64encoded
+        # print(relay_message)
+
+        # TODO only work for item object
         # Avoid any duplicate coming from any sources
         if self.operation_mode == 1:
             digest = hashlib.sha1(gzip64encoded.encode('utf8')).hexdigest()
@@ -207,7 +215,10 @@ class Mixer(AbstractModule):
         # No Filtering
         else:
             self.increase_stat_processed(feeder_name)
-            self.add_message_to_queue(relay_message)
+            if self.obj.type == 'item':
+                self.add_message_to_queue(obj=self.obj, message=gzip64encoded)
+            else:
+                self.add_message_to_queue(obj=self.obj)
 
 
 if __name__ == "__main__":

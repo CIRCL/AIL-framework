@@ -4,14 +4,12 @@
 Importer Class
 ================
 
-Import Content
+ZMQ Importer
 
 """
 import os
 import sys
-
 import zmq
-
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -20,6 +18,8 @@ sys.path.append(os.environ['AIL_BIN'])
 from importer.abstract_importer import AbstractImporter
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
+
+from lib.objects.Items import Item
 
 class ZMQImporters(AbstractImporter):
     def __init__(self):
@@ -74,18 +74,19 @@ class ZMQModuleImporter(AbstractModule):
         for message in messages:
             message = message.decode()
 
-            obj_id, gzip64encoded = message.split(' ', 1) # TODO ADD LOGS
+            obj_id, gzip64encoded = message.split(' ', 1)  # TODO ADD LOGS
             splitted = obj_id.split('>>', 1)
             if splitted == 2:
                 feeder_name, obj_id = splitted
             else:
                 feeder_name = self.default_feeder_name
 
-            # f'{source} item::{obj_id} {content}'
-            relay_message = f'{feeder_name} item::{obj_id} {gzip64encoded}'
+            obj = Item(obj_id)
+            # f'{source} {content}'
+            relay_message = f'{feeder_name} {gzip64encoded}'
 
             print(f'feeder_name item::{obj_id}')
-            self.add_message_to_queue(message=relay_message)
+            self.add_message_to_queue(obj=obj, message=relay_message)
 
 
 if __name__ == '__main__':

@@ -262,22 +262,23 @@ class Crawler(AbstractModule):
 
         if 'html' in entries and entries.get('html'):
             item_id = crawlers.create_item_id(self.items_dir, self.domain.id)
-            print(item_id)
-            gzip64encoded = crawlers.get_gzipped_b64_item(item_id, entries['html'])
+            item = Item(item_id)
+            print(item.id)
+
+            gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
             # send item to Global
-            relay_message = f'crawler item::{item_id} {gzip64encoded}'
-            self.add_message_to_queue(relay_message, 'Importers')
+            relay_message = f'crawler {gzip64encoded}'
+            self.add_message_to_queue(obj=item, message=relay_message, queue='Importers')
 
-            # Tag
-            msg = f'infoleak:submission="crawler";{item_id}'  # TODO FIXME
-            self.add_message_to_queue(msg, 'Tags')
+            # Tag # TODO replace me with metadata to tags
+            msg = f'infoleak:submission="crawler"'  # TODO FIXME
+            self.add_message_to_queue(obj=item, message=msg, queue='Tags')
 
+            # TODO replace me with metadata to add
             crawlers.create_item_metadata(item_id, last_url, parent_id)
             if self.root_item is None:
                 self.root_item = item_id
             parent_id = item_id
-
-            item = Item(item_id)
 
             title_content = crawlers.extract_title_from_html(entries['html'])
             if title_content:

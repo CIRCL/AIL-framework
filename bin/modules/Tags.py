@@ -46,9 +46,6 @@ class Tags(AbstractModule):
         # Forward message to channel
         self.add_message_to_queue(message=tag, queue='Tag_feed')
 
-        self.add_message_to_queue(queue='Sync')
-
-
 if __name__ == '__main__':
     module = Tags()
     module.run()

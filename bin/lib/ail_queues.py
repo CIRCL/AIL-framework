@@ -84,6 +84,18 @@ class AILQueue:
                 add_processed_obj(obj_global_id, m_hash, module=self.name)
                 return obj_global_id, m_hash, mess
 
+    def rename_message_obj(self, new_id, old_id):
+        # restrict rename function
+        if self.name == 'Mixer' or self.name == 'Global':
+            rename_processed_obj(new_id, old_id)
+        else:
+            raise ModuleQueueError('This Module can\'t rename an object ID')
+
+        # condition -> not in any queue
+        # TODO EDIT meta
+
+
+
     def end_message(self, obj_global_id, m_hash):
         end_processed_obj(obj_global_id, m_hash, module=self.name)
 
@@ -171,6 +183,12 @@ def clear_modules_queues_stats():
 def get_processed_objs():
     return r_obj_process.smembers(f'objs:process')
 
+def get_processed_end_objs():
+    return r_obj_process.smembers(f'objs:processed')
+
+def get_processed_end_obj():
+    return r_obj_process.spop(f'objs:processed')
+
 def get_processed_objs_by_type(obj_type):
     return r_obj_process.zrange(f'objs:process:{obj_type}', 0, -1)
 
@@ -218,6 +236,28 @@ def end_processed_obj(obj_global_id, m_hash, module=None, queue=None):
             r_obj_process.srem(f'objs:process', obj_global_id)
 
             r_obj_process.sadd(f'objs:processed', obj_global_id)   # TODO use list ??????
+
+def rename_processed_obj(new_id, old_id):
+    module = get_processed_obj_modules(old_id)
+    # currently in a module
+    if len(module) == 1:
+        module, x_hash = module[0].split(':', 1)
+        obj_type = old_id.split(':', 1)[0]
+        r_obj_process.zrem(f'obj:modules:{old_id}', f'{module}:{x_hash}')
+        r_obj_process.zrem(f'objs:process:{obj_type}', old_id)
+        r_obj_process.srem(f'objs:process', old_id)
+        add_processed_obj(new_id, x_hash, module=module)
+
+def delete_processed_obj(obj_global_id):
+    for q in get_processed_obj_queues(obj_global_id):
+        queue, x_hash = q.split(':', 1)
+        r_obj_process.zrem(f'obj:queues:{obj_global_id}', f'{queue}:{x_hash}')
+    for m in get_processed_obj_modules(obj_global_id):
+        module, x_hash = m.split(':', 1)
+        r_obj_process.zrem(f'obj:modules:{obj_global_id}', f'{module}:{x_hash}')
+    obj_type = obj_global_id.split(':', 1)[0]
+    r_obj_process.zrem(f'objs:process:{obj_type}', obj_global_id)
+    r_obj_process.srem(f'objs:process', obj_global_id)
 
 ###################################################################################
 
@@ -322,7 +362,10 @@ def save_queue_digraph():
 if __name__ == '__main__':
     # clear_modules_queues_stats()
     # save_queue_digraph()
-    oobj_global_id = 'item::submitted/2023/09/06/submitted_75fb9ff2-8c91-409d-8bd6-31769d73db8f.gz'
-    while True:
-        print(get_processed_obj(oobj_global_id))
-        time.sleep(0.5)
+    oobj_global_id = 'item::submitted/2023/10/11/submitted_b5440009-05d5-4494-a807-a6d8e4a900cf.gz'
+    # print(get_processed_obj(oobj_global_id))
+    # delete_processed_obj(oobj_global_id)
+    # while True:
+    #     print(get_processed_obj(oobj_global_id))
+    #     time.sleep(0.5)
+    print(get_processed_end_objs())

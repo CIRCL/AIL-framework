@@ -84,6 +84,8 @@ def get_object(obj_type, subtype, obj_id):
         return UserAccount(obj_id, subtype)
     elif obj_type == 'username':
         return Usernames.Username(obj_id, subtype)
+    else:
+        raise Exception(f'Unknown AIL object: {obj_type} {subtype} {obj_id}')
 
 def get_objects(objects):
     objs = set()

@@ -96,7 +96,8 @@ class AbstractModule(ABC):
         self.obj = None
         return None
 
-    def add_message_to_queue(self, message='', obj=None, queue=None):
+    # TODO ADD META OBJ ????
+    def add_message_to_queue(self, obj=None, message='', queue=None):
         """
         Add message to queue
         :param obj: AILObject

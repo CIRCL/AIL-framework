@@ -22,6 +22,8 @@ from lib import ail_logger
 # from lib.ail_queues import AILQueue
 from lib import ail_files  # TODO RENAME ME
 
+from lib.objects.Items import Item
+
 logging.config.dictConfig(ail_logger.get_config(name='modules'))
 
 class FileImporter(AbstractImporter):
@@ -44,10 +46,12 @@ class FileImporter(AbstractImporter):
                 elif not ail_files.is_text(mimetype):  # # # #
                     return None
 
-                # TODO handle multiple objects
-                message = self.create_message(item_id, content, gzipped=gzipped, source='dir_import')
+                source = 'dir_import'
+                message = self.create_message(content, gzipped=gzipped, source=source)
+                self.logger.info(f'{source} {item_id}')
+                obj = Item(item_id)
                 if message:
-                    self.add_message_to_queue(message=message)
+                    self.add_message_to_queue(obj, message=message)
 
 class DirImporter(AbstractImporter):
     def __init__(self):
