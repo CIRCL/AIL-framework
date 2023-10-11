@@ -33,8 +33,8 @@ class Sync_module(AbstractModule): # TODO KEEP A QUEUE ?????????????????????????
     Sync_module module for AIL framework
     """
 
-    def __init__(self):
-        super(Sync_module, self).__init__()
+    def __init__(self, queue=False): # FIXME MODIFY/ADD QUEUE
+        super(Sync_module, self).__init__(queue=queue)
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 10
@@ -102,13 +102,6 @@ class Sync_module(AbstractModule): # TODO KEEP A QUEUE ?????????????????????????
                     if isinstance(err, ModuleQueueError):
                         self.queue.error()
                         raise err
-                # remove from set_module
-                ## check if item process == completed
-
-                if self.obj:
-                    self.queue.end_message(self.obj.get_global_id(), self.sha256_mess)
-                    self.obj = None
-                    self.sha256_mess = None
 
             else:
                 self.computeNone()
@@ -119,5 +112,5 @@ class Sync_module(AbstractModule): # TODO KEEP A QUEUE ?????????????????????????
 
 if __name__ == '__main__':
 
-    module = Sync_module()
+    module = Sync_module(queue=False)  # FIXME MODIFY/ADD QUEUE
     module.run()

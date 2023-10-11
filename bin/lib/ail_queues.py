@@ -199,7 +199,7 @@ def is_processed_obj_moduled(obj_global_id):
     return r_obj_process.exists(f'obj:modules:{obj_global_id}')
 
 def is_processed_obj(obj_global_id):
-    return is_processed_obj_queued(obj_global_id) and is_processed_obj_moduled(obj_global_id)
+    return is_processed_obj_queued(obj_global_id) or is_processed_obj_moduled(obj_global_id)
 
 def get_processed_obj_modules(obj_global_id):
     return r_obj_process.zrange(f'obj:modules:{obj_global_id}', 0, -1)
