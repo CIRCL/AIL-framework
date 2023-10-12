@@ -85,9 +85,6 @@ class CookieName(AbstractDaterangeObject):
         meta['content'] = self.get_content()
         return meta
 
-    def add(self, date, obj_id):  # date = HAR Date
-        self._add(date, 'domain', '', obj_id)
-
     def create(self, content, _first_seen=None, _last_seen=None):
         if not isinstance(content, str):
             content = content.decode()

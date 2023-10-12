@@ -79,9 +79,6 @@ class Cve(AbstractDaterangeObject):
         meta['tags'] = self.get_tags(r_list=True)
         return meta
 
-    def add(self, date, item_id):
-        self._add(date, 'item', '', item_id)
-
     def get_cve_search(self):
         try:
             response = requests.get(f'https://cvepremium.circl.lu/api/cve/{self.id}', timeout=10)

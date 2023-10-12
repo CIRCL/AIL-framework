@@ -86,9 +86,6 @@ class Favicon(AbstractDaterangeObject):
     # def get_links(self):
     #     # TODO GET ALL URLS FROM CORRELATED ITEMS
 
-    def add(self, date, obj_id):  # TODO correlation base 64 -> calc md5
-        self._add(date, 'domain', '', obj_id)
-
     def create(self, content, _first_seen=None, _last_seen=None):
         if not isinstance(content, str):
             content = content.decode()

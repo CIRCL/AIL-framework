@@ -24,7 +24,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.objects import Pgps
-from lib.objects.Items import Item
 from trackers.Tracker_Term import Tracker_Term
 from trackers.Tracker_Regex import Tracker_Regex
 from trackers.Tracker_Yara import Tracker_Yara
@@ -61,7 +60,6 @@ class PgpDump(AbstractModule):
         self.tracker_yara = Tracker_Yara(queue=False)
 
         # init
-        self.item_id = None
         self.keys = set()
         self.private_keys = set()
         self.names = set()
@@ -93,11 +91,11 @@ class PgpDump(AbstractModule):
         print()
         pgp_block = self.remove_html(pgp_block)
         # Remove Version
-        versions = self.regex_findall(self.reg_tool_version, self.item_id, pgp_block)
+        versions = self.regex_findall(self.reg_tool_version, self.obj.id, pgp_block)
         for version in versions:
             pgp_block = pgp_block.replace(version, '')
         # Remove Comment
-        comments = self.regex_findall(self.reg_block_comment, self.item_id, pgp_block)
+        comments = self.regex_findall(self.reg_block_comment, self.obj.id, pgp_block)
         for comment in comments:
             pgp_block = pgp_block.replace(comment, '')
         # Remove Empty Lines
@@ -130,7 +128,7 @@ class PgpDump(AbstractModule):
         try:
             output = output.decode()
         except UnicodeDecodeError:
-            self.logger.error(f'Error PgpDump UnicodeDecodeError: {self.item_id}')
+            self.logger.error(f'Error PgpDump UnicodeDecodeError: {self.obj.id}')
             output = ''
         return output
 
@@ -145,7 +143,7 @@ class PgpDump(AbstractModule):
             private = True
         else:
             private = False
-        users = self.regex_findall(self.reg_user_id, self.item_id, pgpdump_output)
+        users = self.regex_findall(self.reg_user_id, self.obj.id, pgpdump_output)
         for user in users:
             # avoid key injection in user_id:
             pgpdump_output.replace(user, '', 1)
@@ -159,7 +157,7 @@ class PgpDump(AbstractModule):
                 name = user
                 self.names.add(name)
 
-        keys = self.regex_findall(self.reg_key_id, self.item_id, pgpdump_output)
+        keys = self.regex_findall(self.reg_key_id, self.obj.id, pgpdump_output)
         for key_id in keys:
             key_id = key_id.replace('Key ID - ', '', 1)
             if key_id != '0x0000000000000000':
@@ -171,28 +169,26 @@ class PgpDump(AbstractModule):
                 print('symmetrically encrypted')
 
     def compute(self, message):
-        item = self.get_obj()
-        self.item_id = item.get_id()
-        content = item.get_content()
+        content = self.obj.get_content()
 
         pgp_blocks = []
         # Public Block
-        for pgp_block in self.regex_findall(self.reg_pgp_public_blocs, self.item_id, content):
+        for pgp_block in self.regex_findall(self.reg_pgp_public_blocs, self.obj.id, content):
             # content = content.replace(pgp_block, '')
             pgp_block = self.sanitize_pgp_block(pgp_block)
             pgp_blocks.append(pgp_block)
         # Private Block
-        for pgp_block in self.regex_findall(self.reg_pgp_private_blocs, self.item_id, content):
+        for pgp_block in self.regex_findall(self.reg_pgp_private_blocs, self.obj.id, content):
             # content = content.replace(pgp_block, '')
             pgp_block = self.sanitize_pgp_block(pgp_block)
             pgp_blocks.append(pgp_block)
         # Signature
-        for pgp_block in self.regex_findall(self.reg_pgp_signature, self.item_id, content):
+        for pgp_block in self.regex_findall(self.reg_pgp_signature, self.obj.id, content):
             # content = content.replace(pgp_block, '')
             pgp_block = self.sanitize_pgp_block(pgp_block)
             pgp_blocks.append(pgp_block)
         # Message
-        for pgp_block in self.regex_findall(self.reg_pgp_message, self.item_id, content):
+        for pgp_block in self.regex_findall(self.reg_pgp_message, self.obj.id, content):
             pgp_block = self.sanitize_pgp_block(pgp_block)
             pgp_blocks.append(pgp_block)
 
@@ -206,26 +202,26 @@ class PgpDump(AbstractModule):
             self.extract_id_from_pgpdump_output(pgpdump_output)
 
         if self.keys or self.names or self.mails:
-            print(self.item_id)
-            date = item.get_date()
+            print(self.obj.id)
+            date = self.obj.get_date()
             for key in self.keys:
                 pgp = Pgps.Pgp(key, 'key')
-                pgp.add(date, item)
+                pgp.add(date, self.obj)
                 print(f'    key: {key}')
             for name in self.names:
                 pgp = Pgps.Pgp(name, 'name')
-                pgp.add(date, item)
+                pgp.add(date, self.obj)
                 print(f'    name: {name}')
-                self.tracker_term.compute(name, obj_type='pgp', subtype='name')
-                self.tracker_regex.compute(name, obj_type='pgp', subtype='name')
-                self.tracker_yara.compute(name, obj_type='pgp', subtype='name')
+                self.tracker_term.compute_manual(pgp)
+                self.tracker_regex.compute_manual(pgp)
+                self.tracker_yara.compute_manual(pgp)
             for mail in self.mails:
                 pgp = Pgps.Pgp(mail, 'mail')
-                pgp.add(date, item)
+                pgp.add(date, self.obj)
                 print(f'    mail: {mail}')
-                self.tracker_term.compute(mail, obj_type='pgp', subtype='mail')
-                self.tracker_regex.compute(mail, obj_type='pgp', subtype='mail')
-                self.tracker_yara.compute(mail, obj_type='pgp', subtype='mail')
+                self.tracker_term.compute_manual(pgp)
+                self.tracker_regex.compute_manual(pgp)
+                self.tracker_yara.compute_manual(pgp)
 
             # Keys extracted from PGP PRIVATE KEY BLOCK
             for key in self.private_keys:
@@ -241,4 +237,3 @@ class PgpDump(AbstractModule):
 if __name__ == '__main__':
     module = PgpDump()
     module.run()
-

@@ -124,16 +124,27 @@ class MailExporterTracker(MailExporter):
     def __init__(self, host=None, port=None, password=None, user='', sender=''):
         super().__init__(host=host, port=port, password=password, user=user, sender=sender)
 
-    def export(self, tracker, obj):  # TODO match
+    def export(self, tracker, obj, matches=[]):
         tracker_type = tracker.get_type()
         tracker_name = tracker.get_tracked()
-        subject = f'AIL Framework Tracker: {tracker_name}'  # TODO custom subject
+        description = tracker.get_description()
+        if not description:
+            description = tracker_name
+
+        subject = f'AIL Framework Tracker: {description}'
         body = f"AIL Framework, New occurrence for {tracker_type} tracker: {tracker_name}\n"
         body += f'Item: {obj.id}\nurl:{obj.get_link()}'
 
-        # TODO match option
-        # if match:
-        #     body += f'Tracker Match:\n\n{escape(match)}'
+        if matches:
+            body += '\n'
+            nb = 1
+            for match in matches:
+                body += f'\nMatch {nb}: {match[0]}\nExtract:\n{match[1]}\n\n'
+                nb += 1
+        else:
+            body = f"AIL Framework, New occurrence for {tracker_type} tracker: {tracker_name}\n"
+            body += f'Item: {obj.id}\nurl:{obj.get_link()}'
 
+        # print(body)
         for mail in tracker.get_mails():
             self._export(mail, subject, body)

@@ -45,6 +45,8 @@ class Title(AbstractDaterangeObject):
     def get_content(self, r_type='str'):
         if r_type == 'str':
             return self._get_field('content')
+        elif r_type == 'bytes':
+            return self._get_field('content').encode()
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -81,9 +83,6 @@ class Title(AbstractDaterangeObject):
         meta['tags'] = self.get_tags(r_list=True)
         meta['content'] = self.get_content()
         return meta
-
-    def add(self, date, item_id):
-        self._add(date, 'item', '', item_id)
 
     def create(self, content, _first_seen=None, _last_seen=None):
         self._set_field('content', content)
@@ -122,4 +121,3 @@ class Titles(AbstractDaterangeObjects):
 #     #     print(r)
 #     r = titles.search_by_id('f7d57B', r_pos=True, case_sensitive=False)
 #     print(r)
-

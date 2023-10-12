@@ -175,7 +175,7 @@ class Message(AbstractObject):
         if options is None:
             options = set()
         meta = self.get_default_meta(tags=True)
-        meta['date'] = self.get_date() # TODO replace me by timestamp ??????
+        meta['date'] = self.get_date()
         meta['source'] = self.get_source()
         # optional meta fields
         if 'content' in options:

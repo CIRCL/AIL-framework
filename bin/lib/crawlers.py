@@ -234,7 +234,9 @@ def extract_title_from_html(html):
     soup = BeautifulSoup(html, 'html.parser')
     title = soup.title
     if title:
-        return str(title.string)
+        title = title.string
+        if title:
+            return str(title)
     return ''
 
 def extract_description_from_html(html):
@@ -1690,6 +1692,19 @@ def api_add_crawler_task(data, user_id=None):
                 return {'error': 'The access to this cookiejar is restricted'}, 403
         cookiejar_uuid = cookiejar.uuid
 
+    cookies = data.get('cookies', None)
+    if not cookiejar_uuid and cookies:
+        # Create new cookiejar
+        cookiejar_uuid = create_cookiejar(user_id, "single-shot cookiejar", 1, None)
+        cookiejar = Cookiejar(cookiejar_uuid)
+        for cookie in cookies:
+            try:
+                name = cookie.get('name')
+                value = cookie.get('value')
+                cookiejar.add_cookie(name, value, None, None, None, None, None)
+            except KeyError:
+                return {'error': 'Invalid cookie key, please submit a valid JSON', 'cookiejar_uuid': cookiejar_uuid}, 400
+
     frequency = data.get('frequency', None)
     if frequency:
         if frequency not in ['monthly', 'weekly', 'daily', 'hourly']:
@@ -2010,7 +2025,7 @@ def test_ail_crawlers():
 # TODO MOVE ME IN CRAWLER OR FLASK
 load_blacklist()
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # delete_captures()
 
     # item_id = 'crawled/2023/02/20/data.gz'
@@ -2022,4 +2037,4 @@ if __name__ == '__main__':
     # _reprocess_all_hars_cookie_name()
     # _reprocess_all_hars_etag()
     # _gzip_all_hars()
-    _reprocess_all_hars_hhhashs()
+    # _reprocess_all_hars_hhhashs()

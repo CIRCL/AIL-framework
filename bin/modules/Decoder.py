@@ -21,7 +21,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
 from lib.objects.Decodeds import Decoded
 from trackers.Tracker_Term import Tracker_Term
 from trackers.Tracker_Regex import Tracker_Regex
@@ -87,17 +86,16 @@ class Decoder(AbstractModule):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-        item = self.get_obj()
-        content = item.get_content()
-        date = item.get_date()
+        content = self.obj.get_content()
+        date = self.obj.get_date()
         new_decodeds = []
 
         for decoder in self.decoder_order:
             find = False
             dname = decoder['name']
 
-            encodeds = self.regex_findall(decoder['regex'], item.id, content)
-            # PERF remove encoded from item content
+            encodeds = self.regex_findall(decoder['regex'], self.obj.id, content)
+            # PERF remove encoded from obj content
             for encoded in encodeds:
                 content = content.replace(encoded, '', 1)
             encodeds = set(encodeds)
@@ -113,19 +111,19 @@ class Decoder(AbstractModule):
                     if not decoded.exists():
                         mimetype = decoded.guess_mimetype(decoded_file)
                         if not mimetype:
-                            print(sha1_string, item.id)
-                            raise Exception(f'Invalid mimetype: {decoded.id} {item.id}')
+                            print(sha1_string, self.obj.id)
+                            raise Exception(f'Invalid mimetype: {decoded.id} {self.obj.id}')
                         decoded.save_file(decoded_file, mimetype)
                         new_decodeds.append(decoded.id)
                     else:
                         mimetype = decoded.get_mimetype()
-                    decoded.add(dname, date, item.id, mimetype=mimetype)
+                    decoded.add(date, self.obj, dname, mimetype=mimetype)
 
                     # new_decodeds.append(decoded.id)
-                    self.logger.info(f'{item.id} : {dname} - {decoded.id} - {mimetype}')
+                    self.logger.info(f'{self.obj.id} : {dname} - {decoded.id} - {mimetype}')
 
             if find:
-                self.logger.info(f'{item.id} - {dname}')
+                self.logger.info(f'{self.obj.id} - {dname}')
 
                 # Send to Tags
                 tag = f'infoleak:automatic-detection="{dname}"'
@@ -134,12 +132,13 @@ class Decoder(AbstractModule):
                 ####################
                 # TRACKERS DECODED
                 for decoded_id in new_decodeds:
+                    decoded = Decoded(decoded_id)
                     try:
-                        self.tracker_term.compute(decoded_id, obj_type='decoded')
-                        self.tracker_regex.compute(decoded_id, obj_type='decoded')
+                        self.tracker_term.compute_manual(decoded)
+                        self.tracker_regex.compute_manual(decoded)
                     except UnicodeDecodeError:
                         pass
-                    self.tracker_yara.compute(decoded_id, obj_type='decoded')
+                    self.tracker_yara.compute_manual(decoded)
 
 
 if __name__ == '__main__':

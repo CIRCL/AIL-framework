@@ -204,15 +204,22 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
     if not l_sources_name:
         l_sources_name = set()
     if source_name:
-        l_dir = os.listdir(os.path.join(directory, source_name))
+        path = os.path.join(directory, source_name)
+        if os.path.isdir(path):
+            l_dir = os.listdir(os.path.join(directory, source_name))
+        else:
+            l_dir = []
     else:
         l_dir = os.listdir(directory)
     # empty directory
     if not l_dir:
-        return l_sources_name.add(source_name)
+        if source_name:
+            return l_sources_name.add(source_name)
+        else:
+            return l_sources_name
     else:
         for src_name in l_dir:
-            if len(src_name) == 4:
+            if len(src_name) == 4 and source_name:
                 # try:
                 int(src_name)
                 to_add = os.path.join(source_name)

@@ -239,8 +239,8 @@ class Decoded(AbstractDaterangeObject):
 
         return True
 
-    def add(self, algo_name, date, obj_id, mimetype=None):
-        self._add(date, 'item', '', obj_id)
+    def add(self, date, obj, algo_name, mimetype=None):
+        self._add(date, obj)
         if not mimetype:
             mimetype = self.get_mimetype()
 
@@ -460,7 +460,7 @@ def get_all_decodeds_objects(filters={}):
 ############################################################################
 
 def sanityze_decoder_names(decoder_name):
-    if decoder_name not in Decodeds.get_algos():
+    if decoder_name not in get_algos():
         return None
     else:
         return decoder_name

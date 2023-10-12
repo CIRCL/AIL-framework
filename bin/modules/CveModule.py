@@ -54,7 +54,7 @@ class CveModule(AbstractModule):
             date = item.get_date()
             for cve_id in cves:
                 cve = Cves.Cve(cve_id)
-                cve.add(date, item_id)
+                cve.add(date, item)
 
             warning = f'{item_id} contains CVEs {cves}'
             print(warning)

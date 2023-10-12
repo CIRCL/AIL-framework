@@ -52,7 +52,7 @@ def get_object_all_subtypes(obj_type):
     return []
 
 def get_objects_tracked():
-    return ['decoded', 'item', 'pgp']
+    return ['decoded', 'item', 'pgp', 'title']
 
 def get_objects_retro_hunted():
     return ['decoded', 'item']

@@ -86,9 +86,6 @@ class HHHash(AbstractDaterangeObject):
         meta['content'] = self.get_content()
         return meta
 
-    def add(self, date, obj_id):  # date = HAR Date
-        self._add(date, 'domain', '', obj_id)
-
     def create(self, hhhash_header, _first_seen=None, _last_seen=None):  # TODO CREATE ADD FUNCTION -> urls set
         self._set_field('content', hhhash_header)
         self._create()

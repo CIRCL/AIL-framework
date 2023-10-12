@@ -125,9 +125,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
     def _add_create(self):
         r_object.sadd(f'{self.type}:all', self.id)
 
-    # TODO don't increase nb if same hash in item with different encoding
-    # if hash already in item
-    def _add(self, date, obj_type, subtype, obj_id):
+    def _add(self, date, obj):
         if not self.exists():
             self._add_create()
             self.set_first_seen(date)
@@ -136,26 +134,22 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             self.update_daterange(date)
         update_obj_date(date, self.type)
 
-        if obj_type == 'item':
-            # NB Object seen by day TODO
-            if not self.is_correlated(obj_type, subtype, obj_id):  # nb seen by day
-                r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
-
+        if obj:
             # Correlations
-            self.add_correlation(obj_type, subtype, obj_id)
+            self.add_correlation(obj.type, obj.get_subtype(r_str=True), obj.get_id())
 
-            if is_crawled(obj_id):  # Domain
-                domain = get_item_domain(obj_id)
-                self.add_correlation('domain', '', domain)
-        else:
-            # Correlations
-            self.add_correlation(obj_type, subtype, obj_id)
-
-            # TODO Don't increase on reprocess
+            # Stats NB by day: # TODO Don't increase on reprocess
             r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
-            # r_object.zincrby(f'{self.type}:obj:{obj_type}', 1, self.id)
-            #  1 Domain by day / 1 HAR by day
-            #  Domain check    / file created -> issue with scheduler
+
+            if obj.type == 'item':
+                item_id = obj.get_id()
+                # domain
+                if is_crawled(item_id):
+                    domain = get_item_domain(item_id)
+                    self.add_correlation('domain', '', domain)
+
+    def add(self, date, obj):
+        self._add(date, obj)
 
     # TODO:ADD objects + Stats
     def _create(self, first_seen=None, last_seen=None):

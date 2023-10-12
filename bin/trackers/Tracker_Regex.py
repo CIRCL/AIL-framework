@@ -41,6 +41,8 @@ class Tracker_Regex(AbstractModule):
         self.tracked_regexs = Tracker.get_tracked_regexs()
         self.last_refresh = time.time()
 
+        self.obj = None
+
         # Exporter
         self.exporters = {'mail': MailExporterTracker(),
                           'webhook': WebHookExporterTracker()}
@@ -66,12 +68,46 @@ class Tracker_Regex(AbstractModule):
         content = obj.get_content()
 
         for dict_regex in self.tracked_regexs[obj_type]:
-            matched = self.regex_findall(dict_regex['regex'], obj_id, content)
-            if matched:
-                self.new_tracker_found(dict_regex['tracked'], 'regex', obj)
+            matches = self.regex_finditer(dict_regex['regex'], obj_id, content)
+            if matches:
+                self.new_tracker_found(dict_regex['tracked'], 'regex', obj, matches)
 
-    def new_tracker_found(self, tracker_name, tracker_type, obj):
+    def extract_matches(self, re_matches, limit=500, lines=5):
+        matches = []
+        content = self.obj.get_content()
+        l_content = len(content)
+        for match in re_matches:
+            start = match[0]
+            value = match[2]
+            end = match[1]
+
+            # Start
+            if start > limit:
+                i_start = start - limit
+            else:
+                i_start = 0
+            str_start = content[i_start:start].splitlines()
+            if len(str_start) > lines:
+                str_start = '\n'.join(str_start[-lines + 1:])
+            else:
+                str_start = content[i_start:start]
+
+            # End
+            if end + limit > l_content:
+                i_end = l_content
+            else:
+                i_end = end + limit
+            str_end = content[end:i_end].splitlines()
+            if len(str_end) > lines:
+                str_end = '\n'.join(str_end[:lines + 1])
+            else:
+                str_end = content[end:i_end]
+            matches.append((value, f'{str_start}{value}{str_end}'))
+        return matches
+
+    def new_tracker_found(self, tracker_name, tracker_type, obj, re_matches):
         obj_id = obj.get_id()
+        matches = None
         for tracker_uuid in Tracker.get_trackers_by_tracked_obj_type(tracker_type, obj.get_type(), tracker_name):
             tracker = Tracker.Tracker(tracker_uuid)
 
@@ -92,8 +128,9 @@ class Tracker_Regex(AbstractModule):
                     obj.add_tag(tag)
 
             if tracker.mail_export():
-                # TODO add matches + custom subjects
-                self.exporters['mail'].export(tracker, obj)
+                if not matches:
+                    matches = self.extract_matches(re_matches)
+                self.exporters['mail'].export(tracker, obj, matches)
 
             if tracker.webhook_export():
                 self.exporters['webhook'].export(tracker, obj)
@@ -102,4 +139,3 @@ class Tracker_Regex(AbstractModule):
 if __name__ == "__main__":
     module = Tracker_Regex()
     module.run()
-    # module.compute('submitted/2023/05/02/submitted_b1e518f1-703b-40f6-8238-d1c22888197e.gz')
