@@ -56,6 +56,8 @@ class FeederImporter(AbstractImporter):
         feeders = [f[:-3] for f in os.listdir(feeder_dir) if os.path.isfile(os.path.join(feeder_dir, f))]
         self.feeders = {}
         for feeder in feeders:
+            if feeder == 'abstract_chats_feeder':
+                continue
             print(feeder)
             part = feeder.split('.')[-1]
             # import json importer class

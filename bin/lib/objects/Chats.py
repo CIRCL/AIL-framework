@@ -15,6 +15,9 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
+from lib.objects.abstract_chat_object import AbstractChatObject, AbstractChatObjects
+
+
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 from lib.data_retention_engine import update_obj_date
 from lib.objects import ail_objects
@@ -33,18 +36,13 @@ config_loader = None
 ################################################################################
 ################################################################################
 
-class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
+class Chat(AbstractChatObject):
     """
-    AIL Chat Object. (strings)
+    AIL Chat Object.
     """
 
     def __init__(self, id, subtype):
         super(Chat, self).__init__('chat', id, subtype)
-
-    # def get_ail_2_ail_payload(self):
-    #     payload = {'raw': self.get_gzip_content(b64=True),
-    #                 'compress': 'gzip'}
-    #     return payload
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
@@ -74,9 +72,16 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
 
     def get_meta(self, options=set()):
         meta = self._get_meta(options=options)
-        meta['id'] = self.id
-        meta['subtype'] = self.subtype
+        meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
+        if 'img':
+            meta['icon'] = self.get_img()
+        if 'username' in options:
+            meta['username'] = self.get_username()
+        if 'subchannels' in options:
+            meta['subchannels'] = self.get_subchannels()
+        if 'nb_subchannels':
+            meta['nb_subchannels'] = self.get_nb_subchannels()
         return meta
 
     def get_misp_object(self):
@@ -112,11 +117,6 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
     ############################################################################
     ############################################################################
 
-    # others optional metas, ... -> # TODO ALL meta in hset
-
-    def get_name(self):  # get username ????
-        pass
-
     # users that send at least a message else participants/spectator
     # correlation created by messages
     def get_users(self):
@@ -138,21 +138,21 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
     def update_username_timeline(self, username_global_id, timestamp):
         self._get_timeline_username().add_timestamp(timestamp, username_global_id)
 
+    #### ChatSubChannels ####
+
+
+    #### Categories ####
+
+    #### Threads ####
+
+    #### Messages #### TODO set parents
 
     # def get_last_message_id(self):
     #
     #     return r_object.hget(f'meta:{self.type}:{self.subtype}:{self.id}', 'last:message:id')
 
-    def get_obj_message_id(self, obj_id):
-        if obj_id.endswith('.gz'):
-            obj_id = obj_id[:-3]
-        return int(obj_id.split('_')[-1])
-
     def _get_message_timestamp(self, obj_global_id):
         return r_object.zscore(f'messages:{self.type}:{self.subtype}:{self.id}', obj_global_id)
-
-    def _get_messages(self):
-        return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
 
     def get_message_meta(self, obj_global_id, parent=True, mess_datetime=None):
         obj = ail_objects.get_obj_from_global_id(obj_global_id)
@@ -178,26 +178,6 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
         mess_dict['date'] = mess_datetime.isoformat(' ')
         mess_dict['hour'] = mess_datetime.strftime('%H:%M:%S')
         return mess_dict
-
-
-    def get_messages(self, start=0, page=1, nb=500):  # TODO limit nb returned, # TODO add replies
-        start = 0
-        stop = -1
-        # r_object.delete(f'messages:{self.type}:{self.subtype}:{self.id}')
-
-        # TODO chat without username ???? -> chat ID ????
-
-        messages = {}
-        curr_date = None
-        for message in self._get_messages():
-            date = datetime.fromtimestamp(message[1])
-            date_day = date.strftime('%Y/%m/%d')
-            if date_day != curr_date:
-                messages[date_day] = []
-                curr_date = date_day
-            mess_dict = self.get_message_meta(message[0], parent=True, mess_datetime=date)
-            messages[date_day].append(mess_dict)
-        return messages
 
         # Zset with ID ???  id -> item id ??? multiple id == media + text
         #                   id -> media id
@@ -229,43 +209,12 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
     #         domain = get_item_domain(item_id)
     #         self.add_correlation('domain', '', domain)
 
-    # TODO kvrocks exception if key don't exists
-    def get_obj_by_message_id(self, mess_id):
-        return r_object.hget(f'messages:ids:{self.type}:{self.subtype}:{self.id}', mess_id)
-
     # importer -> use cache for previous reply SET to_add_id: previously_imported : expire SET key -> 30 mn
-    def add_message(self, obj_global_id, timestamp, mess_id, reply_id=None):
-        r_object.hset(f'messages:ids:{self.type}:{self.subtype}:{self.id}', mess_id, obj_global_id)
-        r_object.zadd(f'messages:{self.type}:{self.subtype}:{self.id}', {obj_global_id: timestamp})
 
-        if reply_id:
-            reply_obj = self.get_obj_by_message_id(reply_id)
-            if reply_obj:
-                self.add_obj_children(reply_obj, obj_global_id)
-            else:
-                self.add_message_cached_reply(reply_id, mess_id)
 
-        # ADD cached replies
-        for reply_obj in self.get_cached_message_reply(mess_id):
-            self.add_obj_children(obj_global_id, reply_obj)
-
-    def _get_message_cached_reply(self, message_id):
-        return r_cache.smembers(f'messages:ids:{self.type}:{self.subtype}:{self.id}:{message_id}')
-
-    def get_cached_message_reply(self, message_id):
-        objs_global_id = []
-        for mess_id in self._get_message_cached_reply(message_id):
-            obj_global_id = self.get_obj_by_message_id(mess_id)
-            if obj_global_id:
-                objs_global_id.append(obj_global_id)
-        return objs_global_id
-
-    def add_message_cached_reply(self, reply_to_id, message_id):
-        r_cache.sadd(f'messages:ids:{self.type}:{self.subtype}:{self.id}:{reply_to_id}', message_id)
-        r_cache.expire(f'messages:ids:{self.type}:{self.subtype}:{self.id}:{reply_to_id}', 600)
-
-    # TODO nb replies = nb son ???? what if it create a onion item ??? -> need source filtering
-
+class Chats(AbstractChatObjects):
+    def __init__(self):
+        super().__init__('chat')
 
 # TODO factorize
 def get_all_subtypes():
@@ -279,28 +228,6 @@ def get_all():
 
 def get_all_by_subtype(subtype):
     return get_all_id('chat', subtype)
-
-# # TODO FILTER NAME + Key + mail
-# def sanitize_username_name_to_search(name_to_search, subtype): # TODO FILTER NAME
-#
-#     return name_to_search
-#
-# def search_usernames_by_name(name_to_search, subtype, r_pos=False):
-#     usernames = {}
-#     # for subtype in subtypes:
-#     r_name = sanitize_username_name_to_search(name_to_search, subtype)
-#     if not name_to_search or isinstance(r_name, dict):
-#         # break
-#         return usernames
-#     r_name = re.compile(r_name)
-#     for user_name in get_all_usernames_by_subtype(subtype):
-#         res = re.search(r_name, user_name)
-#         if res:
-#             usernames[user_name] = {}
-#             if r_pos:
-#                 usernames[user_name]['hl-start'] = res.start()
-#                 usernames[user_name]['hl-end'] = res.end()
-#     return usernames
 
 
 if __name__ == '__main__':

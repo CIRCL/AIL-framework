@@ -289,23 +289,24 @@ class AbstractObject(ABC):
     def get_parent(self):
         return r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent')
 
-    def get_children(self):
+    def get_childrens(self):
         return r_object.smembers(f'child:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
 
-    def set_parent(self, obj_type=None, obj_subtype=None, obj_id=None, obj_global_id=None): # TODO ######################
+    def set_parent(self, obj_type=None, obj_subtype=None, obj_id=None, obj_global_id=None):  # TODO # REMOVE ITEM DUP
         if not obj_global_id:
             if obj_subtype is None:
                 obj_subtype = ''
             obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
         r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent', obj_global_id)
 
-    def add_children(self, obj_type=None, obj_subtype=None, obj_id=None, obj_global_id=None): # TODO ######################
+    def add_children(self, obj_type=None, obj_subtype=None, obj_id=None, obj_global_id=None): # TODO # REMOVE ITEM DUP
         if not obj_global_id:
             if obj_subtype is None:
                 obj_subtype = ''
             obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
         r_object.sadd(f'child:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', obj_global_id)
 
+    ## others objects ##
     def add_obj_children(self, parent_global_id, son_global_id):
         r_object.sadd(f'child:{parent_global_id}', son_global_id)
         r_object.hset(f'meta:{son_global_id}', 'parent', parent_global_id)

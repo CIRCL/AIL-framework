@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Chat Messages - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+{#	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">#}
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+{#	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>#}
+	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
+
+	<style>
+        .chat-message-left,
+        .chat-message-right {
+            display: flex;
+            flex-shrink: 0;
+        }
+        .chat-message-right {
+            flex-direction: row-reverse;
+            margin-left: auto
+        }
+	</style>
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="card my-3">
+                    <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+                        <h3 class="text-secondary">{{ meta["id"] }} :</h3>
+                        <ul class="list-group mb-2">
+                            <li class="list-group-item py-0">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Object subtype</th>
+                                                    <th>First seen</th>
+                                                    <th>Last seen</th>
+                                                    <th>Username</th>
+                                                    <th>Nb seen</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <svg height="26" width="26">
+                                                            <g class="nodes">
+                                                                <circle cx="13" cy="13" r="13" fill="{{ meta["icon"]["color"] }}"></circle>
+                                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ meta["icon"]["style"] }}" font-size="16px">{{ meta["icon"]["icon"] }}</text>
+                                                            </g>
+                                                        </svg>
+                                                        {{ meta["subtype"] }}
+                                                    </td>
+                                                    <td>{{ meta['first_seen'] }}</td>
+                                                    <td>{{ meta['last_seen'] }}</td>
+                                                    <td>
+                                                        {% if 'username' in meta %}
+                                                            {{ meta['username']['id'] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ meta['nb_seen'] }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div id="sparkline"></div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="list-group-item py-0">
+                                <br>
+                                <div class="mb-3">
+                                    Tags:
+                                    {% for tag in meta['tags'] %}
+                                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
+                                        data-tagid="{{ tag }}" data-objtype="chat" data-objsubtype="{{ meta["subtype"] }}" data-objid="{{ meta["id"] }}">
+                                            {{ tag }}
+                                        </button>
+                                    {%  endfor %}
+                                    <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                                        <i class="far fa-plus-square"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        </ul>
+
+                        {% with obj_type='chat', obj_id=meta['id'], obj_subtype=meta['subtype'] %}
+                            {% include 'modals/investigations_register_obj.html' %}
+                        {% endwith %}
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+                            <i class="fas fa-microscope"></i> Investigations
+                        </button>
+
+                    </div>
+                </div>
+
+                {% for tag in mess_tags %}
+                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }} <span class="badge badge-light">{{ mess_tags[tag] }}</span></span>
+                {%  endfor %}
+
+                <div>
+                    <div class="list-group d-inline-block">
+                        {% for date in messages %}
+                            <a class="list-group-item list-group-item-action" href="#date_section_{{ date }}">{{ date }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="position-relative">
+                    <div class="chat-messages p-4">
+
+                        {% for date in messages %}
+                            <h2 id="date_section_{{ date }}"><span class="badge badge-secondary mb-2">{{ date }}</span></h2>
+                            {% for mess in messages[date] %}
+
+                                <div class="chat-message-left pb-1">
+                                    <div>
+                                        <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ mess['user-account']['id'] }}" width="40" height="40">
+                                        <div class="text-muted small text-nowrap mt-2">{{ mess['hour'] }}</div>
+                                    </div>
+                                    <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-4 pb-4" style="overflow-x: auto">
+                                        <div class="font-weight-bold mb-1">
+                                            {% if mess['user-account']['username'] %}
+                                            	{{ mess['user-account']['username']['id'] }}
+                                            {% else %}
+                                            	{{ mess['user-account']['id'] }}
+                                            {% endif %}
+                                        </div>
+                                        {% if mess['reply_to'] %}
+                                            <div class="flex-shrink-1 border rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
+                                                <div class="font-weight-bold mb-1">
+                                                    {% if mess['reply_to']['user-account']['username'] %}
+                                                        {{ mess['reply_to']['user-account']['username']['id'] }}
+                                                    {% else %}
+                                                        {{ mess['reply_to']['user-account']['id'] }}
+                                                    {% endif %}
+                                                </div>
+                                                <pre class="my-0">{{ mess['reply_to']['content'] }}</pre>
+                                                {% for tag in mess['reply_to']['tags'] %}
+                                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                                {%  endfor %}
+                                                <div class="text-muted small text-nowrap">{{ mess['reply_to']['date'] }}</div>
+{#                                                <div class="">#}
+{#                                                    <a class="btn btn-light btn-sm text-secondary py-0" href="{{ url_for('correlation.show_correlation')}}?type={{ mess['reply_to']['type'] }}&subtype={{ mess['reply_to']['subtype'] }}&id={{ mess['reply_to']['id'] }}"><i class="fas fa-project-diagram"></i></a>#}
+{#                                                    <a class="btn btn-light btn-sm text-secondary py-0" href="{{ mess['reply_to']['link'] }}"><i class="fas fa-eye"></i></a>#}
+{#                                                </div>#}
+                                            </div>
+                                        {% endif %}
+                                        <pre class="my-0">{{ mess['content'] }}</pre>
+                                        {% for tag in mess['tags'] %}
+                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                        {%  endfor %}
+                                        <div class="">
+                                            <a class="btn btn-light btn-sm text-secondary px-1" href="{{ url_for('correlation.show_correlation')}}?type={{ mess['type'] }}&subtype={{ mess['subtype'] }}&id={{ mess['id'] }}"><i class="fas fa-project-diagram"></i></a>
+                                            <a class="btn btn-light btn-sm text-secondary px-1" href="{{ mess['link'] }}"><i class="fas fa-eye"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endfor %}
+                            <br>
+                        {% endfor %}
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    var chart = {};
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        $("#nav_chat").addClass("active");
+
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</body>
+
+</html>

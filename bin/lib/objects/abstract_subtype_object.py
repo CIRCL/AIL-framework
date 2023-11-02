@@ -88,7 +88,9 @@ class AbstractSubtypeObject(AbstractObject, ABC):
     def _get_meta(self, options=None):
         if options is None:
             options = set()
-        meta = {'first_seen': self.get_first_seen(),
+        meta = {'id': self.id,
+                'subtype': self.subtype,
+                'first_seen': self.get_first_seen(),
                 'last_seen': self.get_last_seen(),
                 'nb_seen': self.get_nb_seen()}
         if 'icon' in options:
@@ -150,8 +152,11 @@ class AbstractSubtypeObject(AbstractObject, ABC):
 #               => data Retention + efficient search
 #
 #
+    def _add_subtype(self):
+        r_object.sadd(f'all_{self.type}:subtypes', self.subtype)
 
     def add(self, date, obj=None):
+        self._add_subtype()
         self.update_daterange(date)
         update_obj_date(date, self.type, self.subtype)
         # daily

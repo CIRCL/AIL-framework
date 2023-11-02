@@ -43,6 +43,10 @@ config_loader = None
 # /!\ handle null chat and message id -> chat = uuid and message = timestamp ???
 
 
+# ID = <ChatInstance UUID>/<timestamp>/<chat ID>/<message ID> => telegram without channels
+# ID = <ChatInstance UUID>/<timestamp>/<chat ID>/<Channel ID>/<message ID>
+# ID = <ChatInstance UUID>/<timestamp>/<chat ID>/<Thread ID>/<message ID>
+# ID = <ChatInstance UUID>/<timestamp>/<chat ID>/<Channel ID>/<Thread ID>/<message ID>
 class Message(AbstractObject):
     """
     AIL Message Object. (strings)
@@ -86,7 +90,7 @@ class Message(AbstractObject):
         return dirs[-2]
 
     def get_message_id(self):  # TODO optimize
-        message_id = self.get_basename().rsplit('_', 1)[1]
+        message_id = self.get_basename().rsplit('/', 1)[1]
         # if message_id.endswith('.gz'):
         #     message_id = message_id[:-3]
         return message_id
@@ -96,6 +100,10 @@ class Message(AbstractObject):
         # if chat_id.endswith('.gz'):
         #     chat_id = chat_id[:-3]
         return chat_id
+
+    # TODO get Instance ID
+    # TODO get channel ID
+    # TODO get thread  ID
 
     def get_user_account(self):
         user_account = self.get_correlation('user-account')
@@ -255,8 +263,16 @@ class Message(AbstractObject):
     def delete(self):
         pass
 
-def create_obj_id(source, chat_id, message_id, timestamp):
-    return f'{source}/{timestamp}/{chat_id}_{message_id}'
+def create_obj_id(chat_instance, chat_id, message_id, timestamp, channel_id=None, thread_id=None):
+    timestamp = int(timestamp)
+    if channel_id and thread_id:
+        return f'{chat_instance}/{timestamp}/{chat_id}/{chat_id}/{message_id}'  # TODO add thread ID ?????
+    elif channel_id:
+        return f'{chat_instance}/{timestamp}/{channel_id}/{chat_id}/{message_id}'
+    elif thread_id:
+        return f'{chat_instance}/{timestamp}/{chat_id}/{thread_id}/{message_id}'
+    else:
+        return f'{chat_instance}/{timestamp}/{chat_id}/{message_id}'
 
 # TODO Check if already exists
 # def create(source, chat_id, message_id, timestamp, content, tags=[]):

@@ -13,6 +13,7 @@ from lib.ConfigLoader import ConfigLoader
 
 config_loader = ConfigLoader()
 r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
+r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
 AIL_OBJECTS = sorted({'chat', 'cookie-name', 'cve', 'cryptocurrency', 'decoded', 'domain', 'etag', 'favicon', 'hhhash', 'item',
@@ -40,9 +41,11 @@ def get_all_objects():
 def get_objects_with_subtypes():
     return ['chat', 'cryptocurrency', 'pgp', 'username']
 
-def get_object_all_subtypes(obj_type):
+def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
     if obj_type == 'chat':
-        return ['discord', 'jabber', 'telegram']
+        return r_object.smembers(f'all_chat:subtypes')
+    if obj_type == 'chat-subchannel':
+        return r_object.smembers(f'all_chat-subchannel:subtypes')
     if obj_type == 'cryptocurrency':
         return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash']
     if obj_type == 'pgp':

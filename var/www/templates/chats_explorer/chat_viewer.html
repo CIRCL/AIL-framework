@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Chats Protocols - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="card my-3">
+
+                    <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+                        <h4 class="text-secondary">{{ chat["username"] }} {{ chat["id"] }} :</h4>
+                        <ul class="list-group mb-2">
+                            <li class="list-group-item py-0">
+                                <table class="table">
+                                    <thead class="bg-dark text-white">
+                                    <tr>
+                                        <th>Icon</th>
+                                        <th>Name</th>
+                                        <th>ID</th>
+                                        <th>First Seen</th>
+                                        <th>Last Seen</th>
+                                        <th>NB Sub-Channels</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody style="font-size: 15px;">
+                                    <tr>
+                                            <td></td>
+                                            <td>{{ chat['name'] }}</td>
+                                            <td>{{ chat['id']  }}</td>
+                                            <td>{{ chat['first_seen'] }}</td>
+                                            <td>{{ chat['last_seen'] }}</td>
+                                            <td>{{ chat['nb_subchannels'] }}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                        </ul>
+
+                    </div>
+                </div>
+
+                {% if chat['subchannels'] %}
+                    <h4>Sub-Channels:</h4>
+                    <table id="tablesubchannels" class="table">
+                        <thead class="bg-dark text-white">
+                        <tr>
+                            <th>Icon</th>
+                            <th>Name</th>
+                            <th>ID</th>
+                            <th>First Seen</th>
+                            <th>Last Seen</th>
+                            <th>NB Messages</th>
+                        </tr>
+                        </thead>
+                        <tbody style="font-size: 15px;">
+                        {% for meta in chat["subchannels"] %}
+                            <tr>
+                                <td>
+                                   <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ meta['id'] }}" width="40" height="40">
+                                </td>
+                                <td><b>{{ meta['name'] }}</b></td>
+                                <td><a href="{{ url_for('chats_explorer.objects_subchannel_messages') }}?uuid={{ meta['subtype'] }}&id={{ meta['id'] }}">{{ meta['id'] }}</a></td>
+                                <td>{{ meta['first_seen'] }}</td>
+                                <td>{{ meta['last_seen'] }}</td>
+                                <td>{{ meta['nb_messages'] }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        $("#nav_cve").addClass("active");
+
+        {% if chat['subchannels'] %}
+            $('#tablesubchannels').DataTable({
+                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+                "iDisplayLength": 10,
+                "order": [[ 4, "desc" ]]
+            });
+        {% endif %}
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</body>
+
+</html>
