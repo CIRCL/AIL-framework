@@ -80,7 +80,7 @@ def chats_explorer_chat():
         return create_json_response(chat[0], chat[1])
     else:
         chat = chat[0]
-        return render_template('chat_viewer.html', chat=chat)
+        return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label)
 
 @chats_explorer.route("/chats/explorer/subchannel", methods=['GET'])
 @login_required
@@ -94,18 +94,6 @@ def objects_subchannel_messages():
     else:
         subchannel = subchannel[0]
         return render_template('SubChannelMessages.html', subchannel=subchannel)
-
-@chats_explorer.route("/chats/explorer/subchannel", methods=['GET'])
-@login_required
-@login_read_only
-def objects_message():
-    message_id = request.args.get('id')
-    message = chats_viewer.api_get_message(message_id)
-    if message[1] != 200:
-        return create_json_response(message[0], message[1])
-    else:
-        message = message[0]
-        return render_template('ChatMessage.html', message=message)
 
 #############################################################################################
 #############################################################################################

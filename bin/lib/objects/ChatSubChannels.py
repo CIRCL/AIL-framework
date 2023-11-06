@@ -80,8 +80,10 @@ class ChatSubChannel(AbstractChatObject):
         meta = self._get_meta(options=options)
         meta['tags'] = self.get_tags(r_list=True)
         meta['name'] = self.get_name()
+        if 'chat' in options:
+            meta['chat'] = self.get_chat()
         if 'img' in options:
-            meta['sub'] = self.get_img()
+            meta['img'] = self.get_img()
         if 'nb_messages':
             meta['nb_messages'] = self.get_nb_messages()
         return meta

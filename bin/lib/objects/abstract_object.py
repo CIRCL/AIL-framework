@@ -298,6 +298,7 @@ class AbstractObject(ABC):
                 obj_subtype = ''
             obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
         r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent', obj_global_id)
+        r_object.sadd(f'child:{obj_global_id}', self.get_global_id())
 
     def add_children(self, obj_type=None, obj_subtype=None, obj_id=None, obj_global_id=None): # TODO # REMOVE ITEM DUP
         if not obj_global_id:
@@ -305,6 +306,7 @@ class AbstractObject(ABC):
                 obj_subtype = ''
             obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
         r_object.sadd(f'child:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', obj_global_id)
+        r_object.hset(f'meta:{obj_global_id}', 'parent', self.get_global_id())
 
     ## others objects ##
     def add_obj_children(self, parent_global_id, son_global_id):

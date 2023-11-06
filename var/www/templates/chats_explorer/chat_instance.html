@@ -75,11 +75,21 @@
                     <tbody style="font-size: 15px;">
                     {% for chat in chat_instance["chats"] %}
                         <tr>
-                            <td></td>
+                            <td>
+                                <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ chat['id'] }}" width="40" height="40">
+                            </td>
                             <td>{{ chat['name'] }}</td>
                             <td><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?uuid={{ chat_instance['uuid'] }}&id={{ chat['id'] }}">{{ chat['id'] }}</a></td>
-                            <td>{{ chat['first_seen'] }}</td>
-							<td>{{ chat['last_seen'] }}</td>
+                            <td>
+                                {% if chat['first_seen'] %}
+                                    {{ chat['first_seen'][0:4] }}-{{ chat['first_seen'][4:6] }}-{{ chat['first_seen'][6:8] }}
+                                {% endif %}
+                            </td>
+							<td>
+                                {% if chat['last_seen'] %}
+                                    {{ chat['last_seen'][0:4] }}-{{ chat['last_seen'][4:6] }}-{{ chat['last_seen'][6:8] }}
+                                {% endif %}
+                            </td>
                             <td>{{ chat['nb_subchannels'] }}</td>
                         </tr>
                     {% endfor %}

@@ -63,16 +63,15 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_chat(self):  # require ail object TODO ##
         if self.type != 'chat':
             parent = self.get_parent()
-            obj_type, _ = parent.split(':', 1)
-            if obj_type == 'chat':
-                return parent
+            if parent:
+                obj_type, _ = parent.split(':', 1)
+                if obj_type == 'chat':
+                    return parent
 
     def get_subchannels(self):
         subchannels = []
         if self.type == 'chat':  # category ???
-            print(self.get_childrens())
             for obj_global_id in self.get_childrens():
-                print(obj_global_id)
                 obj_type, _ = obj_global_id.split(':', 1)
                 if obj_type == 'chat-subchannel':
                     subchannels.append(obj_global_id)
@@ -125,12 +124,11 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_message_meta(self, message, parent=True, mess_datetime=None):  # TODO handle file message
         obj = Message(message[9:])
         mess_dict = obj.get_meta(options={'content', 'link', 'parent', 'user-account'})
-        print(mess_dict)
+        # print(mess_dict)
         if mess_dict.get('parent') and parent:
             mess_dict['reply_to'] = self.get_message_meta(mess_dict['parent'], parent=False)
         if mess_dict.get('user-account'):
             _, user_account_subtype, user_account_id = mess_dict['user-account'].split(':', 3)
-            print(mess_dict['user-account'])
             user_account = UserAccount(user_account_id, user_account_subtype)
             mess_dict['user-account'] = {}
             mess_dict['user-account']['type'] = user_account.get_type()
@@ -224,8 +222,6 @@ class AbstractChatObjects(ABC):
         return r_object.zcard(f'{self.type}_all:{subtype}')
 
     def get_ids_by_subtype(self, subtype):
-        print(subtype)
-        print(f'{self.type}_all:{subtype}')
         return r_object.zrange(f'{self.type}_all:{subtype}', 0, -1)
 
     def get_all_id_iterator_iter(self, subtype):
