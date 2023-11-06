@@ -115,6 +115,12 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def set_img(self, icon):
         self._set_field('img', icon)
 
+    def get_info(self):
+        return self._get_field('info')
+
+    def set_info(self, info):
+        self._set_field('info', info)
+
     def get_nb_messages(self):
         return r_object.zcard(f'messages:{self.type}:{self.subtype}:{self.id}')
 

@@ -98,6 +98,11 @@
                                     </div>
                                 </div>
                             </li>
+                            {% if subchannel['info'] %}
+                                <li class="list-group-item py-0">
+                                    <pre class="my-0">{{ subchannel['info'] }}</pre>
+                                </li>
+                            {% endif %}
                             <li class="list-group-item py-0">
                                 <br>
                                 <div class="mb-3">

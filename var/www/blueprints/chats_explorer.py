@@ -57,6 +57,19 @@ def chats_explorer_protocols():
     protocols = chats_viewer.get_chat_protocols_meta()
     return render_template('chats_protocols.html', protocols=protocols)
 
+@chats_explorer.route("chats/explorer/networks", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_networks():
+    protocol = request.args.get('protocol')
+    networks = chats_viewer.get_chat_service_instances_by_protocol(protocol)
+    if len(networks) == 1:
+        instance_uuid = list(networks.values())[0]
+        return redirect(url_for('chats_explorer.chats_explorer_instance', uuid=instance_uuid))
+    else:
+        return render_template('chats_networks.html', protocol=protocol, networks=networks)
+
+
 @chats_explorer.route("chats/explorer/instance", methods=['GET'])
 @login_required
 @login_read_only
@@ -93,7 +106,7 @@ def objects_subchannel_messages():
         return create_json_response(subchannel[0], subchannel[1])
     else:
         subchannel = subchannel[0]
-        return render_template('SubChannelMessages.html', subchannel=subchannel)
+        return render_template('SubChannelMessages.html', subchannel=subchannel, bootstrap_label=bootstrap_label)
 
 #############################################################################################
 #############################################################################################

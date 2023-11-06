@@ -128,6 +128,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         if meta.get('name'):
             chat.set_name(meta['name'])
 
+        if meta.get('info'):
+            chat.set_info(meta['info'])
+
         if meta.get('date'): # TODO check if already exists
             chat.set_created_at(int(meta['date']['timestamp']))
 
@@ -159,6 +162,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         if meta.get('name'):
             subchannel.set_name(meta['name'])
             # subchannel.update_name(meta['name'], timestamp) # TODO #################
+
+        if meta.get('info'):
+            subchannel.set_info(meta['info'])
 
         subchannel.add_message(message.get_global_id(), message.id, timestamp, reply_id=reply_id)
         return subchannel

@@ -84,6 +84,11 @@
                                     </tr>
                                     </tbody>
                                 </table>
+                            {% if chat['info'] %}
+                                <li class="list-group-item py-0">
+                                    <pre class="my-0">{{ chat['info'] }}</pre>
+                                </li>
+                            {% endif %}
                             </li>
                         </ul>
 

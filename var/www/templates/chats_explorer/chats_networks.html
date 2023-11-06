@@ -29,27 +29,23 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <h1 class="m-2"><i class="fas fa-comments"></i> Chats Protocols:</h1>
+                <h1 class="m-4">{{ protocol }} Networks:</h1>
 
-                {% if protocols %}
-                    <div class="d-flex justify-content-around my-2">
-                        {% for meta in protocols %}
-                            <a class="btn btn-light border-secondary" style="" href="{{ url_for('chats_explorer.chats_explorer_networks') }}?protocol={{ meta['id'] }}">
-                                <div class="card-body">
-                                    <h4 class="card-title">
-                                        {% if meta['icon'] %}
-                                            <i class="{{ meta['icon']['style'] }} {{ meta['icon']['icon'] }}"></i>
-                                        {% endif %}
-                                        <b>{{ meta['id'] }}</b>
-                                    </h4>
-                                </div>
-                            </a>
+                {% for network in networks %}
+                    <ul class="list-group flex-md-column flex-row justify-content-between w-100 mb-4">
+                        <li class="list-group-item active">
+                            <h3>{{ network }}:</h3>
+                        </li>
+
+                        {% for instance_uuid in networks[network] %}
+                            <li class="list-group-item">
+                                <a class="nav-link" href="{{url_for('chats_explorer.chats_explorer_instance')}}?uuid={{ instance_uuid }}">
+                                    <span>{{ instance_uuid }}</span>
+                                </a>
+                            </li>
                         {% endfor %}
-                    </div>
-
-                {% else %}
-                    <h4>No Protocol/Chats Imported</h4>
-                {% endif %}
+                    </ul>
+                {% endfor %}
 
             </div>
 
@@ -59,7 +55,7 @@
 <script>
     $(document).ready(function(){
         $("#page-Decoded").addClass("active");
-        $("#nav_cve").addClass("active");
+        $("#nav_explorer_chat").addClass("active");
   });
 
 function toggle_sidebar(){

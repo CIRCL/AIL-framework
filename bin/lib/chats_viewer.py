@@ -185,12 +185,29 @@ class ChatServiceInstance:
 def get_chat_service_instances():
     return r_obj.smembers(f'chatSerIns:all')
 
+def get_chat_service_instances_by_protocol(protocol):
+    instance_uuids = {}
+    for network in r_obj.smembers(f'chat:protocol:networks:{protocol}'):
+        inst_uuids = r_obj.hvals(f'map:chatSerIns:{protocol}:{network}')
+        if not network:
+            network = 'default'
+        instance_uuids[network] = inst_uuids
+    return instance_uuids
+
 def get_chat_service_instance_uuid(protocol, network, address):
     if not network:
         network = ''
     if not address:
         address = ''
     return r_obj.hget(f'map:chatSerIns:{protocol}:{network}', address)
+
+def get_chat_service_instance_uuid_meta_from_network_dict(instance_uuids):
+    for network in instance_uuids:
+        metas = []
+        for instance_uuid in instance_uuids[network]:
+            metas.append(ChatServiceInstance(instance_uuid).get_meta())
+        instance_uuids[network] = metas
+    return instance_uuids
 
 def get_chat_service_instance(protocol, network, address):
     instance_uuid = get_chat_service_instance_uuid(protocol, network, address)
@@ -280,7 +297,7 @@ def api_get_chat(chat_id, chat_instance_uuid):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'img', 'subchannels', 'username'})
+    meta = chat.get_meta({'img', 'info', 'subchannels', 'username'})
     if meta['subchannels']:
         meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
     else:
