@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject
 from lib.ail_core import get_object_all_subtypes, zscan_iter ################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Messages import Message
+from lib.objects import Messages
 from lib.objects.UsersAccount import UserAccount
 from lib.objects.Usernames import Username
 from lib.data_retention_engine import update_obj_date
@@ -127,8 +127,20 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def _get_messages(self):  # TODO paginate
         return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
 
+    def get_timestamp_first_message(self):
+        return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0, withscores=True)
+
+    def get_timestamp_last_message(self):
+        return r_object.zrevrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0, withscores=True)
+
+    def get_first_message(self):
+        return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0)
+
+    def get_last_message(self):
+        return r_object.zrevrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0)
+
     def get_message_meta(self, message, parent=True, mess_datetime=None):  # TODO handle file message
-        obj = Message(message[9:])
+        obj = Messages.Message(message[9:])
         mess_dict = obj.get_meta(options={'content', 'link', 'parent', 'user-account'})
         # print(mess_dict)
         if mess_dict.get('parent') and parent:
@@ -149,8 +161,8 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
             mess_dict['user-account'] = {'id': 'UNKNOWN'}
 
         if not mess_datetime:
-            obj_mess_id = message.get_timestamp()
-            mess_datetime = datetime.fromtimestamp(obj_mess_id)
+            obj_mess_id = obj.get_timestamp()
+            mess_datetime = datetime.fromtimestamp(float(obj_mess_id))
         mess_dict['date'] = mess_datetime.isoformat(' ')
         mess_dict['hour'] = mess_datetime.strftime('%H:%M:%S')
         return mess_dict
@@ -193,7 +205,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_cached_message_reply(self, message_id):
         objs_global_id = []
         for mess_id in self._get_message_cached_reply(message_id):
-            obj_global_id = self.get_obj_by_message_id(mess_id) # TODO CATCH EXCEPTION
+            obj_global_id = self.get_obj_by_message_id(mess_id)  # TODO CATCH EXCEPTION
             if obj_global_id:
                 objs_global_id.append(obj_global_id)
         return objs_global_id
@@ -209,6 +221,9 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
                 self.add_obj_children(reply_obj, obj_global_id)
             else:
                 self.add_message_cached_reply(reply_id, message_id)
+        # CACHED REPLIES
+        for mess_id in self.get_cached_message_reply(message_id):
+            self.add_obj_children(obj_global_id, mess_id)
 
 
     # get_messages_meta ????

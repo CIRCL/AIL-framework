@@ -79,6 +79,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     def get_thread_id(self):
         pass
 
+    def get_message_id(self):
+        return self.json_data['meta']['id']
+
     def get_message_timestamp(self):
         return self.json_data['meta']['date']['timestamp']  # TODO CREATE DEFAULT TIMESTAMP
         # if self.json_data['meta'].get('date'):
@@ -142,7 +145,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             subchannel = self.process_subchannel(message, date, timestamp, reply_id=reply_id)
             chat.add_children(obj_global_id=subchannel.get_global_id())
         else:
-            chat.add_message(message.get_global_id(), message.id, timestamp, reply_id=reply_id)
+            chat.add_message(message.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
 
         # if meta.get('subchannels'): # TODO Update icon + names
 
@@ -166,7 +169,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         if meta.get('info'):
             subchannel.set_info(meta['info'])
 
-        subchannel.add_message(message.get_global_id(), message.id, timestamp, reply_id=reply_id)
+        subchannel.add_message(message.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
         return subchannel
 
     def process_sender(self, date, timestamp):
