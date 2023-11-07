@@ -63,7 +63,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>Name</th>
-{#                                                    <th>Chat Instance</th>#}
+                                                    <th>Created at</th>
                                                     <th>First seen</th>
                                                     <th>Last seen</th>
                                                     <th>Username</th>
@@ -73,9 +73,9 @@
                                             <tbody>
                                                 <tr>
                                                     <td>
-{#                                                        {{ subchannel["subtype"] }}#}
                                                         {{ subchannel['name'] }}
                                                     </td>
+                                                    <td>{{ subchannel["created_at"] }}</td>
                                                     <td>
                                                         {% if subchannel['first_seen'] %}
                                                             {{ subchannel['first_seen'][0:4] }}-{{ subchannel['first_seen'][4:6] }}-{{ subchannel['first_seen'][6:8] }}

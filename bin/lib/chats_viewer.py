@@ -173,7 +173,7 @@ class ChatServiceInstance:
         if 'chats' in options:
             meta['chats'] = []
             for chat_id in self.get_chats():
-                meta['chats'].append(Chats.Chat(chat_id, self.uuid).get_meta({'nb_subchannels'}))
+                meta['chats'].append(Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'nb_subchannels'}))
         return meta
 
     def get_nb_chats(self):
@@ -297,7 +297,7 @@ def api_get_chat(chat_id, chat_instance_uuid):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'img', 'info', 'subchannels', 'username'})
+    meta = chat.get_meta({'created_at', 'img', 'info', 'subchannels', 'username'})
     if meta['subchannels']:
         meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
     else:
@@ -308,7 +308,7 @@ def api_get_subchannel(chat_id, chat_instance_uuid):
     subchannel = ChatSubChannels.ChatSubChannel(chat_id, chat_instance_uuid)
     if not subchannel.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = subchannel.get_meta({'chat', 'img', 'nb_messages'})
+    meta = subchannel.get_meta({'chat', 'created_at', 'img', 'nb_messages'})
     if meta['chat']:
         meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
     meta['messages'], meta['tags_messages'] = subchannel.get_messages()

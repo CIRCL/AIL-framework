@@ -67,9 +67,10 @@
                         <th>Icon</th>
                         <th>Name</th>
                         <th>ID</th>
+                        <th>Created at</th>
                         <th>First Seen</th>
                         <th>Last Seen</th>
-                        <th>NB Chats</th>
+                        <th>NB SubChannels</th>
                     </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
@@ -78,8 +79,9 @@
                             <td>
                                 <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ chat['id'] }}" width="40" height="40">
                             </td>
-                            <td>{{ chat['name'] }}</td>
+                            <td><b>{{ chat['name'] }}</b></td>
                             <td><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?uuid={{ chat_instance['uuid'] }}&id={{ chat['id'] }}">{{ chat['id'] }}</a></td>
+                            <td>{{ chat['created_at'] }}</td>
                             <td>
                                 {% if chat['first_seen'] %}
                                     {{ chat['first_seen'][0:4] }}-{{ chat['first_seen'][4:6] }}-{{ chat['first_seen'][6:8] }}
@@ -109,7 +111,7 @@
         $('#tablechats').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
             "iDisplayLength": 10,
-            "order": [[ 4, "desc" ]]
+            "order": [[ 5, "desc" ]]
         });
   });
 

@@ -86,6 +86,8 @@ class ChatSubChannel(AbstractChatObject):
             meta['img'] = self.get_img()
         if 'nb_messages':
             meta['nb_messages'] = self.get_nb_messages()
+        if 'created_at':
+            meta['created_at'] = self.get_created_at(date=True)
         return meta
 
     def get_misp_object(self):

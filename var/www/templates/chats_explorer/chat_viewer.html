@@ -60,6 +60,7 @@
                                         <th>Icon</th>
                                         <th>Name</th>
                                         <th>ID</th>
+                                        <th>Created at</th>
                                         <th>First Seen</th>
                                         <th>Last Seen</th>
                                         <th>NB Sub-Channels</th>
@@ -70,6 +71,7 @@
                                             <td></td>
                                             <td>{{ chat['name'] }}</td>
                                             <td>{{ chat['id']  }}</td>
+                                            <td>{{ chat['created_at'] }}</td>
                                             <td>
                                                 {% if chat['first_seen'] %}
                                                     {{ chat['first_seen'][0:4] }}-{{ chat['first_seen'][4:6] }}-{{ chat['first_seen'][6:8] }}
@@ -107,6 +109,7 @@
                             <th>Icon</th>
                             <th>Name</th>
                             <th>ID</th>
+                            <th>Created at</th>
                             <th>First Seen</th>
                             <th>Last Seen</th>
                             <th>NB Messages</th>
@@ -120,6 +123,7 @@
                                 </td>
                                 <td><b>{{ meta['name'] }}</b></td>
                                 <td><a href="{{ url_for('chats_explorer.objects_subchannel_messages') }}?uuid={{ meta['subtype'] }}&id={{ meta['id'] }}">{{ meta['id'] }}</a></td>
+                                <td>{{ meta['created_at'] }}</td>
                                 <td>
                                     {% if meta['first_seen'] %}
                                         {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
@@ -220,7 +224,7 @@
             $('#tablesubchannels').DataTable({
                 "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
                 "iDisplayLength": 10,
-                "order": [[ 4, "desc" ]]
+                "order": [[ 5, "desc" ]]
             });
         {% endif %}
   });

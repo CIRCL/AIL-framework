@@ -94,8 +94,12 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
                 threads.append(obj_global_id)
         return threads
 
-    def get_created_at(self):
-        return self._get_field('created_at')
+    def get_created_at(self, date=False):
+        created_at = self._get_field('created_at')
+        if date and created_at:
+            created_at = datetime.fromtimestamp(float(created_at))
+            created_at = created_at.isoformat(' ')
+        return created_at
 
     def set_created_at(self, timestamp):
         self._set_field('created_at', timestamp)
