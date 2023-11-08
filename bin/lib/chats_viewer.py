@@ -20,6 +20,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
 from lib.objects import Messages
+from lib.objects import Usernames
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -288,6 +289,11 @@ def get_chat_meta_from_global_id(chat_global_id):
     chat = Chats.Chat(chat_id, instance_uuid)
     return chat.get_meta()
 
+def get_username_meta_from_global_id(username_global_id):
+    _, instance_uuid, username_id = username_global_id.split(':', 2)
+    username = Usernames.Username(username_id, instance_uuid)
+    return username.get_meta()
+
 def api_get_chat_service_instance(chat_instance_uuid):
     chat_instance = ChatServiceInstance(chat_instance_uuid)
     if not chat_instance.exists():
@@ -299,6 +305,9 @@ def api_get_chat(chat_id, chat_instance_uuid):
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
     meta = chat.get_meta({'created_at', 'img', 'info', 'subchannels', 'username'})
+    if meta['username']:
+        meta['username'] = get_username_meta_from_global_id(meta['username'])
+        print()
     if meta['subchannels']:
         meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
     else:
@@ -312,6 +321,8 @@ def api_get_subchannel(chat_id, chat_instance_uuid):
     meta = subchannel.get_meta({'chat', 'created_at', 'img', 'nb_messages'})
     if meta['chat']:
         meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
+    if meta['username']:
+        meta['username']:
     meta['messages'], meta['tags_messages'] = subchannel.get_messages()
     return meta, 200
 
