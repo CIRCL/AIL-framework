@@ -98,8 +98,6 @@ class Message(AbstractObject):
 
     def get_chat_id(self):  # TODO optimize -> use me to tag Chat
         chat_id = self.get_basename().rsplit('_', 1)[0]
-        # if chat_id.endswith('.gz'):
-        #     chat_id = chat_id[:-3]
         return chat_id
 
     # TODO get Instance ID
@@ -151,9 +149,9 @@ class Message(AbstractObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', type=self.type, id=self.id)
+            url = url_for('chats_explorer.objects_message', type=self.type, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show?type={self.type}&id={self.id}'
+            url = f'{baseurl}/objects/message?id={self.id}'
         return url
 
     def get_svg_icon(self):
@@ -196,7 +194,7 @@ class Message(AbstractObject):
         else:
             timestamp = float(timestamp)
         timestamp = datetime.fromtimestamp(float(timestamp))
-        meta['date'] = timestamp.strftime('%Y%m%d')
+        meta['date'] = timestamp.strftime('%Y%/m/%d')
         meta['hour'] = timestamp.strftime('%H:%M:%S')
         meta['full_date'] = timestamp.isoformat(' ')
 
@@ -222,6 +220,8 @@ class Message(AbstractObject):
             meta['user-account'] = self.get_user_account(meta=True)
             if not meta['user-account']:
                 meta['user-account'] = {'id': 'UNKNOWN'}
+        if 'chat' in options:
+            meta['chat'] = self.get_chat_id()
 
         # meta['encoding'] = None
         return meta

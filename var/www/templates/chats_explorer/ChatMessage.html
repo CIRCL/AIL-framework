@@ -9,6 +9,8 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -16,6 +18,7 @@
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 	<style>
         .chat-message-left,
@@ -26,6 +29,13 @@
         .chat-message-right {
             flex-direction: row-reverse;
             margin-left: auto
+        }
+        .divider:after,
+        .divider:before {
+            content: "";
+            flex: 1;
+            height: 2px;
+            background: #eee;
         }
 	</style>
 </head>
@@ -50,11 +60,9 @@
                                         <table class="table">
                                             <thead>
                                                 <tr>
-                                                    <th>Object subtype</th>
-                                                    <th>First seen</th>
-                                                    <th>Last seen</th>
+                                                    <th></th>
+                                                    <th>Date</th>
                                                     <th>Username</th>
-                                                    <th>Nb seen</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -68,14 +76,12 @@
                                                         </svg>
                                                         {{ meta["subtype"] }}
                                                     </td>
-                                                    <td>{{ meta['first_seen'] }}</td>
-                                                    <td>{{ meta['last_seen'] }}</td>
+                                                    <td>{{ meta['full_date'] }}</td>
                                                     <td>
-                                                        {% if 'username' in meta %}
-                                                            {{ meta['username']['id'] }}
+                                                        {% if 'username' in meta['user-account'] %}
+                                                            {{ meta['user-account']['username']['id'] }}
                                                         {% endif %}
                                                     </td>
-                                                    <td>{{ meta['nb_seen'] }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -85,29 +91,44 @@
                                     </div>
                                 </div>
                             </li>
-                            <li class="list-group-item py-0">
-                                <br>
-                                <div class="mb-3">
-                                    Tags:
+                        </ul>
+
+                        <div>
+                            <h5>
+                                <span>
+                                    {% include 'modals/edit_tag.html' %}
+
                                     {% for tag in meta['tags'] %}
                                         <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-                                        data-tagid="{{ tag }}" data-objtype="chat" data-objsubtype="{{ meta["subtype"] }}" data-objid="{{ meta["id"] }}">
+                                        data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="" data-objid="{{ meta['id'] }}">
                                             {{ tag }}
                                         </button>
                                     {%  endfor %}
+                                    {% include 'modals/add_tags.html' %}
                                     <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
                                         <i class="far fa-plus-square"></i>
                                     </button>
-                                </div>
-                            </li>
-                        </ul>
+                                </span>
+                            </h5>
+                        </div>
 
-                        {% with obj_type='chat', obj_id=meta['id'], obj_subtype=meta['subtype'] %}
-                            {% include 'modals/investigations_register_obj.html' %}
-                        {% endwith %}
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
-                            <i class="fas fa-microscope"></i> Investigations
-                        </button>
+                        <div class="d-flex flex-row-reverse bd-highlight">
+                            <div>
+                                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&id={{ meta['id'] }}" target="_blank">
+                                    <button class="btn btn-lg btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph</button>
+                                </a>
+                            </div>
+                            <div>
+                                {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=''%}
+                                    {% include 'modals/investigations_register_obj.html' %}
+                                {% endwith %}
+                                <div class="mr-2">
+                                    <button type="button" class="btn btn-lg btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+                                        <i class="fas fa-microscope"></i> Investigations
+                                    </button>
+                                </div>
+                            </div>
+                          </div>
 
                     </div>
                 </div>
@@ -116,7 +137,11 @@
                 <div class="position-relative">
                     <div class="chat-messages p-2">
 
-                        <span class="badge badge-secondary mb-2">{{ meta['date'] }}</span>
+                        <div class="divider d-flex align-items-center mb-4">
+                                <p class="text-center h2 mx-3 mb-0" style="color: #a2aab7;">
+                                    <span class="badge badge-secondary mb-2" id="date_section_{{ meta['date'] }}">{{ meta['date'] }}</span>
+                                </p>
+                            </div>
 
                         <div class="chat-message-left pb-1">
                             <div>

@@ -329,7 +329,11 @@ def api_get_message(message_id):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    return message.get_meta({'content', 'icon', 'link', 'parent', 'parent_meta', 'user-account'}), 200
+    meta = message.get_meta({'chat', 'content', 'icon', 'link', 'parent', 'parent_meta', 'user-account'})
+    # if meta['chat']:
+    #     print(meta['chat'])
+    #     # meta['chat'] =
+    return meta, 200
 
 # # # # # # # # # # LATER
 #                 #

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-'''
+"""
     Blueprint Flask: crawler splash endpoints: dashboard, onion crawler ...
-'''
+"""
 
 import os
 import sys
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -19,17 +19,9 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib import chats_viewer
-
-
-
-############################################
-
 from lib import ail_core
-from lib.objects import ail_objects
 from lib import chats_viewer
-from lib.objects import Chats
-from lib.objects import ChatSubChannels
+from lib import Tag
 
 # ============ BLUEPRINT ============
 chats_explorer = Blueprint('chats_explorer', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/chats_explorer'))
@@ -112,11 +104,12 @@ def objects_subchannel_messages():
 @chats_explorer.route("/objects/message", methods=['GET'])
 @login_required
 @login_read_only
-def objects_dashboard_chat():
+def objects_message():
     message_id = request.args.get('id')
     message = chats_viewer.api_get_message(message_id)
     if message[1] != 200:
         return create_json_response(message[0], message[1])
     else:
         message = message[0]
-        return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label)
+        return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
+                               modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
