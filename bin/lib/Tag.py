@@ -387,8 +387,12 @@ def get_cluster_tags(cluster_type, enabled=False):
         meta_tag = {'tag': tag, 'description': cluster_val.description}
         if enabled:
             meta_tag['enabled'] = is_galaxy_tag_enabled(cluster_type, tag)
-        synonyms = cluster_val.meta.synonyms
-        if not synonyms:
+        cluster_val_meta = cluster_val.meta
+        if cluster_val_meta:
+            synonyms = cluster_val_meta.synonyms
+            if not synonyms:
+                synonyms = []
+        else:
             synonyms = []
         meta_tag['synonyms'] = synonyms
         tags.append(meta_tag)
