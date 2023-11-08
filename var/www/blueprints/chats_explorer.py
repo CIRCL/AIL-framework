@@ -108,26 +108,15 @@ def objects_subchannel_messages():
         subchannel = subchannel[0]
         return render_template('SubChannelMessages.html', subchannel=subchannel, bootstrap_label=bootstrap_label)
 
-#############################################################################################
-#############################################################################################
-#############################################################################################
 
-
-@chats_explorer.route("/objects/chat/messages", methods=['GET'])
+@chats_explorer.route("/objects/message", methods=['GET'])
 @login_required
 @login_read_only
 def objects_dashboard_chat():
-    chat = request.args.get('id')
-    subtype = request.args.get('subtype')
-    chat = Chats.Chat(chat, subtype)
-    if chat.exists():
-        messages, mess_tags = chat.get_messages()
-        print(messages)
-        print(chat.get_subchannels())
-        meta = chat.get_meta({'icon', 'username'})
-        if meta.get('username'):
-            meta['username'] = ail_objects.get_obj_from_global_id(meta['username']).get_meta()
-        print(meta)
-        return render_template('ChatMessages.html', meta=meta, messages=messages, mess_tags=mess_tags, bootstrap_label=bootstrap_label)
+    message_id = request.args.get('id')
+    message = chats_viewer.api_get_message(message_id)
+    if message[1] != 200:
+        return create_json_response(message[0], message[1])
     else:
-        return abort(404)
+        message = message[0]
+        return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label)

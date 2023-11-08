@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
+from lib.objects import Messages
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -313,6 +314,12 @@ def api_get_subchannel(chat_id, chat_instance_uuid):
         meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
     meta['messages'], meta['tags_messages'] = subchannel.get_messages()
     return meta, 200
+
+def api_get_message(message_id):
+    message = Messages.Message(message_id)
+    if not message.exists():
+        return {"status": "error", "reason": "Unknown uuid"}, 404
+    return message.get_meta({'content', 'icon', 'link', 'parent', 'parent_meta', 'user-account'}), 200
 
 # # # # # # # # # # LATER
 #                 #

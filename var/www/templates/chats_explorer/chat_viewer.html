@@ -183,7 +183,7 @@
                                                     {% for tag in mess['reply_to']['tags'] %}
                                                         <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
                                                     {%  endfor %}
-                                                    <div class="text-muted small text-nowrap">{{ mess['reply_to']['date'] }}</div>
+                                                    <div class="text-muted small text-nowrap">{{ mess['reply_to']['full_date'] }}</div>
     {#                                                <div class="">#}
     {#                                                    <a class="btn btn-light btn-sm text-secondary py-0" href="{{ url_for('correlation.show_correlation')}}?type={{ mess['reply_to']['type'] }}&subtype={{ mess['reply_to']['subtype'] }}&id={{ mess['reply_to']['id'] }}"><i class="fas fa-project-diagram"></i></a>#}
     {#                                                    <a class="btn btn-light btn-sm text-secondary py-0" href="{{ mess['reply_to']['link'] }}"><i class="fas fa-eye"></i></a>#}

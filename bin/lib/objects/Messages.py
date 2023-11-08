@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ail_core import get_ail_uuid
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
+from lib.objects import UsersAccount
 from lib.data_retention_engine import update_obj_date, get_obj_date_first
 # TODO Set all messages ???
 
@@ -105,10 +106,14 @@ class Message(AbstractObject):
     # TODO get channel ID
     # TODO get thread  ID
 
-    def get_user_account(self):
+    def get_user_account(self, meta=False):
         user_account = self.get_correlation('user-account')
         if user_account.get('user-account'):
-            return f'user-account:{user_account["user-account"].pop()}'
+            user_account = f'user-account:{user_account["user-account"].pop()}'
+            if meta:
+                _, user_account_subtype, user_account_id = user_account.split(':', 3)
+                user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'username', 'username_meta'})
+        return  user_account
 
     # Update value on import
     # reply to -> parent ?
@@ -176,26 +181,47 @@ class Message(AbstractObject):
     #     return r_object.hget(f'meta:item::{self.id}', 'url')
 
     # options: set of optional meta fields
-    def get_meta(self, options=None):
+    def get_meta(self, options=None, timestamp=None):
         """
         :type options: set
+        :type timestamp: float
         """
         if options is None:
             options = set()
         meta = self.get_default_meta(tags=True)
-        meta['date'] = self.get_date()
+
+        # timestamp
+        if not timestamp:
+            timestamp = self.get_timestamp()
+        else:
+            timestamp = float(timestamp)
+        timestamp = datetime.fromtimestamp(float(timestamp))
+        meta['date'] = timestamp.strftime('%Y%m%d')
+        meta['hour'] = timestamp.strftime('%H:%M:%S')
+        meta['full_date'] = timestamp.isoformat(' ')
+
         meta['source'] = self.get_source()
         # optional meta fields
         if 'content' in options:
             meta['content'] = self.get_content()
         if 'parent' in options:
             meta['parent'] = self.get_parent()
+            if meta['parent'] and 'parent_meta' in options:
+                options.remove('parent')
+                parent_type, _, parent_id = meta['parent'].split(':', 3)
+                if parent_type == 'message':
+                    message = Message(parent_id)
+                    meta['reply_to'] = message.get_meta(options=options)
         if 'investigations' in options:
             meta['investigations'] = self.get_investigations()
         if 'link' in options:
             meta['link'] = self.get_link(flask_context=True)
+        if 'icon' in options:
+            meta['icon'] = self.get_svg_icon()
         if 'user-account' in options:
-            meta['user-account'] = self.get_user_account()
+            meta['user-account'] = self.get_user_account(meta=True)
+            if not meta['user-account']:
+                meta['user-account'] = {'id': 'UNKNOWN'}
 
         # meta['encoding'] = None
         return meta

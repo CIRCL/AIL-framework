@@ -21,11 +21,9 @@ from lib.objects.abstract_subtype_object import AbstractSubtypeObject
 from lib.ail_core import get_object_all_subtypes, zscan_iter ################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Messages
-from lib.objects.UsersAccount import UserAccount
-from lib.objects.Usernames import Username
-from lib.data_retention_engine import update_obj_date
 
-from packages import Date
+# from lib.data_retention_engine import update_obj_date
+
 
 # LOAD CONFIG
 config_loader = ConfigLoader()
@@ -143,46 +141,23 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_last_message(self):
         return r_object.zrevrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0)
 
-    def get_message_meta(self, message, parent=True, mess_datetime=None):  # TODO handle file message
-        obj = Messages.Message(message[9:])
-        mess_dict = obj.get_meta(options={'content', 'link', 'parent', 'user-account'})
-        # print(mess_dict)
-        if mess_dict.get('parent') and parent:
-            mess_dict['reply_to'] = self.get_message_meta(mess_dict['parent'], parent=False)
-        if mess_dict.get('user-account'):
-            _, user_account_subtype, user_account_id = mess_dict['user-account'].split(':', 3)
-            user_account = UserAccount(user_account_id, user_account_subtype)
-            mess_dict['user-account'] = {}
-            mess_dict['user-account']['type'] = user_account.get_type()
-            mess_dict['user-account']['subtype'] = user_account.get_subtype(r_str=True)
-            mess_dict['user-account']['id'] = user_account.get_id()
-            username = user_account.get_username()
-            if username:
-                _, username_account_subtype, username_account_id = username.split(':', 3)
-                username = Username(username_account_id, username_account_subtype).get_default_meta(link=False)
-            mess_dict['user-account']['username'] = username  # TODO get username at the given timestamp ???
-        else:
-            mess_dict['user-account'] = {'id': 'UNKNOWN'}
+    def get_message_meta(self, message, timestamp=None):  # TODO handle file message
+        message = Messages.Message(message[9:])
+        meta = message.get_meta(options={'content', 'link', 'parent', 'parent_meta', 'user-account'}, timestamp=timestamp)
+        return meta
 
-        if not mess_datetime:
-            obj_mess_id = obj.get_timestamp()
-            mess_datetime = datetime.fromtimestamp(float(obj_mess_id))
-        mess_dict['date'] = mess_datetime.isoformat(' ')
-        mess_dict['hour'] = mess_datetime.strftime('%H:%M:%S')
-        return mess_dict
-
-    def get_messages(self, start=0, page=1, nb=500, unread=False): # threads ????
+    def get_messages(self, start=0, page=1, nb=500, unread=False):  # threads ????
         # TODO return message meta
         tags = {}
         messages = {}
         curr_date = None
         for message in self._get_messages():
-            date = datetime.fromtimestamp(message[1])
-            date_day = date.strftime('%Y/%m/%d')
+            timestamp = message[1]
+            date_day = datetime.fromtimestamp(timestamp).strftime('%Y/%m/%d')
             if date_day != curr_date:
                 messages[date_day] = []
                 curr_date = date_day
-            mess_dict = self.get_message_meta(message[0], parent=True, mess_datetime=date)  # TODO use object
+            mess_dict = self.get_message_meta(message[0], timestamp=timestamp)
             messages[date_day].append(mess_dict)
 
             if mess_dict.get('tags'):
@@ -257,6 +232,3 @@ class AbstractChatObjects(ABC):
 
     def search(self):
         pass
-
-
-

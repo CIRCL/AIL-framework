@@ -16,6 +16,8 @@ from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
 from lib.timeline_engine import Timeline
+from lib.objects import Usernames
+
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -97,9 +99,12 @@ class UserAccount(AbstractSubtypeObject):
         meta = self._get_meta(options=options)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
-        meta['tags'] = self.get_tags(r_list=True)
+        meta['tags'] = self.get_tags(r_list=True)  # TODO add in options ????
         if 'username' in options:
             meta['username'] = self.get_username()
+            if meta['username'] and 'username_meta' in options:
+                _, username_account_subtype, username_account_id = meta['username'].split(':', 3)
+                meta['username'] = Usernames.Username(username_account_id, username_account_subtype).get_meta()
         if 'usernames' in options:
             meta['usernames'] = self.get_usernames()
         return meta

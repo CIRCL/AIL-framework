@@ -155,43 +155,6 @@ class Chat(AbstractChatObject):
     #
     #     return r_object.hget(f'meta:{self.type}:{self.subtype}:{self.id}', 'last:message:id')
 
-    def _get_message_timestamp(self, obj_global_id):
-        return r_object.zscore(f'messages:{self.type}:{self.subtype}:{self.id}', obj_global_id)
-
-    def get_message_meta(self, obj_global_id, parent=True, mess_datetime=None):
-        obj = ail_objects.get_obj_from_global_id(obj_global_id)
-        mess_dict = obj.get_meta(options={'content', 'link', 'parent', 'user-account'})
-        if mess_dict.get('parent') and parent:
-            mess_dict['reply_to'] = self.get_message_meta(mess_dict['parent'], parent=False)
-        if mess_dict.get('user-account'):
-            user_account = ail_objects.get_obj_from_global_id(mess_dict['user-account'])
-            mess_dict['user-account'] = {}
-            mess_dict['user-account']['type'] = user_account.get_type()
-            mess_dict['user-account']['subtype'] = user_account.get_subtype(r_str=True)
-            mess_dict['user-account']['id'] = user_account.get_id()
-            username = user_account.get_username()
-            if username:
-                username = ail_objects.get_obj_from_global_id(username).get_default_meta(link=False)
-            mess_dict['user-account']['username'] = username  # TODO get username at the given timestamp ???
-        else:
-            mess_dict['user-account']['id'] = 'UNKNOWN'
-
-        if not mess_datetime:
-            obj_mess_id = self._get_message_timestamp(obj_global_id)
-            mess_datetime = datetime.fromtimestamp(obj_mess_id)
-        mess_dict['date'] = mess_datetime.isoformat(' ')
-        mess_dict['hour'] = mess_datetime.strftime('%H:%M:%S')
-        return mess_dict
-
-        # Zset with ID ???  id -> item id ??? multiple id == media + text
-        #                   id -> media id
-        # How do we handle reply/thread ??? -> separate with new chats name/id ZSET ???
-        # Handle media ???
-
-        # list of message id -> obj_id
-        # list of obj_id ->
-        # abuse parent children ???
-
     # def add(self, timestamp, obj_id, mess_id=0, username=None, user_id=None):
     #     date = # TODO get date from object
     #     self.update_daterange(date)
