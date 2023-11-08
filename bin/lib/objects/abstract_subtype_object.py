@@ -89,6 +89,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         if options is None:
             options = set()
         meta = {'id': self.id,
+                'type': self.type,
                 'subtype': self.subtype,
                 'first_seen': self.get_first_seen(),
                 'last_seen': self.get_last_seen(),
