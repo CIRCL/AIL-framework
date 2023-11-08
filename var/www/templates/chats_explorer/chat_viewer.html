@@ -51,7 +51,7 @@
                 <div class="card my-3">
 
                     <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-                        <h4 class="text-secondary">{% if chat['username'] %}{{ chat["username"] }} {% else %} {{ chat['name'] }}{% endif %} :</h4> {{ chat["id"] }}
+                        <h4 class="text-secondary">{% if chat['username'] %}{{ chat["username"]["id"] }} {% else %} {{ chat['name'] }}{% endif %} :</h4> {{ chat["id"] }}
                         <ul class="list-group mb-2">
                             <li class="list-group-item py-0">
                                 <table class="table">

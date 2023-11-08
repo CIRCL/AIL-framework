@@ -54,7 +54,7 @@
 
                 <div class="card my-3">
                     <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-                        <h3 class="text-secondary">{% if subchannel['chat']['name'] %}{{ subchannel['chat']['name'] }} {% else %} {{ subchannel['chat']['id'] }}{% endif %} - {% if subchannel['username'] %}{{ subchannel["username"] }} {% else %} {{ subchannel['name'] }}{% endif %} :</h3> {{ subchannel["id"] }}
+                        <h3 class="text-secondary">{% if subchannel['chat']['name'] %}{{ subchannel['chat']['name'] }} {% else %} {{ subchannel['chat']['id'] }}{% endif %} - {% if subchannel['username'] %}{{ subchannel["username"]["id"] }} {% else %} {{ subchannel['name'] }}{% endif %} :</h3> {{ subchannel["id"] }}
                         <ul class="list-group mb-2">
                             <li class="list-group-item py-0">
                                 <div class="row">
@@ -88,7 +88,9 @@
                                                     </td>
                                                     <td>
                                                         {% if 'username' in subchannel %}
-                                                            {{ subchannel['username'] }}
+                                                            {% if subchannel['username'] %}
+                                                                {{ subchannel['username']['id'] }}
+                                                            {% endif %}
                                                         {% endif %}
                                                     </td>
                                                     <td>{{ subchannel['nb_messages'] }}</td>

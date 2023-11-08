@@ -307,7 +307,6 @@ def api_get_chat(chat_id, chat_instance_uuid):
     meta = chat.get_meta({'created_at', 'img', 'info', 'subchannels', 'username'})
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
-        print()
     if meta['subchannels']:
         meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
     else:
@@ -321,8 +320,8 @@ def api_get_subchannel(chat_id, chat_instance_uuid):
     meta = subchannel.get_meta({'chat', 'created_at', 'img', 'nb_messages'})
     if meta['chat']:
         meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
-    if meta['username']:
-        meta['username']:
+    if meta.get('username'):
+        meta['username'] = get_username_meta_from_global_id(meta['username'])
     meta['messages'], meta['tags_messages'] = subchannel.get_messages()
     return meta, 200
 
