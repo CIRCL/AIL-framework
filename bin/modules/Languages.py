@@ -28,9 +28,9 @@ class Languages(AbstractModule):
         obj = self.get_obj()
         
         if obj.type == 'item':
-            if item.is_crawled():
-                domain = Domain(item.get_domain())
-                for lang in item.get_languages(min_probability=0.8):
+            if obj.is_crawled():
+                domain = Domain(obj.get_domain())
+                for lang in obj.get_languages(min_probability=0.8):
                     domain.add_language(lang.language)
 
 
