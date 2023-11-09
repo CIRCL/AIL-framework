@@ -201,14 +201,14 @@ pyail = PyAIL(URL, API_KEY, ssl=verifycert)
 #. . . imports
 #. . . setup code
 
-for content in sys.stdin:
-    elm = json.loads(content)
-    tmp = elm['body']
+for elem in sys.stdin:
+    elm = json.loads(elem)
+    content = elm['body']
     meta = {}
     meta['jabber:to'] = elm['to']
     meta['jabber:from'] = elm['from']
     meta['jabber:ts]' = elm['ts']
-    pyail.feed_json_item(tmp , meta, feeder_name, feeder_uuid)
+    pyail.feed_json_item(content , meta, feeder_name, feeder_uuid)
 ```
 
 # AIL SYNC
