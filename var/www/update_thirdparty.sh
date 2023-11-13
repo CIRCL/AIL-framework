@@ -10,7 +10,7 @@ wget -q http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.
 SBADMIN_VERSION='3.3.7'
 BOOTSTRAP_VERSION='4.2.1'
 FONT_AWESOME_VERSION='5.7.1'
-D3_JS_VERSION='5.5.0'
+D3_JS_VERSION='5.16.0'
 
 rm -rf temp
 mkdir temp

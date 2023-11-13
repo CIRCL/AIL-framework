@@ -85,10 +85,24 @@ def get_today_date_str(separator=False):
     else:
         return datetime.date.today().strftime("%Y%m%d")
 
+def get_current_week_day():
+    dt = datetime.date.today()
+    start = dt - datetime.timedelta(days=dt.weekday())
+    return start.strftime("%Y%m%d")
+
+def get_date_week_by_date(date):
+    dt = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8]))
+    start = dt - datetime.timedelta(days=dt.weekday())
+    return start.strftime("%Y%m%d")
+
 def date_add_day(date, num_day=1):
     new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) + datetime.timedelta(num_day)
     new_date = str(new_date).replace('-', '')
     return new_date
+
+def daterange_add_days(date, nb_days):
+    end_date = date_add_day(date, num_day=nb_days)
+    return get_daterange(date, end_date)
 
 def date_substract_day(date, num_day=1):
     new_date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])) - datetime.timedelta(num_day)

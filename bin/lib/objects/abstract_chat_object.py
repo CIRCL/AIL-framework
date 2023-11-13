@@ -8,6 +8,7 @@ Base Class for AIL Objects
 ##################################
 import os
 import sys
+import time
 from abc import ABC
 
 from datetime import datetime
@@ -21,6 +22,7 @@ from lib.objects.abstract_subtype_object import AbstractSubtypeObject
 from lib.ail_core import get_object_all_subtypes, zscan_iter ################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Messages
+from packages import Date
 
 # from lib.data_retention_engine import update_obj_date
 
@@ -141,6 +143,30 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_last_message(self):
         return r_object.zrevrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0)
 
+    def get_nb_message_by_hours(self, date_day, nb_day):
+        hours = []
+        # start=0, end=23
+        timestamp = time.mktime(datetime.strptime(date_day, "%Y%m%d").timetuple())
+        for i in range(24):
+            timestamp_end = timestamp + 3600
+            nb_messages = r_object.zcount(f'messages:{self.type}:{self.subtype}:{self.id}', timestamp, timestamp_end)
+            timestamp = timestamp_end
+            hours.append({'date': f'{date_day[0:4]}-{date_day[4:6]}-{date_day[6:8]}', 'day': nb_day, 'hour': i, 'count': nb_messages})
+        return hours
+
+    def get_nb_message_by_week(self, date_day):
+        date_day = Date.get_date_week_by_date(date_day)
+        week_messages = []
+        i = 0
+        for date in Date.daterange_add_days(date_day, 6):
+            week_messages = week_messages + self.get_nb_message_by_hours(date, i)
+            i += 1
+        return week_messages
+
+    def get_nb_message_this_week(self):
+        week_date = Date.get_current_week_day()
+        return self.get_nb_message_by_week(week_date)
+
     def get_message_meta(self, message, timestamp=None):  # TODO handle file message
         message = Messages.Message(message[9:])
         meta = message.get_meta(options={'content', 'link', 'parent', 'parent_meta', 'user-account'}, timestamp=timestamp)
@@ -203,6 +229,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         # CACHED REPLIES
         for mess_id in self.get_cached_message_reply(message_id):
             self.add_obj_children(obj_global_id, mess_id)
+
 
 
     # get_messages_meta ????

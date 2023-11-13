@@ -313,6 +313,14 @@ def api_get_chat(chat_id, chat_instance_uuid):
         meta['messages'], meta['tags_messages'] = chat.get_messages()
     return meta, 200
 
+def api_get_nb_message_by_week(chat_id, chat_instance_uuid):
+    chat = Chats.Chat(chat_id, chat_instance_uuid)
+    if not chat.exists():
+        return {"status": "error", "reason": "Unknown chat"}, 404
+    week = chat.get_nb_message_this_week()
+    # week = chat.get_nb_message_by_week('20231109')
+    return week, 200
+
 def api_get_subchannel(chat_id, chat_instance_uuid):
     subchannel = ChatSubChannels.ChatSubChannel(chat_id, chat_instance_uuid)
     if not subchannel.exists():

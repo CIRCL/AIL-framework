@@ -87,6 +87,18 @@ def chats_explorer_chat():
         chat = chat[0]
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label)
 
+@chats_explorer.route("chats/explorer/messages/stats/week", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_messages_stats_week():
+    chat_id = request.args.get('id')
+    instance_uuid = request.args.get('uuid')
+    week = chats_viewer.api_get_nb_message_by_week(chat_id, instance_uuid)
+    if week[1] != 200:
+        return create_json_response(week[0], week[1])
+    else:
+        return jsonify(week[0])
+
 @chats_explorer.route("/chats/explorer/subchannel", methods=['GET'])
 @login_required
 @login_read_only
