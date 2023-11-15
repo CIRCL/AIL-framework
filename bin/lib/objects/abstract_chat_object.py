@@ -128,8 +128,18 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_nb_messages(self):
         return r_object.zcard(f'messages:{self.type}:{self.subtype}:{self.id}')
 
-    def _get_messages(self):  # TODO paginate
-        return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
+    def _get_messages(self, nb=-1, page=1):
+        if nb < 1:
+            return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
+        else:
+            if page > 1:
+                start = page - 1 + nb
+            else:
+                start = 0
+            messages = r_object.zrevrange(f'messages:{self.type}:{self.subtype}:{self.id}', start, start+nb-1, withscores=True)
+            if messages:
+                messages = reversed(messages)
+            return messages
 
     def get_timestamp_first_message(self):
         return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0, withscores=True)
@@ -169,15 +179,15 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
 
     def get_message_meta(self, message, timestamp=None):  # TODO handle file message
         message = Messages.Message(message[9:])
-        meta = message.get_meta(options={'content', 'link', 'parent', 'parent_meta', 'user-account'}, timestamp=timestamp)
+        meta = message.get_meta(options={'content', 'images', 'link', 'parent', 'parent_meta', 'user-account'}, timestamp=timestamp)
         return meta
 
-    def get_messages(self, start=0, page=1, nb=500, unread=False):  # threads ????
+    def get_messages(self, start=0, page=1, nb=500, unread=False):  # threads ???? # TODO ADD last/first message timestamp + return page
         # TODO return message meta
         tags = {}
         messages = {}
         curr_date = None
-        for message in self._get_messages():
+        for message in self._get_messages(nb=10, page=3):
             timestamp = message[1]
             date_day = datetime.fromtimestamp(timestamp).strftime('%Y/%m/%d')
             if date_day != curr_date:

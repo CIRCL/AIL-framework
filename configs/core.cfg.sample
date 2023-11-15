@@ -6,6 +6,7 @@ hash = HASHS
 crawled = crawled
 har = CRAWLED_SCREENSHOT
 screenshot = CRAWLED_SCREENSHOT/screenshot
+images = IMAGES
 
 wordtrending_csv = var/www/static/csv/wordstrendingdata
 wordsfile = files/wordfile

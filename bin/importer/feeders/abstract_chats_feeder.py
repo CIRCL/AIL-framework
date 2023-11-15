@@ -20,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from importer.feeders.Default import DefaultFeeder
 from lib.objects.Chats import Chat
 from lib.objects import ChatSubChannels
+from lib.objects import Images
 from lib.objects import Messages
 from lib.objects import UsersAccount
 from lib.objects.Usernames import Username
@@ -70,7 +71,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     def get_chat_id(self):  # TODO RAISE ERROR IF NONE
         return self.json_data['meta']['chat']['id']
 
-    def get_channel_id(self):
+    def get_subchannel_id(self):
         pass
 
     def get_subchannels(self):
@@ -114,19 +115,29 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         timestamp = self.get_message_timestamp()
 
         #### Create Object ID ####
-        chat_id = str(self.json_data['meta']['chat']['id'])
-        message_id = str(self.json_data['meta']['id'])
+        chat_id = self.get_chat_id()
+        message_id = self.get_message_id()
         # channel id
         # thread id
 
-        obj_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp)
-        self.obj = Messages.Message(obj_id)
+        # TODO sanitize obj type
+        obj_type = self.get_obj_type()
+        print(obj_type)
+
+        if obj_type == 'image':
+            self.obj = Images.Image(self.json_data['data-sha256'])
+
+        else:
+            obj_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp)
+            self.obj = Messages.Message(obj_id)
         return self.obj
 
-    def process_chat(self, message, date, timestamp, reply_id=None):  # TODO threads
-        meta = self.json_data['meta']['chat']
+    def process_chat(self, obj, date, timestamp, reply_id=None):  # TODO threads
+        meta = self.json_data['meta']['chat'] # todo replace me by function
         chat = Chat(self.get_chat_id(), self.get_chat_instance_uuid())
-        chat.add(date)  # TODO ### Dynamic subtype ???
+
+        # date stat + correlation
+        chat.add(date, obj)
 
         if meta.get('name'):
             chat.set_name(meta['name'])
@@ -142,10 +153,12 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             chat.update_username_timeline(username.get_global_id(), timestamp)
 
         if meta.get('subchannel'):
-            subchannel = self.process_subchannel(message, date, timestamp, reply_id=reply_id)
+            subchannel = self.process_subchannel(obj, date, timestamp, reply_id=reply_id)
             chat.add_children(obj_global_id=subchannel.get_global_id())
         else:
-            chat.add_message(message.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
+            if obj.type == 'message':
+                chat.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
+
 
         # if meta.get('subchannels'): # TODO Update icon + names
 
@@ -154,9 +167,11 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     # def process_subchannels(self):
     #     pass
 
-    def process_subchannel(self, message, date, timestamp, reply_id=None):  # TODO CREATE DATE
+    def process_subchannel(self, obj, date, timestamp, reply_id=None):  # TODO CREATE DATE
         meta = self.json_data['meta']['chat']['subchannel']
         subchannel = ChatSubChannels.ChatSubChannel(f'{self.get_chat_id()}/{meta["id"]}', self.get_chat_instance_uuid())
+
+        # TODO correlation with obj = message/image
         subchannel.add(date)
 
         if meta.get('date'): # TODO check if already exists
@@ -169,12 +184,16 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         if meta.get('info'):
             subchannel.set_info(meta['info'])
 
-        subchannel.add_message(message.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
+        if obj.type == 'message':
+            subchannel.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
         return subchannel
 
-    def process_sender(self, date, timestamp):
+    def process_sender(self, obj, date, timestamp):
         meta = self.json_data['meta']['sender']
         user_account = UsersAccount.UserAccount(meta['id'], self.get_chat_instance_uuid())
+
+        # date stat + correlation
+        user_account.add(date, obj)
 
         if meta.get('username'):
             username = Username(meta['username'], self.get_chat_protocol())
@@ -214,25 +233,45 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         # TODO Translation
 
-        # Content
-        content = self.get_message_content()
+        print(self.obj.type)
 
-        message = Messages.create(self.obj.id, content)  # TODO translation
+        # get object by meta object type
+        if self.obj.type == 'message':
+            # Content
+            obj = Messages.create(self.obj.id, self.get_message_content())  # TODO translation
 
-        # CHAT
-        chat = self.process_chat(message, date, timestamp, reply_id=reply_id)
+        else:
+            chat_id = self.get_chat_id()
+            message_id = self.get_message_id()
+            message_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp)
+            message = Messages.Message(message_id)
+            if message.exists():
+                obj = Images.create(self.get_message_content())
+                obj.add(date, message)
+                obj.set_parent(obj_global_id=message.get_global_id())
+            else:
+                obj = None
 
-        # SENDER # TODO HANDLE NULL SENDER
-        user_account = self.process_sender(date, timestamp)
+        if obj:
 
-        # UserAccount---Message
-        user_account.add(date, obj=message)
-        # UserAccount---Chat
-        user_account.add_correlation(chat.type, chat.get_subtype(r_str=True), chat.id)
+            # CHAT
+            chat = self.process_chat(obj, date, timestamp, reply_id=reply_id)
 
-        # if chat: # TODO Chat---Username correlation ???
-        #     # Chat---Username
-        #     chat.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
+            # SENDER # TODO HANDLE NULL SENDER
+            user_account = self.process_sender(obj, date, timestamp)
+
+            # UserAccount---Chat
+            user_account.add_correlation(chat.type, chat.get_subtype(r_str=True), chat.id)
+
+            # if chat: # TODO Chat---Username correlation ???
+            #     # Chat---Username    => need to handle members and participants
+            #     chat.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
+
+
+            # TODO Sender image -> correlation
+                # image
+                #       -> subchannel ?
+                #       -> thread id ?
 
 
 

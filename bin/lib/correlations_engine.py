@@ -41,7 +41,7 @@ config_loader = None
 ##################################
 
 CORRELATION_TYPES_BY_OBJ = {
-    "chat": ["user-account"],  # message or direct correlation like cve, bitcoin, ... ???
+    "chat": ["image", "user-account"],  # message or direct correlation like cve, bitcoin, ... ???
     "cookie-name": ["domain"],
     "cryptocurrency": ["domain", "item", "message"],
     "cve": ["domain", "item", "message"],
@@ -50,8 +50,9 @@ CORRELATION_TYPES_BY_OBJ = {
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
     "hhhash": ["domain"],
+    "image": ["chat", "message", "user-account"],
     "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
-    "message": ["cve", "cryptocurrency", "decoded", "pgp", "user-account"],  # chat ??
+    "message": ["cve", "cryptocurrency", "decoded", "image", "pgp", "user-account"],  # chat ??
     "pgp": ["domain", "item", "message"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],

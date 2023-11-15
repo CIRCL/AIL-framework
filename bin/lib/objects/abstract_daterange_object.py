@@ -71,8 +71,8 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         else:
             return last_seen
 
-    def get_nb_seen(self):
-        return self.get_nb_correlation('item')
+    def get_nb_seen(self): # TODO REPLACE ME -> correlation image
+        return self.get_nb_correlation('item') + self.get_nb_correlation('message')
 
     def get_nb_seen_by_date(self, date):
         nb = r_object.zscore(f'{self.type}:date:{date}', self.id)
@@ -125,7 +125,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
     def _add_create(self):
         r_object.sadd(f'{self.type}:all', self.id)
 
-    def _add(self, date, obj):
+    def _add(self, date, obj): # TODO OBJ=None
         if not self.exists():
             self._add_create()
             self.set_first_seen(date)
@@ -134,12 +134,11 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             self.update_daterange(date)
         update_obj_date(date, self.type)
 
+        r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
+
         if obj:
             # Correlations
             self.add_correlation(obj.type, obj.get_subtype(r_str=True), obj.get_id())
-
-            # Stats NB by day: # TODO Don't increase on reprocess
-            r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
 
             if obj.type == 'item':
                 item_id = obj.get_id()

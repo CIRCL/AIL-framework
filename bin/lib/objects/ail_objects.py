@@ -23,6 +23,7 @@ from lib.objects import Etags
 from lib.objects.Favicons import Favicon
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
+from lib.objects import Images
 from lib.objects.Messages import Message
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
@@ -70,6 +71,8 @@ def get_object(obj_type, subtype, obj_id):
         return Favicon(obj_id)
     elif obj_type == 'hhhash':
         return HHHashs.HHHash(obj_id)
+    elif obj_type == 'image':
+        return Images.Image(obj_id)
     elif obj_type == 'message':
         return Message(obj_id)
     elif obj_type == 'screenshot':

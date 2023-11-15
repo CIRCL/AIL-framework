@@ -62,6 +62,9 @@ class DefaultFeeder:
         """
         return self.json_data.get('data')
 
+    def get_obj_type(self):
+        return self.json_data.get('type', 'item')
+
     ## OVERWRITE ME ##
     def get_obj(self):
         """

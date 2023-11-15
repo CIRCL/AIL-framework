@@ -684,7 +684,12 @@ if (d.popover) {
 
 					if (data["img"]) {
                         if (data["tags_safe"]) {
-						    desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}" + data["img"] +" class=\"img-thumbnail blured\" id=\"tooltip_screenshot_correlation\" style=\"\"/>";
+                            if (data["type"] === "screenshot") {
+						        desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}"
+                            } else {
+                                desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}"
+                            }
+                            desc = desc + data["img"] +" class=\"img-thumbnail blured\" id=\"tooltip_screenshot_correlation\" style=\"\"/>";
                         } else {
                             desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
                         }

@@ -88,7 +88,7 @@ class Message(AbstractObject):
 
     def get_timestamp(self):
         dirs = self.id.split('/')
-        return dirs[-2]
+        return dirs[1]
 
     def get_message_id(self):  # TODO optimize
         message_id = self.get_basename().rsplit('/', 1)[1]
@@ -103,6 +103,14 @@ class Message(AbstractObject):
     # TODO get Instance ID
     # TODO get channel ID
     # TODO get thread  ID
+
+    def get_images(self):
+        images = []
+        for child in self.get_childrens():
+            obj_type, _, obj_id = child.split(':', 2)
+            if obj_type == 'image':
+                images.append(obj_id)
+        return images
 
     def get_user_account(self, meta=False):
         user_account = self.get_correlation('user-account')
@@ -194,7 +202,7 @@ class Message(AbstractObject):
         else:
             timestamp = float(timestamp)
         timestamp = datetime.fromtimestamp(float(timestamp))
-        meta['date'] = timestamp.strftime('%Y%/m/%d')
+        meta['date'] = timestamp.strftime('%Y/%m/%d')
         meta['hour'] = timestamp.strftime('%H:%M:%S')
         meta['full_date'] = timestamp.isoformat(' ')
 
@@ -222,6 +230,8 @@ class Message(AbstractObject):
                 meta['user-account'] = {'id': 'UNKNOWN'}
         if 'chat' in options:
             meta['chat'] = self.get_chat_id()
+        if 'images' in options:
+            meta['images'] = self.get_images()
 
         # meta['encoding'] = None
         return meta
