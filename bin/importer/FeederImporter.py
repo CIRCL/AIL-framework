@@ -98,7 +98,8 @@ class FeederImporter(AbstractImporter):
             gzip64_content = feeder.get_gzip64_content()
             return obj, f'{feeder_name} {gzip64_content}'
         else:  # Messages save on DB
-            return obj, f'{feeder_name}'
+            if obj.exists():
+                return obj, f'{feeder_name}'
 
 
 class FeederModuleImporter(AbstractModule):

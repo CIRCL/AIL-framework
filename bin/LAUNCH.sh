@@ -273,6 +273,9 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "MISP_Thehive_Auto_Push" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./MISP_Thehive_Auto_Push.py; read x"
     sleep 0.1
 
+    screen -S "Script_AIL" -X screen -t "Exif" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Exif.py; read x"
+    sleep 0.1
+
     ##################################
     #       TRACKERS MODULES         #
     ##################################

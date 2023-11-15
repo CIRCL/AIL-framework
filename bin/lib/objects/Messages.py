@@ -287,7 +287,7 @@ class Message(AbstractObject):
     #     self._set_translation(translated)
     #     return translated
 
-    def create(self, content, translation, tags):
+    def create(self, content, translation=None, tags=[]):
         self._set_field('content', content)
         # r_content.get(f'content:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', content)
         if translation:
@@ -315,7 +315,7 @@ def create_obj_id(chat_instance, chat_id, message_id, timestamp, channel_id=None
 def create(obj_id, content, translation=None, tags=[]):
     message = Message(obj_id)
     if not message.exists():
-        message.create(content, translation, tags)
+        message.create(content, translation=translation, tags=tags)
     return message
 
 

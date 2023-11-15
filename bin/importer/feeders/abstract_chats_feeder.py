@@ -122,7 +122,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         # TODO sanitize obj type
         obj_type = self.get_obj_type()
-        print(obj_type)
 
         if obj_type == 'image':
             self.obj = Images.Image(self.json_data['data-sha256'])
@@ -226,6 +225,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         """
         # meta = self.get_json_meta()
 
+        objs = set()
+        if self.obj:
+            objs.add(self.obj)
+
         date, timestamp = self.get_message_date_timestamp()
 
         # REPLY
@@ -245,14 +248,17 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             message_id = self.get_message_id()
             message_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp)
             message = Messages.Message(message_id)
+            # create empty message if message don't exists
+            if not message.exists():
+                message.create('')
+                objs.add(message)
+
             if message.exists():
                 obj = Images.create(self.get_message_content())
                 obj.add(date, message)
                 obj.set_parent(obj_global_id=message.get_global_id())
-            else:
-                obj = None
 
-        if obj:
+        for obj in objs:  # TODO PERF avoid parsing metas multpile times
 
             # CHAT
             chat = self.process_chat(obj, date, timestamp, reply_id=reply_id)
