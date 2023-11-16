@@ -258,7 +258,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 obj.add(date, message)
                 obj.set_parent(obj_global_id=message.get_global_id())
 
-        for obj in objs:  # TODO PERF avoid parsing metas multpile times
+        for obj in objs:  # TODO PERF avoid parsing metas multiple times
 
             # CHAT
             chat = self.process_chat(obj, date, timestamp, reply_id=reply_id)

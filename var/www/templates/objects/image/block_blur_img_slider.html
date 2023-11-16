@@ -1,0 +1,34 @@
+<div class="card border-secondary">
+    <div class="card-body py-2">
+        <div class="row">
+            <div class="col-md-3 text-center px-0">
+                <button class="btn btn-sm btn-secondary" onclick="blur_slider.val(0);blur_images();">
+                    <i class="fas fa-eye-slash"></i>
+                    <span class="label-icon">Hide</span>
+                </button>
+            </div>
+            <div class="col-md-6 text-center pl-0 pt-1">
+                <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider" onchange="blur_images();">
+            </div>
+            <div class="col-md-3 text-center">
+                <button class="btn btn-sm btn-secondary" onclick="blur_slider.val(15);blur_images();">
+                    <i class="fas fa-image"></i>
+                    <span class="label-icon">Full</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    const blur_slider = $('#blur-slider');
+    function blur_images(){
+        let blurValue = blur_slider.val();
+        blurValue = 15 - blurValue;
+        let images = document.getElementsByClassName('message_image');
+        for(i = 0; i < images.length; i++) {
+            images[i].style.filter = "blur(" + blurValue + "px)";
+        }
+    }
+</script>

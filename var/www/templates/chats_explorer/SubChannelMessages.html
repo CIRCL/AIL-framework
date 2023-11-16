@@ -144,6 +144,10 @@
                     </div>
                 </div>
 
+                <span class="mt-3">
+                    {% include 'objects/image/block_blur_img_slider.html' %}
+                </span>
+
                 <div class="position-relative">
                     <div class="chat-messages p-2">
 
@@ -157,49 +161,9 @@
 
                             {% for mess in subchannel['messages'][date] %}
 
-                                <div class="chat-message-left pb-1">
-                                    <div>
-                                        <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ mess['user-account']['id'] }}" width="40" height="40">
-                                        <div class="text-muted small text-nowrap mt-2">{{ mess['hour'] }}</div>
-                                    </div>
-                                    <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-4 pb-4" style="overflow-x: auto">
-                                        <div class="font-weight-bold mb-1">
-                                            {% if mess['user-account']['username'] %}
-                                            	{{ mess['user-account']['username']['id'] }}
-                                            {% else %}
-                                            	{{ mess['user-account']['id'] }}
-                                            {% endif %}
-                                        </div>
-                                        {% if mess['reply_to'] %}
-                                            <div class="flex-shrink-1 bg-white border rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
-                                                <div class="font-weight-bold mb-1">
-                                                    {% if mess['reply_to']['user-account']['username'] %}
-                                                        {{ mess['reply_to']['user-account']['username']['id'] }}
-                                                    {% else %}
-                                                        {{ mess['reply_to']['user-account']['id'] }}
-                                                    {% endif %}
-                                                </div>
-                                                <pre class="my-0">{{ mess['reply_to']['content'] }}</pre>
-                                                {% for tag in mess['reply_to']['tags'] %}
-                                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
-                                                {%  endfor %}
-                                                <div class="text-muted small text-nowrap">{{ mess['reply_to']['full_date'] }}</div>
-{#                                                <div class="">#}
-{#                                                    <a class="btn btn-light btn-sm text-secondary py-0" href="{{ url_for('correlation.show_correlation')}}?type={{ mess['reply_to']['type'] }}&subtype={{ mess['reply_to']['subtype'] }}&id={{ mess['reply_to']['id'] }}"><i class="fas fa-project-diagram"></i></a>#}
-{#                                                    <a class="btn btn-light btn-sm text-secondary py-0" href="{{ mess['reply_to']['link'] }}"><i class="fas fa-eye"></i></a>#}
-{#                                                </div>#}
-                                            </div>
-                                        {% endif %}
-                                        <pre class="my-0">{{ mess['content'] }}</pre>
-                                        {% for tag in mess['tags'] %}
-                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
-                                        {%  endfor %}
-                                        <div class="">
-                                            <a class="btn btn-light btn-sm text-secondary px-1" href="{{ url_for('correlation.show_correlation')}}?type={{ mess['type'] }}&subtype={{ mess['subtype'] }}&id={{ mess['id'] }}"><i class="fas fa-project-diagram"></i></a>
-                                            <a class="btn btn-light btn-sm text-secondary px-1" href="{{ mess['link'] }}"><i class="fas fa-eye"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% with message=mess %}
+                                    {% include 'chats_explorer/block_message.html' %}
+                                {% endwith %}
 
                             {% endfor %}
                             <br>

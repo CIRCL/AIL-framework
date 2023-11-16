@@ -1,0 +1,74 @@
+
+<style>
+    .chat-message-left,
+    .chat-message-right {
+        display: flex;
+        flex-shrink: 0;
+    }
+    .chat-message-right {
+        flex-direction: row-reverse;
+        margin-left: auto
+        }
+    .divider:after,
+    .divider:before {
+        content: "";
+        flex: 1;
+        height: 2px;
+        background: #eee;
+    }
+    .message_image {
+        max-width: 50%;
+        filter: blur(5px);
+    }
+</style>
+
+
+
+<div class="chat-message-left pb-1">
+    <div>
+        <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ message['user-account']['id'] }}" width="40" height="40">
+        <div class="text-muted small text-nowrap mt-2">{{ message['hour'] }}</div>
+    </div>
+    <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-4 pb-4" style="overflow-x: auto">
+        <div class="font-weight-bold mb-1">
+            {% if message['user-account']['username'] %}
+                {{ message['user-account']['username']['id'] }}
+            {% else %}
+                {{ message['user-account']['id'] }}
+            {% endif %}
+        </div>
+        {% if message['reply_to'] %}
+            <div class="flex-shrink-1 bg-white border rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
+                <div class="font-weight-bold mb-1">
+                    {% if message['reply_to']['user-account']['username'] %}
+                        {{ message['reply_to']['user-account']['username']['id'] }}
+                    {% else %}
+                        {{ message['reply_to']['user-account']['id'] }}
+                    {% endif %}
+                </div>
+                <pre class="my-0">{{ message['reply_to']['content'] }}</pre>
+                {% for tag in message['reply_to']['tags'] %}
+                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                {%  endfor %}
+                <div class="text-muted small text-nowrap">{{ message['reply_to']['full_date'] }}</div>
+    {#              <div class="">#}
+    {#                  <a class="btn btn-light btn-sm text-secondary py-0" href="{{ url_for('correlation.show_correlation')}}?type={{ message['reply_to']['type'] }}&subtype={{ message['reply_to']['subtype'] }}&id={{ message['reply_to']['id'] }}"><i class="fas fa-project-diagram"></i></a>#}
+    {#                  <a class="btn btn-light btn-sm text-secondary py-0" href="{{ message['reply_to']['link'] }}"><i class="fas fa-eye"></i></a>#}
+    {#              </div>#}
+            </div>
+        {% endif %}
+        {% if message['images'] %}
+            <img class="message_image mb-1" src="{{ url_for('objects_image.image', filename=message['images'][0])}}">
+        {% endif %}
+        <pre class="my-0">{{ message['content'] }}</pre>
+        {% for tag in message['tags'] %}
+            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+        {%  endfor %}
+        <div class="">
+            <a class="btn btn-light btn-sm text-secondary px-1" href="{{ url_for('correlation.show_correlation')}}?type={{ message['type'] }}&subtype={{ message['subtype'] }}&id={{ message['id'] }}"><i class="fas fa-project-diagram"></i></a>
+            <a class="btn btn-light btn-sm text-secondary px-1" href="{{ message['link'] }}"><i class="fas fa-eye"></i></a>
+        </div>
+    </div>
+</div>
+
+
