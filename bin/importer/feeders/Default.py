@@ -84,4 +84,4 @@ class DefaultFeeder:
         Process JSON meta filed.
         """
         # meta = self.get_json_meta()
-        pass
+        return set()

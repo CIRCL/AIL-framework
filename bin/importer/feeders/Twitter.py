@@ -45,4 +45,4 @@ class TwitterFeeder(DefaultFeeder):
         user = str(self.json_data['meta']['twitter:id'])
         username = Username(user, 'twitter')
         username.add(date, item)
-        return None
+        return set()

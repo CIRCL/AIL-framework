@@ -74,8 +74,8 @@ class Chat(AbstractChatObject):
         meta = self._get_meta(options=options)
         meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
-        if 'img':
-            meta['icon'] = self.get_img()
+        if 'icon':
+            meta['icon'] = self.get_icon()
         if 'info':
             meta['info'] = self.get_info()
         if 'username' in options:

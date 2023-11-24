@@ -33,3 +33,4 @@ class BgpMonitorFeeder(DefaultFeeder):
         tag = 'infoleak:automatic-detection=bgp_monitor'
         item = Item(self.get_item_id())
         item.add_tag(tag)
+        return set()

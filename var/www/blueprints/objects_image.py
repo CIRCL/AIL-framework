@@ -40,7 +40,7 @@ def image(filename):
         abort(404)
     filename = filename.replace('/', '')
     image = Images.Image(filename)
-    return send_from_directory(Images.IMAGE_FOLDER, image.get_rel_path(), as_attachment=True)
+    return send_from_directory(Images.IMAGE_FOLDER, image.get_rel_path(), as_attachment=False, mimetype='image')
 
 
 @objects_image.route("/objects/images", methods=['GET'])

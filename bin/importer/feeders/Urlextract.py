@@ -56,3 +56,5 @@ class UrlextractFeeder(DefaultFeeder):
             item = Item(self.item_id)
             item.set_parent(parent_id)
 
+        return set()
+

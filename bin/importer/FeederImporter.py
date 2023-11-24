@@ -89,17 +89,26 @@ class FeederImporter(AbstractImporter):
         feeder_name = feeder.get_name()
         print(f'importing: {feeder_name} feeder')
 
-        obj = feeder.get_obj()  # TODO replace by a list of objects to import ????
+        # Get Data object:
+        data_obj = feeder.get_obj()
+
         # process meta
         if feeder.get_json_meta():
-            feeder.process_meta()
+            objs = feeder.process_meta()
+            if objs is None:
+                objs = set()
+        else:
+            objs = set()
 
-        if obj.type == 'item':  # object save on disk as file (Items)
-            gzip64_content = feeder.get_gzip64_content()
-            return obj, f'{feeder_name} {gzip64_content}'
-        else:  # Messages save on DB
-            if obj.exists():
-                return obj, f'{feeder_name}'
+        objs.add(data_obj)
+
+        for obj in objs:
+            if obj.type == 'item':  # object save on disk as file (Items)
+                gzip64_content = feeder.get_gzip64_content()
+                return obj, f'{feeder_name} {gzip64_content}'
+            else:  # Messages save on DB
+                if obj.exists():
+                    return obj, f'{feeder_name}'
 
 
 class FeederModuleImporter(AbstractModule):

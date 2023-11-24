@@ -131,7 +131,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             self.obj = Messages.Message(obj_id)
         return self.obj
 
-    def process_chat(self, obj, date, timestamp, reply_id=None):  # TODO threads
+    def process_chat(self, new_objs, obj, date, timestamp, reply_id=None):  # TODO threads
         meta = self.json_data['meta']['chat'] # todo replace me by function
         chat = Chat(self.get_chat_id(), self.get_chat_instance_uuid())
 
@@ -146,6 +146,12 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         if meta.get('date'): # TODO check if already exists
             chat.set_created_at(int(meta['date']['timestamp']))
+
+        if meta.get('icon'):
+            img = Images.create(meta['icon'], b64=True)
+            img.add(date, chat)
+            chat.set_icon(img.get_global_id())
+            new_objs.add(img)
 
         if meta.get('username'):
             username = Username(meta['username'], self.get_chat_protocol())
@@ -228,6 +234,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         objs = set()
         if self.obj:
             objs.add(self.obj)
+        new_objs = set()
 
         date, timestamp = self.get_message_date_timestamp()
 
@@ -261,7 +268,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         for obj in objs:  # TODO PERF avoid parsing metas multiple times
 
             # CHAT
-            chat = self.process_chat(obj, date, timestamp, reply_id=reply_id)
+            chat = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
 
             # SENDER # TODO HANDLE NULL SENDER
             user_account = self.process_sender(obj, date, timestamp)
@@ -278,6 +285,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 # image
                 #       -> subchannel ?
                 #       -> thread id ?
+
+        return new_objs | objs
 
 
 

@@ -58,7 +58,9 @@
             </div>
         {% endif %}
         {% if message['images'] %}
-            <img class="message_image mb-1" src="{{ url_for('objects_image.image', filename=message['images'][0])}}">
+            {% for message_image in message['images'] %}
+                <img class="message_image mb-1" src="{{ url_for('objects_image.image', filename=message_image)}}">
+            {%  endfor %}
         {% endif %}
         <pre class="my-0">{{ message['content'] }}</pre>
         {% for tag in message['tags'] %}

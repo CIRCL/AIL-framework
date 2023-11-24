@@ -113,11 +113,13 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def set_name(self, name):
         self._set_field('name', name)
 
-    def get_img(self):
-        return self._get_field('img')
+    def get_icon(self):
+        icon = self._get_field('icon')
+        if icon:
+            return icon.rsplit(':', 1)[1]
 
-    def set_img(self, icon):
-        self._set_field('img', icon)
+    def set_icon(self, icon):
+        self._set_field('icon', icon)
 
     def get_info(self):
         return self._get_field('info')
@@ -187,7 +189,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         tags = {}
         messages = {}
         curr_date = None
-        for message in self._get_messages(nb=10, page=3):
+        for message in self._get_messages(nb=30, page=1):
             timestamp = message[1]
             date_day = datetime.fromtimestamp(timestamp).strftime('%Y/%m/%d')
             if date_day != curr_date:

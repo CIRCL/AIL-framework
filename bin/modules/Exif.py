@@ -42,6 +42,8 @@ class Exif(AbstractModule):
         img_exif = img.getexif()
         print(img_exif)
         if img_exif:
+            gps = img_exif.get(34853)
+            print(gps)
             for key, val in img_exif.items():
                 if key in ExifTags.TAGS:
                     print(f'{ExifTags.TAGS[key]}:{val}')

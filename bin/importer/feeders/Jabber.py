@@ -52,4 +52,4 @@ class JabberFeeder(DefaultFeeder):
         user_fr = Username(fr, 'jabber')
         user_to.add(date, item)
         user_fr.add(date, item)
-        return None
+        return set()
