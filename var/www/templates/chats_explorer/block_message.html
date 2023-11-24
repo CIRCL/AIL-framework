@@ -26,7 +26,8 @@
 
 <div class="chat-message-left pb-1">
     <div>
-        <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ message['user-account']['id'] }}" width="40" height="40">
+        <img src="{% if message['user-account']['icon'] %}{{ url_for('objects_image.image', filename=message['user-account']['icon'])}}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}"
+             class="rounded-circle mr-1" alt="{{ message['user-account']['id'] }}" width="40" height="40">
         <div class="text-muted small text-nowrap mt-2">{{ message['hour'] }}</div>
     </div>
     <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-4 pb-4" style="overflow-x: auto">

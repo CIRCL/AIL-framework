@@ -193,7 +193,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             subchannel.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
         return subchannel
 
-    def process_sender(self, obj, date, timestamp):
+    def process_sender(self, new_objs, obj, date, timestamp):
         meta = self.json_data['meta']['sender']
         user_account = UsersAccount.UserAccount(meta['id'], self.get_chat_instance_uuid())
 
@@ -216,6 +216,12 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             user_account.set_last_name(meta['lastname'])
         if meta.get('phone'):
             user_account.set_phone(meta['phone'])
+
+        if meta.get('icon'):
+            img = Images.create(meta['icon'], b64=True)
+            img.add(date, user_account)
+            user_account.set_icon(img.get_global_id())
+            new_objs.add(img)
 
         return user_account
 
@@ -271,7 +277,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             chat = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
 
             # SENDER # TODO HANDLE NULL SENDER
-            user_account = self.process_sender(obj, date, timestamp)
+            user_account = self.process_sender(new_objs, obj, date, timestamp)
 
             # UserAccount---Chat
             user_account.add_correlation(chat.type, chat.get_subtype(r_str=True), chat.id)

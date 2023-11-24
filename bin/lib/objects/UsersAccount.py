@@ -83,6 +83,14 @@ class UserAccount(AbstractSubtypeObject):
     def set_phone(self, phone):
         return self._set_field('phone', phone)
 
+    def get_icon(self):
+        icon = self._get_field('icon')
+        if icon:
+            return icon.rsplit(':', 1)[1]
+
+    def set_icon(self, icon):
+        self._set_field('icon', icon)
+
     def _get_timeline_username(self):
         return Timeline(self.get_global_id(), 'username')
 
@@ -107,6 +115,8 @@ class UserAccount(AbstractSubtypeObject):
                 meta['username'] = Usernames.Username(username_account_id, username_account_subtype).get_meta()
         if 'usernames' in options:
             meta['usernames'] = self.get_usernames()
+        if 'icon' in options:
+            meta['icon'] = self.get_icon()
         return meta
 
     def get_misp_object(self):
