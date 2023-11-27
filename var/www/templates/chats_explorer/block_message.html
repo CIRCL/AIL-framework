@@ -63,7 +63,17 @@
                 <img class="message_image mb-1" src="{{ url_for('objects_image.image', filename=message_image)}}">
             {%  endfor %}
         {% endif %}
+        {% if message['files-names'] %}
+            {% for file_name in message['files-names'] %}
+                <div class="flex-shrink-1 bg-white border-primary text-secondary rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
+                    <i class="far fa-file fa-3x"></i> {{ file_name }}
+                </div>
+            {%  endfor %}
+        {% endif %}
         <pre class="my-0">{{ message['content'] }}</pre>
+        {% for reaction in message['reactions'] %}
+            <span class="border rounded px-1">{{ reaction }} {{ message['reactions'][reaction] }}</span>
+        {%  endfor %}
         {% for tag in message['tags'] %}
             <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
         {%  endfor %}

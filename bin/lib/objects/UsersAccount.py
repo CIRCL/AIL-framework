@@ -91,6 +91,12 @@ class UserAccount(AbstractSubtypeObject):
     def set_icon(self, icon):
         self._set_field('icon', icon)
 
+    def get_info(self):
+        return self._get_field('info')
+
+    def set_info(self, info):
+        return self._set_field('info', info)
+
     def _get_timeline_username(self):
         return Timeline(self.get_global_id(), 'username')
 

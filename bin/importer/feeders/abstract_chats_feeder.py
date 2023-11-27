@@ -22,6 +22,8 @@ from lib.objects.Chats import Chat
 from lib.objects import ChatSubChannels
 from lib.objects import Images
 from lib.objects import Messages
+from lib.objects import FilesNames
+# from lib.objects import Files
 from lib.objects import UsersAccount
 from lib.objects.Usernames import Username
 from lib import chats_viewer
@@ -82,6 +84,12 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
     def get_message_id(self):
         return self.json_data['meta']['id']
+
+    def get_media_name(self):
+        return self.json_data['meta'].get('media', {}).get('name')
+
+    def get_reactions(self):
+        return self.json_data['meta'].get('reactions', [])
 
     def get_message_timestamp(self):
         return self.json_data['meta']['date']['timestamp']  # TODO CREATE DEFAULT TIMESTAMP
@@ -223,6 +231,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             user_account.set_icon(img.get_global_id())
             new_objs.add(img)
 
+        if meta.get('info'):
+            user_account.set_info(meta['info'])
+
         return user_account
 
     # Create abstract class: -> new API endpoint ??? => force field, check if already imported ?
@@ -251,10 +262,21 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         print(self.obj.type)
 
+        # TODO FILES + FILES REF
+
         # get object by meta object type
         if self.obj.type == 'message':
             # Content
             obj = Messages.create(self.obj.id, self.get_message_content())  # TODO translation
+
+            # FILENAME
+            media_name = self.get_media_name()
+            if media_name:
+                print(media_name)
+                FilesNames.FilesNames().create(media_name, date, obj)
+
+            for reaction in self.get_reactions():
+                obj.add_reaction(reaction['reaction'], int(reaction['count']))
 
         else:
             chat_id = self.get_chat_id()
@@ -270,6 +292,11 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 obj = Images.create(self.get_message_content())
                 obj.add(date, message)
                 obj.set_parent(obj_global_id=message.get_global_id())
+
+                # FILENAME
+                media_name = self.get_media_name()
+                if media_name:
+                    FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
 
         for obj in objs:  # TODO PERF avoid parsing metas multiple times
 

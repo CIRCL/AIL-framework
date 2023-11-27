@@ -181,7 +181,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
 
     def get_message_meta(self, message, timestamp=None):  # TODO handle file message
         message = Messages.Message(message[9:])
-        meta = message.get_meta(options={'content', 'images', 'link', 'parent', 'parent_meta', 'user-account'}, timestamp=timestamp)
+        meta = message.get_meta(options={'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'user-account'}, timestamp=timestamp)
         return meta
 
     def get_messages(self, start=0, page=1, nb=500, unread=False):  # threads ???? # TODO ADD last/first message timestamp + return page
@@ -189,7 +189,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         tags = {}
         messages = {}
         curr_date = None
-        for message in self._get_messages(nb=30, page=1):
+        for message in self._get_messages(nb=50, page=1):
             timestamp = message[1]
             date_day = datetime.fromtimestamp(timestamp).strftime('%Y/%m/%d')
             if date_day != curr_date:

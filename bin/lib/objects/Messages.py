@@ -118,8 +118,23 @@ class Message(AbstractObject):
             user_account = f'user-account:{user_account["user-account"].pop()}'
             if meta:
                 _, user_account_subtype, user_account_id = user_account.split(':', 3)
-                user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'username', 'username_meta'})
+                user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'icon', 'username', 'username_meta'})
         return  user_account
+
+    def get_files_names(self):
+        names = []
+        filenames = self.get_correlation('file-name').get('file-name')
+        if filenames:
+            for name in filenames:
+                names.append(name[1:])
+        return names
+
+    def get_reactions(self):
+        return r_object.hgetall(f'meta:reactions:{self.type}::{self.id}')
+
+    # TODO sanitize reactions
+    def add_reaction(self, reactions, nb_reaction):
+        r_object.hset(f'meta:reactions:{self.type}::{self.id}', reactions, nb_reaction)
 
     # Update value on import
     # reply to -> parent ?
@@ -232,6 +247,10 @@ class Message(AbstractObject):
             meta['chat'] = self.get_chat_id()
         if 'images' in options:
             meta['images'] = self.get_images()
+        if 'files-names' in options:
+            meta['files-names'] = self.get_files_names()
+        if 'reactions' in options:
+            meta['reactions'] = self.get_reactions()
 
         # meta['encoding'] = None
         return meta
@@ -314,8 +333,8 @@ def create_obj_id(chat_instance, chat_id, message_id, timestamp, channel_id=None
 # def create(source, chat_id, message_id, timestamp, content, tags=[]):
 def create(obj_id, content, translation=None, tags=[]):
     message = Message(obj_id)
-    if not message.exists():
-        message.create(content, translation=translation, tags=tags)
+    # if not message.exists():
+    message.create(content, translation=translation, tags=tags)
     return message
 
 

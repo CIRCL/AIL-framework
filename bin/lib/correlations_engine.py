@@ -49,10 +49,11 @@ CORRELATION_TYPES_BY_OBJ = {
     "domain": ["cve", "cookie-name", "cryptocurrency", "decoded", "etag", "favicon", "hhhash", "item", "pgp", "title", "screenshot", "username"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
+    "file-name": ["chat", "message"],
     "hhhash": ["domain"],
     "image": ["chat", "message", "user-account"],
     "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
-    "message": ["cve", "cryptocurrency", "decoded", "image", "pgp", "user-account"],  # chat ??
+    "message": ["cve", "cryptocurrency", "decoded", "file-name", "image", "pgp", "user-account"],  # chat ??
     "pgp": ["domain", "item", "message"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],
