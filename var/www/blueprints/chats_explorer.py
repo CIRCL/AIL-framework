@@ -112,6 +112,18 @@ def objects_subchannel_messages():
         subchannel = subchannel[0]
         return render_template('SubChannelMessages.html', subchannel=subchannel, bootstrap_label=bootstrap_label)
 
+@chats_explorer.route("/chats/explorer/thread", methods=['GET'])
+@login_required
+@login_read_only
+def objects_thread_messages():
+    thread_id = request.args.get('id')
+    instance_uuid = request.args.get('uuid')
+    thread = chats_viewer.api_get_thread(thread_id, instance_uuid)
+    if thread[1] != 200:
+        return create_json_response(thread[0], thread[1])
+    else:
+        meta = thread[0]
+        return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label)
 
 @chats_explorer.route("/objects/message", methods=['GET'])
 @login_required

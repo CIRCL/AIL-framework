@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
+from lib.objects import ChatThreads
 from lib.objects import Messages
 from lib.objects import Usernames
 
@@ -324,13 +325,23 @@ def api_get_nb_message_by_week(chat_id, chat_instance_uuid):
 def api_get_subchannel(chat_id, chat_instance_uuid):
     subchannel = ChatSubChannels.ChatSubChannel(chat_id, chat_instance_uuid)
     if not subchannel.exists():
-        return {"status": "error", "reason": "Unknown chat"}, 404
+        return {"status": "error", "reason": "Unknown subchannel"}, 404
     meta = subchannel.get_meta({'chat', 'created_at', 'icon', 'nb_messages'})
     if meta['chat']:
         meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     meta['messages'], meta['tags_messages'] = subchannel.get_messages()
+    return meta, 200
+
+def api_get_thread(thread_id, thread_instance_uuid):
+    thread = ChatThreads.ChatThread(thread_id, thread_instance_uuid)
+    if not thread.exists():
+        return {"status": "error", "reason": "Unknown thread"}, 404
+    meta = thread.get_meta({'chat', 'nb_messages'})
+    # if meta['chat']:
+    #     meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
+    meta['messages'], meta['tags_messages'] = thread.get_messages()
     return meta, 200
 
 def api_get_message(message_id):

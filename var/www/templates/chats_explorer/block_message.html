@@ -74,6 +74,12 @@
         {% for reaction in message['reactions'] %}
             <span class="border rounded px-1">{{ reaction }} {{ message['reactions'][reaction] }}</span>
         {%  endfor %}
+        {% if message['thread'] %}
+            <hr class="mb-1">
+            <div class="my-2 text-center">
+                <a href="{{ url_for('chats_explorer.objects_thread_messages')}}?uuid={{ message['thread']['subtype'] }}&id={{ message['thread']['id'] }}"><i class="far fa-comment"></i> {{ message['thread']['nb'] }} Messages</a>
+            </div>
+        {% endif %}
         {% for tag in message['tags'] %}
             <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
         {%  endfor %}

@@ -100,6 +100,13 @@ class Message(AbstractObject):
         chat_id = self.get_basename().rsplit('_', 1)[0]
         return chat_id
 
+    def get_thread(self):
+        for child in self.get_childrens():
+            obj_type, obj_subtype, obj_id = child.split(':', 2)
+            if obj_type == 'chat-thread':
+                nb_messages = r_object.zcard(f'messages:{obj_type}:{obj_subtype}:{obj_id}')
+                return {'type': obj_type, 'subtype': obj_subtype, 'id': obj_id, 'nb': nb_messages}
+
     # TODO get Instance ID
     # TODO get channel ID
     # TODO get thread  ID
@@ -245,6 +252,10 @@ class Message(AbstractObject):
                 meta['user-account'] = {'id': 'UNKNOWN'}
         if 'chat' in options:
             meta['chat'] = self.get_chat_id()
+        if 'thread' in options:
+            thread = self.get_thread()
+            if thread:
+                meta['thread'] = thread
         if 'images' in options:
             meta['images'] = self.get_images()
         if 'files-names' in options:
@@ -318,16 +329,20 @@ class Message(AbstractObject):
     def delete(self):
         pass
 
-def create_obj_id(chat_instance, chat_id, message_id, timestamp, channel_id=None, thread_id=None):
+def create_obj_id(chat_instance, chat_id, message_id, timestamp, channel_id=None, thread_id=None): # TODO CHECK COLLISIONS
     timestamp = int(timestamp)
     if channel_id and thread_id:
-        return f'{chat_instance}/{timestamp}/{chat_id}/{chat_id}/{message_id}'  # TODO add thread ID ?????
+        return f'{chat_instance}/{timestamp}/{chat_id}/{thread_id}/{message_id}'
     elif channel_id:
         return f'{chat_instance}/{timestamp}/{channel_id}/{chat_id}/{message_id}'
     elif thread_id:
         return f'{chat_instance}/{timestamp}/{chat_id}/{thread_id}/{message_id}'
     else:
         return f'{chat_instance}/{timestamp}/{chat_id}/{message_id}'
+
+    # thread id of message
+    # thread id of chat
+    # thread id of subchannel
 
 # TODO Check if already exists
 # def create(source, chat_id, message_id, timestamp, content, tags=[]):

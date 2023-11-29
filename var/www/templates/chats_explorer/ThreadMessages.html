@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Thread Messages - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+{#	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">#}
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+{#	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>#}
+	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
+
+	<style>
+        .chat-message-left,
+        .chat-message-right {
+            display: flex;
+            flex-shrink: 0;
+        }
+        .chat-message-right {
+            flex-direction: row-reverse;
+            margin-left: auto
+        }
+        .divider:after,
+        .divider:before {
+            content: "";
+            flex: 1;
+            height: 2px;
+            background: #eee;
+        }
+	</style>
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="card my-3">
+                    <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+                        {{ meta["id"] }}
+                        <ul class="list-group mb-2">
+                            <li class="list-group-item py-0">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Parent</th>
+                                                    <th>First seen</th>
+                                                    <th>Last seen</th>
+                                                    <th>Nb Messages</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        {{ meta['id'] }}
+                                                    </td>
+                                                    <td>
+                                                        {% if meta['first_seen'] %}
+                                                            {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if meta['last_seen'] %}
+                                                            {{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ meta['nb_messages'] }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </li>
+{#                            <li class="list-group-item py-0">#}
+{#                                <br>#}
+{#                                <div class="mb-3">#}
+{#                                    Tags:#}
+{#                                    {% for tag in meta['tags'] %}#}
+{#                                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"#}
+{#                                        data-tagid="{{ tag }}" data-objtype="chat" data-objsubtype="{{ meta["subtype"] }}" data-objid="{{ meta["id"] }}">#}
+{#                                            {{ tag }}#}
+{#                                        </button>#}
+{#                                    {%  endfor %}#}
+{#                                    <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">#}
+{#                                        <i class="far fa-plus-square"></i>#}
+{#                                    </button>#}
+{#                                </div>#}
+{#                            </li>#}
+                        </ul>
+
+{#                        {% with obj_type='chat', obj_id=meta['id'], obj_subtype=meta['subtype'] %}#}
+{#                            {% include 'modals/investigations_register_obj.html' %}#}
+{#                        {% endwith %}#}
+{#                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">#}
+{#                            <i class="fas fa-microscope"></i> Investigations#}
+{#                        </button>#}
+
+                    </div>
+                </div>
+
+                {% for tag in meta['tags_messages'] %}
+                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }} <span class="badge badge-light">{{ meta['tags_messages'][tag] }}</span></span>
+                {%  endfor %}
+
+                <div>
+                    <div class="list-group d-inline-block">
+                        {% for date in messages %}
+                            <a class="list-group-item list-group-item-action" href="#date_section_{{ date }}">{{ date }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <span class="mt-3">
+                    {% include 'objects/image/block_blur_img_slider.html' %}
+                </span>
+
+                <div class="position-relative">
+                    <div class="chat-messages p-2">
+
+                        {% for date in meta['messages'] %}
+
+                            <div class="divider d-flex align-items-center mb-4">
+                                <p class="text-center h2 mx-3 mb-0" style="color: #a2aab7;">
+                                    <span class="badge badge-secondary mb-2" id="date_section_{{ date }}">{{ date }}</span>
+                                </p>
+                            </div>
+
+                            {% for mess in meta['messages'][date] %}
+
+                                {% with message=mess %}
+                                    {% include 'chats_explorer/block_message.html' %}
+                                {% endwith %}
+
+                            {% endfor %}
+                            <br>
+                        {% endfor %}
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    var chart = {};
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        $("#nav_chat").addClass("active");
+
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</body>
+
+</html>

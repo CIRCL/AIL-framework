@@ -20,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from importer.feeders.Default import DefaultFeeder
 from lib.objects.Chats import Chat
 from lib.objects import ChatSubChannels
+from lib.objects import ChatThreads
 from lib.objects import Images
 from lib.objects import Messages
 from lib.objects import FilesNames
@@ -74,13 +75,13 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         return self.json_data['meta']['chat']['id']
 
     def get_subchannel_id(self):
-        pass
+        return self.json_data['meta']['chat'].get('subchannel', {}).get('id')
 
     def get_subchannels(self):
         pass
 
     def get_thread_id(self):
-        pass
+        return self.json_data['meta'].get('thread', {}).get('id')
 
     def get_message_id(self):
         return self.json_data['meta']['id']
@@ -112,7 +113,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         return self.json_data['meta'].get('reply_to')  # TODO change to reply ???
 
     def get_message_reply_id(self):
-        return self.json_data['meta'].get('reply_to', None)
+        return self.json_data['meta'].get('reply_to', {}).get('message_id')
 
     def get_message_content(self):
         decoded = base64.standard_b64decode(self.json_data['data'])
@@ -125,6 +126,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         #### Create Object ID ####
         chat_id = self.get_chat_id()
         message_id = self.get_message_id()
+        thread_id = self.get_thread_id()
         # channel id
         # thread id
 
@@ -135,11 +137,11 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             self.obj = Images.Image(self.json_data['data-sha256'])
 
         else:
-            obj_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp)
+            obj_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, thread_id=thread_id)
             self.obj = Messages.Message(obj_id)
         return self.obj
 
-    def process_chat(self, new_objs, obj, date, timestamp, reply_id=None):  # TODO threads
+    def process_chat(self, new_objs, obj, date, timestamp, reply_id=None):
         meta = self.json_data['meta']['chat'] # todo replace me by function
         chat = Chat(self.get_chat_id(), self.get_chat_instance_uuid())
 
@@ -170,7 +172,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             chat.add_children(obj_global_id=subchannel.get_global_id())
         else:
             if obj.type == 'message':
-                chat.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
+                if self.get_thread_id():
+                    self.process_thread(obj, chat, date, timestamp, reply_id=reply_id)
+                else:
+                    chat.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
 
 
         # if meta.get('subchannels'): # TODO Update icon + names
@@ -198,8 +203,31 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             subchannel.set_info(meta['info'])
 
         if obj.type == 'message':
-            subchannel.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
+            if self.get_thread_id():
+                self.process_thread(obj, subchannel, date, timestamp, reply_id=reply_id)
+            else:
+                subchannel.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
         return subchannel
+
+    def process_thread(self, obj, obj_chat, date, timestamp, reply_id=None):
+        meta = self.json_data['meta']['thread']
+        thread_id = self.get_thread_id()
+        p_chat_id = meta['parent'].get('chat')
+        p_subchannel_id = meta['parent'].get('subchannel')
+        p_message_id = meta['parent'].get('message')
+
+        if p_chat_id == self.get_chat_id() and p_subchannel_id == self.get_subchannel_id():
+            thread = ChatThreads.create(thread_id, self.get_chat_instance_uuid(), p_chat_id, p_subchannel_id, p_message_id, obj_chat)
+            thread.add(date, obj)
+            thread.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
+            # TODO OTHERS CORRELATIONS TO ADD
+
+            return thread
+
+        # TODO
+        # else:
+        #   # ADD NEW MESSAGE REF (used by discord)
+
 
     def process_sender(self, new_objs, obj, date, timestamp):
         meta = self.json_data['meta']['sender']
@@ -297,6 +325,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 media_name = self.get_media_name()
                 if media_name:
                     FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+
+                for reaction in self.get_reactions():
+                    message.add_reaction(reaction['reaction'], int(reaction['count']))
 
         for obj in objs:  # TODO PERF avoid parsing metas multiple times
 

@@ -14,6 +14,8 @@ from lib import btc_ail
 from lib import Tag
 
 from lib.objects import Chats
+from lib.objects import ChatSubChannels
+from lib.objects import ChatThreads
 from lib.objects import CryptoCurrencies
 from lib.objects import CookiesNames
 from lib.objects.Cves import Cve
@@ -62,6 +64,10 @@ def get_object(obj_type, subtype, obj_id):
         return Decoded(obj_id)
     elif obj_type == 'chat':
         return Chats.Chat(obj_id, subtype)
+    elif obj_type == 'chat-subchannel':
+        return ChatSubChannels.ChatSubChannel(obj_id, subtype)
+    elif obj_type == 'chat-thread':
+        return ChatThreads.ChatThread(obj_id, subtype)
     elif obj_type == 'cookie-name':
         return CookiesNames.CookieName(obj_id)
     elif obj_type == 'cve':

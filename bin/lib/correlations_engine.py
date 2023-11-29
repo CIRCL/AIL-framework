@@ -41,7 +41,9 @@ config_loader = None
 ##################################
 
 CORRELATION_TYPES_BY_OBJ = {
-    "chat": ["image", "user-account"],  # message or direct correlation like cve, bitcoin, ... ???
+    "chat": ["chat-subchannel", "chat-thread", "image", "user-account"],  # message or direct correlation like cve, bitcoin, ... ???
+    "chat-subchannel": ["chat", "chat-thread", "image", "message", "user-account"],
+    "chat-thread": ["chat", "chat-subchannel", "image", "message", "user-account"], # TODO user account
     "cookie-name": ["domain"],
     "cryptocurrency": ["domain", "item", "message"],
     "cve": ["domain", "item", "message"],
@@ -53,11 +55,11 @@ CORRELATION_TYPES_BY_OBJ = {
     "hhhash": ["domain"],
     "image": ["chat", "message", "user-account"],
     "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
-    "message": ["cve", "cryptocurrency", "decoded", "file-name", "image", "pgp", "user-account"],  # chat ??
+    "message": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "file-name", "image", "pgp", "user-account"],  # chat ??
     "pgp": ["domain", "item", "message"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],
-    "user-account": ["chat", "message"],
+    "user-account": ["chat", "chat-subchannel", "chat-thread", "message"],
     "username": ["domain", "item", "message"],  # TODO chat-user/account
 }
 

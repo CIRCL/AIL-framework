@@ -180,9 +180,9 @@ class AbstractSubtypeObject(AbstractObject, ABC):
                     self.add_correlation('domain', '', domain)
 
     # TODO:ADD objects + Stats
-    def create(self, first_seen, last_seen):
-        self.set_first_seen(first_seen)
-        self.set_last_seen(last_seen)
+    # def create(self, first_seen, last_seen):
+    #     self.set_first_seen(first_seen)
+    #     self.set_last_seen(last_seen)
 
     def _delete(self):
         pass

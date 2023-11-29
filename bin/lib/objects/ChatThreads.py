@@ -15,12 +15,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
-from lib.data_retention_engine import update_obj_date
-from lib.objects import ail_objects
-from lib.timeline_engine import Timeline
+from lib.objects.abstract_chat_object import AbstractChatObject, AbstractChatObjects
 
-from lib.correlations_engine import get_correlation_by_correl_type
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -33,13 +29,13 @@ config_loader = None
 ################################################################################
 ################################################################################
 
-class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
+class ChatThread(AbstractChatObject):
     """
     AIL Chat Object. (strings)
     """
 
     def __init__(self, id, subtype):
-        super(Chat, self).__init__('chat-thread', id, subtype)
+        super().__init__('chat-thread', id, subtype)
 
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True),
@@ -69,7 +65,7 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
         #     style = 'fas'
         #     icon = '\uf007'
         style = 'fas'
-        icon = '\uf086'
+        icon = '\uf7a4'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
     def get_meta(self, options=set()):
@@ -77,27 +73,42 @@ class Chat(AbstractSubtypeObject):  # TODO # ID == username ?????
         meta['id'] = self.id
         meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True)
-        if 'username':
-            meta['username'] = self.get_username()
+        if 'nb_messages':
+            meta['nb_messages'] = self.get_nb_messages()
+        # created_at ???
         return meta
 
     def get_misp_object(self):
         return
 
-    ############################################################################
-    ############################################################################
+    def create(self, container_obj, message_id):
+        if message_id:
+            parent_message = container_obj.get_obj_by_message_id(message_id)
+            if parent_message:  # TODO EXCEPTION IF DON'T EXISTS
+                self.set_parent(obj_global_id=parent_message)
+                _, _, parent_id = parent_message.split(':', 2)
+                self.add_correlation('message', '', parent_id)
+        else:
+            self.set_parent(obj_global_id=container_obj.get_global_id())
+            self.add_correlation(container_obj.get_type(), container_obj.get_subtype(r_str=True), container_obj.get_id())
 
-    # others optional metas, ... -> # TODO ALL meta in hset
+def create(thread_id, chat_instance, chat_id, subchannel_id, message_id, container_obj):
+    if container_obj.get_type() == 'chat':
+        new_thread_id = f'{chat_id}/{thread_id}'
+    # sub-channel
+    else:
+        new_thread_id = f'{chat_id}/{subchannel_id}/{thread_id}'
 
-    #### Messages #### TODO set parents
+    thread = ChatThread(new_thread_id, chat_instance)
+    if not thread.exists():
+        thread.create(container_obj, message_id)
+    return thread
 
-    # def get_last_message_id(self):
-    #
-    #     return r_object.hget(f'meta:{self.type}:{self.subtype}:{self.id}', 'last:message:id')
+class ChatThreads(AbstractChatObjects):
+    def __init__(self):
+        super().__init__('chat-thread')
 
-
-
-if __name__ == '__main__':
-    chat = Chat('test', 'telegram')
-    r = chat.get_messages()
-    print(r)
+# if __name__ == '__main__':
+#     chat = Chat('test', 'telegram')
+#     r = chat.get_messages()
+#     print(r)

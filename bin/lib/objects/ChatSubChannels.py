@@ -149,7 +149,7 @@ class ChatSubChannel(AbstractChatObject):
 
 class ChatSubChannels(AbstractChatObjects):
     def __init__(self):
-        super().__init__('chat-subchannels')
+        super().__init__('chat-subchannel')
 
 # if __name__ == '__main__':
 #     chat = Chat('test', 'telegram')
