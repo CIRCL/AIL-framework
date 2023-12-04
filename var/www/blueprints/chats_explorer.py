@@ -21,6 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib import chats_viewer
+from lib import Language
 from lib import Tag
 
 # ============ BLUEPRINT ============
@@ -80,12 +81,14 @@ def chats_explorer_instance():
 def chats_explorer_chat():
     chat_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
-    chat = chats_viewer.api_get_chat(chat_id, instance_uuid)
+    target = request.args.get('target')
+    chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target)
     if chat[1] != 200:
         return create_json_response(chat[0], chat[1])
     else:
         chat = chat[0]
-        return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label)
+        languages = Language.get_translation_languages()
+        return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/messages/stats/week", methods=['GET'])
 @login_required
@@ -105,12 +108,14 @@ def chats_explorer_messages_stats_week():
 def objects_subchannel_messages():
     subchannel_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
-    subchannel = chats_viewer.api_get_subchannel(subchannel_id, instance_uuid)
+    target = request.args.get('target')
+    subchannel = chats_viewer.api_get_subchannel(subchannel_id, instance_uuid, translation_target=target)
     if subchannel[1] != 200:
         return create_json_response(subchannel[0], subchannel[1])
     else:
         subchannel = subchannel[0]
-        return render_template('SubChannelMessages.html', subchannel=subchannel, bootstrap_label=bootstrap_label)
+        languages = Language.get_translation_languages()
+        return render_template('SubChannelMessages.html', subchannel=subchannel, bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/thread", methods=['GET'])
 @login_required
@@ -118,12 +123,14 @@ def objects_subchannel_messages():
 def objects_thread_messages():
     thread_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
-    thread = chats_viewer.api_get_thread(thread_id, instance_uuid)
+    target = request.args.get('target')
+    thread = chats_viewer.api_get_thread(thread_id, instance_uuid, translation_target=target)
     if thread[1] != 200:
         return create_json_response(thread[0], thread[1])
     else:
         meta = thread[0]
-        return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label)
+        languages = Language.get_translation_languages()
+        return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/objects/message", methods=['GET'])
 @login_required
@@ -135,5 +142,6 @@ def objects_message():
         return create_json_response(message[0], message[1])
     else:
         message = message[0]
+        languages = Language.get_translation_languages()
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))

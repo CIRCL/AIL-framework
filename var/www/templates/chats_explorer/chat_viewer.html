@@ -159,6 +159,10 @@
                         {% include 'objects/image/block_blur_img_slider.html' %}
                     </span>
 
+                    {% with translate_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), obj_id=chat['id'] %}
+                        {% include 'chats_explorer/block_translation.html' %}
+                    {% endwith %}
+
                     <div class="position-relative">
                         <div class="chat-messages p-2">
 

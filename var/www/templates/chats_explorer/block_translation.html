@@ -1,0 +1,37 @@
+<div class="card border-secondary">
+    <div class="card-body py-2">
+        <div class="row">
+            <div class="col-md-3 text-center px-0">
+                Translation
+            </div>
+            <div class="col-md-6 text-center pl-0 pt-1">
+                <select id="translation_selector_target" class="form-select" aria-label="Default select example">
+                    {% if not translation_target or translation_target == "Don't Translate" %}
+                        <option selected>Don't Translate</option>
+                    {% else %}
+                        <option selected value="{{ translation_target }}">{{ translation_target }}</option>
+                    {% endif %}
+                    {% for language in translation_languages %}
+                        <option value="{{ language['iso'] }}">{{ language['language'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 text-center">
+                <button class="btn btn-sm btn-primary" onclick="translate_selector();">
+                    <i class="fas fa-language"></i>
+                    <span class="label-icon">Translate</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+function translate_selector(){
+    var t = document.getElementById("translation_selector_target");
+    var target = t.value
+    window.location.replace("{{ translate_url }}&id={{ obj_id }}&target=" + target);
+}
+</script>

@@ -4,6 +4,20 @@
 import os
 import sys
 
+import cld3
+from libretranslatepy import LibreTranslateAPI
+
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.ConfigLoader import ConfigLoader
+
+config_loader = ConfigLoader()
+TRANSLATOR_URL = config_loader.get_config_str('Translation', 'libretranslate')
+config_loader = None
+
+
 dict_iso_languages = {
     'af': 'Afrikaans',
     'am': 'Amharic',
@@ -237,3 +251,77 @@ def get_iso_from_languages(l_languages, sort=False):
     if sort:
         l_iso = sorted(l_iso)
     return l_iso
+
+
+class LanguageDetector:
+    pass
+
+def get_translator_instance():
+    return TRANSLATOR_URL
+
+class LanguageTranslator:
+
+    def __init__(self):
+        self.lt = LibreTranslateAPI(get_translator_instance())
+
+    def languages(self):
+        languages = []
+        try:
+            for dict_lang in self.lt.languages():
+                languages.append({'iso': dict_lang['code'], 'language': dict_lang['name']})
+        except:
+            pass
+        return languages
+
+    def detect_cld3(self, content):
+        for lang in cld3.get_frequent_languages(content, num_langs=1):
+            return lang.language
+
+    def detect_libretranslate(self, content):
+        try:
+            language = self.lt.detect(content)
+        except:  # TODO ERROR MESSAGE
+            language = None
+        if language:
+            return language[0].get('language')
+
+    def detect(self, content):  # TODO replace by gcld3
+        # cld3
+        if len(content) >= 200:
+            language = self.detect_cld3(content)
+        # libretranslate
+        else:
+            language = self.detect_libretranslate(content)
+        return language
+
+    def translate(self, content, source=None, target="en"):  # TODO source target
+        translation = None
+        if content:
+            if not source:
+                source = self.detect(content)
+            # print(source, content)
+            if source:
+                if source != target:
+                    try:
+                        # print(content, source, target)
+                        translation = self.lt.translate(content, source, target)
+                    except:
+                        translation = None
+                    # TODO LOG and display error
+                    if translation == content:
+                        print('EQUAL')
+                        translation = None
+        return translation
+
+
+LIST_LANGUAGES = LanguageTranslator().languages()
+
+def get_translation_languages():
+    return LIST_LANGUAGES
+
+
+if __name__ == '__main__':
+    t_content = ''
+    langg = LanguageTranslator()
+    # lang.translate(t_content, source='ru')
+    langg.languages()

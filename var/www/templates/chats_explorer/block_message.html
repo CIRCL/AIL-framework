@@ -48,6 +48,10 @@
                     {% endif %}
                 </div>
                 <pre class="my-0">{{ message['reply_to']['content'] }}</pre>
+                {% if message['reply_to']['translation'] %}
+                    <hr class="m-1">
+                    <div class="my-0 text-secondary">{{ message['reply_to']['translation'] }}</div>
+                {% endif %}
                 {% for tag in message['reply_to']['tags'] %}
                     <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
                 {%  endfor %}
@@ -71,6 +75,10 @@
             {%  endfor %}
         {% endif %}
         <pre class="my-0">{{ message['content'] }}</pre>
+        {% if message['translation'] %}
+            <hr class="m-1">
+            <pre class="my-0 text-secondary">{{ message['translation'] }}</pre>
+        {% endif %}
         {% for reaction in message['reactions'] %}
             <span class="border rounded px-1">{{ reaction }} {{ message['reactions'][reaction] }}</span>
         {%  endfor %}

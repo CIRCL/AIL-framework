@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ail_core import get_ail_uuid
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
+from lib import Language
 from lib.objects import UsersAccount
 from lib.data_retention_engine import update_obj_date, get_obj_date_first
 # TODO Set all messages ???
@@ -76,7 +77,13 @@ class Message(AbstractObject):
         """
         Returns content
         """
-        content = self._get_field('content')
+        global_id = self.get_global_id()
+        content = r_cache.get(f'content:{global_id}')
+        if not content:
+            content = self._get_field('content')
+            if content:
+                r_cache.set(f'content:{global_id}', content)
+                r_cache.expire(f'content:{global_id}', 300)
         if r_type == 'str':
             return content
         elif r_type == 'bytes':
@@ -153,11 +160,23 @@ class Message(AbstractObject):
     # message from channel ???
     # message media
 
-    def get_translation(self):  # TODO support multiple translated languages ?????
+    def get_translation(self, content=None, source=None, target='fr'):
         """
         Returns translated content
         """
-        return self._get_field('translated')  # TODO multiples translation ... -> use set
+        # return self._get_field('translated')
+        global_id = self.get_global_id()
+        translation = r_cache.get(f'translation:{target}:{global_id}')
+        r_cache.expire(f'translation:{target}:{global_id}', 0)
+        if translation:
+            return translation
+        if not content:
+            content = self.get_content()
+        translation = Language.LanguageTranslator().translate(content, source=source, target=target)
+        if translation:
+            r_cache.set(f'translation:{target}:{global_id}', translation)
+            r_cache.expire(f'translation:{target}:{global_id}', 300)
+        return translation
 
     def _set_translation(self, translation):
         """
@@ -209,7 +228,7 @@ class Message(AbstractObject):
     #     return r_object.hget(f'meta:item::{self.id}', 'url')
 
     # options: set of optional meta fields
-    def get_meta(self, options=None, timestamp=None):
+    def get_meta(self, options=None, timestamp=None, translation_target='en'):
         """
         :type options: set
         :type timestamp: float
@@ -239,7 +258,7 @@ class Message(AbstractObject):
                 parent_type, _, parent_id = meta['parent'].split(':', 3)
                 if parent_type == 'message':
                     message = Message(parent_id)
-                    meta['reply_to'] = message.get_meta(options=options)
+                    meta['reply_to'] = message.get_meta(options=options, translation_target=translation_target)
         if 'investigations' in options:
             meta['investigations'] = self.get_investigations()
         if 'link' in options:
@@ -262,6 +281,8 @@ class Message(AbstractObject):
             meta['files-names'] = self.get_files_names()
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
+        if 'translation' in options and translation_target:
+            meta['translation'] = self.get_translation(content=meta.get('content'), target=translation_target)
 
         # meta['encoding'] = None
         return meta
