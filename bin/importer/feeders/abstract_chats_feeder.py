@@ -182,8 +182,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         return chat
 
-    # def process_subchannels(self):
-    #     pass
 
     def process_subchannel(self, obj, date, timestamp, reply_id=None):  # TODO CREATE DATE
         meta = self.json_data['meta']['chat']['subchannel']
@@ -216,11 +214,16 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         p_subchannel_id = meta['parent'].get('subchannel')
         p_message_id = meta['parent'].get('message')
 
+        # print(thread_id, p_chat_id, p_subchannel_id, p_message_id)
+
         if p_chat_id == self.get_chat_id() and p_subchannel_id == self.get_subchannel_id():
             thread = ChatThreads.create(thread_id, self.get_chat_instance_uuid(), p_chat_id, p_subchannel_id, p_message_id, obj_chat)
             thread.add(date, obj)
             thread.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
             # TODO OTHERS CORRELATIONS TO ADD
+
+            if meta.get('name'):
+                thread.set_name(meta['name'])
 
             return thread
 
@@ -308,8 +311,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         else:
             chat_id = self.get_chat_id()
+            thread_id = self.get_thread_id()
+            channel_id = self.get_subchannel_id()
             message_id = self.get_message_id()
-            message_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp)
+            message_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, channel_id=channel_id, thread_id=thread_id)
             message = Messages.Message(message_id)
             # create empty message if message don't exists
             if not message.exists():

@@ -86,6 +86,9 @@ class Chat(AbstractChatObject):
             meta['nb_subchannels'] = self.get_nb_subchannels()
         if 'created_at':
             meta['created_at'] = self.get_created_at(date=True)
+        if 'threads' in options:
+            meta['threads'] = self.get_threads()
+            print(meta['threads'])
         return meta
 
     def get_misp_object(self):

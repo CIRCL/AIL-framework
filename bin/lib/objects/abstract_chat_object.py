@@ -88,10 +88,10 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
 
     def get_threads(self):
         threads = []
-        for obj_global_id in self.get_childrens():
-            obj_type, _ = obj_global_id.split(':', 1)
+        for child in self.get_childrens():
+            obj_type, obj_subtype, obj_id = child.split(':', 2)
             if obj_type == 'chat-thread':
-                threads.append(obj_global_id)
+                threads.append({'type': obj_type, 'subtype': obj_subtype, 'id': obj_id})
         return threads
 
     def get_created_at(self, date=False):
@@ -242,6 +242,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         for mess_id in self.get_cached_message_reply(message_id):
             self.add_obj_children(obj_global_id, mess_id)
 
+    # def get_deleted_messages(self, message_id):
 
 
     # get_messages_meta ????

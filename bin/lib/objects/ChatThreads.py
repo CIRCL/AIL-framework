@@ -73,6 +73,8 @@ class ChatThread(AbstractChatObject):
         meta['id'] = self.id
         meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True)
+        if 'name':
+            meta['name'] = self.get_name()
         if 'nb_messages':
             meta['nb_messages'] = self.get_nb_messages()
         # created_at ???
