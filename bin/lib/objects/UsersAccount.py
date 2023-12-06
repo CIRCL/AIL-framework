@@ -54,16 +54,7 @@ class UserAccount(AbstractSubtypeObject):
         return url
 
     def get_svg_icon(self): # TODO change icon/color
-        if self.subtype == 'telegram':
-            style = 'fab'
-            icon = '\uf2c6'
-        elif self.subtype == 'twitter':
-            style = 'fab'
-            icon = '\uf099'
-        else:
-            style = 'fas'
-            icon = '\uf007'
-        return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
+        return {'style': 'fas', 'icon': '\uf2bd', 'color': '#4dffff', 'radius': 5}
 
     def get_first_name(self):
         return self._get_field('firstname')
@@ -97,6 +88,25 @@ class UserAccount(AbstractSubtypeObject):
     def set_info(self, info):
         return self._set_field('info', info)
 
+    # TODO MESSAGES:
+    # 1) ALL MESSAGES + NB
+    # 2) ALL MESSAGES TIMESTAMP
+    # 3) ALL MESSAGES TIMESTAMP By: - chats
+    #                               - subchannel
+    #                               - thread
+
+    def get_chats(self):
+        chats = self.get_correlation('chat')['chat']
+        return chats
+
+    def get_chat_subchannels(self):
+        chats = self.get_correlation('chat-subchannel')['chat-subchannel']
+        return chats
+
+    def get_chat_threads(self):
+        chats = self.get_correlation('chat-thread')['chat-thread']
+        return chats
+
     def _get_timeline_username(self):
         return Timeline(self.get_global_id(), 'username')
 
@@ -109,20 +119,31 @@ class UserAccount(AbstractSubtypeObject):
     def update_username_timeline(self, username_global_id, timestamp):
         self._get_timeline_username().add_timestamp(timestamp, username_global_id)
 
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set()): # TODO Username timeline
         meta = self._get_meta(options=options)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True)  # TODO add in options ????
         if 'username' in options:
             meta['username'] = self.get_username()
-            if meta['username'] and 'username_meta' in options:
+            if meta['username']:
                 _, username_account_subtype, username_account_id = meta['username'].split(':', 3)
-                meta['username'] = Usernames.Username(username_account_id, username_account_subtype).get_meta()
+                if 'username_meta' in options:
+                    meta['username'] = Usernames.Username(username_account_id, username_account_subtype).get_meta()
+                else:
+                    meta['username'] = {'type': 'username', 'subtype': username_account_subtype, 'id': username_account_id}
         if 'usernames' in options:
             meta['usernames'] = self.get_usernames()
         if 'icon' in options:
             meta['icon'] = self.get_icon()
+        if 'info' in options:
+            meta['info'] = self.get_info()
+        if 'chats' in options:
+            meta['chats'] = self.get_chats()
+        if 'subchannels' in options:
+            meta['subchannels'] = self.get_chat_subchannels()
+        if 'threads' in options:
+            meta['threads'] = self.get_chat_threads()
         return meta
 
     def get_misp_object(self):

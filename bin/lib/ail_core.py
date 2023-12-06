@@ -40,7 +40,7 @@ def get_all_objects():
     return AIL_OBJECTS
 
 def get_objects_with_subtypes():
-    return ['chat', 'cryptocurrency', 'pgp', 'username']
+    return ['chat', 'cryptocurrency', 'pgp', 'username', 'user-account']
 
 def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
     if obj_type == 'chat':
@@ -53,6 +53,8 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
         return ['key', 'mail', 'name']
     if obj_type == 'username':
         return ['telegram', 'twitter', 'jabber']
+    if obj_type == 'user-account':
+        return r_object.smembers(f'all_chat:subtypes')
     return []
 
 def get_objects_tracked():
@@ -75,10 +77,28 @@ def get_all_objects_with_subtypes_tuple():
 def unpack_obj_global_id(global_id, r_type='tuple'):
     if r_type == 'dict':
         obj = global_id.split(':', 2)
-        return {'type': obj[0], 'subtype': obj[1], 'id': obj['2']}
+        return {'type': obj[0], 'subtype': obj[1], 'id': obj[2]}
     else:  # tuple(type, subtype, id)
         return global_id.split(':', 2)
 
+def unpack_objs_global_id(objs_global_id, r_type='tuple'):
+    objs = []
+    for global_id in objs_global_id:
+        objs.append(unpack_obj_global_id(global_id, r_type=r_type))
+    return objs
+
+def unpack_correl_obj__id(obj_type, global_id, r_type='tuple'):
+    obj = global_id.split(':', 1)
+    if r_type == 'dict':
+        return {'type': obj_type, 'subtype': obj[0], 'id': obj[1]}
+    else:  # tuple(type, subtype, id)
+        return obj_type, obj[0], obj[1]
+
+def unpack_correl_objs_id(obj_type, correl_objs_id, r_type='tuple'):
+    objs = []
+    for correl_obj_id in correl_objs_id:
+        objs.append(unpack_correl_obj__id(obj_type, correl_obj_id, r_type=r_type))
+    return objs
 
 ##-- AIL OBJECTS --##
 

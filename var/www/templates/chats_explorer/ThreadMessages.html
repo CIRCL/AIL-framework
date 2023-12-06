@@ -67,6 +67,7 @@
                                                     <th>First seen</th>
                                                     <th>Last seen</th>
                                                     <th>Nb Messages</th>
+                                                    <th>Participants</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -74,6 +75,7 @@
                                                     <td>
                                                         {{ meta['name'] }}
                                                     </td>
+                                                    <td></td>
                                                     <td>
                                                         {% if meta['first_seen'] %}
                                                             {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
@@ -85,6 +87,9 @@
                                                         {% endif %}
                                                     </td>
                                                     <td>{{ meta['nb_messages'] }}</td>
+                                                    <td>
+                                                        <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat-thread&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}"><i class="far fa-user-circle"></i> {{ meta['nb_participants']}}</a>
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>

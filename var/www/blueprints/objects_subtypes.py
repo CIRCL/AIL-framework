@@ -43,7 +43,8 @@ def subtypes_objects_dashboard(obj_type, f_request):
         date_to = f_request.form.get('to')
         subtype = f_request.form.get('subtype')
         show_objects = bool(f_request.form.get('show_objects'))
-        endpoint_dashboard = url_for(f'objects_subtypes.objects_dashboard_{obj_type}')
+        t_obj_type = obj_type.replace('-', '_')
+        endpoint_dashboard = url_for(f'objects_subtypes.objects_dashboard_{t_obj_type}')
         endpoint_dashboard = f'{endpoint_dashboard}?from={date_from}&to={date_to}'
         if subtype:
             if subtype == 'All types':
@@ -81,7 +82,8 @@ def subtypes_objects_dashboard(obj_type, f_request):
             for obj_t, obj_subtype, obj_id in subtypes_objs:
                 objs.append(ail_objects.get_object_meta(obj_t, obj_subtype, obj_id, options={'sparkline'}, flask_context=True))
 
-    endpoint_dashboard = f'objects_subtypes.objects_dashboard_{obj_type}'
+    t_obj_type = obj_type.replace('-', '_')
+    endpoint_dashboard = f'objects_subtypes.objects_dashboard_{t_obj_type}'
     return render_template('subtypes_objs_dashboard.html', date_from=date_from, date_to=date_to,
                            daily_type_chart = daily_type_chart, show_objects=show_objects,
                            obj_type=obj_type, subtype=subtype, objs=objs,
@@ -114,6 +116,12 @@ def objects_dashboard_pgp():
 @login_read_only
 def objects_dashboard_username():
     return subtypes_objects_dashboard('username', request)
+
+@objects_subtypes.route("/objects/user-accounts", methods=['GET'])
+@login_required
+@login_read_only
+def objects_dashboard_user_account():
+    return subtypes_objects_dashboard('user-account', request)
 
 # TODO REDIRECT
 @objects_subtypes.route("/objects/subtypes/post", methods=['POST'])

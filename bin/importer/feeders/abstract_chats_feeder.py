@@ -11,7 +11,7 @@ import datetime
 import os
 import sys
 
-from abc import abstractmethod, ABC
+from abc import ABC
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -144,6 +144,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     def process_chat(self, new_objs, obj, date, timestamp, reply_id=None):
         meta = self.json_data['meta']['chat'] # todo replace me by function
         chat = Chat(self.get_chat_id(), self.get_chat_instance_uuid())
+        subchannel = None
+        thread = None
 
         # date stat + correlation
         chat.add(date, obj)
@@ -168,24 +170,26 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             chat.update_username_timeline(username.get_global_id(), timestamp)
 
         if meta.get('subchannel'):
-            subchannel = self.process_subchannel(obj, date, timestamp, reply_id=reply_id)
+            subchannel, thread = self.process_subchannel(obj, date, timestamp, reply_id=reply_id)
             chat.add_children(obj_global_id=subchannel.get_global_id())
         else:
             if obj.type == 'message':
                 if self.get_thread_id():
-                    self.process_thread(obj, chat, date, timestamp, reply_id=reply_id)
+                    thread = self.process_thread(obj, chat, date, timestamp, reply_id=reply_id)
                 else:
                     chat.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
 
-
-        # if meta.get('subchannels'): # TODO Update icon + names
-
-        return chat
-
+        chats_obj = [chat]
+        if subchannel:
+            chats_obj.append(subchannel)
+        if thread:
+            chats_obj.append(thread)
+        return chats_obj
 
     def process_subchannel(self, obj, date, timestamp, reply_id=None):  # TODO CREATE DATE
         meta = self.json_data['meta']['chat']['subchannel']
         subchannel = ChatSubChannels.ChatSubChannel(f'{self.get_chat_id()}/{meta["id"]}', self.get_chat_instance_uuid())
+        thread = None
 
         # TODO correlation with obj = message/image
         subchannel.add(date)
@@ -202,10 +206,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         if obj.type == 'message':
             if self.get_thread_id():
-                self.process_thread(obj, subchannel, date, timestamp, reply_id=reply_id)
+                thread = self.process_thread(obj, subchannel, date, timestamp, reply_id=reply_id)
             else:
                 subchannel.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
-        return subchannel
+        return subchannel, thread
 
     def process_thread(self, obj, obj_chat, date, timestamp, reply_id=None):
         meta = self.json_data['meta']['thread']
@@ -230,7 +234,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         # TODO
         # else:
         #   # ADD NEW MESSAGE REF (used by discord)
-
 
     def process_sender(self, new_objs, obj, date, timestamp):
         meta = self.json_data['meta']['sender']
@@ -267,12 +270,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         return user_account
 
-    # Create abstract class: -> new API endpoint ??? => force field, check if already imported ?
-    # 1) Create/Get MessageInstance                     - # TODO uuidv5 + text like discord and telegram for default
-    # 2) Create/Get CHAT ID                             - Done
-    # 3) Create/Get Channel IF is in channel
-    # 4) Create/Get Thread IF is in thread
-    # 5) Create/Update Username and User-account        - Done
     def process_meta(self):  # TODO CHECK MANDATORY FIELDS
         """
         Process JSON meta filed.
@@ -316,7 +313,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             message_id = self.get_message_id()
             message_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, channel_id=channel_id, thread_id=thread_id)
             message = Messages.Message(message_id)
-            # create empty message if message don't exists
+            # create empty message if message don't exist
             if not message.exists():
                 message.create('')
                 objs.add(message)
@@ -336,19 +333,22 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         for obj in objs:  # TODO PERF avoid parsing metas multiple times
 
+            # TODO get created subchannel + thread
+            #    => create correlation user-account with object
+
             # CHAT
-            chat = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
+            chat_objs = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
 
             # SENDER # TODO HANDLE NULL SENDER
             user_account = self.process_sender(new_objs, obj, date, timestamp)
 
-            # UserAccount---Chat
-            user_account.add_correlation(chat.type, chat.get_subtype(r_str=True), chat.id)
+            # UserAccount---ChatObjects
+            for obj_chat in chat_objs:
+                user_account.add_correlation(obj_chat.type, obj_chat.get_subtype(r_str=True), obj_chat.id)
 
             # if chat: # TODO Chat---Username correlation ???
             #     # Chat---Username    => need to handle members and participants
             #     chat.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
-
 
             # TODO Sender image -> correlation
                 # image
@@ -356,26 +356,3 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 #       -> thread id ?
 
         return new_objs | objs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

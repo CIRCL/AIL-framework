@@ -68,6 +68,7 @@
                                                     <th>Last seen</th>
                                                     <th>Username</th>
                                                     <th>Nb Messages</th>
+                                                    <th>Participants</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -94,6 +95,9 @@
                                                         {% endif %}
                                                     </td>
                                                     <td>{{ subchannel['nb_messages'] }}</td>
+                                                    <td>
+                                                        <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat-subchannel&subtype={{ subchannel['subtype'] }}&id={{ subchannel['id'] }}"><i class="far fa-user-circle"></i> {{ subchannel['nb_participants']}}</a>
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>

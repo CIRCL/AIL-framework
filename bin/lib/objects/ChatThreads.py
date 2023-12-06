@@ -77,6 +77,10 @@ class ChatThread(AbstractChatObject):
             meta['name'] = self.get_name()
         if 'nb_messages':
             meta['nb_messages'] = self.get_nb_messages()
+        if 'participants':
+            meta['participants'] = self.get_participants()
+        if 'nb_participants':
+            meta['nb_participants'] = self.get_nb_participants()
         # created_at ???
         return meta
 

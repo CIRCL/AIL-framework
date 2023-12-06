@@ -70,7 +70,7 @@ class ChatSubChannel(AbstractChatObject):
         # else:
         #     style = 'fas'
         #     icon = '\uf007'
-        style = 'fas'
+        style = 'far'
         icon = '\uf086'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
@@ -90,7 +90,10 @@ class ChatSubChannel(AbstractChatObject):
             meta['created_at'] = self.get_created_at(date=True)
         if 'threads' in options:
             meta['threads'] = self.get_threads()
-            print(meta['threads'])
+        if 'participants' in options:
+            meta['participants'] = self.get_participants()
+        if 'nb_participants' in options:
+            meta['nb_participants'] = self.get_nb_participants()
         return meta
 
     def get_misp_object(self):

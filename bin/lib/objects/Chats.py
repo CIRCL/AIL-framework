@@ -74,10 +74,14 @@ class Chat(AbstractChatObject):
         meta = self._get_meta(options=options)
         meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
-        if 'icon':
+        if 'icon' in options:
             meta['icon'] = self.get_icon()
-        if 'info':
+        if 'info' in options:
             meta['info'] = self.get_info()
+        if 'participants' in options:
+            meta['participants'] = self.get_participants()
+        if 'nb_participants' in options:
+            meta['nb_participants'] = self.get_nb_participants()
         if 'username' in options:
             meta['username'] = self.get_username()
         if 'subchannels' in options:

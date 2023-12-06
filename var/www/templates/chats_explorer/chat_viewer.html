@@ -66,18 +66,17 @@
                                 <table class="table">
                                     <thead class="">
                                     <tr>
-                                        <th>Icon</th>
                                         <th>Name</th>
                                         <th>ID</th>
                                         <th>Created at</th>
                                         <th>First Seen</th>
                                         <th>Last Seen</th>
                                         <th>NB Sub-Channels</th>
+                                        <th>Participants</th>
                                     </tr>
                                     </thead>
                                     <tbody style="font-size: 15px;">
                                     <tr>
-                                            <td></td>
                                             <td>{{ chat['name'] }}</td>
                                             <td>{{ chat['id']  }}</td>
                                             <td>{{ chat['created_at'] }}</td>
@@ -92,6 +91,9 @@
                                                 {% endif %}
                                             </td>
                                             <td>{{ chat['nb_subchannels'] }}</td>
+                                            <td>
+                                                <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}"><i class="far fa-user-circle"></i> {{ chat['nb_participants']}}</a>
+                                            </td>
                                     </tr>
                                     </tbody>
                                 </table>

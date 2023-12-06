@@ -132,6 +132,20 @@ def objects_thread_messages():
         languages = Language.get_translation_languages()
         return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
+@chats_explorer.route("/chats/explorer/participants", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_chat_participants():
+    chat_type = request.args.get('type')
+    chat_id = request.args.get('id')
+    chat_subtype = request.args.get('subtype')
+    meta = chats_viewer.api_get_chat_participants(chat_type, chat_subtype,chat_id)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    else:
+        meta = meta[0]
+        return render_template('chat_participants.html', meta=meta, bootstrap_label=bootstrap_label)
+
 @chats_explorer.route("/objects/message", methods=['GET'])
 @login_required
 @login_read_only
@@ -145,3 +159,16 @@ def objects_message():
         languages = Language.get_translation_languages()
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
+
+@chats_explorer.route("/objects/user-account", methods=['GET'])
+@login_required
+@login_read_only
+def objects_user_account():
+    instance_uuid = request.args.get('subtype')
+    user_id = request.args.get('id')
+    user_account = chats_viewer.api_get_user_account(user_id, instance_uuid)
+    if user_account[1] != 200:
+        return create_json_response(user_account[0], user_account[1])
+    else:
+        user_account = user_account[0]
+        return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label)

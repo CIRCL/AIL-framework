@@ -19,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject
-from lib.ail_core import get_object_all_subtypes, zscan_iter ################
+from lib.ail_core import unpack_correl_objs_id, zscan_iter ################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Messages
 from packages import Date
@@ -244,8 +244,11 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
 
     # def get_deleted_messages(self, message_id):
 
+    def get_participants(self):
+        return unpack_correl_objs_id('user-account', self.get_correlation('user-account')['user-account'], r_type='dict')
 
-    # get_messages_meta ????
+    def get_nb_participants(self):
+        return self.get_nb_correlation('user-account')
 
 # TODO move me to abstract subtype
 class AbstractChatObjects(ABC):
