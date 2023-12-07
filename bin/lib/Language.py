@@ -313,8 +313,10 @@ class LanguageTranslator:
                         translation = None
         return translation
 
-
-LIST_LANGUAGES = LanguageTranslator().languages()
+try:
+    LIST_LANGUAGES = LanguageTranslator().languages()
+except Exception:
+    LIST_LANGUAGES = []
 
 def get_translation_languages():
     return LIST_LANGUAGES
