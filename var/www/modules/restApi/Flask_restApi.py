@@ -523,6 +523,20 @@ def add_crawler_task():
     return create_json_response(dict_res, 200)
 
 
+@restApi.route("api/v1/add/crawler/capture", methods=['POST'])
+@token_required('analyst')
+def add_crawler_task():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_id = Users.get_token_user(user_token)
+    res = crawlers.api_add_crawler_capture(data, user_id)
+    if res:
+        return create_json_response(res[0], res[1])
+
+    dict_res = {'url': data['url']}
+    return create_json_response(dict_res, 200)
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        DOMAIN       # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

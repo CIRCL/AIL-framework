@@ -309,6 +309,16 @@ def get_all_har_ids():
                     har_ids.append(har_id)
     return har_ids
 
+def get_month_har_ids(year, month):
+    har_ids = []
+    month_path = os.path.join(HAR_DIR, year, month)
+    for root, dirs, files in os.walk(month_path):
+        for file in files:
+            har_id = os.path.relpath(os.path.join(root, file), HAR_DIR)
+            har_ids.append(har_id)
+    return har_ids
+
+
 def get_har_content(har_id):
     har_path = os.path.join(HAR_DIR, har_id)
     try:
@@ -1519,7 +1529,7 @@ class CrawlerTask:
     # TODO SANITIZE PRIORITY
     # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
     def create(self, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-               user_agent=None, tags=[], parent='manual', priority=0):
+               user_agent=None, tags=[], parent='manual', priority=0, external=False):
         if self.exists():
             raise Exception('Error: Task already exists')
 
@@ -1576,8 +1586,8 @@ class CrawlerTask:
 
         r_crawler.hset('crawler:queue:hash', hash_query, self.uuid)
         self._set_field('hash', hash_query)
-        r_crawler.zadd('crawler:queue', {self.uuid: priority})
-        self.add_to_db_crawler_queue(priority)
+        if not external:
+            self.add_to_db_crawler_queue(priority)
         # UI
         domain_type = dom.get_domain_type()
         r_crawler.sadd(f'crawler:queue:type:{domain_type}', self.uuid)
@@ -1637,7 +1647,7 @@ def add_task_to_lacus_queue():
 
 # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
 def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-                user_agent=None, tags=[], parent='manual', priority=0, task_uuid=None):
+                user_agent=None, tags=[], parent='manual', priority=0, task_uuid=None, external=False):
     if task_uuid:
         if CrawlerTask(task_uuid).exists():
             task_uuid = gen_uuid()
@@ -1645,7 +1655,8 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
         task_uuid = gen_uuid()
     task = CrawlerTask(task_uuid)
     task_uuid = task.create(url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar,
-                            proxy=proxy, user_agent=user_agent, tags=tags, parent=parent, priority=priority)
+                            proxy=proxy, user_agent=user_agent, tags=tags, parent=parent, priority=priority,
+                            external=external)
     return task_uuid
 
 
@@ -1655,7 +1666,8 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
 
 # # TODO: ADD user agent
 # # TODO: sanitize URL
-def api_add_crawler_task(data, user_id=None):
+
+def api_parse_task_dict_basic(data, user_id):
     url = data.get('url', None)
     if not url or url == '\n':
         return {'status': 'error', 'reason': 'No url supplied'}, 400
@@ -1680,6 +1692,31 @@ def api_add_crawler_task(data, user_id=None):
             return {'error': 'invalid depth limit'}, 400
     else:
         depth_limit = 0
+
+    # PROXY
+    proxy = data.get('proxy', None)
+    if proxy == 'onion' or proxy == 'tor' or proxy == 'force_tor':
+        proxy = 'force_tor'
+    elif proxy:
+        verify = api_verify_proxy(proxy)
+        if verify[1] != 200:
+            return verify
+
+    tags = data.get('tags', [])
+
+    return {'url': url, 'depth_limit': depth_limit, 'har': har, 'screenshot': screenshot, 'proxy': proxy, 'tags': tags}, 200
+
+def api_add_crawler_task(data, user_id=None):
+    task, resp = api_parse_task_dict_basic(data, user_id)
+    if resp != 200:
+        return task, resp
+
+    url = task['url']
+    screenshot = task['screenshot']
+    har = task['har']
+    depth_limit = task['depth_limit']
+    proxy = task['proxy']
+    tags = task['tags']
 
     cookiejar_uuid = data.get('cookiejar', None)
     if cookiejar_uuid:
@@ -1725,17 +1762,6 @@ def api_add_crawler_task(data, user_id=None):
                     return {'error': 'Invalid frequency'}, 400
                 frequency = f'{months}:{weeks}:{days}:{hours}:{minutes}'
 
-    # PROXY
-    proxy = data.get('proxy', None)
-    if proxy == 'onion' or proxy == 'tor' or proxy == 'force_tor':
-        proxy = 'force_tor'
-    elif proxy:
-        verify = api_verify_proxy(proxy)
-        if verify[1] != 200:
-            return verify
-
-    tags = data.get('tags', [])
-
     if frequency:
         # TODO verify user
         task_uuid = create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
@@ -1752,6 +1778,26 @@ def api_add_crawler_task(data, user_id=None):
 
 #### ####
 
+# TODO cookiejar - cookies - frequency
+def api_add_crawler_capture(data, user_id):
+    task, resp = api_parse_task_dict_basic(data, user_id)
+    if resp != 200:
+        return task, resp
+
+    task_uuid = data.get('task_uuid')
+    if not task_uuid:
+        return {'error': 'Invalid task_uuid', 'task_uuid': task_uuid}, 400
+    capture_uuid = data.get('capture_uuid')
+    if not capture_uuid:
+        return {'error': 'Invalid capture_uuid', 'task_uuid': capture_uuid}, 400
+
+    # TODO parent
+    create_task(task['url'], depth=task['depth_limit'], har=task['har'], screenshot=task['screenshot'],
+                proxy=task['proxy'], tags=task['tags'],
+                parent='AIL_capture', task_uuid=task_uuid, external=True)
+
+    create_capture(capture_uuid, task_uuid)
+    return capture_uuid, 200
 
 ###################################################################################
 ###################################################################################

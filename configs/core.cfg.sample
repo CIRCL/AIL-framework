@@ -261,6 +261,8 @@ default_depth_limit = 1
 default_har = True
 default_screenshot = True
 onion_proxy = onion.foundation
+ail_url_to_push_onion_discovery =
+ail_key_to_push_onion_discovery =
 
 [Translation]
 libretranslate = 

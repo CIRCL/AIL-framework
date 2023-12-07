@@ -6,6 +6,7 @@ import logging.config
 import sys
 import time
 
+from pyail import PyAIL
 from requests.exceptions import ConnectionError
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -43,6 +44,15 @@ class Crawler(AbstractModule):
         self.default_har = config_loader.get_config_boolean('Crawler', 'default_har')
         self.default_screenshot = config_loader.get_config_boolean('Crawler', 'default_screenshot')
         self.default_depth_limit = config_loader.get_config_int('Crawler', 'default_depth_limit')
+
+        ail_url_to_push_discovery = config_loader.get_config_str('Crawler', 'ail_url_to_push_onion_discovery')
+        ail_key_to_push_discovery = config_loader.get_config_str('Crawler', 'ail_key_to_push_onion_discovery')
+        if ail_url_to_push_discovery and ail_key_to_push_discovery:
+            ail = PyAIL(ail_url_to_push_discovery, ail_key_to_push_discovery, ssl=False)
+            if ail.ping_ail():
+                self.ail_to_push_discovery = ail
+        else:
+            self.ail_to_push_discovery = None
 
         # TODO: LIMIT MAX NUMBERS OF CRAWLED PAGES
 
@@ -183,6 +193,14 @@ class Crawler(AbstractModule):
 
         crawlers.create_capture(capture_uuid, task_uuid)
         print(task.uuid, capture_uuid, 'launched')
+
+        if self.ail_to_push_discovery:
+            if task.get_depth() == 1 and priority < 10 and task.get_domain().endswith('.onion'):
+                har = task.get_har()
+                screenshot = task.get_screenshot()
+                self.ail_to_push_discovery.add_crawler_capture(task_uuid, capture_uuid, url, har=har,
+                                                               screenshot=screenshot, depth_limit=1, proxy='force_tor')
+                print(task.uuid, capture_uuid, 'Added to ail_to_push_discovery')
         return capture_uuid
 
     # CRAWL DOMAIN
