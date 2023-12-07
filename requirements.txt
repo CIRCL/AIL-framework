@@ -41,6 +41,7 @@ scrapy-splash>=0.7.2
 
 # Languages
 pycld3>0.20
+libretranslatepy
 
 #Graph
 numpy>1.18.1
