@@ -525,7 +525,7 @@ def add_crawler_task():
 
 @restApi.route("api/v1/add/crawler/capture", methods=['POST'])
 @token_required('analyst')
-def add_crawler_task():
+def add_crawler_capture():
     data = request.get_json()
     user_token = get_auth_from_header()
     user_id = Users.get_token_user(user_token)
