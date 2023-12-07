@@ -111,7 +111,10 @@ class Retro_Hunt_Module(AbstractModule):
         self.redis_logger.warning(f'{self.module_name}, Retro Hunt {task_uuid} completed')
 
     def update_progress(self):
-        new_progress = self.nb_done * 100 / self.nb_objs
+        if self.nb_objs == 0:
+            new_progress = 100
+        else:
+            new_progress = self.nb_done * 100 / self.nb_objs
         if int(self.progress) != int(new_progress):
             print(new_progress)
             self.retro_hunt.set_progress(new_progress)

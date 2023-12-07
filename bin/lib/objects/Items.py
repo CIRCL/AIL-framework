@@ -498,7 +498,10 @@ def get_all_items_objects(filters={}):
         daterange = Date.get_daterange(date_from, date_to)
     else:
         date_from = get_obj_date_first('item')
-        daterange = Date.get_daterange(date_from, Date.get_today_date_str())
+        if date_from:
+            daterange = Date.get_daterange(date_from, Date.get_today_date_str())
+        else:
+            daterange = []
     if start_date:
         if int(start_date) > int(date_from):
             i = 0
