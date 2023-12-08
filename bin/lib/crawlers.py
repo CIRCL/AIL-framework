@@ -1791,13 +1791,15 @@ def api_add_crawler_capture(data, user_id):
     if not capture_uuid:
         return {'error': 'Invalid capture_uuid', 'task_uuid': capture_uuid}, 400
 
+    # parent = data.get('parent')
+
     # TODO parent
     create_task(task['url'], depth=task['depth_limit'], har=task['har'], screenshot=task['screenshot'],
                 proxy=task['proxy'], tags=task['tags'],
                 parent='AIL_capture', task_uuid=task_uuid, external=True)
 
     create_capture(capture_uuid, task_uuid)
-    return capture_uuid, 200
+    return {'uuid': capture_uuid}, 200
 
 ###################################################################################
 ###################################################################################
