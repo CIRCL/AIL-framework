@@ -6,14 +6,14 @@ The ZMQ_PubSub_Categ Module
 
 Each words files created under /files/ are representing categories.
 This modules take these files and compare them to
-the content of an item.
+the content of an obj.
 
-When a word from a item match one or more of these words file, the filename of
-the item / zhe item id is published/forwarded to the next modules.
+When a word from a obj match one or more of these words file, the filename of
+the obj / the obj id is published/forwarded to the next modules.
 
 Each category (each files) are representing a dynamic channel.
 This mean that if you create 1000 files under /files/ you'll have 1000 channels
-where every time there is a matching word to a category, the item containing
+where every time there is a matching word to a category, the obj containing
 this word will be pushed to this specific channel.
 
 ..note:: The channel will have the name of the file created.
@@ -44,7 +44,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
 
 
 class Categ(AbstractModule):
@@ -81,27 +80,32 @@ class Categ(AbstractModule):
         self.categ_words = tmp_dict.items()
 
     def compute(self, message, r_result=False):
-        # Create Item Object
-        item = self.get_obj()
-        # Get item content
-        content = item.get_content()
+        # Get obj Object
+        obj = self.get_obj()
+        # Get obj content
+        content = obj.get_content()
         categ_found = []
 
-        # Search for pattern categories in item content
+        # Search for pattern categories in obj content
         for categ, pattern in self.categ_words:
 
-            found = set(re.findall(pattern, content))
-            lenfound = len(found)
-            if lenfound >= self.matchingThreshold:
-                categ_found.append(categ)
-                msg = str(lenfound)
+            if obj.type == 'message':
+                self.add_message_to_queue(message='0', queue=categ)
+            else:
 
-                # Export message to categ queue
-                print(msg, categ)
-                self.add_message_to_queue(message=msg, queue=categ)
+                found = set(re.findall(pattern, content))
+                lenfound = len(found)
+                if lenfound >= self.matchingThreshold:
+                    categ_found.append(categ)
+                    msg = str(lenfound)
 
-                self.redis_logger.debug(
-                    f'Categ;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {lenfound} as {categ};{item.get_id()}')
+                    # Export message to categ queue
+                    print(msg, categ)
+                    self.add_message_to_queue(message=msg, queue=categ)
+
+                    self.redis_logger.debug(
+                        f'Categ;{obj.get_source()};{obj.get_date()};{obj.get_basename()};Detected {lenfound} as {categ};{obj.get_id()}')
+
         if r_result:
             return categ_found
 
