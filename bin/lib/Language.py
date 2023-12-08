@@ -269,8 +269,8 @@ class LanguageTranslator:
         try:
             for dict_lang in self.lt.languages():
                 languages.append({'iso': dict_lang['code'], 'language': dict_lang['name']})
-        except:
-            pass
+        except Exception as e:
+            print(e)
         return languages
 
     def detect_cld3(self, content):
@@ -315,7 +315,8 @@ class LanguageTranslator:
 
 try:
     LIST_LANGUAGES = LanguageTranslator().languages()
-except Exception:
+except Exception as e:
+    print(e)
     LIST_LANGUAGES = []
 
 def get_translation_languages():
