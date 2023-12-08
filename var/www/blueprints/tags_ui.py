@@ -275,6 +275,15 @@ def tags_search_items():
     dict_tagged['date'] = Date.sanitise_date_range('', '', separator='-')
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
+@tags_ui.route('/tag/search/message')
+@login_required
+@login_read_only
+def tags_search_messages():
+    object_type = 'message'
+    dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
+    dict_tagged['date'] = Date.sanitise_date_range('', '', separator='-')
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
 @tags_ui.route('/tag/search/domain')
 @login_required
 @login_read_only
@@ -337,7 +346,7 @@ def get_obj_by_tags():
 
     # TODO REPLACE ME
     dict_obj = Tag.get_obj_by_tags(object_type, list_tag, date_from=date_from, date_to=date_to, page=page)
-    print(dict_obj)
+    # print(dict_obj)
 
     if dict_obj['tagged_obj']:
         dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s",
