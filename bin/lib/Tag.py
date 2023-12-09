@@ -64,7 +64,7 @@ unsafe_tags = build_unsafe_tags()
 # get set_keys: intersection
 def get_obj_keys_by_tags(tags, obj_type, subtype='', date=None):
     l_set_keys = []
-    if obj_type == 'item':
+    if obj_type == 'item' or obj_type == 'message':
         for tag in tags:
             l_set_keys.append(f'{obj_type}:{subtype}:{tag}:{date}')
     else:
@@ -658,6 +658,15 @@ def add_object_tag(tag, obj_type, obj_id, subtype=''):
                 add_object_tag(tag, "domain", domain)
 
             update_tag_metadata(tag, date)
+        # MESSAGE
+        elif obj_type == 'message':
+            timestamp = obj_id.split('/')[1]
+            date = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d')
+            r_tags.sadd(f'{obj_type}:{subtype}:{tag}:{date}', obj_id)
+
+            # TODO ADD CHAT TAGS ????
+
+            update_tag_metadata(tag, date)
         else:
             r_tags.sadd(f'{obj_type}:{subtype}:{tag}', obj_id)
 
@@ -729,7 +738,7 @@ def delete_object_tags(obj_type, subtype, obj_id):
 def get_obj_by_tags(obj_type, l_tags, date_from=None, date_to=None, nb_obj=50, page=1):
     # with daterange
     l_tagged_obj = []
-    if obj_type=='item':
+    if obj_type=='item' or obj_type=='message':
         #sanityze date
         date_range = sanitise_tags_date_range(l_tags, date_from=date_from, date_to=date_to)
         l_dates = Date.substract_date(date_range['date_from'], date_range['date_to'])

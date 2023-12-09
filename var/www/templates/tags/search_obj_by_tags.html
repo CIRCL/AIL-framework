@@ -201,7 +201,7 @@
           {% with page=dict_tagged['page'], nb_page_max=dict_tagged['nb_pages'],  nb_first_elem=dict_tagged['nb_first_elem'], nb_last_elem=dict_tagged['nb_last_elem'], nb_all_elem=dict_tagged['nb_all_elem'] %}
             {% set object_name= dict_tagged['object_name'] %}
             {% set target_url=url_for('tags_ui.get_obj_by_tags') + "?object_type=" + dict_tagged['object_type'] + "&ltags=" + dict_tagged['current_tags_str'] %}
-            {%if dict_tagged["object_type"]=="item"%}
+            {%if dict_tagged["object_type"]=="item" or dict_tagged["object_type"]=="message"%}
               {% set target_url= target_url + "&date_from=" + dict_tagged['date']['date_from'] + "&date_to=" + dict_tagged['date']['date_to'] %}
             {%endif%}
             {% include 'pagination.html' %}
