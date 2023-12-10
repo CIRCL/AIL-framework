@@ -130,18 +130,36 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_nb_messages(self):
         return r_object.zcard(f'messages:{self.type}:{self.subtype}:{self.id}')
 
-    def _get_messages(self, nb=-1, page=1):
+    def _get_messages(self, nb=-1, page=-1):
         if nb < 1:
-            return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
+            messages = r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
+            nb_pages = 0
+            page = 1
+            total = len(messages)
+            nb_first = 1
+            nb_last = total
         else:
+            total = r_object.zcard(f'messages:{self.type}:{self.subtype}:{self.id}')
+            nb_pages = total / nb
+            if not nb_pages.is_integer():
+                nb_pages = int(nb_pages) + 1
+            else:
+                nb_pages = int(nb_pages)
+            if page > nb_pages or page < 1:
+                page = nb_pages
+
             if page > 1:
-                start = page - 1 + nb
+                start = (page - 1) * nb
             else:
                 start = 0
-            messages = r_object.zrevrange(f'messages:{self.type}:{self.subtype}:{self.id}', start, start+nb-1, withscores=True)
-            if messages:
-                messages = reversed(messages)
-            return messages
+            messages = r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', start, start+nb-1, withscores=True)
+            # if messages:
+            #     messages = reversed(messages)
+            nb_first = start+1
+            nb_last = start+nb
+        if nb_last > total:
+            nb_last = total
+        return messages, {'nb': nb, 'page': page, 'nb_pages': nb_pages, 'total': total, 'nb_first': nb_first, 'nb_last': nb_last}
 
     def get_timestamp_first_message(self):
         return r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, 0, withscores=True)
@@ -184,12 +202,23 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         meta = message.get_meta(options={'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, timestamp=timestamp, translation_target=translation_target)
         return meta
 
-    def get_messages(self, start=0, page=1, nb=500, unread=False, translation_target='en'):  # threads ???? # TODO ADD last/first message timestamp + return page
+    def get_messages(self, start=0, page=-1, nb=500, unread=False, translation_target='en'):  # threads ???? # TODO ADD last/first message timestamp + return page
         # TODO return message meta
         tags = {}
         messages = {}
         curr_date = None
-        for message in self._get_messages(nb=2000, page=1):
+        try:
+            nb = int(nb)
+        except TypeError:
+            nb = 500
+        if not page:
+            page = -1
+        try:
+            page = int(page)
+        except TypeError:
+            page = 1
+        mess, pagination = self._get_messages(nb=nb, page=page)
+        for message in mess:
             timestamp = message[1]
             date_day = datetime.fromtimestamp(timestamp).strftime('%Y/%m/%d')
             if date_day != curr_date:
@@ -203,7 +232,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
                     if tag not in tags:
                         tags[tag] = 0
                     tags[tag] += 1
-        return messages, tags
+        return messages, pagination, tags
 
     # TODO REWRITE ADD OR ADD MESSAGE ????
     # add

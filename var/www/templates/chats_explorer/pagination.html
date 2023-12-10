@@ -1,0 +1,50 @@
+<div class="my-2">
+	<div class="d-flex justify-content-center">
+		<nav class="mt-4" aria-label="...">
+			<ul class="pagination">
+				<li class="page-item {% if pagination['page']==1 %}disabled{%endif%}">
+					<a class="page-link" href="{{ endpoint_url }}&page={{pagination['page']-1}}">Previous</a>
+				</li>
+
+				{% if pagination['page']>3 %}
+					<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page=1">1</a></li>
+					<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+					<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['page'] - 1 }}">{{ pagination['page'] - 1 }}</a></li>
+					<li class="page-item active"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['page'] }}">{{ pagination['page'] }}</a></li>
+				{% else %}
+				{% if pagination['page']>2 %}<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['page'] - 2 }}">{{ pagination['page'] - 2 }}</a></li>{%endif%}
+				{% if pagination['page']>1 %}<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['page'] - 1 }}">{{ pagination['page'] - 1 }}</a></li>{%endif%}
+					<li class="page-item active"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['page'] }}">{{ pagination['page'] }}</a></li>
+				{% endif %}
+
+				{% if pagination['nb_pages']>3 and pagination['nb_pages'] != pagination['page'] %}
+					<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['page'] + 1 }}">{{ pagination['page'] + 1 }}</a></li>
+					<li class="page-item disabled"><a class="page-link" aria-disabled="true" href="#">...</a></li>
+					<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['nb_pages'] }}">{{ pagination['nb_pages'] }}</a></li>
+				{% else %}
+                    {%if pagination['nb_pages'] - pagination['page']>2 %}<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['nb_pages'] - 2  }}">{{ pagination['nb_pages'] - 2 }}</a></li>{%endif%}
+                    {%if pagination['nb_pages'] - pagination['page']>1 %}<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['nb_pages'] - 1 }}">{{ pagination['nb_pages'] - 1 }}</a></li>{%endif%}
+                    {%if pagination['nb_pages'] - pagination['page']>0 %}<li class="page-item"><a class="page-link" href="{{ endpoint_url }}&page={{ pagination['nb_pages'] }}">{{ pagination['nb_pages'] }}</a></li>{%endif%}
+				{% endif %}
+
+				<li class="page-item {%if pagination['page']==pagination['nb_pages'] %}disabled{%endif%}">
+					<a class="page-link" href="{{ endpoint_url }}&page={{ pagination['page'] + 1 }}" aria-disabled="true">Next</a>
+				</li>
+			</ul>
+		</nav>
+	</div>
+
+	{%if pagination['total'] %}
+		<div class="d-flex justify-content-center">
+			<span class="badge badge-info text-white">
+				results:&nbsp;
+				<span class="badge badge-light">{{ pagination['nb_first'] }}-{{ pagination['nb_last'] }}</span>
+				<span> / </span>
+				<span class="badge badge-light">{{ pagination['total'] }}</span>
+			 </span>
+		</div>
+		<br>
+		<br>
+		<br>
+	{%endif%}
+</div>

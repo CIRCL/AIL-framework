@@ -82,7 +82,9 @@ def chats_explorer_chat():
     chat_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
     target = request.args.get('target')
-    chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target)
+    nb_messages = request.args.get('nb')
+    page = request.args.get('page')
+    chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
     if chat[1] != 200:
         return create_json_response(chat[0], chat[1])
     else:
@@ -109,7 +111,9 @@ def objects_subchannel_messages():
     subchannel_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
     target = request.args.get('target')
-    subchannel = chats_viewer.api_get_subchannel(subchannel_id, instance_uuid, translation_target=target)
+    nb_messages = request.args.get('nb')
+    page = request.args.get('page')
+    subchannel = chats_viewer.api_get_subchannel(subchannel_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
     if subchannel[1] != 200:
         return create_json_response(subchannel[0], subchannel[1])
     else:
@@ -124,7 +128,9 @@ def objects_thread_messages():
     thread_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
     target = request.args.get('target')
-    thread = chats_viewer.api_get_thread(thread_id, instance_uuid, translation_target=target)
+    nb_messages = request.args.get('nb')
+    page = request.args.get('page')
+    thread = chats_viewer.api_get_thread(thread_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
     if thread[1] != 200:
         return create_json_response(thread[0], thread[1])
     else:

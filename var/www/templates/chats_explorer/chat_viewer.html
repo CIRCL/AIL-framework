@@ -164,6 +164,18 @@
                     {% with translate_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), obj_id=chat['id'] %}
                         {% include 'chats_explorer/block_translation.html' %}
                     {% endwith %}
+                    {% with obj_subtype=chat['subtype'], obj_id=chat['id'], url_endpoint=url_for("chats_explorer.chats_explorer_chat"), nb=chat['pagination']['nb']  %}
+                        {% set date_from=chat['first_seen'] %}
+                        {% set date_to=chat['last_seen'] %}
+                        {% include 'block_obj_time_search.html' %}
+                    {% endwith %}
+                    {% with endpoint_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), pagination=chat['pagination'] %}
+                        {% set endpoint_url = endpoint_url + "&id=" + chat['id'] + "&nb=" + chat['pagination']['nb'] | string %}
+                        {% if translation_target %}
+                            {% set endpoint_url = endpoint_url + "&target=" + translation_target %}
+                        {% endif %}
+                        {% include 'chats_explorer/pagination.html' %}
+                    {% endwith %}
 
                     <div class="position-relative">
                         <div class="chat-messages p-2">
@@ -188,6 +200,14 @@
 
                         </div>
                     </div>
+
+                    {% with endpoint_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), pagination=chat['pagination'] %}
+                        {% set endpoint_url = endpoint_url + "&id=" + chat['id'] + "&nb=" + chat['pagination']['nb'] | string %}
+                        {% if translation_target %}
+                            {% set endpoint_url = endpoint_url + "&target=" + translation_target %}
+                        {% endif %}
+                        {% include 'chats_explorer/pagination.html' %}
+                    {% endwith %}
 
                 {% endif %}
 

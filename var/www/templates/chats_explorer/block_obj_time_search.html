@@ -1,0 +1,85 @@
+<div class="card mb-3 mt-1">
+    <div class="card-body">
+        <h5 class="card-title">Filter by Time :</h5>
+
+{#        <div class="row mb-3">#}
+{#            <div class="col-md-6">#}
+{#                <div class="input-group" id="date-range-from">#}
+{#                    <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>#}
+{#                    <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from[0:4] }}-{{ date_from[4:6] }}-{{ date_from[6:8] }}" name="date_from" autocomplete="off">#}
+{#                </div>#}
+{#                    <div class="input-group" id="time-range-from">#}
+{#                        <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-clock" aria-hidden="true"></i></span></div>#}
+{#                        <input class="form-control" type="time" id="time-range-from-input" name="time_from" autocomplete="off">#}
+{#                    </div>#}
+{#            </div>#}
+{#            <div class="col-md-6">#}
+{#                <div class="input-group" id="date-range-to">#}
+{#                    <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>#}
+{#                    <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to[0:4] }}-{{ date_to[4:6] }}-{{ date_to[6:8] }}" name="date_to" autocomplete="off">#}
+{#                </div>#}
+{#                    <div class="input-group" id="time-range-to">#}
+{#                        <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-clock" aria-hidden="true"></i></span></div>#}
+{#                        <input class="form-control" type="time" id="time-range-from-to" name="time_to" autocomplete="off">#}
+{#                    </div>#}
+{#            </div>#}
+{#        </div>#}
+
+        <div class="input-group mb-3">
+            <div class="input-group">
+                <div class="input-group-prepend"><span class="input-group-text">Numbers by page</span></div>
+                <input id="nb_messages" name="nb_messages" type="number" value="{{ nb }}" class="form-control" aria-describedby="button-clear-tags" autocomplete="off">
+            </div>
+        </div>
+
+        <button class="btn btn-primary" type="button" id="button-search-tags" onclick="filter_by_time()">
+            <i class="fas fa-search"></i> Show
+        </button>
+
+    </div>
+</div>
+
+<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+<script>
+
+    function filter_by_time() {
+		let parameter = "?uuid={{ obj_subtype }}&id={{ obj_id }}";
+		//let date_from = $('#date-range-from-input').val();
+	  	//let date_to = $('#date-range-to-input').val();
+        let nb_messages = $('#nb_messages').val();
+        //parameter = parameter + "&date_from=" + date_from + "&date_to=" + date_to + "&nb=" + nb_messages {%if page%}+ "&page={{ page }}"{%endif%};
+        parameter = parameter + "&nb=" + nb_messages {%if page%}+ "&page={{ page }}"{%endif%};
+  	    window.location.replace("{{ url_endpoint }}" + parameter);
+    }
+
+
+	$('#date-range-from').dateRangePicker({
+        separator : ' to ',
+        getValue: function(){
+            if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+                return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+            else
+                return '';
+        },
+        setValue: function(s,s1,s2){
+            $('#date-range-from-input').val(s1);
+            $('#date-range-to-input').val(s2);
+        }
+	});
+	$('#date-range-to').dateRangePicker({
+        separator : ' to ',
+        getValue: function(){
+            if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
+                return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
+            else
+                return '';
+        },
+        setValue: function(s,s1,s2){
+            $('#date-range-from-input').val(s1);
+            $('#date-range-to-input').val(s2);
+        }
+	});
+
+</script>

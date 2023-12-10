@@ -331,7 +331,7 @@ def api_get_chat_service_instance(chat_instance_uuid):
         return {"status": "error", "reason": "Unknown uuid"}, 404
     return chat_instance.get_meta({'chats'}), 200
 
-def api_get_chat(chat_id, chat_instance_uuid, translation_target=None):
+def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
@@ -341,7 +341,7 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None):
     if meta['subchannels']:
         meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
     else:
-        meta['messages'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target)
+        meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
 
 def api_get_nb_message_by_week(chat_id, chat_instance_uuid):
@@ -367,7 +367,7 @@ def api_get_chat_participants(chat_type, chat_subtype, chat_id):
         meta['participants'] = chat_participants
         return meta, 200
 
-def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None):
+def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1):
     subchannel = ChatSubChannels.ChatSubChannel(chat_id, chat_instance_uuid)
     if not subchannel.exists():
         return {"status": "error", "reason": "Unknown subchannel"}, 404
@@ -378,17 +378,17 @@ def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None):
         meta['threads'] = get_threads_metas(meta['threads'])
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
-    meta['messages'], meta['tags_messages'] = subchannel.get_messages(translation_target=translation_target)
+    meta['messages'], meta['pagination'], meta['tags_messages'] = subchannel.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
 
-def api_get_thread(thread_id, thread_instance_uuid, translation_target=None):
+def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=-1, page=-1):
     thread = ChatThreads.ChatThread(thread_id, thread_instance_uuid)
     if not thread.exists():
         return {"status": "error", "reason": "Unknown thread"}, 404
     meta = thread.get_meta({'chat', 'nb_messages', 'nb_participants'})
     # if meta['chat']:
     #     meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
-    meta['messages'], meta['tags_messages'] = thread.get_messages(translation_target=translation_target)
+    meta['messages'], meta['pagination'], meta['tags_messages'] = thread.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
 
 def api_get_message(message_id):
