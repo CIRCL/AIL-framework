@@ -161,7 +161,7 @@
                         {% include 'objects/image/block_blur_img_slider.html' %}
                     </span>
 
-                    {% with translate_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), obj_id=chat['id'] %}
+                    {% with translate_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
                         {% include 'chats_explorer/block_translation.html' %}
                     {% endwith %}
                     {% with obj_subtype=chat['subtype'], obj_id=chat['id'], url_endpoint=url_for("chats_explorer.chats_explorer_chat"), nb=chat['pagination']['nb']  %}

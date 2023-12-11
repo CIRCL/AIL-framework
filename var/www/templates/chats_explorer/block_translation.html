@@ -32,6 +32,6 @@
 function translate_selector(){
     var t = document.getElementById("translation_selector_target");
     var target = t.value
-    window.location.replace("{{ translate_url }}&id={{ obj_id }}&target=" + target);
+    window.location.replace("{{ translate_url }}&id={{ obj_id }}{% if pagination %}&nb={{ pagination['nb'] }}&page={{ pagination['page'] }}{% endif %}&target=" + target);
 }
 </script>

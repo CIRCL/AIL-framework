@@ -138,7 +138,7 @@
                 <span class="mt-3">
                     {% include 'objects/image/block_blur_img_slider.html' %}
                 </span>
-                {% with translate_url=url_for('chats_explorer.objects_thread_messages', uuid=meta['subtype']), obj_id=meta['id'] %}
+                {% with translate_url=url_for('chats_explorer.objects_thread_messages', uuid=meta['subtype']), obj_id=meta['id'], pagination=meta['pagination'] %}
                     {% include 'chats_explorer/block_translation.html' %}
                 {% endwith %}
                 {% with obj_subtype=meta['subtype'], obj_id=meta['id'], url_endpoint=url_for("chats_explorer.objects_thread_messages"), nb=meta['pagination']['nb']  %}
