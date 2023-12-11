@@ -1642,8 +1642,7 @@ def add_task_to_lacus_queue():
         return None
     task_uuid, priority = task_uuid[0]
     task = CrawlerTask(task_uuid)
-    task.start()
-    return task.uuid, priority
+    return task, priority
 
 # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
 def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,

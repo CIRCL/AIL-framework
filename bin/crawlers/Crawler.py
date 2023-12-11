@@ -121,7 +121,9 @@ class Crawler(AbstractModule):
         if crawlers.get_nb_crawler_captures() < crawlers.get_crawler_max_captures():
             task_row = crawlers.add_task_to_lacus_queue()
             if task_row:
-                task_uuid, priority = task_row
+                task, priority = task_row
+                task.start()
+                task_uuid = task.uuid
                 try:
                     self.enqueue_capture(task_uuid, priority)
                 except ConnectionError:
@@ -195,10 +197,17 @@ class Crawler(AbstractModule):
         print(task.uuid, capture_uuid, 'launched')
 
         if self.ail_to_push_discovery:
+
             if task.get_depth() == 1 and priority < 10 and task.get_domain().endswith('.onion'):
                 har = task.get_har()
                 screenshot = task.get_screenshot()
-                self.ail_to_push_discovery.add_crawler_capture(task_uuid, capture_uuid, url, har=har,
+                # parent_id = task.get_parent()
+                # if parent_id != 'manual' and parent_id != 'auto':
+                #     parent = parent_id[19:-36]
+                # else:
+                #     parent = 'AIL_capture'
+
+                self.ail_to_push_discovery.add_crawler_capture(task_uuid, capture_uuid, url, har=har,  # parent=parent,
                                                                screenshot=screenshot, depth_limit=1, proxy='force_tor')
                 print(task.uuid, capture_uuid, 'Added to ail_to_push_discovery')
         return capture_uuid
