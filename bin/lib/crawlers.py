@@ -1793,11 +1793,12 @@ def api_add_crawler_capture(data, user_id):
     # parent = data.get('parent')
 
     # TODO parent
-    create_task(task['url'], depth=task['depth_limit'], har=task['har'], screenshot=task['screenshot'],
-                proxy=task['proxy'], tags=task['tags'],
-                parent='AIL_capture', task_uuid=task_uuid, external=True)
-
+    task_uuid = create_task(task['url'], depth=task['depth_limit'], har=task['har'], screenshot=task['screenshot'],
+                            proxy=task['proxy'], tags=task['tags'],
+                            parent='manual', task_uuid=task_uuid, external=True)
+    task = CrawlerTask(task_uuid)
     create_capture(capture_uuid, task_uuid)
+    task.start()
     return {'uuid': capture_uuid}, 200
 
 ###################################################################################
