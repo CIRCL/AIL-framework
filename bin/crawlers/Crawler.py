@@ -209,7 +209,7 @@ class Crawler(AbstractModule):
 
                 self.ail_to_push_discovery.add_crawler_capture(task_uuid, capture_uuid, url, har=har,  # parent=parent,
                                                                screenshot=screenshot, depth_limit=1, proxy='force_tor')
-                print(task.uuid, capture_uuid, 'Added to ail_to_push_discovery')
+                print(task.uuid, capture_uuid, url, 'Added to ail_to_push_discovery')
         return capture_uuid
 
     # CRAWL DOMAIN
