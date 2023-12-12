@@ -219,6 +219,8 @@ class Crawler(AbstractModule):
         task = capture.get_task()
         domain = task.get_domain()
         print(domain)
+        if not domain:
+            raise Exception(f'Error: domain {domain}')
 
         self.domain = Domain(domain)
         self.original_domain = Domain(domain)
