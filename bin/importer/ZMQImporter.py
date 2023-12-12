@@ -76,7 +76,7 @@ class ZMQModuleImporter(AbstractModule):
 
             obj_id, gzip64encoded = message.split(' ', 1)  # TODO ADD LOGS
             splitted = obj_id.split('>>', 1)
-            if splitted == 2:
+            if len(splitted) == 2:
                 feeder_name, obj_id = splitted
             else:
                 feeder_name = self.default_feeder_name
