@@ -25,9 +25,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
-# from lib import Statistics
 
 class LibInjection(AbstractModule):
     """docstring for LibInjection module."""

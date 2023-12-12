@@ -265,8 +265,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SQLInjectionDetection" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SQLInjectionDetection.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./LibInjection.py; read x"
-    sleep 0.1
+#    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./LibInjection.py; read x"
+#    sleep 0.1
 #    screen -S "Script_AIL" -X screen -t "Pasties" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Pasties.py; read x"
 #    sleep 0.1
 
