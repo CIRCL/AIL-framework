@@ -83,6 +83,13 @@ def crawler_dashboard_json():
     return jsonify({'crawlers_status': crawlers_status,
                     'stats': crawlers_latest_stats})
 
+@crawler_splash.route("/crawlers/dashboard/captures/delete", methods=['GET'])
+@login_required
+@login_admin
+def crawlers_dashboard():
+    crawlers.delete_captures()
+    return redirect(url_for('crawler_splash.crawlers_dashboard'))
+
 
 @crawler_splash.route("/crawlers/manual", methods=['GET'])
 @login_required
