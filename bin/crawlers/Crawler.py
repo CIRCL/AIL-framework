@@ -207,6 +207,9 @@ class Crawler(AbstractModule):
                 # else:
                 #     parent = 'AIL_capture'
 
+                if not url:
+                    raise Exception(f'Error: url is None, {task.uuid}, {capture_uuid}, {url}')
+
                 self.ail_to_push_discovery.add_crawler_capture(task_uuid, capture_uuid, url, har=har,  # parent=parent,
                                                                screenshot=screenshot, depth_limit=1, proxy='force_tor')
                 print(task.uuid, capture_uuid, url, 'Added to ail_to_push_discovery')
