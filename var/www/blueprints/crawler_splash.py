@@ -86,7 +86,7 @@ def crawler_dashboard_json():
 @crawler_splash.route("/crawlers/dashboard/captures/delete", methods=['GET'])
 @login_required
 @login_admin
-def crawlers_dashboard():
+def crawlers_dashboard_captures_delete():
     crawlers.delete_captures()
     return redirect(url_for('crawler_splash.crawlers_dashboard'))
 
