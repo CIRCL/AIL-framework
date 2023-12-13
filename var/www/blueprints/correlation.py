@@ -121,9 +121,24 @@ def show_correlation():
         correl_option = request.form.get('ItemCheck')
         if correl_option:
             filter_types.append('item')
-        correl_option = request.form.get('TitleCheck')
+        correl_option = request.form.get('chatCheck')
         if correl_option:
-            filter_types.append('title')
+            filter_types.append('chat')
+        correl_option = request.form.get('subchannelCheck')
+        if correl_option:
+            filter_types.append('chat-subchannel')
+        correl_option = request.form.get('threadCheck')
+        if correl_option:
+            filter_types.append('chat-thread')
+        correl_option = request.form.get('messageCheck')
+        if correl_option:
+            filter_types.append('message')
+        correl_option = request.form.get('imageCheck')
+        if correl_option:
+            filter_types.append('image')
+        correl_option = request.form.get('user_accountCheck')
+        if correl_option:
+            filter_types.append('user-account')
 
         # list as params
         filter_types = ",".join(filter_types)

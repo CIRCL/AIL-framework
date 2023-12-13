@@ -59,8 +59,8 @@ CORRELATION_TYPES_BY_OBJ = {
     "pgp": ["domain", "item", "message"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],
-    "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message"],
-    "username": ["domain", "item", "message"],  # TODO chat-user/account
+    "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "username"],
+    "username": ["domain", "item", "message", "user-account"],
 }
 
 def get_obj_correl_types(obj_type):

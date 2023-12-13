@@ -249,16 +249,44 @@
                                                 <label class="form-check-label" for="PgpCheck">PGP</label>
                                             </div>
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="UsernameCheck" name="UsernameCheck" {%if "username" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="UsernameCheck">Username</label>
-                                            </div>
-                                            <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="DomainCheck" name="DomainCheck" {%if "domain" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="DomainCheck">Domain</label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="ItemCheck" name="ItemCheck" {%if "item" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="ItemCheck">Item</label>
+                                            </div>
+
+                                            <hr>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="chatCheck" name="chatCheck" {%if "chat" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="chatCheck">Chat</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="subchannelCheck" name="subchannelCheck" {%if "chat-subchannel" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="subchannelCheck">Chat-Subchannel</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="threadCheck" name="threadCheck" {%if "chat-thread" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="threadCheck">Chat-Thread</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="messageCheck" name="messageCheck" {%if "message" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="messageCheck">Message</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="imageCheck" name="imageCheck" {%if "image" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="imageCheck">Image</label>
+                                            </div>
+
+                                            <hr>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="user_accountCheck" name="user_accountCheck" {%if "user-account" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="user_accountCheck">User-Account</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="UsernameCheck" name="UsernameCheck" {%if "username" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="UsernameCheck">Username</label>
                                             </div>
 
                                     </li>
