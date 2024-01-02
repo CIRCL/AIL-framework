@@ -119,6 +119,9 @@ class UserAccount(AbstractSubtypeObject):
     def update_username_timeline(self, username_global_id, timestamp):
         self._get_timeline_username().add_timestamp(timestamp, username_global_id)
 
+    def get_messages_by_chat_obj(self, chat_obj):
+        return self.get_correlation_iter_obj(chat_obj, 'message')
+
     def get_meta(self, options=set()): # TODO Username timeline
         meta = self._get_meta(options=options)
         meta['id'] = self.id
@@ -191,7 +194,8 @@ def get_all_by_subtype(subtype):
     return get_all_id('user-account', subtype)
 
 
-# if __name__ == '__main__':
-#     name_to_search = 'co'
-#     subtype = 'telegram'
-#     print(search_usernames_by_name(name_to_search, subtype))
+if __name__ == '__main__':
+    from lib.objects import Chats
+    chat = Chats.Chat('', '00098785-7e70-5d12-a120-c5cdc1252b2b')
+    account = UserAccount('', '00098785-7e70-5d12-a120-c5cdc1252b2b')
+    print(account.get_messages_by_chat_obj(chat))

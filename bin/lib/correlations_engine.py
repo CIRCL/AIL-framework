@@ -123,6 +123,9 @@ def is_obj_correlated(obj_type, subtype, obj_id, obj2_type, subtype2, obj2_id):
     except:
         return False
 
+def get_obj_inter_correlation(obj_type1, subtype1, obj_id1, obj_type2, subtype2, obj_id2, correl_type):
+    return r_metadata.sinter(f'correlation:obj:{obj_type1}:{subtype1}:{correl_type}:{obj_id1}', f'correlation:obj:{obj_type2}:{subtype2}:{correl_type}:{obj_id2}')
+
 def add_obj_correlation(obj1_type, subtype1, obj1_id, obj2_type, subtype2, obj2_id):
     if subtype1 is None:
         subtype1 = ''

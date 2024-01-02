@@ -22,7 +22,7 @@ from lib import ail_logger
 from lib import Tag
 from lib.ConfigLoader import ConfigLoader
 from lib import Duplicate
-from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type
+from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
@@ -269,6 +269,12 @@ class AbstractObject(ABC):
         """
         return is_obj_correlated(self.type, self.subtype, self.id,
                                  object2.get_type(), object2.get_subtype(r_str=True), object2.get_id())
+
+    def get_correlation_iter(self, obj_type2, subtype2, obj_id2, correl_type):
+        return get_obj_inter_correlation(self.type, self.get_subtype(r_str=True), self.id, obj_type2, subtype2, obj_id2, correl_type)
+
+    def get_correlation_iter_obj(self, object2, correl_type):
+        return self.get_correlation_iter(object2.get_type(), object2.get_subtype(r_str=True), object2.get_id(), correl_type)
 
     def delete_correlation(self, type2, subtype2, id2):
         """

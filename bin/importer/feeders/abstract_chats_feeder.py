@@ -318,7 +318,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 message.create('')
                 objs.add(message)
 
-            if message.exists():
+            if message.exists(): # TODO Correlation user-account image/filename ????
                 obj = Images.create(self.get_message_content())
                 obj.add(date, message)
                 obj.set_parent(obj_global_id=message.get_global_id())
@@ -335,6 +335,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
             # TODO get created subchannel + thread
             #    => create correlation user-account with object
+
+            print(obj.id)
 
             # CHAT
             chat_objs = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
