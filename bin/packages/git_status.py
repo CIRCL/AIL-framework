@@ -129,17 +129,25 @@ def get_last_tag_from_local(verbose=False):
             print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
         return ''
 
-# Get last local tag
+# Get last remote tag
 def get_last_tag_from_remote(verbose=False):
     if verbose:
         print('retrieving last remote tag ...')
         #print('git ls-remote --tags')
+
     process = subprocess.run(['git', 'ls-remote', '--tags'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
-        res = process.stdout.split(b'\n')[-2].split(b'/')[-1].replace(b'^{}', b'').decode()
-        if verbose:
-            print(res)
-        return res
+        output_lines = process.stdout.split(b'\n')
+        if len(output_lines) > 1:
+            # Assuming we want the second-to-last line as before
+            res = output_lines[-2].split(b'/')[-1].replace(b'^{}', b'').decode()
+            if verbose:
+                print(res)
+            return res
+        else:
+            if verbose:
+                print("No tags found or insufficient output from git command.")
+            return ''
 
     else:
         if verbose:
