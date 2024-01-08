@@ -115,12 +115,6 @@ then
     source ./../../AILENV/bin/activate
 fi
 
-#Update MISP Taxonomies and Galaxies
-pip3 install git+https://github.com/MISP/PyTaxonomies --upgrade  # TODO move to requirement
-pip3 install git+https://github.com/MISP/PyMISPGalaxies --upgrade  # TODO move to requirement
-
 #Update PyMISP
 pip3 install pymisp --upgrade
 
-#Update the Hive
-pip3 install thehive4py --upgrade  # TODO move to requirement

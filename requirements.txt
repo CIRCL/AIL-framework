@@ -4,6 +4,8 @@ pymisp>=2.4.144
 d4-pyclient>=0.1.6
 
 thehive4py
+git+https://github.com/MISP/PyTaxonomies
+git+https://github.com/MISP/PyMISPGalaxies
 
 # Core
 redis>4.4.4
