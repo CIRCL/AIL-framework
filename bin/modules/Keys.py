@@ -71,26 +71,26 @@ class Keys(AbstractModule):
             # find = True
 
         if KeyEnum.PGP_PUBLIC_KEY_BLOCK.value in content:
-            tag = f'infoleak:automatic-detection="pgp-public-key-block";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="pgp-public-key-block"'
             self.add_message_to_queue(message=tag, queue='Tags')
             get_pgp_content = True
 
         if KeyEnum.PGP_SIGNATURE.value in content:
-            tag = f'infoleak:automatic-detection="pgp-signature";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="pgp-signature"'
             self.add_message_to_queue(message=tag, queue='Tags')
             get_pgp_content = True
 
         if KeyEnum.PGP_PRIVATE_KEY_BLOCK.value in content:
             self.redis_logger.warning(f'{item.get_basename()} has a pgp private key block message')
 
-            tag = f'infoleak:automatic-detection="pgp-private-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="pgp-private-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             get_pgp_content = True
 
         if KeyEnum.CERTIFICATE.value in content:
             self.redis_logger.warning(f'{item.get_basename()} has a certificate message')
 
-            tag = f'infoleak:automatic-detection="certificate";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="certificate"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
@@ -98,7 +98,7 @@ class Keys(AbstractModule):
             self.redis_logger.warning(f'{item.get_basename()} has a RSA private key message')
             print('rsa private key message found')
 
-            tag = f'infoleak:automatic-detection="rsa-private-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="rsa-private-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
@@ -106,7 +106,7 @@ class Keys(AbstractModule):
             self.redis_logger.warning(f'{item.get_basename()} has a private key message')
             print('private key message found')
 
-            tag = f'infoleak:automatic-detection="private-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="private-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
@@ -114,7 +114,7 @@ class Keys(AbstractModule):
             self.redis_logger.warning(f'{item.get_basename()} has an encrypted private key message')
             print('encrypted private key message found')
 
-            tag = f'infoleak:automatic-detection="encrypted-private-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="encrypted-private-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
@@ -122,7 +122,7 @@ class Keys(AbstractModule):
             self.redis_logger.warning(f'{item.get_basename()} has an openssh private key message')
             print('openssh private key message found')
 
-            tag = f'infoleak:automatic-detection="private-ssh-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="private-ssh-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
@@ -130,7 +130,7 @@ class Keys(AbstractModule):
             self.redis_logger.warning(f'{item.get_basename()} has an ssh2 private key message')
             print('SSH2 private key message found')
 
-            tag = f'infoleak:automatic-detection="private-ssh-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="private-ssh-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
@@ -138,28 +138,28 @@ class Keys(AbstractModule):
             self.redis_logger.warning(f'{item.get_basename()} has an openssh private key message')
             print('OpenVPN Static key message found')
 
-            tag = f'infoleak:automatic-detection="vpn-static-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="vpn-static-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
         if KeyEnum.DSA_PRIVATE_KEY.value in content:
             self.redis_logger.warning(f'{item.get_basename()} has a dsa private key message')
 
-            tag = f'infoleak:automatic-detection="dsa-private-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="dsa-private-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
         if KeyEnum.EC_PRIVATE_KEY.value in content:
             self.redis_logger.warning(f'{item.get_basename()} has an ec private key message')
 
-            tag = f'infoleak:automatic-detection="ec-private-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="ec-private-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
         if KeyEnum.PUBLIC_KEY.value in content:
             self.redis_logger.warning(f'{item.get_basename()} has a public key message')
 
-            tag = f'infoleak:automatic-detection="public-key";{item.get_id()}'
+            tag = 'infoleak:automatic-detection="public-key"'
             self.add_message_to_queue(message=tag, queue='Tags')
             # find = True
 
