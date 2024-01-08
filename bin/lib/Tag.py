@@ -635,7 +635,7 @@ def update_tag_metadata(tag, date, delete=False): # # TODO: delete Tags
 # r_tags.smembers(f'{tag}:{date}')
 # r_tags.smembers(f'{obj_type}:{tag}')
 def get_tag_objects(tag, obj_type, subtype='', date=''):
-    if obj_type == 'item':
+    if obj_type == 'item' or obj_type == 'message':
         return r_tags.smembers(f'{obj_type}:{subtype}:{tag}:{date}')
     else:
         return r_tags.smembers(f'{obj_type}:{subtype}:{tag}')
@@ -714,6 +714,12 @@ def delete_object_tag(tag, obj_type, id, subtype=''):
         r_tags.sadd(f'list_tags:{obj_type}:{subtype}', tag)
         if obj_type == 'item':
             date = item_basic.get_item_date(id)
+            r_tags.srem(f'{obj_type}:{subtype}:{tag}:{date}', id)
+
+            update_tag_metadata(tag, date, delete=True)
+        elif obj_type == 'message':
+            timestamp = id.split('/')[1]
+            date = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d')
             r_tags.srem(f'{obj_type}:{subtype}:{tag}:{date}', id)
 
             update_tag_metadata(tag, date, delete=True)
@@ -1457,6 +1463,18 @@ def get_list_of_solo_tags_to_export_by_type(export_type): # by type
     else:
         return None
     #r_serv_db.smembers('whitelist_hive')
+
+def _fix_tag_obj_id():
+    for obj_type in ail_core.get_all_objects():
+        for tag in get_all_obj_tags(obj_type):
+            if ';' in tag:
+                new_tag = tag.split(';')[0]
+                for raw in get_obj_by_tags(obj_type, [new_tag], nb_obj=500000):
+                    for global_id in raw.get('tagged_obj', []):
+                        obj_type, subtype, obj_id = global_id.split(':', 2)
+                        delete_object_tag(tag, obj_type, obj_id, subtype=subtype)
+                        add_object_tag(new_tag, obj_type, obj_id, subtype=subtype)
+
 
 # if __name__ == '__main__':
 #     taxo = 'accessnow'
