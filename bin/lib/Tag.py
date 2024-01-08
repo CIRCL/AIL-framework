@@ -1464,7 +1464,8 @@ def get_list_of_solo_tags_to_export_by_type(export_type): # by type
         return None
     #r_serv_db.smembers('whitelist_hive')
 
-def _fix_tag_obj_id():
+def _fix_tag_obj_id(date_from):
+    date_to = datetime.date.today().strftime("%Y%m%d")
     for obj_type in ail_core.get_all_objects():
         print(obj_type)
         for tag in get_all_obj_tags(obj_type):
@@ -1472,7 +1473,7 @@ def _fix_tag_obj_id():
                 print(tag)
                 new_tag = tag.split(';')[0]
                 print(new_tag)
-                raw = get_obj_by_tags(obj_type, [new_tag], nb_obj=500000)
+                raw = get_obj_by_tags(obj_type, [new_tag], nb_obj=500000, date_from=date_from, date_to=date_to)
                 for obj_id in raw.get('tagged_obj', []):
                     # print(obj_id)
                     delete_object_tag(tag, obj_type, obj_id)
