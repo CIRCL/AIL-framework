@@ -1473,7 +1473,7 @@ def _fix_tag_obj_id():
                 print(new_tag)
                 raw = get_obj_by_tags(obj_type, [new_tag], nb_obj=500000)
                 for obj_id in raw.get('tagged_obj', []):
-                    print(obj_id)
+                    # print(obj_id)
                     delete_object_tag(tag, obj_type, obj_id)
                     add_object_tag(new_tag, obj_type, obj_id)
 
