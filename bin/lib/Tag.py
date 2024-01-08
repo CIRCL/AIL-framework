@@ -684,7 +684,7 @@ def confirm_tag(tag, obj):
 # TODO REVIEW ME
 def update_tag_global_by_obj_type(tag, obj_type, subtype=''):
     tag_deleted = False
-    if obj_type == 'item':
+    if obj_type == 'item' or obj_type == 'message':
         if not r_tags.exists(f'tag_metadata:{tag}'):
             tag_deleted = True
     else:
@@ -1466,6 +1466,7 @@ def get_list_of_solo_tags_to_export_by_type(export_type): # by type
 
 def _fix_tag_obj_id():
     for obj_type in ail_core.get_all_objects():
+        print(obj_type)
         for tag in get_all_obj_tags(obj_type):
             if ';' in tag:
                 print(tag)
