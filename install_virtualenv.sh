@@ -3,7 +3,7 @@
 # halt on errors
 set -e
 
-## bash debug mode togle below
+## bash debug mode toggle below
 #set -x
 
 if [ -z "$VIRTUAL_ENV" ]; then

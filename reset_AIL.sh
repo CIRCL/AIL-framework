@@ -67,8 +67,8 @@ function reset_dir {
     popd
   fi
 
-  if [ -d CRAWLED_SCREESHOT/ ]; then
-    pushd CRAWLED_SCREESHOT/
+  if [ -d CRAWLED_SCREENSHOT/ ]; then
+    pushd CRAWLED_SCREENSHOT/
     rm -r *
     echo 'cleaned CRAWLED_SCREENSHOT'
     popd
