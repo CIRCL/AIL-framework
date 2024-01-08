@@ -1471,12 +1471,12 @@ def _fix_tag_obj_id():
                 print(tag)
                 new_tag = tag.split(';')[0]
                 print(new_tag)
-                for raw in get_obj_by_tags(obj_type, [new_tag], nb_obj=500000):
-                    for global_id in raw.get('tagged_obj', []):
-                        obj_type, subtype, obj_id = global_id.split(':', 2)
-                        print(global_id)
-                        delete_object_tag(tag, obj_type, obj_id, subtype=subtype)
-                        add_object_tag(new_tag, obj_type, obj_id, subtype=subtype)
+                raw = get_obj_by_tags(obj_type, [new_tag], nb_obj=500000)
+                for global_id in raw.get('tagged_obj', []):
+                    obj_type, subtype, obj_id = global_id.split(':', 2)
+                    print(global_id)
+                    delete_object_tag(tag, obj_type, obj_id, subtype=subtype)
+                    add_object_tag(new_tag, obj_type, obj_id, subtype=subtype)
 
 
 # if __name__ == '__main__':
