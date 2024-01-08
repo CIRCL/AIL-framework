@@ -138,7 +138,7 @@ CIRCL organises training on how to use or extend the AIL framework. AIL training
 
 ## API
 
-The API documentation is available in [doc/README.md](doc/README.md)
+The API documentation is available in [doc/api.md](doc/api.md)
 
 ## HOWTO
 
