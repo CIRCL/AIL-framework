@@ -1474,11 +1474,13 @@ def _fix_tag_obj_id(date_from):
                 new_tag = tag.split(';')[0]
                 print(new_tag)
                 raw = get_obj_by_tags(obj_type, [tag], nb_obj=500000, date_from=date_from, date_to=date_to)
-                for obj_id in raw.get('tagged_obj', []):
-                    # print(obj_id)
-                    delete_object_tag(tag, obj_type, obj_id)
-                    add_object_tag(new_tag, obj_type, obj_id)
-
+                if raw.get('tagged_obj', []):
+                    for obj_id in raw['tagged_obj']:
+                        # print(obj_id)
+                        delete_object_tag(tag, obj_type, obj_id)
+                        add_object_tag(new_tag, obj_type, obj_id)
+                else:
+                    update_tag_global_by_obj_type(tag, obj_type)
 
 # if __name__ == '__main__':
 #     taxo = 'accessnow'
