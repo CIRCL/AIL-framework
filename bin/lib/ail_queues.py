@@ -14,10 +14,12 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.exceptions import ModuleQueueError
 from lib.ConfigLoader import ConfigLoader
+from lib import ail_core
 
 config_loader = ConfigLoader()
 r_queues = config_loader.get_redis_conn("Redis_Queues")
 r_obj_process = config_loader.get_redis_conn("Redis_Process")
+timeout_queue_obj = 172800
 config_loader = None
 
 MODULES_FILE = os.path.join(os.environ['AIL_HOME'], 'configs', 'modules.cfg')
@@ -247,6 +249,29 @@ def rename_processed_obj(new_id, old_id):
         r_obj_process.zrem(f'objs:process:{obj_type}', old_id)
         r_obj_process.srem(f'objs:process', old_id)
         add_processed_obj(new_id, x_hash, module=module)
+
+def timeout_process_obj(obj_global_id):
+    for q in get_processed_obj_queues(obj_global_id):
+        queue, x_hash = q.split(':', 1)
+        r_obj_process.zrem(f'obj:queues:{obj_global_id}', f'{queue}:{x_hash}')
+    for m in get_processed_obj_modules(obj_global_id):
+        module, x_hash = m.split(':', 1)
+        r_obj_process.zrem(f'obj:modules:{obj_global_id}', f'{module}:{x_hash}')
+
+    obj_type = obj_global_id.split(':', 1)[0]
+    r_obj_process.zrem(f'objs:process:{obj_type}', obj_global_id)
+    r_obj_process.srem(f'objs:process', obj_global_id)
+
+    r_obj_process.sadd(f'objs:processed', obj_global_id)
+    print(f'timeout: {obj_global_id}')
+
+
+def timeout_processed_objs():
+    curr_time = int(time.time())
+    time_limit = curr_time - timeout_queue_obj
+    for obj_type in ail_core.get_obj_queued():
+        for obj_global_id in r_obj_process.zrangebyscore(f'objs:process:{obj_type}', 0, time_limit):
+            timeout_process_obj(obj_global_id)
 
 def delete_processed_obj(obj_global_id):
     for q in get_processed_obj_queues(obj_global_id):

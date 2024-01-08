@@ -22,18 +22,18 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from core import ail_2_ail
-from lib.ail_queues import get_processed_end_obj
+from lib.ail_queues import get_processed_end_obj, timeout_processed_objs
 from lib.exceptions import ModuleQueueError
 from lib.objects import ail_objects
 from modules.abstract_module import AbstractModule
 
 
-class Sync_module(AbstractModule): # TODO KEEP A QUEUE ???????????????????????????????????????????????
+class Sync_module(AbstractModule):
     """
     Sync_module module for AIL framework
     """
 
-    def __init__(self, queue=False): # FIXME MODIFY/ADD QUEUE
+    def __init__(self, queue=False):  # FIXME MODIFY/ADD QUEUE
         super(Sync_module, self).__init__(queue=queue)
 
         # Waiting time in seconds between to message processed
@@ -81,6 +81,10 @@ class Sync_module(AbstractModule): # TODO KEEP A QUEUE ?????????????????????????
 
         # Endless loop processing messages from the input queue
         while self.proceed:
+
+            # Timeout queues
+            timeout_processed_objs()
+
             # Get one message (paste) from the QueueIn (copy of Redis_Global publish)
             global_id = get_processed_end_obj()
             if global_id:

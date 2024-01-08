@@ -57,6 +57,9 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
         return r_object.smembers(f'all_chat:subtypes')
     return []
 
+def get_obj_queued():
+    return ['item', 'image']
+
 def get_objects_tracked():
     return ['decoded', 'item', 'pgp', 'title']
 
