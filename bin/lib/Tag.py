@@ -1473,7 +1473,7 @@ def _fix_tag_obj_id(date_from):
                 print(tag)
                 new_tag = tag.split(';')[0]
                 print(new_tag)
-                raw = get_obj_by_tags(obj_type, [new_tag], nb_obj=500000, date_from=date_from, date_to=date_to)
+                raw = get_obj_by_tags(obj_type, [tag], nb_obj=500000, date_from=date_from, date_to=date_to)
                 for obj_id in raw.get('tagged_obj', []):
                     # print(obj_id)
                     delete_object_tag(tag, obj_type, obj_id)
