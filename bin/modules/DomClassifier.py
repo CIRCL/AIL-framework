@@ -61,6 +61,8 @@ class DomClassifier(AbstractModule):
 
             self.c.text(rawtext=host)
             print(self.c.domain)
+            if not self.c.domain:
+                return
             self.c.validdomain(passive_dns=True, extended=False)
             # self.logger.debug(self.c.vdomain)
 
