@@ -73,15 +73,17 @@ class DomClassifier(AbstractModule):
                 for dns_record in self.c.vdomain:
                     self.add_message_to_queue(obj=None, message=dns_record)
 
-            localizeddomains = self.c.include(expression=self.cc_tld)
-            if localizeddomains:
-                print(localizeddomains)
-                self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{item.get_id()}")
+            if self.cc_tld:
+                localizeddomains = self.c.include(expression=self.cc_tld)
+                if localizeddomains:
+                    print(localizeddomains)
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{item.get_id()}")
 
-            localizeddomains = self.c.localizedomain(cc=self.cc)
-            if localizeddomains:
-                print(localizeddomains)
-                self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{item.get_id()}")
+            if self.cc:
+                localizeddomains = self.c.localizedomain(cc=self.cc)
+                if localizeddomains:
+                    print(localizeddomains)
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{item.get_id()}")
 
             if r_result:
                 return self.c.vdomain

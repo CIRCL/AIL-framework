@@ -222,9 +222,12 @@ password = ail_trackers
 cc_critical = DE
 
 [DomClassifier]
-cc = DE
-cc_tld = r'\.de$'
+#cc = DE
+#cc_tld = r'\.de$'
+cc =
+cc_tld =
 dns = 8.8.8.8
+
 
 [Mail]
 dns = 8.8.8.8
