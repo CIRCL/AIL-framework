@@ -1788,7 +1788,7 @@ def api_add_crawler_capture(data, user_id):
         return {'error': 'Invalid task_uuid', 'task_uuid': task_uuid}, 400
     capture_uuid = data.get('capture_uuid')
     if not capture_uuid:
-        return {'error': 'Invalid capture_uuid', 'task_uuid': capture_uuid}, 400
+        return {'error': 'Invalid capture_uuid', 'capture_uuid': capture_uuid}, 400
 
     # parent = data.get('parent')
 
@@ -1796,6 +1796,8 @@ def api_add_crawler_capture(data, user_id):
     task_uuid = create_task(task['url'], depth=task['depth_limit'], har=task['har'], screenshot=task['screenshot'],
                             proxy=task['proxy'], tags=task['tags'],
                             parent='manual', task_uuid=task_uuid, external=True)
+    if not task_uuid:
+        return {'error': 'Aborted by Crawler', 'task_uuid': task_uuid, 'capture_uuid': capture_uuid}, 400
     task = CrawlerTask(task_uuid)
     create_capture(capture_uuid, task_uuid)
     task.start()
