@@ -55,7 +55,7 @@ class Hosts(AbstractModule):
         # if mimetype.split('/')[0] == "text":
 
         content = item.get_content()
-        hosts = self.regex_findall(self.host_regex, item.get_id(), content)
+        hosts = self.regex_findall(self.host_regex, item.get_id(), content, r_set=True)
         if hosts:
             print(f'{len(hosts)} host     {item.get_id()}')
             for host in hosts:
