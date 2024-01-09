@@ -60,7 +60,8 @@ class Hosts(AbstractModule):
             print(f'{len(hosts)} host     {item.get_id()}')
             for host in hosts:
                 # print(host)
-                self.add_message_to_queue(message=str(host), queue='Host')
+                if not host.endswith('.onion'):
+                    self.add_message_to_queue(message=str(host), queue='Host')
 
 
 if __name__ == '__main__':
