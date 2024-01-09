@@ -22,7 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from core import ail_2_ail
-from lib.ail_queues import get_processed_end_obj, timeout_processed_objs
+from lib.ail_queues import get_processed_end_obj, timeout_processed_objs, get_last_queue_timeout
 from lib.exceptions import ModuleQueueError
 from lib.objects import ail_objects
 from modules.abstract_module import AbstractModule
@@ -41,6 +41,7 @@ class Sync_module(AbstractModule):
 
         self.dict_sync_queues = ail_2_ail.get_all_sync_queue_dict()
         self.last_refresh = time.time()
+        self.last_refresh_queues = time.time()
 
         print(self.dict_sync_queues)
 
@@ -83,7 +84,12 @@ class Sync_module(AbstractModule):
         while self.proceed:
 
             # Timeout queues
-            timeout_processed_objs()
+            # timeout_processed_objs()
+            if self.last_refresh_queues < time.time():
+                timeout_processed_objs()
+                self.last_refresh_queues = time.time() + 120
+                self.redis_logger.debug('Timeout queues')
+                # print('Timeout queues')
 
             # Get one message (paste) from the QueueIn (copy of Redis_Global publish)
             global_id = get_processed_end_obj()

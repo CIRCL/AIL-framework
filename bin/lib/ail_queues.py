@@ -250,6 +250,12 @@ def rename_processed_obj(new_id, old_id):
         r_obj_process.srem(f'objs:process', old_id)
         add_processed_obj(new_id, x_hash, module=module)
 
+def get_last_queue_timeout():
+    epoch_update = r_obj_process.get('queue:obj:timeout:last')
+    if not epoch_update:
+        epoch_update = 0
+    return float(epoch_update)
+
 def timeout_process_obj(obj_global_id):
     for q in get_processed_obj_queues(obj_global_id):
         queue, x_hash = q.split(':', 1)
@@ -272,6 +278,7 @@ def timeout_processed_objs():
     for obj_type in ail_core.get_obj_queued():
         for obj_global_id in r_obj_process.zrangebyscore(f'objs:process:{obj_type}', 0, time_limit):
             timeout_process_obj(obj_global_id)
+    r_obj_process.set('queue:obj:timeout:last', time.time())
 
 def delete_processed_obj(obj_global_id):
     for q in get_processed_obj_queues(obj_global_id):
