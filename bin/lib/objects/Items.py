@@ -7,7 +7,6 @@ import magic
 import os
 import re
 import sys
-import cld3
 import html2text
 
 from io import BytesIO
@@ -23,6 +22,7 @@ from lib.ail_core import get_ail_uuid, rreplace
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import item_basic
+from lib.Language import LanguagesDetector
 from lib.data_retention_engine import update_obj_date, get_obj_date_first
 from packages import Date
 
@@ -338,21 +338,10 @@ class Item(AbstractObject):
             nb_line += 1
         return {'nb': nb_line, 'max_length': max_length}
 
+    # TODO RENAME ME
     def get_languages(self, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
-        all_languages = []
-        ## CLEAN CONTENT ##
-        content = self.get_html2text_content(ignore_links=True)
-        content = remove_all_urls_from_content(self.id, item_content=content) ##########################################
-        # REMOVE USELESS SPACE
-        content = ' '.join(content.split())
-        #- CLEAN CONTENT -#
-        #print(content)
-        #print(len(content))
-        if len(content) >= min_len: # # TODO:  # FIXME: check num langs limit
-            for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
-                if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
-                    all_languages.append(lang)
-        return all_languages
+        ld = LanguagesDetector(nb_langs=num_langs, min_proportion=min_proportion, min_probability=min_probability, min_len=min_len)
+        return ld.detect(self.get_content())
 
     def get_mimetype(self, content=None):
         if not content:
@@ -677,24 +666,6 @@ def remove_all_urls_from_content(item_id, item_content=None):
 
     return item_content
 
-def get_item_languages(item_id, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
-    all_languages = []
-
-    ## CLEAN CONTENT ##
-    content = get_item_content_html2text(item_id, ignore_links=True)
-    content = remove_all_urls_from_content(item_id, item_content=content)
-
-    # REMOVE USELESS SPACE
-    content = ' '.join(content.split())
-    #- CLEAN CONTENT -#
-
-    #print(content)
-    #print(len(content))
-    if len(content) >= min_len:
-        for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
-            if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
-                all_languages.append(lang)
-    return all_languages
 
 # API
 # def get_item(request_dict):
@@ -945,13 +916,13 @@ def create_item(obj_id, obj_metadata, io_content):
 #         delete_item(child_id)
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 #     content = 'test file content'
 #     duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
 #
-#     item = Item('tests/2020/01/02/test_save.gz')
+    # item = Item('tests/2020/01/02/test_save.gz')
 #     item.create(content, _save=False)
-    filters = {'date_from': '20230101', 'date_to': '20230501', 'sources': ['crawled', 'submitted'], 'start': ':submitted/2023/04/28/submitted_2b3dd861-a75d-48e4-8cec-6108d41450da.gz'}
-    gen = get_all_items_objects(filters=filters)
-    for obj_id in gen:
-        print(obj_id.id)
+#     filters = {'date_from': '20230101', 'date_to': '20230501', 'sources': ['crawled', 'submitted'], 'start': ':submitted/2023/04/28/submitted_2b3dd861-a75d-48e4-8cec-6108d41450da.gz'}
+#     gen = get_all_items_objects(filters=filters)
+#     for obj_id in gen:
+#         print(obj_id.id)

@@ -4,8 +4,6 @@
 import os
 import re
 import sys
-import cld3
-import html2text
 
 from datetime import datetime
 
@@ -184,14 +182,6 @@ class Message(AbstractObject):
         """
         return self._set_field('translated', translation)  # translation by hash ??? -> avoid translating multiple time
 
-    def get_html2text_content(self, content=None, ignore_links=False):
-        if not content:
-            content = self.get_content()
-        h = html2text.HTML2Text()
-        h.ignore_links = ignore_links
-        h.ignore_images = ignore_links
-        return h.handle(content)
-
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True)}
     #     return payload
@@ -286,48 +276,6 @@ class Message(AbstractObject):
 
         # meta['encoding'] = None
         return meta
-
-    def _languages_cleaner(self, content=None):
-        if not content:
-            content = self.get_content()
-        # REMOVE URLS
-        regex = r'\b(?:http://|https://)?(?:[a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)(?:\:[0-9]+)*(?:/(?:$|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*\b'
-        url_regex = re.compile(regex)
-        urls = url_regex.findall(content)
-        urls = sorted(urls, key=len, reverse=True)
-        for url in urls:
-            content = content.replace(url, '')
-        # REMOVE PGP Blocks
-        regex_pgp_public_blocs = r'-----BEGIN PGP PUBLIC KEY BLOCK-----[\s\S]+?-----END PGP PUBLIC KEY BLOCK-----'
-        regex_pgp_signature = r'-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
-        regex_pgp_message = r'-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
-        re.compile(regex_pgp_public_blocs)
-        re.compile(regex_pgp_signature)
-        re.compile(regex_pgp_message)
-        res = re.findall(regex_pgp_public_blocs, content)
-        for it in res:
-            content = content.replace(it, '')
-        res = re.findall(regex_pgp_signature, content)
-        for it in res:
-            content = content.replace(it, '')
-        res = re.findall(regex_pgp_message, content)
-        for it in res:
-            content = content.replace(it, '')
-        return content
-
-    def detect_languages(self, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
-        languages = []
-        ## CLEAN CONTENT ##
-        content = self.get_html2text_content(ignore_links=True)
-        content = self._languages_cleaner(content=content)
-        # REMOVE USELESS SPACE
-        content = ' '.join(content.split())
-        # - CLEAN CONTENT - #
-        if len(content) >= min_len:
-            for lang in cld3.get_frequent_languages(content, num_langs=num_langs):
-                if lang.proportion >= min_proportion and lang.probability >= min_probability and lang.is_reliable:
-                    languages.append(lang)
-        return languages
 
     # def translate(self, content=None): # TODO translation plugin
     #     # TODO get text language

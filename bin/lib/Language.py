@@ -2,9 +2,11 @@
 # -*-coding:UTF-8 -*
 
 import os
+import re
 import sys
+import html2text
 
-import cld3
+import gcld3
 from libretranslatepy import LibreTranslateAPI
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -259,6 +261,91 @@ class LanguageDetector:
 def get_translator_instance():
     return TRANSLATOR_URL
 
+def _get_html2text(content, ignore_links=False):
+    h = html2text.HTML2Text()
+    h.ignore_links = ignore_links
+    h.ignore_images = ignore_links
+    return h.handle(content)
+
+def _clean_text_to_translate(content, html=False, keys_blocks=True):
+    if html:
+        content = _get_html2text(content, ignore_links=True)
+
+    # REMOVE URLS
+    regex = r'\b(?:http://|https://)?(?:[a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)(?:\:[0-9]+)*(?:/(?:$|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*\b'
+    url_regex = re.compile(regex)
+    urls = url_regex.findall(content)
+    urls = sorted(urls, key=len, reverse=True)
+    for url in urls:
+        content = content.replace(url, '')
+
+    # REMOVE PGP Blocks
+    if keys_blocks:
+        regex_pgp_public_blocs = r'-----BEGIN PGP PUBLIC KEY BLOCK-----[\s\S]+?-----END PGP PUBLIC KEY BLOCK-----'
+        regex_pgp_signature = r'-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
+        regex_pgp_message = r'-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
+        re.compile(regex_pgp_public_blocs)
+        re.compile(regex_pgp_signature)
+        re.compile(regex_pgp_message)
+        res = re.findall(regex_pgp_public_blocs, content)
+        for it in res:
+            content = content.replace(it, '')
+        res = re.findall(regex_pgp_signature, content)
+        for it in res:
+            content = content.replace(it, '')
+        res = re.findall(regex_pgp_message, content)
+        for it in res:
+            content = content.replace(it, '')
+    return content
+
+
+class LanguagesDetector:
+
+    def __init__(self, nb_langs=3, min_proportion=0.2, min_probability=0.7, min_len=0):
+        self.lt = LibreTranslateAPI(get_translator_instance())
+        try:
+            self.lt.languages()
+        except Exception:
+            self.lt = None
+        self.detector = gcld3.NNetLanguageIdentifier(min_num_bytes=0, max_num_bytes=1000)
+        self.nb_langs = nb_langs
+        self.min_proportion = min_proportion
+        self.min_probability = min_probability
+        self.min_len = min_len
+
+    def detect_gcld3(self, content):
+        languages = []
+        content = _clean_text_to_translate(content, html=True)
+        if self.min_len > 0:
+            if len(content) < self.min_len:
+                return languages
+        for lang in self.detector.FindTopNMostFreqLangs(content, num_langs=self.nb_langs):
+            if lang.proportion >= self.min_proportion and lang.probability >= self.min_probability and lang.is_reliable:
+                languages.append(lang.language)
+        return languages
+
+    def detect_libretranslate(self, content):
+        languages = []
+        try:
+            # [{"confidence": 0.6, "language": "en"}]
+            resp = self.lt.detect(content)
+        except:  # TODO ERROR MESSAGE
+            resp = []
+        if resp:
+            for language in resp:
+                if language.confidence >= self.min_probability:
+                    languages.append(language)
+        return languages
+
+    def detect(self, content):
+        # gcld3
+        if len(content) >= 200 or not self.lt:
+            language = self.detect_gcld3(content)
+        # libretranslate
+        else:
+            language = self.detect_libretranslate(content)
+        return language
+
 class LanguageTranslator:
 
     def __init__(self):
@@ -273,9 +360,15 @@ class LanguageTranslator:
             print(e)
         return languages
 
-    def detect_cld3(self, content):
-        for lang in cld3.get_frequent_languages(content, num_langs=1):
-            return lang.language
+    def detect_gcld3(self, content):
+        content = _clean_text_to_translate(content, html=True)
+        detector = gcld3.NNetLanguageIdentifier(min_num_bytes=0, max_num_bytes=1000)
+        lang = detector.FindLanguage(content)
+        # print(lang.language)
+        # print(lang.is_reliable)
+        # print(lang.proportion)
+        # print(lang.probability)
+        return lang.language
 
     def detect_libretranslate(self, content):
         try:
@@ -285,10 +378,10 @@ class LanguageTranslator:
         if language:
             return language[0].get('language')
 
-    def detect(self, content):  # TODO replace by gcld3
-        # cld3
+    def detect(self, content):
+        # gcld3
         if len(content) >= 200:
-            language = self.detect_cld3(content)
+            language = self.detect_gcld3(content)
         # libretranslate
         else:
             language = self.detect_libretranslate(content)
@@ -313,18 +406,22 @@ class LanguageTranslator:
                         translation = None
         return translation
 
-try:
-    LIST_LANGUAGES = LanguageTranslator().languages()
-except Exception as e:
-    print(e)
-    LIST_LANGUAGES = []
 
+LIST_LANGUAGES = []
 def get_translation_languages():
+    global LIST_LANGUAGES
+    if not LIST_LANGUAGES:
+        try:
+            LIST_LANGUAGES = LanguageTranslator().languages()
+        except Exception as e:
+            print(e)
+            LIST_LANGUAGES = []
     return LIST_LANGUAGES
 
 
 if __name__ == '__main__':
-    t_content = ''
+    # t_content = ''
     langg = LanguageTranslator()
+    # langg = LanguagesDetector()
     # lang.translate(t_content, source='ru')
     langg.languages()
