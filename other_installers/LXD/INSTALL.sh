@@ -177,14 +177,14 @@ createLacusContainer(){
     lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "export PATH='/root/.local/bin:$PATH' && echo 'no' | /root/.local/bin/poetry run update --init"
     # Install Tor
     lxc exec "$LACUS_CONTAINER" -- apt install apt-transport-https -y
-    lxc exec "$LACUS_CONTAINER" -- bash -c "echo 'deb https://deb.torproject.org/torproject.org $(lsb_release -cs) main' >> /etc/apt/sources.list.d/tor.list"
-    lxc exec "$LACUS_CONTAINER" -- bash -c "echo 'deb-src https://deb.torproject.org/torproject.org $(lsb_release -cs) main' >> /etc/apt/sources.list.d/tor.list"
+    lxc exec "$LACUS_CONTAINER" -- bash -c "echo 'deb [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -cs) main' >> /etc/apt/sources.list.d/tor.list"
+    lxc exec "$LACUS_CONTAINER" -- bash -c "echo 'deb-src [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -cs) main' >> /etc/apt/sources.list.d/tor.list"
     lxc exec "$LACUS_CONTAINER" -- bash -c "wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg > /dev/null"
     lxc exec "$LACUS_CONTAINER" -- apt update
     lxc exec "$LACUS_CONTAINER" -- apt install tor deb.torproject.org-keyring -y
     lxc exec "$LACUS_CONTAINER" -- sed -i "/^\$nrconf{restart} = 'a';/s/.*/#\$nrconf{restart} = 'i';/" /etc/needrestart/needrestart.conf
     # Start Lacus
-    lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- cp ./confg/logging.json.sample ./confg/logging.json
+    lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- cp ./config/logging.json.sample ./config/logging.json
     lxc file push ./systemd/lacus.service "$LACUS_CONTAINER"/etc/systemd/system/lacus.service
     lxc exec "$LACUS_CONTAINER" -- systemctl daemon-reload
     lxc exec "$LACUS_CONTAINER" -- systemctl enable lacus.service
