@@ -394,11 +394,11 @@ def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=
     meta['messages'], meta['pagination'], meta['tags_messages'] = thread.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
 
-def api_get_message(message_id):
+def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'chat', 'content', 'icon', 'images', 'link', 'parent', 'parent_meta', 'user-account'})
+    meta = message.get_meta({'chat', 'content', 'files-names', 'icon', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     # if meta['chat']:
     #     print(meta['chat'])
     #     # meta['chat'] =

@@ -163,13 +163,17 @@ def chats_explorer_chat_participants():
 @login_read_only
 def objects_message():
     message_id = request.args.get('id')
-    message = chats_viewer.api_get_message(message_id)
+    target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
+    message = chats_viewer.api_get_message(message_id, translation_target=target)
     if message[1] != 200:
         return create_json_response(message[0], message[1])
     else:
         message = message[0]
         languages = Language.get_translation_languages()
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
+                               translation_languages=languages, translation_target=target,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
 
 @chats_explorer.route("/objects/user-account", methods=['GET'])

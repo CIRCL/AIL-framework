@@ -388,7 +388,7 @@ class LanguageTranslator:
         return language
 
     def translate(self, content, source=None, target="en"):  # TODO source target
-        if target not in LIST_LANGUAGES:
+        if target not in get_translation_languages():
             return None
         translation = None
         if content:
