@@ -629,43 +629,6 @@ def get_item_metadata(item_id, item_content=None):
 def get_item_content(item_id):
     return item_basic.get_item_content(item_id)
 
-def get_item_content_html2text(item_id, item_content=None, ignore_links=False):
-    if not item_content:
-        item_content = get_item_content(item_id)
-    h = html2text.HTML2Text()
-    h.ignore_links = ignore_links
-    h.ignore_images = ignore_links
-    return h.handle(item_content)
-
-def remove_all_urls_from_content(item_id, item_content=None):
-    if not item_content:
-        item_content = get_item_content(item_id)
-    regex = r'\b(?:http://|https://)?(?:[a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)(?:\:[0-9]+)*(?:/(?:$|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*\b'
-    url_regex = re.compile(regex)
-    urls = url_regex.findall(item_content)
-    urls = sorted(urls, key=len, reverse=True)
-    for url in urls:
-        item_content = item_content.replace(url, '')
-
-    regex_pgp_public_blocs = r'-----BEGIN PGP PUBLIC KEY BLOCK-----[\s\S]+?-----END PGP PUBLIC KEY BLOCK-----'
-    regex_pgp_signature = r'-----BEGIN PGP SIGNATURE-----[\s\S]+?-----END PGP SIGNATURE-----'
-    regex_pgp_message = r'-----BEGIN PGP MESSAGE-----[\s\S]+?-----END PGP MESSAGE-----'
-    re.compile(regex_pgp_public_blocs)
-    re.compile(regex_pgp_signature)
-    re.compile(regex_pgp_message)
-
-    res = re.findall(regex_pgp_public_blocs, item_content)
-    for it in res:
-        item_content = item_content.replace(it, '')
-    res = re.findall(regex_pgp_signature, item_content)
-    for it in res:
-        item_content = item_content.replace(it, '')
-    res = re.findall(regex_pgp_message, item_content)
-    for it in res:
-        item_content = item_content.replace(it, '')
-
-    return item_content
-
 
 # API
 # def get_item(request_dict):

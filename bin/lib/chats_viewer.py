@@ -23,6 +23,7 @@ from lib.objects import ChatThreads
 from lib.objects import Messages
 from lib.objects import UsersAccount
 from lib.objects import Usernames
+from lib import Language
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -341,6 +342,8 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     if meta['subchannels']:
         meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
     else:
+        if translation_target not in Language.LIST_LANGUAGES:
+            translation_target = None
         meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
 

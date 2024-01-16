@@ -388,6 +388,8 @@ class LanguageTranslator:
         return language
 
     def translate(self, content, source=None, target="en"):  # TODO source target
+        if target not in LIST_LANGUAGES:
+            return None
         translation = None
         if content:
             if not source:
@@ -407,15 +409,17 @@ class LanguageTranslator:
         return translation
 
 
-LIST_LANGUAGES = []
+LIST_LANGUAGES = {}
 def get_translation_languages():
     global LIST_LANGUAGES
     if not LIST_LANGUAGES:
         try:
-            LIST_LANGUAGES = LanguageTranslator().languages()
+            LIST_LANGUAGES = {}
+            for lang in LanguageTranslator().languages():
+                LIST_LANGUAGES[lang['iso']] = lang['language']
         except Exception as e:
             print(e)
-            LIST_LANGUAGES = []
+            LIST_LANGUAGES = {}
     return LIST_LANGUAGES
 
 

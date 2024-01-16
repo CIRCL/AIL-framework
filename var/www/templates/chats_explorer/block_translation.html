@@ -12,7 +12,7 @@
                         <option selected value="{{ translation_target }}">{{ translation_target }}</option>
                     {% endif %}
                     {% for language in translation_languages %}
-                        <option value="{{ language['iso'] }}">{{ language['language'] }}</option>
+                        <option value="{{ language }}">{{ translation_languages[language] }}</option>
                     {% endfor %}
                 </select>
             </div>

@@ -82,6 +82,8 @@ def chats_explorer_chat():
     chat_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
     target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
     nb_messages = request.args.get('nb')
     page = request.args.get('page')
     chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
@@ -111,6 +113,8 @@ def objects_subchannel_messages():
     subchannel_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
     target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
     nb_messages = request.args.get('nb')
     page = request.args.get('page')
     subchannel = chats_viewer.api_get_subchannel(subchannel_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
@@ -128,6 +132,8 @@ def objects_thread_messages():
     thread_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
     target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
     nb_messages = request.args.get('nb')
     page = request.args.get('page')
     thread = chats_viewer.api_get_thread(thread_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
