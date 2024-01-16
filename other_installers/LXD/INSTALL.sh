@@ -172,12 +172,23 @@ createLacusContainer(){
     lxc exec "$LACUS_CONTAINER" -- git clone https://github.com/ail-project/lacus.git
     lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- /root/.local/bin/poetry install
     AIL_VENV_PATH=$(lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "/root/.local/bin/poetry env info -p")
-    # lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "source ${AIL_VENV_PATH}/bin/activate"
-    # lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- /root/.local/bin/poetry shell
     lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "source ${AIL_VENV_PATH}/bin/activate && playwright install-deps"
     lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "echo LACUS_HOME=/root/lacus >> .env"
-    lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "export PATH='/root/.local/bin:$PATH' && yes | /root/.local/bin/poetry run update --init"
+    lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "export PATH='/root/.local/bin:$PATH' && echo 'no' | /root/.local/bin/poetry run update --init"
+    # Install Tor
+    lxc exec "$LACUS_CONTAINER" -- apt install apt-transport-https -y
+    lxc exec "$LACUS_CONTAINER" -- bash -c "echo 'deb https://deb.torproject.org/torproject.org $(lsb_release -cs) main' >> /etc/apt/sources.list.d/tor.list"
+    lxc exec "$LACUS_CONTAINER" -- bash -c "echo 'deb-src https://deb.torproject.org/torproject.org $(lsb_release -cs) main' >> /etc/apt/sources.list.d/tor.list"
+    lxc exec "$LACUS_CONTAINER" -- bash -c "wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg > /dev/null"
+    lxc exec "$LACUS_CONTAINER" -- apt update
+    lxc exec "$LACUS_CONTAINER" -- apt install tor deb.torproject.org-keyring -y
     lxc exec "$LACUS_CONTAINER" -- sed -i "/^\$nrconf{restart} = 'a';/s/.*/#\$nrconf{restart} = 'i';/" /etc/needrestart/needrestart.conf
+    # Start Lacus
+    lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- cp ./confg/logging.json.sample ./confg/logging.json
+    lxc file push ./systemd/lacus.service "$LACUS_CONTAINER"/etc/systemd/system/lacus.service
+    lxc exec "$LACUS_CONTAINER" -- systemctl daemon-reload
+    lxc exec "$LACUS_CONTAINER" -- systemctl enable lacus.service
+    lxc exec "$LACUS_CONTAINER" -- systemctl start lacus.service
 }
 
 nonInteractiveConfig(){
@@ -358,14 +369,13 @@ if $LACUS; then
 fi
 
 # Print info
-ail_ip=$(lxc list $AIL_CONTAINER --format=json | jq -r '.[0].state.network.eth0.addresses[] | select(.family=="inet").address')
+ail_ip=$(lxc list "$AIL_CONTAINER" --format=json | jq -r '.[0].state.network.eth0.addresses[] | select(.family=="inet").address')
+ail_email=$(lxc exec "$AIL_CONTAINER" -- bash -c "grep '^email=' /home/ail/ail-framework/DEFAULT_PASSWORD | cut -d'=' -f2")
+ail_password=$(lxc exec "$AIL_CONTAINER" -- bash -c "grep '^password=' /home/ail/ail-framework/DEFAULT_PASSWORD | cut -d'=' -f2")
+ail_API_Key=$(lxc exec "$AIL_CONTAINER" -- bash -c "grep '^API_Key=' /home/ail/ail-framework/DEFAULT_PASSWORD | cut -d'=' -f2")
 if $LACUS; then
-    lacus_ip=$(lxc list $LACUS_CONTAINER --format=json | jq -r '.[0].state.network.eth0.addresses[] | select(.family=="inet").address')
+    lacus_ip=$(lxc list "$LACUS_CONTAINER" --format=json | jq -r '.[0].state.network.eth0.addresses[] | select(.family=="inet").address')
 fi
-ail_email=$(lxc exec $AIL_CONTAINER -- bash -c "grep '^email=' /home/ail/ail-framework/DEFAULT_PASSWORD | cut -d'=' -f2")
-ail_password=$(lxc exec $AIL_CONTAINER -- bash -c "grep '^password=' /home/ail/ail-framework/DEFAULT_PASSWORD | cut -d'=' -f2")
-ail_API_Key=$(lxc exec $AIL_CONTAINER -- bash -c "grep '^API_Key=' /home/ail/ail-framework/DEFAULT_PASSWORD | cut -d'=' -f2")
-
 echo "--------------------------------------------------------------------------------------------"
 echo -e "${BLUE}AIL ${NC}is up and running on $ail_ip"
 echo "--------------------------------------------------------------------------------------------"
