@@ -1,12 +1,12 @@
 #!/bin/bash
 
-setVars() {
-    GREEN='\033[0;32m'
-    YELLOW='\033[1;33m'
-    BLUE='\033[0;34m'
-    RED='\033[0;31m'
-    NC='\033[0m' # No Color
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
+setVars() {
     STORAGE_POOL_NAME=$(generateName "AIL")
     NETWORK_NAME=$(generateName "AIL")
     NETWORK_NAME=${NETWORK_NAME:0:14}
@@ -20,6 +20,7 @@ setDefaults(){
     default_ail_name=$(generateName "AIL")
     default_lacus="Yes"
     default_lacus_name=$(generateName "LACUS")
+    default_partition=""
 }
 
 error() {
@@ -69,7 +70,7 @@ setupLXD(){
         error "Storage '$STORAGE_POOL_NAME' already exists."
         exit 1
     fi
-    lxc storage create "$STORAGE_POOL_NAME" zfs source="$PARTITION_NAME"
+    lxc storage create "$STORAGE_POOL_NAME" zfs source="$PARTITION"
 
     if checkRessourceExist "network" "$NETWORK_NAME"; then
         error "Network '$NETWORK_NAME' already exists."
@@ -191,8 +192,100 @@ createLacusContainer(){
     lxc exec "$LACUS_CONTAINER" -- systemctl start lacus.service
 }
 
+interactiveConfig(){
+    echo
+    echo "################################################################################"
+    echo -e "# Welcome to the ${BLUE}AIL-framework-LXD${NC} Installer Script                                  #"
+    echo "#------------------------------------------------------------------------------#"
+    echo -e "# This installer script will guide you through the installation process of     #"
+    echo -e "# ${BLUE}AIL${NC} using LXD.                                                              #"
+    echo -e "#                                                                              #"
+    echo "################################################################################"
+    echo
+    
+    declare -A nameCheckArray
+
+    # Ask for LXD project name
+    while true; do 
+        read -r -p "Name of the AIL LXD-project (default: $default_ail_project): " ail_project
+        PROJECT_NAME=${ail_project:-$default_ail_project}
+        if ! checkNamingConvention "$PROJECT_NAME"; then
+            continue
+        fi
+        if checkRessourceExist "project" "$PROJECT_NAME"; then
+            error "Project '$PROJECT_NAME' already exists."
+            continue
+        fi
+        break
+    done
+
+    # Ask for AIL container name
+    while true; do 
+        read -r -p "Name of the AIL container (default: $default_ail_name): " ail_name
+        AIL_CONTAINER=${ail_name:-$default_ail_name}
+        if [[ ${nameCheckArray[$AIL_CONTAINER]+_} ]]; then
+            error "Name '$AIL_CONTAINER' has already been used. Please choose a different name."
+            continue
+        fi
+        if ! checkNamingConvention "$AIL_CONTAINER"; then
+            continue
+        fi
+        nameCheckArray[$AIL_CONTAINER]=1
+        break
+    done
+
+    # Ask for Lacus installation
+    read -r -p "Do you want to install Lacus (y/n, default: $default_lacus): " lacus
+    lacus=${lacus:-$default_lacus}
+    LACUS=$(echo "$lacus" | grep -iE '^y(es)?$' > /dev/null && echo true || echo false)
+    if $LACUS; then
+        # Ask for LACUS container name
+        while true; do
+            read -r -p "Name of the Lacus container (default: $default_lacus_name): " lacus_name
+            LACUS_CONTAINER=${lacus_name:-$default_lacus_name}
+            if [[ ${nameCheckArray[$LACUS_CONTAINER]+_} ]]; then
+                error "Name '$LACUS_CONTAINER' has already been used. Please choose a different name."
+                continue
+            fi
+            if ! checkNamingConvention "$LACUS_CONTAINER"; then
+                continue
+            fi
+            nameCheckArray[$LACUS_CONTAINER]=1
+            break
+        done
+
+    fi
+
+    # Ask for dedicated partitions
+    read -r -p "Dedicated partition for AIL LXD-project (leave blank if none): " partition
+    PARTITION=${partition:-$default_partition}
+
+    # Output values set by the user
+    echo -e "\nValues set:"
+    echo "--------------------------------------------------------------------------------------------------------------------"
+    echo -e "PROJECT_NAME: ${GREEN}$PROJECT_NAME${NC}"
+    echo "--------------------------------------------------------------------------------------------------------------------"
+    echo -e "AIL_CONTAINER: ${GREEN}$AIL_CONTAINER${NC}"
+    echo "--------------------------------------------------------------------------------------------------------------------"
+    echo -e "LACUS: ${GREEN}$LACUS${NC}"
+    if $LACUS; then
+        echo -e "LACUS_CONTAINER: ${GREEN}$LACUS_CONTAINER${NC}"
+        echo "--------------------------------------------------------------------------------------------------------------------"
+    fi
+    echo -e "PARTITION: ${GREEN}$PARTITION${NC}"
+    echo "--------------------------------------------------------------------------------------------------------------------"
+
+    # Ask for confirmation
+    read -r -p "Do you want to proceed with the installation? (y/n): " confirm
+    confirm=${confirm:-$default_confirm}
+    if [[ $confirm != "y" ]]; then
+        warn "Installation aborted."
+        exit 1
+    fi
+}
+
 nonInteractiveConfig(){
-    VALID_ARGS=$(getopt -o h --long help,production,project:ail-name:,no-lacus,lacus-name:  -- "$@")
+    VALID_ARGS=$(getopt -o h --long help,production,project:ail-name:,no-lacus,lacus-name:,partition:  -- "$@")
     if [[ $? -ne 0 ]]; then
         exit 1;
     fi
@@ -203,6 +296,10 @@ nonInteractiveConfig(){
             -h | --help)
                 usage
                 exit 0
+                ;;
+            --partition)
+                partition=$2
+                shift 2
                 ;;
             --project)
                 ail_project=$2
@@ -232,6 +329,7 @@ nonInteractiveConfig(){
     lacus=${lacus:-$default_lacus}
     LACUS=$(echo "$lacus" | grep -iE '^y(es)?$' > /dev/null && echo true || echo false)
     LACUS_CONTAINER=${lacus_name:-$default_lacus_name}
+    PARTITION=${partition:-$default_partition}
 }
 
 validateArgs(){
