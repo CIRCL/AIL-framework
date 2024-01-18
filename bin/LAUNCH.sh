@@ -69,6 +69,7 @@ function helptext {
     LAUNCH.sh
       [-l  | --launchAuto]         LAUNCH DB + Scripts
       [-k  | --killAll]            Kill DB + Scripts
+      [-kl  | --killLaunch]        Kill All & launchAuto
       [-ks | --killscript]         Scripts
       [-u  | --update]             Update AIL
       [-ut | --thirdpartyUpdate]   Update UI/Frontend
@@ -694,6 +695,9 @@ while [ "$1" != "" ]; do
         --set_kvrocks_namespaces )      set_kvrocks_namespaces;
                                         ;;
         -k | --killAll )                killall;
+                                        ;;
+        -kl | --killLaunch )            killall;
+                                        launch_all "automatic";
                                         ;;
         -ks | --killscript )            killscript;
                                         ;;
