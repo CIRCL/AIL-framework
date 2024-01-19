@@ -1,0 +1,28 @@
+{
+    "check_interval": 600,
+    "outputdir": "/opt/ailbuilder/images",
+    "sign": true,
+    "github": [
+        {
+            "name": "AIL",
+            "id": "ail-project/ail-framework",
+            "mode": "commits",
+            "args": [
+                "--ail",
+                "--ail-name",
+                "AIL"
+            ]
+        },
+        {
+            "name": "Lacus",
+            "id": "ail-project/lacus",
+            "mode": "commits",
+            "args": [
+                "--lacus",
+                "--lacus-name",
+                "Lacus"
+            ]
+        }
+    ],
+    "apt": []
+}

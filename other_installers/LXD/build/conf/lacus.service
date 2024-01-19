@@ -1,0 +1,19 @@
+[Unit]
+Description=lacus service
+After=network.target
+
+[Service]
+User=root
+Group=root
+Type=forking
+WorkingDirectory=/root/lacus
+Environment="PATH=/root/.local/bin/poetry:/usr/bin"
+Environment="LACUS_HOME=/root/lacus"
+ExecStart=/bin/bash -c "exec /root/.local/bin/poetry run start"
+ExecStop=/bin/bash -c "exec /root/.local/bin/poetry run stop"
+StandardOutput=append:/var/log/lacus_message.log
+StandardError=append:/var/log/lacus_error.log
+
+
+[Install]
+WantedBy=multi-user.target
