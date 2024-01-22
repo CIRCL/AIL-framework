@@ -1,0 +1,7 @@
+{
+    "NAME": "admin",
+    "EMAIL": "admin@admin.test",
+    "COMMENT": "Key for signing images",
+    "EXPIRE_DATE": 0,
+    "PASSPHRASE": "admin"
+}

@@ -1,0 +1,13 @@
+[Unit]
+Description=Service for building AIL and Lacus LXD images
+After=network.target
+
+[Service]
+Type=simple
+User=ailbuilder
+ExecStart=/usr/bin/python3 /opt/ailbuilder/build/ailbuilder.py
+Restart=on-failure
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
