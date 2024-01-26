@@ -63,7 +63,7 @@ def chats_explorer_networks():
         return render_template('chats_networks.html', protocol=protocol, networks=networks)
 
 
-@chats_explorer.route("chats/explorer/instance", methods=['GET'])
+@chats_explorer.route("chats/explorer/instances", methods=['GET'])
 @login_required
 @login_read_only
 def chats_explorer_instance():

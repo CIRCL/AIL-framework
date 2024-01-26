@@ -70,7 +70,8 @@
                         <th>Created at</th>
                         <th>First Seen</th>
                         <th>Last Seen</th>
-                        <th>NB SubChannels</th>
+                        <th>SubChannels</th>
+                        <th>Messages</th>
                     </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
@@ -94,6 +95,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ chat['nb_subchannels'] }}</td>
+                            <td>{{ chat['nb_messages'] }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

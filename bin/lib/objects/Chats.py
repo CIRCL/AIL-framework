@@ -83,6 +83,8 @@ class Chat(AbstractChatObject):
             meta['participants'] = self.get_participants()
         if 'nb_participants' in options:
             meta['nb_participants'] = self.get_nb_participants()
+        if 'nb_messages' in options:
+            meta['nb_messages'] = self.get_nb_messages()
         if 'username' in options:
             meta['username'] = self.get_username()
         if 'subchannels' in options:
