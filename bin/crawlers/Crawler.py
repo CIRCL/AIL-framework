@@ -146,6 +146,7 @@ class Crawler(AbstractModule):
                         task = capture.get_task()
                         task.reset()
                         capture.delete()
+                        self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
                     else:
                         capture.update(status)
                 else:
