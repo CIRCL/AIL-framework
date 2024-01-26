@@ -24,6 +24,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
+from lib.relationships_engine import get_obj_nb_relationships, add_obj_relationship
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
@@ -283,6 +284,22 @@ class AbstractObject(ABC):
         delete_obj_correlation(self.type, self.subtype, self.id, type2, subtype2, id2)
 
     ## -Correlation- ##
+
+    ## Relationship ##
+
+    def get_nb_relationships(self, filter=[]):
+        return get_obj_nb_relationships(self.get_global_id())
+
+    def add_relationship(self, obj2_global_id, relationship, source=True):
+        # is source
+        if source:
+            print(self.get_global_id(), obj2_global_id, relationship)
+            add_obj_relationship(self.get_global_id(), obj2_global_id, relationship)
+        # is target
+        else:
+            add_obj_relationship(obj2_global_id, self.get_global_id(), relationship)
+
+    ## -Relationship- ##
 
     ## Parent ##
 

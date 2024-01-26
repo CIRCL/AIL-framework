@@ -203,7 +203,7 @@ def get_description():
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # object exist
     else:
-        res = ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'tags_safe'},
+        res = ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'icon', 'tags', 'tags_safe'},
                                           flask_context=True)
         if 'tags' in res:
             res['tags'] = list(res['tags'])
@@ -292,3 +292,64 @@ def correlation_tags_add():
                             max_nodes=nb_max,
                             hidden=hidden, hidden_str=",".join(hidden),
                             filter=",".join(filter_types)))
+
+#####################################################################################
+
+@correlation.route('/relationships/graph_node_json')
+@login_required
+@login_read_only
+def relationships_graph_node_json():
+    obj_id = request.args.get('id')
+    subtype = request.args.get('subtype')
+    obj_type = request.args.get('type')
+    max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
+    level = sanitise_level(request.args.get('level'))
+
+    json_graph = ail_objects.get_relationships_graph_node(obj_type, subtype, obj_id, max_nodes=max_nodes, level=level, flask_context=True)
+    return jsonify(json_graph)
+
+
+@correlation.route('/relationship/show', methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def show_relationship():
+    if request.method == 'POST':
+        object_type = request.form.get('obj_type')
+        subtype = request.form.get('subtype')
+        obj_id = request.form.get('obj_id')
+        max_nodes = request.form.get('max_nb_nodes_in')
+        level = sanitise_level(request.form.get('level'))
+
+        # redirect to keep history and bookmark
+        return redirect(url_for('correlation.show_relationship', type=object_type, subtype=subtype, id=obj_id,
+                                max_nodes=max_nodes, level=level))
+
+    # request.method == 'GET'
+    else:
+        obj_type = request.args.get('type')
+        subtype = request.args.get('subtype', '')
+        obj_id = request.args.get('id')
+        max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
+        level = sanitise_level(request.args.get('level'))
+
+        # check if obj_id exist
+        if not ail_objects.exists_obj(obj_type, subtype, obj_id):
+            return abort(404)
+        # object exist
+        else: # TODO remove old dict key
+            dict_object = {"type": obj_type,
+                           "id": obj_id,
+                           "object_type": obj_type,
+                           "max_nodes": max_nodes, "level": level,
+                           "correlation_id": obj_id,
+                           "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'info', 'icon', 'username'}, flask_context=True),
+                           "nb_relation": ail_objects.get_obj_nb_relationships(obj_type, subtype, obj_id)
+                           }
+            if subtype:
+                dict_object["subtype"] = subtype
+                dict_object["metadata"]['type_id'] = subtype
+            else:
+                dict_object["subtype"] = ''
+                dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id)
+            return render_template("show_relationship.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
+                                       tags_selector_data=Tag.get_tags_selector_data())

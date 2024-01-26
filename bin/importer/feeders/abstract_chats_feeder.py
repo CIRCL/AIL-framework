@@ -93,7 +93,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         return self.json_data['meta'].get('reactions', [])
 
     def get_message_timestamp(self):
-        return self.json_data['meta']['date']['timestamp']  # TODO CREATE DEFAULT TIMESTAMP
+        if not self.json_data['meta'].get('date'):
+            return None
+        else:
+            return self.json_data['meta']['date']['timestamp']
         # if self.json_data['meta'].get('date'):
         #     date = datetime.datetime.fromtimestamp( self.json_data['meta']['date']['timestamp'])
         #     date = date.strftime('%Y/%m/%d')
@@ -115,17 +118,29 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     def get_message_reply_id(self):
         return self.json_data['meta'].get('reply_to', {}).get('message_id')
 
+    def get_message_forward(self):
+        return self.json_data['meta'].get('forward')
+
     def get_message_content(self):
         decoded = base64.standard_b64decode(self.json_data['data'])
         return _gunzip_bytes_obj(decoded)
 
-    def get_obj(self):  # TODO handle others objects -> images, pdf, ...
+    def get_obj(self):
         #### TIMESTAMP ####
         timestamp = self.get_message_timestamp()
 
         #### Create Object ID ####
         chat_id = self.get_chat_id()
-        message_id = self.get_message_id()
+        try:
+            message_id = self.get_message_id()
+        except KeyError:
+            if chat_id:
+                self.obj = Chat(chat_id, self.get_chat_instance_uuid())
+                return self.obj
+            else:
+                self.obj = None
+                return None
+
         thread_id = self.get_thread_id()
         # channel id
         # thread id
@@ -236,7 +251,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         #   # ADD NEW MESSAGE REF (used by discord)
 
     def process_sender(self, new_objs, obj, date, timestamp):
-        meta = self.json_data['meta']['sender']
+        meta = self.json_data['meta'].get('sender')
+        if not meta:
+            return None
+
         user_account = UsersAccount.UserAccount(meta['id'], self.get_chat_instance_uuid())
 
         # date stat + correlation
@@ -286,8 +304,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         # REPLY
         reply_id = self.get_message_reply_id()
 
-        # TODO Translation
-
         print(self.obj.type)
 
         # TODO FILES + FILES REF
@@ -295,7 +311,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         # get object by meta object type
         if self.obj.type == 'message':
             # Content
-            obj = Messages.create(self.obj.id, self.get_message_content())  # TODO translation
+            obj = Messages.create(self.obj.id, self.get_message_content())
 
             # FILENAME
             media_name = self.get_media_name()
@@ -305,7 +321,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
             for reaction in self.get_reactions():
                 obj.add_reaction(reaction['reaction'], int(reaction['count']))
-
+        elif self.obj.type == 'chat':
+            pass
         else:
             chat_id = self.get_chat_id()
             thread_id = self.get_thread_id()
@@ -341,12 +358,29 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             # CHAT
             chat_objs = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
 
+            # Message forward
+            # if self.get_json_meta().get('forward'):
+            #     forward_from = self.get_message_forward()
+            #     print('-----------------------------------------------------------')
+            #     print(forward_from)
+            #     if forward_from:
+            #         forward_from_type = forward_from['from']['type']
+            #         if forward_from_type == 'channel' or forward_from_type == 'chat':
+            #             chat_forward_id = forward_from['from']['id']
+            #             chat_forward = Chat(chat_forward_id, self.get_chat_instance_uuid())
+            #             if chat_forward.exists():
+            #                 for chat_obj in chat_objs:
+            #                     if chat_obj.type == 'chat':
+            #                         chat_forward.add_relationship(chat_obj.get_global_id(), 'forward')
+            #                         # chat_forward.add_relationship(obj.get_global_id(), 'forward')
+
             # SENDER # TODO HANDLE NULL SENDER
             user_account = self.process_sender(new_objs, obj, date, timestamp)
 
+            if user_account:
             # UserAccount---ChatObjects
-            for obj_chat in chat_objs:
-                user_account.add_correlation(obj_chat.type, obj_chat.get_subtype(r_str=True), obj_chat.id)
+                for obj_chat in chat_objs:
+                    user_account.add_correlation(obj_chat.type, obj_chat.get_subtype(r_str=True), obj_chat.id)
 
             # if chat: # TODO Chat---Username correlation ???
             #     # Chat---Username    => need to handle members and participants

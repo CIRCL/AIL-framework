@@ -10,6 +10,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 from lib.ail_core import get_all_objects, get_object_all_subtypes
 from lib import correlations_engine
+from lib import relationships_engine
 from lib import btc_ail
 from lib import Tag
 
@@ -467,6 +468,24 @@ def get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=[], max_
 
 
 # --- CORRELATION --- #
+
+def get_obj_nb_relationships(obj_type, subtype, obj_id, filter_types=[]):
+    obj = get_object(obj_type, subtype, obj_id)
+    return obj.get_nb_relationships(filter=filter_types)
+
+def get_relationships_graph_node(obj_type, subtype, obj_id, filter_types=[], max_nodes=300, level=1,
+                                 objs_hidden=set(),
+                                 flask_context=False):
+    obj_global_id = get_obj_global_id(obj_type, subtype, obj_id)
+    nodes, links, meta = relationships_engine.get_relationship_graph(obj_global_id,
+                                                                    filter_types=filter_types,
+                                                                    max_nodes=max_nodes, level=level,
+                                                                    objs_hidden=objs_hidden)
+    # print(meta)
+    meta['objs'] = list(meta['objs'])
+    return {"nodes": create_correlation_graph_nodes(nodes, obj_global_id, flask_context=flask_context),
+            "links": links,
+            "meta": meta}
 
 
 # if __name__ == '__main__':

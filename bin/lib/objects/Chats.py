@@ -76,6 +76,7 @@ class Chat(AbstractChatObject):
         meta['tags'] = self.get_tags(r_list=True)
         if 'icon' in options:
             meta['icon'] = self.get_icon()
+            meta['img'] = meta['icon']
         if 'info' in options:
             meta['info'] = self.get_info()
         if 'participants' in options:
@@ -93,6 +94,8 @@ class Chat(AbstractChatObject):
         if 'threads' in options:
             meta['threads'] = self.get_threads()
             print(meta['threads'])
+        if 'tags_safe' in options:
+            meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
 
     def get_misp_object(self):
