@@ -14,7 +14,7 @@ GREEN="\\033[1;32m"
 DEFAULT="\\033[0;39m"
 
 echo -e $GREEN"Shutting down AIL ..."$DEFAULT
-bash ${AIL_BIN}/LAUNCH.sh -ks
+bash ${AIL_BIN}/LAUNCH.sh -k
 wait
 
 # SUBMODULES #
@@ -27,6 +27,17 @@ pip install -U gcld3
 pip install -U libretranslatepy
 pip install -U xxhash
 pip install -U DomainClassifier
+
+echo ""
+echo -e $GREEN"Updating KVROCKS ..."$DEFAULT
+echo ""
+pushd ${AIL_HOME}/kvrocks
+git pull
+./x.py build -j 4
+popd
+
+bash ${AIL_BIN}/LAUNCH.sh -lrv
+bash ${AIL_BIN}/LAUNCH.sh -lkv
 
 echo ""
 echo -e $GREEN"Updating AIL VERSION ..."$DEFAULT
