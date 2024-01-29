@@ -179,6 +179,7 @@ class Message(AbstractObject):
         """
         Returns translated content
         """
+
         # return self._get_field('translated')
         global_id = self.get_global_id()
         translation = r_cache.get(f'translation:{target}:{global_id}')
@@ -289,7 +290,7 @@ class Message(AbstractObject):
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
         if 'translation' in options and translation_target:
-            meta['translation'] = self.get_translation(content=meta.get('content'), target=translation_target)
+            meta['translation'] = self.translate(content=meta.get('content'), target=translation_target)
 
         # meta['encoding'] = None
         return meta

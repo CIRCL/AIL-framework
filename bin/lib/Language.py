@@ -16,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 
 config_loader = ConfigLoader()
+r_cache = config_loader.get_redis_conn("Redis_Cache")
 TRANSLATOR_URL = config_loader.get_config_str('Translation', 'libretranslate')
 config_loader = None
 
@@ -298,6 +299,25 @@ def _clean_text_to_translate(content, html=False, keys_blocks=True):
             content = content.replace(it, '')
     return content
 
+#### AIL Objects ####
+
+def get_obj_translation(obj_global_id, content, field='', source=None, target='en'):
+    """
+    Returns translated content
+    """
+    translation = r_cache.get(f'translation:{target}:{obj_global_id}:{field}')
+    if translation:
+        # DEBUG
+        # print('cache')
+        # r_cache.expire(f'translation:{target}:{obj_global_id}:{field}', 0)
+        return translation
+    translation = LanguageTranslator().translate(content, source=source, target=target)
+    if translation:
+        r_cache.set(f'translation:{target}:{obj_global_id}:{field}', translation)
+        r_cache.expire(f'translation:{target}:{obj_global_id}:{field}', 300)
+    return translation
+
+## --AIL Objects-- ##
 
 class LanguagesDetector:
 

@@ -182,9 +182,14 @@ def objects_message():
 def objects_user_account():
     instance_uuid = request.args.get('subtype')
     user_id = request.args.get('id')
-    user_account = chats_viewer.api_get_user_account(user_id, instance_uuid)
+    target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
+    user_account = chats_viewer.api_get_user_account(user_id, instance_uuid, translation_target=target)
     if user_account[1] != 200:
         return create_json_response(user_account[0], user_account[1])
     else:
         user_account = user_account[0]
-        return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label)
+        languages = Language.get_translation_languages()
+        return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
+                               translation_languages=languages, translation_target=target)

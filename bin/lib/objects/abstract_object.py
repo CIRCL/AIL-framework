@@ -25,6 +25,7 @@ from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.relationships_engine import get_obj_nb_relationships, add_obj_relationship
+from lib.Language import get_obj_translation
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
@@ -300,6 +301,16 @@ class AbstractObject(ABC):
             add_obj_relationship(obj2_global_id, self.get_global_id(), relationship)
 
     ## -Relationship- ##
+
+    ## Translation ##
+
+    def translate(self, content=None, field='', source=None, target='en'):
+        global_id = self.get_global_id()
+        if not content:
+            content = self.get_content()
+        return get_obj_translation(global_id, content, field=field, source=source, target=target)
+
+    ## -Translation- ##
 
     ## Parent ##
 

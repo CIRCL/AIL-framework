@@ -299,12 +299,12 @@ def get_obj_chat_meta(obj_chat, new_options=set()):
         options.add(option)
     return obj_chat.get_meta(options=options)
 
-def get_subchannels_meta_from_global_id(subchannels):
+def get_subchannels_meta_from_global_id(subchannels, translation_target=None):
     meta = []
     for sub in subchannels:
         _, instance_uuid, sub_id = sub.split(':', 2)
         subchannel = ChatSubChannels.ChatSubChannel(sub_id, instance_uuid)
-        meta.append(subchannel.get_meta({'nb_messages', 'created_at', 'icon'}))
+        meta.append(subchannel.get_meta({'nb_messages', 'created_at', 'icon', 'translation'}, translation_target=translation_target))
     return meta
 
 def get_chat_meta_from_global_id(chat_global_id):
@@ -335,13 +335,13 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'threads', 'username'})
+    meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     if meta['subchannels']:
-        meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
+        meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'], translation_target=translation_target)
     else:
-        if translation_target not in Language.LIST_LANGUAGES:
+        if translation_target not in Language.get_translation_languages():
             translation_target = None
         meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
@@ -373,7 +373,7 @@ def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, nb=
     subchannel = ChatSubChannels.ChatSubChannel(chat_id, chat_instance_uuid)
     if not subchannel.exists():
         return {"status": "error", "reason": "Unknown subchannel"}, 404
-    meta = subchannel.get_meta({'chat', 'created_at', 'icon', 'nb_messages', 'nb_participants', 'threads'})
+    meta = subchannel.get_meta({'chat', 'created_at', 'icon', 'nb_messages', 'nb_participants', 'threads', 'translation'}, translation_target=translation_target)
     if meta['chat']:
         meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
     if meta.get('threads'):
@@ -400,11 +400,11 @@ def api_get_message(message_id, translation_target=None):
     meta = message.get_meta({'chat', 'content', 'files-names', 'icon', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     return meta, 200
 
-def api_get_user_account(user_id, instance_uuid):
+def api_get_user_account(user_id, instance_uuid, translation_target=None):
     user_account = UsersAccount.UserAccount(user_id, instance_uuid)
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
-    meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'username', 'username_meta'})
+    meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
     return meta, 200
 
 # # # # # # # # # # LATER

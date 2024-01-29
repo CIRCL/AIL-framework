@@ -70,7 +70,7 @@ class Chat(AbstractChatObject):
         icon = '\uf086'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), translation_target=None):
         meta = self._get_meta(options=options)
         meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
@@ -79,6 +79,8 @@ class Chat(AbstractChatObject):
             meta['img'] = meta['icon']
         if 'info' in options:
             meta['info'] = self.get_info()
+            if 'translation' in options and translation_target:
+                meta['translation_info'] = self.translate(meta['info'], field='info', target=translation_target)
         if 'participants' in options:
             meta['participants'] = self.get_participants()
         if 'nb_participants' in options:
