@@ -82,8 +82,9 @@ class ChatSubChannel(AbstractChatObject):
         meta['name'] = self.get_name()
         if 'chat' in options:
             meta['chat'] = self.get_chat()
-        if 'img' in options:
-            meta['img'] = self.get_img()
+        if 'icon' in options:
+            meta['icon'] = self.get_icon()
+            meta['img'] = meta['icon']
         if 'nb_messages' in options:
             meta['nb_messages'] = self.get_nb_messages()
         if 'created_at' in options:

@@ -280,7 +280,6 @@ def create_chat_service_instance(protocol, network=None, address=None):
 #######################################################################################
 
 def get_obj_chat(chat_type, chat_subtype, chat_id):
-    print(chat_type, chat_subtype, chat_id)
     if chat_type == 'chat':
         return Chats.Chat(chat_id, chat_subtype)
     elif chat_type == 'chat-subchannel':
@@ -305,7 +304,7 @@ def get_subchannels_meta_from_global_id(subchannels):
     for sub in subchannels:
         _, instance_uuid, sub_id = sub.split(':', 2)
         subchannel = ChatSubChannels.ChatSubChannel(sub_id, instance_uuid)
-        meta.append(subchannel.get_meta({'nb_messages'}))
+        meta.append(subchannel.get_meta({'nb_messages', 'created_at', 'icon'}))
     return meta
 
 def get_chat_meta_from_global_id(chat_global_id):
@@ -399,9 +398,6 @@ def api_get_message(message_id, translation_target=None):
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
     meta = message.get_meta({'chat', 'content', 'files-names', 'icon', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
-    # if meta['chat']:
-    #     print(meta['chat'])
-    #     # meta['chat'] =
     return meta, 200
 
 def api_get_user_account(user_id, instance_uuid):

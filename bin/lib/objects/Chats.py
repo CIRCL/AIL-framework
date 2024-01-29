@@ -95,7 +95,6 @@ class Chat(AbstractChatObject):
             meta['created_at'] = self.get_created_at(date=True)
         if 'threads' in options:
             meta['threads'] = self.get_threads()
-            print(meta['threads'])
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
