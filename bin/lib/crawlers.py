@@ -1331,6 +1331,8 @@ class CrawlerCapture:
         start_time = self.get_task().get_start_time()
         if r_str:
             return start_time
+        elif not start_time:
+            return 0
         else:
             start_time = datetime.strptime(start_time, "%Y/%m/%d  -  %H:%M.%S").timestamp()
             return int(start_time)
