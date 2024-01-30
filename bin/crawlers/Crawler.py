@@ -161,7 +161,7 @@ class Crawler(AbstractModule):
 
             except ConnectionError:
                 print(capture.uuid)
-                capture.update(self, -1)
+                capture.update(-1)
                 self.refresh_lacus_status()
 
         time.sleep(self.pending_seconds)
