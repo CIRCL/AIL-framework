@@ -64,7 +64,7 @@
 
 - name: Clone the AIL repository
   git:
-    repo: 'https://github.com/CIRCL/AIL-framework.git'
+    repo: 'https://github.com/ail-project/AIL-framework.git'
     dest: /opt/AIL-framework
     update: yes
 

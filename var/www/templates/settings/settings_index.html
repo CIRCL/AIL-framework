@@ -43,7 +43,9 @@
                       <tbody>
                         <tr>
                           <td>AIL Version</td>
+                          {%if ail_version != 'None'%}
                           <td>{{ail_version}}<a target="_blank" href="https://github.com/ail-project/ail-framework/releases/tag/{{ail_version}}" class="text-info"><small> (release note)</small></a></td>
+                          {%endif%}
                         </tr>
                         <tr
                         {%if git_metadata['current_branch'] != 'master'%}
@@ -121,7 +123,7 @@
             <h4 class="alert-heading">New Version Available!</h4>
             <hr class="my-0">
             <p>A new version is available, new version: <strong>{{git_metadata['last_remote_tag']}}</strong></p>
-            <a target="_blank" href="https://github.com/CIRCL/AIL-framework/releases/tag/{{git_metadata['last_remote_tag']}}"> Check last release note.</a>
+            <a target="_blank" href="https://github.com/ail-project/AIL-framework/releases/tag/{{git_metadata['last_remote_tag']}}"> Check last release note.</a>
           </div>
         {%endif%}
 
@@ -130,7 +132,7 @@
             <h4 class="alert-heading">New Update Available!</h4>
             <hr class="my-0">
             <p>A new update is available, new commit ID: <strong>{{git_metadata['last_remote_commit']}}</strong></p>
-            <a target="_blank" href="https://github.com/CIRCL/AIL-framework/commit/{{git_metadata['last_remote_commit']}}"> Check last commit content.</a>
+            <a target="_blank" href="https://github.com/ail-project/AIL-framework/commit/{{git_metadata['last_remote_commit']}}"> Check last commit content.</a>
           </div>
         {%endif%}
 
