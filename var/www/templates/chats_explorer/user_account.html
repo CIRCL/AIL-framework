@@ -46,7 +46,6 @@
                                     <tr>
                                         <th>username</th>
                                         <th>ID</th>
-                                        <th>Created at</th>
                                         <th>First Seen</th>
                                         <th>Last Seen</th>
                                         <th>NB Chats</th>
@@ -56,7 +55,6 @@
                                     <tr>
                                             <td>{{ meta['username']['id'] }}</td>
                                             <td>{{ meta['id']  }}</td>
-                                            <td>{{ meta['created_at'] }}</td>
                                             <td>
                                                 {% if meta['first_seen'] %}
                                                     {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
@@ -74,6 +72,10 @@
                             {% if meta['info'] %}
                                 <li class="list-group-item py-0">
                                     <pre class="my-0">{{ meta['info'] }}</pre>
+                                    {% if meta['translation_info'] %}
+                                        <hr>
+                                        <pre class="my-0 text-secondary">{{ meta['translation_info'] }}</pre>
+                                    {% endif %}
                                 </li>
                             {% endif %}
                             </li>
@@ -99,6 +101,10 @@
 
                     </div>
                 </div>
+
+                {% with translate_url=url_for('chats_explorer.objects_user_account', subtype=meta['subtype']), obj_id=meta['id'] %}
+                    {% include 'chats_explorer/block_translation.html' %}
+                {% endwith %}
 
 
 {#                {% if meta['subchannels'] %}#}

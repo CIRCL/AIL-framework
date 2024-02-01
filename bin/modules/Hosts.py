@@ -18,13 +18,14 @@ import os
 import re
 import sys
 
+import DomainClassifier.domainclassifier
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
 
 class Hosts(AbstractModule):
     """
@@ -43,28 +44,29 @@ class Hosts(AbstractModule):
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
-        self.host_regex = r'\b([a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)\b'
-        re.compile(self.host_regex)
-
+        redis_host = config_loader.get_config_str('Redis_Cache', 'host')
+        redis_port = config_loader.get_config_int('Redis_Cache', 'port')
+        redis_db = config_loader.get_config_int('Redis_Cache', 'db')
+        self.dom_classifier = DomainClassifier.domainclassifier.Extract(rawtext="",
+                                                                        redis_host=redis_host,
+                                                                        redis_port=redis_port,
+                                                                        redis_db=redis_db,
+                                                                        re_timeout=30)
         self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
-        item = self.get_obj()
+        obj = self.get_obj()
 
-        # mimetype = item_basic.get_item_mimetype(item.get_id())
-        # if mimetype.split('/')[0] == "text":
-
-        content = item.get_content()
-        hosts = self.regex_findall(self.host_regex, item.get_id(), content, r_set=True)
-        if hosts:
-            print(f'{len(hosts)} host     {item.get_id()}')
-            for host in hosts:
-                # print(host)
-                if not host.endswith('.onion'):
-                    self.add_message_to_queue(message=str(host), queue='Host')
+        content = obj.get_content()
+        self.dom_classifier.text(content)
+        if self.dom_classifier.domain:
+            print(f'{len(self.dom_classifier.domain)} host     {obj.get_id()}')
+            # print(self.dom_classifier.domain)
+            for domain in self.dom_classifier.domain:
+                if domain:
+                    self.add_message_to_queue(message=domain, queue='Host')
 
 
 if __name__ == '__main__':
-
     module = Hosts()
     module.run()

@@ -39,9 +39,9 @@
     </div>
 </div>
 
-<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
-<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+{#<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">#}
+{#<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>#}
+{#<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>#}
 <script>
 
     function filter_by_time() {
@@ -55,7 +55,7 @@
     }
 
 
-	$('#date-range-from').dateRangePicker({
+	/*$('#date-range-from').dateRangePicker({
         separator : ' to ',
         getValue: function(){
             if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
@@ -80,6 +80,6 @@
             $('#date-range-from-input').val(s1);
             $('#date-range-to-input').val(s2);
         }
-	});
+	});*/
 
 </script>

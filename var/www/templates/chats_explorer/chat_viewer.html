@@ -100,6 +100,10 @@
                             {% if chat['info'] %}
                                 <li class="list-group-item py-0">
                                     <pre class="my-0">{{ chat['info'] }}</pre>
+                                    {% if chat['translation_info'] %}
+                                        <hr class="m-1">
+                                        <pre class="my-0 text-secondary">{{ chat['translation_info'] }}</pre>
+                                    {% endif %}
                                 </li>
                             {% endif %}
                             </li>
@@ -112,8 +116,12 @@
                     <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }} <span class="badge badge-light">{{ chat['tags_messages'][tag] }}</span></span>
                 {%  endfor %}
 
+                {% with translate_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
+                    {% include 'chats_explorer/block_translation.html' %}
+                {% endwith %}
+
                 {% if chat['subchannels'] %}
-                    <h4>Sub-Channels:</h4>
+                    <h4 class="mt-2">Sub-Channels:</h4>
                     <table id="tablesubchannels" class="table">
                         <thead class="bg-dark text-white">
                         <tr>
@@ -123,7 +131,7 @@
                             <th>Created at</th>
                             <th>First Seen</th>
                             <th>Last Seen</th>
-                            <th>NB Messages</th>
+                            <th><i class="fas fa-comment-dots"></i></th>
                         </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
@@ -132,7 +140,12 @@
                                 <td>
                                    <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ meta['id'] }}" width="40" height="40">
                                 </td>
-                                <td><b>{{ meta['name'] }}</b></td>
+                                <td>
+                                    <b>{{ meta['name'] }}</b>
+                                    {% if meta['translation_name'] %}
+                                        <div class="text-secondary">{{ meta['translation_name'] }}</div>
+                                    {% endif %}
+                                </td>
                                 <td><a href="{{ url_for('chats_explorer.objects_subchannel_messages') }}?uuid={{ meta['subtype'] }}&id={{ meta['id'] }}">{{ meta['id'] }}</a></td>
                                 <td>{{ meta['created_at'] }}</td>
                                 <td>
@@ -161,9 +174,6 @@
                         {% include 'objects/image/block_blur_img_slider.html' %}
                     </span>
 
-                    {% with translate_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
-                        {% include 'chats_explorer/block_translation.html' %}
-                    {% endwith %}
                     {% with obj_subtype=chat['subtype'], obj_id=chat['id'], url_endpoint=url_for("chats_explorer.chats_explorer_chat"), nb=chat['pagination']['nb']  %}
                         {% set date_from=chat['first_seen'] %}
                         {% set date_to=chat['last_seen'] %}

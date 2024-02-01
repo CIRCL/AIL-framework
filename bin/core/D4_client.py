@@ -34,16 +34,20 @@ class D4Client(AbstractModule):
 
         self.d4_client = d4.create_d4_client()
         self.last_refresh = time.time()
+        self.last_config_check = time.time()
 
         # Send module state to logs
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, dns_record):
         # Refresh D4 Client
-        if self.last_refresh < d4.get_config_last_update_time():
-            self.d4_client = d4.create_d4_client()
-            self.last_refresh = time.time()
-            print('D4 Client: config updated')
+        if self.last_config_check < int(time.time()) - 30:
+            print('refresh rrrr')
+            if self.last_refresh < d4.get_config_last_update_time():
+                self.d4_client = d4.create_d4_client()
+                self.last_refresh = time.time()
+                print('D4 Client: config updated')
+            self.last_config_check = time.time()
 
         if self.d4_client:
             # Send DNS Record to D4Server

@@ -76,14 +76,15 @@ class ChatSubChannel(AbstractChatObject):
 
     # TODO TIME LAST MESSAGES
 
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), translation_target=None):
         meta = self._get_meta(options=options)
         meta['tags'] = self.get_tags(r_list=True)
         meta['name'] = self.get_name()
         if 'chat' in options:
             meta['chat'] = self.get_chat()
-        if 'img' in options:
-            meta['img'] = self.get_img()
+        if 'icon' in options:
+            meta['icon'] = self.get_icon()
+            meta['img'] = meta['icon']
         if 'nb_messages' in options:
             meta['nb_messages'] = self.get_nb_messages()
         if 'created_at' in options:
@@ -94,6 +95,8 @@ class ChatSubChannel(AbstractChatObject):
             meta['participants'] = self.get_participants()
         if 'nb_participants' in options:
             meta['nb_participants'] = self.get_nb_participants()
+        if 'translation' in options and translation_target:
+            meta['translation_name'] = self.translate(meta['name'], field='name', target=translation_target)
         return meta
 
     def get_misp_object(self):

@@ -135,6 +135,9 @@
 
 
                 {% include 'objects/image/block_blur_img_slider.html' %}
+                {% with translate_url=url_for('chats_explorer.objects_message', id=meta['id']), obj_id=meta['id'] %}
+                    {% include 'chats_explorer/block_translation.html' %}
+                {% endwith %}
 
 
                 <div class="position-relative">

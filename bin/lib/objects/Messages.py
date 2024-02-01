@@ -131,7 +131,7 @@ class Message(AbstractObject):
             if meta:
                 _, user_account_subtype, user_account_id = user_account.split(':', 3)
                 user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'icon', 'username', 'username_meta'})
-        return  user_account
+        return user_account
 
     def get_files_names(self):
         names = []
@@ -148,20 +148,38 @@ class Message(AbstractObject):
     def add_reaction(self, reactions, nb_reaction):
         r_object.hset(f'meta:reactions:{self.type}::{self.id}', reactions, nb_reaction)
 
-    # Update value on import
-    # reply to -> parent ?
-    # reply/comment - > children ?
+    # Interactions between users -> use replies
     # nb views
-    # reactions
-    # nb fowards
-    # room ???
-    # message from channel ???
+    # MENTIONS -> Messages + Chats
+    #       # relationship -> mention       - Chat    -> Chat
+    #                                       - Message -> Chat
+    #                                       - Message -> Message ??? fetch mentioned messages
+    # FORWARDS
+    # TODO Create forward CHAT -> message
+    #                       message (is forwarded) -> message (is forwarded from) ???
+    #                       # TODO get source message timestamp
+    #
+    #       # is forwarded
+    #       # forwarded from -> check if relationship
+    #       # nb forwarded -> scard relationship
+    #
+    #       Messages -> CHATS -> NB forwarded
+    #       CHAT -> NB forwarded by chats -> NB messages -> parse full set ????
+    #
+    #
+    #
+    #
+    #
+    #
+    # show users chats
     # message media
+    # flag is deleted -> event or missing from feeder pass ???
 
     def get_translation(self, content=None, source=None, target='fr'):
         """
         Returns translated content
         """
+
         # return self._get_field('translated')
         global_id = self.get_global_id()
         translation = r_cache.get(f'translation:{target}:{global_id}')
@@ -272,7 +290,7 @@ class Message(AbstractObject):
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
         if 'translation' in options and translation_target:
-            meta['translation'] = self.get_translation(content=meta.get('content'), target=translation_target)
+            meta['translation'] = self.translate(content=meta.get('content'), target=translation_target)
 
         # meta['encoding'] = None
         return meta

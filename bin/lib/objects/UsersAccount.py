@@ -5,6 +5,7 @@ import os
 import sys
 # import re
 
+# from datetime import datetime
 from flask import url_for
 from pymisp import MISPObject
 
@@ -88,6 +89,13 @@ class UserAccount(AbstractSubtypeObject):
     def set_info(self, info):
         return self._set_field('info', info)
 
+    # def get_created_at(self, date=False):
+    #     created_at = self._get_field('created_at')
+    #     if date and created_at:
+    #         created_at = datetime.fromtimestamp(float(created_at))
+    #         created_at = created_at.isoformat(' ')
+    #     return created_at
+
     # TODO MESSAGES:
     # 1) ALL MESSAGES + NB
     # 2) ALL MESSAGES TIMESTAMP
@@ -122,7 +130,7 @@ class UserAccount(AbstractSubtypeObject):
     def get_messages_by_chat_obj(self, chat_obj):
         return self.get_correlation_iter_obj(chat_obj, 'message')
 
-    def get_meta(self, options=set()): # TODO Username timeline
+    def get_meta(self, options=set(), translation_target=None): # TODO Username timeline
         meta = self._get_meta(options=options)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
@@ -141,6 +149,10 @@ class UserAccount(AbstractSubtypeObject):
             meta['icon'] = self.get_icon()
         if 'info' in options:
             meta['info'] = self.get_info()
+            if 'translation' in options and translation_target:
+                meta['translation_info'] = self.translate(meta['info'], field='info', target=translation_target)
+        # if 'created_at':
+        #     meta['created_at'] = self.get_created_at(date=True)
         if 'chats' in options:
             meta['chats'] = self.get_chats()
         if 'subchannels' in options:

@@ -50,7 +50,12 @@ const create_heatmap_week_hour = (container_id, data, options) => {
             .style("stroke", "black")
             //.style("stroke-opacity", 1)
 
+        var xPosition = d3.mouse(this)[0] + margin.left;
+        var yPosition = d3.mouse(this)[1] + margin.top + window.scrollY + 100;
+
         tooltip.html(d.date + " " + d.hour + "-" + (d.hour + 1) + "h: <b>" + d.count + "</b> messages")
+            .style("left", xPosition + "px")
+            .style("top", yPosition + "px");
     }
     const mouseleave = function(d) {
         tooltip.style("opacity", 0)

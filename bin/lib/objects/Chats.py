@@ -70,18 +70,23 @@ class Chat(AbstractChatObject):
         icon = '\uf086'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), translation_target=None):
         meta = self._get_meta(options=options)
         meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
         if 'icon' in options:
             meta['icon'] = self.get_icon()
+            meta['img'] = meta['icon']
         if 'info' in options:
             meta['info'] = self.get_info()
+            if 'translation' in options and translation_target:
+                meta['translation_info'] = self.translate(meta['info'], field='info', target=translation_target)
         if 'participants' in options:
             meta['participants'] = self.get_participants()
         if 'nb_participants' in options:
             meta['nb_participants'] = self.get_nb_participants()
+        if 'nb_messages' in options:
+            meta['nb_messages'] = self.get_nb_messages()
         if 'username' in options:
             meta['username'] = self.get_username()
         if 'subchannels' in options:
@@ -92,7 +97,8 @@ class Chat(AbstractChatObject):
             meta['created_at'] = self.get_created_at(date=True)
         if 'threads' in options:
             meta['threads'] = self.get_threads()
-            print(meta['threads'])
+        if 'tags_safe' in options:
+            meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
 
     def get_misp_object(self):

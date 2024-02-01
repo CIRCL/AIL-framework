@@ -107,6 +107,8 @@
 							{% include 'correlation/metadata_card_username.html' %}
 					{% elif dict_object["object_type"] == "decoded" %}
 						{% include 'correlation/metadata_card_decoded.html' %}
+                    {% elif dict_object["object_type"] == "chat" %}
+						{% include 'correlation/metadata_card_chat.html' %}
                     {% elif dict_object["object_type"] == "cve" %}
 						{% include 'correlation/metadata_card_cve.html' %}
 					{% elif dict_object["object_type"] == "domain" %}
@@ -154,13 +156,13 @@
                                             </div>
                                         </div>
                                     </span>
-                                    <span class="float-right mx-1">
-										{% if dict_object["object_type"] != "" %}
-											{% with obj_type=dict_object["object_type"], obj_id=dict_object["correlation_id"], obj_subtype=dict_object["metadata"]["type_id"],obj_lvl=1%}
-                                                {% include 'import_export/block_add_user_object_to_export.html' %}
-                                            {% endwith %}
-										{% endif %}
-                                    </span>
+{#                                    <span class="float-right mx-1">#}
+{#										{% if dict_object["object_type"] != "" %}#}
+{#											{% with obj_type=dict_object["object_type"], obj_id=dict_object["correlation_id"], obj_subtype=dict_object["metadata"]["type_id"],obj_lvl=1%}#}
+{#                                                {% include 'import_export/block_add_user_object_to_export.html' %}#}
+{#                                            {% endwith %}#}
+{#										{% endif %}#}
+{#                                    </span>#}
                                     <span class="float-right mt-2">
 										<button class="btn btn-primary py-1" onclick="resize_graph();">
 											<i class="fas fa-sync"></i>&nbsp;Resize Graph
@@ -187,13 +189,13 @@
 								</div>
 							</div>
 
-                            <p>Press <b>H</b> on an object / node to hide it.</p>
-                            {% if dict_object["hidden"] %}
-                                <h5>Hidden objects:</h5>
-                                {% for obj_hidden in dict_object["hidden"] %}
-                                    {{ obj_hidden }} <br>
-                                {% endfor %}
-                            {% endif %}
+{#                            <p>Press <b>H</b> on an object / node to hide it.</p>#}
+{#                            {% if dict_object["hidden"] %}#}
+{#                                <h5>Hidden objects:</h5>#}
+{#                                {% for obj_hidden in dict_object["hidden"] %}#}
+{#                                    {{ obj_hidden }} <br>#}
+{#                                {% endfor %}#}
+{#                            {% endif %}#}
 
 						</div>
 
@@ -203,125 +205,47 @@
 								<div class="card-body text-center px-0 py-0">
 
 									<ul class="list-group">
-  									<li class="list-group-item list-group-item-info">Select Correlation</li>
-                                    <form action="{{ url_for('correlation.show_correlation') }}" method="post">
-									<li class="list-group-item text-left">
+                                        <li class="list-group-item list-group-item-info">Relationship</li>
+                                        <form action="{{ url_for('correlation.show_relationship') }}" method="post">
 
                                             <input type="hidden" id="obj_type" name="obj_type" value="{{ dict_object["object_type"] }}">
                                             <input type="hidden" id="subtype" name="subtype" value="{{ dict_object["metadata"]["type_id"] }}">
                                             <input type="hidden" id="obj_id" name="obj_id" value="{{ dict_object["correlation_id"] }}">
 
+{#                                        <li class="list-group-item text-left">#}
+{#                                                <div class="form-check">#}
+{#                                                    <input class="form-check-input" type="checkbox" value="True" id="forwardCheck" name="forwardCheck" {%if "forward" in dict_object["filter"]%}checked{%endif%}>#}
+{#                                                    <label class="form-check-label" for="forwardCheck">Forwards</label>#}
+{#                                                </div>#}
+{#                                                <div class="form-check">#}
+{#                                                    <input class="form-check-input" type="checkbox" value="True" id="mentionCheck" name="mentionCheck" {%if "mention" in dict_object["filter"]%}checked{%endif%}>#}
+{#                                                    <label class="form-check-label" for="mentionCheck">Mentions</label>#}
+{#                                                </div>#}
+{##}
+{#                                        </li>#}
+                                        <li class="list-group-item text-left">
 
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="CookieNameCheck" name="CookieNameCheck" {%if "cookie-name" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="CookieNameCheck">Cookie Name</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="CveCheck" name="CveCheck" {%if "cve" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="CveCheck">Cve</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="CryptocurrencyCheck" name="CryptocurrencyCheck" {%if "cryptocurrency" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="CryptocurrencyCheck">Cryptocurrency</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="DecodedCheck" name="DecodedCheck" {%if "decoded" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="DecodedCheck">Decoded</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="EtagCheck" name="EtagCheck" {%if "etag" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="EtagCheck">Etag</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="HHHashCheck" name="HHHashCheck" {%if "hhhash" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="HHHashCheck">HHHash</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="ScreenshotCheck" name="ScreenshotCheck" {%if "screenshot" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="ScreenshotCheck">Screenshot</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="TitleCheck" name="TitleCheck" {%if "title" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="TitleCheck">Title</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="PgpCheck" name="PgpCheck" {%if "pgp" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="PgpCheck">PGP</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="DomainCheck" name="DomainCheck" {%if "domain" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="DomainCheck">Domain</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="ItemCheck" name="ItemCheck" {%if "item" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="ItemCheck">Item</label>
+                                            <div class="form-group">
+                                                <label for="max_nb_nodes_in">Correlation Depth:</label>
+                                                <input class="form-control" type="number" value="{{dict_object["level"]}}" min="0" id="level" name="level">
                                             </div>
 
-                                            <hr>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="chatCheck" name="chatCheck" {%if "chat" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="chatCheck">Chat</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="subchannelCheck" name="subchannelCheck" {%if "chat-subchannel" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="subchannelCheck">Chat-Subchannel</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="threadCheck" name="threadCheck" {%if "chat-thread" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="threadCheck">Chat-Thread</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="messageCheck" name="messageCheck" {%if "message" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="messageCheck">Message</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="imageCheck" name="imageCheck" {%if "image" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="imageCheck">Image</label>
+
+                                        </li>
+                                        <li class="list-group-item text-left">
+
+                                            <div class="form-group">
+                                                <label for="max_nb_nodes_in">Max number of nodes:</label>
+                                                <input class="form-control" type="number" value="{{dict_object["max_nodes"]}}" min="0" id="max_nb_nodes_in" name="max_nb_nodes_in">
                                             </div>
 
-                                            <hr>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="user_accountCheck" name="user_accountCheck" {%if "user-account" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="user_accountCheck">User-Account</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="UsernameCheck" name="UsernameCheck" {%if "username" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="UsernameCheck">Username</label>
+                                            <div class="text-center">
+                                                <input class="btn btn-primary" type="submit" value="Redraw Graph">
                                             </div>
 
-                                    </li>
-{#                                    <li class="list-group-item text-left">#}
-{#                                        <div class="d-flex mt-1">#}
-{#                                            Union&nbsp;&nbsp;#}
-{#                                            <div class="custom-control custom-switch">#}
-{#                                                <input class="custom-control-input" type="checkbox" name="mode" value="True" id="mode" {%if dict_object["mode"]=="inter"%}checked{%endif%}>#}
-{#                                                <label class="custom-control-label" for="mode">Intersection</label>#}
-{#                                            </div>#}
-{#                                        </div>#}
-{#                                    </li>#}
-                                    <li class="list-group-item text-left">
 
-                                        <div class="form-group">
-                                            <label for="max_nb_nodes_in">Correlation Depth:</label>
-                                            <input class="form-control" type="number" value="{{dict_object["level"]}}" min="0" id="level" name="level">
-                                        </div>
-
-
-                                    </li>
-                                    <li class="list-group-item text-left">
-
-                                        <div class="form-group">
-                                            <label for="max_nb_nodes_in">Max number of nodes:</label>
-                                            <input class="form-control" type="number" value="{{dict_object["max_nodes"]}}" min="0" id="max_nb_nodes_in" name="max_nb_nodes_in">
-                                        </div>
-
-                                        <div class="text-center">
-                                            <input class="btn btn-primary" type="submit" value="Redraw Graph">
-                                        </div>
-
-
-                                    </li>
-                                    </form>
+                                        </li>
+                                        </form>
 									</ul>
 
 									<ul class="list-group">
@@ -333,20 +257,20 @@
                                                         <circle cx="13" cy="13" r="13" fill="orange"></circle>
 													</g>
 												</svg>
-                                                Current Correlation<br>
+                                                Current Object<br>
                                             </p>
                                         </li>
                                     </ul>
                                     <ul class="list-group">
-                                        <li class="list-group-item list-group-item-secondary"><i class="fas fa-project-diagram"></i> Direct Correlations</li>
+                                        <li class="list-group-item list-group-item-secondary"><i class="fas fa-project-diagram"></i> Direct Relationships</li>
                                         <li class="list-group-item text-left">
-                                            {% for obj_type in  dict_object['nb_correl'] %}
+                                            {% for relationship in  dict_object['nb_relation'] %}
                                                 <div class="row">
                                                     <div class="col-8">
-                                                        {{ obj_type }}
+                                                        {{ relationship }}
                                                     </div>
                                                     <div class="col-4">
-                                                        <span class="badge badge-primary">{{ dict_object['nb_correl'][obj_type] }}</span>
+                                                        <span class="badge badge-primary">{{ dict_object['nb_relation'][relationship] }}</span>
                                                     </div>
                                                 </div>
                                             {% endfor %}
@@ -366,17 +290,7 @@
 						</div>
 					</div>
 
-					{% if dict_object["object_type"] in ["cve", "decoded", "pgp", "cryptocurrency"] %}
-						<div class="card">
-							<div class="card-header">
-								<i class="fas fa-chart-bar"></i> Graph
-							</div>
-							<div class="panel-body ">
-								<div id="graph_line">
-								</div>
-							</div>
-						</div>
-                    {% endif %}
+
 
                     <div class="card my-2">
                         <div class="card-header bg-light">
@@ -410,14 +324,7 @@ $(document).ready(function(){
         $("#incomplete_graph").hide();
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
-		{% if dict_object["object_type"] in ["cryptocurrency", "pgp", "username"] %}
-			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_subtypes.objects_cve_graphline_json') }}?type={{ dict_object["object_type"] }}&subtype={{dict_object["metadata"]["type_id"]}}&id={{dict_object["correlation_id"]}}");
-		{% elif dict_object["object_type"] == "decoded" %}
-			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_decoded.graphline_json') }}?id={{dict_object["correlation_id"]}}");
-		{% elif dict_object["object_type"] == "cve" %}
-            all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_cve.objects_cve_graphline_json') }}?id={{dict_object["correlation_id"]}}");
-        {% endif %}
+		all_graph.node_graph = create_graph("{{ url_for('correlation.relationships_graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
 		all_graph.onResize();
 });
 
@@ -465,13 +372,13 @@ function SubmitAddTags() {
 	}
 
     function reset_graph() {
-        window.location.href = "{{ url_for('correlation.show_correlation') }}?type={{ dict_object["type"] }}&subtype={{ dict_object["subtype"] }}&id={{ dict_object["id"] }}"
+        window.location.href = "{{ url_for('correlation.show_relationship') }}?type={{ dict_object["type"] }}&subtype={{ dict_object["subtype"] }}&id={{ dict_object["id"] }}"
     }
 
 </script>
 
 <script>
-var correl_link = "{{ url_for('correlation.show_correlation') }}?type={{ dict_object["type"] }}&subtype={{ dict_object["subtype"] }}&id={{ dict_object["id"] }}&max_nodes={{ dict_object["max_nodes"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}"
+var correl_link = "{{ url_for('correlation.show_relationship') }}?type={{ dict_object["type"] }}&subtype={{ dict_object["subtype"] }}&id={{ dict_object["id"] }}&max_nodes={{ dict_object["max_nodes"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}"
 {% if 'hidden_str' in dict_object %}
     correl_link = correl_link + "&hidden={{ dict_object["hidden_str"] }}"
 {% endif %}
@@ -521,11 +428,39 @@ function create_graph(url){
 d3.json(url)
 .then(function(data){
 
-	link = container_graph.append("g")
-	.selectAll("line")
-	.data(data.links)
-	.enter().append("line")
-		.attr("class", "link");
+    // ----------------------------------------------------------------------------------
+    svg_node.append("defs").selectAll("marker")
+        .data(["end"])      // Different link/path types can be defined here
+    .enter().append("marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 25)   // Controls the distance of the marker from the node
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+    .append("path")
+        .attr("d", "M0,-5L10,0L0,5");
+    // ----------------------------------------------------------------------------------
+
+	var link = container_graph.append("g")
+        /*.selectAll("line")
+        .data(data.links)
+        .enter().append("line")
+            .attr("class", "link")
+            .attr("marker-end", "url(#end)");*/
+        .selectAll("g")
+        .data(data.links)
+        .enter().append("g");
+    link.append("line")
+        .attr("class", "link")
+        .attr("marker-end", "url(#end)")
+    link.append("text")
+        .attr("class", "link-label")
+        .style("font-size", "6px")
+        .text(function(d) { return d.relationship; })
+
+
 		//.attr("stroke-width", function(d) { return Math.sqrt(d.value); })
 
 	var node = container_graph.selectAll(".node")
@@ -589,11 +524,19 @@ d3.json(url)
 			.links(data.links);
 
 	function ticked() {
-		link
+		link.select("line")
 				.attr("x1", function(d) { return d.source.x; })
 				.attr("y1", function(d) { return d.source.y; })
 				.attr("x2", function(d) { return d.target.x; })
 				.attr("y2", function(d) { return d.target.y; });
+
+        link.select("text")
+            .attr("x", function(d) {
+                return (d.source.x + d.target.x) / 2;
+            })
+            .attr("y", function(d) {
+                return (d.source.y + d.target.y) / 2;
+            });
 
 		/*node
 				.attr("cx", function(d) { return d.x; })
@@ -758,8 +701,7 @@ function mouseouted() {
 	div.transition()
 		.duration(500)
 		.style("opacity", 0);
-
-	link.style("stroke", "#666");
+        //link.select("line")
 }
 
 all_graph.onResize = function () {

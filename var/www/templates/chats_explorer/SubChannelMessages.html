@@ -75,6 +75,9 @@
                                                 <tr>
                                                     <td>
                                                         {{ subchannel['name'] }}
+                                                        {% if subchannel['translation_name'] %}
+                                                            <div class="text-secondary">{{ subchannel['translation_name'] }}</div>
+                                                        {% endif %}
                                                     </td>
                                                     <td>{{ subchannel["created_at"] }}</td>
                                                     <td>

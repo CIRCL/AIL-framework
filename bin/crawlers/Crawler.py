@@ -142,10 +142,17 @@ class Crawler(AbstractModule):
                     return capture
                 elif status == crawlers.CaptureStatus.UNKNOWN:
                     capture_start = capture.get_start_time(r_str=False)
+                    if capture_start == 0:
+                        task = capture.get_task()
+                        task.delete()
+                        capture.delete()
+                        self.logger.warning(f'capture UNKNOWN ERROR STATE, {task.uuid} Removed from queue')
+                        return None
                     if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
                         task = capture.get_task()
                         task.reset()
                         capture.delete()
+                        self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
                     else:
                         capture.update(status)
                 else:
@@ -154,7 +161,7 @@ class Crawler(AbstractModule):
 
             except ConnectionError:
                 print(capture.uuid)
-                capture.update(self, -1)
+                capture.update(-1)
                 self.refresh_lacus_status()
 
         time.sleep(self.pending_seconds)

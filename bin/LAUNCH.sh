@@ -607,7 +607,7 @@ function launch_all {
 
 function menu_display {
 
-  options=("Redis" "Ardb" "Kvrocks" "Logs" "Scripts" "Flask" "Killall" "Update" "Update-config" "Update-thirdparty")
+  options=("Redis" "Kvrocks" "Logs" "Scripts" "Flask" "Killall" "Update" "Update-config" "Update-thirdparty")
 
   menu() {
       echo "What do you want to Launch?:"
@@ -634,9 +634,6 @@ function menu_display {
           case ${options[i]} in
               Redis)
                   launch_redis;
-                  ;;
-              Ardb)
-                  launch_ardb;
                   ;;
               Kvrocks)
                   launch_kvrocks;

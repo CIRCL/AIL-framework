@@ -319,11 +319,7 @@ class MISPExporterAutoDaily(MISPExporter):
     def __init__(self, url='', key='', ssl=False):
         super().__init__(url=url, key=key, ssl=ssl)
 
-        # create event if don't exists
-        try:
-            self.event_id = self.get_daily_event_id()
-        except MISPConnectionError:
-            self.event_id = - 1
+        self.event_id = - 1
         self.date = datetime.date.today()
 
     def export(self, obj, tag):
@@ -345,6 +341,7 @@ class MISPExporterAutoDaily(MISPExporter):
                 self.add_event_object(self.event_id, obj)
 
         except MISPConnectionError:
+            self.event_id = - 1
             return -1
 
 

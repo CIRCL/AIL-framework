@@ -100,14 +100,15 @@ class FeederImporter(AbstractImporter):
         else:
             objs = set()
 
-        objs.add(data_obj)
+        if data_obj:
+            objs.add(data_obj)
 
         for obj in objs:
             if obj.type == 'item':  # object save on disk as file (Items)
                 gzip64_content = feeder.get_gzip64_content()
                 return obj, f'{feeder_name} {gzip64_content}'
             else:  # Messages save on DB
-                if obj.exists():
+                if obj.exists() and obj.type != 'chat':
                     return obj, f'{feeder_name}'
 
 
@@ -136,4 +137,5 @@ class FeederModuleImporter(AbstractModule):
 # Launch Importer
 if __name__ == '__main__':
     module = FeederModuleImporter()
+    # module.debug = True
     module.run()
