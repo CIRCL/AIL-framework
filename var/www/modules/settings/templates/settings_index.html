@@ -43,7 +43,11 @@
                       <tbody>
                         <tr>
                           <td>AIL Version</td>
+                          {%if ail_version is not none %}
                           <td>{{current_version}}<a target="_blank" href="https://github.com/ail-project/ail-framework/releases/tag/{{current_version}}" class="text-info"><small> (release note)</small></a></td>
+			  {%else%}
+                          <td>{{git_metadata['current_branch']}}</td>
+                          {%endif%}
                         </tr>
                         <tr
                         {%if git_metadata['current_branch'] != 'master'%}
