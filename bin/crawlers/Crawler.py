@@ -230,7 +230,12 @@ class Crawler(AbstractModule):
         domain = task.get_domain()
         print(domain)
         if not domain:
-            raise Exception(f'Error: domain {domain}')
+            if self.debug:
+                raise Exception(f'Error: domain {domain} - task {task.uuid} - capture {capture.uuid}')
+            else:
+                self.logger.critical(f'Error: domain {domain} - task {task.uuid} - capture {capture.uuid}')
+                print(f'Error: domain {domain}')
+            return None
 
         self.domain = Domain(domain)
         self.original_domain = Domain(domain)
