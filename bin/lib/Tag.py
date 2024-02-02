@@ -1538,7 +1538,7 @@ def api_add_obj_tags(tags=[], galaxy_tags=[], object_id=None, object_type="item"
 #         r_serv_metadata.srem('tag:{}'.format(object_id), tag)
 #         r_tags.srem('{}:{}'.format(object_type, tag), object_id)
 
-def delete_tag(object_type, tag, object_id, obj_date=None): ################################ # TODO:
+def delete_tag(object_type, tag, object_id, obj_date=None): ################################ # TODO: REMOVE ME
     # tag exist
     if is_obj_tagged(object_id, tag):
         if not obj_date:
@@ -1613,6 +1613,11 @@ def _fix_tag_obj_id(date_from):
                 print(tag)
                 new_tag = tag.split(';')[0]
                 print(new_tag)
+                r_tags.hdel(f'tag_metadata:{tag}', 'first_seen')
+                r_tags.hdel(f'tag_metadata:{tag}', 'last_seen')
+                r_tags.srem(f'list_tags:{obj_type}', tag)
+                r_tags.srem(f'list_tags:{obj_type}:', tag)
+                r_tags.srem(f'list_tags', tag)
                 raw = get_obj_by_tags(obj_type, [tag], nb_obj=500000, date_from=date_from, date_to=date_to)
                 if raw.get('tagged_obj', []):
                     for obj_id in raw['tagged_obj']:
