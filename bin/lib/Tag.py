@@ -1249,7 +1249,7 @@ class Tag:
         return last_seen
 
     def set_last_seen(self, last_seen):
-        return r_tags.hset(f'meta:tag:{self.name}', 'last_seen', int(last_seen)
+        return r_tags.hset(f'meta:tag:{self.name}', 'last_seen', int(last_seen))
 
     def get_color(self):
         color = r_tags.hget(f'meta:tag:{self.name}', 'color')
