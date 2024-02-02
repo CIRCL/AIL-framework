@@ -15,7 +15,7 @@ curl https://get.docker.com | /bin/bash
 
 2. Type these commands to build the Docker image:
 ```bash
-git clone https://github.com/ail-project/AIL-framework.git
+git clone https://github.com/ail-project/ail-framework.git
 cd AIL-framework
 cp -r ./other_installers/docker/Dockerfile ./other_installers/docker/docker_start.sh ./other_installers/docker/pystemon ./
 cp ./configs/update.cfg.sample ./configs/update.cfg
