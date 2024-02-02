@@ -31,61 +31,7 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-{#                <div class="card my-3">#}  TODO CHAT abstract metadata
-{##}
-{#                    <div class="card-header" style="background-color:#d9edf7;font-size: 15px">#}
-{#                        <h4 class="text-secondary">{% if chat['username'] %}{{ chat["username"]["id"] }} {% else %} {{ chat['name'] }}{% endif %} :</h4>#}
-{#                        {% if chat['icon'] %}#}
-{#                            <div><img src="{{ url_for('objects_image.image', filename=chat['icon'])}}" class="mb-2" alt="{{ chat['id'] }}" width="200" height="200"></div>#}
-{#                        {% endif %}#}
-{#                        <ul class="list-group mb-2">#}
-{#                            <li class="list-group-item py-0">#}
-{#                                <table class="table">#}
-{#                                    <thead class="">#}
-{#                                    <tr>#}
-{#                                        <th>Name</th>#}
-{#                                        <th>ID</th>#}
-{#                                        <th>Created at</th>#}
-{#                                        <th>First Seen</th>#}
-{#                                        <th>Last Seen</th>#}
-{#                                        <th>NB Sub-Channels</th>#}
-{#                                        <th>Participants</th>#}
-{#                                    </tr>#}
-{#                                    </thead>#}
-{#                                    <tbody style="font-size: 15px;">#}
-{#                                    <tr>#}
-{#                                            <td>{{ chat['name'] }}</td>#}
-{#                                            <td>{{ chat['id']  }}</td>#}
-{#                                            <td>{{ chat['created_at'] }}</td>#}
-{#                                            <td>#}
-{#                                                {% if chat['first_seen'] %}#}
-{#                                                    {{ chat['first_seen'][0:4] }}-{{ chat['first_seen'][4:6] }}-{{ chat['first_seen'][6:8] }}#}
-{#                                                {% endif %}#}
-{#                                            </td>#}
-{#                                            <td>#}
-{#                                                {% if chat['last_seen'] %}#}
-{#                                                    {{ chat['last_seen'][0:4] }}-{{ chat['last_seen'][4:6] }}-{{ chat['last_seen'][6:8] }}#}
-{#                                                {% endif %}#}
-{#                                            </td>#}
-{#                                            <td>{{ chat['nb_subchannels'] }}</td>#}
-{#                                            <td>#}
-{#                                                <a href="{{ url_for('chats_explorer.objects_thread_messages')}}?uuid={{ chat['subtype'] }}&id={{ chat['id'] }}"><i class="far fa-user-circle"></i> {{ chat['participants'] | length}}</a>#}
-{##}
-{#                                            </td>#}
-{#                                    </tr>#}
-{#                                    </tbody>#}
-{#                                </table>#}
-{#                            {% if chat['info'] %}#}
-{#                                <li class="list-group-item py-0">#}
-{#                                    <pre class="my-0">{{ chat['info'] }}</pre>#}
-{#                                </li>#}
-{#                            {% endif %}#}
-{#                            </li>#}
-{#                        </ul>#}
-{##}
-{#                    </div>#}
-{#                </div>#}
-
+                <h5>{{ meta['type'] }} {{ meta['subtype'] }} {{ meta['id'] }}</h5>
 
                 <h4>Participants:</h4>
                 <table id="tableparticipantss" class="table">

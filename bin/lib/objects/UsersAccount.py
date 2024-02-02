@@ -128,7 +128,10 @@ class UserAccount(AbstractSubtypeObject):
         self._get_timeline_username().add_timestamp(timestamp, username_global_id)
 
     def get_messages_by_chat_obj(self, chat_obj):
-        return self.get_correlation_iter_obj(chat_obj, 'message')
+        messages = []
+        for mess in self.get_correlation_iter_obj(chat_obj, 'message'):
+            messages.append(f'message:{mess}')
+        return messages
 
     def get_meta(self, options=set(), translation_target=None): # TODO Username timeline
         meta = self._get_meta(options=options)

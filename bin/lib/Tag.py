@@ -685,7 +685,7 @@ def confirm_tag(tag, obj):
 def update_tag_global_by_obj_type(tag, obj_type, subtype=''):
     tag_deleted = False
     if obj_type == 'item' or obj_type == 'message':
-        if not r_tags.exists(f'tag_metadata:{tag}'):
+        if not r_tags.exists(f'tag_metadata:{tag}'): # TODO FIXME #################################################################
             tag_deleted = True
     else:
         if not r_tags.exists(f'{obj_type}:{subtype}:{tag}'):
@@ -1200,11 +1200,16 @@ def get_enabled_tags_with_synonyms_ui():
 
 # TYPE -> taxonomy/galaxy/custom
 
+# TODO GET OBJ Types
 class Tag:
 
     def __int__(self, name: str, local=False):  # TODO Get first seen by object, obj='item
         self.name = name
         self.local = local
+
+    # TODO
+    def exists(self):
+        pass
 
     def is_local(self):
         return self.local
@@ -1216,7 +1221,11 @@ class Tag:
         else:
             return 'taxonomy'
 
+    def is_taxonomy(self):
+        return not self.local and self.is_galaxy()
 
+    def is_galaxy(self):
+        return not self.local and self.name.startswith('misp-galaxy:')
 
     def get_first_seen(self, r_int=False):
         first_seen = r_tags.hget(f'meta:tag:{self.name}', 'first_seen')
@@ -1227,6 +1236,9 @@ class Tag:
                 first_seen = 99999999
         return first_seen
 
+    def set_first_seen(self, first_seen):
+        return r_tags.hget(f'meta:tag:{self.name}', 'first_seen', int(first_seen))
+
     def get_last_seen(self, r_int=False):
         last_seen = r_tags.hget(f'meta:tag:{self.name}', 'last_seen')  # 'last_seen:object' -> only if date or daterange
         if r_int:
@@ -1235,6 +1247,9 @@ class Tag:
             else:
                 last_seen = 0
         return last_seen
+
+    def set_last_seen(self, last_seen):
+        return r_tags.hset(f'meta:tag:{self.name}', 'last_seen', int(last_seen)
 
     def get_color(self):
         color = r_tags.hget(f'meta:tag:{self.name}', 'color')
@@ -1257,6 +1272,131 @@ class Tag:
                 'tag': self.name,
                 'local': self.is_local()}
         return meta
+
+    def update_obj_type_first_seen(self, obj_type, first_seen, last_seen): # TODO SUBTYPE ##################################
+        if int(first_seen) > int(last_seen):
+            raise Exception(f'INVALID first_seen/last_seen, {first_seen}/{last_seen}')
+
+        for date in Date.get_daterange(first_seen, last_seen):
+            date = int(date)
+            if date == last_seen:
+                if r_tags.scard(f'{obj_type}::{self.name}:{first_seen}') > 0:
+                    r_tags.hset(f'tag_metadata:{self.name}', 'first_seen', first_seen)
+                else:
+                    r_tags.hdel(f'tag_metadata:{self.name}', 'first_seen')  # TODO SUBTYPE
+                    r_tags.hdel(f'tag_metadata:{self.name}', 'last_seen')   # TODO SUBTYPE
+                    r_tags.srem(f'list_tags:{obj_type}', self.name)         # TODO SUBTYPE
+
+            elif r_tags.scard(f'{obj_type}::{self.name}:{first_seen}') > 0:
+                r_tags.hset(f'tag_metadata:{self.name}', 'first_seen', first_seen)  # TODO METADATA OBJECT NAME
+
+
+    def update_obj_type_last_seen(self, obj_type, first_seen, last_seen):  # TODO SUBTYPE ##################################
+        if int(first_seen) > int(last_seen):
+            raise Exception(f'INVALID first_seen/last_seen, {first_seen}/{last_seen}')
+
+        for date in Date.get_daterange(first_seen, last_seen).reverse():
+            date = int(date)
+            if date == last_seen:
+                if r_tags.scard(f'{obj_type}::{self.name}:{last_seen}') > 0:
+                    r_tags.hset(f'tag_metadata:{self.name}', 'last_seen', last_seen)
+                else:
+                    r_tags.hdel(f'tag_metadata:{self.name}', 'first_seen')  # TODO SUBTYPE
+                    r_tags.hdel(f'tag_metadata:{self.name}', 'last_seen')   # TODO SUBTYPE
+                    r_tags.srem(f'list_tags:{obj_type}', self.name)         # TODO SUBTYPE
+
+            elif r_tags.scard(f'{obj_type}::{self.name}:{last_seen}') > 0:
+                r_tags.hset(f'tag_metadata:{self.name}', 'last_seen', last_seen)  # TODO METADATA OBJECT NAME
+
+    # TODO
+    # TODO Update First seen and last seen
+    # TODO SUBTYPE CHATS ??????????????
+    def update_obj_type_date(self, obj_type, date, op='add', first_seen=None, last_seen=None):
+        date = int(date)
+        if not first_seen:
+            first_seen = self.get_first_seen(r_int=True)
+        if not last_seen:
+            last_seen = self.get_last_seen(r_int=True)
+
+        # Add tag
+        if op == 'add':
+            if date < first_seen:
+                self.set_first_seen(date)
+            if date > last_seen:
+                self.set_last_seen(date)
+
+        # Delete tag
+        else:
+            if date == first_seen and date == last_seen:
+
+                # TODO OBJECTS ##############################################################################################
+                if r_tags.scard(f'{obj_type}::{self.name}:{first_seen}') < 1:   ####################### TODO OBJ SUBTYPE ???????????????????
+                    r_tags.hdel(f'tag_metadata:{self.name}', 'first_seen')
+                    r_tags.hdel(f'tag_metadata:{self.name}', 'last_seen')
+                    # TODO CHECK IF DELETE FULL TAG LIST ############################
+
+            elif date == first_seen:
+                if r_tags.scard(f'{obj_type}::{self.name}:{first_seen}') < 1:
+                    if int(last_seen) >= int(first_seen):
+                        self.update_obj_type_first_seen(obj_type, first_seen, last_seen)  # TODO OBJ_TYPE
+
+            elif date == last_seen:
+                if r_tags.scard(f'{obj_type}::{self.name}:{last_seen}') < 1:
+                    if int(last_seen) >= int(first_seen):
+                        self.update_obj_type_last_seen(obj_type, first_seen, last_seen)  # TODO OBJ_TYPE
+
+            # STATS
+            nb = r_tags.hincrby(f'daily_tags:{date}', self.name, -1)
+            if nb < 1:
+                r_tags.hdel(f'daily_tags:{date}', self.name)
+
+    # TODO -> CHECK IF TAG EXISTS + UPDATE FIRST SEEN/LAST SEEN
+    def update(self, date=None):
+        pass
+
+    # TODO CHANGE ME TO SUB FUNCTION ##### add_object_tag(tag, obj_type, obj_id, subtype='')
+    def add(self, obj_type, subtype, obj_id):
+        if subtype is None:
+            subtype = ''
+
+        if r_tags.sadd(f'tag:{obj_type}:{subtype}:{obj_id}', self.name) == 1:
+            r_tags.sadd('list_tags', self.name)
+            r_tags.sadd(f'list_tags:{obj_type}', self.name)
+            if subtype:
+                r_tags.sadd(f'list_tags:{obj_type}:{subtype}', self.name)
+
+            if obj_type == 'item':
+                date = item_basic.get_item_date(obj_id)
+
+                # add domain tag
+                if item_basic.is_crawled(obj_id) and self.name != 'infoleak:submission="crawler"' and self.name != 'infoleak:submission="manual"':
+                    domain = item_basic.get_item_domain(obj_id)
+                    self.add('domain', '', domain)
+            elif obj_type == 'message':
+                timestamp = obj_id.split('/')[1]
+                date = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d')
+            else:
+                date = None
+
+            if date:
+                r_tags.sadd(f'{obj_type}:{subtype}:{self.name}:{date}', obj_id)
+                update_tag_metadata(self.name, date)
+            else:
+                r_tags.sadd(f'{obj_type}:{subtype}:{self.name}', obj_id)
+
+            # TODO REPLACE ME BY DATE TAGS ????
+            # STATS BY TYPE ???
+            # DAILY STATS
+            r_tags.hincrby(f'daily_tags:{datetime.date.today().strftime("%Y%m%d")}', self.name, 1)
+
+
+    # TODO CREATE FUNCTION GET OBJECT DATE
+    def remove(self, obj_type, subtype, obj_id):
+        # TODO CHECK IN ALL OBJECT TO DELETE
+        pass
+
+    def delete(self):
+        pass
 
 
 #### TAG AUTO PUSH ####
