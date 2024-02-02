@@ -31,19 +31,15 @@ export PATH=$AIL_KVROCKS:$PATH
 export PATH=$AIL_BIN:$PATH
 export PATH=$AIL_FLASK:$PATH
 
-function isup {
-    isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
-    isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
-    iskvrocks=`screen -ls | egrep '[0-9]+.KVROCKS_AIL' | cut -d. -f1`
-    islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
-    is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
-    is_ail_2_ail=`screen -ls | egrep '[0-9]+.AIL_2_AIL' | cut -d. -f1`
-    isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
-    isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
-    isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
-}
-
-isup
+isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
+isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
+iskvrocks=`screen -ls | egrep '[0-9]+.KVROCKS_AIL' | cut -d. -f1`
+islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
+is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
+is_ail_2_ail=`screen -ls | egrep '[0-9]+.AIL_2_AIL' | cut -d. -f1`
+isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
+isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
+isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
 
 function helptext {
     echo -e $YELLOW"
@@ -63,7 +59,6 @@ function helptext {
     - All the queuing modules.
     - All the processing modules.
     - All Redis in memory servers.
-    - All ARDB on disk servers.
     - All KVROCKS servers.
     "$DEFAULT"
     (Inside screen Daemons)
@@ -73,7 +68,7 @@ function helptext {
     LAUNCH.sh
       [-l  | --launchAuto]         LAUNCH DB + Scripts
       [-k  | --killAll]            Kill DB + Scripts
-      [-kl | --killLaunch]         Kill All & launchAuto
+      [-r  | --restart]            Restart
       [-ks | --killscript]         Scripts
       [-u  | --update]             Update AIL
       [-ut | --thirdpartyUpdate]   Update UI/Frontend
@@ -697,8 +692,8 @@ while [ "$1" != "" ]; do
                                         ;;
         -k | --killAll )                killall;
                                         ;;
-        -kl | --killLaunch )            killall;
-                                        isup;
+        -r | --restart )                killall;
+                                        sleep 0.1;
                                         launch_all "automatic";
                                         ;;
         -ks | --killscript )            killscript;
