@@ -189,8 +189,118 @@ from GHArchive, collect and feed AIL
 - [ail-feeder-leak](https://github.com/ail-project/ail-feeder-leak): Automates the process of feeding files to AIL, using data chunking to handle large files.
 - [ail-feeder-atom-rss](https://github.com/ail-project/ail-feeder-atom-rss) Atom and RSS feeder for AIL.
 - [ail-feeder-jsonlogs](https://github.com/ail-project/ail-feeder-jsonlogs) Aggregate JSON log lines and pushes them  to AIL. 
+
+### AIL Chats Feeders List:
 - [ail-feeder-discord](https://github.com/ail-project/ail-feeder-discord) Discord Feeder.
 - [ail-feeder-telegram](https://github.com/ail-project/ail-feeder-telegram) Telegram Channels and User Feeder.
+
+### Chats Message
+
+Overview of the JSON fields used by the Chat feeder.
+
+```
+{
+    "data": "New NFT Scam available,"
+    "meta": {
+        "chat": {
+            "date": {
+                "datestamp": "2023-01-10 08:19:16",
+                "timestamp": 1673870217.0,
+                "timezone": "UTC"
+            },
+            "icon": "AAAAAAAA",
+            "id": 123456,
+            "info": "",
+            "name": "NFT legit",
+            "subchannel": {
+                "date": {
+                    "datestamp": "2023-08-10 08:19:18",
+                    "timestamp": 1691655558.0,
+                    "timezone": "UTC"
+                },
+                "id": 285,
+                "name": "Market"
+            },
+        },
+        "date": {
+            "datestamp": "2024-02-01 13:43:46",
+            "timestamp": 1707139999.0,
+            "timezone": "UTC"
+        },
+        "id": 16,
+        "reply_to": {
+            "message_id": 12
+        },
+        "sender": {
+            "first_name": "nftmaster",
+            "icon": "AAAAAAAA",
+            "id": 5684,
+            "info": "best legit NFT vendor",
+            "username": "nft_best"
+        },
+        "type": "message"
+    },
+    "source": "ail_feeder_telegram",
+    "source-uuid": "9cde0855-248b-4439-b964-0495b9b2b8bb"
+}
+```
+
+#### 1. "data"
+- Content of the message.
+
+#### 2. "meta"
+- Provides metadata about the message.
+  
+  ##### "type":
+  - Indicates the type of message. It can be either "message" or "image".
+  
+  ##### "id":
+  - The unique identifier of the message.
+  
+  ##### "date":
+  - Represents the timestamp of the message.
+    - "datestamp": The date in the format "YYYY-MM-DD HH:MM:SS".
+    - "timestamp": The timestamp representing the date and time.
+    - "timezone": The timezone in which the date and time are specified (e.g., "UTC").
+  
+  ##### "reply_to":
+  - The unique identifier of a message to which this message is a reply (optional).
+    - "message_id": The unique identifier of the replied message.
+  
+  ##### "sender":
+  - Contains information about the sender of the message.
+    - "id": The unique identifier for the sender.
+    - "info": Additional information about the sender (optional).
+    - "username": The sender's username (optional).
+    - "firstname": The sender's firstname (optional).
+    - "lastname": The sender's lastname (optional).
+    - "phone": The sender's phone (optional).
+  
+  ##### "chat":
+  - Contains information about the chat where the message was sent.
+    - "date": The chat creation date.
+      - "datestamp": The date in the format "YYYY-MM-DD HH:MM:SS".
+      - "timestamp": The timestamp representing the date and time.
+      - "timezone": The timezone in which the date and time are specified (e.g., "UTC").
+    - "icon": The icon associated with the chat (optional).
+    - "id": The unique identifier of the chat.
+    - "info": Chat description/info (optional).
+    - "name": The name of the chat.
+    - "username": The username of the chat (optional).
+    - "subchannel": If this message is posted in a subchannel within the chat (optional).
+      - "date": The subchannel creation date.
+        - "datestamp": The date in the format "YYYY-MM-DD HH:MM:SS".
+        - "timestamp": The timestamp representing the date and time.
+        - "timezone": The timezone in which the date and time are specified (e.g., "UTC").
+      - "id": The unique identifier of the subchannel.
+      - "name": The name of the subchannel (optional).
+  
+#### 3. "source"
+- Indicates the feeder name.
+
+#### 4. "source-uuid"
+- The UUID associated with the source.
+
 
 #### Example: Feeding AIL with Conti leaks
 
