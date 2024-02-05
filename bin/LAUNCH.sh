@@ -20,7 +20,7 @@ if [ -e "${DIR}/AILENV/bin/python" ]; then
     export AIL_VENV=${AIL_HOME}/AILENV/
     . ./AILENV/bin/activate
 else
-    echo "Please make sure you have a AIL-framework environment, au revoir"
+    echo "Please make sure AILENV is installed"
     exit 1
 fi
 
@@ -31,15 +31,17 @@ export PATH=$AIL_KVROCKS:$PATH
 export PATH=$AIL_BIN:$PATH
 export PATH=$AIL_FLASK:$PATH
 
-isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
-isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
-iskvrocks=`screen -ls | egrep '[0-9]+.KVROCKS_AIL' | cut -d. -f1`
-islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
-is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
-is_ail_2_ail=`screen -ls | egrep '[0-9]+.AIL_2_AIL' | cut -d. -f1`
-isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
-isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
-isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
+function check_screens {
+    isredis=`screen -ls | egrep '[0-9]+.Redis_AIL' | cut -d. -f1`
+    isardb=`screen -ls | egrep '[0-9]+.ARDB_AIL' | cut -d. -f1`
+    iskvrocks=`screen -ls | egrep '[0-9]+.KVROCKS_AIL' | cut -d. -f1`
+    islogged=`screen -ls | egrep '[0-9]+.Logging_AIL' | cut -d. -f1`
+    is_ail_core=`screen -ls | egrep '[0-9]+.Core_AIL' | cut -d. -f1`
+    is_ail_2_ail=`screen -ls | egrep '[0-9]+.AIL_2_AIL' | cut -d. -f1`
+    isscripted=`screen -ls | egrep '[0-9]+.Script_AIL' | cut -d. -f1`
+    isflasked=`screen -ls | egrep '[0-9]+.Flask_AIL' | cut -d. -f1`
+    isfeeded=`screen -ls | egrep '[0-9]+.Feeder_Pystemon' | cut -d. -f1`
+}
 
 function helptext {
     echo -e $YELLOW"
@@ -671,7 +673,7 @@ function menu_display {
 }
 
 #echo "$@"
-
+check_screens;
 while [ "$1" != "" ]; do
     case $1 in
         -l | --launchAuto )             launch_all "automatic";
@@ -694,6 +696,7 @@ while [ "$1" != "" ]; do
                                         ;;
         -r | --restart )                killall;
                                         sleep 0.1;
+                                        check_screens;
                                         launch_all "automatic";
                                         ;;
         -ks | --killscript )            killscript;
