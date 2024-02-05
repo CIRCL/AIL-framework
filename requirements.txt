@@ -71,7 +71,7 @@ pylibinjection>=0.2.4
 phonenumbers>8.12.1
 
 # Web
-flask==2.3.3
+flask>=2.3.3
 flask-login
 bcrypt>3.1.6
 
