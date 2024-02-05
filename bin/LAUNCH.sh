@@ -692,7 +692,8 @@ while [ "$1" != "" ]; do
                                         ;;
         --set_kvrocks_namespaces )      set_kvrocks_namespaces;
                                         ;;
-        -k | --killAll )                killall;
+        -k | --killAll )                check_screens;
+                                        killall;
                                         ;;
         -r | --restart )                killall;
                                         sleep 0.1;
