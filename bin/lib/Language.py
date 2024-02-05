@@ -349,9 +349,12 @@ class LanguagesDetector:
         try:
             # [{"confidence": 0.6, "language": "en"}]
             resp = self.lt.detect(content)
-        except:  # TODO ERROR MESSAGE
-            resp = []
+        except Exception as e:  # TODO ERROR MESSAGE
+            raise Exception(f'libretranslate error: {e}')
+            # resp = []
         if resp:
+            if isinstance(resp, dict):
+                raise Exception(f'libretranslate error {resp}')
             for language in resp:
                 if language.confidence >= self.min_probability:
                     languages.append(language)
