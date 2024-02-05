@@ -339,9 +339,9 @@ class Item(AbstractObject):
         return {'nb': nb_line, 'max_length': max_length}
 
     # TODO RENAME ME
-    def get_languages(self, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7):
+    def get_languages(self, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7, force_gcld3=False):
         ld = LanguagesDetector(nb_langs=num_langs, min_proportion=min_proportion, min_probability=min_probability, min_len=min_len)
-        return ld.detect(self.get_content())
+        return ld.detect(self.get_content(), force_gcld3=force_gcld3)
 
     def get_mimetype(self, content=None):
         if not content:

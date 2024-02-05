@@ -357,9 +357,9 @@ class LanguagesDetector:
                     languages.append(language)
         return languages
 
-    def detect(self, content):
+    def detect(self, content, force_gcld3=False):
         # gcld3
-        if len(content) >= 200 or not self.lt:
+        if len(content) >= 200 or not self.lt or force_gcld3:
             language = self.detect_gcld3(content)
         # libretranslate
         else:

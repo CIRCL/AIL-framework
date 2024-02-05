@@ -30,7 +30,7 @@ class Languages(AbstractModule):
         if obj.type == 'item':
             if obj.is_crawled():
                 domain = Domain(obj.get_domain())
-                for lang in obj.get_languages(min_probability=0.8):
+                for lang in obj.get_languages(min_probability=0.8, force_gcld3=True):
                     print(lang)
                     domain.add_language(lang)
 
