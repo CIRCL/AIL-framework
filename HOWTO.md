@@ -1,17 +1,16 @@
 
-# Feeding, adding new features and contributing
+# Feeding, Adding new features and Contributing
 
-## [Documentation AIL Importers](./doc/README.md#ail-importers)
+## [AIL Importers](./doc/README.md#ail-importers)
 
-[Documentation AIL Importers](./doc/README.md#ail-importers)
+Refer to the [AIL Importers Documentation](./doc/README.md#ail-importers)
 
-## How to feed the AIL framework
+## Feeding Data to AIL
 
 AIL is an analysis tool, not a collector!
 However, if you want to collect some pastes and feed them to AIL, the procedure is described below. Nevertheless, moderate your queries!
 
 1. [AIL Importers](./doc/README.md#ail-importers)
-
 2. ZMQ: Be a collaborator of CIRCL and ask to access our feed. It will be sent to the static IP you are using for AIL.
 
 ## How to create a new module
@@ -19,22 +18,16 @@ However, if you want to collect some pastes and feed them to AIL, the procedure 
 To add a new processing or analysis module to AIL, follow these steps:
 
 1. Add your module name in [./configs/modules.cfg](./configs/modules.cfg) and subscribe to at least one module at minimum (Usually, `Item`).
-
 2. Use [./bin/modules/modules/TemplateModule.py](./bin/modules/modules/TemplateModule.py) as a sample module and create a new file in bin/modules with the module name used in the `modules.cfg` configuration.
 
 
-## How to contribute a module
+## Contributions
 
-Feel free to fork the code, play with it, make some patches or add additional analysis modules.
+Contributions are welcome! Fork the repository, experiment with the code, and submit your modules or patches through a pull request.
 
-To contribute your module, feel free to pull your contribution.
+## Crawler
 
-
-## Additional information
-
-### Crawler
-
-In AIL, you can crawl websites and Tor hidden services. Don't forget to review the proxy configuration of your Tor client and especially if you enabled the SOCKS5 proxy
+AIL supports crawling of websites and Tor hidden services. Ensure your Tor client's proxy configuration is correct, especially the SOCKS5 proxy settings.
 
 ### Installation
 
@@ -45,38 +38,35 @@ In AIL, you can crawl websites and Tor hidden services. Don't forget to review t
 1. Lacus URL:  
 In the web interface, go to `Crawlers` > `Settings` and click on the Edit button
 
-![Splash Manager Config](./doc/screenshots/lacus_config.png?raw=true "AIL Lacus Config")
+![AIL Crawler Config](./doc/screenshots/lacus_config.png?raw=true "AIL Lacus Config")
 
-![Splash Manager Config](./doc/screenshots/lacus_config_edit.png?raw=true "AIL Lacus Config")
+![AIL Crawler Config Edis](./doc/screenshots/lacus_config_edit.png?raw=true "AIL Lacus Config")
 
-2. Launch AIL Crawlers:   
+2. Number of Crawlers:
 Choose the number of crawlers you want to launch
 
-![Splash Manager Nb Crawlers Config](./doc/screenshots/crawler_nb_captures.png?raw=true "AIL Lacus Nb Crawlers Config")
+![Crawler Manager Nb Crawlers Config](./doc/screenshots/crawler_nb_captures.png?raw=true "AIL Lacus Nb Crawlers Config")
 
-![Splash Manager Nb Crawlers Config](./doc/screenshots/crawler_nb_captures_edit.png?raw=true "AIL Lacus Nb Crawlers Config")
+![Crawler Manager Nb Crawlers Config](./doc/screenshots/crawler_nb_captures_edit.png?raw=true "AIL Lacus Nb Crawlers Config")
 
+## Chats Translation with LibreTranslate
 
-### Kvrocks Migration
----------------------
-**Important Note:
-We are currently working on a [migration script](https://github.com/ail-project/ail-framework/blob/master/update/v5.0/DB_KVROCKS_MIGRATION.py) to facilitate the migration to Kvrocks. 
-**
+Chats message can be translated using [libretranslate](https://github.com/LibreTranslate/LibreTranslate), an open-source self-hosted machine translation.
 
-Please note that the current version of this migration script only supports migrating the database on the same server.
-(If you plan to migrate to another server, we will provide additional instructions in this section once the migration script is completed)
+### Installation:  
+1. Install LibreTranslate by running the following command:
+```bash
+pip install libretranslate
+```
+2. Run libretranslate:
+```bash
+libretranslate
+```
 
-To migrate your database to Kvrocks:
-1. Launch ARDB and Kvrocks
-2. Pull from remote
-	```shell
-	git checkout master
-	git pull
- 	```
-3. Launch the migration script:
-	```shell
-	git checkout master
-	git pull
-	cd update/v5.0
-	./DB_KVROCKS_MIGRATION.py
-	```
+### Configuration:
+To enable LibreTranslate for chat translation, edit the LibreTranslate URL in the [./configs/core.cfg](./configs/core.cfg) file under the [Translation] section.
+```
+[Translation]
+libretranslate = http://127.0.0.1:5000
+```
+
