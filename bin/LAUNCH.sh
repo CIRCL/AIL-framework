@@ -676,13 +676,16 @@ function menu_display {
 check_screens;
 while [ "$1" != "" ]; do
     case $1 in
-        -l | --launchAuto )             launch_all "automatic";
+        -l | --launchAuto )             check_screens;
+                                        launch_all "automatic";
                                         ;;
-        -lr | --launchRedis )           launch_redis;
+        -lr | --launchRedis )           check_screens;
+                                        launch_redis;
                                         ;;
         -la | --launchARDB )            launch_ardb;
                                         ;;
-        -lk | --launchKVROCKS )         launch_kvrocks;
+        -lk | --launchKVROCKS )         check_screens;
+                                        launch_kvrocks;
                                         ;;
         -lrv | --launchRedisVerify )    launch_redis;
                                         wait_until_redis_is_ready;
@@ -700,7 +703,8 @@ while [ "$1" != "" ]; do
                                         check_screens;
                                         launch_all "automatic";
                                         ;;
-        -ks | --killscript )            killscript;
+        -ks | --killscript )            check_screens;
+                                        killscript;
                                         ;;
         -m | --menu )                   menu_display;
                                         ;;
