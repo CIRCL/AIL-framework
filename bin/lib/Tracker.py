@@ -16,7 +16,7 @@ from ail_typo_squatting import runAll
 import math
 
 from collections import defaultdict
-from flask import escape
+from markupsafe import escape
 from textblob import TextBlob
 from nltk.tokenize import RegexpTokenizer
 

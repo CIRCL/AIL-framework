@@ -16,7 +16,7 @@ import time
 import uuid
 
 from enum import Enum
-from flask import escape
+from markupsafe import escape
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################

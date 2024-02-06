@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, escape, abort
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')

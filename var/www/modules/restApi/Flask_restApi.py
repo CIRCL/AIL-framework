@@ -27,7 +27,7 @@ from packages import Import_helper
 from importer.FeederImporter import api_add_json_feeder_to_queue
 
 
-from flask import jsonify, request, Blueprint, redirect, url_for, Response, escape
+from flask import jsonify, request, Blueprint, redirect, url_for, Response
 
 from functools import wraps
 
