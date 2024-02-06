@@ -106,7 +106,7 @@ def create(thread_id, chat_instance, chat_id, subchannel_id, message_id, contain
         new_thread_id = f'{chat_id}/{subchannel_id}/{thread_id}'
 
     thread = ChatThread(new_thread_id, chat_instance)
-    if not thread.exists():
+    if not thread.is_children():
         thread.create(container_obj, message_id)
     return thread
 
