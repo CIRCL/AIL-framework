@@ -42,13 +42,17 @@ class Exif(AbstractModule):
         img_exif = img.getexif()
         print(img_exif)
         if img_exif:
+            self.logger.critical(f'Exif: {self.get_obj().id}')
             gps = img_exif.get(34853)
             print(gps)
+            self.logger.critical(f'gps: {gps}')
             for key, val in img_exif.items():
                 if key in ExifTags.TAGS:
                     print(f'{ExifTags.TAGS[key]}:{val}')
+                    self.logger.critical(f'{ExifTags.TAGS[key]}:{val}')
                 else:
                     print(f'{key}:{val}')
+                    self.logger.critical(f'{key}:{val}')
             sys.exit(0)
 
         # tag = 'infoleak:automatic-detection="cve"'
