@@ -80,7 +80,7 @@ Available Importers:
 	```shell
 	cd ail-framework/
 	. ./AILENV/bin/activate
-	cd pystemon/
+	cd ../pystemon/
 	pip install -U -r requirements.txt
 	``` 
 4. Edit the configuration file ```ail-framework/configs/core.cfg```:
