@@ -52,6 +52,8 @@ Available Importers:
 	```
 	git clone https://github.com/cvandeplas/pystemon.git
  	```
+    Clone it into the same directory as AIL if you wish to launch it via the AIL launcher.
+
 
 2. Edit configuration file for pystemon ```pystemon/pystemon.yaml```: 
 	- Configure the storage section according to your needs:
