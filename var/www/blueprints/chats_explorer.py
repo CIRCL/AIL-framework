@@ -158,6 +158,51 @@ def chats_explorer_chat_participants():
         meta = meta[0]
         return render_template('chat_participants.html', meta=meta, bootstrap_label=bootstrap_label)
 
+
+@chats_explorer.route("/chats/explorer/chat/download", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_chat_download():
+    chat_id = request.args.get('id')
+    chat_subtype = request.args.get('uuid')
+    chat = chats_viewer.api_download_chat(chat_id, chat_subtype)
+    if chat[1] != 200:
+        if chat[1] == 404:
+            abort(404)
+        else:
+            return create_json_response(chat[0], chat[1])
+    else:
+        return jsonify(chat[0])
+
+@chats_explorer.route("/chats/explorer/subchannel/download", methods=['GET'])
+@login_required
+@login_read_only
+def objects_subchannel_messages_download():
+    subchannel_id = request.args.get('id')
+    instance_uuid = request.args.get('uuid')
+    subchannel = chats_viewer.api_download_subchannel(subchannel_id, instance_uuid)
+    if subchannel[1] != 200:
+        return create_json_response(subchannel[0], subchannel[1])
+    else:
+        return jsonify(subchannel[0])
+
+
+@chats_explorer.route("/chats/explorer/thread/download", methods=['GET'])
+@login_required
+@login_read_only
+def objects_thread_messages_download():
+    thread_id = request.args.get('id')
+    instance_uuid = request.args.get('uuid')
+    thread = chats_viewer.api_download_thread(thread_id, instance_uuid)
+    if thread[1] != 200:
+        return create_json_response(thread[0], thread[1])
+    else:
+        return jsonify(thread[0])
+
+
+#### ####
+
+
 @chats_explorer.route("/objects/message", methods=['GET'])
 @login_required
 @login_read_only

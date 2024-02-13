@@ -197,12 +197,14 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         week_date = Date.get_current_week_day()
         return self.get_nb_message_by_week(week_date)
 
-    def get_message_meta(self, message, timestamp=None, translation_target='en'):  # TODO handle file message
+    def get_message_meta(self, message, timestamp=None, translation_target='', options=None):  # TODO handle file message
         message = Messages.Message(message[9:])
-        meta = message.get_meta(options={'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, timestamp=timestamp, translation_target=translation_target)
+        if not options:
+            options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
+        meta = message.get_meta(options=options, timestamp=timestamp, translation_target=translation_target)
         return meta
 
-    def get_messages(self, start=0, page=-1, nb=500, unread=False, translation_target='en'):  # threads ???? # TODO ADD last/first message timestamp + return page
+    def get_messages(self, start=0, page=-1, nb=500, unread=False, options=None, translation_target='en'):  # threads ???? # TODO ADD last/first message timestamp + return page
         # TODO return message meta
         tags = {}
         messages = {}
@@ -224,7 +226,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
             if date_day != curr_date:
                 messages[date_day] = []
                 curr_date = date_day
-            mess_dict = self.get_message_meta(message[0], timestamp=timestamp, translation_target=translation_target)
+            mess_dict = self.get_message_meta(message[0], timestamp=timestamp, translation_target=translation_target, options=options)
             messages[date_day].append(mess_dict)
 
             if mess_dict.get('tags'):

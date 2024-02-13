@@ -236,7 +236,7 @@ class Message(AbstractObject):
     #     return r_object.hget(f'meta:item::{self.id}', 'url')
 
     # options: set of optional meta fields
-    def get_meta(self, options=None, timestamp=None, translation_target='en'):
+    def get_meta(self, options=None, timestamp=None, translation_target=''):
         """
         :type options: set
         :type timestamp: float

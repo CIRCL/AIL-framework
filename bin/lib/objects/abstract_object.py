@@ -72,7 +72,7 @@ class AbstractObject(ABC):
                      'type': self.get_type(),
                      'subtype': self.get_subtype(r_str=True)}
         if tags:
-            dict_meta['tags'] = self.get_tags()
+            dict_meta['tags'] = self.get_tags(r_list=True)
         if link:
             dict_meta['link'] = self.get_link()
         return dict_meta

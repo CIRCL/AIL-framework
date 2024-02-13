@@ -407,6 +407,45 @@ def api_get_user_account(user_id, instance_uuid, translation_target=None):
     meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
     return meta, 200
 
+def api_download_chat(chat_id, subtype):
+    chat = Chats.Chat(chat_id, subtype)
+    if not chat.exists():
+        return {"status": "error", "reason": "Unknown chat"}, 404
+    meta = chat.get_meta({'created_at', 'info', 'nb_participants', 'subchannels', 'threads', 'username'})  # 'icon' 'translation'
+    if meta['username']:
+        meta['username'] = get_username_meta_from_global_id(meta['username'])
+    if meta['subchannels']:
+        meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
+    else:
+        options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+        meta['messages'], _, _ = chat.get_messages(nb=-1, options=options)
+    return meta, 200
+
+def api_download_subchannel(subchannel_id, subtype):
+    subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, subtype)
+    if not subchannel.exists():
+        return {"status": "error", "reason": "Unknown subchannel"}, 404
+    meta = subchannel.get_meta(
+        {'chat', 'created_at', 'nb_messages', 'nb_participants', 'threads'})
+    if meta['chat']:
+        meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
+    if meta.get('threads'):
+        meta['threads'] = get_threads_metas(meta['threads'])
+    if meta.get('username'):
+        meta['username'] = get_username_meta_from_global_id(meta['username'])
+    options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+    meta['messages'], _, _ = subchannel.get_messages(nb=-1, options=options)
+    return meta, 200
+
+def api_download_thread(thread_id, subtype):
+    thread = ChatThreads.ChatThread(thread_id, subtype)
+    if not thread.exists():
+        return {"status": "error", "reason": "Unknown thread"}, 404
+    meta = thread.get_meta({'chat', 'nb_messages', 'nb_participants'})
+    options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+    meta['messages'], _, _ = thread.get_messages(nb=-1, options=options)
+    return meta, 200
+
 # # # # # # # # # # LATER
 #                 #
 #   ChatCategory  #
