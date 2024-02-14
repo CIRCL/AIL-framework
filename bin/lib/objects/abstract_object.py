@@ -25,7 +25,7 @@ from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.relationships_engine import get_obj_nb_relationships, add_obj_relationship
-from lib.Language import get_obj_translation
+from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, get_obj_translation, set_obj_translation
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
@@ -302,15 +302,31 @@ class AbstractObject(ABC):
 
     ## -Relationship- ##
 
-    ## Translation ##
+    ## Language ##
+
+    def get_languages(self):
+        return get_obj_languages(self.type, self.get_subtype(r_str=True), self.id)
+
+    def add_language(self, language):
+        return add_obj_language(language, self.type, self.get_subtype(r_str=True), self.id)
+
+    def remove_language(self, language):
+        return remove_obj_language(language, self.type, self.get_subtype(r_str=True), self.id)
+
+    def get_translation(self, language, field=''):
+        return get_obj_translation(self.get_global_id(), language, field=field)
+
+    def set_translation(self, language, translation, field=''):
+        return set_obj_translation(self.get_global_id(), language, translation, field=field)
 
     def translate(self, content=None, field='', source=None, target='en'):
         global_id = self.get_global_id()
         if not content:
             content = self.get_content()
-        return get_obj_translation(global_id, content, field=field, source=source, target=target)
+        translation = get_obj_translation(global_id, target, source=source, content=content, field=field)
+        return translation
 
-    ## -Translation- ##
+    ## -Language- ##
 
     ## Parent ##
 

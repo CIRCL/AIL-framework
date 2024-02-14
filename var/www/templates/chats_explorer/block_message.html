@@ -80,6 +80,25 @@
         {% if message['translation'] %}
             <hr class="m-1">
             <pre class="my-0 text-secondary">{{ message['translation'] }}</pre>
+
+            {% set mess_id_escape= message['id'] | replace("/", "_") %}
+            <button class="btn btn-light p-0" type="button" data-toggle="collapse" data-target="#collapseTrans{{ mess_id_escape }}" aria-expanded="false" aria-controls="collapseTrans{{ mess_id_escape }}">
+                <i class="fas fa-language"></i>
+            </button>
+            <div class="collapse" id="collapseTrans{{ mess_id_escape }}">
+                <div class="card card-body">
+                    <form method="post" action="{{ url_for('chats_explorer.objects_message_translate') }}" target="_blank">
+                        <input type="text" id="id" name="id" value="{{message['id']}}" hidden>
+                        <input type="text" id="target" name="target" value="{{translation_target}}" hidden>
+                        <span>{{translation_target}}:</span>
+                        <textarea class="form-control" id="translation" name="translation">{{ message['translation'] }}</textarea>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-pen-alt"> Manual Translation</i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
         {% endif %}
         {% for reaction in message['reactions'] %}
             <span class="border rounded px-1">{{ reaction }} {{ message['reactions'][reaction] }}</span>

@@ -17,6 +17,7 @@ from lib.ConfigLoader import ConfigLoader
 
 config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
+r_lang = config_loader.get_db_conn("Kvrocks_Languages")
 TRANSLATOR_URL = config_loader.get_config_str('Translation', 'libretranslate')
 config_loader = None
 
@@ -256,9 +257,6 @@ def get_iso_from_languages(l_languages, sort=False):
     return l_iso
 
 
-class LanguageDetector:
-    pass
-
 def get_translator_instance():
     return TRANSLATOR_URL
 
@@ -299,25 +297,98 @@ def _clean_text_to_translate(content, html=False, keys_blocks=True):
             content = content.replace(it, '')
     return content
 
-#### AIL Objects ####
+#### LANGUAGE ENGINE ####
 
-def get_obj_translation(obj_global_id, content, field='', source=None, target='en'):
+# first seen
+# last seen
+# language by date -> iter on object date ????
+
+## Langs
+def get_language_obj_types(language):
+    return r_lang.smembers(f'languages:{language}')
+
+def get_language_objs(language, obj_type, obj_subtype=''):
+    return r_lang.smembers(f'langs:{obj_type}:{obj_subtype}:{language}')
+
+# def get_languages_objs(languages, obj_type, obj_subtype='')
+
+## Objs
+def get_objs_languages(obj_type, obj_subtype=''):
+    if obj_subtype:
+        return r_lang.smembers(f'objs:lang:{obj_type}:{obj_subtype}')
+    else:
+        return r_lang.smembers(f'objs:langs:{obj_type}')
+
+## Obj
+def get_obj_languages(obj_type, obj_subtype, obj_id):
+    return r_lang.smembers(f'obj:lang:{obj_type}:{obj_subtype}:{obj_id}')
+
+# TODO ADD language to CHAT GLOBAL SET
+def add_obj_language(language, obj_type, obj_subtype, obj_id):  # (s)
+    if not obj_subtype:
+        obj_subtype = ''
+    obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
+
+    r_lang.sadd(f'objs:langs:{obj_type}', language)
+    r_lang.sadd(f'objs:lang:{obj_type}:{obj_subtype}', language)
+    r_lang.sadd(f'obj:lang:{obj_global_id}', language)
+
+    r_lang.sadd(f'languages:{language}', f'{obj_type}:{obj_subtype}') ################### REMOVE ME ???
+    r_lang.sadd(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
+
+def remove_obj_language(language, obj_type, obj_subtype, obj_id):
+    if not obj_subtype:
+        obj_subtype = ''
+    obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
+    r_lang.srem(f'obj:lang:{obj_global_id}', language)
+
+    r_lang.srem(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
+    if not r_lang.exists(f'langs:{obj_type}:{obj_subtype}:{language}'):
+        r_lang.srem(f'objs:lang:{obj_type}:{obj_subtype}', language)
+        r_lang.srem(f'languages:{language}', f'{obj_type}:{obj_subtype}')
+        if not r_lang.exists(f'objs:lang:{obj_type}:{obj_subtype}'):
+            if r_lang.scard(f'objs:langs:{obj_type}', language) <= 1:
+                r_lang.srem(f'objs:langs:{obj_type}', language)
+
+def edit_obj_language(language, obj_type, obj_subtype, obj_id):
+    remove_obj_language(language, obj_type, obj_subtype, obj_id)
+    add_obj_language(language, obj_type, obj_subtype, obj_id)
+
+
+## Translation
+def _get_obj_translation(obj_global_id, language, field=''):
+    return r_lang.hget(f'tr:{obj_global_id}:{field}', language)
+
+def get_obj_translation(obj_global_id, language, source=None, content=None, field=''):
     """
-    Returns translated content
+        Returns translated content
     """
-    translation = r_cache.get(f'translation:{target}:{obj_global_id}:{field}')
+    translation = r_cache.get(f'translation:{language}:{obj_global_id}:{field}')
     if translation:
         # DEBUG
         # print('cache')
-        # r_cache.expire(f'translation:{target}:{obj_global_id}:{field}', 0)
+        # r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 0)
         return translation
-    translation = LanguageTranslator().translate(content, source=source, target=target)
+    # TODO HANDLE FIELDS TRANSLATION
+    translation = _get_obj_translation(obj_global_id, language, field=field)
+    if not translation:
+        translation = LanguageTranslator().translate(content, source=source, target=language)
     if translation:
-        r_cache.set(f'translation:{target}:{obj_global_id}:{field}', translation)
-        r_cache.expire(f'translation:{target}:{obj_global_id}:{field}', 300)
+        r_cache.set(f'translation:{language}:{obj_global_id}:{field}', translation)
+        r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 300)
     return translation
 
-## --AIL Objects-- ##
+
+# TODO Force to edit ????
+def set_obj_translation(obj_global_id, language, translation, field=''):
+    r_cache.delete(f'translation:{language}:{obj_global_id}:')
+    return r_lang.hset(f'tr:{obj_global_id}:{field}', language, translation)
+
+
+## --LANGUAGE ENGINE-- ##
+
+
+#### AIL Objects ####
 
 class LanguagesDetector:
 

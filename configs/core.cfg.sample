@@ -191,6 +191,11 @@ host = localhost
 port = 6383
 password = ail_crawlers
 
+[Kvrocks_Languages]
+host = localhost
+port = 6383
+password = ail_langs
+
 [Kvrocks_Objects]
 host = localhost
 port = 6383

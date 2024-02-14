@@ -221,6 +221,21 @@ def objects_message():
                                translation_languages=languages, translation_target=target,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
 
+@chats_explorer.route("/objects/message/translate", methods=['POST'])
+@login_required
+@login_read_only
+def objects_message_translate():
+    message_id = request.form.get('id')
+    target = request.form.get('target')
+    translation = request.form.get('translation')
+    if target == "Don't Translate":
+        target = None
+    resp = chats_viewer.api_manually_translate_message(message_id, target, translation)
+    if resp[1] != 200:
+        return create_json_response(resp[0], resp[1])
+    else:
+        return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+
 @chats_explorer.route("/objects/user-account", methods=['GET'])
 @login_required
 @login_read_only
