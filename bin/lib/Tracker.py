@@ -929,7 +929,7 @@ def api_add_tracker(dict_input, user_id):
     # Filters # TODO MOVE ME
     filters = dict_input.get('filters', {})
     if filters:
-        if filters.keys() == {'decoded', 'item', 'pgp', 'title'} and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == set(get_objects_tracked()) and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
             filters = {}
         for obj_type in filters:
             if obj_type not in get_objects_tracked():
@@ -1004,7 +1004,7 @@ def api_edit_tracker(dict_input, user_id):
     # Filters # TODO MOVE ME
     filters = dict_input.get('filters', {})
     if filters:
-        if filters.keys() == {'decoded', 'item', 'pgp', 'title'} and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == set(get_objects_tracked()) and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
             if not filters['decoded'] and not filters['item']:
                 filters = {}
         for obj_type in filters:

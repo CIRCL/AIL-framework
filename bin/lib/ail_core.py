@@ -61,10 +61,10 @@ def get_obj_queued():
     return ['item', 'image']
 
 def get_objects_tracked():
-    return ['decoded', 'item', 'pgp', 'title']
+    return ['decoded', 'item', 'pgp', 'message', 'title']
 
 def get_objects_retro_hunted():
-    return ['decoded', 'item']
+    return ['decoded', 'item', 'message']
 
 def get_all_objects_with_subtypes_tuple():
     str_objs = []
