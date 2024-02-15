@@ -108,6 +108,9 @@
                                                     {{ meta['tracked'] }}
                                                 {% endif %}
                                             {% endif %}
+                                            {% if meta['description'] %}
+                                                <div><i>{{ meta['description'] }}</i></div>
+                                            {% endif  %}
                                         </a>
                                     </span>
                                 </td>

@@ -701,7 +701,7 @@ def get_trackers_dashboard():
     for raw in r_tracker.lrange('trackers:dashboard', 0, -1):
         tracker_uuid, timestamp, obj_type, subtype, obj_id = raw.split(':', 4)
         tracker = Tracker(tracker_uuid)
-        meta = tracker.get_meta(options={'tags'})
+        meta = tracker.get_meta(options={'description', 'tags'})
         if not meta.get('type'):
             meta['type'] = 'Tracker DELETED'
         timestamp = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
