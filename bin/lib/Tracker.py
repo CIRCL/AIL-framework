@@ -1616,6 +1616,19 @@ def get_retro_hunt_metas():
         tasks.append(retro_hunt.get_meta(options={'date', 'progress', 'nb_match', 'tags'}))
     return tasks
 
+## Objects ##
+
+def is_obj_retro_hunted(obj_type, subtype, obj_id):
+    return r_tracker.exists(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}')
+
+def get_obj_retro_hunts(obj_type, subtype, obj_id):
+    return r_tracker.smembers(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}')
+
+def delete_obj_retro_hunts(obj_type, subtype, obj_id):
+    for retro_uuid in get_obj_retro_hunts(obj_type, subtype, obj_id):
+        retro_hunt = RetroHunt(retro_uuid)
+        retro_hunt.remove(obj_type, subtype, obj_id)
+
 ## API ##
 def api_check_retro_hunt_task_uuid(task_uuid):
     if not is_valid_uuid_v4(task_uuid):

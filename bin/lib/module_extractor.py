@@ -152,6 +152,20 @@ def get_tracker_match(obj_id, content):
                 for match in regex_match:
                     extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
 
+    # Retro Hunt
+    retro_hunts = Tracker.get_obj_retro_hunts('item', '', obj_id)
+    for retro_uuid in retro_hunts:
+        retro_hunt = Tracker.RetroHunt(retro_uuid)
+        rule = retro_hunt.get_rule(r_compile=True)
+        rule.match(data=content.encode(), callback=_get_yara_match,
+                   which_callbacks=yara.CALLBACK_MATCHES, timeout=30)
+        yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')
+        r_cache.delete(f'extractor:yara:match:{r_key}')
+        extracted = []
+        for match in yara_match:
+            start, end, value = match.split(':', 2)
+            extracted_yara.append([int(start), int(end), value, f'retro_hunt:{retro_hunt.uuid}'])
+
     # Convert byte offset to string offset
     if extracted_yara:
         b_content = content.encode()
@@ -229,6 +243,11 @@ def get_extracted_by_match(extracted):
                 matches[str_obj]['subtype'] = 'tracker'
                 matches[str_obj]['id'] = row_id
                 matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#ffc107', 'radius': 5}
+                matches[str_obj]['link'] = ''
+            elif ob_type == 'retro_hunt':  # TODO put me in object class
+                matches[str_obj]['subtype'] = 'retro_hunt'
+                matches[str_obj]['id'] = row_id
+                matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#008107', 'radius': 5}
                 matches[str_obj]['link'] = ''
             else:
                 row_id = row_id.split(':', 1)

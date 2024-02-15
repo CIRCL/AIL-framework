@@ -128,7 +128,7 @@ class Retro_Hunt_Module(AbstractModule):
         self.redis_logger.info(f'{self.module_name}, Retro hunt {task_uuid} match found:    {obj_id}')
         print(f'Retro hunt {task_uuid} match found:   {self.obj.get_type()} {obj_id}')
 
-        self.retro_hunt.add(self.obj.get_type(), self.obj.get_subtype(), obj_id)
+        self.retro_hunt.add(self.obj.get_type(), self.obj.get_subtype(r_str=True), obj_id)
 
         # TODO FILTER Tags
 
