@@ -698,7 +698,7 @@ def v1_ping():
 @restApi.route("api/v1/titles/download", methods=['GET'])
 @token_required('read_only')
 def objects_titles_downloads():
-    return jsonify(Titles.Titles().get_contents_ids())
+    return Response(Titles.Titles().get_contents_ids(), mimetype='application/json'), 200
 
 
 # ========= REGISTRATION =========
