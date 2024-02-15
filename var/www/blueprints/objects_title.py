@@ -131,3 +131,10 @@ def objects_title_search():
     return render_template("search_title_result.html", dict_objects=dict_objects, search_result=search_result,
                            dict_page=dict_page,
                            to_search=to_search, case_sensitive=case_sensitive, type_to_search=type_to_search)
+
+@objects_title.route("/objects/titles/download", methods=['GET'])
+@login_required
+@login_analyst
+def objects_title_downloads():
+    return jsonify(Titles.Titles().get_contents_ids())
+

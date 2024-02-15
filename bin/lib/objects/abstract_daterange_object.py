@@ -229,6 +229,16 @@ class AbstractDaterangeObjects(ABC):
     def sanitize_content_to_search(self, content_to_search):
         return content_to_search
 
+    def get_contents_ids(self):
+        titles = {}
+        for obj_id in self.get_ids():
+            obj = self.obj_class(obj_id)
+            content = obj.get_content()
+            if content not in titles:
+                titles[content] = []
+            titles[content].append(obj.get_id())
+        return titles
+
     def search_by_content(self, content_to_search, r_pos=False, case_sensitive=True):
         objs = {}
         if case_sensitive:
