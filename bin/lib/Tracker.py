@@ -1749,7 +1749,7 @@ def api_delete_retro_hunt_task(task_uuid):
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
-    if retro_hunt.is_running() and retro_hunt.get_state() != 'completed':
+    if retro_hunt.is_running() and retro_hunt.get_state() not in ['completed', 'paused']:
         return {"status": "error", "reason": "You can't delete a running task"}, 400
     else:
         return retro_hunt.delete(), 200
