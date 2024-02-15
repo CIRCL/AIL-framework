@@ -20,6 +20,7 @@ from lib import crawlers
 from lib import Users
 from lib.objects import Items
 from lib.objects import Titles
+from lib.objects import Domains
 from lib import Tag
 from lib import Tracker
 
@@ -696,9 +697,28 @@ def v1_ping():
 
 
 @restApi.route("api/v1/titles/download", methods=['GET'])
-@token_required('read_only')
-def objects_titles_downloads():
+@token_required('analyst')
+def objects_titles_download():
     return Response(json.dumps(Titles.Titles().get_contents_ids()), mimetype='application/json'), 200
+
+@restApi.route("api/v1/titles/download/unsafe", methods=['GET'])
+@token_required('analyst')
+def objects_titles_download_unsafe():
+    all_titles = {}
+    unsafe_tags = Tag.unsafe_tags
+    for tag in unsafe_tags:
+        domains = Tag.get_tag_objects(tag, 'domain')
+        for domain_id in domains:
+            domain = Domains.Domain(domain_id)
+            domain_titles = domain.get_correlation('title').get('title', [])
+            for titl in domain_titles:
+                title = Titles.Title(titl[1:])
+                title_content = title.get_content()
+                if title_content and title_content != 'None':
+                    if title_content not in all_titles:
+                        all_titles[title_content] = []
+                    all_titles[title_content].append(domain.get_id())
+    return Response(json.dumps(all_titles), mimetype='application/json'), 200
 
 
 # ========= REGISTRATION =========
