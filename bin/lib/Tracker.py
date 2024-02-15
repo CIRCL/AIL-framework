@@ -1530,7 +1530,7 @@ class RetroHunt:
         self._set_state(state)
 
     def delete(self):
-        if self.is_running() and self.get_state() != 'completed':
+        if self.is_running() and self.get_state() not in ['completed', 'paused']:
             return None
 
         # Delete custom rule
