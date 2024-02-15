@@ -19,6 +19,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib import crawlers
 from lib import Users
 from lib.objects import Items
+from lib.objects import Titles
 from lib import Tag
 from lib import Tracker
 
@@ -688,6 +689,16 @@ def import_json_item():
 @token_required('read_only')
 def v1_ping():
     return Response(json.dumps({'status': 'pong'}), mimetype='application/json'), 200
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # #        OTHERS       # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+@restApi.route("api/v1/titles/download", methods=['GET'])
+@token_required('read_only')
+def objects_titles_downloads():
+    return jsonify(Titles.Titles().get_contents_ids())
 
 
 # ========= REGISTRATION =========
