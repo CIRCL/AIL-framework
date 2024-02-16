@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 import itertools
+import json
 import os
 import re
 import sys
@@ -643,6 +644,23 @@ def api_search_domains_by_name(name_to_search, domain_types, meta=False, page=1)
 ################################################################################
 ################################################################################
 
-# if __name__ == '__main__':
-#     dom = Domain('')
-#     dom.get_download_zip()
+def cluster_onion_domain_vanity(len_vanity=4):
+    domains = {}
+    occurrences = {}
+    for domain in get_domains_up_by_type('web'):
+        start = domain[:len_vanity]
+        if start not in domains:
+            domains[start] = []
+            occurrences[start] = 0
+        domains[start].append(domain)
+        occurrences[start] += 1
+
+    # print(json.dumps(domains))
+    res = dict(sorted(occurrences.items(), key=lambda item: item[1], reverse=True))
+    print(json.dumps(res))
+
+################################################################################
+################################################################################
+
+if __name__ == '__main__':
+    cluster_onion_domain_vanity(len_vanity=4)
