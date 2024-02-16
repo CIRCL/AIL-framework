@@ -236,7 +236,8 @@ class AbstractDaterangeObjects(ABC):
             content = obj.get_content()
             if content not in titles:
                 titles[content] = []
-            titles[content].append(obj.get_id())
+            for domain in obj.get_correlation('domain').get('domain', []):
+                titles[content].append(domain[1:])
         return titles
 
     def search_by_content(self, content_to_search, r_pos=False, case_sensitive=True):
