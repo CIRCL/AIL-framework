@@ -41,13 +41,13 @@
                             {% if vanities_tree | length > 1 %}
                                 <i class="fas fa-arrow-right"></i>
                                 {% for vanity in vanities_tree[:-1] %}
-                                    <btn class="btn btn-primary disabled">{{ vanity }}</btn> <i class="fas fa-arrow-right"></i>
+                                    <a class="btn btn-primary" href="{{url_for('crawler_splash.domains_explorer_vanity_explore')}}?vanity={{vanity}}&length={{ vanity | length }}">{{ vanity }}</a> <i class="fas fa-arrow-right"></i>
                                 {% endfor %}
                                     <btn class="btn btn-primary disabled">{{ vanities_tree[-1] }}</btn>
                             {% else %}
                                 <i class="fas fa-arrow-right"></i>
                                 {% for vanity in vanities_tree %}
-                                    <btn class="btn btn-primary disabled">{{ vanity }}</btn>
+                                    <a class="btn btn-primary" href="{{url_for('crawler_splash.domains_explorer_vanity_explore')}}?vanity={{vanity}}&length={{ vanity | length }}">{{ vanity }}</a>
                                 {% endfor %}
                             {% endif %}
                         </div>
