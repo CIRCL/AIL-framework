@@ -664,7 +664,6 @@ def get_vanity_domains(vanity, len_vanity=4, meta=False):
         domains = []
         for domain in r_crawler.smembers(f'vanity:4:{vanity[:4]}'):
             dom_vanity = get_domain_vanity(domain, len_vanity=len_vanity)
-            print(vanity, dom_vanity)
             if vanity == dom_vanity:
                 domains.append(domain)
     if meta:
@@ -680,13 +679,14 @@ def get_vanity_cluster(vanity, len_vanity=4, nb_min=4):
         return get_vanity_clusters(nb_min=nb_min)
     else:
         clusters = {}
+        print(vanity, len_vanity, get_vanity_domains(vanity[:4], len_vanity=4))
         for domain in get_vanity_domains(vanity[:4], len_vanity=4):
             new_vanity = get_domain_vanity(domain, len_vanity=len_vanity)
             if vanity not in clusters:
                 clusters[new_vanity] = 0
             clusters[new_vanity] += 1
-        to_remove = []
         print(clusters)
+        to_remove = []
         for new_vanity in clusters:
             if clusters[new_vanity] < nb_min:
                 to_remove.append(new_vanity)
