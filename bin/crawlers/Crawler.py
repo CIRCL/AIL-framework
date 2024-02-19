@@ -262,6 +262,7 @@ class Crawler(AbstractModule):
         # Origin + History + tags
         if self.root_item:
             self.domain.set_last_origin(parent_id)
+            self.domain.update_vanity_cluster()
             # Tags
             for tag in task.get_tags():
                 self.domain.add_tag(tag)
@@ -277,7 +278,6 @@ class Crawler(AbstractModule):
             self.original_domain.add_history(epoch, root_item=self.root_item)
             # crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
 
-        self.domain.update_vanity_cluster()
         crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
         print('capture:', capture.uuid, 'completed')
         print('task:   ', task.uuid, 'completed')
