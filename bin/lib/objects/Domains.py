@@ -685,6 +685,7 @@ def get_vanity_cluster(vanity, len_vanity=4, nb_min=4):
                 clusters[new_vanity] = 0
             clusters[new_vanity] += 1
         to_remove = []
+        print(clusters)
         for new_vanity in clusters:
             if clusters[new_vanity] < nb_min:
                 to_remove.append(new_vanity)
