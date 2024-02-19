@@ -664,6 +664,7 @@ def get_vanity_domains(vanity, len_vanity=4, meta=False):
         domains = []
         for domain in r_crawler.smembers(f'vanity:4:{vanity[:4]}'):
             dom_vanity = get_domain_vanity(domain, len_vanity=len_vanity)
+            print(vanity, dom_vanity)
             if vanity == dom_vanity:
                 domains.append(domain)
     if meta:
