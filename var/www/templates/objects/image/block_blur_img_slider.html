@@ -26,7 +26,7 @@
     function blur_images(){
         let blurValue = blur_slider.val();
         blurValue = 15 - blurValue;
-        let images = document.getElementsByClassName('message_image');
+        let images = document.getElementsByClassName('object_image');
         for(i = 0; i < images.length; i++) {
             images[i].style.filter = "blur(" + blurValue + "px)";
         }

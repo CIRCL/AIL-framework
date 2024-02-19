@@ -1,3 +1,11 @@
+<style>
+    .object_image {
+        max-height: 400px;
+        max-width: 100%;
+        filter: blur(5px);
+    }
+</style>
+
 {% for dict_domain in l_dict_domains %}
     {% if loop.index0 % 4 == 0 %}
         <div class="card-deck mt-3">
@@ -6,7 +14,7 @@
     <div class="card {% if dict_domain["status"] %}border-success{% else %}border-danger{% endif %}">
         <div class="text-center">
             {% if dict_domain["is_tags_safe"] %}
-                <canvas id="canvas_{{loop.index0}}" style="max-height: 400px; max-width: 100%;"></canvas>
+                <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename="") }}{{dict_domain['screenshot']}}">
             {% else %}
                 <span class="my-2 fa-stack fa-8x">
                     <i class="fas fa-stack-1x fa-image"></i>

@@ -16,7 +16,7 @@
         height: 2px;
         background: #eee;
     }
-    .message_image {
+    .object_image {
         max-width: 50%;
         filter: blur(5px);
     }
@@ -66,7 +66,7 @@
         {% endif %}
         {% if message['images'] %}
             {% for message_image in message['images'] %}
-                <img class="message_image mb-1" src="{{ url_for('objects_image.image', filename=message_image)}}">
+                <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=message_image)}}">
             {%  endfor %}
         {% endif %}
         {% if message['files-names'] %}

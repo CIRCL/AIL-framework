@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vanity Explorer - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+    <style>
+        .card-columns {
+            column-count: 4;
+        }
+    </style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <h1>Vanity Explorer: </h1>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+
+                        <div class="my-2">
+                            {% if vanities_tree | length > 1 %}
+                                <i class="fas fa-arrow-right"></i>
+                                {% for vanity in vanities_tree[:-1] %}
+                                    <btn class="btn btn-primary disabled">{{ vanity }}</btn> <i class="fas fa-arrow-right"></i>
+                                {% endfor %}
+                                    <btn class="btn btn-primary disabled">{{ vanities_tree[-1] }}</btn>
+                            {% else %}
+                                <i class="fas fa-arrow-right"></i>
+                                {% for vanity in vanities_tree %}
+                                    <btn class="btn btn-primary disabled">{{ vanity }}</btn>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div><b>Vanity Length:</b> {{ length }}</div>
+
+                    </div>
+                    <div class="col-12 col-xl-6">
+
+                        <table id="tableClusters" class="table">
+                            <thead class="bg-dark text-white">
+                            <tr>
+                                <th>Length+1 Vanities</th>
+                                <th>NB Domains</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody style="font-size: 15px;">
+                            {% for row in vanity_clusters %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('crawler_splash.domains_explorer_vanity_explore') }}?vanity={{row}}&length={{ length + 1 }}">{{ row }}</a>
+                                    </td>
+                                    <td>{{ vanity_clusters[row] }}</td>
+                                    <td>
+
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+
+                {% if vanity_domains %}
+                    <div class="my-3">
+                        {% include 'objects/image/block_blur_img_slider.html' %}
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-dark text-white" style="background-color:#d9edf7;font-size: 15px">
+                            <h4>{{ vanity }} <span class="badge badge-primary">{{ vanity_domains | length }}</span></h4>
+                        </div>
+                        <div class="card-body">
+                            {% with l_dict_domains=vanity_domains, bootstrap_label=bootstrap_label %}
+                                {% include 'domains/card_img_domain.html' %}
+                            {% endwith %}
+                        </div>
+                    </div>
+
+                {% endif %}
+
+			</div>
+		</div>
+	</div>
+</body>
+
+
+<script>
+  $(document).ready(function(){
+    $('#nav_title_domains_explorer').removeClass("text-muted");
+    $("#nav_vanity_explorer").addClass("active");
+    $('#tableClusters').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 1, "desc" ]]
+    });
+
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</html>

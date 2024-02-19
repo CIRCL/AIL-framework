@@ -576,6 +576,37 @@ def domains_search_date_post():
                             type=domain_type, down=down, up=up))
 
 
+@crawler_splash.route('/domains/explorer/vanity', methods=['GET'])
+@login_required
+@login_analyst
+def domains_explorer_vanity_clusters():
+    nb_min = request.args.get('min', 0)
+    if int(nb_min) < 0:
+        nb_min = 4
+    vanity_clusters = Domains.get_vanity_clusters(nb_min=nb_min)
+    return render_template("explorer_vanity_clusters.html", vanity_clusters=vanity_clusters,
+                           length=4)
+
+@crawler_splash.route('/domains/explorer/vanity/explore', methods=['GET'])
+@login_required
+@login_analyst
+def domains_explorer_vanity_explore():
+    vanity = request.args.get('vanity')
+    nb_min = request.args.get('min', 0)   # TODO SHOW DOMAINS OPTIONS + HARD CODED DOMAINS LIMIT FOR RENDER
+    length = len(vanity)
+    if int(nb_min) < 0:
+        nb_min = 4
+    vanity_clusters = Domains.get_vanity_cluster(vanity, len_vanity=length+1, nb_min=nb_min)
+    vanity_domains = Domains.get_vanity_domains(vanity, len_vanity=length, meta=True)
+    vanities_tree = []
+    for i in range(4, length):
+        vanities_tree.append(vanity[:i])
+    if length == len(vanity):
+        vanities_tree.append(vanity)
+    return render_template("explorer_vanity_domains.html", vanity_clusters=vanity_clusters,
+                           bootstrap_label=bootstrap_label, vanity=vanity, vanities_tree=vanities_tree,
+                           vanity_domains=vanity_domains, length=length)
+
 ##--  --##
 
 

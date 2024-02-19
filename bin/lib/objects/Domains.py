@@ -411,6 +411,10 @@ class Domain(AbstractObject):
         r_crawler.sadd(f'language:domains:{self.domain_type}:{language}', self.id)
         r_crawler.sadd(f'domain:language:{self.id}', language)
 
+    def update_vanity_cluster(self):
+        if self.get_domain_type() == 'onion':
+            update_vanity_cluster(self.id)
+
     ############################################################################
     ############################################################################
 
@@ -644,10 +648,71 @@ def api_search_domains_by_name(name_to_search, domain_types, meta=False, page=1)
 ################################################################################
 ################################################################################
 
+#### Vanity Explorer ####
+
+# TODO ADD ME IN OBJ CLASS
+def get_domain_vanity(domain, len_vanity=4):
+    return domain[:len_vanity]
+
+def get_vanity_clusters(nb_min=4):
+    return r_crawler.zrange('vanity:onion:4', nb_min, '+inf', byscore=True, withscores=True)
+
+def get_vanity_domains(vanity, len_vanity=4, meta=False):
+    if len_vanity == 4:
+        domains = r_crawler.smembers(f'vanity:{int(len_vanity)}:{vanity}')
+    else:
+        domains = []
+        for domain in r_crawler.smembers(f'vanity:4:{vanity[:4]}'):
+            dom_vanity = get_domain_vanity(domain, len_vanity=len_vanity)
+            if vanity == dom_vanity:
+                domains.append(domain)
+    if meta:
+        metas = []
+        for domain in domains:
+            metas.append(Domain(domain).get_meta(options={'languages', 'screenshot', 'tags_safe'}))
+        return metas
+    else:
+        return domains
+
+def get_vanity_cluster(vanity, len_vanity=4, nb_min=4):
+    if len_vanity == 4:
+        return get_vanity_clusters(nb_min=nb_min)
+    else:
+        clusters = {}
+        for domain in get_vanity_domains(vanity[:4], len_vanity=4):
+            new_vanity = get_domain_vanity(domain, len_vanity=len_vanity)
+            if vanity not in clusters:
+                clusters[new_vanity] = 0
+            clusters[new_vanity] += 1
+        to_remove = []
+        for new_vanity in clusters:
+            if clusters[new_vanity] < nb_min:
+                to_remove.append(new_vanity)
+        for new_vanity in to_remove:
+            del clusters[new_vanity]
+        return clusters
+
+def get_vanity_nb_domains(vanity, len_vanity=4):
+    return r_crawler.scard(f'vanity:{int(len_vanity)}:{vanity}')
+
+# TODO BUILD DICTIONARY
+def update_vanity_cluster(domain):
+    vanity = get_domain_vanity(domain, len_vanity=4)
+    add = r_crawler.sadd(f'vanity:4:{vanity}', domain)
+    if add == 1:
+        r_crawler.zadd('vanity:onion:4', {vanity: 1})
+
+def _rebuild_vanity_clusters():
+    for vanity in r_crawler.zrange('vanity:onion:4', 0, -1):
+        r_crawler.delete(f'vanity:4:{vanity}')
+    r_crawler.delete('vanity:onion:4')
+    for domain in get_domains_up_by_type('onion'):
+        update_vanity_cluster(domain)
+
 def cluster_onion_domain_vanity(len_vanity=4):
     domains = {}
     occurrences = {}
-    for domain in get_domains_up_by_type('web'):
+    for domain in get_domains_up_by_type('onion'):
         start = domain[:len_vanity]
         if start not in domains:
             domains[start] = []
@@ -659,8 +724,6 @@ def cluster_onion_domain_vanity(len_vanity=4):
     res = dict(sorted(occurrences.items(), key=lambda item: item[1], reverse=True))
     print(json.dumps(res))
 
-################################################################################
-################################################################################
 
 if __name__ == '__main__':
-    cluster_onion_domain_vanity(len_vanity=4)
+    _rebuild_vanity_clusters()

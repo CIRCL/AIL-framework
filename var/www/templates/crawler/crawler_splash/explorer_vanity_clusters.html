@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vanity Explorer - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+    <style>
+        .card-columns {
+            column-count: 4;
+        }
+    </style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'crawler/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <h1>Vanity Explorer</h1>
+
+                <table id="tableClusters" class="table">
+                    <thead class="bg-dark text-white">
+                    <tr>
+                        <th>Vanity</th>
+                        <th>NB Domains</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody style="font-size: 15px;">
+                    {% for row in vanity_clusters %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('crawler_splash.domains_explorer_vanity_explore') }}?vanity={{row[0]}}&length={{ length }}">{{ row[0] }}</a>
+                            </td>
+                            <td>{{ row[1] | int }}</td>
+                            <td>
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+
+			</div>
+		</div>
+	</div>
+</body>
+
+
+<script>
+  $(document).ready(function(){
+    $('#nav_title_domains_explorer').removeClass("text-muted");
+    $("#nav_vanity_explorer").addClass("active");
+    $('#tableClusters').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 1, "desc" ]]
+    });
+
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</html>

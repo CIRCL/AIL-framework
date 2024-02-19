@@ -56,7 +56,7 @@ def screenshot(filename):
         abort(404)
     filename = filename.replace('/', '')
     s = Screenshot(filename)
-    return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=True)
+    return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=False, mimetype='image')
 
 @objects_item.route("/object/item")
 @login_required

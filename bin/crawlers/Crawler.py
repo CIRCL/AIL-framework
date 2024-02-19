@@ -192,6 +192,7 @@ class Crawler(AbstractModule):
         #                                   force=force,
         #                                   general_timeout_in_sec=120)
 
+        # with_favicon = True,
         capture_uuid = self.lacus.enqueue(url=url,
                                           depth=task.get_depth(),
                                           user_agent=task.get_user_agent(),
@@ -274,8 +275,9 @@ class Crawler(AbstractModule):
                 for tag in task.get_tags():
                     self.domain.add_tag(tag)
             self.original_domain.add_history(epoch, root_item=self.root_item)
-            crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
+            # crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
 
+        self.domain.update_vanity_cluster()
         crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
         print('capture:', capture.uuid, 'completed')
         print('task:   ', task.uuid, 'completed')
