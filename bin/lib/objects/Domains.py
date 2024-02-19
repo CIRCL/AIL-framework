@@ -700,7 +700,7 @@ def update_vanity_cluster(domain):
     vanity = get_domain_vanity(domain, len_vanity=4)
     add = r_crawler.sadd(f'vanity:4:{vanity}', domain)
     if add == 1:
-        r_crawler.zadd('vanity:onion:4', {vanity: 1})
+        r_crawler.zadd('vanity:onion:4', {vanity: 1}, incr=True)
 
 def _rebuild_vanity_clusters():
     for vanity in r_crawler.zrange('vanity:onion:4', 0, -1):
