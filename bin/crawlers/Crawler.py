@@ -20,6 +20,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects import CookiesNames
 from lib.objects import Etags
 from lib.objects.Domains import Domain
+from lib.objects import Favicons
 from lib.objects.Items import Item
 from lib.objects import Screenshots
 from lib.objects import Titles
@@ -198,6 +199,7 @@ class Crawler(AbstractModule):
                                           user_agent=task.get_user_agent(),
                                           proxy=task.get_proxy(),
                                           cookies=task.get_cookies(),
+                                          with_favicon=True,
                                           force=force,
                                           general_timeout_in_sec=90)  # TODO increase timeout if onion ????
 
@@ -245,6 +247,7 @@ class Crawler(AbstractModule):
         parent_id = task.get_parent()
 
         entries = self.lacus.get_capture(capture.uuid)
+
         print(entries.get('status'))
         self.har = task.get_har()
         self.screenshot = task.get_screenshot()
@@ -368,6 +371,12 @@ class Crawler(AbstractModule):
                         etag = Etags.create(etag_content)
                         etag.add(self.date.replace('/', ''), self.domain)
                     crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
+
+            # FAVICON
+            if entries.get('potential_favicons'):
+                for favicon in entries['potential_favicons']:
+                    fav = Favicons.create(favicon)
+                    fav.add(item.get_date(), item)
 
         # Next Children
         entries_children = entries.get('children')
