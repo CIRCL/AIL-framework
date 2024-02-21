@@ -108,7 +108,7 @@ def get_objects(objects):
             obj_subtype = obj['subtype']
             obj_id = obj['id']
             if 'lvl' in obj:
-                correl_objs = get_obj_correlations_objs(obj_type, obj_subtype, obj_id, lvl=obj['lvl'])
+                correl_objs = get_obj_correlations_objs(obj_type, obj_subtype, obj_id, lvl=int(obj['lvl']))
                 objs = objs.union(correl_objs)
         else:
             obj_type, obj_subtype, obj_id = obj
@@ -387,7 +387,7 @@ def _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lv
 
 def get_obj_correlations_objs(obj_type, subtype, obj_id, filter_types=[], lvl=0, nb_max=300, objs_hidden=set()):
     objs = set()
-    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, lvl, nb_max, objs_hidden)
+    _get_obj_correlations_objs(objs, obj_type, subtype, obj_id, filter_types, int(lvl), nb_max, objs_hidden)
     return objs
 
 def obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=[], lvl=0, nb_max=300, objs_hidden=set()):
