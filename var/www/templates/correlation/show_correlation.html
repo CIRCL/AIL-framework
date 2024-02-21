@@ -4,7 +4,7 @@
 	<head>
 	  <meta charset="utf-8">
 
-	  <title>AIL - framework</title>
+	  <title>Correlation - AIL</title>
 		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
 	  <!-- Core CSS -->
@@ -123,6 +123,8 @@
 						{% include 'correlation/metadata_card_hhhash.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
+                    {% elif dict_object["object_type"] == "favicon" %}
+						{% include 'correlation/metadata_card_favicon.html' %}
 					{% endif %}
 
 					<div class="row">
@@ -231,6 +233,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="EtagCheck" name="EtagCheck" {%if "etag" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="EtagCheck">Etag</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="FaviconCheck" name="FaviconCheck" {%if "favicon" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="FaviconCheck">Favicon</label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="HHHashCheck" name="HHHashCheck" {%if "hhhash" in dict_object["filter"]%}checked{%endif%}>
@@ -723,6 +729,8 @@ if (d.popover) {
                         if (data["tags_safe"]) {
                             if (data["type"] === "screenshot") {
 						        desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}"
+                            } else if (data["type"] === "favicon") {
+                                desc = desc + "<img src={{ url_for('objects_favicon.favicon', filename="") }}"
                             } else {
                                 desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}"
                             }
