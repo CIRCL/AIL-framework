@@ -3,7 +3,7 @@
 
 import os
 import sys
-from uuid import uuid4
+import uuid
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -31,8 +31,16 @@ def _set_ail_uuid():
     r_serv_db.set('ail:uuid', ail_uuid)
     return ail_uuid
 
+def is_valid_uuid_v4(header_uuid):
+    try:
+        header_uuid = header_uuid.replace('-', '')
+        uuid_test = uuid.UUID(hex=header_uuid, version=4)
+        return uuid_test.hex == header_uuid
+    except:
+        return False
+
 def generate_uuid():
-    return str(uuid4())
+    return str(uuid.uuid4())
 
 #### AIL OBJECTS ####
 

@@ -5,153 +5,39 @@
     Flask functions and routes for the rest api
 """
 
-import os
-import re
-import sys
-import uuid
-import json
+# import os
+# import re
+# import sys
+# import uuid
+# import json
 
-sys.path.append(os.environ['AIL_BIN'])
-##################################
-# Import Project packages
-##################################
-from lib.ConfigLoader import ConfigLoader
-from lib import crawlers
-from lib import Users
-from lib.objects import Items
-from lib.objects import Titles
-from lib.objects import Domains
-from lib import Tag
-from lib import Tracker
-
-from packages import Import_helper
-
-from importer.FeederImporter import api_add_json_feeder_to_queue
-
-
-from flask import jsonify, request, Blueprint, redirect, url_for, Response
-
-from functools import wraps
+# sys.path.append(os.environ['AIL_BIN'])
+# ##################################
+# # Import Project packages
+# ##################################
+# from lib.ConfigLoader import ConfigLoader
+# from lib import Users
+# from lib.objects import Items
+# from lib import Tag
+#
+# from packages import Import_helper
+#
+# from importer.FeederImporter import api_add_json_feeder_to_queue
+#
+#
+# from flask import jsonify, request, Blueprint, redirect, url_for, Response
+#
+# from functools import wraps
 
 # ============ VARIABLES ============
-config_loader = ConfigLoader()
-baseUrl = config_loader.get_config_str("Flask", "baseurl")
-baseUrl = baseUrl.replace('/', '')
-if baseUrl != '':
-    baseUrl = '/' + baseUrl
 
-r_cache = config_loader.get_redis_conn("Redis_Cache")
 
-config_loader = None
-
-import Flask_config
-app = Flask_config.app
-
-restApi = Blueprint('restApi', __name__, template_folder='templates')
-
-# ============ AUTH FUNCTIONS ============
-
-def check_token_format(token, search=re.compile(r'[^a-zA-Z0-9_-]').search):
-    return not bool(search(token))
-
-def verify_token(token):
-    if len(token) != 55:
-        return False
-
-    if not check_token_format(token):
-        return False
-
-    return Users.exists_token(token)
-
-def verify_user_role(role, token):
-    # User without API
-    if role == 'user_no_api':
-        return False
-
-    user_id = Users.get_token_user(token)
-    if user_id:
-        return Users.is_in_role(user_id, role)
-    else:
-        return False
 
 # ============ DECORATOR ============
 
-def token_required(user_role):
-    def actual_decorator(funct):
-        @wraps(funct)
-        def api_token(*args, **kwargs):
-            data = auth_errors(user_role)
-            if data:
-                return Response(json.dumps(data[0], indent=2, sort_keys=True), mimetype='application/json'), data[1]
-            else:
-                return funct(*args, **kwargs)
-        return api_token
-    return actual_decorator
 
-def get_auth_from_header():
-    token = request.headers.get('Authorization').replace(' ', '')  # remove space
-    return token
 
-def auth_errors(user_role):
-    # Check auth
-    if not request.headers.get('Authorization'):
-        return {'status': 'error', 'reason': 'Authentication needed'}, 401
-    token = get_auth_from_header()
-    data = None
-    # verify token format
 
-    # brute force protection
-    current_ip = request.remote_addr
-    login_failed_ip = r_cache.get(f'failed_login_ip_api:{current_ip}')
-    # brute force by ip
-    if login_failed_ip:
-        login_failed_ip = int(login_failed_ip)
-        if login_failed_ip >= 5:
-            return {'status': 'error',
-                    'reason': 'Max Connection Attempts reached, Please wait {}s'.format(r_cache.ttl('failed_login_ip_api:{}'.format(current_ip)))
-                    }, 401
-
-    try:
-        authenticated = False
-        if verify_token(token): # TODO Improve Returned error
-            authenticated = True
-
-            # check user role
-            if not verify_user_role(user_role, token):
-                data = ({'status': 'error', 'reason': 'Access Forbidden'}, 403)
-
-        if not authenticated:
-            r_cache.incr(f'failed_login_ip_api:{current_ip}')
-            r_cache.expire(f'failed_login_ip_api:{current_ip}', 300)
-            data = ({'status': 'error', 'reason': 'Authentication failed'}, 401)
-    except Exception as e:
-        print(e)
-        data = ({'status': 'error', 'reason': 'Malformed Authentication String'}, 400)
-    if data:
-        return data
-    else:
-        return None
-
-# ============ API CORE =============
-
-def create_json_response(data_dict, response_code):
-    return Response(json.dumps(data_dict, indent=2, sort_keys=True), mimetype='application/json'), int(response_code)
-
-def get_mandatory_fields(json_data, required_fields):
-    for field in required_fields:
-        if field not in json_data:
-            return {'status': 'error', 'reason': 'mandatory field: {} not provided'.format(field)}, 400
-    return None
-
-# ============ FUNCTIONS ============
-
-def is_valid_uuid_v4(header_uuid):
-    try:
-        header_uuid = header_uuid.replace('-', '')
-        uuid_test = uuid.UUID(hex=header_uuid, version=4)
-        return uuid_test.hex == header_uuid
-    except:
-        return False
 
 # ============= ROUTES ==============
 
@@ -160,6 +46,8 @@ def is_valid_uuid_v4(header_uuid):
 # def api():
 #     return 'api doc'
 
+
+'''
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # POST
 #
@@ -303,11 +191,12 @@ def get_item_content_encoded_text():
 def get_item_sources():
     res = Item.api_get_items_sources()
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+'''
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        TAGS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
+'''
 @restApi.route("api/v1/get/tag/metadata", methods=['POST'])
 @token_required('read_only')
 def get_tag_metadata():
@@ -323,6 +212,7 @@ def get_tag_metadata():
 def get_all_tags():
     res = {'tags': Tag.get_all_tags()}
     return Response(json.dumps(res, indent=2, sort_keys=True), mimetype='application/json'), 200
+'''
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # TODO
 # # # # # # # # # # # # # #        TRACKER      # # # # # # # # # # # # # # # # # TODO
@@ -506,42 +396,11 @@ def get_item_cryptocurrency_bitcoin():
     return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 '''
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # #        CRAWLER      # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # TODO: ADD RESULT JSON Response
-# @restApi.route("api/v1/crawler/task/add", methods=['POST'])
-@restApi.route("api/v1/add/crawler/task", methods=['POST'])
-@token_required('analyst')
-def add_crawler_task():
-    data = request.get_json()
-    user_token = get_auth_from_header()
-    user_id = Users.get_token_user(user_token)
-    res = crawlers.api_add_crawler_task(data, user_id=user_id)
-    if res:
-        return create_json_response(res[0], res[1])
-
-    dict_res = {'url': data['url']}
-    return create_json_response(dict_res, 200)
-
-
-@restApi.route("api/v1/add/crawler/capture", methods=['POST'])
-@token_required('analyst')
-def add_crawler_capture():
-    data = request.get_json()
-    user_token = get_auth_from_header()
-    user_id = Users.get_token_user(user_token)
-    res = crawlers.api_add_crawler_capture(data, user_id)
-    if res:
-        return create_json_response(res[0], res[1])
-
-    dict_res = {'url': data['url']}
-    return create_json_response(dict_res, 200)
-
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #        DOMAIN       # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+'''
 @restApi.route("api/v1/get/domain/status/minimal", methods=['POST'])
 @token_required('analyst')
 def get_domain_status_minimal():
@@ -558,6 +417,7 @@ def get_domain_status_minimal():
     # res = Domain.api_get_domain_up_range(domain)
     res[0]['domain'] = domain
     return create_json_response(res[0], res[1])
+'''
 
 # @restApi.route("api/v1/get/crawled/domain/list", methods=['POST'])
 # @token_required('analyst')
@@ -601,6 +461,7 @@ def get_domain_status_minimal():
 # response: {"uuid": "uuid"}
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+'''
 @restApi.route("api/v1/import/item", methods=['POST'])
 @token_required('analyst')
 def import_item():
@@ -664,62 +525,4 @@ def import_item_uuid():
         return Response(json.dumps(data[0]), mimetype='application/json'), data[1]
 
     return Response(json.dumps({'status': 'error', 'reason': 'Invalid response'}), mimetype='application/json'), 400
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/import/json/item", methods=['POST'])
-@token_required('user')
-def import_json_item():
-
-    data_json = request.get_json()
-    res = api_add_json_feeder_to_queue(data_json)
-    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # #        CORE       # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@restApi.route("api/v1/ping", methods=['GET'])
-@token_required('read_only')
-def v1_ping():
-    return Response(json.dumps({'status': 'pong'}), mimetype='application/json'), 200
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # #        OTHERS       # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
-@restApi.route("api/v1/titles/download", methods=['GET'])
-@token_required('analyst')
-def objects_titles_download():
-    return Response(json.dumps(Titles.Titles().get_contents_ids()), mimetype='application/json'), 200
-
-@restApi.route("api/v1/titles/download/unsafe", methods=['GET'])
-@token_required('analyst')
-def objects_titles_download_unsafe():
-    all_titles = {}
-    unsafe_tags = Tag.unsafe_tags
-    for tag in unsafe_tags:
-        domains = Tag.get_tag_objects(tag, 'domain')
-        for domain_id in domains:
-            domain = Domains.Domain(domain_id)
-            domain_titles = domain.get_correlation('title').get('title', [])
-            for titl in domain_titles:
-                title = Titles.Title(titl[1:])
-                title_content = title.get_content()
-                if title_content and title_content != 'None':
-                    if title_content not in all_titles:
-                        all_titles[title_content] = []
-                    all_titles[title_content].append(domain.get_id())
-    return Response(json.dumps(all_titles), mimetype='application/json'), 200
-
-
-# ========= REGISTRATION =========
-app.register_blueprint(restApi, url_prefix=baseUrl)
+'''

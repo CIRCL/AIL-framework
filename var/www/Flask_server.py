@@ -53,6 +53,8 @@ from blueprints.objects_hhhash import objects_hhhash
 from blueprints.chats_explorer import chats_explorer
 from blueprints.objects_image import objects_image
 from blueprints.objects_favicon import objects_favicon
+from blueprints.api_rest import api_rest
+
 
 Flask_dir = os.environ['AIL_FLASK']
 
@@ -113,6 +115,7 @@ app.register_blueprint(objects_hhhash, url_prefix=baseUrl)
 app.register_blueprint(chats_explorer, url_prefix=baseUrl)
 app.register_blueprint(objects_image, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
+app.register_blueprint(api_rest, url_prefix=baseUrl)
 
 # =========       =========#
 
@@ -124,8 +127,6 @@ app.secret_key = str(random.getrandbits(256))
 login_manager = LoginManager()
 login_manager.login_view = 'root.login'
 login_manager.init_app(app)
-
-print()
 
 # ========= LOGIN MANAGER ========
 
@@ -256,6 +257,10 @@ default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
 # enable default taxonomies
 for taxonomy in default_taxonomies:
     Tag.enable_taxonomy_tags(taxonomy)
+
+# rrrr = [str(p) for p in app.url_map.iter_rules()]
+# for p in rrrr:
+#     print(p)
 
 # ============ MAIN ============
 

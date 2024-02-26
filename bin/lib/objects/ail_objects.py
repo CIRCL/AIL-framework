@@ -7,6 +7,10 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.exceptions import AILObjectUnknown
+
+
+
 from lib.ConfigLoader import ConfigLoader
 from lib.ail_core import get_all_objects, get_object_all_subtypes
 from lib import correlations_engine
@@ -23,7 +27,7 @@ from lib.objects.Cves import Cve
 from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decodeds_objects
 from lib.objects.Domains import Domain
 from lib.objects import Etags
-from lib.objects.Favicons import Favicon
+from lib.objects import Favicons
 from lib.objects import FilesNames
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
@@ -55,52 +59,70 @@ def sanitize_objs_types(objs):
         l_types = get_all_objects()
     return l_types
 
+#### OBJECT ####
 
 def get_object(obj_type, subtype, obj_id):
-    if obj_type == 'item':
-        return Item(obj_id)
-    elif obj_type == 'domain':
-        return Domain(obj_id)
-    elif obj_type == 'decoded':
-        return Decoded(obj_id)
-    elif obj_type == 'chat':
-        return Chats.Chat(obj_id, subtype)
-    elif obj_type == 'chat-subchannel':
-        return ChatSubChannels.ChatSubChannel(obj_id, subtype)
-    elif obj_type == 'chat-thread':
-        return ChatThreads.ChatThread(obj_id, subtype)
-    elif obj_type == 'cookie-name':
-        return CookiesNames.CookieName(obj_id)
-    elif obj_type == 'cve':
-        return Cve(obj_id)
-    elif obj_type == 'etag':
-        return Etags.Etag(obj_id)
-    elif obj_type == 'favicon':
-        return Favicon(obj_id)
-    elif obj_type == 'file-name':
-        return FilesNames.FileName(obj_id)
-    elif obj_type == 'hhhash':
-        return HHHashs.HHHash(obj_id)
-    elif obj_type == 'image':
-        return Images.Image(obj_id)
-    elif obj_type == 'message':
-        return Message(obj_id)
-    elif obj_type == 'screenshot':
-        return Screenshot(obj_id)
-    elif obj_type == 'cryptocurrency':
-        return CryptoCurrencies.CryptoCurrency(obj_id, subtype)
-    elif obj_type == 'pgp':
-        return Pgps.Pgp(obj_id, subtype)
-    elif obj_type == 'title':
-        return Titles.Title(obj_id)
-    elif obj_type == 'user-account':
-        return UserAccount(obj_id, subtype)
-    elif obj_type == 'username':
-        return Usernames.Username(obj_id, subtype)
+    if not subtype:
+        if obj_type == 'item':
+            return Item(obj_id)
+        elif obj_type == 'domain':
+            return Domain(obj_id)
+        elif obj_type == 'decoded':
+            return Decoded(obj_id)
+        elif obj_type == 'cookie-name':
+            return CookiesNames.CookieName(obj_id)
+        elif obj_type == 'cve':
+            return Cve(obj_id)
+        elif obj_type == 'etag':
+            return Etags.Etag(obj_id)
+        elif obj_type == 'favicon':
+            return Favicons.Favicon(obj_id)
+        elif obj_type == 'file-name':
+            return FilesNames.FileName(obj_id)
+        elif obj_type == 'hhhash':
+            return HHHashs.HHHash(obj_id)
+        elif obj_type == 'image':
+            return Images.Image(obj_id)
+        elif obj_type == 'message':
+            return Message(obj_id)
+        elif obj_type == 'screenshot':
+            return Screenshot(obj_id)
+        elif obj_type == 'title':
+            return Titles.Title(obj_id)
+        else:
+            raise AILObjectUnknown(f'Unknown AIL object: {obj_type} {subtype} {obj_id}')
+    # SUBTYPES
     else:
-        raise Exception(f'Unknown AIL object: {obj_type} {subtype} {obj_id}')
+        if obj_type == 'chat':
+            return Chats.Chat(obj_id, subtype)
+        elif obj_type == 'chat-subchannel':
+            return ChatSubChannels.ChatSubChannel(obj_id, subtype)
+        elif obj_type == 'chat-thread':
+            return ChatThreads.ChatThread(obj_id, subtype)
+        elif obj_type == 'cryptocurrency':
+            return CryptoCurrencies.CryptoCurrency(obj_id, subtype)
+        elif obj_type == 'pgp':
+            return Pgps.Pgp(obj_id, subtype)
+        elif obj_type == 'user-account':
+            return UserAccount(obj_id, subtype)
+        elif obj_type == 'username':
+            return Usernames.Username(obj_id, subtype)
+        else:
+            raise AILObjectUnknown(f'Unknown AIL object: {obj_type} {subtype} {obj_id}')
 
-def get_objects(objects):
+def exists_obj(obj_type, subtype, obj_id):
+    obj = get_object(obj_type, subtype, obj_id)
+    if obj:
+        return obj.exists()
+    else:
+        return False
+
+#########################################################################################
+#########################################################################################
+#########################################################################################
+
+
+def get_objects(objects): # TODO RENAME ME
     objs = set()
     for obj in objects:
         if isinstance(obj, dict):
@@ -117,14 +139,6 @@ def get_objects(objects):
     for obj in objs:
         ail_objects.append(get_object(obj[0], obj[1], obj[2]))
     return ail_objects
-
-
-def exists_obj(obj_type, subtype, obj_id):
-    obj = get_object(obj_type, subtype, obj_id)
-    if obj:
-        return obj.exists()
-    else:
-        return False
 
 
 def get_obj_global_id(obj_type, subtype, obj_id):

@@ -19,3 +19,6 @@ class ModuleQueueError(AILError):
 
 class MISPConnectionError(AILError):
     pass
+
+class AILObjectUnknown(AILError):
+    pass
