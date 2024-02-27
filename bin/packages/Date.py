@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import datetime
+from calendar import monthrange
 
 from dateutil.rrule import rrule, MONTHLY
 from dateutil.relativedelta import relativedelta
@@ -89,6 +90,14 @@ def get_current_week_day():
     dt = datetime.date.today()
     start = dt - datetime.timedelta(days=dt.weekday())
     return start.strftime("%Y%m%d")
+
+def get_month_dates(date=None):
+    if date:
+        date = convert_date_str_to_datetime(date)
+    else:
+        date = datetime.date.today()
+    num_days = monthrange(date.year, date.month)[1]
+    return [datetime.date(date.year, date.month, day).strftime("%Y%m%d") for day in range(1, num_days+1)]
 
 def get_date_week_by_date(date):
     dt = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8]))

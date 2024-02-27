@@ -925,6 +925,12 @@ def get_crawlers_stats_by_day(date, domain_type):
         'down': r_crawler.scard(f'{domain_type}_down:{date}'),
     }
 
+def get_crawlers_stats_by_month(domain_type, date=None):
+    stats = []
+    for date in Date.get_month_dates(date=date):
+        stats.append(get_crawlers_stats_by_day(date, domain_type))
+    return stats
+
 
 def get_crawlers_stats(domain_type=None):
     stats = {}

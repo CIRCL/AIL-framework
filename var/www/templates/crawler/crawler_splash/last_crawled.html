@@ -102,6 +102,8 @@
 					</div>
 				</div>
 
+                <div id="barchart_type_month"></div>
+
 			</div>
 
 		</div>
@@ -142,9 +144,11 @@ $(document).ready(function(){
 					$('#date-range-to-input').val(s2);
 			}
 	});
-	chart.stackBarChart =barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}", 'id');
 
-	chart.onResize();
+    chart.stackBarChart = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}", 'barchart_type');
+	chart.stackBarChartMonth = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_monthly_json') }}?type={{type}}", 'barchart_type_month');
+
+    chart.onResize()
 	$(window).on("resize", function() {
 		chart.onResize();
 	});
@@ -174,7 +178,7 @@ function toggle_sidebar(){
 
 <script>
 var margin = {top: 20, right: 90, bottom: 55, left: 0},
-				width = parseInt(d3.select('#barchart_type').style('width'), 10);
+				width = parseInt(d3.select('#' + id).style('width'), 10);
 				width  = 1000 - margin.left - margin.right,
 				height = 500  - margin.top  - margin.bottom;
 var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
@@ -187,7 +191,7 @@ var yAxis = d3.axisLeft(y);
 
 var color = d3.scaleOrdinal(d3.schemeSet3);
 
-var svg = d3.select("#barchart_type").append("svg")
+var svg = d3.select("#" + id).append("svg")
 				.attr("id", "thesvg")
 				.attr("viewBox", "0 0 "+width+" 500")
 				.attr("width",  width  + margin.left + margin.right)
