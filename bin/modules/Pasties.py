@@ -56,7 +56,7 @@ class Pasties(AbstractModule):
             with open(domains_pasties) as f:
                 for line in f:
                     url = line.strip()
-                    if url: # TODO validate line
+                    if url:  # TODO validate line
                         self.faup.decode(url)
                         url_decoded = self.faup.get()
                         host = url_decoded['host']
@@ -135,7 +135,7 @@ class Pasties(AbstractModule):
                     if path.startswith(url_path):
                         if url_path != path and url_path != path_end:
                             print('send to crawler', url_path, url)
-                            self.send_to_crawler(url, self.obj.id))
+                            self.send_to_crawler(url, self.obj.id)
                             break
 
 

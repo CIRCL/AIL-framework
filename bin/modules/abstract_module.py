@@ -76,6 +76,14 @@ class AbstractModule(ABC):
     def get_obj(self):
         return self.obj
 
+    def set_obj(self, new_obj):
+        if self.obj:
+            old_id = self.obj.id
+            self.obj = new_obj
+            self.queue.rename_message_obj(self.obj.id, old_id)
+        else:
+            self.obj = new_obj
+
     def get_message(self):
         """
         Get message from the Redis Queue (QueueIn)

@@ -105,6 +105,11 @@ class Global(AbstractModule):
                         filename = self.check_filename(filename, new_file_content)
 
                         if filename:
+                            new_obj_id = filename.replace(self.ITEMS_FOLDER, '', 1)
+                            new_obj = Item(new_obj_id)
+                            new_obj.sanitize_id()
+                            self.set_obj(new_obj)
+
                             # create subdir
                             dirname = os.path.dirname(filename)
                             if not os.path.exists(dirname):
