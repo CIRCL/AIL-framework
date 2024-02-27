@@ -148,10 +148,10 @@ $(document).ready(function(){
 	chart.stackBarChart = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}", '#barchart_type');
     chart.stackBarChartMonth = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_month_json') }}?type={{type}}", '#barchart_type_month');
 
-	//chart.onResize();
-	//$(window).on("resize", function() {
-	//	chart.onResize();
-	//});
+	chart.onResize();
+	$(window).on("resize", function() {
+		chart.onResize();
+	});
 
 	$('[data-toggle="popover"]').popover({
 		placement: 'top',
@@ -182,8 +182,8 @@ function toggle_sidebar(){
 function barchart_type_stack(url, svg_id) {
 
     var margin = {top: 20, right: 90, bottom: 55, left: 0},
-                    width = parseInt(d3.select(svg_id).style('width'), 10);
-                    width  = 1000 - margin.left - margin.right,
+        width = $(svg_id).width()
+        width  = width - margin.left - margin.right,
                     height = 500  - margin.top  - margin.bottom;
     var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
 
@@ -196,7 +196,7 @@ function barchart_type_stack(url, svg_id) {
     var color = d3.scaleOrdinal(d3.schemeSet3);
 
     var svg = d3.select(svg_id).append("svg")
-        .attr("id", "thesvg")
+        .attr("id", svg_id)
         .attr("viewBox", "0 0 "+width+" 500")
         .attr("width",  width  + margin.left + margin.right)
         .attr("height", height + margin.top  + margin.bottom)
@@ -291,7 +291,7 @@ function barchart_type_stack(url, svg_id) {
             .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
 
         legend.append("rect")
-            .attr("x", 943)
+            .attr("x", width)
             .attr("width", 10)
             .attr("height", 10)
             .style("fill", color)
@@ -299,40 +299,42 @@ function barchart_type_stack(url, svg_id) {
 
         legend.append("text")
                     .attr("class", "svgText")
-            .attr("x", 941)
+            .attr("x", width - 2)
             .attr("y", 6)
             .attr("dy", ".35em")
             .style("text-anchor", "end")
             .text(function (d) { return d; });
     }
+    chart.onResize = function () {
+        //var aspect = width / height, chart = $("#thesvg");
+        svg_g = $(svg_id)
+        var targetWidth = svg_g.parent().width();
+        svg_g.attr("width", targetWidth);
+        svg_g.attr("height", targetWidth / 2);
+    }
+
+    function removePopovers () {
+        $('.popover').each(function() {
+          $(this).remove();
+        });
+      }
+
+    function showPopover (d) {
+      $(this).popover({
+        title: d.name,
+        placement: 'top',
+        container: 'body',
+        trigger: 'manual',
+        html : true,
+        content: function() {
+          return d.label +
+                "<br/>num: " + d3.format(",")(d.value ? d.value: d.y1 - d.y0); }
+      });
+      $(this).popover('show')
+    }
+
 }
 
-function removePopovers () {
-    $('.popover').each(function() {
-      $(this).remove();
-    });
-  }
-
-function showPopover (d) {
-  $(this).popover({
-    title: d.name,
-    placement: 'top',
-    container: 'body',
-    trigger: 'manual',
-    html : true,
-    content: function() {
-      return d.label +
-            "<br/>num: " + d3.format(",")(d.value ? d.value: d.y1 - d.y0); }
-  });
-  $(this).popover('show')
-}
-
-chart.onResize = function () {
-    var aspect = width / height, chart = $("#thesvg");
-    var targetWidth = chart.parent().width();
-    chart.attr("width", targetWidth);
-    chart.attr("height", targetWidth / 2);
-}
 
 window.chart = chart;
 
