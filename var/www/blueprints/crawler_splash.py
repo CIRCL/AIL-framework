@@ -306,10 +306,10 @@ def crawlers_last_domains_json():
         stats.append(crawlers.get_crawlers_stats_by_day(date, domain_type))
     return jsonify(stats)
 
-@crawler_splash.route('/crawlers/last/domains/monthly/json')
+@crawler_splash.route('/crawlers/last/domains/month/json')
 @login_required
 @login_read_only
-def crawlers_last_domains_monthly_json():
+def crawlers_last_domains_month_json():
     domain_type = request.args.get('type')
     if domain_type not in crawlers.get_crawler_all_types():
         return jsonify({'error': 'Invalid domain type'}), 400

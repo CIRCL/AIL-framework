@@ -102,6 +102,7 @@
 					</div>
 				</div>
 
+                <h3>Month Stats:</h3>
                 <div id="barchart_type_month"></div>
 
 			</div>
@@ -144,14 +145,13 @@ $(document).ready(function(){
 					$('#date-range-to-input').val(s2);
 			}
 	});
+	chart.stackBarChart = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}", '#barchart_type');
+    chart.stackBarChartMonth = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_month_json') }}?type={{type}}", '#barchart_type_month');
 
-    chart.stackBarChart = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}", 'barchart_type');
-	chart.stackBarChartMonth = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_monthly_json') }}?type={{type}}", 'barchart_type_month');
-
-    chart.onResize()
-	$(window).on("resize", function() {
-		chart.onResize();
-	});
+	//chart.onResize();
+	//$(window).on("resize", function() {
+	//	chart.onResize();
+	//});
 
 	$('[data-toggle="popover"]').popover({
 		placement: 'top',
@@ -177,30 +177,31 @@ function toggle_sidebar(){
 </script>
 
 <script>
-var margin = {top: 20, right: 90, bottom: 55, left: 0},
-				width = parseInt(d3.select('#' + id).style('width'), 10);
-				width  = 1000 - margin.left - margin.right,
-				height = 500  - margin.top  - margin.bottom;
-var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
-
-var y = d3.scaleLinear().rangeRound([height, 0]);
-
-var xAxis = d3.axisBottom(x);
-
-var yAxis = d3.axisLeft(y);
-
-var color = d3.scaleOrdinal(d3.schemeSet3);
-
-var svg = d3.select("#" + id).append("svg")
-				.attr("id", "thesvg")
-				.attr("viewBox", "0 0 "+width+" 500")
-				.attr("width",  width  + margin.left + margin.right)
-				.attr("height", height + margin.top  + margin.bottom)
-			.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-function barchart_type_stack(url, id) {
+function barchart_type_stack(url, svg_id) {
+
+    var margin = {top: 20, right: 90, bottom: 55, left: 0},
+                    width = parseInt(d3.select(svg_id).style('width'), 10);
+                    width  = 1000 - margin.left - margin.right,
+                    height = 500  - margin.top  - margin.bottom;
+    var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+
+    var y = d3.scaleLinear().rangeRound([height, 0]);
+
+    var xAxis = d3.axisBottom(x);
+
+    var yAxis = d3.axisLeft(y);
+
+    var color = d3.scaleOrdinal(d3.schemeSet3);
+
+    var svg = d3.select(svg_id).append("svg")
+        .attr("id", "thesvg")
+        .attr("viewBox", "0 0 "+width+" 500")
+        .attr("width",  width  + margin.left + margin.right)
+        .attr("height", height + margin.top  + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   d3.json(url)
     .then(function(data){
@@ -281,29 +282,29 @@ function barchart_type_stack(url, id) {
 			drawLegend(varNames);
     });
 
-}
 
-function drawLegend (varNames) {
-    var legend = svg.selectAll(".legend")
-        .data(varNames.slice().reverse())
-      .enter().append("g")
-        .attr("class", "legend")
-        .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
+    function drawLegend (varNames) {
+        var legend = svg.selectAll(".legend")
+            .data(varNames.slice().reverse())
+          .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
 
-    legend.append("rect")
-        .attr("x", 943)
-        .attr("width", 10)
-        .attr("height", 10)
-        .style("fill", color)
-        .style("stroke", "grey");
+        legend.append("rect")
+            .attr("x", 943)
+            .attr("width", 10)
+            .attr("height", 10)
+            .style("fill", color)
+            .style("stroke", "grey");
 
-    legend.append("text")
-				.attr("class", "svgText")
-        .attr("x", 941)
-        .attr("y", 6)
-        .attr("dy", ".35em")
-        .style("text-anchor", "end")
-        .text(function (d) { return d; });
+        legend.append("text")
+                    .attr("class", "svgText")
+            .attr("x", 941)
+            .attr("y", 6)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text(function (d) { return d; });
+    }
 }
 
 function removePopovers () {
