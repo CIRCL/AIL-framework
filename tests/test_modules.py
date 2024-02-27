@@ -33,6 +33,8 @@ ITEMS_FOLDER = Items.ITEMS_FOLDER
 TESTS_ITEMS_FOLDER = os.path.join(ITEMS_FOLDER, 'tests')
 sample_dir = os.path.join(os.environ['AIL_HOME'], 'samples')
 copy_tree(sample_dir, TESTS_ITEMS_FOLDER)
+
+
 #### ---- ####
 
 class TestModuleApiKey(unittest.TestCase):
@@ -53,6 +55,7 @@ class TestModuleApiKey(unittest.TestCase):
         self.assertCountEqual(matches[1], {aws_access_key})
         self.assertCountEqual(matches[2], {aws_secret_key})
 
+
 class TestModuleCateg(unittest.TestCase):
 
     def setUp(self):
@@ -65,8 +68,8 @@ class TestModuleCateg(unittest.TestCase):
         test_categ = ['CreditCards', 'Mail', 'Onion', 'Urls', 'Credential', 'Cve']
 
         result = self.module.compute(None, r_result=True)
-        print(result)
         self.assertCountEqual(result, test_categ)
+
 
 class TestModuleCreditCards(unittest.TestCase):
 
@@ -82,10 +85,11 @@ class TestModuleCreditCards(unittest.TestCase):
                       '3547151714018657',  # Japan Credit Bureau (JCB)
                       '5492981206527330',  # 16 digits MasterCard
                       '4024007132849695',  # '4532525919781' # 16-digit VISA, with separators
-                     ]
+                      ]
 
         result = self.module.compute('7', r_result=True)
         self.assertCountEqual(result, test_cards)
+
 
 class TestModuleDomClassifier(unittest.TestCase):
 
@@ -99,6 +103,7 @@ class TestModuleDomClassifier(unittest.TestCase):
         self.module.obj = Items.Item(item_id)
         result = self.module.compute(f'{test_host}', r_result=True)
         self.assertTrue(len(result))
+
 
 class TestModuleGlobal(unittest.TestCase):
 
@@ -119,27 +124,24 @@ class TestModuleGlobal(unittest.TestCase):
         self.module.obj = Items.Item(item_id)
         # Test new item
         result = self.module.compute(item_content_1, r_result=True)
-        print(f'test new item: {result}')
         self.assertEqual(result, item_id)
 
         # Test duplicate
         result = self.module.compute(item_content_1, r_result=True)
-        print(f'test duplicate {result}')
         self.assertIsNone(result)
 
         # Test same id with != content
         item = Items.Item('tests/2021/01/01/global_831875da824fc86ab5cc0e835755b520.gz')
         item.delete()
         result = self.module.compute(item_content_2, r_result=True)
-        print(f'test same id with != content: {result}')
         self.assertIn(item_id[:-3], result)
-        print(result)
         self.assertNotEqual(result, item_id)
 
         # cleanup
         # item = Items.Item(result)
         # item.delete()
         # # TODO: remove from queue
+
 
 class TestModuleKeys(unittest.TestCase):
 
@@ -151,7 +153,8 @@ class TestModuleKeys(unittest.TestCase):
         item_id = 'tests/2021/01/01/keys.gz'
         self.module.obj = Items.Item(item_id)
         # # TODO: check results
-        result = self.module.compute(None)
+        self.module.compute(None)
+
 
 class TestModuleOnion(unittest.TestCase):
 
@@ -162,10 +165,11 @@ class TestModuleOnion(unittest.TestCase):
     def test_module(self):
         item_id = 'tests/2021/01/01/onion.gz'
         self.module.obj = Items.Item(item_id)
-        domain_1 = 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
-        domain_2 = 'www.facebookcorewwwi.onion'
+        # domain_1 = 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
+        # domain_2 = 'www.facebookcorewwwi.onion'
 
         self.module.compute(f'3')
+
 
 class TestModuleTelegram(unittest.TestCase):
 
@@ -177,7 +181,7 @@ class TestModuleTelegram(unittest.TestCase):
         item_id = 'tests/2021/01/01/keys.gz'
         self.module.obj = Items.Item(item_id)
         # # TODO: check results
-        result = self.module.compute(None)
+        self.module.compute(None)
 
 
 if __name__ == '__main__':

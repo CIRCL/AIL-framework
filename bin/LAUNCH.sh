@@ -578,7 +578,7 @@ function update_thirdparty {
 function launch_tests() {
   tests_dir=${AIL_HOME}/tests
   bin_dir=${AIL_BIN}
-  python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage testApi test_modules
+  python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules
 }
 
 function reset_password() {
