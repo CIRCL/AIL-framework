@@ -931,6 +931,13 @@ def get_crawlers_stats_by_month(domain_type, date=None):
         stats.append(get_crawlers_stats_by_day(date, domain_type))
     return stats
 
+def get_crawlers_stats_up_down_by_month(domain_type, date=None):
+    stats = {'down': 0, 'up': 0}
+    for date in Date.get_month_dates(date=date):
+        day = get_crawlers_stats_by_day(date, domain_type)
+        stats['down'] += day.get('down', 0)
+        stats['up'] += day.get('up', 0)
+    return stats
 
 def get_crawlers_stats(domain_type=None):
     stats = {}

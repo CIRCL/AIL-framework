@@ -17,6 +17,7 @@
 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/d3/barchart_stack.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/pie_chart.js') }}"></script>
 
 	<style>
         .domain_name {
@@ -91,8 +92,8 @@
 				</div>
 
                 <h3>Month Stats:</h3>
-                <div id="pie_chart_month"></div>
                 <div id="barchart_type_month"></div>
+                <div class="text-center" id="pie_chart_month"></div>
 
 			</div>
 
@@ -139,6 +140,12 @@ $(document).ready(function(){
         function (data) {
                 let div_width = $("#barchart_type").width();
                 barchart_stack("barchart_type", data, {"width": div_width});
+        }
+    );
+
+    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_status_month_json') }}?type={{type}}",
+        function (data) {
+                pie_chart("pie_chart_month", data, {});
         }
     );
 
