@@ -16,21 +16,9 @@
 	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/barchart_stack.js') }}"></script>
 
 	<style>
-		.bar {
-				fill: steelblue;
-			}
-		.bar:hover{
-			fill: brown;
-			cursor: pointer;
-		}
-		.bar_stack:hover{
-			cursor: pointer;
-		}
-		.popover{
-    	max-width: 100%;
-		}
         .domain_name {
             display:inline-block;
             overflow: hidden;
@@ -103,6 +91,7 @@
 				</div>
 
                 <h3>Month Stats:</h3>
+                <div id="pie_chart_month"></div>
                 <div id="barchart_type_month"></div>
 
 			</div>
@@ -145,19 +134,20 @@ $(document).ready(function(){
 					$('#date-range-to-input').val(s2);
 			}
 	});
-	chart.stackBarChart = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}", '#barchart_type');
-    chart.stackBarChartMonth = barchart_type_stack("{{ url_for('crawler_splash.crawlers_last_domains_month_json') }}?type={{type}}", '#barchart_type_month');
 
-	chart.onResize();
-	$(window).on("resize", function() {
-		chart.onResize();
-	});
+    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}",
+        function (data) {
+                let div_width = $("#barchart_type").width();
+                barchart_stack("barchart_type", data, {"width": div_width});
+        }
+    );
 
-	$('[data-toggle="popover"]').popover({
-		placement: 'top',
-		container: 'body',
-		html : true,
-	});
+    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_month_json') }}?type={{type}}",
+        function (data) {
+                let div_width = $("#barchart_type_month").width();
+                barchart_stack("barchart_type_month", data, {"width": div_width});
+        }
+    );
 
 });
 
@@ -176,166 +166,3 @@ function toggle_sidebar(){
 }
 </script>
 
-<script>
-
-
-function barchart_type_stack(url, svg_id) {
-
-    var margin = {top: 20, right: 90, bottom: 55, left: 0},
-        width = $(svg_id).width()
-        width  = width - margin.left - margin.right,
-                    height = 500  - margin.top  - margin.bottom;
-    var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
-
-    var y = d3.scaleLinear().rangeRound([height, 0]);
-
-    var xAxis = d3.axisBottom(x);
-
-    var yAxis = d3.axisLeft(y);
-
-    var color = d3.scaleOrdinal(d3.schemeSet3);
-
-    var svg = d3.select(svg_id).append("svg")
-        .attr("id", svg_id)
-        .attr("viewBox", "0 0 "+width+" 500")
-        .attr("width",  width  + margin.left + margin.right)
-        .attr("height", height + margin.top  + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-  d3.json(url)
-    .then(function(data){
-
-			var labelVar = 'date';  //A
-		  var varNames = d3.keys(data[0])
-		      .filter(function (key) { return key !== labelVar;}); //B
-
-		  data.forEach(function (d) { //D
-		    var y0 = 0;
-		    d.mapping = varNames.map(function (name) {
-		      return {
-		        name: name,
-		        label: d[labelVar],
-		        y0: y0,
-		        y1: y0 += +d[name]
-		      };
-		    });
-		    d.total = d.mapping[d.mapping.length - 1].y1;
-		  });
-
-		  x.domain(data.map(function (d) { return (d.date); })); //E
-		  y.domain([0, d3.max(data, function (d) { return d.total; })]);
-
-			svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-				.selectAll("text")
-					.attr("class", "bar")
-					.on("click", function (d) { window.location.href = "#" })
-					.attr("transform", "rotate(-18)" )
-					//.attr("transform", "rotate(-40)" )
-					.style("text-anchor", "end");
-
-    	svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-      	.append("text")
-        	.attr("transform", "rotate(-90)")
-        	.attr("y", 6)
-        	.attr("dy", ".71em")
-        	.style("text-anchor", "end");
-
-			var selection = svg.selectAll(".series")
-		    .data(data)
-		    .enter().append("g")
-		      .attr("class", "series")
-		      .attr("transform", function (d) { return "translate(" + x((d.date)) + ",0)"; });
-
-			selection.selectAll("rect")
-	      .data(function (d) { return d.mapping; })
-	    .enter().append("rect")
-				.attr("class", "bar_stack")
-	      .attr("width", x.bandwidth())
-	      .attr("y", function (d) { return y(d.y1); })
-	      .attr("height", function (d) { return y(d.y0) - y(d.y1); })
-	      .style("fill", function (d) { return color(d.name); })
-	      .style("stroke", "grey")
-	      .on("mouseover", function (d) { showPopover.call(this, d); })
-				.on("mouseout", function (d) { removePopovers(); })
-				.on("click", function(d){ window.location.href = "#" });
-
-
-				data.forEach(function(d) {
-					if(d.total != 0){
-						svg.append("text")
-								.attr("class", "bar")
-								.attr("dy", "-.35em")
-								.attr('x', x(d.date) + x.bandwidth()/2)
-								.attr('y', y(d.total))
-								.on("click", function () {window.location.href = "#" })
-								.style("text-anchor", "middle")
-								.text(d.total);
-					}
-				});
-
-			drawLegend(varNames);
-    });
-
-
-    function drawLegend (varNames) {
-        var legend = svg.selectAll(".legend")
-            .data(varNames.slice().reverse())
-          .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
-
-        legend.append("rect")
-            .attr("x", width)
-            .attr("width", 10)
-            .attr("height", 10)
-            .style("fill", color)
-            .style("stroke", "grey");
-
-        legend.append("text")
-                    .attr("class", "svgText")
-            .attr("x", width - 2)
-            .attr("y", 6)
-            .attr("dy", ".35em")
-            .style("text-anchor", "end")
-            .text(function (d) { return d; });
-    }
-    chart.onResize = function () {
-        //var aspect = width / height, chart = $("#thesvg");
-        svg_g = $(svg_id)
-        var targetWidth = svg_g.parent().width();
-        svg_g.attr("width", targetWidth);
-        svg_g.attr("height", targetWidth / 2);
-    }
-
-    function removePopovers () {
-        $('.popover').each(function() {
-          $(this).remove();
-        });
-      }
-
-    function showPopover (d) {
-      $(this).popover({
-        title: d.name,
-        placement: 'top',
-        container: 'body',
-        trigger: 'manual',
-        html : true,
-        content: function() {
-          return d.label +
-                "<br/>num: " + d3.format(",")(d.value ? d.value: d.y1 - d.y0); }
-      });
-      $(this).popover('show')
-    }
-
-}
-
-
-window.chart = chart;
-
-</script>
