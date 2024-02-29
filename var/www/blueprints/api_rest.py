@@ -163,7 +163,6 @@ def v1_object():
         obj_subtype = request.args.get('subtype')
         obj_id = request.args.get('id')
         r = ail_objects.api_get_object(obj_type, obj_subtype, obj_id)
-    print(r[0])
     return create_json_response(r[0], r[1])
 
 
