@@ -128,12 +128,12 @@ def api_get_object(obj_type, obj_subtype, obj_id):
     if not is_valid_object_type(obj_type):
         return {'status': 'error', 'reason': 'Invalid object type'}, 400
     if obj_subtype:
-        if not is_valid_object_subtype(obj_type, subtype):
+        if not is_valid_object_subtype(obj_type, obj_subtype):
             return {'status': 'error', 'reason': 'Invalid object subtype'}, 400
     obj = get_object(obj_type, obj_subtype, obj_id)
     if not obj.exists():
         return {'status': 'error', 'reason': 'Object Not Found'}, 404
-    options = {'chat', 'content', 'files-names', 'images', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+    options = {'chat', 'content', 'created_at', 'files-names', 'icon', 'images', 'info', 'nb_participants', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account', 'username', 'subchannels', 'threads'}
     return obj.get_meta(options=options), 200
 
 

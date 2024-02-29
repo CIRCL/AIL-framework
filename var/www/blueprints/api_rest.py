@@ -20,6 +20,7 @@ from lib import ail_api
 from lib import ail_core
 from lib import ail_updates
 from lib import crawlers
+from lib import chats_viewer
 
 from lib import Investigations
 from lib import Tag
@@ -180,17 +181,45 @@ def v1_object_type_id(object_type, object_id):
     return create_json_response(r[0], r[1])
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # #      CHATS      # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+@api_rest.route("api/v1/chat/messages", methods=['GET'])
+@token_required('analyst')
+def objects_chat_messages():
+    obj_subtype = request.args.get('subtype')
+    obj_id = request.args.get('id')
+    r = chats_viewer.api_chat_messages(obj_subtype, obj_id)
+    return create_json_response(r[0], r[1])
+
+@api_rest.route("api/v1/chat-subchannel/messages", methods=['GET'])
+@token_required('analyst')
+def objects_chat_subchannel_messages():
+    obj_subtype = request.args.get('subtype')
+    obj_id = request.args.get('id')
+    r = chats_viewer.api_subchannel_messages(obj_subtype, obj_id)
+    return create_json_response(r[0], r[1])
+
+@api_rest.route("api/v1/chat-thread/messages", methods=['GET'])
+@token_required('analyst')
+def objects_chat_thread_messages():
+    obj_subtype = request.args.get('subtype')
+    obj_id = request.args.get('id')
+    r = chats_viewer.api_thread_messages(obj_subtype, obj_id)
+    return create_json_response(r[0], r[1])
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      TITLES       # # # # # # # # # # # # # # # # # # # TODO TO REVIEW
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-@api_rest.route("api/v1/titles/download", methods=['GET'])
+@api_rest.route("api/v1/titles/download", methods=['GET'])  # TODO RENAME ->api/v1/titles/domains
 @token_required('analyst')
 def objects_titles_download():
     return create_json_response(Titles.Titles().get_contents_ids(), 200)
 
 
 # TODO
-@api_rest.route("api/v1/titles/download/unsafe", methods=['GET'])  # TODO REFACTOR ME
+@api_rest.route("api/v1/titles/download/unsafe", methods=['GET'])  # TODO RENAME ->api/v1/titles/domains/unsafe
 @token_required('analyst')
 def objects_titles_download_unsafe():
     all_titles = {}
@@ -212,6 +241,7 @@ def objects_titles_download_unsafe():
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      INVESTIGATIONS     # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 @api_rest.route("api/v1/investigation/<investigation_uuid>", methods=['GET'])  # TODO options
 @token_required('read_only')
 def v1_investigation(investigation_uuid):

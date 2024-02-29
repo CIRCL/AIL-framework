@@ -165,7 +165,7 @@ def chats_explorer_chat_participants():
 def chats_explorer_chat_download():
     chat_id = request.args.get('id')
     chat_subtype = request.args.get('uuid')
-    chat = chats_viewer.api_download_chat(chat_id, chat_subtype)
+    chat = chats_viewer.api_chat_messages(chat_subtype, chat_id)
     if chat[1] != 200:
         if chat[1] == 404:
             abort(404)
@@ -180,7 +180,7 @@ def chats_explorer_chat_download():
 def objects_subchannel_messages_download():
     subchannel_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
-    subchannel = chats_viewer.api_download_subchannel(subchannel_id, instance_uuid)
+    subchannel = chats_viewer.api_subchannel_messages(instance_uuid, subchannel_id)
     if subchannel[1] != 200:
         return create_json_response(subchannel[0], subchannel[1])
     else:
@@ -193,7 +193,7 @@ def objects_subchannel_messages_download():
 def objects_thread_messages_download():
     thread_id = request.args.get('id')
     instance_uuid = request.args.get('uuid')
-    thread = chats_viewer.api_download_thread(thread_id, instance_uuid)
+    thread = chats_viewer.api_thread_messages(instance_uuid, thread_id)
     if thread[1] != 200:
         return create_json_response(thread[0], thread[1])
     else:

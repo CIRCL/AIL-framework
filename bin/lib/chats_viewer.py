@@ -420,7 +420,7 @@ def api_get_user_account(user_id, instance_uuid, translation_target=None):
     meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
     return meta, 200
 
-def api_download_chat(chat_id, subtype):
+def api_chat_messages(subtype, chat_id):
     chat = Chats.Chat(chat_id, subtype)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
@@ -434,7 +434,7 @@ def api_download_chat(chat_id, subtype):
         meta['messages'], _, _ = chat.get_messages(nb=-1, options=options)
     return meta, 200
 
-def api_download_subchannel(subchannel_id, subtype):
+def api_subchannel_messages(subtype, subchannel_id):
     subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, subtype)
     if not subchannel.exists():
         return {"status": "error", "reason": "Unknown subchannel"}, 404
@@ -450,7 +450,7 @@ def api_download_subchannel(subchannel_id, subtype):
     meta['messages'], _, _ = subchannel.get_messages(nb=-1, options=options)
     return meta, 200
 
-def api_download_thread(thread_id, subtype):
+def api_thread_messages(subtype, thread_id):
     thread = ChatThreads.ChatThread(thread_id, subtype)
     if not thread.exists():
         return {"status": "error", "reason": "Unknown thread"}, 404
