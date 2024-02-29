@@ -152,25 +152,30 @@ class Investigation(object):
         return r_tracking.smembers(f'investigations:misp:{self.uuid}')
 
     # # TODO: DATE FORMAT
-    def get_metadata(self, r_str=False):
+    def get_metadata(self, options=set(), r_str=False):
         if r_str:
             analysis = self.get_analysis_str()
             threat_level = self.get_threat_level_str()
         else:
             analysis = self.get_analysis()
             threat_level = self.get_threat_level()
-        return {'uuid': self.uuid,
-                'name': self.get_name(),
+
+        # 'name': self.get_name(),
+        meta = {'uuid': self.uuid,
                 'threat_level': threat_level,
                 'analysis': analysis,
-                'tags': self.get_tags(),
+                'tags': list(self.get_tags()),
                 'user_creator': self.get_creator_user(),
                 'date': self.get_date(),
                 'timestamp': self.get_timestamp(r_str=r_str),
                 'last_change': self.get_last_change(r_str=r_str),
                 'info': self.get_info(),
                 'nb_objects': self.get_nb_objects(),
-                'misp_events': self.get_misp_events()}
+                'misp_events': list(self.get_misp_events())
+                }
+        if 'objects' in options:
+            meta['objects'] = self.get_objects()
+        return meta
 
     def set_name(self, name):
         r_tracking.hset(f'investigations:data:{self.uuid}', 'name', name)
@@ -367,6 +372,21 @@ def get_investigations_selector():
 
 
 ####  API  ####
+
+def api_get_investigation(investigation_uuid): # TODO check if is UUIDv4
+    investigation = Investigation(investigation_uuid)
+    if not investigation.exists():
+        return {'status': 'error', 'reason': 'Investigation Not Found'}, 404
+
+    meta = investigation.get_metadata(options={'objects'}, r_str=False)
+    # objs = []
+    # for obj in investigation.get_objects():
+    #     obj_meta = ail_objects.get_object_meta(obj["type"], obj["subtype"], obj["id"], flask_context=True)
+    #     comment = investigation.get_objects_comment(f'{obj["type"]}:{obj["subtype"]}:{obj["id"]}')
+    #     if comment:
+    #         obj_meta['comment'] = comment
+    #     objs.append(obj_meta)
+    return meta, 200
 
 # # TODO: CHECK Mandatory Fields
 # # TODO: SANITYZE Fields

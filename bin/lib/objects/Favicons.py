@@ -62,11 +62,18 @@ class Favicon(AbstractDaterangeObject):
         filename = os.path.join(FAVICON_FOLDER, self.get_rel_path())
         return os.path.realpath(filename)
 
-    def get_file_content(self):
+    def get_file_content(self, r_type='str'):
         filepath = self.get_filepath()
-        with open(filepath, 'rb') as f:
-            file_content = BytesIO(f.read())
-        return file_content
+        if r_type == 'str':
+            with open(filepath, 'rb') as f:
+                file_content = f.read()
+            b64 = base64.b64encode(file_content)
+            # b64 = base64.encodebytes(file_content)
+            return b64.decode()
+        elif r_type == 'io':
+            with open(filepath, 'rb') as f:
+                file_content = BytesIO(f.read())
+                return file_content
 
     def get_content(self, r_type='str'):
         return self.get_file_content()

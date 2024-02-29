@@ -21,14 +21,14 @@ from lib import ail_core
 from lib import ail_updates
 from lib import crawlers
 
+from lib import Investigations
 from lib import Tag
 
 from lib.objects import ail_objects
-from importer.FeederImporter import api_add_json_feeder_to_queue
-
 from lib.objects import Domains
 from lib.objects import Titles
 
+from importer.FeederImporter import api_add_json_feeder_to_queue
 
 
 # ============ BLUEPRINT ============
@@ -75,8 +75,8 @@ def token_required(user_role):
 
 # ============ FUNCTIONS ============
 
-def create_json_response(data, status_code):  # TODO REMOVE INDENT ????????????????????
-    return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
+def create_json_response(data, status_code):
+    return Response(json.dumps(data) + "\n", mimetype='application/json'), status_code
 
 # ============= ROUTES ==============
 
@@ -150,12 +150,38 @@ def import_json_item():
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # #      OBJECTS      # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # #      OBJECTS      # # # # # # # # # # # # # # # # # # # TODO LIST OBJ TYPES + SUBTYPES
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@api_rest.route("api/v1/object", methods=['GET'])  # TODO options
+@token_required('read_only')
+def v1_object():
+    obj_gid = request.args.get('gid')
+    if obj_gid:
+        r = ail_objects.api_get_object_global_id(obj_gid)
+    else:
+        obj_type = request.args.get('type')
+        obj_subtype = request.args.get('subtype')
+        obj_id = request.args.get('id')
+        r = ail_objects.api_get_object(obj_type, obj_subtype, obj_id)
+    print(r[0])
+    return create_json_response(r[0], r[1])
 
 
+@api_rest.route("api/v1/obj/gid/<path:object_global_id>", methods=['GET'])  # TODO REMOVE ME ????
+@token_required('read_only')
+def v1_object_global_id(object_global_id):
+    r = ail_objects.api_get_object_global_id(object_global_id)
+    return create_json_response(r[0], r[1])
+
+# @api_rest.route("api/v1/object/<object_type>/<object_subtype>/<path:object_id>", methods=['GET'])
+@api_rest.route("api/v1/obj/<object_type>/<path:object_id>", methods=['GET'])  # TODO REMOVE ME ????
+@token_required('read_only')
+def v1_object_type_id(object_type, object_id):
+    r = ail_objects.api_get_object_type_id(object_type, object_id)
+    return create_json_response(r[0], r[1])
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # #      TITLES       # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # #      TITLES       # # # # # # # # # # # # # # # # # # # TODO TO REVIEW
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 @api_rest.route("api/v1/titles/download", methods=['GET'])
@@ -184,4 +210,13 @@ def objects_titles_download_unsafe():
                     all_titles[title_content].append(domain.get_id())
     return Response(json.dumps(all_titles), mimetype='application/json'), 200
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # #      INVESTIGATIONS     # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@api_rest.route("api/v1/investigation/<investigation_uuid>", methods=['GET'])  # TODO options
+@token_required('read_only')
+def v1_investigation(investigation_uuid):
+    r = Investigations.api_get_investigation(investigation_uuid)
+    return create_json_response(r[0], r[1])
 
+# TODO CATCH REDIRECT

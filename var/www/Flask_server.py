@@ -234,17 +234,24 @@ def _handle_client_error(e):
         anchor_id = anchor_id.replace('/', '_')
         api_doc_url = 'https://github.com/ail-project/ail-framework/tree/master/doc#{}'.format(anchor_id)
         res_dict['documentation'] = api_doc_url
-        return Response(json.dumps(res_dict, indent=2, sort_keys=True), mimetype='application/json'), 405
+        return Response(json.dumps(res_dict) + '\n', mimetype='application/json'), 405
     else:
         return e
 
 @app.errorhandler(404)
 def error_page_not_found(e):
     if request.path.startswith('/api/'): ## # TODO: add baseUrl
-        return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
+        return Response(json.dumps({"status": "error", "reason": "404 Not Found"}) + '\n', mimetype='application/json'), 404
     else:
         # avoid endpoint enumeration
         return page_not_found(e)
+
+@app.errorhandler(500)
+def _handle_client_error(e):
+    if request.path.startswith('/api/'):
+        return Response(json.dumps({"status": "error", "reason": "Server Error"}) + '\n', mimetype='application/json'), 500
+    else:
+        return e
 
 @login_required
 def page_not_found(e):

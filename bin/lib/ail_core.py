@@ -20,6 +20,8 @@ AIL_OBJECTS = sorted({'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', '
                       'domain', 'etag', 'favicon', 'file-name', 'hhhash',
                       'item', 'image', 'message', 'pgp', 'screenshot', 'title', 'user-account', 'username'})
 
+AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
+
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
     if not ail_uuid:
@@ -48,7 +50,7 @@ def get_all_objects():
     return AIL_OBJECTS
 
 def get_objects_with_subtypes():
-    return ['chat', 'cryptocurrency', 'pgp', 'username', 'user-account']
+    return AIL_OBJECTS_WITH_SUBTYPES
 
 def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
     if obj_type == 'chat':

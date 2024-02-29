@@ -12,7 +12,7 @@ from lib.exceptions import AILObjectUnknown
 
 
 from lib.ConfigLoader import ConfigLoader
-from lib.ail_core import get_all_objects, get_object_all_subtypes
+from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_with_subtypes
 from lib import correlations_engine
 from lib import relationships_engine
 from lib import btc_ail
@@ -46,6 +46,9 @@ config_loader = None
 
 def is_valid_object_type(obj_type):
     return obj_type in get_all_objects()
+
+def is_object_subtype(obj_type):
+    return obj_type in get_objects_with_subtypes()
 
 def is_valid_object_subtype(obj_type, subtype):
     return subtype in get_object_all_subtypes(obj_type)
@@ -116,6 +119,39 @@ def exists_obj(obj_type, subtype, obj_id):
         return obj.exists()
     else:
         return False
+
+#### API ####
+
+def api_get_object(obj_type, obj_subtype, obj_id):
+    if not obj_id:
+        return {'status': 'error', 'reason': 'Invalid object id'}, 400
+    if not is_valid_object_type(obj_type):
+        return {'status': 'error', 'reason': 'Invalid object type'}, 400
+    if obj_subtype:
+        if not is_valid_object_subtype(obj_type, subtype):
+            return {'status': 'error', 'reason': 'Invalid object subtype'}, 400
+    obj = get_object(obj_type, obj_subtype, obj_id)
+    if not obj.exists():
+        return {'status': 'error', 'reason': 'Object Not Found'}, 404
+    options = {'chat', 'content', 'files-names', 'images', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+    return obj.get_meta(options=options), 200
+
+
+def api_get_object_type_id(obj_type, obj_id):
+    if not is_valid_object_type(obj_type):
+        return {'status': 'error', 'reason': 'Invalid object type'}, 400
+    if is_object_subtype(obj_type):
+        subtype, obj_id = obj_type.split('/', 1)
+    else:
+        subtype = None
+    return api_get_object(obj_type, subtype, obj_id)
+
+
+def api_get_object_global_id(global_id):
+    obj_type, subtype, obj_id = global_id.split(':', 2)
+    return api_get_object(obj_type, subtype, obj_id)
+
+#### --API-- ####
 
 #########################################################################################
 #########################################################################################
