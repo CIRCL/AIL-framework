@@ -39,7 +39,7 @@
 
                         {% for instance_uuid in networks[network] %}
                             <li class="list-group-item">
-                                <a class="nav-link" href="{{url_for('chats_explorer.chats_explorer_instance')}}?uuid={{ instance_uuid }}">
+                                <a class="nav-link" href="{{url_for('chats_explorer.chats_explorer_instance')}}?subtype={{ instance_uuid }}">
                                     <span>{{ instance_uuid }}</span>
                                 </a>
                             </li>

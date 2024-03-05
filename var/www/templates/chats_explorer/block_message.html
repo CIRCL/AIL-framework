@@ -106,7 +106,7 @@
         {% if message['thread'] %}
             <hr class="mb-1">
             <div class="my-2 text-center">
-                <a href="{{ url_for('chats_explorer.objects_thread_messages')}}?uuid={{ message['thread']['subtype'] }}&id={{ message['thread']['id'] }}"><i class="far fa-comment"></i> {{ message['thread']['nb'] }} Messages</a>
+                <a href="{{ url_for('chats_explorer.objects_thread_messages')}}?subtype={{ message['thread']['subtype'] }}&id={{ message['thread']['id'] }}"><i class="far fa-comment"></i> {{ message['thread']['nb'] }} Messages</a>
             </div>
         {% endif %}
         {% for tag in message['tags'] %}

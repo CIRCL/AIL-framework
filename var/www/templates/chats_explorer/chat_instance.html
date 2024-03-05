@@ -82,7 +82,7 @@
                                      class="rounded-circle mr-1" alt="{{ chat['id'] }}" width="40" height="40">
                             </td>
                             <td><b>{{ chat['name'] }}</b></td>
-                            <td><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?uuid={{ chat_instance['uuid'] }}&id={{ chat['id'] }}">{{ chat['id'] }}</a></td>
+                            <td><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?subtype={{ chat_instance['uuid'] }}&id={{ chat['id'] }}">{{ chat['id'] }}</a></td>
                             <td>{{ chat['created_at'] }}</td>
                             <td>
                                 {% if chat['first_seen'] %}

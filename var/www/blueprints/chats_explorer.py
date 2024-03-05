@@ -58,7 +58,7 @@ def chats_explorer_networks():
     networks = chats_viewer.get_chat_service_instances_by_protocol(protocol)
     if len(networks) == 1:
         instance_uuid = list(networks.values())[0]
-        return redirect(url_for('chats_explorer.chats_explorer_instance', uuid=instance_uuid))
+        return redirect(url_for('chats_explorer.chats_explorer_instance', subtype=instance_uuid))
     else:
         return render_template('chats_networks.html', protocol=protocol, networks=networks)
 
@@ -67,7 +67,7 @@ def chats_explorer_networks():
 @login_required
 @login_read_only
 def chats_explorer_instance():
-    intance_uuid = request.args.get('uuid')
+    intance_uuid = request.args.get('subtype')
     chat_instance = chats_viewer.api_get_chat_service_instance(intance_uuid)
     if chat_instance[1] != 200:
         return create_json_response(chat_instance[0], chat_instance[1])
@@ -80,7 +80,7 @@ def chats_explorer_instance():
 @login_read_only
 def chats_explorer_chat():
     chat_id = request.args.get('id')
-    instance_uuid = request.args.get('uuid')
+    instance_uuid = request.args.get('subtype')
     target = request.args.get('target')
     if target == "Don't Translate":
         target = None
@@ -125,7 +125,7 @@ def chats_explorer_messages_stats_week_all():
 @login_read_only
 def objects_subchannel_messages():
     subchannel_id = request.args.get('id')
-    instance_uuid = request.args.get('uuid')
+    instance_uuid = request.args.get('subtype')
     target = request.args.get('target')
     if target == "Don't Translate":
         target = None
@@ -144,7 +144,7 @@ def objects_subchannel_messages():
 @login_read_only
 def objects_thread_messages():
     thread_id = request.args.get('id')
-    instance_uuid = request.args.get('uuid')
+    instance_uuid = request.args.get('subtype')
     target = request.args.get('target')
     if target == "Don't Translate":
         target = None
@@ -178,7 +178,7 @@ def chats_explorer_chat_participants():
 @login_read_only
 def chats_explorer_chat_download():
     chat_id = request.args.get('id')
-    chat_subtype = request.args.get('uuid')
+    chat_subtype = request.args.get('subtype')
     chat = chats_viewer.api_chat_messages(chat_subtype, chat_id)
     if chat[1] != 200:
         if chat[1] == 404:
@@ -193,7 +193,7 @@ def chats_explorer_chat_download():
 @login_read_only
 def objects_subchannel_messages_download():
     subchannel_id = request.args.get('id')
-    instance_uuid = request.args.get('uuid')
+    instance_uuid = request.args.get('subtype')
     subchannel = chats_viewer.api_subchannel_messages(instance_uuid, subchannel_id)
     if subchannel[1] != 200:
         return create_json_response(subchannel[0], subchannel[1])
@@ -206,7 +206,7 @@ def objects_subchannel_messages_download():
 @login_read_only
 def objects_thread_messages_download():
     thread_id = request.args.get('id')
-    instance_uuid = request.args.get('uuid')
+    instance_uuid = request.args.get('subtype')
     thread = chats_viewer.api_thread_messages(instance_uuid, thread_id)
     if thread[1] != 200:
         return create_json_response(thread[0], thread[1])

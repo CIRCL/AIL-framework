@@ -116,10 +116,6 @@
                     <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }} <span class="badge badge-light">{{ chat['tags_messages'][tag] }}</span></span>
                 {%  endfor %}
 
-                {% with translate_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
-                    {% include 'chats_explorer/block_translation.html' %}
-                {% endwith %}
-
                 {% if chat['subchannels'] %}
                     <h4 class="mt-2">Sub-Channels:</h4>
                     <table id="tablesubchannels" class="table">
@@ -146,7 +142,7 @@
                                         <div class="text-secondary">{{ meta['translation_name'] }}</div>
                                     {% endif %}
                                 </td>
-                                <td><a href="{{ url_for('chats_explorer.objects_subchannel_messages') }}?uuid={{ meta['subtype'] }}&id={{ meta['id'] }}">{{ meta['id'] }}</a></td>
+                                <td><a href="{{ url_for('chats_explorer.objects_subchannel_messages') }}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">{{ meta['id'] }}</a></td>
                                 <td>{{ meta['created_at'] }}</td>
                                 <td>
                                     {% if meta['first_seen'] %}
@@ -174,6 +170,10 @@
                     <div id="heatmapweekhour"></div>
                 {% endif %}
 
+                {% with translate_url=url_for('chats_explorer.chats_explorer_chat', subtype=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
+                    {% include 'chats_explorer/block_translation.html' %}
+                {% endwith %}
+
                 {% if chat['messages'] %}
 
                     <span class="mt-3">
@@ -185,7 +185,7 @@
                         {% set date_to=chat['last_seen'] %}
                         {% include 'block_obj_time_search.html' %}
                     {% endwith %}
-                    {% with endpoint_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), pagination=chat['pagination'] %}
+                    {% with endpoint_url=url_for('chats_explorer.chats_explorer_chat', subtype=chat['subtype']), pagination=chat['pagination'] %}
                         {% set endpoint_url = endpoint_url + "&id=" + chat['id'] + "&nb=" + chat['pagination']['nb'] | string %}
                         {% if translation_target %}
                             {% set endpoint_url = endpoint_url + "&target=" + translation_target %}
@@ -217,7 +217,7 @@
                         </div>
                     </div>
 
-                    {% with endpoint_url=url_for('chats_explorer.chats_explorer_chat', uuid=chat['subtype']), pagination=chat['pagination'] %}
+                    {% with endpoint_url=url_for('chats_explorer.chats_explorer_chat', subtype=chat['subtype']), pagination=chat['pagination'] %}
                         {% set endpoint_url = endpoint_url + "&id=" + chat['id'] + "&nb=" + chat['pagination']['nb'] | string %}
                         {% if translation_target %}
                             {% set endpoint_url = endpoint_url + "&target=" + translation_target %}
