@@ -346,12 +346,19 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
         meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
 
-def api_get_nb_message_by_week(chat_id, chat_instance_uuid):
-    chat = Chats.Chat(chat_id, chat_instance_uuid)
+def api_get_nb_message_by_week(chat_type, chat_instance_uuid, chat_id):
+    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
     week = chat.get_nb_message_this_week()
     # week = chat.get_nb_message_by_week('20231109')
+    return week, 200
+
+def api_get_nb_week_messages(chat_type, chat_instance_uuid, chat_id):
+    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
+    if not chat.exists():
+        return {"status": "error", "reason": "Unknown chat"}, 404
+    week = chat.get_nb_week_messages()
     return week, 200
 
 def api_get_chat_participants(chat_type, chat_subtype, chat_id):

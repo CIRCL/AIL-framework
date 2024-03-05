@@ -166,7 +166,13 @@
 
                 {% endif %}
 
-                <div id="heatmapweekhour"></div>
+                <h5 class="mx-5 mt-2 text-secondary">All Messages:</h5>
+                <div id="heatmapweekhourall"></div>
+
+                {% if not chat['subchannels'] %}
+                    <h5 class="mx-5 text-secondary">This week:</h5>
+                    <div id="heatmapweekhour"></div>
+                {% endif %}
 
                 {% if chat['messages'] %}
 
@@ -258,11 +264,17 @@ function toggle_sidebar(){
 
 
 <script>
+    d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week_all') }}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}")
+        .then(function(data) {
+            create_heatmap_week_hour('#heatmapweekhourall', data);
+        })
 
-d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week') }}?uuid={{ chat['subtype'] }}&id={{ chat['id'] }}")
+{% if not chat['subchannels'] %}
+d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week') }}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}")
 .then(function(data) {
     create_heatmap_week_hour('#heatmapweekhour', data);
 })
+{% endif %}
 
 /*
 

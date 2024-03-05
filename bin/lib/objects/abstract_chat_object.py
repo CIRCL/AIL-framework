@@ -51,8 +51,6 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     # get useraccount / username
     # get users ?
     # timeline name ????
-    # info
-    # created
     # last imported/updated
 
     # TODO get instance
@@ -97,7 +95,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_created_at(self, date=False):
         created_at = self._get_field('created_at')
         if date and created_at:
-            created_at = datetime.fromtimestamp(float(created_at))
+            created_at = datetime.utcfromtimestamp(float(created_at))
             created_at = created_at.isoformat(' ')
         return created_at
 
@@ -176,7 +174,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_nb_message_by_hours(self, date_day, nb_day):
         hours = []
         # start=0, end=23
-        timestamp = time.mktime(datetime.strptime(date_day, "%Y%m%d").timetuple())
+        timestamp = time.mktime(datetime.strptime(date_day, "%Y%m%d").utctimetuple())
         for i in range(24):
             timestamp_end = timestamp + 3600
             nb_messages = r_object.zcount(f'messages:{self.type}:{self.subtype}:{self.id}', timestamp, timestamp_end)
@@ -196,6 +194,34 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_nb_message_this_week(self):
         week_date = Date.get_current_week_day()
         return self.get_nb_message_by_week(week_date)
+
+    def get_nb_week_messages(self):
+        week = {}
+        # Init
+        for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']:
+            week[day] = {}
+            for i in range(24):
+                week[day][i] = 0
+
+        # chat
+        for mess_t in r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True):
+            timestamp = datetime.utcfromtimestamp(float(mess_t[1]))
+            date_name = timestamp.strftime('%a')
+            week[date_name][timestamp.hour] += 1
+
+        subchannels = self.get_subchannels()
+        for gid in subchannels:
+            for mess_t in r_object.zrange(f'messages:{gid}', 0, -1, withscores=True):
+                timestamp = datetime.utcfromtimestamp(float(mess_t[1]))
+                date_name = timestamp.strftime('%a')
+                week[date_name][timestamp.hour] += 1
+        stats = []
+        nb_day = 0
+        for day in week:
+            for hour in week[day]:
+                stats.append({'date': day, 'day': nb_day, 'hour': hour, 'count': week[day][hour]})
+            nb_day += 1
+        return stats
 
     def get_message_meta(self, message, timestamp=None, translation_target='', options=None):  # TODO handle file message
         message = Messages.Message(message[9:])
@@ -222,7 +248,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         mess, pagination = self._get_messages(nb=nb, page=page)
         for message in mess:
             timestamp = message[1]
-            date_day = datetime.fromtimestamp(timestamp).strftime('%Y/%m/%d')
+            date_day = datetime.utcfromtimestamp(timestamp).strftime('%Y/%m/%d')
             if date_day != curr_date:
                 messages[date_day] = []
                 curr_date = date_day

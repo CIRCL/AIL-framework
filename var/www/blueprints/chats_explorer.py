@@ -98,9 +98,23 @@ def chats_explorer_chat():
 @login_required
 @login_read_only
 def chats_explorer_messages_stats_week():
+    chat_type = request.args.get('type')
+    instance_uuid = request.args.get('subtype')
     chat_id = request.args.get('id')
-    instance_uuid = request.args.get('uuid')
-    week = chats_viewer.api_get_nb_message_by_week(chat_id, instance_uuid)
+    week = chats_viewer.api_get_nb_message_by_week(chat_type, instance_uuid, chat_id)
+    if week[1] != 200:
+        return create_json_response(week[0], week[1])
+    else:
+        return jsonify(week[0])
+
+@chats_explorer.route("chats/explorer/messages/stats/week/all", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_messages_stats_week_all():
+    chat_type = request.args.get('type')
+    instance_uuid = request.args.get('subtype')
+    chat_id = request.args.get('id')
+    week = chats_viewer.api_get_nb_week_messages(chat_type, instance_uuid, chat_id)  # TODO SELECT DATE
     if week[1] != 200:
         return create_json_response(week[0], week[1])
     else:

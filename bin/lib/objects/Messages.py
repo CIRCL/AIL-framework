@@ -89,7 +89,7 @@ class Message(AbstractObject):
 
     def get_date(self):
         timestamp = self.get_timestamp()
-        return datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d')
+        return datetime.utcfromtimestamp(float(timestamp)).strftime('%Y%m%d')
 
     def get_timestamp(self):
         dirs = self.id.split('/')
@@ -250,7 +250,7 @@ class Message(AbstractObject):
             timestamp = self.get_timestamp()
         else:
             timestamp = float(timestamp)
-        timestamp = datetime.fromtimestamp(float(timestamp))
+        timestamp = datetime.utcfromtimestamp(float(timestamp))
         meta['date'] = timestamp.strftime('%Y/%m/%d')
         meta['hour'] = timestamp.strftime('%H:%M:%S')
         meta['full_date'] = timestamp.isoformat(' ')

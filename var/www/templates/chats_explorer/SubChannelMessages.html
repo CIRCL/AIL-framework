@@ -21,6 +21,7 @@
 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>#}
 	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/d3/heatmap_week_hour.js')}}"></script>
 
 	<style>
         .chat-message-left,
@@ -180,6 +181,12 @@
                     <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }} <span class="badge badge-light">{{ subchannel['tags_messages'][tag] }}</span></span>
                 {%  endfor %}
 
+                <h5 class="mx-5 mt-2 text-secondary">All Messages:</h5>
+                <div id="heatmapweekhourall"></div>
+
+                <h5 class="mx-5 text-secondary">This week:</h5>
+                <div id="heatmapweekhour"></div>
+
                 <div>
                     <div class="list-group d-inline-block">
                         {% for date in messages %}
@@ -271,6 +278,17 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
+
+d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week_all') }}?type=chat-subchannel&subtype={{ subchannel['subtype'] }}&id={{ subchannel['id'] }}")
+    .then(function(data) {
+        create_heatmap_week_hour('#heatmapweekhourall', data);
+})
+
+d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week') }}?type=chat-subchannel&subtype={{ subchannel['subtype'] }}&id={{ subchannel['id'] }}")
+.then(function(data) {
+    create_heatmap_week_hour('#heatmapweekhour', data);
+})
+
 </script>
 
 </body>
