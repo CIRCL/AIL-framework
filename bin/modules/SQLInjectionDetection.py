@@ -51,13 +51,13 @@ class SQLInjectionDetection(AbstractModule):
             self.faup.decode(url)
             url_parsed = self.faup.get()
 
-            print(f"Detected SQL in URL: {item_id}")
+            print(f"Detected SQL in URL: {item.id}")
             print(urllib.request.unquote(url))
-            to_print = f'SQLInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{item_id}'
+            to_print = f'SQLInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{item.id}'
             self.redis_logger.warning(to_print)
 
             # Tag
-            tag = f'infoleak:automatic-detection="sql-injection";{item_id}'
+            tag = f'infoleak:automatic-detection="sql-injection"'
             self.add_message_to_queue(message=tag, queue='Tags')
 
             # statistics
