@@ -175,6 +175,13 @@ class Message(AbstractObject):
     # message media
     # flag is deleted -> event or missing from feeder pass ???
 
+    def get_language(self):
+        languages = self.get_languages()
+        if languages:
+            return languages.pop()
+        else:
+            return None
+
     def get_translation(self, content=None, source=None, target='fr'):
         """
         Returns translated content
@@ -289,8 +296,14 @@ class Message(AbstractObject):
             meta['files-names'] = self.get_files_names()
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
+        if 'language' in options:
+            meta['language'] = self.get_language()
         if 'translation' in options and translation_target:
-            meta['translation'] = self.translate(content=meta.get('content'), target=translation_target)
+            if meta.get('language'):
+                source = meta['language']
+            else:
+                source = None
+            meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
 
         # meta['encoding'] = None
         return meta

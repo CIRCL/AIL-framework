@@ -404,18 +404,33 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'chat', 'content', 'files-names', 'icon', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'chat', 'content', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     return meta, 200
 
-def api_manually_translate_message(message_id, translation_target, translation):
+def api_message_detect_language(message_id):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    if len(translation) > 200000: # TODO REVIEW LIMIT
-        return {"status": "error", "reason": "Max Size reached"}, 400
-    if translation_target not in Language.get_translation_languages():
-        return {"status": "error", "reason": "Unknown Language"}, 400
+    lang = message.detect_language()
+    return {"language": lang}, 200
+
+def api_manually_translate_message(message_id, source, translation_target, translation):
+    message = Messages.Message(message_id)
+    if not message.exists():
+        return {"status": "error", "reason": "Unknown uuid"}, 404
     if translation:
+        if len(translation) > 200000: # TODO REVIEW LIMIT
+            return {"status": "error", "reason": "Max Size reached"}, 400
+    all_languages = Language.get_translation_languages()
+    if source not in all_languages:
+        print(source)
+        return {"status": "error", "reason": "Unknown source Language"}, 400
+    message_language = message.get_language()
+    if message_language != source:
+        message.edit_language(message_language, source)
+    if translation:
+        if translation_target not in all_languages:
+            return {"status": "error", "reason": "Unknown target Language"}, 400
         message.set_translation(translation_target, translation)
     # TODO SANITYZE translation
     return None, 200

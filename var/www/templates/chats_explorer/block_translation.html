@@ -10,6 +10,7 @@
                         <option selected>Don't Translate</option>
                     {% else %}
                         <option selected value="{{ translation_target }}">{{ translation_target }}</option>
+                        <option>Don't Translate</option>
                     {% endif %}
                     {% for language in translation_languages %}
                         <option value="{{ language }}">{{ translation_languages[language] }}</option>

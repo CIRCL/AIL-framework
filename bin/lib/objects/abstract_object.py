@@ -25,7 +25,7 @@ from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.relationships_engine import get_obj_nb_relationships, add_obj_relationship
-from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, get_obj_translation, set_obj_translation
+from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_translation, set_obj_translation, delete_obj_translation
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
@@ -313,11 +313,21 @@ class AbstractObject(ABC):
     def remove_language(self, language):
         return remove_obj_language(language, self.type, self.get_subtype(r_str=True), self.id)
 
+    def edit_language(self, old_language, new_language):
+        self.remove_language(old_language)
+        self.add_language(new_language)
+
+    def detect_language(self, field=''):
+        return detect_obj_language(self.type, self.get_subtype(r_str=True), self.id, self.get_content())
+
     def get_translation(self, language, field=''):
         return get_obj_translation(self.get_global_id(), language, field=field)
 
     def set_translation(self, language, translation, field=''):
         return set_obj_translation(self.get_global_id(), language, translation, field=field)
+
+    def delete_translation(self, language, field=''):
+        return delete_obj_translation(self.get_global_id(), language, field=field)
 
     def translate(self, content=None, field='', source=None, target='en'):
         global_id = self.get_global_id()

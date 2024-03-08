@@ -226,7 +226,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_message_meta(self, message, timestamp=None, translation_target='', options=None):  # TODO handle file message
         message = Messages.Message(message[9:])
         if not options:
-            options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
+            options = {'content', 'files-names', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
         meta = message.get_meta(options=options, timestamp=timestamp, translation_target=translation_target)
         return meta
 
