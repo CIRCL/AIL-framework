@@ -22,6 +22,11 @@ AIL_OBJECTS = sorted({'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', '
 
 AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
 
+# TODO by object TYPE ????
+AIL_OBJECTS_CORRELATIONS_DEFAULT = sorted({'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency', 'decoded',
+                                           'domain', 'favicon', 'file-name',
+                                           'item', 'image', 'message', 'pgp', 'screenshot', 'title', 'user-account', 'username'})
+
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
     if not ail_uuid:
@@ -68,6 +73,9 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
     if obj_type == 'user-account':
         return r_object.smembers(f'all_chat:subtypes')
     return []
+
+def get_default_correlation_objects():
+    return AIL_OBJECTS_CORRELATIONS_DEFAULT
 
 def get_obj_queued():
     return ['item', 'image']

@@ -12,7 +12,7 @@ from lib.exceptions import AILObjectUnknown
 
 
 from lib.ConfigLoader import ConfigLoader
-from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_with_subtypes
+from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_with_subtypes, get_default_correlation_objects
 from lib import correlations_engine
 from lib import relationships_engine
 from lib import btc_ail
@@ -53,13 +53,16 @@ def is_object_subtype(obj_type):
 def is_valid_object_subtype(obj_type, subtype):
     return subtype in get_object_all_subtypes(obj_type)
 
-def sanitize_objs_types(objs):
+def sanitize_objs_types(objs, default=False):
     l_types = []
     for obj in objs:
         if is_valid_object_type(obj):
             l_types.append(obj)
     if not l_types:
-        l_types = get_all_objects()
+        if default:
+            l_types = get_default_correlation_objects()
+        else:
+            l_types = get_all_objects()
     return l_types
 
 #### OBJECT ####
