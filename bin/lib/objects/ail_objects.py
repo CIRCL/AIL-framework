@@ -18,6 +18,8 @@ from lib import relationships_engine
 from lib import btc_ail
 from lib import Tag
 
+from lib import chats_viewer
+
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
 from lib.objects import ChatThreads
@@ -32,7 +34,7 @@ from lib.objects import FilesNames
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
-from lib.objects.Messages import Message
+from lib.objects import Messages
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
 from lib.objects import Titles
@@ -90,7 +92,7 @@ def get_object(obj_type, subtype, obj_id):
         elif obj_type == 'image':
             return Images.Image(obj_id)
         elif obj_type == 'message':
-            return Message(obj_id)
+            return Messages.Message(obj_id)
         elif obj_type == 'screenshot':
             return Screenshot(obj_id)
         elif obj_type == 'title':
@@ -296,6 +298,9 @@ def obj_iterator(obj_type, filters):
         return get_all_items_objects(filters=filters)
     elif obj_type == 'pgp':
         return Pgps.get_all_pgps_objects(filters=filters)
+    elif obj_type == 'message':
+        return chats_viewer.get_messages_iterator(filters=filters)
+
 
 def card_objs_iterators(filters):
     nb = 0
@@ -310,6 +315,8 @@ def card_obj_iterator(obj_type, filters):
         return get_nb_items_objects(filters=filters)
     elif obj_type == 'pgp':
         return Pgps.nb_all_pgps_objects(filters=filters)
+    elif obj_type == 'message':
+        return chats_viewer.get_nb_messages_iterator(filters=filters)
 
 def get_ui_obj_tag_table_keys(obj_type): # TODO REMOVE ME
     """
