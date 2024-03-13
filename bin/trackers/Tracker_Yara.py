@@ -62,6 +62,8 @@ class Tracker_Yara(AbstractModule):
             return None
 
         content = self.obj.get_content(r_type='bytes')
+        if not content:
+            return None
 
         try:
             yara_match = self.rules[obj_type].match(data=content, callback=self.yara_rules_match,
