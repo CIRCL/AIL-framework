@@ -61,7 +61,7 @@ class ApiKey(AbstractModule):
 
             if google_api_key:
                 print(f'found google api key: {to_print}')
-                self.redis_logger.warning(f'{to_print}Checked {len(google_api_key)} found Google API Key;{item.get_id()}')
+                self.redis_logger.warning(f'{to_print}Checked {len(google_api_key)} found Google API Key;{self.obj.get_global_id()}')
 
                 tag = 'infoleak:automatic-detection="google-api-key"'
                 self.add_message_to_queue(message=tag, queue='Tags')
@@ -69,10 +69,10 @@ class ApiKey(AbstractModule):
             # # TODO: # FIXME: AWS regex/validate/sanitize KEY + SECRET KEY
             if aws_access_key:
                 print(f'found AWS key: {to_print}')
-                self.redis_logger.warning(f'{to_print}Checked {len(aws_access_key)} found AWS Key;{item.get_id()}')
+                self.redis_logger.warning(f'{to_print}Checked {len(aws_access_key)} found AWS Key;{self.obj.get_global_id()}')
                 if aws_secret_key:
                     print(f'found AWS secret key')
-                    self.redis_logger.warning(f'{to_print}Checked {len(aws_secret_key)} found AWS secret Key;{item.get_id()}')
+                    self.redis_logger.warning(f'{to_print}Checked {len(aws_secret_key)} found AWS secret Key;{self.obj.get_global_id()}')
 
                 tag = 'infoleak:automatic-detection="aws-key"'
                 self.add_message_to_queue(message=tag, queue='Tags')

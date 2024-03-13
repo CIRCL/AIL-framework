@@ -86,7 +86,7 @@ class CreditCards(AbstractModule):
             # print(creditcard_set)
             to_print = f'CreditCard;{item.get_source()};{item.get_date()};{item.get_basename()};'
             if creditcard_set:
-                mess = f'{to_print}Checked {len(creditcard_set)} valid number(s);{item.id}'
+                mess = f'{to_print}Checked {len(creditcard_set)} valid number(s);{self.obj.get_global_id()}'
                 print(mess)
                 self.redis_logger.warning(mess)
 
@@ -96,7 +96,7 @@ class CreditCards(AbstractModule):
                 if r_result:
                     return creditcard_set
             else:
-                self.redis_logger.info(f'{to_print}CreditCard related;{item.id}')
+                self.redis_logger.info(f'{to_print}CreditCard related;{self.obj.get_global_id()}')
 
 
 if __name__ == '__main__':

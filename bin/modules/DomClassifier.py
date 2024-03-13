@@ -82,20 +82,20 @@ class DomClassifier(AbstractModule):
                 localizeddomains = self.dom_classifier.include(expression=self.cc_tld)
                 if localizeddomains:
                     print(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{item.get_id()}")
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{self.obj.get_global_id()}")
 
             if self.cc:
                 localizeddomains = self.dom_classifier.localizedomain(cc=self.cc)
                 if localizeddomains:
                     print(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{item.get_id()}")
+                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{self.obj.get_global_id()}")
 
             if r_result:
                 return self.dom_classifier.vdomain
 
         except IOError as err:
             self.redis_logger.error(f"Duplicate;{item_source};{item_date};{item_basename};CRC Checksum Failed")
-            raise Exception(f"CRC Checksum Failed on: {item.get_id()}")
+            raise Exception(f"CRC Checksum Failed on: {self.obj.get_global_id()}")
 
 
 if __name__ == "__main__":

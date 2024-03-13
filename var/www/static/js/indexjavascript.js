@@ -212,18 +212,18 @@ function create_log_table(obj_json) {
           tr.className = "table-danger"
       }
 
-      source_link = document.createElement("A");
-      if (parsedmess[1] == "slexy.org"){
-          source_url = "http://"+parsedmess[1]+"/view/"+parsedmess[3].split(".")[0];
-      }
-      else{
-          source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
-      }
-      source_link.setAttribute("HREF",source_url);
-      source_link.setAttribute("TARGET", "_blank");
-      source_link.appendChild(document.createTextNode(parsedmess[1]));
+      // source_link = document.createElement("A");
+      // if (parsedmess[1] == "slexy.org"){
+      //     source_url = "http://"+parsedmess[1]+"/view/"+parsedmess[3].split(".")[0];
+      // }
+      // else{
+      //     source_url = "http://"+parsedmess[1]+"/"+parsedmess[3].split(".")[0];
+      // }
+      // source_link.setAttribute("HREF",source_url);
+      // src.appendChild(source_link);
 
-      src.appendChild(source_link);
+      src.appendChild(document.createTextNode(parsedmess[1]));
+
 
       var now = new Date();
       var timepaste = pad_2(now.getHours()) + ":" + pad_2(now.getMinutes()) + ":" + pad_2(now.getSeconds());
@@ -250,8 +250,10 @@ function create_log_table(obj_json) {
 
       msage.appendChild(document.createTextNode(message.join(" ")));
 
+      // console.log(parsedmess)
+
       var paste_path = parsedmess[5];
-      var url_to_saved_paste = url_showSavedPath+"?id="+paste_path;
+      var url_to_saved_paste = url_showSavedPath+"?gid="+paste_path;
 
       var action_icon_a = document.createElement("A");
       action_icon_a.setAttribute("TARGET", "_blank");

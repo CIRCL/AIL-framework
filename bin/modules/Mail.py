@@ -172,7 +172,7 @@ class Mail(AbstractModule):
         # for tld in mx_tlds:
         #     Statistics.add_module_tld_stats_by_date('mail', item_date, tld, mx_tlds[tld])
 
-        msg = f'Mails;{item.get_source()};{item_date};{item.get_basename()};Checked {num_valid_email} e-mail(s);{item.id}'
+        msg = f'Mails;{item.get_source()};{item_date};{item.get_basename()};Checked {num_valid_email} e-mail(s);{self.obj.get_global_id()}'
         if num_valid_email > self.mail_threshold:
             print(f'{item.id}    Checked {num_valid_email} e-mail(s)')
             self.redis_logger.warning(msg)

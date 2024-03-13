@@ -82,8 +82,8 @@ class IPAddress(AbstractModule):
                     matching_ips.append(address)
 
         if len(matching_ips) > 0:
-            self.logger.info(f'{item.get_id()} contains {len(matching_ips)} IPs')
-            self.redis_logger.warning(f'{item.get_id()} contains {item.get_id()} IPs')
+            self.logger.info(f'{self.obj.get_global_id()} contains {len(matching_ips)} IPs')
+            self.redis_logger.warning(f'{self.obj.get_global_id()} contains IPs')
 
             # Tag message with IP
             tag = 'infoleak:automatic-detection="ip"'

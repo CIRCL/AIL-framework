@@ -56,7 +56,7 @@ class CveModule(AbstractModule):
                 cve = Cves.Cve(cve_id)
                 cve.add(date, item)
 
-            warning = f'{item_id} contains CVEs {cves}'
+            warning = f'{self.obj.get_global_id()} contains CVEs {cves}'
             print(warning)
             self.redis_logger.warning(warning)
 

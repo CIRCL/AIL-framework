@@ -62,7 +62,7 @@ class Phone(AbstractModule):
             tag = 'infoleak:automatic-detection="phone-number"'
             self.add_message_to_queue(message=tag, queue='Tags')
 
-            self.redis_logger.warning(f'{item.get_id()} contains {len(phone)} Phone numbers')
+            self.redis_logger.warning(f'{self.obj.get_global_id()} contains {len(phone)} Phone numbers')
 
         # # List of the regex results in the Item, may be null
         # results = self.REG_PHONE.findall(content)

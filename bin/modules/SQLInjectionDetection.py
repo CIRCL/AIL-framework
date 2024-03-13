@@ -53,7 +53,7 @@ class SQLInjectionDetection(AbstractModule):
 
             print(f"Detected SQL in URL: {item.id}")
             print(urllib.request.unquote(url))
-            to_print = f'SQLInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{item.id}'
+            to_print = f'SQLInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{self.obj.get_global_id()}'
             self.redis_logger.warning(to_print)
 
             # Tag

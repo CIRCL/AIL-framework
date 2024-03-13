@@ -116,8 +116,8 @@ class Tracker_Regex(AbstractModule):
             if ail_objects.is_filtered(obj, filters):
                 continue
 
-            print(f'new tracked regex found: {tracker_name} in {obj_id}')
-            self.redis_logger.warning(f'new tracked regex found: {tracker_name} in {obj_id}')
+            print(f'new tracked regex found: {tracker_name} in {self.obj.get_global_id()}')
+            self.redis_logger.warning(f'new tracked regex found: {tracker_name} in {self.obj.get_global_id()}')
 
             tracker.add(obj.get_type(), obj.get_subtype(r_str=True), obj_id)
 

@@ -78,7 +78,7 @@ class Urls(AbstractModule):
             except AttributeError:
                 url = url_decoded['url']
 
-            print(url, item.get_id())
+            print(url, self.obj.get_global_id())
             self.add_message_to_queue(message=str(url), queue='Url')
             self.logger.debug(f"url_parsed: {url}")
 
