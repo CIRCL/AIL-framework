@@ -54,6 +54,9 @@ def generate_uuid():
 def get_all_objects():
     return AIL_OBJECTS
 
+def is_object_type(obj_type):
+    return obj_type in AIL_OBJECTS
+
 def get_objects_with_subtypes():
     return AIL_OBJECTS_WITH_SUBTYPES
 

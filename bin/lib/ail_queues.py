@@ -139,6 +139,10 @@ class AILQueue:
     def error(self):
         r_queues.hdel(f'modules', f'{self.pid}:{self.name}')
 
+    def end(self):
+        self.clear()
+        r_queues.hdel(f'modules', f'{self.pid}:{self.name}')
+
 
 def get_queues_modules():
     return r_queues.hkeys('queues')
