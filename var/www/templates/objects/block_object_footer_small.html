@@ -1,0 +1,12 @@
+<div class="d-flex flex-row-reverse bd-highlight">
+{#  <div>#}
+{#    <a class="btn" target="_blank" href="{{ url_for('import_export.add_object_id_to_export')}}?type={{ meta['type'] }}{% if meta['subtype'] %}&subtype={{ meta['subtype'] }}{%endif%}&id={{ meta['id'] }}&lvl=0">#}
+{#      <img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="25">#}
+{#    </a>#}
+{#  </div>#}
+  <div>
+    <a class="btn btn-outline-light" href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}{% if meta['subtype'] %}&subtype={{ meta['subtype'] }}{%endif%}&id={{ meta['id'] }}" target="_blank" style="font-size: 15px">
+      <i class="fas fa-project-diagram text-secondary"></i>
+    </a>
+  </div>
+</div>

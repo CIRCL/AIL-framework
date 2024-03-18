@@ -49,9 +49,9 @@ class UserAccount(AbstractSubtypeObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', type=self.type, subtype=self.subtype, id=self.id)
+            url = url_for('chats_explorer.objects_user_account', type=self.type, subtype=self.subtype, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
+            url = f'{baseurl}/objects/user-account?&subtype={self.subtype}&id={self.id}'
         return url
 
     def get_svg_icon(self): # TODO change icon/color
@@ -126,6 +126,13 @@ class UserAccount(AbstractSubtypeObject):
 
     def update_username_timeline(self, username_global_id, timestamp):
         self._get_timeline_username().add_timestamp(timestamp, username_global_id)
+
+    def get_messages(self):
+        messages = []
+        for mess in self.get_correlation('message'):
+            messages.append(f'message:{mess}')
+        return messages
+
 
     def get_messages_by_chat_obj(self, chat_obj):
         messages = []

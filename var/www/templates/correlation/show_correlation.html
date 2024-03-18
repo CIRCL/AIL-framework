@@ -121,6 +121,8 @@
 						{% include 'correlation/metadata_card_etag.html' %}
                     {% elif dict_object["object_type"] == "hhhash" %}
 						{% include 'correlation/metadata_card_hhhash.html' %}
+                    {% elif dict_object["object_type"] == "image" %}
+						{% include 'chats_explorer/card_image.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
                     {% elif dict_object["object_type"] == "favicon" %}
