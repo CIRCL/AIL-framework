@@ -51,7 +51,7 @@ class Chat(AbstractChatObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', type=self.type, subtype=self.subtype, id=self.id)
+            url = url_for('chats_explorer.chats_explorer_chat', subtype=self.subtype, id=self.id)
         else:
             url = f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
         return url

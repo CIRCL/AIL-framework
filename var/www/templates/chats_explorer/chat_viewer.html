@@ -54,67 +54,9 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <div class="card my-3">
-
-                    <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-                        <h4 class="text-secondary">{% if chat['username'] %}{{ chat["username"]["id"] }} {% else %} {{ chat['name'] }}{% endif %} :</h4>
-                        {% if chat['icon'] %}
-                            <div><img src="{{ url_for('objects_image.image', filename=chat['icon'])}}" class="mb-2" alt="{{ chat['id'] }}" width="200" height="200"></div>
-                        {% endif %}
-                        <ul class="list-group mb-2">
-                            <li class="list-group-item py-0">
-                                <table class="table">
-                                    <thead class="">
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>ID</th>
-                                        <th>Created at</th>
-                                        <th>First Seen</th>
-                                        <th>Last Seen</th>
-                                        <th>NB Sub-Channels</th>
-                                        <th>Participants</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody style="font-size: 15px;">
-                                    <tr>
-                                            <td>{{ chat['name'] }}</td>
-                                            <td>{{ chat['id']  }}</td>
-                                            <td>{{ chat['created_at'] }}</td>
-                                            <td>
-                                                {% if chat['first_seen'] %}
-                                                    {{ chat['first_seen'][0:4] }}-{{ chat['first_seen'][4:6] }}-{{ chat['first_seen'][6:8] }}
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if chat['last_seen'] %}
-                                                    {{ chat['last_seen'][0:4] }}-{{ chat['last_seen'][4:6] }}-{{ chat['last_seen'][6:8] }}
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ chat['nb_subchannels'] }}</td>
-                                            <td>
-                                                <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}"><i class="far fa-user-circle"></i> {{ chat['nb_participants']}}</a>
-                                            </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            {% if chat['info'] %}
-                                <li class="list-group-item py-0">
-                                    <pre class="my-0">{{ chat['info'] }}</pre>
-                                    {% if chat['translation_info'] %}
-                                        <hr class="m-1">
-                                        <pre class="my-0 text-secondary">{{ chat['translation_info'] }}</pre>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                            </li>
-                        </ul>
-
-                    </div>
-                </div>
-
-                {% for tag in chat['tags_messages'] %}
-                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }} <span class="badge badge-light">{{ chat['tags_messages'][tag] }}</span></span>
-                {%  endfor %}
+                {% with meta=chat %}
+                    {% include 'chats_explorer/card_chat.html' %}
+                {% endwith %}
 
                 {% if chat['subchannels'] %}
                     <h4 class="mt-2">Sub-Channels:</h4>

@@ -254,8 +254,9 @@ def get_objects_meta(objs, options=set(), flask_context=False):
 
 def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
-    meta = obj.get_meta()
-    meta['icon'] = obj.get_svg_icon()
+    meta = obj.get_meta(options={'icon', 'info', 'nb_participants'})
+    # meta['icon'] = obj.get_svg_icon()
+    meta['svg_icon'] = obj.get_svg_icon()
     if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':

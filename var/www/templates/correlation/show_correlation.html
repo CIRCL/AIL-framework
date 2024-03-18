@@ -101,6 +101,8 @@
 
 					{% if dict_object["object_type"] == "pgp" %}
 						{% include 'correlation/metadata_card_pgp.html' %}
+                    {% elif dict_object["object_type"] == "chat" %}
+						{% include 'chats_explorer/card_chat.html' %}
 					{% elif dict_object["object_type"] == "cryptocurrency" %}
 						{% include 'correlation/metadata_card_cryptocurrency.html' %}
 					{% elif dict_object["object_type"] == "username" %}

@@ -1558,14 +1558,14 @@ def get_obj_date(object_type, object_id):
         return None
 
 # API QUERY
-def api_delete_obj_tags(tags=[], object_id=None, object_type="item"):
+def api_delete_obj_tags(tags=[], object_id=None, object_type="item", subtype=''):
     if not object_id:
         return ({'status': 'error', 'reason': 'object id not found'}, 404)
     if not tags:
         return ({'status': 'error', 'reason': 'No Tag(s) specified'}, 400)
 
     for tag in tags:
-        res = delete_object_tag(tag, object_type, object_id, subtype='')
+        res = delete_object_tag(tag, object_type, object_id, subtype=subtype)
         if res:
             return res
 

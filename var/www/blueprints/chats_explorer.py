@@ -92,7 +92,9 @@ def chats_explorer_chat():
     else:
         chat = chat[0]
         languages = Language.get_translation_languages()
-        return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
+        return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
+                               ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
+                               translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/messages/stats/week", methods=['GET'])
 @login_required
