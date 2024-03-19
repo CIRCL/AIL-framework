@@ -139,7 +139,9 @@ def objects_subchannel_messages():
     else:
         subchannel = subchannel[0]
         languages = Language.get_translation_languages()
-        return render_template('SubChannelMessages.html', subchannel=subchannel, bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
+        return render_template('SubChannelMessages.html', subchannel=subchannel,
+                               ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
+                               bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/thread", methods=['GET'])
 @login_required

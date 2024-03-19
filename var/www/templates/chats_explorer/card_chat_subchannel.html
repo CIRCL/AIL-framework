@@ -1,0 +1,103 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{% with modal_add_tags=ail_tags %}
+	{% include 'modals/add_tags.html' %}
+{% endwith %}
+
+{% include 'modals/edit_tag.html' %}
+
+
+<div class="card my-1">
+	<div class="card-header">
+        <h3 class="text-secondary">{% if meta['chat']['name'] %}{{ meta['chat']['name'] }} {% else %} {{ meta['chat']['id'] }}{% endif %} - {% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['name'] }}{% endif %} :</h3> {{ meta["id"] }}
+        <ul class="list-group mb-2">
+            <li class="list-group-item py-0">
+                <div class="row">
+                    <div class="col-md-10">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Created at</th>
+                                <th>First seen</th>
+                                <th>Last seen</th>
+                                <th>Nb Messages</th>
+                                <th>Participants</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>
+                                    {{ meta['name'] }}
+                                    {% if meta['translation_name'] %}
+                                        <div class="text-secondary">{{ meta['translation_name'] }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ meta["created_at"] }}</td>
+                                <td>
+                                    {% if meta['first_seen'] %}
+                                        {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if meta['last_seen'] %}
+                                        {{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ meta['nb_messages'] }}</td>
+                                <td>
+                                    <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat-subchannel&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}"><i class="far fa-user-circle"></i> {{ meta['nb_participants']}}</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </li>
+            {% if meta['info'] %}
+                <li class="list-group-item py-0">
+                    <pre class="my-0">{{ meta['info'] }}</pre>
+                </li>
+            {% endif %}
+
+			<li class="list-group-item py-0">
+				<div class="my-2">
+					Tags:
+					{% for tag in meta['tags'] %}
+                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}"
+                                data-toggle="modal" data-target="#edit_tags_modal"
+						        data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="{{ meta['subtype'] }}" data-objid="{{ meta["id"] }}">
+                                {{ tag }}
+						</button>
+					{%  endfor %}
+					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                        <i class="far fa-plus-square"></i>
+                    </button>
+				</div>
+			</li>
+		</ul>
+
+		{% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'] %}
+			{% include 'modals/investigations_register_obj.html' %}
+		{% endwith %}
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+			<i class="fas fa-microscope"></i> Investigations
+		</button>
+
+        <span class="mb-2 float-right">
+            {% if is_correlation %}
+                <a href="{{ url_for('chats_explorer.objects_subchannel_messages')}}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="far fa-comments"></i> Show Object</button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
+{#                        <span class="badge badge-warning">{{ meta['nb_correlations'] }}</span>#}
+                    </button>
+                </a>
+            {% endif %}
+        </span>
+
+	</div>
+</div>

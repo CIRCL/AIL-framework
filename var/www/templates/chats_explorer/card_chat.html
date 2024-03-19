@@ -84,5 +84,19 @@
 			<i class="fas fa-microscope"></i> Investigations
 		</button>
 
+        <span class="mb-2 float-right">
+            {% if is_correlation %}
+                <a href="{{ url_for('chats_explorer.chats_explorer_chat')}}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="fas fa-comments"></i> Show Object</button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
+{#                        <span class="badge badge-warning">{{ meta['nb_correlations'] }}</span>#}
+                    </button>
+                </a>
+            {% endif %}
+        </span>
+
 	</div>
 </div>
