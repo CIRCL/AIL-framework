@@ -254,7 +254,7 @@ def get_objects_meta(objs, options=set(), flask_context=False):
 
 def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
-    meta = obj.get_meta(options={'chat', 'created_at', 'icon', 'info', 'nb_messages', 'nb_participants', 'threads'})
+    meta = obj.get_meta(options={'chat', 'chats', 'created_at', 'icon', 'info', 'nb_messages', 'nb_participants', 'threads', 'username'})
     # meta['icon'] = obj.get_svg_icon()
     meta['svg_icon'] = obj.get_svg_icon()
     if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':

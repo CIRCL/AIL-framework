@@ -106,6 +106,8 @@
 						{% include 'chats_explorer/card_chat.html' %}
                     {% elif dict_object["object_type"] == "chat-subchannel" %}
 						{% include 'chats_explorer/card_chat_subchannel.html' %}
+                    {% elif dict_object["object_type"] == "user-account" %}
+						{% include 'chats_explorer/card_user_account.html' %}
 					{% elif dict_object["object_type"] == "cryptocurrency" %}
 						{% include 'correlation/metadata_card_cryptocurrency.html' %}
 					{% elif dict_object["object_type"] == "username" %}

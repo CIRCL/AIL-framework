@@ -270,4 +270,5 @@ def objects_user_account():
         user_account = user_account[0]
         languages = Language.get_translation_languages()
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
+                               ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
                                translation_languages=languages, translation_target=target)
