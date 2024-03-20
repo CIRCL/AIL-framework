@@ -37,13 +37,16 @@ textblob>=0.15.3
 html2text>=2020.1.16
 beautifulsoup4>4.8.2
 
-#Crawler
+# Crawler
 scrapy>2.0.0
 scrapy-splash>=0.7.2
 
 # Languages
 gcld3
 libretranslatepy
+
+# Demoji
+git+https://github.com/ail-project/demoji
 
 #Graph
 numpy>1.18.1
