@@ -99,8 +99,15 @@
 
 				<div class="col-12 col-lg-10" id="core_content">
 
+                    {% set is_correlation = True %}
 					{% if dict_object["object_type"] == "pgp" %}
 						{% include 'correlation/metadata_card_pgp.html' %}
+                    {% elif dict_object["object_type"] == "chat" %}
+						{% include 'chats_explorer/card_chat.html' %}
+                    {% elif dict_object["object_type"] == "chat-subchannel" %}
+						{% include 'chats_explorer/card_chat_subchannel.html' %}
+                    {% elif dict_object["object_type"] == "user-account" %}
+						{% include 'chats_explorer/card_user_account.html' %}
 					{% elif dict_object["object_type"] == "cryptocurrency" %}
 						{% include 'correlation/metadata_card_cryptocurrency.html' %}
 					{% elif dict_object["object_type"] == "username" %}
@@ -121,6 +128,8 @@
 						{% include 'correlation/metadata_card_etag.html' %}
                     {% elif dict_object["object_type"] == "hhhash" %}
 						{% include 'correlation/metadata_card_hhhash.html' %}
+                    {% elif dict_object["object_type"] == "image" %}
+						{% include 'chats_explorer/card_image.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
                     {% elif dict_object["object_type"] == "favicon" %}
@@ -203,6 +212,22 @@
 
 							<div class="card mb-3">
 								<div class="card-body text-center px-0 py-0">
+
+                                    <ul class="list-group">
+                                        <li class="list-group-item list-group-item-secondary"><i class="fas fa-project-diagram"></i> Direct Correlations</li>
+                                        <li class="list-group-item text-left">
+                                            {% for obj_type in  dict_object['nb_correl'] %}
+                                                <div class="row">
+                                                    <div class="col-8">
+                                                        {{ obj_type }}
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <span class="badge badge-primary">{{ dict_object['nb_correl'][obj_type] }}</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </li>
+                                    </ul>
 
 									<ul class="list-group">
   									<li class="list-group-item list-group-item-info">Select Correlation</li>
@@ -341,21 +366,6 @@
 												</svg>
                                                 Current Correlation<br>
                                             </p>
-                                        </li>
-                                    </ul>
-                                    <ul class="list-group">
-                                        <li class="list-group-item list-group-item-secondary"><i class="fas fa-project-diagram"></i> Direct Correlations</li>
-                                        <li class="list-group-item text-left">
-                                            {% for obj_type in  dict_object['nb_correl'] %}
-                                                <div class="row">
-                                                    <div class="col-8">
-                                                        {{ obj_type }}
-                                                    </div>
-                                                    <div class="col-4">
-                                                        <span class="badge badge-primary">{{ dict_object['nb_correl'][obj_type] }}</span>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
                                         </li>
                                     </ul>
 
@@ -714,7 +724,9 @@ if (d.popover) {
 							}
 							desc = desc + "</div></dd>"
 						} else if (key!="tags" && key!="id" && key!="img" && key!="icon" && key!="link" && key!="type") {
-							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+                            if (data[key]) {
+							    desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+                            }
 						}
 					});
 					desc = desc + "</dl>"

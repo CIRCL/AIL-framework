@@ -53,93 +53,9 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <div class="card my-3">
-                    <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-                        <h3 class="text-secondary">{% if subchannel['chat']['name'] %}{{ subchannel['chat']['name'] }} {% else %} {{ subchannel['chat']['id'] }}{% endif %} - {% if subchannel['username'] %}{{ subchannel["username"]["id"] }} {% else %} {{ subchannel['name'] }}{% endif %} :</h3> {{ subchannel["id"] }}
-                        <ul class="list-group mb-2">
-                            <li class="list-group-item py-0">
-                                <div class="row">
-                                    <div class="col-md-10">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Created at</th>
-                                                    <th>First seen</th>
-                                                    <th>Last seen</th>
-                                                    <th>Username</th>
-                                                    <th>Nb Messages</th>
-                                                    <th>Participants</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>
-                                                        {{ subchannel['name'] }}
-                                                        {% if subchannel['translation_name'] %}
-                                                            <div class="text-secondary">{{ subchannel['translation_name'] }}</div>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>{{ subchannel["created_at"] }}</td>
-                                                    <td>
-                                                        {% if subchannel['first_seen'] %}
-                                                            {{ subchannel['first_seen'][0:4] }}-{{ subchannel['first_seen'][4:6] }}-{{ subchannel['first_seen'][6:8] }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if subchannel['last_seen'] %}
-                                                            {{ subchannel['last_seen'][0:4] }}-{{ subchannel['last_seen'][4:6] }}-{{ subchannel['last_seen'][6:8] }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if 'username' in subchannel %}
-                                                            {% if subchannel['username'] %}
-                                                                {{ subchannel['username']['id'] }}
-                                                            {% endif %}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>{{ subchannel['nb_messages'] }}</td>
-                                                    <td>
-                                                        <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat-subchannel&subtype={{ subchannel['subtype'] }}&id={{ subchannel['id'] }}"><i class="far fa-user-circle"></i> {{ subchannel['nb_participants']}}</a>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </li>
-                            {% if subchannel['info'] %}
-                                <li class="list-group-item py-0">
-                                    <pre class="my-0">{{ subchannel['info'] }}</pre>
-                                </li>
-                            {% endif %}
-                            <li class="list-group-item py-0">
-                                <br>
-                                <div class="mb-3">
-                                    Tags:
-                                    {% for tag in subchannel['tags'] %}
-                                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-                                        data-tagid="{{ tag }}" data-objtype="chat" data-objsubtype="{{ subchannel["subtype"] }}" data-objid="{{ subchannel["id"] }}">
-                                            {{ tag }}
-                                        </button>
-                                    {%  endfor %}
-                                    <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
-                                        <i class="far fa-plus-square"></i>
-                                    </button>
-                                </div>
-                            </li>
-                        </ul>
-
-{#                        {% with obj_type='chat', obj_id=subchannel['id'], obj_subtype=subchannel['subtype'] %}#}
-{#                            {% include 'modals/investigations_register_obj.html' %}#}
-{#                        {% endwith %}#}
-{#                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">#}
-{#                            <i class="fas fa-microscope"></i> Investigations#}
-{#                        </button>#}
-
-                    </div>
-                </div>
-
+                {% with meta=subchannel %}
+                    {% include 'chats_explorer/card_chat_subchannel.html' %}
+                {% endwith %}
 
                 {% if subchannel['threads'] %}
                     <table id="tablethreads" class="table">

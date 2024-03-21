@@ -62,7 +62,7 @@ class Telegram(AbstractModule):
                 print(f'username: {user_id}')
             invite_hash = dict_url.get('invite_hash')
             if invite_hash:
-                telegram.save_telegram_invite_hash(invite_hash, item.id)
+                telegram.save_telegram_invite_hash(invite_hash, self.obj.get_global_id())
                 print(f'invite code: {invite_hash}')
                 invite_code_found = True
 

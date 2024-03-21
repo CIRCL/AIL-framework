@@ -85,7 +85,8 @@ class Message(AbstractObject):
         if r_type == 'str':
             return content
         elif r_type == 'bytes':
-            return content.encode()
+            if content:
+                return content.encode()
 
     def get_date(self):
         timestamp = self.get_timestamp()
@@ -351,7 +352,6 @@ def create(obj_id, content, translation=None, tags=[]):
     # if not message.exists():
     message.create(content, translation=translation, tags=tags)
     return message
-
 
 # TODO Encode translation
 

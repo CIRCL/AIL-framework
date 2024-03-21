@@ -170,7 +170,11 @@ def tag_confirm():
     if not obj.exists():
         abort(404)
     Tag.confirm_tag(tag, obj)
-    return redirect(obj.get_link(flask_context=True))
+
+    if request.referrer:
+        return redirect(request.referrer)
+    else:
+        return redirect(obj.get_link(flask_context=True))
 
 @tags_ui.route('/tag/add_tags')
 @login_required
@@ -192,22 +196,27 @@ def add_tags():
     if res[1] != 200:
         return str(res[0])
 
-    return redirect(ail_objects.get_object_link(object_type, object_subtype, object_id, flask_context=True))
+    if request.referrer:
+        return redirect(request.referrer)
+    else:
+        return redirect(ail_objects.get_object_link(object_type, object_subtype, object_id, flask_context=True))
 
-@tags_ui.route('/tag/delete_tag')
+@tags_ui.route('/tag/delete_tag') # TODO FIX REQUEST PARAMETER
 @login_required
 @login_analyst
 def delete_tag():
-
-    object_type = request.args.get('object_type')
-    object_id = request.args.get('object_id')
-    subtype = '' # TODO: handle subtype object
+    object_type = request.args.get('type')
+    subtype = request.args.get('subtype', '')
+    object_id = request.args.get('id')
     tag = request.args.get('tag')
 
-    res = Tag.api_delete_obj_tags(tags=[tag], object_id=object_id, object_type=object_type)
+    res = Tag.api_delete_obj_tags(tags=[tag], object_id=object_id, object_type=object_type, subtype=subtype)
     if res[1] != 200:
         return str(res[0])
-    return redirect(ail_objects.get_object_link(object_type, subtype, object_id, flask_context=True))
+    if request.referrer:
+        return redirect(request.referrer)
+    else:
+        return redirect(ail_objects.get_object_link(object_type, subtype, object_id, flask_context=True))
 
 
 @tags_ui.route('/tag/get_all_tags')

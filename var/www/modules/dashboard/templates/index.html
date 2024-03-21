@@ -162,7 +162,7 @@
 
 </body>
 
-<script> var url_showSavedPath = "{{ url_for('objects_item.showItem') }}"; </script>
+<script> var url_showSavedPath = "{{ url_for('investigations_b.get_object_gid') }}"; </script>
 
     <script>
         $("#page-Dashboard").addClass("active");
@@ -180,6 +180,8 @@
             var nam = document.createElement('TD')
             var msage = document.createElement('TD')
             var inspect = document.createElement('TD')
+
+            // console.log(d)
 
             tr.className = "table-log-warning";
             time.appendChild(document.createTextNode(d.time))

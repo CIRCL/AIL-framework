@@ -81,10 +81,9 @@ class Global(AbstractModule):
 
     def compute(self, message, r_result=False): # TODO move OBJ ID sanitization to importer
         # Recovering the streamed message infos
-        gzip64encoded = message
 
         if self.obj.type == 'item':
-            if gzip64encoded:
+            if message:
 
                 # Creating the full filepath
                 filename = os.path.join(self.ITEMS_FOLDER, self.obj.id)
@@ -97,7 +96,7 @@ class Global(AbstractModule):
 
                 else:
                     # Decode compressed base64
-                    decoded = base64.standard_b64decode(gzip64encoded)
+                    decoded = base64.standard_b64decode(message)
                     new_file_content = self.gunzip_bytes_obj(filename, decoded)
 
                     # TODO REWRITE ME

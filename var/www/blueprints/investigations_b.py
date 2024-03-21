@@ -209,6 +209,14 @@ def unregister_investigation():
 def get_investigations_selector_json():
     return jsonify(Investigations.get_investigations_selector())
 
+@investigations_b.route("/object/gid")
+@login_required
+@login_read_only
+def get_object_gid():
+    obj_global_id = request.args.get('gid')
+    ail_obj = ail_objects.get_obj_from_global_id(obj_global_id)
+    url = ail_obj.get_link(flask_context=True)
+    return redirect(url)
 
 #
 # @investigations_b.route("/object/item") #completely shows the paste in a new tab

@@ -41,7 +41,7 @@ class Tags(AbstractModule):
 
         # Create a new tag
         item.add_tag(tag)
-        print(f'{item.get_id()}: Tagged {tag}')
+        print(f'{self.obj.get_global_id()}: Tagged {tag}')
 
         # Forward message to channel
         self.add_message_to_queue(message=tag, queue='Tag_feed')

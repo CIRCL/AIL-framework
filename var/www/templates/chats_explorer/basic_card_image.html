@@ -1,0 +1,57 @@
+<style>
+    .object_image {
+        filter: blur(5px);
+    }
+</style>
+
+<div class="card">
+	<div class="card-header">
+		<h4 class="text-secondary">
+            <svg height="30" width="30">
+                <g class="nodes">
+                    <circle cx="15" cy="15" r="15" fill="{{ meta["icon"]["color"] }}"></circle>
+                    <text x="15" y="15" text-anchor="middle" dominant-baseline="central" class="{{ meta["icon"]["style"] }}" font-size="16px">{{ meta["icon"]["icon"] }}</text>
+                </g>
+            </svg>
+            {{ meta["id"] }} :
+        </h4>
+    </div>
+    <div class="card-body pt-0">
+        <div class="text-center">
+            {% if meta["tags_safe"] %}
+                <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=meta['id'])}}" style="max-height: 500px">
+            {% else %}
+                <span class="my-2 fa-stack fa-8x">
+                    <i class="fas fa-stack-1x fa-image"></i>
+                    <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
+                </span>
+            {% endif %}
+        </div>
+
+        <div>
+            <span class="badge badge-dark">
+                <span data-toggle="tooltip" data-placement="top" title="Tooltip on top">
+                    <span class="badge badge-info" style="font-size: 0.8rem;">
+                        <i class="fas fa-hourglass-start"></i>
+                    </span>
+                    {{meta["first_seen"]}}
+                </span>
+                <span class="badge badge-light mx-1" style="font-size: 1rem;">
+                    <i class="far fa-calendar-alt"></i>
+                </span>
+                {{meta["last_seen"]}}
+                <span class="badge badge-secondary" style="font-size: 0.8rem;">
+                    <i class="fas fa-hourglass-end"></i>
+                </span>
+            </span>
+        </div>
+
+        <div class="">
+            {% for tag in meta['tags'] %}
+                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+            {%  endfor %}
+        </div>
+
+	</div>
+    {% include 'objects/block_object_footer_small.html' %}
+</div>

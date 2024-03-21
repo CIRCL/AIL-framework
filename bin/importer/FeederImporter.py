@@ -103,14 +103,16 @@ class FeederImporter(AbstractImporter):
         if data_obj:
             objs.add(data_obj)
 
+        objs_messages = []
         for obj in objs:
             if obj.type == 'item':  # object save on disk as file (Items)
                 gzip64_content = feeder.get_gzip64_content()
-                return obj, f'{feeder_name} {gzip64_content}'
+                relay_message = f'{feeder_name} {gzip64_content}'
+                objs_messages.append({'obj': obj, 'message': relay_message})
             else:  # Messages save on DB
                 if obj.exists() and obj.type != 'chat':
-                    return obj, f'{feeder_name}'
-
+                    objs_messages.append({'obj': obj, 'message': feeder_name})
+        return objs_messages
 
 class FeederModuleImporter(AbstractModule):
     def __init__(self):
@@ -128,10 +130,8 @@ class FeederModuleImporter(AbstractModule):
     def compute(self, message):
         # TODO HANDLE Invalid JSON
         json_data = json.loads(message)
-        # TODO multiple objs + messages
-        obj, relay_message = self.importer.importer(json_data)
-        ####
-        self.add_message_to_queue(obj=obj, message=relay_message)
+        for obj_message in self.importer.importer(json_data):
+            self.add_message_to_queue(obj=obj_message['obj'], message=obj_message['message'])
 
 
 # Launch Importer

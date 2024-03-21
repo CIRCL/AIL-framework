@@ -1,0 +1,104 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{% with modal_add_tags=ail_tags %}
+	{% include 'modals/add_tags.html' %}
+{% endwith %}
+
+{% include 'modals/edit_tag.html' %}
+
+<style>
+    .object_image {
+        filter: blur(5px);
+    }
+</style>
+
+<div class="card my-1">
+	<div class="card-header">
+		<h4 class="text-secondary">{{ meta["id"] }} :</h4>
+		<ul class="list-group mb-2">
+            <li class="list-group-item py-0">
+                <table class="table">
+                    <thead class="">
+                    <tr>
+                        <th></th>
+                        <th>First Seen</th>
+                        <th>Last Seen</th>
+                        <th>NB</th>
+                    </tr>
+                    </thead>
+                    <tbody style="font-size: 15px;">
+                    <tr>
+                        <td>
+                            <svg height="26" width="26">
+                                <g class="nodes">
+                                    <circle cx="13" cy="13" r="13" fill="orange"></circle>
+                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ meta["svg_icon"]["style"] }}" font-size="16px">{{ meta["svg_icon"]["icon"] }}</text>
+                                </g>
+                            </svg>
+                            {{ meta['type'] }}
+                        </td>
+                        <td>
+                            {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
+                        </td>
+                        <td>
+                            {{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}
+                        </td>
+                        <td>{{ meta['nb_seen'] }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+			<li class="list-group-item py-0">
+				<div id="accordion_image" class="my-3">
+                    <div class="card">
+                        <div class="card-header py-1" id="headingImage">
+                            <button class="btn w-100 collapsed rotate" data-toggle="collapse" data-target="#collapseImage" aria-expanded="false" aria-controls="collapseImage">
+                                <span class="row text-left">
+                                    <div class="col-11">
+                                        <span class="mt-2">
+                                            <i class="far fa-image"></i> Show Image&nbsp;&nbsp;
+                                        </span>
+                                    </div>
+                                    <div class="col-1 text-primary">
+                                        <i class="fas fa-chevron-circle-down"></i>
+                                    </div>
+                                </span>
+                            </button>
+                        </div>
+                        <div id="collapseImage" class="collapse show" aria-labelledby="headingImage" data-parent="#accordion_image">
+                            <div class="card-body text-center">
+                                {% include 'objects/image/block_blur_img_slider.html' %}
+								<img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=meta['id'])}}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</li>
+
+			<li class="list-group-item py-0">
+				<div class="my-2">
+					Tags:
+					{% for tag in meta['tags'] %}
+                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}"
+                                data-toggle="modal" data-target="#edit_tags_modal"
+						        data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="" data-objid="{{ meta["id"] }}">
+                                {{ tag }}
+						</button>
+					{%  endfor %}
+					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                        <i class="far fa-plus-square"></i>
+                    </button>
+				</div>
+			</li>
+		</ul>
+
+		{% with obj_type='image', obj_id=meta['id'], obj_subtype='' %}
+			{% include 'modals/investigations_register_obj.html' %}
+		{% endwith %}
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+			<i class="fas fa-microscope"></i> Investigations
+		</button>
+
+	</div>
+</div>

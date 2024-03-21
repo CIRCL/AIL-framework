@@ -149,7 +149,7 @@ class Cryptocurrencies(AbstractModule, ABC):
                                                                          item.get_date(),
                                                                          item.get_basename())
                             self.redis_logger.warning('{}Detected {} {} private key;{}'.format(
-                                to_print, len(private_keys), currency['name'], item_id))
+                                to_print, len(private_keys), currency['name'], self.obj.get_global_id()))
                     else:
                         private_keys = []
 

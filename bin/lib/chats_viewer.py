@@ -323,6 +323,63 @@ def get_username_meta_from_global_id(username_global_id):
     username = Usernames.Username(username_id, instance_uuid)
     return username.get_meta()
 
+
+# TODO Filter
+## Instance type
+## Chats IDS
+## SubChats IDS
+## Threads IDS
+## Daterange
+def get_messages_iterator(filters={}):
+
+    for instance_uuid in get_chat_service_instances():
+
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+
+            # subchannels
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
+                messages, _ = subchannel._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', )
+                    yield Messages.Message(message_id)
+                # threads
+
+            # threads
+            for threads in chat.get_threads():
+                thread = ChatThreads.ChatThread(threads['id'], instance_uuid)
+                _, _ = thread._get_messages(nb=-1)
+                for mess in messages:
+                    message_id, _, message_id = mess[0].split(':', )
+                    yield Messages.Message(message_id)
+
+            # messages
+            messages, _ = chat._get_messages(nb=-1)
+            for mess in messages:
+                _, _, message_id = mess[0].split(':', )
+                yield Messages.Message(message_id)
+                # threads ???
+
+def get_nb_messages_iterator(filters={}):
+    nb_messages = 0
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            # subchannels
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
+                nb_messages += subchannel.get_nb_messages()
+            # threads
+            for threads in chat.get_threads():
+                thread = ChatThreads.ChatThread(threads['id'], instance_uuid)
+                nb_messages += thread.get_nb_messages()
+            # messages
+            nb_messages += chat.get_nb_messages()
+    return nb_messages
+
 #### API ####
 
 def api_get_chat_service_instance(chat_instance_uuid):

@@ -71,7 +71,10 @@ class Image(AbstractDaterangeObject):
         return file_content
 
     def get_content(self, r_type='str'):
-        return self.get_file_content()
+        if r_type == 'str':
+            return None
+        else:
+            return self.get_file_content()
 
     def get_misp_object(self):
         obj_attrs = []

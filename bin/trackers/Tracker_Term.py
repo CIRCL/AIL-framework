@@ -93,7 +93,7 @@ class Tracker_Term(AbstractModule):
         try:
             dict_words_freq = Tracker.get_text_word_frequency(content)
         except TimeoutException:
-            self.redis_logger.warning(f"{obj.get_id()} processing timeout")
+            self.redis_logger.warning(f"{self.obj.get_global_id()} processing timeout")
         else:
             signal.alarm(0)
 
@@ -124,8 +124,8 @@ class Tracker_Term(AbstractModule):
             if ail_objects.is_filtered(obj, filters):
                 continue
 
-            print(f'new tracked term {tracker_uuid} found: {tracker_name} in {obj_id}')
-            self.redis_logger.warning(f'new tracked term found: {tracker_name} in {obj_id}')
+            print(f'new tracked term {tracker_uuid} found: {tracker_name} in {self.obj.get_global_id()}')
+            self.redis_logger.warning(f'new tracked term found: {tracker_name} in {self.obj.get_global_id()}')
 
             tracker.add(obj.get_type(), obj.get_subtype(), obj_id)
 

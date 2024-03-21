@@ -95,7 +95,7 @@ class Iban(AbstractModule):
                 #     Statistics.add_module_tld_stats_by_date('iban', date, iban[0:2], 1)
 
                 to_print = f'Iban;{item.get_source()};{item.get_date()};{item.get_basename()};'
-                self.redis_logger.warning(f'{to_print}Checked found {len(valid_ibans)} IBAN;{item_id}')
+                self.redis_logger.warning(f'{to_print}Checked found {len(valid_ibans)} IBAN;{self.obj.get_global_id()}')
                 # Tags
                 tag = 'infoleak:automatic-detection="iban"'
                 self.add_message_to_queue(message=tag, queue='Tags')

@@ -98,8 +98,8 @@ class Onion(AbstractModule):
                         print(f'{domain} added to crawler queue: {task_uuid}')
             else:
                 to_print = f'Onion;{item.get_source()};{item.get_date()};{item.get_basename()};'
-                print(f'{to_print}Detected {len(domains)} .onion(s);{item.get_id()}')
-                self.redis_logger.warning(f'{to_print}Detected {len(domains)} .onion(s);{item.get_id()}')
+                print(f'{to_print}Detected {len(domains)} .onion(s);{self.obj.get_global_id()}')
+                self.redis_logger.warning(f'{to_print}Detected {len(domains)} .onion(s);{self.obj.get_global_id()}')
 
             # TAG Item
             tag = 'infoleak:automatic-detection="onion"'

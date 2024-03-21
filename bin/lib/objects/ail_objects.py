@@ -12,11 +12,13 @@ from lib.exceptions import AILObjectUnknown
 
 
 from lib.ConfigLoader import ConfigLoader
-from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_with_subtypes
+from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_with_subtypes, get_default_correlation_objects
 from lib import correlations_engine
 from lib import relationships_engine
 from lib import btc_ail
 from lib import Tag
+
+from lib import chats_viewer
 
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
@@ -32,7 +34,7 @@ from lib.objects import FilesNames
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
-from lib.objects.Messages import Message
+from lib.objects import Messages
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
 from lib.objects import Titles
@@ -53,13 +55,16 @@ def is_object_subtype(obj_type):
 def is_valid_object_subtype(obj_type, subtype):
     return subtype in get_object_all_subtypes(obj_type)
 
-def sanitize_objs_types(objs):
+def sanitize_objs_types(objs, default=False):
     l_types = []
     for obj in objs:
         if is_valid_object_type(obj):
             l_types.append(obj)
     if not l_types:
-        l_types = get_all_objects()
+        if default:
+            l_types = get_default_correlation_objects()
+        else:
+            l_types = get_all_objects()
     return l_types
 
 #### OBJECT ####
@@ -87,7 +92,7 @@ def get_object(obj_type, subtype, obj_id):
         elif obj_type == 'image':
             return Images.Image(obj_id)
         elif obj_type == 'message':
-            return Message(obj_id)
+            return Messages.Message(obj_id)
         elif obj_type == 'screenshot':
             return Screenshot(obj_id)
         elif obj_type == 'title':
@@ -249,8 +254,9 @@ def get_objects_meta(objs, options=set(), flask_context=False):
 
 def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
-    meta = obj.get_meta()
-    meta['icon'] = obj.get_svg_icon()
+    meta = obj.get_meta(options={'chat', 'chats', 'created_at', 'icon', 'info', 'nb_messages', 'nb_participants', 'threads', 'username'})
+    # meta['icon'] = obj.get_svg_icon()
+    meta['svg_icon'] = obj.get_svg_icon()
     if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
@@ -293,6 +299,9 @@ def obj_iterator(obj_type, filters):
         return get_all_items_objects(filters=filters)
     elif obj_type == 'pgp':
         return Pgps.get_all_pgps_objects(filters=filters)
+    elif obj_type == 'message':
+        return chats_viewer.get_messages_iterator(filters=filters)
+
 
 def card_objs_iterators(filters):
     nb = 0
@@ -307,6 +316,8 @@ def card_obj_iterator(obj_type, filters):
         return get_nb_items_objects(filters=filters)
     elif obj_type == 'pgp':
         return Pgps.nb_all_pgps_objects(filters=filters)
+    elif obj_type == 'message':
+        return chats_viewer.get_nb_messages_iterator(filters=filters)
 
 def get_ui_obj_tag_table_keys(obj_type): # TODO REMOVE ME
     """

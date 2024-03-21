@@ -25,6 +25,7 @@ echo -e $GREEN"Updating python packages ..."$DEFAULT
 echo ""
 pip install -U pylacus
 pip install -U lexilang
+pip install git+https://github.com/ail-project/demoji
 
 
 bash ${AIL_BIN}/LAUNCH.sh -lrv

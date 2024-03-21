@@ -92,10 +92,10 @@ class Duplicates(AbstractModule):
             Duplicate.save_object_hash(algo, curr_date_ymonth, self.algos[algo]['hash'], item.get_id())
 
         if nb_duplicates:
-            self.redis_logger.info(f'Duplicate;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {nb_duplicates};{item.get_id()}')
+            self.redis_logger.info(f'Duplicate;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {nb_duplicates};{self.obj.get_global_id()}')
 
         y = time.time()
-        print(f'{item.get_id()} Processed in {y-x} sec')
+        print(f'{self.obj.get_global_id()} Processed in {y-x} sec')
         # self.redis_logger.debug('{}Processed in {} sec'.format(to_print, y-x))
 
 

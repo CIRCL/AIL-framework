@@ -70,7 +70,7 @@ class LibInjection(AbstractModule):
             print(f"Detected (libinjection) SQL in URL: {item_id}")
             print(unquote(url))
 
-            to_print = f'LibInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{item_id}'
+            to_print = f'LibInjection;{item.get_source()};{item.get_date()};{item.get_basename()};Detected SQL in URL;{self.obj.get_global_id()}'
             self.redis_logger.warning(to_print)
 
             # Add tag

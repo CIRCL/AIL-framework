@@ -103,11 +103,11 @@ class Credential(AbstractModule):
 
             print(message)
 
-            to_print = f'Credential;{item.get_source()};{item.get_date()};{item.get_basename()};{message};{item.get_id()}'
+            to_print = f'Credential;{item.get_source()};{item.get_date()};{item.get_basename()};{message};{self.obj.get_global_id()}'
 
             # num of creds above threshold, publish an alert
             if nb_cred > self.criticalNumberToAlert:
-                print(f"========> Found more than 10 credentials in this file : {item.get_id()}")
+                print(f"========> Found more than 10 credentials in this file : {self.obj.get_global_id()}")
                 self.redis_logger.warning(to_print)
 
                 tag = 'infoleak:automatic-detection="credential"'

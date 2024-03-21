@@ -88,6 +88,9 @@ class Retro_Hunt_Module(AbstractModule):
             for obj in ail_objects.obj_iterator(obj_type, filters):
                 self.obj = obj
                 content = obj.get_content(r_type='bytes')
+                if not content:
+                    continue
+
                 rule.match(data=content, callback=self.yara_rules_match,
                            which_callbacks=yara.CALLBACK_MATCHES, timeout=timeout)
 

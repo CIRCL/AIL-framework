@@ -165,7 +165,7 @@ def show_correlation():
 
         related_btc = bool(request.args.get('related_btc', False))
 
-        filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
+        filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','), default=True)
 
         # check if obj_id exist
         if not ail_objects.exists_obj(obj_type, subtype, obj_id):
@@ -190,8 +190,11 @@ def show_correlation():
             else:
                 dict_object["subtype"] = ''
             dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
+            dict_object["metadata_card"]['tags_safe'] = True
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
-                                   tags_selector_data=Tag.get_tags_selector_data())
+                                   tags_selector_data=Tag.get_tags_selector_data(),
+                                   meta=dict_object["metadata_card"],
+                                   ail_tags=dict_object["metadata_card"]["add_tags_modal"])
 
 @correlation.route('/correlation/get/description')
 @login_required
@@ -206,7 +209,10 @@ def get_description():
         return Response(json.dumps({"status": "error", "reason": "404 Not Found"}, indent=2, sort_keys=True), mimetype='application/json'), 404
     # object exist
     else:
-        res = ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'icon', 'tags', 'tags_safe'},
+        options = {'icon', 'tags', 'tags_safe'}
+        if obj_type == 'message':
+            options.add('content')
+        res = ail_objects.get_object_meta(obj_type, subtype, obj_id, options=options,
                                           flask_context=True)
         if 'tags' in res:
             res['tags'] = list(res['tags'])
