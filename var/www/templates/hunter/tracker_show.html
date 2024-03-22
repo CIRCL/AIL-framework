@@ -258,7 +258,7 @@
                             <th>Type</th>
 			      	        <th></th>
 							<th>Id</th>
-				     	    <th>Tags</th>
+				     	    <th>Last Date</th>
 							<th></th>
 				   	    </tr>
 					    </thead>
@@ -280,11 +280,19 @@
 									<a href="{{ object['link'] }}">
 										{{ object['id']}}
 									</a>
+                                    {% if object['tags'] %}
+                                        <div>
+                                            {% for tag in object['tags'] %}
+                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
 								</td>
+
 								<td>
-									{% for tag in object['tags'] %}
-										<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-									{% endfor %}
+									{% if object['last_full_date'] %}
+										{{ object['last_full_date']}}
+									{% endif %}
 								</td>
 								<td class="text-right">
 {#									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ meta['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">#}
@@ -342,7 +350,7 @@
         $('#myTable_').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
             "iDisplayLength": 10,
-            "order": [[0, "asc"]]
+            "order": [[3, "desc"]]
         });
 
         sparkline("sparkline", {{ meta['sparkline'] }}, {});

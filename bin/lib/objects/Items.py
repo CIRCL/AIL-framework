@@ -305,6 +305,8 @@ class Item(AbstractObject):
             meta['investigations'] = self.get_investigations()
         if 'link' in options:
             meta['link'] = self.get_link(flask_context=True)
+        if 'last_full_date' in options:
+            meta['last_full_date'] = f"{meta['date'][0:4]}-{meta['date'][5:7]}-{meta['date'][8:10]}"
 
         # meta['encoding'] = None
         return meta

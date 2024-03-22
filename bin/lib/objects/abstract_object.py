@@ -67,6 +67,9 @@ class AbstractObject(ABC):
     def get_global_id(self):
         return f'{self.get_type()}:{self.get_subtype(r_str=True)}:{self.get_id()}'
 
+    def get_last_full_date(self):
+        return None
+
     def get_default_meta(self, tags=False, link=False):
         dict_meta = {'id': self.get_id(),
                      'type': self.get_type(),

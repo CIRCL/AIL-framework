@@ -92,6 +92,10 @@ class Message(AbstractObject):
         timestamp = self.get_timestamp()
         return datetime.utcfromtimestamp(float(timestamp)).strftime('%Y%m%d')
 
+    def get_last_full_date(self):
+        timestamp = datetime.utcfromtimestamp(float(self.get_timestamp()))
+        return timestamp.strftime('%Y-%m-%d %H:%M:%S')
+
     def get_timestamp(self):
         dirs = self.id.split('/')
         return dirs[1]
@@ -255,6 +259,8 @@ class Message(AbstractObject):
         meta['date'] = timestamp.strftime('%Y/%m/%d')
         meta['hour'] = timestamp.strftime('%H:%M:%S')
         meta['full_date'] = timestamp.isoformat(' ')
+        if 'last_full_date' in options:
+            meta['last_full_date'] = meta['full_date']
 
         meta['source'] = self.get_source()
         # optional meta fields

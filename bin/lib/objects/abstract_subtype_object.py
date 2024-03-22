@@ -85,6 +85,11 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         else:
             return int(nb)
 
+    def get_last_full_date(self):
+        last_seen = self.get_last_seen()
+        if last_seen:
+            return f'{last_seen[0:4]}-{last_seen[4:6]}-{last_seen[6:8]}'
+
     def _get_meta(self, options=None):
         if options is None:
             options = set()
