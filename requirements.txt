@@ -44,6 +44,7 @@ scrapy-splash>=0.7.2
 # Languages
 gcld3
 libretranslatepy
+lexilang
 
 # Demoji
 git+https://github.com/ail-project/demoji
