@@ -244,15 +244,34 @@ def objects_message():
 @login_read_only
 def objects_message_translate():
     message_id = request.form.get('id')
+    source = request.form.get('language_target')
     target = request.form.get('target')
     translation = request.form.get('translation')
     if target == "Don't Translate":
         target = None
-    resp = chats_viewer.api_manually_translate_message(message_id, target, translation)
+    resp = chats_viewer.api_manually_translate_message(message_id, source, target, translation)
     if resp[1] != 200:
         return create_json_response(resp[0], resp[1])
     else:
-        return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+
+@chats_explorer.route("/objects/message/detect/language", methods=['GET'])
+@login_required
+@login_read_only
+def objects_message_detect_language():
+    message_id = request.args.get('id')
+    target = request.args.get('target')
+    resp = chats_viewer.api_message_detect_language(message_id)
+    if resp[1] != 200:
+        return create_json_response(resp[0], resp[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
 
 @chats_explorer.route("/objects/user-account", methods=['GET'])
 @login_required

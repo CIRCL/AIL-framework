@@ -20,17 +20,39 @@ from lib.ail_core import is_object_type
 from lib import ail_queues
 from lib.objects import ail_objects
 
-def reprocess_message_objects(object_type):
-    queue = ail_queues.AILQueue('FeederModuleImporter', -1)
-    for obj in ail_objects.obj_iterator(object_type, filters={}):
-        queue.send_message(obj.get_global_id(), message='reprocess')
-    queue.end()
+# from modules.ApiKey import ApiKey
+# from modules.Categ import Categ
+# from modules.CreditCards import CreditCards
+# from modules.DomClassifier import DomClassifier
+# from modules.Global import Global
+# from modules.Keys import Keys
+# from modules.Onion import Onion
+# from modules.Telegram import Telegram
+
+from modules.Languages import Languages
+
+MODULES = {
+    'Languages': Languages
+}
+
+def reprocess_message_objects(object_type, module_name=None):
+    if module_name:
+        module = MODULES[module_name]()
+        for obj in ail_objects.obj_iterator(object_type, filters={}):
+            module.obj = obj
+            module.compute(None)
+    else:
+        queue = ail_queues.AILQueue('FeederModuleImporter', -1)
+        for obj in ail_objects.obj_iterator(object_type, filters={}):
+            queue.send_message(obj.get_global_id(), message='reprocess')
+        queue.end()
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Reprocess AIL Objects')
     parser.add_argument('-t', '--type', type=str, help='AIL Object Type', required=True)
+    parser.add_argument('-m', '--module', type=str, help='AIL Module Name')
 
     args = parser.parse_args()
     if not args.type:
@@ -43,4 +65,7 @@ if __name__ == "__main__":
     if obj_type not in ['item', 'message']:  # TODO image
         raise Exception(f'Currently not supported Object Type: {obj_type}')
 
-    reprocess_message_objects(obj_type)
+    modulename = args.module
+    if modulename not in MODULES:
+        raise Exception(f'Currently not supported Module: {modulename}')
+    reprocess_message_objects(obj_type, module_name=modulename)

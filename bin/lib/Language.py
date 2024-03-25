@@ -7,6 +7,7 @@ import sys
 import html2text
 
 import gcld3
+from lexilang.detector import detect as lexilang_detect
 from libretranslatepy import LibreTranslateAPI
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -264,7 +265,10 @@ def _get_html2text(content, ignore_links=False):
     h = html2text.HTML2Text()
     h.ignore_links = ignore_links
     h.ignore_images = ignore_links
-    return h.handle(content)
+    content = h.handle(content)
+    if content == '\n\n':
+        content = ''
+    return content
 
 def _clean_text_to_translate(content, html=False, keys_blocks=True):
     if html:
@@ -323,67 +327,105 @@ def get_objs_languages(obj_type, obj_subtype=''):
 def get_obj_languages(obj_type, obj_subtype, obj_id):
     return r_lang.smembers(f'obj:lang:{obj_type}:{obj_subtype}:{obj_id}')
 
+def get_obj_language_stats(obj_type, obj_subtype, obj_id):
+    return r_lang.zrange(f'obj:langs:stat:{obj_type}:{obj_subtype}:{obj_id}', 0, -1, withscores=True)
+
 # TODO ADD language to CHAT GLOBAL SET
-def add_obj_language(language, obj_type, obj_subtype, obj_id):  # (s)
+def add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):  # (s)
     if not obj_subtype:
         obj_subtype = ''
     obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
 
     r_lang.sadd(f'objs:langs:{obj_type}', language)
     r_lang.sadd(f'objs:lang:{obj_type}:{obj_subtype}', language)
-    r_lang.sadd(f'obj:lang:{obj_global_id}', language)
+    new = r_lang.sadd(f'obj:lang:{obj_global_id}', language)
 
     r_lang.sadd(f'languages:{language}', f'{obj_type}:{obj_subtype}') ################### REMOVE ME ???
     r_lang.sadd(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
 
-def remove_obj_language(language, obj_type, obj_subtype, obj_id):
+    if new:
+        for global_id in objs_containers:
+            r_lang.zincrby(f'obj:langs:stat:{global_id}', 1, language)
+
+
+def remove_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):
     if not obj_subtype:
         obj_subtype = ''
     obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
-    r_lang.srem(f'obj:lang:{obj_global_id}', language)
+    rem = r_lang.srem(f'obj:lang:{obj_global_id}', language)
+
+    delete_obj_translation(obj_global_id, language)
 
     r_lang.srem(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
     if not r_lang.exists(f'langs:{obj_type}:{obj_subtype}:{language}'):
         r_lang.srem(f'objs:lang:{obj_type}:{obj_subtype}', language)
         r_lang.srem(f'languages:{language}', f'{obj_type}:{obj_subtype}')
         if not r_lang.exists(f'objs:lang:{obj_type}:{obj_subtype}'):
-            if r_lang.scard(f'objs:langs:{obj_type}', language) <= 1:
+            if r_lang.scard(f'objs:langs:{obj_type}') <= 1:
                 r_lang.srem(f'objs:langs:{obj_type}', language)
 
-def edit_obj_language(language, obj_type, obj_subtype, obj_id):
-    remove_obj_language(language, obj_type, obj_subtype, obj_id)
-    add_obj_language(language, obj_type, obj_subtype, obj_id)
+    if rem:
+        for global_id in objs_containers:
+            r = r_lang.zincrby(f'obj:langs:stat:{global_id}', -1, language)
+            if r < 1:
+                r_lang.zrem(f'obj:langs:stat:{global_id}', language)
 
+# TODO handle fields
+def detect_obj_language(obj_type, obj_subtype, obj_id, content, objs_containers=set()):
+    detector = LanguagesDetector(nb_langs=1)
+    language = detector.detect(content)
+    if language:
+        language = language[0]
+        previous_lang = get_obj_languages(obj_type, obj_subtype, obj_id)
+        if previous_lang:
+            previous_lang = previous_lang.pop()
+            if language != previous_lang:
+                remove_obj_language(previous_lang, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
+                add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
+        else:
+            add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
+        return language
 
 ## Translation
-def _get_obj_translation(obj_global_id, language, field=''):
+def r_get_obj_translation(obj_global_id, language, field=''):
     return r_lang.hget(f'tr:{obj_global_id}:{field}', language)
 
-def get_obj_translation(obj_global_id, language, source=None, content=None, field=''):
+def _get_obj_translation(obj_global_id, language, source=None, content=None, field='', objs_containers=set()):
     """
         Returns translated content
     """
     translation = r_cache.get(f'translation:{language}:{obj_global_id}:{field}')
+    r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 0)
     if translation:
         # DEBUG
         # print('cache')
         # r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 0)
         return translation
     # TODO HANDLE FIELDS TRANSLATION
-    translation = _get_obj_translation(obj_global_id, language, field=field)
+    translation = r_get_obj_translation(obj_global_id, language, field=field)
     if not translation:
-        translation = LanguageTranslator().translate(content, source=source, target=language)
+        source, translation = LanguageTranslator().translate(content, source=source, target=language)
+        if source:
+            obj_type, subtype, obj_id = obj_global_id.split(':', 2)
+            add_obj_language(source, obj_type, subtype, obj_id, objs_containers=objs_containers)
     if translation:
         r_cache.set(f'translation:{language}:{obj_global_id}:{field}', translation)
         r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 300)
     return translation
 
+def get_obj_translation(obj_global_id, language, source=None, content=None, field='', objs_containers=set()):
+    return _get_obj_translation(obj_global_id, language, source=source, content=content, field=field, objs_containers=objs_containers)
+
 
 # TODO Force to edit ????
+
 def set_obj_translation(obj_global_id, language, translation, field=''):
     r_cache.delete(f'translation:{language}:{obj_global_id}:')
     return r_lang.hset(f'tr:{obj_global_id}:{field}', language, translation)
 
+def delete_obj_translation(obj_global_id, language, field=''):
+    r_cache.delete(f'translation:{language}:{obj_global_id}:')
+    r_lang.hdel(f'tr:{obj_global_id}:{field}', language)
 
 ## --LANGUAGE ENGINE-- ##
 
@@ -410,10 +452,21 @@ class LanguagesDetector:
         if self.min_len > 0:
             if len(content) < self.min_len:
                 return languages
+        # p = self.detector.FindTopNMostFreqLangs(content, num_langs=3)
+        # for lang in p:
+        #     print(lang.language, lang.probability, lang.proportion, lang.is_reliable)
+        # print('------------------------------------------------')
         for lang in self.detector.FindTopNMostFreqLangs(content, num_langs=self.nb_langs):
             if lang.proportion >= self.min_proportion and lang.probability >= self.min_probability and lang.is_reliable:
                 languages.append(lang.language)
         return languages
+
+    def detect_lexilang(self, content):  # TODO clean text ??? - TODO REMOVE SEPARATOR
+        language, prob = lexilang_detect(content)
+        if prob > 0:
+            return [language]
+        else:
+            return []
 
     def detect_libretranslate(self, content):
         languages = []
@@ -431,19 +484,35 @@ class LanguagesDetector:
                     languages.append(language)
         return languages
 
-    def detect(self, content, force_gcld3=False):
+    def detect(self, content, force_gcld3=False):  # TODO detect length between 20-200 ????
+        if not content:
+            return None
+        content = _clean_text_to_translate(content, html=True)
+        if not content:
+            return None
+        # DEBUG
+        # print('-------------------------------------------------------')
+        # print(content)
+        # print(len(content))
+        # lexilang
+        if len(content) < 150:
+            # print('lexilang')
+            languages = self.detect_lexilang(content)
         # gcld3
-        if len(content) >= 200 or not self.lt or force_gcld3:
-            language = self.detect_gcld3(content)
-        # libretranslate
         else:
-            language = self.detect_libretranslate(content)
-        return language
+            # if len(content) >= 200 or not self.lt or force_gcld3:
+            # print('gcld3')
+            languages = self.detect_gcld3(content)
+        # libretranslate
+        # else:
+        #     languages = self.detect_libretranslate(content)
+        return languages
 
 class LanguageTranslator:
 
     def __init__(self):
         self.lt = LibreTranslateAPI(get_translator_instance())
+        self.ld = LanguagesDetector(nb_langs=1)
 
     def languages(self):
         languages = []
@@ -473,13 +542,13 @@ class LanguageTranslator:
             return language[0].get('language')
 
     def detect(self, content):
-        # gcld3
-        if len(content) >= 200:
-            language = self.detect_gcld3(content)
-        # libretranslate
-        else:
-            language = self.detect_libretranslate(content)
-        return language
+        # print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        # print(content)
+        language = self.ld.detect(content)
+        if language:
+            # print(language[0])
+            # print('##############################################################')
+            return language[0]
 
     def translate(self, content, source=None, target="en"):  # TODO source target
         if target not in get_translation_languages():
@@ -498,9 +567,9 @@ class LanguageTranslator:
                         translation = None
                     # TODO LOG and display error
                     if translation == content:
-                        print('EQUAL')
+                        # print('EQUAL')
                         translation = None
-        return translation
+        return source, translation
 
 
 LIST_LANGUAGES = {}

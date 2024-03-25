@@ -23,6 +23,7 @@ git submodule update
 echo ""
 echo -e $GREEN"Updating python packages ..."$DEFAULT
 echo ""
+pip install -U pyail
 pip install -U pylacus
 pip install -U git+https://github.com/ail-project/demoji
 pip install -U lexilang

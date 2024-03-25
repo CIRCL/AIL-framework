@@ -10,6 +10,7 @@ sys.path.append(os.environ['AIL_HOME'])
 ##################################
 from update.bin.ail_updater import AIL_Updater
 from lib import ail_updates
+from lib import chats_viewer
 
 class Updater(AIL_Updater):
     """default Updater."""
@@ -19,6 +20,7 @@ class Updater(AIL_Updater):
 
 
 if __name__ == '__main__':
+    chats_viewer.fix_correlations_subchannel_message()
     updater = Updater('v5.4')
     updater.run_update()
 
