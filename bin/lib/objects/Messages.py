@@ -103,8 +103,17 @@ class Message(AbstractObject):
         return message_id
 
     def get_chat_id(self):  # TODO optimize -> use me to tag Chat
-        chat_id = self.get_basename().rsplit('_', 1)[0]
-        return chat_id
+        c_id = self.id.split('/')
+        return c_id[2]
+
+    def get_chat(self):
+        c_id = self.id.split('/')
+        return f'chat:{c_id[0]}:{c_id[2]}'
+
+    def get_subchannel(self):
+        subchannel = self.get_correlation('chat-subchannel')
+        if subchannel.get('chat-subchannel'):
+            return f'user-account:{subchannel["chat-subchannel"].pop()}'
 
     def get_thread(self):
         for child in self.get_childrens():
@@ -182,25 +191,6 @@ class Message(AbstractObject):
             return languages.pop()
         else:
             return None
-
-    def get_translation(self, content=None, source=None, target='fr'):
-        """
-        Returns translated content
-        """
-
-        # return self._get_field('translated')
-        global_id = self.get_global_id()
-        translation = r_cache.get(f'translation:{target}:{global_id}')
-        r_cache.expire(f'translation:{target}:{global_id}', 0)
-        if translation:
-            return translation
-        if not content:
-            content = self.get_content()
-        translation = Language.LanguageTranslator().translate(content, source=source, target=target)
-        if translation:
-            r_cache.set(f'translation:{target}:{global_id}', translation)
-            r_cache.expire(f'translation:{target}:{global_id}', 300)
-        return translation
 
     def _set_translation(self, translation):
         """
@@ -305,6 +295,8 @@ class Message(AbstractObject):
             else:
                 source = None
             meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
+            if 'language' in options:
+                meta['language'] = self.get_language()
 
         # meta['encoding'] = None
         return meta
@@ -318,11 +310,29 @@ class Message(AbstractObject):
     #     self._set_translation(translated)
     #     return translated
 
-    def create(self, content, translation=None, tags=[]):
+    ## Language ##
+
+    def get_objs_container(self):
+        objs_containers = set()
+        # chat
+        objs_containers.add(self.get_chat())
+        subchannel = self.get_subchannel()
+        if subchannel:
+            objs_containers.add(subchannel)
+        # thread = self.get_thread() # TODO Get current thread
+        # if thread:
+        #     objs_containers.add(thread)
+        return objs_containers
+
+    #- Language -#
+
+    def create(self, content, language=None, translation=None, tags=[]):
         self._set_field('content', content)
-        # r_content.get(f'content:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', content)
-        if translation:
+        if not language and content:
+            language = self.detect_language()
+        if translation and content:
             self._set_translation(translation)
+            self.set_translation(language, translation)
         for tag in tags:
             self.add_tag(tag)
 

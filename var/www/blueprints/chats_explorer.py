@@ -253,7 +253,10 @@ def objects_message_translate():
     if resp[1] != 200:
         return create_json_response(resp[0], resp[1])
     else:
-        return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
 
 @chats_explorer.route("/objects/message/detect/language", methods=['GET'])
 @login_required
@@ -265,7 +268,10 @@ def objects_message_detect_language():
     if resp[1] != 200:
         return create_json_response(resp[0], resp[1])
     else:
-        return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
 
 @chats_explorer.route("/objects/user-account", methods=['GET'])
 @login_required

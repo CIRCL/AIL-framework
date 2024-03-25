@@ -324,24 +324,32 @@ def get_objs_languages(obj_type, obj_subtype=''):
 def get_obj_languages(obj_type, obj_subtype, obj_id):
     return r_lang.smembers(f'obj:lang:{obj_type}:{obj_subtype}:{obj_id}')
 
+def get_obj_language_stats(obj_type, obj_subtype, obj_id):
+    return r_lang.zrange(f'obj:langs:stat:{obj_type}:{obj_subtype}:{obj_id}', 0, -1, withscores=True)
+
 # TODO ADD language to CHAT GLOBAL SET
-def add_obj_language(language, obj_type, obj_subtype, obj_id):  # (s)
+def add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):  # (s)
     if not obj_subtype:
         obj_subtype = ''
     obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
 
     r_lang.sadd(f'objs:langs:{obj_type}', language)
     r_lang.sadd(f'objs:lang:{obj_type}:{obj_subtype}', language)
-    r_lang.sadd(f'obj:lang:{obj_global_id}', language)
+    new = r_lang.sadd(f'obj:lang:{obj_global_id}', language)
 
     r_lang.sadd(f'languages:{language}', f'{obj_type}:{obj_subtype}') ################### REMOVE ME ???
     r_lang.sadd(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
 
-def remove_obj_language(language, obj_type, obj_subtype, obj_id):
+    if new:
+        for global_id in objs_containers:
+            r_lang.zincrby(f'obj:langs:stat:{global_id}', 1, language)
+
+
+def remove_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):
     if not obj_subtype:
         obj_subtype = ''
     obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
-    r_lang.srem(f'obj:lang:{obj_global_id}', language)
+    rem = r_lang.srem(f'obj:lang:{obj_global_id}', language)
 
     delete_obj_translation(obj_global_id, language)
 
@@ -353,27 +361,33 @@ def remove_obj_language(language, obj_type, obj_subtype, obj_id):
             if r_lang.scard(f'objs:langs:{obj_type}') <= 1:
                 r_lang.srem(f'objs:langs:{obj_type}', language)
 
+    if rem:
+        for global_id in objs_containers:
+            r = r_lang.zincrby(f'obj:langs:stat:{global_id}', -1, language)
+            if r < 1:
+                r_lang.zrem(f'obj:langs:stat:{global_id}', language)
+
 # TODO handle fields
-def detect_obj_language(obj_type, obj_subtype, obj_id, content):
+def detect_obj_language(obj_type, obj_subtype, obj_id, content, objs_containers=set()):
     detector = LanguagesDetector(nb_langs=1)
     language = detector.detect(content)
     if language:
         language = language[0]
         previous_lang = get_obj_languages(obj_type, obj_subtype, obj_id)
         if previous_lang:
-            previous_lang = previous_lang[0]
+            previous_lang = previous_lang.pop()
             if language != previous_lang:
-                remove_obj_language(language, obj_type, obj_subtype, obj_id)
-                add_obj_language(language, obj_type, obj_subtype, obj_id)
+                remove_obj_language(previous_lang, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
+                add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
         else:
-            add_obj_language(language, obj_type, obj_subtype, obj_id)
+            add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
         return language
 
 ## Translation
-def _get_obj_translation(obj_global_id, language, field=''):
+def r_get_obj_translation(obj_global_id, language, field=''):
     return r_lang.hget(f'tr:{obj_global_id}:{field}', language)
 
-def get_obj_translation(obj_global_id, language, source=None, content=None, field=''):
+def _get_obj_translation(obj_global_id, language, source=None, content=None, field='', objs_containers=set()):
     """
         Returns translated content
     """
@@ -385,16 +399,19 @@ def get_obj_translation(obj_global_id, language, source=None, content=None, fiel
         # r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 0)
         return translation
     # TODO HANDLE FIELDS TRANSLATION
-    translation = _get_obj_translation(obj_global_id, language, field=field)
+    translation = r_get_obj_translation(obj_global_id, language, field=field)
     if not translation:
         source, translation = LanguageTranslator().translate(content, source=source, target=language)
         if source and translation:
             obj_type, subtype, obj_id = obj_global_id.split(':', 2)
-            add_obj_language(source, obj_type, subtype, obj_id)
+            add_obj_language(source, obj_type, subtype, obj_id, objs_containers=objs_containers)
     if translation:
         r_cache.set(f'translation:{language}:{obj_global_id}:{field}', translation)
         r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 300)
     return translation
+
+def get_obj_translation(obj_global_id, language, source=None, content=None, field='', objs_containers=set()):
+    return _get_obj_translation(obj_global_id, language, source=source, content=content, field=field, objs_containers=objs_containers)
 
 
 # TODO Force to edit ????

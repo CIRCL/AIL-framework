@@ -480,7 +480,6 @@ def api_manually_translate_message(message_id, source, translation_target, trans
             return {"status": "error", "reason": "Max Size reached"}, 400
     all_languages = Language.get_translation_languages()
     if source not in all_languages:
-        print(source)
         return {"status": "error", "reason": "Unknown source Language"}, 400
     message_language = message.get_language()
     if message_language != source:
