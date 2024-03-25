@@ -468,6 +468,7 @@ def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=
     thread = ChatThreads.ChatThread(thread_id, thread_instance_uuid)
     if not thread.exists():
         return {"status": "error", "reason": "Unknown thread"}, 404
+    # print(thread.get_obj_language_stats())
     meta = thread.get_meta({'chat', 'nb_messages', 'nb_participants'})
     # if meta['chat']:
     #     meta['chat'] = get_chat_meta_from_global_id(meta['chat'])

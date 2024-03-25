@@ -405,7 +405,7 @@ def _get_obj_translation(obj_global_id, language, source=None, content=None, fie
     translation = r_get_obj_translation(obj_global_id, language, field=field)
     if not translation:
         source, translation = LanguageTranslator().translate(content, source=source, target=language)
-        if source and translation:
+        if source:
             obj_type, subtype, obj_id = obj_global_id.split(':', 2)
             add_obj_language(source, obj_type, subtype, obj_id, objs_containers=objs_containers)
     if translation:

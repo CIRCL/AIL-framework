@@ -115,6 +115,12 @@ class Message(AbstractObject):
         if subchannel.get('chat-subchannel'):
             return f'chat-subchannel:{subchannel["chat-subchannel"].pop()}'
 
+    def get_current_thread(self):
+        subchannel = self.get_correlation('chat-thread')
+        if subchannel.get('chat-thread'):
+            return f'chat-thread:{subchannel["chat-thread"].pop()}'
+
+    # children thread
     def get_thread(self):
         for child in self.get_childrens():
             obj_type, obj_subtype, obj_id = child.split(':', 2)
@@ -319,9 +325,9 @@ class Message(AbstractObject):
         subchannel = self.get_subchannel()
         if subchannel:
             objs_containers.add(subchannel)
-        # thread = self.get_thread() # TODO Get current thread
-        # if thread:
-        #     objs_containers.add(thread)
+        thread = self.get_current_thread()
+        if thread:
+            objs_containers.add(thread)
         return objs_containers
 
     #- Language -#
