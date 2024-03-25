@@ -113,7 +113,7 @@ class Message(AbstractObject):
     def get_subchannel(self):
         subchannel = self.get_correlation('chat-subchannel')
         if subchannel.get('chat-subchannel'):
-            return f'user-account:{subchannel["chat-subchannel"].pop()}'
+            return f'chat-subchannel:{subchannel["chat-subchannel"].pop()}'
 
     def get_thread(self):
         for child in self.get_childrens():

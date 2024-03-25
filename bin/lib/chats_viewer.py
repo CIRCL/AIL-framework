@@ -323,7 +323,6 @@ def get_username_meta_from_global_id(username_global_id):
     username = Usernames.Username(username_id, instance_uuid)
     return username.get_meta()
 
-
 # TODO Filter
 ## Instance type
 ## Chats IDS
@@ -380,6 +379,22 @@ def get_nb_messages_iterator(filters={}):
             nb_messages += chat.get_nb_messages()
     return nb_messages
 
+
+#### FIX ####
+
+def fix_correlations_subchannel_message():
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            # subchannels
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
+                messages, _ = subchannel._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', )
+                    subchannel.add_correlation('message', '', message_id)
+
 #### API ####
 
 def api_get_chat_service_instance(chat_instance_uuid):
@@ -392,6 +407,7 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
+    # print(chat.get_obj_language_stats())
     meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
@@ -437,6 +453,7 @@ def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, nb=
     subchannel = ChatSubChannels.ChatSubChannel(chat_id, chat_instance_uuid)
     if not subchannel.exists():
         return {"status": "error", "reason": "Unknown subchannel"}, 404
+    # print(subchannel.get_obj_language_stats())
     meta = subchannel.get_meta({'chat', 'created_at', 'icon', 'nb_messages', 'nb_participants', 'threads', 'translation'}, translation_target=translation_target)
     if meta['chat']:
         meta['chat'] = get_chat_meta_from_global_id(meta['chat'])

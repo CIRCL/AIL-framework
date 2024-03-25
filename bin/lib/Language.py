@@ -265,7 +265,10 @@ def _get_html2text(content, ignore_links=False):
     h = html2text.HTML2Text()
     h.ignore_links = ignore_links
     h.ignore_images = ignore_links
-    return h.handle(content)
+    content = h.handle(content)
+    if content == '\n\n':
+        content = ''
+    return content
 
 def _clean_text_to_translate(content, html=False, keys_blocks=True):
     if html:
@@ -482,14 +485,23 @@ class LanguagesDetector:
         return languages
 
     def detect(self, content, force_gcld3=False):  # TODO detect length between 20-200 ????
+        if not content:
+            return None
         content = _clean_text_to_translate(content, html=True)
-        # print('cleaned content', content)
-        # gcld3
-        if len(content) < 100:
+        if not content:
+            return None
+        # DEBUG
+        # print('-------------------------------------------------------')
+        # print(content)
+        # print(len(content))
+        # lexilang
+        if len(content) < 150:
+            # print('lexilang')
             languages = self.detect_lexilang(content)
+        # gcld3
         else:
             # if len(content) >= 200 or not self.lt or force_gcld3:
-            #     print('gcld3')
+            # print('gcld3')
             languages = self.detect_gcld3(content)
         # libretranslate
         # else:
