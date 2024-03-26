@@ -75,6 +75,7 @@ class Chat(AbstractChatObject):
         meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
         if 'icon' in options:
+            meta['svg_icon'] = self.get_svg_icon()
             meta['icon'] = self.get_icon()
             meta['img'] = meta['icon']
         if 'info' in options:

@@ -38,44 +38,16 @@
                     {% include 'chats_explorer/block_translation.html' %}
                 {% endwith %}
 
-
-{#                {% if meta['subchannels'] %}#}
-{#                    <h4>Sub-Channels:</h4>#}
-{#                    <table id="tablesubchannels" class="table">#}
-{#                        <thead class="bg-dark text-white">#}
-{#                        <tr>#}
-{#                            <th></th>#}
-{#                            <th></th>#}
-{#                            <th></th>#}
-{#                            <th></th>#}
-{#                        </tr>#}
-{#                        </thead>#}
-{#                        <tbody style="font-size: 15px;">#}
-{#                        {% for meta in meta["subchannels"] %}#}
-{#                            <tr>#}
-{#                                <td>#}
-{#                                   <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle mr-1" alt="{{ meta['id'] }}" width="40" height="40">#}
-{#                                </td>#}
-{#                                <td><b>{{ meta['name'] }}</b></td>#}
-{#                                <td><a href="{{ url_for('metas_explorer.objects_subchannel_messages') }}?uuid={{ meta['subtype'] }}&id={{ meta['id'] }}">{{ meta['id'] }}</a></td>#}
-{#                                <td>{{ meta['created_at'] }}</td>#}
-{#                                <td>#}
-{#                                    {% if meta['first_seen'] %}#}
-{#                                        {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}#}
-{#                                    {% endif %}#}
-{#                                </td>#}
-{#                                <td>#}
-{#                                    {% if meta['last_seen'] %}#}
-{#                                        {{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}#}
-{#                                    {% endif %}#}
-{#                                </td>#}
-{#                                <td>{{ meta['nb_messages'] }}</td>#}
-{#                            </tr>#}
-{#                        {% endfor %}#}
-{#                        </tbody>#}
-{#                    </table>#}
-{##}
-{#                {% endif %}#}
+                {% if meta['chats'] %}
+                    <h4>User Chats:</h4>
+                    {% for meta_chats in meta['chats'] %}
+                        <div class="my-2">
+                            {% with meta=meta_chats  %}
+                                {% include 'chats_explorer/basic_card_chat.html' %}
+                            {% endwith %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
 
 
             </div>

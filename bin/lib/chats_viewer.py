@@ -379,6 +379,23 @@ def get_nb_messages_iterator(filters={}):
             nb_messages += chat.get_nb_messages()
     return nb_messages
 
+def get_user_account_chats_meta(user_id, chats, subchannels):
+    meta = []
+    for chat_g_id in chats:
+        c_subtype, c_id = chat_g_id.split(':', 1)
+        chat = Chats.Chat(c_id, c_subtype)
+        chat_meta = chat.get_meta(options={'icon', 'info', 'nb_participants', 'tags_safe', 'username'})
+        chat_meta['nb_messages'] = len(chat.get_user_messages(user_id))
+        chat_meta['subchannels'] = []
+        for subchannel_gid in chat.get_subchannels():
+            if subchannel_gid[16:] in subchannels:
+                _, s_subtype, s_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(s_id, s_subtype)
+                subchannel_meta = subchannel.get_meta(options={'created_at'})
+                subchannel_meta['nb_messages'] = len(subchannel.get_user_messages(user_id))
+                chat_meta['subchannels'].append(subchannel_meta)
+        meta.append(chat_meta)
+    return meta
 
 #### FIX ####
 
@@ -514,6 +531,8 @@ def api_get_user_account(user_id, instance_uuid, translation_target=None):
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
     meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
+    if meta['chats']:
+        meta['chats'] = get_user_account_chats_meta(user_id, meta['chats'], meta['subchannels'])
     return meta, 200
 
 def api_chat_messages(subtype, chat_id):

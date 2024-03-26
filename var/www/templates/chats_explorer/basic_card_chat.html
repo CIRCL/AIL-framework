@@ -13,7 +13,7 @@
                     <text x="15" y="15" text-anchor="middle" dominant-baseline="central" class="{{ meta["svg_icon"]["style"] }}" font-size="16px">{{ meta["svg_icon"]["icon"] }}</text>
                 </g>
             </svg>
-            {% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['name'] }}{% endif %} :
+            {% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['name'] }}{% endif %} :  <small><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">{{ meta['id'] }}</a></small>
         </h4>
     </div>
     <div class="card-body py-0">
@@ -46,21 +46,78 @@
             </span>
             <span class="badge badge-dark">
                 <span class="badge badge-info" style="font-size: 0.8rem;">
-                        <i class="far fa-comments"></i>
-                    </span>
+                    <i class="far fa-comments"></i>
+                </span>
                 {{meta["nb_subchannels"]}}&nbsp;&nbsp;
                 <span class="badge badge-info" style="font-size: 0.8rem;">
                     <i class="fas fa-user-circle"></i>
                 </span>
                 {{meta["nb_participants"]}}
             </span>
+            <span class="badge badge-dark">
+                <span class="badge badge-info" style="font-size: 0.8rem;">
+                    <i class="fas fa-user-circle"></i>
+                    <i class="far fa-comment-dots"></i>
+                </span>
+                {{meta["nb_messages"]}}&nbsp;&nbsp;
+            </span>
         </span>
+
+        <div class="">
+            {{ meta['info'] }}
+        </div>
 
         <div class="">
             {% for tag in meta['tags'] %}
                 <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
             {%  endfor %}
         </div>
+
+        {% if meta['subchannels'] %}
+            <table id="tablesubchannels" class="table">
+                <thead class="bg-dark text-white">
+                <tr>
+                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Created at</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                    <th>
+                        <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-comment-dots"></i>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for meta_s in meta["subchannels"] %}
+                    <tr>
+                        <td>
+                            <b>{{ meta_s['name'] }}</b>
+                            {% if meta_s['translation_name'] %}
+                                <div class="text-secondary">{{ meta_s['translation_name'] }}</div>
+                            {% endif %}
+                        </td>
+                        <td><a href="{{ url_for('chats_explorer.objects_subchannel_messages') }}?subtype={{ meta_s['subtype'] }}&id={{ meta_s['id'] }}">{{ meta_s['id'] }}</a></td>
+                        <td>{{ meta_s['created_at'] }}</td>
+                        <td>
+                            {% if meta_s['first_seen'] %}
+                                {{ meta_s['first_seen'][0:4] }}-{{ meta_s['first_seen'][4:6] }}-{{ meta_s['first_seen'][6:8] }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if meta_s['last_seen'] %}
+                                {{ meta_s['last_seen'][0:4] }}-{{ meta_s['last_seen'][4:6] }}-{{ meta_s['last_seen'][6:8] }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ meta_s['nb_messages'] }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% endif %}
 
 	</div>
     {% include 'objects/block_object_footer_small.html' %}

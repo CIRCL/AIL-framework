@@ -307,6 +307,9 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_nb_participants(self):
         return self.get_nb_correlation('user-account')
 
+    def get_user_messages(self, user_id):
+        return self.get_correlation_iter('user-account', self.subtype, user_id, 'message')
+
 # TODO move me to abstract subtype
 class AbstractChatObjects(ABC):
     def __init__(self, type):
