@@ -14,8 +14,8 @@
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
@@ -134,6 +134,65 @@
                 </div>
 
 
+                {% if meta['extracted_matches'] %}
+                    <div id="accordion_extracted" class="mb-3 mx-3">
+                        <div class="card">
+                            <div class="card-header py-1" id="heading_extracted">
+                                <div class="row">
+                                    <div class="col-11">
+                                        <div class="mt-2">
+                                            <img id="misp-logo" src="{{ url_for('static', filename='image/ail-icon.png')}}" height="32"> Extracted&nbsp;&nbsp;
+                                            <div class="badge badge-warning">{{meta['extracted_matches']|length}}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-1">
+                                        <button class="btn btn-link btn-lg py-2 float-right rotate down" data-toggle="collapse" data-target="#collapse_extracted" aria-expanded="true" aria-controls="collapseDecoded">
+                                            <i class="fas fa-chevron-circle-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="collapse_extracted" class="collapse" aria-labelledby="heading_extracted" data-parent="#accordion_extracted">
+                                <div class="card-body">
+                                    <table id="table_extracted" class="table table-striped">
+                                        <thead class="thead-dark">
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>ID</th>
+                                            <th>Extracted</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for match in meta['extracted_matches'] %}
+                                            <tr>
+                                                <td>
+                                                    <svg height="26" width="26">
+                                                        <g class="nodes">
+                                                            <circle cx="13" cy="13" r="13" fill="{{ meta['extracted_matches'][match]['icon']['color'] }}"></circle>
+                                                            <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ meta['extracted_matches'][match]['icon']['style'] }}" font-size="16px">{{ meta['extracted_matches'][match]['icon']['icon'] }}</text>
+                                                        </g>
+                                                    </svg>
+                                                    {{ meta['extracted_matches'][match]['subtype'] }}
+                                                </td>
+                                                <td>{{ meta['extracted_matches'][match]['id'] }}</td>
+                                                <td>
+                                                    {% for row in meta['extracted_matches'][match]['matches'] %}
+                                                        <a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a><br>
+                                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                {% endif %}
+
+
                 {% include 'objects/image/block_blur_img_slider.html' %}
                 {% with translate_url=url_for('chats_explorer.objects_message', id=meta['id']), obj_id=meta['id'] %}
                     {% include 'chats_explorer/block_translation.html' %}
@@ -168,6 +227,10 @@
         $("#nav_chat").addClass("active");
 
   });
+
+$(function () {
+    $('[data-toggle="popover"]').popover()
+})
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){

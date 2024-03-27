@@ -40,6 +40,11 @@ r_key = regex_helper.generate_redis_cache_key('extractor')
 
 # TODO UI Link
 
+CORRELATION_TO_EXTRACT = {
+    'item': ['cve', 'cryptocurrency', 'title', 'username'],
+    'message': ['cve', 'cryptocurrency', 'username']
+}
+
 MODULES = {
     'infoleak:automatic-detection="credit-card"': CreditCards(queue=False),
     'infoleak:automatic-detection="iban"': Iban(queue=False),
@@ -57,9 +62,9 @@ tools = Tools(queue=False)
 for tool_name in tools.get_tools():
     MODULES[f'infoleak:automatic-detection="{tool_name}-tool"'] = tools
 
-def get_correl_match(extract_type, obj_id, content):
+def get_correl_match(extract_type, obj, content):
     extracted = []
-    correl = correlations_engine.get_correlation_by_correl_type('item', '', obj_id, extract_type)
+    correl = correlations_engine.get_correlation_by_correl_type(obj.type, obj.get_subtype(r_str=True), obj.id, extract_type)
     to_extract = []
     map_subtype = {}
     map_value_id = {}
@@ -75,18 +80,18 @@ def get_correl_match(extract_type, obj_id, content):
             sha256_val = sha256(value.encode()).hexdigest()
         map_value_id[sha256_val] = value
     if to_extract:
-        objs = regex_helper.regex_finditer(r_key, '|'.join(to_extract), obj_id, content)
-        for obj in objs:
-            if map_subtype.get(obj[2]):
-                subtype = map_subtype[obj[2]]
+        objs = regex_helper.regex_finditer(r_key, '|'.join(to_extract), obj.get_global_id(), content)
+        for ob in objs:
+            if map_subtype.get(ob[2]):
+                subtype = map_subtype[ob[2]]
             else:
                 subtype = ''
-                sha256_val = sha256(obj[2].encode()).hexdigest()
+                sha256_val = sha256(ob[2].encode()).hexdigest()
             value_id = map_value_id.get(sha256_val)
             if not value_id:
                 logger.critical(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
                 value_id = 'ERROR'
-            extracted.append([obj[0], obj[1], obj[2], f'{extract_type}:{subtype}:{value_id}'])
+            extracted.append([ob[0], ob[1], ob[2], f'{extract_type}:{subtype}:{value_id}'])
     return extracted
 
 def _get_yara_match(data):
@@ -100,7 +105,7 @@ def _get_yara_match(data):
     return yara.CALLBACK_CONTINUE
 
 def _get_word_regex(word):
-    return '(?:^|(?<=[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]))' + word + '(?:$|(?=[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]))'
+    return '(?i)(?:^|(?<=[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]))' + word + '(?:$|(?=[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]))'
 
 def convert_byte_offset_to_string(b_content, offset):
     byte_chunk = b_content[:offset + 1]
@@ -115,17 +120,18 @@ def convert_byte_offset_to_string(b_content, offset):
 
 # TODO RETRO HUNTS
 # TODO TRACKER TYPE IN UI
-def get_tracker_match(obj_id, content):
+def get_tracker_match(obj, content):
     extracted = []
     extracted_yara = []
-    trackers = Tracker.get_obj_trackers('item', '', obj_id)
+    obj_gid = obj.get_global_id()
+    trackers = Tracker.get_obj_trackers(obj.type, obj.get_subtype(r_str=True), obj.id)
     for tracker_uuid in trackers:
         tracker = Tracker.Tracker(tracker_uuid)
         tracker_type = tracker.get_type()
         # print(tracker_type)
         tracked = tracker.get_tracked()
         if tracker_type == 'regex':  # TODO Improve word detection -> word delimiter
-            regex_match = regex_helper.regex_finditer(r_key, tracked, obj_id, content)
+            regex_match = regex_helper.regex_finditer(r_key, tracked, obj_gid, content)
             for match in regex_match:
                 extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
         elif tracker_type == 'yara':
@@ -147,13 +153,13 @@ def get_tracker_match(obj_id, content):
                 words = [tracked]
             for word in words:
                 regex = _get_word_regex(word)
-                regex_match = regex_helper.regex_finditer(r_key, regex, obj_id, content)
+                regex_match = regex_helper.regex_finditer(r_key, regex, obj_gid, content)
                 # print(regex_match)
                 for match in regex_match:
                     extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
 
     # Retro Hunt
-    retro_hunts = Tracker.get_obj_retro_hunts('item', '', obj_id)
+    retro_hunts = Tracker.get_obj_retro_hunts(obj.type, obj.get_subtype(r_str=True), obj.id)
     for retro_uuid in retro_hunts:
         retro_hunt = Tracker.RetroHunt(retro_uuid)
         rule = retro_hunt.get_rule(r_compile=True)
@@ -182,35 +188,36 @@ def get_tracker_match(obj_id, content):
 # Type:subtype:id
 # tag:iban
 # tracker:uuid
-
-def extract(obj_id, content=None):
-    item = Item(obj_id)
-    if not item.exists():
+# def extract(obj_id, content=None):
+def extract(obj_type, subtype, obj_id, content=None):
+    obj = ail_objects.get_object(obj_type, subtype, obj_id)
+    if not obj.exists():
         return []
+    obj_gid = obj.get_global_id()
 
     # CHECK CACHE
-    cached = r_cache.get(f'extractor:cache:{obj_id}')
+    cached = r_cache.get(f'extractor:cache:{obj_gid}')
     # cached = None
     if cached:
-        r_cache.expire(f'extractor:cache:{obj_id}', 300)
+        r_cache.expire(f'extractor:cache:{obj_gid}', 300)
         return json.loads(cached)
 
     if not content:
-        content = item.get_content()
+        content = obj.get_content()
 
-    extracted = get_tracker_match(obj_id, content)
+    extracted = get_tracker_match(obj, content)
 
     # print(item.get_tags())
-    for tag in item.get_tags():
+    for tag in obj.get_tags():
         if MODULES.get(tag):
             # print(tag)
             module = MODULES.get(tag)
-            matches = module.extract(obj_id, content, tag)
+            matches = module.extract(obj, content, tag)
             if matches:
                 extracted = extracted + matches
 
-    for obj_t in ['cve', 'cryptocurrency', 'title', 'username']:  # Decoded, PGP->extract bloc
-        matches = get_correl_match(obj_t, obj_id, content)
+    for obj_t in CORRELATION_TO_EXTRACT[obj.type]:
+        matches = get_correl_match(obj_t, obj, content)
         if matches:
             extracted = extracted + matches
 
@@ -221,8 +228,8 @@ def extract(obj_id, content=None):
     # Save In Cache
     if extracted:
         extracted_dump = json.dumps(extracted)
-        r_cache.set(f'extractor:cache:{obj_id}', extracted_dump)
-        r_cache.expire(f'extractor:cache:{obj_id}', 300)  # TODO Reduce CACHE ???????????????
+        r_cache.set(f'extractor:cache:{obj_gid}', extracted_dump)
+        r_cache.expire(f'extractor:cache:{obj_gid}', 300)  # TODO Reduce CACHE ???????????????
 
     return extracted
 
@@ -271,15 +278,7 @@ def get_extracted_by_match(extracted):
 
 # if __name__ == '__main__':
 #     t0 = time.time()
-#     obj_id = 'crawled/2022/09/15/circl.lu179c7903-5b21-452e-9f25-4b61d9934e2b'
-#     obj_id = 'crawled/2022/09/15/circl.lu1e4f9721-06dc-404f-aabf-3c3bd0b533bd'
-#     obj_id = 'submitted/2022/09/13/submitted_ba3ee771-c91c-4f50-9d6a-8558cdac7aeb.gz'
-#     # obj_id = 'tests/2021/01/01/credit_cards.gz'
-#     # obj_id = 'crawled/2020/07/20/circl.luc9301321-f1b1-4d91-9082-5eb452b946c5'
-#     obj_id = 'submitted/2019/09/22/97172282-e4c2-4a1e-b82c-c4fb9490a56e.gz'
-#     obj_id = 'submitted/2019/09/20/4fb7f02d-1241-4ef4-b17e-80ae76038835.gz'
 #     obj_id = 'crawled/2023/02/21/circl.lu1c300acb-0cbe-480f-917e-9afe3ec958e8'
-#
 #     extract(obj_id)
 #
 #     # get_obj_correl('cve', obj_id, content)

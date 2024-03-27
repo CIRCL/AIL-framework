@@ -41,9 +41,9 @@ class Phone(AbstractModule):
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
-    def extract(self, obj_id, content, tag):
+    def extract(self, obj, content, tag):
         extracted = []
-        phones = self.regex_phone_iter('ZZ', obj_id, content)
+        phones = self.regex_phone_iter('ZZ', obj.get_global_id(), content)
         for phone in phones:
             extracted.append([phone[0], phone[1], phone[2], f'tag:{tag}'])
         return extracted

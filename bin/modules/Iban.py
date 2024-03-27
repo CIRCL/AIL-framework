@@ -62,9 +62,9 @@ class Iban(AbstractModule):
             return True
         return False
 
-    def extract(self, obj_id, content, tag):
+    def extract(self, obj, content, tag):
         extracted = []
-        ibans = self.regex_finditer(self.iban_regex, obj_id, content)
+        ibans = self.regex_finditer(self.iban_regex, obj.get_global_id(), content)
         for iban in ibans:
             start, end, value = iban
             value = ''.join(e for e in value if e.isalnum())

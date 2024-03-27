@@ -118,10 +118,10 @@ class Mail(AbstractModule):
                     print(e)
         return valid_mxdomain
 
-    def extract(self, obj_id, content, tag):
+    def extract(self, obj, content, tag):
         extracted = []
         mxdomains = {}
-        mails = self.regex_finditer(self.email_regex, obj_id, content)
+        mails = self.regex_finditer(self.email_regex, obj.get_global_id(), content)
         for mail in mails:
             start, end, value = mail
             mxdomain = value.rsplit('@', 1)[1].lower()

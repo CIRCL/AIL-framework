@@ -58,9 +58,9 @@ class CreditCards(AbstractModule):
         if lib_refine.is_luhn_valid(clean_card):
             return clean_card
 
-    def extract(self, obj_id, content, tag):
+    def extract(self, obj, content, tag):
         extracted = []
-        cards = self.regex_finditer(self.regex, obj_id, content)
+        cards = self.regex_finditer(self.regex, obj.get_global_id(), content)
         for card in cards:
             start, end, value = card
             if self.get_valid_card(value):

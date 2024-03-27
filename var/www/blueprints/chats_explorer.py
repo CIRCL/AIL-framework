@@ -23,6 +23,7 @@ from lib import ail_core
 from lib import chats_viewer
 from lib import Language
 from lib import Tag
+from lib import module_extractor
 
 # ============ BLUEPRINT ============
 chats_explorer = Blueprint('chats_explorer', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/chats_explorer'))
@@ -235,6 +236,10 @@ def objects_message():
     else:
         message = message[0]
         languages = Language.get_translation_languages()
+        extracted = module_extractor.extract('message', '', message['id'], content=message['content'])
+        extracted_matches = module_extractor.get_extracted_by_match(extracted)
+        message['extracted'] = extracted
+        message['extracted_matches'] = extracted_matches
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
                                translation_languages=languages, translation_target=target,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))

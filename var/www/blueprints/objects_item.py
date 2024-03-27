@@ -85,7 +85,7 @@ def showItem():  # # TODO: support post
     else:
         meta['investigations'] = []
 
-    extracted = module_extractor.extract(item.id, content=meta['content'])
+    extracted = module_extractor.extract('item', '', item.id, content=meta['content'])
     extracted_matches = module_extractor.get_extracted_by_match(extracted)
 
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
