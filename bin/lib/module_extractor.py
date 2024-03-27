@@ -62,6 +62,24 @@ tools = Tools(queue=False)
 for tool_name in tools.get_tools():
     MODULES[f'infoleak:automatic-detection="{tool_name}-tool"'] = tools
 
+def merge_overlap(extracted):
+    merged = []
+    curr_start, curr_end, curr_string_match, curr_obj_ref = extracted[0]
+    curr_obj_ref = [(curr_obj_ref, curr_string_match)]
+
+    for start, end, mstring, ref in extracted[1:]:
+        # overlap
+        if start <= curr_end:
+            curr_string_match += mstring[curr_end - start:]
+            curr_end = max(curr_end, end)
+            curr_obj_ref.append((ref, mstring))
+        else:
+            merged.append((curr_start, curr_end, curr_string_match, curr_obj_ref))
+            curr_start, curr_end, curr_string_match, curr_obj_ref = start, end, mstring, [(ref, mstring)]
+
+    merged.append((curr_start, curr_end, curr_string_match, curr_obj_ref))
+    return merged
+
 def get_correl_match(extract_type, obj, content):
     extracted = []
     correl = correlations_engine.get_correlation_by_correl_type(obj.type, obj.get_subtype(r_str=True), obj.id, extract_type)
@@ -81,6 +99,8 @@ def get_correl_match(extract_type, obj, content):
         map_value_id[sha256_val] = value
     if to_extract:
         objs = regex_helper.regex_finditer(r_key, '|'.join(to_extract), obj.get_global_id(), content)
+        if extract_type == 'title' and objs:
+            objs = [objs[0]]
         for ob in objs:
             if map_subtype.get(ob[2]):
                 subtype = map_subtype[ob[2]]
@@ -223,7 +243,7 @@ def extract(obj_type, subtype, obj_id, content=None):
 
     # SORT By Start Pos
     extracted = sorted(extracted, key=itemgetter(0))
-    # print(extracted)
+    extracted = merge_overlap(extracted)
 
     # Save In Cache
     if extracted:
@@ -236,43 +256,46 @@ def extract(obj_type, subtype, obj_id, content=None):
 # TODO ADD LINK UI
 def get_extracted_by_match(extracted):
     matches = {}
-    for start, end, value, str_obj in extracted:
+    for start, end, value, raw_objs in extracted:
 
-        if str_obj not in matches:
-            matches[str_obj] = {}
-            ob_type, row_id = str_obj.split(':', 1)
-            if ob_type == 'tag':  # TODO put me in object class
-                matches[str_obj]['subtype'] = 'tag'
-                matches[str_obj]['id'] = row_id
-                matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf02b', 'color': '#28a745', 'radius': 5}
-                matches[str_obj]['link'] = ''
-            elif ob_type == 'tracker':  # TODO put me in object class
-                matches[str_obj]['subtype'] = 'tracker'
-                matches[str_obj]['id'] = row_id
-                matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#ffc107', 'radius': 5}
-                matches[str_obj]['link'] = ''
-            elif ob_type == 'retro_hunt':  # TODO put me in object class
-                matches[str_obj]['subtype'] = 'retro_hunt'
-                matches[str_obj]['id'] = row_id
-                matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#008107', 'radius': 5}
-                matches[str_obj]['link'] = ''
-            else:
-                row_id = row_id.split(':', 1)
-                if len(row_id) == 2:
-                    subtype = row_id[0]
-                    obj_id = row_id[1]
+        for raw in raw_objs:
+            str_obj, str_match = raw
+
+            if str_obj not in matches:
+                matches[str_obj] = {}
+                ob_type, row_id = str_obj.split(':', 1)
+                if ob_type == 'tag':  # TODO put me in object class
+                    matches[str_obj]['subtype'] = 'tag'
+                    matches[str_obj]['id'] = row_id
+                    matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf02b', 'color': '#28a745', 'radius': 5}
+                    matches[str_obj]['link'] = ''
+                elif ob_type == 'tracker':  # TODO put me in object class
+                    matches[str_obj]['subtype'] = 'tracker'
+                    matches[str_obj]['id'] = row_id
+                    matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#ffc107', 'radius': 5}
+                    matches[str_obj]['link'] = ''
+                elif ob_type == 'retro_hunt':  # TODO put me in object class
+                    matches[str_obj]['subtype'] = 'retro_hunt'
+                    matches[str_obj]['id'] = row_id
+                    matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#008107', 'radius': 5}
+                    matches[str_obj]['link'] = ''
                 else:
-                    subtype = ''
-                    obj_id = row_id[0]
-                matches[str_obj]['subtype'] = subtype
-                matches[str_obj]['id'] = obj_id
-                matches[str_obj]['icon'] = ail_objects.get_object_svg(ob_type, subtype, obj_id)
-                matches[str_obj]['link'] = ail_objects.get_object_link(ob_type, subtype, obj_id)
+                    row_id = row_id.split(':', 1)
+                    if len(row_id) == 2:
+                        subtype = row_id[0]
+                        obj_id = row_id[1]
+                    else:
+                        subtype = ''
+                        obj_id = row_id[0]
+                    matches[str_obj]['subtype'] = subtype
+                    matches[str_obj]['id'] = obj_id
+                    matches[str_obj]['icon'] = ail_objects.get_object_svg(ob_type, subtype, obj_id)
+                    matches[str_obj]['link'] = ail_objects.get_object_link(ob_type, subtype, obj_id)
 
-            matches[str_obj]['matches'] = []
+                matches[str_obj]['matches'] = []
 
-        match = [start, end, value]
-        matches[str_obj]['matches'].append(match)
+            match = [start, end, str_match]
+            matches[str_obj]['matches'].append(match)
     return matches
 
 

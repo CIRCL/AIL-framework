@@ -547,7 +547,7 @@
             {% if not extracted %}
                 <p class="my-0"> <pre class="border">{{ meta['content'] }}</pre></p>
             {% else %}
-                <p class="my-0"> <pre class="border">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="<svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[row[3]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;graph_node_icon {{ extracted_matches[row[3]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[row[3]]['icon']['icon'] }}</text></g></svg> {{ extracted_matches[row[3]]['subtype'] }}" data-content="{{ extracted_matches[row[3]]['id'] }}" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
+                <p class="my-0"> <pre class="border">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Extracted:" data-content="<ul class=&quot;list-group&quot;>{% for r in row[3] %}<li class=&quot;list-group-item&quot;><div><svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon'] }}</text></g></svg> {{ extracted_matches[r[0]]['subtype'] }}</div>{{ extracted_matches[r[0]]['id'] }} <div><b>{{ r[1] }}</b></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
             {% endif %}
         </div>
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
@@ -576,7 +576,10 @@
         $(".rotate").click(function(){
             $(this).toggleClass("down");
         })
-      });
+        $('[data-toggle="popover"]').popover({
+            boundary:'window',
+        })
+    });
 
       $('#pills-html2text-tab').on('shown.bs.tab', function (e) {
         if ($('#html2text-container').is(':empty')){
@@ -639,9 +642,6 @@
   }
 
   blocks.addEventListener('change', pixelate, false);
-  $(function () {
-    $('[data-toggle="popover"]').popover()
-  })
   </script>
 {% endif %}
 
