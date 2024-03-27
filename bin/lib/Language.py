@@ -434,7 +434,7 @@ def delete_obj_translation(obj_global_id, language, field=''):
 
 class LanguagesDetector:
 
-    def __init__(self, nb_langs=3, min_proportion=0.2, min_probability=0.7, min_len=0):
+    def __init__(self, nb_langs=3, min_proportion=0.2, min_probability=-1, min_len=0):
         self.lt = LibreTranslateAPI(get_translator_instance())
         try:
             self.lt.languages()
@@ -461,9 +461,11 @@ class LanguagesDetector:
                 languages.append(lang.language)
         return languages
 
-    def detect_lexilang(self, content):  # TODO clean text ??? - TODO REMOVE SEPARATOR
+    def detect_lexilang(self, content):
         language, prob = lexilang_detect(content)
-        if prob > 0:
+        if prob > 0 and self.min_probability == -1:
+            return [language]
+        elif prob > 0.4:
             return [language]
         else:
             return []
@@ -506,6 +508,8 @@ class LanguagesDetector:
         # libretranslate
         # else:
         #     languages = self.detect_libretranslate(content)
+        if not languages:
+            languages = []
         return languages
 
 class LanguageTranslator:
