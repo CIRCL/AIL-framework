@@ -372,6 +372,22 @@ def get_json_tracker_graph():
         res = Tracker.get_trackers_graph_by_day([tracker_uuid])
     return jsonify(res)
 
+@hunters.route('/tracker/object/remove', methods=['GET'])
+@login_required
+@login_analyst
+def tracker_object_remove():
+    user_id = current_user.get_id()
+    tracker_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+    res = Tracker.api_tracker_remove_object({'uuid': tracker_uuid, 'gid': object_global_id}, user_id)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
+
 
 ####################
 #    RETRO HUNT    #

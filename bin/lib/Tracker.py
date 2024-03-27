@@ -385,7 +385,7 @@ class Tracker:
             r_tracker.srem(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}', date)
 
         r_tracker.srem(f'obj:trackers:{obj_type}:{subtype}:{obj_id}', self.uuid)
-        r_tracker.srem(f'tracker:objs:{self.uuid}', f'{obj_type}:{subtype}:{obj_id}')
+        r_tracker.srem(f'tracker:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
         self.update_daterange()
 
     # TODO escape custom tags
@@ -1054,6 +1054,20 @@ def api_delete_tracker(data, user_id):
 
     tracker = Tracker(tracker_uuid)
     return tracker.delete(), 200
+
+def api_tracker_remove_object(data, user_id):
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_id)
+    if res:
+        return res
+
+    tracker = Tracker(tracker_uuid)
+    object_gid = data.get('gid')
+    try:
+        obj_type, subtype, obj_id = object_gid.split(':', 2)
+    except (AttributeError, IndexError):
+        return {"status": "error", "reason": "Invalid Object"}, 400
+    return tracker.remove(obj_type, subtype, obj_id), 200
 
 ## -- CREATE TRACKER -- ##
 

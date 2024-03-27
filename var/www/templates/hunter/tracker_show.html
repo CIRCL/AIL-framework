@@ -44,6 +44,8 @@
 
 {% include 'nav_bar.html' %}
 
+{% include 'modals/tracker_remove_object.html' %}
+
 <div class="container-fluid">
     <div class="row">
         {% include 'hunter/menu_sidebar.html' %}
@@ -295,6 +297,11 @@
 									{% endif %}
 								</td>
 								<td class="text-right">
+                                    <button class="btn btn-outline-danger py-0 px-1"
+                                            data-toggle="modal" data-target="#modal_tracker_remove_object"
+                                            data-tracker_uuid="{{ meta['uuid'] }}" data-obj_gid="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
+                                            <i class="fas fa-trash-alt"></i></button>
+                                    </button>
 {#									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ meta['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">#}
 {#										<button type="button" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>#}
 {#									</a>#}
