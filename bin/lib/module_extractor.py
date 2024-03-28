@@ -242,8 +242,9 @@ def extract(obj_type, subtype, obj_id, content=None):
             extracted = extracted + matches
 
     # SORT By Start Pos
-    extracted = sorted(extracted, key=itemgetter(0))
-    extracted = merge_overlap(extracted)
+    if extracted:
+        extracted = sorted(extracted, key=itemgetter(0))
+        extracted = merge_overlap(extracted)
 
     # Save In Cache
     if extracted:
