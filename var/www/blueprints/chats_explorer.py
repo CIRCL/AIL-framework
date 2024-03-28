@@ -296,3 +296,18 @@ def objects_user_account():
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
                                translation_languages=languages, translation_target=target)
+
+@chats_explorer.route("objects/user-account/messages/stats/week/all", methods=['GET'])
+@login_required
+@login_read_only
+def user_account_messages_stats_week_all():
+    instance_uuid = request.args.get('subtype')
+    user_id = request.args.get('id')
+    week = chats_viewer.api_get_user_account_nb_all_week_messages(user_id, instance_uuid)
+    if week[1] != 200:
+        return create_json_response(week[0], week[1])
+    else:
+        return jsonify(week[0])
+
+
+

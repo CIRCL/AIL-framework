@@ -11,6 +11,7 @@ import sys
 import time
 import uuid
 
+from datetime import datetime
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -397,6 +398,33 @@ def get_user_account_chats_meta(user_id, chats, subchannels):
         meta.append(chat_meta)
     return meta
 
+
+def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
+    week = {}
+    # Init
+    for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']:
+        week[day] = {}
+        for i in range(24):
+            week[day][i] = 0
+
+    # chats
+    for chat_g_id in chats:
+        c_subtype, c_id = chat_g_id.split(':', 1)
+        chat = Chats.Chat(c_id, c_subtype)
+        for message in chat.get_user_messages(user_id):
+            timestamp = message.split('/', 2)[1]
+            timestamp = datetime.utcfromtimestamp(float(timestamp))
+            date_name = timestamp.strftime('%a')
+            week[date_name][timestamp.hour] += 1
+
+    stats = []
+    nb_day = 0
+    for day in week:
+        for hour in week[day]:
+            stats.append({'date': day, 'day': nb_day, 'hour': hour, 'count': week[day][hour]})
+        nb_day += 1
+    return stats
+
 #### FIX ####
 
 def fix_correlations_subchannel_message():
@@ -534,6 +562,13 @@ def api_get_user_account(user_id, instance_uuid, translation_target=None):
     if meta['chats']:
         meta['chats'] = get_user_account_chats_meta(user_id, meta['chats'], meta['subchannels'])
     return meta, 200
+
+def api_get_user_account_nb_all_week_messages(user_id, instance_uuid):
+    user_account = UsersAccount.UserAccount(user_id, instance_uuid)
+    if not user_account.exists():
+        return {"status": "error", "reason": "Unknown user-account"}, 404
+    week = get_user_account_nb_all_week_messages(user_account.id, user_account.get_chats(), user_account.get_chat_subchannels())
+    return week, 200
 
 def api_chat_messages(subtype, chat_id):
     chat = Chats.Chat(chat_id, subtype)

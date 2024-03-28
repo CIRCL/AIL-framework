@@ -39,6 +39,9 @@
                 {% endwith %}
 
                 {% if meta['chats'] %}
+                    <h4 class="mx-5 mt-2 text-secondary">User All Messages:</h4>
+                    <div id="heatmapweekhourall"></div>
+
                     <h4>User Chats:</h4>
                     {% for meta_chats in meta['chats'] %}
                         <div class="my-2">
@@ -68,6 +71,11 @@
 {#            });#}
 {#        {% endif %}#}
   });
+
+d3.json("{{ url_for('chats_explorer.user_account_messages_stats_week_all') }}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}")
+    .then(function(data) {
+        create_heatmap_week_hour('#heatmapweekhourall', data);
+    })
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){
