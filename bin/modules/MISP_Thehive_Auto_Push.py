@@ -57,7 +57,7 @@ class MISP_Thehive_Auto_Push(AbstractModule):
                     Tag.set_auto_push_status('misp', 'ConnectionError')
                 else:
                     Tag.set_auto_push_status('misp', '')
-                    self.logger.info('MISP Pushed:', tag, '->', item_id)
+                    self.logger.info(f'MISP Pushed: {tag} -> {item_id}')
 
         if 'thehive' in self.tags:
             if tag in self.tags['thehive']:
@@ -68,7 +68,7 @@ class MISP_Thehive_Auto_Push(AbstractModule):
                     Tag.set_auto_push_status('thehive', 'Request Entity Too Large')
                 else:
                     Tag.set_auto_push_status('thehive', '')
-                    self.logger.info('thehive Pushed:', tag, '->', item_id)
+                    self.logger.info(f'thehive Pushed: {tag} -> {item_id}')
 
 
 if __name__ == "__main__":
