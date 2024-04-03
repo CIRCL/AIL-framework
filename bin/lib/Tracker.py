@@ -1055,6 +1055,23 @@ def api_delete_tracker(data, user_id):
     tracker = Tracker(tracker_uuid)
     return tracker.delete(), 200
 
+def api_tracker_add_object(data, user_id):
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_id)
+    if res:
+        return res
+    tracker = Tracker(tracker_uuid)
+    object_gid = data.get('gid')
+    date = data.get('date')
+    if date:
+        if not Date.validate_str_date(date):
+            date = None
+    try:
+        obj_type, subtype, obj_id = object_gid.split(':', 2)
+    except (AttributeError, IndexError):
+        return {"status": "error", "reason": "Invalid Object"}, 400
+    return tracker.add(obj_type, subtype, obj_id, date=date), 200
+
 def api_tracker_remove_object(data, user_id):
     tracker_uuid = data.get('uuid')
     res = api_check_tracker_acl(tracker_uuid, user_id)

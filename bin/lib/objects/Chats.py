@@ -56,6 +56,13 @@ class Chat(AbstractChatObject):
             url = f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
         return url
 
+    def get_origin_link(self):
+        if self.subtype == '00098785-7e70-5d12-a120-c5cdc1252b2b':
+            username = self.get_username()
+            if username:
+                username = username.split(':', 2)[2]
+                return f'https://t.me/{username}'
+
     def get_svg_icon(self):  # TODO
         # if self.subtype == 'telegram':
         #     style = 'fab'
@@ -100,6 +107,8 @@ class Chat(AbstractChatObject):
             meta['threads'] = self.get_threads()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'origin_link' in options:
+            meta['origin_link'] = self.get_origin_link()
         return meta
 
     def get_misp_object(self):

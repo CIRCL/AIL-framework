@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Report - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/d3.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/d3/heatmap_week_hour.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js') }}"></script>
+
+    <style>
+        .chat-message-left,
+        .chat-message-right {
+            display: flex;
+            flex-shrink: 0;
+        }
+        .chat-message-right {
+            flex-direction: row-reverse;
+            margin-left: auto
+        }
+        .divider:after,
+        .divider:before {
+            content: "";
+            flex: 1;
+            height: 2px;
+            background: #eee;
+        }
+        .object_image {
+            max-width: 50%;
+        }
+	</style>
+
+</head>
+<body>
+    {% include 'nav_bar.html' %}
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-12">
+
+            <h1>Tracker Report:</h1>
+
+            <div class="row">
+                <div class="col-8">
+
+                    <div class="card my-2">
+                        <div class="card-header bg-dark text-white">
+                            <span class="badge badge-light lex-row-reverse float-right">
+                                <span id="sparkline"></span>
+                            </span>
+                            <h4 class="card-title">
+                                {% if meta['description'] %}
+                                    {{ meta['description'] }}
+                                {% endif %}
+                            </h4>
+                        </div>
+                        <div class="card-body bg-light pt-2">
+                            <table class="table table-borderless">
+                                <tbody>
+                                <tr>
+                                    <td class="text-right"><b>Type</b></td>
+                                    <td>
+                                        {% if meta['type'] == 'word' %}
+                                            <i class="fas fa-font"></i>&nbsp;
+                                        {% elif meta['type'] == 'set' %}
+                                            <i class="fas fa-layer-group"></i>&nbsp;
+                                        {% elif meta['type'] == 'regex' %}
+                                            <i class="fas fa-compass"></i>&nbsp;
+                                        {% elif meta['type'] == 'typosquatting' %}
+                                            <i class="fas fa-clone"></i>&nbsp;
+                                        {% elif meta['type'] == 'yara' %}
+                                            <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>&nbsp;
+                                        {% endif %}
+                                        {{ meta['type'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Generation Date</b></td>
+                                    <td>
+                                        <b>{{meta['date']}}</b>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>First Seen &nbsp;<i class="fas fa-hourglass-start"></i></b></td>
+                                    <td>
+                                        {% if meta['first_seen'] %}
+                                            {{ meta['first_seen'][0:4] }} - {{ meta['first_seen'][4:6] }} - {{ meta['first_seen'][6:8] }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Last Seen &nbsp;<i class="fas fa-hourglass-end"></i></b></td>
+                                    <td>
+                                        {% if meta['last_seen'] %}
+                                            {{ meta['last_seen'][0:4] }} - {{ meta['last_seen'][4:6] }} - {{ meta['last_seen'][6:8] }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Tags</b></td>
+                                    <td>
+                                        {%for tag in meta['tags']%}
+                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                        {%endfor%}
+                                    </td>
+                                </tr>
+
+
+
+                                <tr>
+                                    <td class="text-right"><b>Objects Match</b></td>
+                                    <td>
+                                        {%for obj_type in meta['nb_objs']%}
+                                            <h4><span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">
+                                                {{ obj_type }}
+                                                <span class="badge badge-light">{{ meta['nb_objs'][obj_type] }}</span>
+                                            </span></h4>
+                                        {%endfor%}
+                                    </td>
+                                </tr>
+                                </tbody>
+                                {% if meta['type'] != 'yara' %}
+                                    <tr>
+                                        <td class="text-right"><b>Tracker</b></td>
+                                        <td>
+                                            {{ meta['tracked'] }}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </table>
+
+                            {% if yara_rule_content %}
+                                <h5 class="mb-0">Yara Rule:</h5>
+                                <p class="my-0">
+                                    <pre class="border bg-white" style="white-space: pre-wrap;">{{ yara_rule_content }}</pre>
+                                </p>
+                            {% endif %}
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-4">
+                    <div>
+                        <img src="{{ url_for('static', filename='image/ail-project.png') }}" width="200">
+                    </div>
+                    <div>
+                        <img src="https://circl.lu/assets/images/circl-logo.png" width="200">
+                    </div>
+                </div>
+            </div>
+
+            <h3>Messages:</h3>
+            {% for message in messages %}
+                <div class="d-flex justify-content-between py-2 px-3 border-top" style="background-color: rgba(0,0,0,.03)">
+                    <div>
+                        <svg height="30" width="30">
+                            <g class="nodes">
+                                <circle cx="15" cy="15" r="15" fill="{{ chats[message['chat']]["svg_icon"]["color"] }}"></circle>
+                                <text x="15" y="15" text-anchor="middle" dominant-baseline="central" class="{{ chats[message['chat']]["svg_icon"]["style"] }}" font-size="16px">{{ chats[message['chat']]["svg_icon"]["icon"] }}</text>
+                            </g>
+                        </svg>
+                        {% if chats[message['chat']]['name'] %}{{ chats[message['chat']]['name'] }}{% endif %}
+                    </div>
+                    <div>
+                        {% if chats[message['chat']]['origin_link'] %}
+                            <span class="flex-row-reverse">{{ chats[message['chat']]['origin_link'] }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% with message=message,show_full_message=True %}
+                    {% include 'chats_explorer/block_message.html' %}
+                {% endwith %}
+
+            {% endfor %}
+
+            <h3 class="mt-4">Chats Metadata:</h3>
+            {% for chat in chats %}
+                <div class="my-2">
+                    {% with meta=chats[chat],report_mode=True %}
+                        {% include 'chats_explorer/basic_card_chat.html' %}
+                    {% endwith %}
+                </div>
+            {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+{#                <h5 class="mx-5 mt-2 text-secondary">All Messages:</h5>#}
+{#                <div id="heatmapweekhourall"></div>#}
+
+{#                {% with translate_url=url_for('chats_explorer.chats_explorer_chat', subtype=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}#}
+{#                    {% include 'chats_explorer/block_translation.html' %}#}
+{#                {% endwith %}#}
+
+{#                {% if chat['messages'] %}#}
+{##}
+{#                    <div class="position-relative">#}
+{#                        <div class="chat-messages p-2">#}
+{##}
+{#                            {% for date in chat['messages'] %}#}
+{##}
+{#                                <div class="divider d-flex align-items-center mb-4">#}
+{#                                    <p class="text-center h2 mx-3 mb-0" style="color: #a2aab7;">#}
+{#                                        <span class="badge badge-secondary mb-2" id="date_section_{{ date }}">{{ date }}</span>#}
+{#                                    </p>#}
+{#                                </div>#}
+{##}
+{#                                {% for mess in chat['messages'][date] %}#}
+{##}
+{#                                    {% with message=mess %}#}
+{#                                        {% include 'chats_explorer/block_message.html' %}#}
+{#                                    {% endwith %}#}
+{##}
+{#                                {% endfor %}#}
+{#                                <br>#}
+{#                            {% endfor %}#}
+{##}
+{#                        </div>#}
+{#                    </div>#}
+{##}
+{#                {% endif %}#}
+
+
+
+<script>
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        $("#nav_chat").addClass("active");
+
+        // unblur images
+        let images = document.getElementsByClassName('object_image');
+        for(i = 0; i < images.length; i++) {
+            images[i].style.filter = "blur(0px)";
+        }
+        sparkline("sparkline", {{ meta['sparkline'] }}, {});
+  });
+
+</script>
+
+
+{#<script>#}
+{#    d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week_all') }}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}")#}
+{#        .then(function(data) {#}
+{#            create_heatmap_week_hour('#heatmapweekhourall', data);#}
+{#        })#}
+{##}
+{#{% if not chat['subchannels'] %}#}
+{#d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week') }}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}")#}
+{#.then(function(data) {#}
+{#    create_heatmap_week_hour('#heatmapweekhour', data);#}
+{#})#}
+{#{% endif %}#}
+{#</script>#}
+
+
+</body>
+
+</html>

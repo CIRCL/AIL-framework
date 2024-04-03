@@ -71,6 +71,10 @@ class Message(AbstractObject):
     def get_basename(self):
         return os.path.basename(self.id)
 
+    def get_chat_instance(self):
+        c_id = self.id.split('/')
+        return c_id[0]
+
     def get_content(self, r_type='str'): # TODO ADD cache # TODO Compress content ???????
         """
         Returns content
@@ -259,7 +263,7 @@ class Message(AbstractObject):
         else:
             timestamp = float(timestamp)
         timestamp = datetime.utcfromtimestamp(float(timestamp))
-        meta['date'] = timestamp.strftime('%Y/%m/%d')
+        meta['date'] = timestamp.strftime('%Y-%m-%d')
         meta['hour'] = timestamp.strftime('%H:%M:%S')
         meta['full_date'] = timestamp.isoformat(' ')
         if 'last_full_date' in options:

@@ -24,6 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib.objects import ail_objects
+from lib import chats_viewer
 from lib import item_basic
 from lib import Tracker
 from lib import Tag
@@ -372,6 +373,27 @@ def get_json_tracker_graph():
         res = Tracker.get_trackers_graph_by_day([tracker_uuid])
     return jsonify(res)
 
+@hunters.route('/tracker/object/add', methods=['GET'])
+@login_required
+@login_admin
+def tracker_object_add():
+    user_id = current_user.get_id()
+    tracker_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+    if object_global_id.startswith('messages::'):
+        obj = ail_objects.get_obj_from_global_id(object_global_id)
+        date = obj.get_date()
+    else:
+        date = request.args.get('date')  # TODO check daterange
+    res = Tracker.api_tracker_add_object({'uuid': tracker_uuid, 'gid': object_global_id, 'date': date}, user_id)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
+
 @hunters.route('/tracker/object/remove', methods=['GET'])
 @login_required
 @login_analyst
@@ -388,6 +410,41 @@ def tracker_object_remove():
         else:
             return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
 
+
+@hunters.route('/tracker/objects', methods=['GET'])
+@login_required
+@login_admin
+def tracker_objects():
+    user_id = current_user.get_id()
+    tracker_uuid = request.args.get('uuid', None)
+    res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, user_id)
+    if res[1] != 200:  # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+    tracker = Tracker.Tracker(tracker_uuid)
+    meta = tracker.get_meta(options={'description', 'sparkline', 'tags', 'nb_objs'})
+    if meta['type'] == 'yara':
+        yara_rule_content = Tracker.get_yara_rule_content(meta['tracked'])
+    else:
+        yara_rule_content = None
+
+    chats, messages = chats_viewer.get_message_report(tracker.get_objs())
+
+    meta['date'] = Date.get_current_utc_full_time()
+
+    return render_template("messages_report.html", meta=meta, yara_rule_content=yara_rule_content,
+                           chats=chats, messages=messages, bootstrap_label=bootstrap_label)
+
+    # TODO
+
+    # Manual - Title
+    #        - Summary
+
+    # Messages table
+
+    # Timeline messages by chats - line
+    # pie charts NB messages all chats
+    # Barchart NB messages by days
 
 ####################
 #    RETRO HUNT    #

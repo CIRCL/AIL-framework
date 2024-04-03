@@ -322,7 +322,7 @@ def get_threads_metas(threads):
 def get_username_meta_from_global_id(username_global_id):
     _, instance_uuid, username_id = username_global_id.split(':', 2)
     username = Usernames.Username(username_id, instance_uuid)
-    return username.get_meta()
+    return username.get_meta(options={'icon'})
 
 # TODO Filter
 ## Instance type
@@ -386,6 +386,8 @@ def get_user_account_chats_meta(user_id, chats, subchannels):
         c_subtype, c_id = chat_g_id.split(':', 1)
         chat = Chats.Chat(c_id, c_subtype)
         chat_meta = chat.get_meta(options={'icon', 'info', 'nb_participants', 'tags_safe', 'username'})
+        if chat_meta['username']:
+            chat_meta['username'] = get_username_meta_from_global_id(chat_meta['username'])
         chat_meta['nb_messages'] = len(chat.get_user_messages(user_id))
         chat_meta['subchannels'] = []
         for subchannel_gid in chat.get_subchannels():
@@ -424,6 +426,39 @@ def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
             stats.append({'date': day, 'day': nb_day, 'hour': hour, 'count': week[day][hour]})
         nb_day += 1
     return stats
+
+def _get_chat_card_meta_options():
+    return {'created_at', 'icon', 'info', 'nb_participants', 'origin_link', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
+
+def _get_message_bloc_meta_options():
+    return {'chat', 'content', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
+
+def get_message_report(l_mess): # TODO Force language + translation
+    translation_target = 'en'
+    chats = {}
+    messages = []
+    mess_options = _get_message_bloc_meta_options()
+
+    l_mess = sorted(l_mess, key=lambda x: x[2])
+
+    for m in l_mess:
+        message = Messages.Message(m[2])
+        meta = message.get_meta(options=mess_options, translation_target=translation_target)
+        if meta['chat'] not in chats:
+            chat = Chats.Chat(meta['chat'], message.get_chat_instance())
+            meta_chat = chat.get_meta(options=_get_chat_card_meta_options(), translation_target=translation_target)
+            if meta_chat['username']:
+                meta_chat['username'] = get_username_meta_from_global_id(meta_chat['username'])
+            chats[chat.id] = meta_chat
+
+            # stats
+            chats[chat.id]['t_messages'] = 1
+        else:
+            chats[meta['chat']]['t_messages'] += 1
+
+        messages.append(meta)
+
+    return chats, messages
 
 #### FIX ####
 

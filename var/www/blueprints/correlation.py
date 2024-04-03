@@ -359,6 +359,10 @@ def show_relationship():
                 dict_object["metadata"]['type_id'] = subtype
             else:
                 dict_object["subtype"] = ''
-                dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id)
+            dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id)
+            dict_object["metadata_card"]['tags_safe'] = True
             return render_template("show_relationship.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
-                                       tags_selector_data=Tag.get_tags_selector_data())
+                                   tags_selector_data=Tag.get_tags_selector_data(),
+                                   meta=dict_object["metadata_card"],
+                                   ail_tags=dict_object["metadata_card"]["add_tags_modal"])
+

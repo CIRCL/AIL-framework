@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import datetime
+import time
 from calendar import monthrange
 
 from dateutil.rrule import rrule, MONTHLY
@@ -90,6 +91,10 @@ def get_current_week_day():
     dt = datetime.date.today()
     start = dt - datetime.timedelta(days=dt.weekday())
     return start.strftime("%Y%m%d")
+
+def get_current_utc_full_time():
+    timestamp = datetime.datetime.fromtimestamp(time.time())
+    return timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
 def get_month_dates(date=None):
     if date:
