@@ -9,8 +9,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.exceptions import AILObjectUnknown
 
-
-
 from lib.ConfigLoader import ConfigLoader
 from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_with_subtypes, get_default_correlation_objects
 from lib import correlations_engine
@@ -35,6 +33,7 @@ from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
 from lib.objects import Messages
+from lib.objects import Ocrs
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
 from lib.objects import Titles
@@ -93,6 +92,8 @@ def get_object(obj_type, subtype, obj_id):
             return Images.Image(obj_id)
         elif obj_type == 'message':
             return Messages.Message(obj_id)
+        elif obj_type == 'ocr':
+            return Ocrs.Ocr(obj_id)
         elif obj_type == 'screenshot':
             return Screenshot(obj_id)
         elif obj_type == 'title':
@@ -254,7 +255,7 @@ def get_objects_meta(objs, options=set(), flask_context=False):
 
 def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
-    meta = obj.get_meta(options={'chat', 'chats', 'created_at', 'icon', 'info', 'nb_messages', 'nb_participants', 'threads', 'username'})
+    meta = obj.get_meta(options={'chat', 'chats', 'created_at', 'icon', 'info', 'map', 'nb_messages', 'nb_participants', 'threads', 'username'})
     # meta['icon'] = obj.get_svg_icon()
     meta['svg_icon'] = obj.get_svg_icon()
     if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':

@@ -53,9 +53,10 @@ CORRELATION_TYPES_BY_OBJ = {
     "favicon": ["domain", "item"],  # TODO Decoded
     "file-name": ["chat", "message"],
     "hhhash": ["domain"],
-    "image": ["chat", "message", "user-account"],
+    "image": ["chat", "message", "ocr", "user-account"],
     "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
     "message": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "file-name", "image", "pgp", "user-account"],  # chat ??
+    "ocr": ["image"],
     "pgp": ["domain", "item", "message"],
     "screenshot": ["domain", "item"],
     "title": ["domain", "item"],

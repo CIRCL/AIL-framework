@@ -130,6 +130,8 @@
 						{% include 'correlation/metadata_card_hhhash.html' %}
                     {% elif dict_object["object_type"] == "image" %}
 						{% include 'chats_explorer/card_image.html' %}
+                    {% elif dict_object["object_type"] == "ocr" %}
+						{% include 'objects/ocr/card_ocr.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
                     {% elif dict_object["object_type"] == "favicon" %}
@@ -308,6 +310,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="imageCheck" name="imageCheck" {%if "image" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="imageCheck">Image</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="ocrCheck" name="ocrCheck" {%if "ocr" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="ocrCheck">OCR</label>
                                             </div>
 
                                             <hr>

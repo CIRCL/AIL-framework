@@ -139,6 +139,9 @@ def show_correlation():
         correl_option = request.form.get('imageCheck')
         if correl_option:
             filter_types.append('image')
+        correl_option = request.form.get('ocrCheck')
+        if correl_option:
+            filter_types.append('ocr')
         correl_option = request.form.get('user_accountCheck')
         if correl_option:
             filter_types.append('user-account')

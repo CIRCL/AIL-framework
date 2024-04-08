@@ -18,14 +18,14 @@ config_loader = None
 
 AIL_OBJECTS = sorted({'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency', 'decoded',
                       'domain', 'etag', 'favicon', 'file-name', 'hhhash',
-                      'item', 'image', 'message', 'pgp', 'screenshot', 'title', 'user-account', 'username'})
+                      'item', 'image', 'message', 'ocr', 'pgp', 'screenshot', 'title', 'user-account', 'username'})
 
 AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
 
 # TODO by object TYPE ????
 AIL_OBJECTS_CORRELATIONS_DEFAULT = sorted({'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency', 'decoded',
                                            'domain', 'favicon', 'file-name',
-                                           'item', 'image', 'message', 'pgp', 'screenshot', 'title', 'user-account', 'username'})
+                                           'item', 'image', 'message', 'ocr', 'pgp', 'screenshot', 'title', 'user-account', 'username'})
 
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
@@ -105,7 +105,7 @@ def unpack_obj_global_id(global_id, r_type='tuple'):
         obj = global_id.split(':', 2)
         return {'type': obj[0], 'subtype': obj[1], 'id': obj[2]}
     else:  # tuple(type, subtype, id)
-        return global_id.split(':', 2)
+        return global_id.split(':', 2)    # TODO REPLACE get_obj_type_subtype_id_from_global_id(global_id)
 
 def unpack_objs_global_id(objs_global_id, r_type='tuple'):
     objs = []

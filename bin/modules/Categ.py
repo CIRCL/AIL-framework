@@ -89,7 +89,7 @@ class Categ(AbstractModule):
         # Search for pattern categories in obj content
         for categ, pattern in self.categ_words:
 
-            if obj.type == 'message':
+            if obj.type == 'message' or obj.type == 'ocr':
                 self.add_message_to_queue(message='0', queue=categ)
             else:
 
