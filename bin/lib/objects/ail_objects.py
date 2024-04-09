@@ -37,7 +37,7 @@ from lib.objects import Ocrs
 from lib.objects import Pgps
 from lib.objects.Screenshots import Screenshot
 from lib.objects import Titles
-from lib.objects.UsersAccount import UserAccount
+from lib.objects import UsersAccount
 from lib.objects import Usernames
 
 config_loader = ConfigLoader()
@@ -113,7 +113,7 @@ def get_object(obj_type, subtype, obj_id):
         elif obj_type == 'pgp':
             return Pgps.Pgp(obj_id, subtype)
         elif obj_type == 'user-account':
-            return UserAccount(obj_id, subtype)
+            return UsersAccount.UserAccount(obj_id, subtype)
         elif obj_type == 'username':
             return Usernames.Username(obj_id, subtype)
         else:

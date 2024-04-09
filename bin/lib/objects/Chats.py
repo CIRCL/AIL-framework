@@ -18,12 +18,9 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_chat_object import AbstractChatObject, AbstractChatObjects
 
 
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
-from lib.data_retention_engine import update_obj_date
-from lib.objects import ail_objects
+from lib.objects.abstract_subtype_object import get_all_id
+# from lib.data_retention_engine import update_obj_date
 from lib.timeline_engine import Timeline
-
-from lib.correlations_engine import get_correlation_by_correl_type
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")

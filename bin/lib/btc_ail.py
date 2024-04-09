@@ -8,7 +8,6 @@ import sys
 import requests
 
 sys.path.append(os.environ['AIL_BIN'])
-from lib.objects.CryptoCurrencies import CryptoCurrency
 
 logger = logging.getLogger()
 
@@ -53,9 +52,11 @@ def get_bitcoin_info(bitcoin_address, nb_transaction=50):
 
 # filter btc seen in ail
 def filter_btc_seen(btc_addr_set):
+    from lib.objects import CryptoCurrencies
+
     list_seen_btc = []
     for btc_addr in btc_addr_set:
-        cryptocurrency = CryptoCurrency(btc_addr, 'bitcoin')
+        cryptocurrency = CryptoCurrencies.CryptoCurrency(btc_addr, 'bitcoin')
         if cryptocurrency.exists():
             list_seen_btc.append(btc_addr)
     return list_seen_btc

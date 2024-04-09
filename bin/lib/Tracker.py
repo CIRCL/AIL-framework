@@ -12,7 +12,6 @@ import yara
 import datetime
 import base64
 
-from ail_typo_squatting import runAll
 import math
 
 from collections import defaultdict
@@ -38,23 +37,21 @@ logger = logging.getLogger()
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
-
 r_tracker = config_loader.get_db_conn("Kvrocks_Trackers")
-
-items_dir = config_loader.get_config_str("Directories", "pastes")
-if items_dir[-1] == '/':
-    items_dir = items_dir[:-1]
 config_loader = None
 
-email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
-email_regex = re.compile(email_regex)
-
-special_characters = set('[<>~!?@#$%^&*|()_-+={}":;,.\'\n\r\t]/\\')
-special_characters.add('\\s')
-
 # NLTK tokenizer
-tokenizer = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
+TOKENIZER = None
+
+def init_tokenizer():
+    global TOKENIZER
+    TOKENIZER = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
                             gaps=True, discard_empty=True)
+
+def get_special_characters():
+    special_characters = set('[<>~!?@#$%^&*|()_-+={}":;,.\'\n\r\t]/\\')
+    special_characters.add('\\s')
+    return special_characters
 
 ###############
 #### UTILS ####
@@ -76,6 +73,8 @@ def is_valid_regex(tracker_regex):
         return False
 
 def is_valid_mail(email):
+    email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}'
+    email_regex = re.compile(email_regex)
     result = email_regex.match(email)
     if result:
         return True
@@ -400,6 +399,9 @@ class Tracker:
             tracker_type = 'yara'
 
         elif tracker_type == 'typosquatting':
+
+            from ail_typo_squatting import runAll
+
             domain = to_track.split(" ")[0]
             typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False) # TODO REPLACE LIMIT BY -1
             for typo in typo_generation:
@@ -857,7 +859,7 @@ def api_validate_tracker_to_add(to_track, tracker_type, nb_words=1):
         # force lowercase
         to_track = to_track.lower()
         word_set = set(to_track)
-        set_inter = word_set.intersection(special_characters)
+        set_inter = word_set.intersection(get_special_characters())
         if set_inter:
             return {"status": "error",
                     "reason": f'special character(s) not allowed: {set_inter}',
@@ -1113,7 +1115,9 @@ def get_text_word_frequency(content, filtering=True):
     words_dict = defaultdict(int)
 
     if filtering:
-        blob = TextBlob(content, tokenizer=tokenizer)
+        if TOKENIZER is None:
+            init_tokenizer()
+        blob = TextBlob(content, tokenizer=TOKENIZER)
     else:
         blob = TextBlob(content)
     for word in blob.tokens:
@@ -1800,9 +1804,9 @@ def _fix_db_custom_tags():
 #### -- ####
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    _fix_db_custom_tags()
+    # _fix_db_custom_tags()
     # fix_all_tracker_uuid_list()
     # res = get_all_tracker_uuid()
     # print(len(res))

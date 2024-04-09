@@ -32,6 +32,9 @@ config_loader = None
 
 # # # # UNSAFE TAGS # # # #
 
+# set of unsafe tags
+UNSAFE_TAGS = None
+
 def build_unsafe_tags():
     tags = set()
     # CE content
@@ -52,11 +55,11 @@ def is_tags_safe(ltags):
     :return: is a tag in the set unsafe
     :rtype: boolean
     """
-    return unsafe_tags.isdisjoint(ltags)
+    global UNSAFE_TAGS
+    if UNSAFE_TAGS is None:
+        UNSAFE_TAGS = build_unsafe_tags()
+    return UNSAFE_TAGS.isdisjoint(ltags)
 
-
-# set of unsafe tags
-unsafe_tags = build_unsafe_tags()
 
 # - - - UNSAFE TAGS - - - #
 
@@ -80,16 +83,15 @@ def get_obj_by_tag(key_tag):
 
 #### Taxonomies ####
 
-TAXONOMIES = {}
+TAXONOMIES = None
 def load_taxonomies():
     global TAXONOMIES
     manifest = os.path.join(os.environ['AIL_HOME'], 'files/misp-taxonomies/MANIFEST.json')
     TAXONOMIES = Taxonomies(manifest_path=manifest)
 
-
-load_taxonomies()
-
 def get_taxonomies():
+    if TAXONOMIES is None:
+        load_taxonomies()
     return TAXONOMIES.keys()
 
 # TODO rename me to get enabled_taxonomies
@@ -111,12 +113,18 @@ def disable_taxonomy(taxonomy):
     r_tags.srem('taxonomies:enabled', taxonomy)
 
 def exists_taxonomy(taxonomy):
+    if TAXONOMIES is None:
+        load_taxonomies()
     return TAXONOMIES.get(taxonomy) is not None
 
 def get_taxonomy_description(taxonomy):
+    if TAXONOMIES is None:
+        load_taxonomies()
     return TAXONOMIES.get(taxonomy).description
 
 def get_taxonomy_name(taxonomy):
+    if TAXONOMIES is None:
+        load_taxonomies()
     return TAXONOMIES.get(taxonomy).name
 
 def get_taxonomy_predicates(taxonomy):
@@ -133,12 +141,18 @@ def get_taxonomy_predicates(taxonomy):
     return meta
 
 def get_taxonomy_refs(taxonomy):
+    if TAXONOMIES is None:
+        load_taxonomies()
     return TAXONOMIES.get(taxonomy).refs
 
 def get_taxonomy_version(taxonomy):
+    if TAXONOMIES is None:
+        load_taxonomies()
     return TAXONOMIES.get(taxonomy).version
 
 def get_taxonomy_tags(taxonomy, enabled=False):
+    if TAXONOMIES is None:
+        load_taxonomies()
     taxonomy_obj = TAXONOMIES.get(taxonomy)
     tags = []
     for p, content in taxonomy_obj.items():
@@ -165,6 +179,8 @@ def get_taxonomy_meta(taxonomy_name, enabled=False, enabled_tags=False, nb_activ
     meta = {}
     if not exists_taxonomy(taxonomy_name):
         return meta
+    if TAXONOMIES is None:
+        load_taxonomies()
     taxonomy = TAXONOMIES.get(taxonomy_name)
     meta['description'] = taxonomy.description
     meta['name'] = taxonomy.name
@@ -241,6 +257,8 @@ def api_update_taxonomy_tag_enabled(data):
     if not exists_taxonomy(taxonomy):
         return {'error': f'taxonomy {taxonomy} not found'}, 404
     tags = data.get('tags', [])
+    if TAXONOMIES is None:
+        load_taxonomies()
     taxonomy_tags = set(TAXONOMIES.get(taxonomy).machinetags())
     for tag in tags:
         if tag not in taxonomy_tags:
@@ -249,6 +267,8 @@ def api_update_taxonomy_tag_enabled(data):
 
 def enable_taxonomy_tags(taxonomy):
     enable_taxonomy(taxonomy)
+    if TAXONOMIES is None:
+        load_taxonomies()
     for tag in TAXONOMIES.get(taxonomy).machinetags():
         add_taxonomy_tag_enabled(taxonomy, tag)
 
@@ -279,9 +299,8 @@ def api_disable_taxonomy_tags(data):
 #
 
 # TODO Synonyms
-
-GALAXIES = {}
-CLUSTERS = {}
+GALAXIES = None
+CLUSTERS = None
 def load_galaxies():
     global GALAXIES
     galaxies = []
@@ -298,11 +317,10 @@ def load_galaxies():
             clusters.append(json.load(f))
     CLUSTERS = Clusters(clusters)
 
-
-# LOAD GALAXY + CLUSTERS
-load_galaxies()
-
 def get_galaxies():
+    if GALAXIES is None:
+        # LOAD GALAXY + CLUSTERS
+        load_galaxies()
     return GALAXIES.keys()
 
 # TODO RENAME ME
@@ -310,9 +328,15 @@ def get_active_galaxies():
     return r_tags.smembers('galaxies:enabled')
 
 def get_galaxy(galaxy_name):
+    if GALAXIES is None:
+        # LOAD GALAXY + CLUSTERS
+        load_galaxies()
     return GALAXIES.get(galaxy_name)
 
 def exists_galaxy(galaxy):
+    if CLUSTERS is None:
+        # LOAD GALAXY + CLUSTERS
+        load_galaxies()
     return CLUSTERS.get(galaxy) is not None
 
 def is_galaxy_enabled(galaxy):
@@ -369,9 +393,15 @@ def get_galaxy_tag_meta(galaxy_type, tag):
 
 
 def get_clusters():
+    if CLUSTERS is None:
+        # LOAD GALAXY + CLUSTERS
+        load_galaxies()
     return CLUSTERS.keys()
 
 def get_cluster(cluster_type):
+    if CLUSTERS is None:
+        # LOAD GALAXY + CLUSTERS
+        load_galaxies()
     return CLUSTERS.get(cluster_type)
 
 def get_galaxy_tags(galaxy_type):

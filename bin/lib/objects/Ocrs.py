@@ -213,10 +213,10 @@ class Ocr(AbstractObject):
         draw = ImageDraw.Draw(img)
         for bbox in self.get_coords():
             c1, c2, c3, c4 = bbox
-            draw.line((tuple(c1), tuple(c2)), fill="yellow")
-            draw.line((tuple(c2), tuple(c3)), fill="yellow")
-            draw.line((tuple(c3), tuple(c4)), fill="yellow")
-            draw.line((tuple(c4), tuple(c1)), fill="yellow")
+            draw.line((tuple(c1), tuple(c2)), fill="yellow", width=2)
+            draw.line((tuple(c2), tuple(c3)), fill="yellow", width=2)
+            draw.line((tuple(c3), tuple(c4)), fill="yellow", width=2)
+            draw.line((tuple(c4), tuple(c1)), fill="yellow", width=2)
         # img.show()
         buff = BytesIO()
         img.save(buff, "PNG")

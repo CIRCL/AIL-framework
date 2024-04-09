@@ -9,7 +9,6 @@ The ``Domain``
 
 import os
 import sys
-import time
 import redis
 import configparser
 
