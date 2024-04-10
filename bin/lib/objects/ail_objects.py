@@ -296,6 +296,8 @@ def is_filtered(obj, filters):
 def obj_iterator(obj_type, filters):
     if obj_type == 'decoded':
         return get_all_decodeds_objects(filters=filters)
+    elif obj_type == 'image':
+        return Images.get_all_images_objects(filters=filters)
     elif obj_type == 'item':
         return get_all_items_objects(filters=filters)
     elif obj_type == 'pgp':

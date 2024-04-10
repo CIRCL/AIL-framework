@@ -288,6 +288,10 @@ def get_obj_chat(chat_type, chat_subtype, chat_id):
     elif chat_type == 'chat-thread':
         return ChatThreads.ChatThread(chat_id, chat_subtype)
 
+def get_obj_chat_from_global_id(chat_gid):
+    chat_type, chat_subtype, chat_id = chat_gid.split(':', 2)
+    return get_obj_chat(chat_type, chat_subtype, chat_id)
+
 def get_obj_chat_meta(obj_chat, new_options=set()):
     options = {}
     if obj_chat.type == 'chat':

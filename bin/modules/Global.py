@@ -128,7 +128,7 @@ class Global(AbstractModule):
 
             else:
                 self.logger.info(f"Empty Item: {message} not processed")
-        elif self.obj.type == 'message':
+        elif self.obj.type == 'message' or self.obj.type == 'ocr':
             # TODO send to specific object queue => image, ...
             self.add_message_to_queue(obj=self.obj, queue='Item')
         elif self.obj.type == 'image':

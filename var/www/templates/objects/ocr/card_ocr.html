@@ -92,7 +92,7 @@
 			</li>
 		</ul>
 
-		{% with obj_type='image', obj_id=meta['id'], obj_subtype='' %}
+		{% with obj_type='ocr', obj_id=meta['id'], obj_subtype='' %}
 			{% include 'modals/investigations_register_obj.html' %}
 		{% endwith %}
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">

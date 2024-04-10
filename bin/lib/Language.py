@@ -330,6 +330,11 @@ def get_obj_languages(obj_type, obj_subtype, obj_id):
 def get_obj_language_stats(obj_type, obj_subtype, obj_id):
     return r_lang.zrange(f'obj:langs:stat:{obj_type}:{obj_subtype}:{obj_id}', 0, -1, withscores=True)
 
+def get_obj_main_language(obj_type, obj_subtype, obj_id):
+    language = r_lang.zrevrange(f'obj:langs:stat:{obj_type}:{obj_subtype}:{obj_id}', 0, 0)
+    if language:
+        return language[0]
+
 # TODO ADD language to CHAT GLOBAL SET
 def add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):  # (s)
     if not obj_subtype:

@@ -50,7 +50,7 @@ class Image(AbstractDaterangeObject):
         if flask_context:
             url = url_for('correlation.show_correlation', type=self.type, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show?type={self.type}&id={self.id}'
+            url = f'/correlation/show?type={self.type}&id={self.id}'
         return url
 
     def get_svg_icon(self):
@@ -109,6 +109,20 @@ class Image(AbstractDaterangeObject):
 def get_screenshot_dir():
     return IMAGE_FOLDER
 
+def get_all_images():
+    images = []
+    for root, dirs, files in os.walk(get_screenshot_dir()):
+        for file in files:
+            path = f'{root}{file}'
+            image_id = path.replace(IMAGE_FOLDER, '').replace('/', '')
+            images.append(image_id)
+    return images
+
+
+def get_all_images_objects(filters={}):
+    for image_id in get_all_images():
+        yield Image(image_id)
+
 
 def create(content, size_limit=5000000, b64=False, force=False):
     size = (len(content)*3) / 4
@@ -134,5 +148,6 @@ class Images(AbstractDaterangeObjects):
 
 
 # if __name__ == '__main__':
+#     print(json.dumps(get_all_images()))
 #     name_to_search = '29ba'
 #     print(search_screenshots_by_name(name_to_search))

@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
+from packages import Date
 # from lib import Language
 # from lib.data_retention_engine import update_obj_date, get_obj_date_first
 
@@ -49,10 +50,24 @@ class Ocr(AbstractObject):
         global_id = self.get_global_id()
         content = r_cache.get(f'content:{global_id}')
         if not content:
-            content = ''
+            dict_content = {}
             for extracted in r_object.smembers(f'ocr:{self.id}'):
-                text = extracted.split(':', 4)[-1]
-                content = f'{content}\n{text}'
+                extracted = extracted.split(':', 4)
+                x, y = extracted[0].split(',', 1)
+                # get text line, y +- 20
+                rounded_y = round(int(y) / 20) * 20
+                if rounded_y not in dict_content:
+                    dict_content[rounded_y] = []
+                dict_content[rounded_y].append((int(x), int(y), extracted[-1]))
+
+            content = ''
+            l_key = sorted(dict_content.keys())
+            for key in l_key:
+                dict_content[key] = sorted(dict_content[key], key=lambda c: c[0])
+                for text in dict_content[key]:
+                    content = f'{content}      {text[2]}'
+                content = f'{content}\n'
+
             # Set Cache
             if content:
                 global_id = self.get_global_id()
@@ -66,8 +81,18 @@ class Ocr(AbstractObject):
                 return content.encode()
 
     def get_date(self): # TODO
-        timestamp = self.get_timestamp()
-        return datetime.utcfromtimestamp(float(timestamp)).strftime('%Y%m%d')
+        return Date.get_today_date_str()
+
+    def get_source(self): # TODO
+        """
+        Returns source/feeder name
+        """
+        return 'ocr'
+        # l_source = self.id.split('/')[:-2]
+        # return os.path.join(*l_source)
+
+    def get_basename(self):  # TODO
+        return 'ocr'
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -77,7 +102,7 @@ class Ocr(AbstractObject):
         return url
 
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': '\uf20a', 'color': 'yellow', 'radius': 5}
+        return {'style': 'fas', 'icon': '\uf065', 'color': 'yellow', 'radius': 5}
 
     def get_image_path(self):
         rel_path = os.path.join(self.id[0:2], self.id[2:4], self.id[4:6], self.id[6:8], self.id[8:10], self.id[10:12], self.id[12:])
@@ -138,18 +163,17 @@ class Ocr(AbstractObject):
         #         meta['language'] = self.get_language()
         return meta
 
-    def get_objs_container(self):  # TODO
-        pass
-        # objs_containers = set()
-        # # chat
-        # objs_containers.add(self.get_chat())
-        # subchannel = self.get_subchannel()
-        # if subchannel:
-        #     objs_containers.add(subchannel)
-        # thread = self.get_current_thread()
-        # if thread:
-        #     objs_containers.add(thread)
-        # return objs_containers
+    def get_objs_container(self):
+        objs_containers = set()
+        # chat
+        objs_containers.add(self.get_first_correlation('chat'))
+        subchannel = self.get_first_correlation('chat-subchannel')
+        if subchannel:
+            objs_containers.add(subchannel)
+        thread = self.get_first_correlation('chat-thread')
+        if thread:
+            objs_containers.add(thread)
+        return objs_containers
 
     def create_coord_str(self, bbox):
         c1, c2, c3, c4 = bbox
@@ -195,18 +219,20 @@ class Ocr(AbstractObject):
         return r_object.srem(f'ocr:{self.id}', val)
 
     def create(self, extracted_texts, tags=[]):
+        r_object.sadd(f'{self.type}:all', self.id)
         for extracted in extracted_texts:
             bbox, text = extracted
-            str_coords = self.create_coord_str(bbox)
-            self.add(str_coords, text)
-            self.add_correlation('image', '', self.id)
+            if len(text) > 1:
+                str_coords = self.create_coord_str(bbox)
+                self.add(str_coords, text)
+                self.add_correlation('image', '', self.id)
 
         for tag in tags:
             self.add_tag(tag)
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
-        pass
+        r_object.delete(f'ocr:{self.id}')
 
     def draw_bounding_boxs(self):
         img = Image.open(self.get_image_path()).convert("RGBA")
@@ -233,8 +259,9 @@ def create(obj_id, detections, tags=[]):
 # TODO preload languages
 def extract_text(image_path, languages, threshold=0.2):
     import easyocr
-    reader = easyocr.Reader(languages)
+    reader = easyocr.Reader(languages, verbose=False)
     texts = reader.readtext(image_path)
+    # print(texts)
     extracted = []
     for bbox, text, score in texts:
         if score > threshold:
@@ -242,3 +269,11 @@ def extract_text(image_path, languages, threshold=0.2):
     return extracted
 
 # TODO OCRS Class
+
+def get_ids():
+    return r_object.smembers(f'ocr:all')
+
+def get_all_ocrs_objects(filters={}):
+    for obj_id in get_ids():
+        yield Ocr(obj_id)
+
