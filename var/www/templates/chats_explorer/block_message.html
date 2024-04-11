@@ -67,7 +67,12 @@
         {% endif %}
         {% if message['images'] %}
             {% for message_image in message['images'] %}
-                <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=message_image)}}">
+                <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=message_image['id'])}}">
+                {% if message_image['ocr'] %}
+                    <span>
+                        <a class="btn btn-info" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=message_image['id'])}}"><i class="fas fa-expand"></i> OCR</a>
+                    </span>
+                {% endif %}
             {%  endfor %}
         {% endif %}
         {% if message['files-names'] %}

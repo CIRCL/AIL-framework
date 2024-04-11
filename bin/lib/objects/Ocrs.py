@@ -61,12 +61,18 @@ class Ocr(AbstractObject):
                 dict_content[rounded_y].append((int(x), int(y), extracted[-1]))
 
             content = ''
+            new_line = True
             l_key = sorted(dict_content.keys())
             for key in l_key:
                 dict_content[key] = sorted(dict_content[key], key=lambda c: c[0])
                 for text in dict_content[key]:
-                    content = f'{content}      {text[2]}'
+                    if new_line:
+                        content = f'{content}{text[2]}'
+                        new_line = False
+                    else:
+                        content = f'{content}      {text[2]}'
                 content = f'{content}\n'
+                new_line = True
 
             # Set Cache
             if content:
@@ -93,6 +99,13 @@ class Ocr(AbstractObject):
 
     def get_basename(self):  # TODO
         return 'ocr'
+
+    def get_language(self):
+        languages = self.get_languages()
+        if languages:
+            return languages.pop()
+        else:
+            return None
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -128,10 +141,9 @@ class Ocr(AbstractObject):
         return obj
 
     # options: set of optional meta fields
-    def get_meta(self, options=None, timestamp=None, translation_target=''):
+    def get_meta(self, options=None, translation_target=''):
         """
         :type options: set
-        :type timestamp: float
         """
         if options is None:
             options = set()
@@ -144,23 +156,21 @@ class Ocr(AbstractObject):
         if 'link' in options:
             meta['link'] = self.get_link(flask_context=True)
         if 'icon' in options:
-            meta['icon'] = self.get_svg_icon()
+            meta['svg_icon'] = self.get_svg_icon()
         if 'img' in options:
             meta['img'] = self.draw_bounding_boxs()
         if 'map' in options:
             meta['map'] = self.get_img_map_coords()
-
-        # # TODO
-        # if 'language' in options:
-        #     meta['language'] = self.get_language()
-        # if 'translation' in options and translation_target:
-        #     if meta.get('language'):
-        #         source = meta['language']
-        #     else:
-        #         source = None
-        #     meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
-        #     if 'language' in options:
-        #         meta['language'] = self.get_language()
+        if 'language' in options:
+            meta['language'] = self.get_language()
+        if 'translation' in options and translation_target:
+            if meta.get('language'):
+                source = meta['language']
+            else:
+                source = None
+            meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
+            if 'language' in options:
+                meta['language'] = self.get_language()
         return meta
 
     def get_objs_container(self):
@@ -276,4 +286,15 @@ def get_ids():
 def get_all_ocrs_objects(filters={}):
     for obj_id in get_ids():
         yield Ocr(obj_id)
+
+
+#### API ####
+def api_get_ocr(obj_id, translation_target=None):
+    ocr = Ocr(obj_id)
+    if not ocr.exists():
+        return {"status": "error", "reason": "Unknown ocr"}, 404
+    meta = ocr.get_meta({'content', 'icon', 'img', 'language', 'link', 'map', 'translation'}, translation_target=translation_target)
+    return meta, 200
+
+
 

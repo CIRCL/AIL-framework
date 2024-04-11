@@ -19,11 +19,6 @@
 		<ul class="list-group mb-2">
             <li class="list-group-item py-0">
                 <table class="table">
-                    <thead class="">
-                    <tr>
-                        <th></th>
-                    </tr>
-                    </thead>
                     <tbody style="font-size: 15px;">
                     <tr>
                         <td>
@@ -73,6 +68,59 @@
 			</li>
             <li class="list-group-item py-0">
                 <pre class="my-0" style="white-space: pre-wrap;">{{ meta['content'] }}</pre>
+                {% if meta['translation'] %}
+                    <hr class="m-1">
+                    <pre class="my-0 text-secondary" style="white-space: pre-wrap;">{{ meta['translation'] }}</pre>
+               {% endif %}
+
+
+
+
+                <div class="my-1">
+
+                    {% set mess_id_escape= meta['id'] | replace("/", "_") %}
+                    <span class="btn btn-outline-dark p-0 px-1" type="button" data-toggle="collapse" data-target="#collapseTrans{{ mess_id_escape }}" aria-expanded="false" aria-controls="collapseTrans{{ mess_id_escape }}">
+                        <i class="fas fa-language"></i> {% if meta['language'] %}{{ meta['language'] }}{% endif %}
+                    </span>
+                    <div class="collapse" id="collapseTrans{{ mess_id_escape }}">
+                        <div class="card card-body">
+                            <form method="post" action="{{ url_for('languages_ui.translate_object') }}">
+                                <input type="text" id="type" name="type" value="{{meta['type']}}" hidden>
+                                <input type="text" id="id" name="id" value="{{meta['id']}}" hidden>
+                                <span class="badge badge-primary">Source:</span>
+                                <span class="">
+                                    <select id="language_target" name="language_target" class="form-select" aria-label="Message Language" onchange="$('#translation').val('');">
+                                            <option selected value="{{ meta['language'] }}">{{ meta['language'] }}</option>
+                                        {% for language in translation_languages %}
+                                            <option value="{{ language }}">{{ translation_languages[language] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </span>
+                                {% if translation_target %}
+                                    <input type="text" id="target" name="target" value="{{translation_target}}" hidden>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="badge badge-primary">Target:</span><span>{{translation_target}}</span>
+                                    <textarea class="form-control" id="translation" name="translation">{{ meta['translation'] }}</textarea>
+                                    <button class="btn btn-dark" type="submit">
+                                        <i class="fas fa-pen-alt"> Update Language or Translation</i>
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-dark" type="submit">
+                                        <i class="fas fa-pen-alt"> Update Language</i>
+                                    </button>
+                                {% endif %}
+                            </form>
+                            <div>
+                                <a class="btn btn-primary" href="{{ url_for('languages_ui.detect_object_language')}}?type={{ meta['type'] }}&id={{ meta['id'] }}">
+                                    <i class="fas fa-redo"></i> Detect Language
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
             </li>
 
 			<li class="list-group-item py-0">
@@ -98,6 +146,19 @@
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
 			<i class="fas fa-microscope"></i> Investigations
 		</button>
+
+        <span class="mb-2 float-right">
+            {% if is_correlation %}
+                <a href="{{ url_for('objects_ocr.object_ocr')}}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="fas fa-expand"></i> Show Object</button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
+                    </button>
+                </a>
+            {% endif %}
+        </span>
 
 	</div>
 </div>

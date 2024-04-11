@@ -14,6 +14,7 @@ from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_w
 from lib import correlations_engine
 from lib import relationships_engine
 from lib import btc_ail
+from lib import Language
 from lib import Tag
 
 from lib import chats_viewer
@@ -275,6 +276,34 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     meta["add_tags_modal"] = Tag.get_modal_add_tags(obj.id, obj.get_type(), obj.get_subtype(r_str=True))
     return meta
 
+#### OBJ LANGUAGES ####
+
+def api_detect_language(obj_type, subtype, obj_id):
+    obj = get_object(obj_type, subtype, obj_id)
+    if not obj.exists():
+        return {"status": "error", "reason": "Unknown obj"}, 404
+    lang = obj.detect_language()
+    return {"language": lang}, 200
+
+def api_manually_translate(obj_type, subtype, obj_id, source, translation_target, translation):
+    obj = get_object(obj_type, subtype, obj_id)
+    if not obj.exists():
+        return {"status": "error", "reason": "Unknown obj"}, 404
+    if translation:
+        if len(translation) > 200000: # TODO REVIEW LIMIT
+            return {"status": "error", "reason": "Max Size reached"}, 400
+    all_languages = Language.get_translation_languages()
+    if source not in all_languages:
+        return {"status": "error", "reason": "Unknown source Language"}, 400
+    obj_language = obj.get_language()
+    if obj_language != source:
+        obj.edit_language(obj_language, source)
+    if translation:
+        if translation_target not in all_languages:
+            return {"status": "error", "reason": "Unknown target Language"}, 400
+        obj.set_translation(translation_target, translation)
+    # TODO SANITYZE translation
+    return None, 200
 
 #### OBJ FILTERS ####
 

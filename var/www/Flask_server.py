@@ -35,6 +35,7 @@ import Flask_config
 from blueprints.root import root
 from blueprints.crawler_splash import crawler_splash
 from blueprints.correlation import correlation
+from blueprints.languages_ui import languages_ui
 from blueprints.tags_ui import tags_ui
 from blueprints.import_export import import_export
 from blueprints.investigations_b import investigations_b
@@ -98,6 +99,7 @@ app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 app.register_blueprint(root, url_prefix=baseUrl)
 app.register_blueprint(crawler_splash, url_prefix=baseUrl)
 app.register_blueprint(correlation, url_prefix=baseUrl)
+app.register_blueprint(languages_ui, url_prefix=baseUrl)
 app.register_blueprint(tags_ui, url_prefix=baseUrl)
 app.register_blueprint(import_export, url_prefix=baseUrl)
 app.register_blueprint(investigations_b, url_prefix=baseUrl)

@@ -140,12 +140,15 @@ class Message(AbstractObject):
     # TODO get channel ID
     # TODO get thread  ID
 
+    def _get_image_ocr(self, obj_id):
+        return bool(self._get_external_correlation('image', '', obj_id, 'ocr').get('ocr'))
+
     def get_images(self):
         images = []
         for child in self.get_childrens():
             obj_type, _, obj_id = child.split(':', 2)
             if obj_type == 'image':
-                images.append(obj_id)
+                images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id)})
         return images
 
     def get_user_account(self, meta=False):
@@ -205,12 +208,6 @@ class Message(AbstractObject):
             return languages.pop()
         else:
             return None
-
-    def _set_translation(self, translation):
-        """
-        Set translated content
-        """
-        return self._set_field('translated', translation)  # translation by hash ??? -> avoid translating multiple time
 
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True)}
@@ -323,7 +320,6 @@ class Message(AbstractObject):
     #         content = self.get_content()
     #     translated = argostranslate.translate.translate(content, 'ru', 'en')
     #     # Save translation
-    #     self._set_translation(translated)
     #     return translated
 
     ## Language ##
@@ -347,7 +343,6 @@ class Message(AbstractObject):
         if not language and content:
             language = self.detect_language()
         if translation and content:
-            self._set_translation(translation)
             self.set_translation(language, translation)
         for tag in tags:
             self.add_tag(tag)
