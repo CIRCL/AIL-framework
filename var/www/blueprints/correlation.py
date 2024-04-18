@@ -87,64 +87,10 @@ def show_correlation():
 
         ## get all selected correlations
         filter_types = []
-        correl_option = request.form.get('CookieNameCheck')
-        if correl_option:
-            filter_types.append('cookie-name')
-        correl_option = request.form.get('EtagCheck')
-        if correl_option:
-            filter_types.append('etag')
-        correl_option = request.form.get('FaviconCheck')
-        if correl_option:
-            filter_types.append('favicon')
-        correl_option = request.form.get('CveCheck')
-        if correl_option:
-            filter_types.append('cve')
-        correl_option = request.form.get('CryptocurrencyCheck')
-        if correl_option:
-            filter_types.append('cryptocurrency')
-        correl_option = request.form.get('HHHashCheck')
-        if correl_option:
-            filter_types.append('hhhash')
-        correl_option = request.form.get('PgpCheck')
-        if correl_option:
-            filter_types.append('pgp')
-        correl_option = request.form.get('UsernameCheck')
-        if correl_option:
-            filter_types.append('username')
-        correl_option = request.form.get('DecodedCheck')
-        if correl_option:
-            filter_types.append('decoded')
-        correl_option = request.form.get('ScreenshotCheck')
-        if correl_option:
-            filter_types.append('screenshot')
-        # correlation_objects
-        correl_option = request.form.get('DomainCheck')
-        if correl_option:
-            filter_types.append('domain')
-        correl_option = request.form.get('ItemCheck')
-        if correl_option:
-            filter_types.append('item')
-        correl_option = request.form.get('chatCheck')
-        if correl_option:
-            filter_types.append('chat')
-        correl_option = request.form.get('subchannelCheck')
-        if correl_option:
-            filter_types.append('chat-subchannel')
-        correl_option = request.form.get('threadCheck')
-        if correl_option:
-            filter_types.append('chat-thread')
-        correl_option = request.form.get('messageCheck')
-        if correl_option:
-            filter_types.append('message')
-        correl_option = request.form.get('imageCheck')
-        if correl_option:
-            filter_types.append('image')
-        correl_option = request.form.get('ocrCheck')
-        if correl_option:
-            filter_types.append('ocr')
-        correl_option = request.form.get('user_accountCheck')
-        if correl_option:
-            filter_types.append('user-account')
+        for ob_type in ail_objects.get_all_objects():
+            correl_option = request.form.get(f'{ob_type}_Check')
+            if correl_option:
+                filter_types.append(ob_type)
 
         # list as params
         filter_types = ",".join(filter_types)
