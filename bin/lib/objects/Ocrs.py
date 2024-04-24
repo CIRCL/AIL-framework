@@ -228,6 +228,14 @@ class Ocr(AbstractObject):
     def remove(self, val):
         return r_object.srem(f'ocr:{self.id}', val)
 
+    def update_correlation(self):
+        image_correl = self.get_obj_correlations('image', '', self.id)
+        for obj_type in image_correl:
+            if obj_type != 'ocr':
+                for obj_raw in image_correl[obj_type]:
+                    obj_subtype, obj_id = obj_raw.split(':', 1)
+                    self.add_correlation(obj_type, obj_subtype, obj_id)
+
     def create(self, extracted_texts, tags=[]):
         r_object.sadd(f'{self.type}:all', self.id)
         for extracted in extracted_texts:
@@ -235,7 +243,10 @@ class Ocr(AbstractObject):
             if len(text) > 1:
                 str_coords = self.create_coord_str(bbox)
                 self.add(str_coords, text)
-                self.add_correlation('image', '', self.id)
+
+        # Correlations
+        self.update_correlation()
+        self.add_correlation('image', '', self.id)
 
         for tag in tags:
             self.add_tag(tag)

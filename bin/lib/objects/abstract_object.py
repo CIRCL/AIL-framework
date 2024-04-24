@@ -225,11 +225,11 @@ class AbstractObject(ABC):
 
     ## Correlation ##
 
-    def _get_external_correlation(self, req_type, req_subtype, req_id, obj_type):
+    def get_obj_correlations(self, obj_type, obj_subtype, obj_id, filter_types=[]):
         """
         Get object correlation
         """
-        return get_correlations(req_type, req_subtype, req_id, filter_types=[obj_type])
+        return get_correlations(obj_type, obj_subtype, obj_id, filter_types=filter_types)
 
     def get_correlation(self, obj_type):
         """

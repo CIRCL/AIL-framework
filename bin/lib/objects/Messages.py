@@ -141,7 +141,7 @@ class Message(AbstractObject):
     # TODO get thread  ID
 
     def _get_image_ocr(self, obj_id):
-        return bool(self._get_external_correlation('image', '', obj_id, 'ocr').get('ocr'))
+        return bool(self.get_correlation('ocr').get('ocr'))
 
     def get_images(self):
         images = []
