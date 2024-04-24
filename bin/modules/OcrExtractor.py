@@ -89,6 +89,10 @@ class OcrExtractor(AbstractModule):
         if self.is_cached():
             return None
 
+        if self.obj.is_gif():
+            self.logger.warning(f'Ignoring GIF: {self.obj.id}')
+            return None
+
         if not ocr.exists():
             path = image.get_filepath()
             languages = get_model_languages(image)

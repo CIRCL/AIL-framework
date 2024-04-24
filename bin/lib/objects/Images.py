@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import base64
+import magic
 import os
 import sys
 
@@ -63,6 +64,14 @@ class Image(AbstractDaterangeObject):
     def get_filepath(self):
         filename = os.path.join(IMAGE_FOLDER, self.get_rel_path())
         return os.path.realpath(filename)
+
+    def is_gif(self, filepath=None):
+        if not filepath:
+            filepath = self.get_filepath()
+        mime = magic.from_file(filepath, mime=True)
+        if mime == 'image/gif':
+            return True
+        return False
 
     def get_file_content(self):
         filepath = self.get_filepath()

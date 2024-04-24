@@ -30,15 +30,21 @@ from lib.objects import ail_objects
 # from modules.Telegram import Telegram
 
 from modules.Languages import Languages
+from modules.OcrExtractor import OcrExtractor
 
 MODULES = {
-    'Languages': Languages
+    'Languages': Languages,
+    'OcrExtractor': OcrExtractor
+
 }
 
 def reprocess_message_objects(object_type, module_name=None):
     if module_name:
         module = MODULES[module_name]()
         for obj in ail_objects.obj_iterator(object_type, filters={}):
+            if not obj.exists():
+                print(f'ERROR: object does not exist, {obj.id}')
+                continue
             module.obj = obj
             module.compute(None)
     else:
