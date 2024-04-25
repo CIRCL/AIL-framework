@@ -29,6 +29,8 @@ Contributions are welcome! Fork the repository, experiment with the code, and su
 
 AIL supports crawling of websites and Tor hidden services. Ensure your Tor client's proxy configuration is correct, especially the SOCKS5 proxy settings.
 
+![Crawler](./doc/screenshots/ail-lacus.png?raw=true "AIL framework Crawler")
+
 ### Installation
 
 [Install Lacus](https://github.com/ail-project/lacus)

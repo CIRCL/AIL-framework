@@ -29,6 +29,8 @@ AIL framework - Framework for Analysis of Information Leaks
 
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
 
+![Overview](./doc/screenshots/ail-overview.png?raw=true "AIL framework Overview")
+
 ![Dashboard](./doc/screenshots/dashboard0.png?raw=true "AIL framework dashboard")
 
 
@@ -54,6 +56,8 @@ Allow easy creation and customization by extending an abstract class.
 - **New Object CVE and Title**: Extract an correlate CVE IDs and web page titles.
 
 ## Features
+
+![Internal](./doc/screenshots/ail-internal.png?raw=true "AIL framework Internal")
 
 - Modular architecture to handle streams of unstructured or structured information
 - Default support for external ZMQ feeds, such as provided by CIRCL or other providers
