@@ -133,7 +133,8 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         if first_seen and last_seen:
             for date in Date.get_daterange(first_seen, last_seen):
                 nb = r_object.zscore(f'{obj_type}:date:{date}', self.id)
-                r_object.zincrby(f'{self.type}:date:{date}', nb, self.id)
+                if nb:
+                    r_object.zincrby(f'{self.type}:date:{date}', nb, self.id)
             update_obj_date(first_seen, self.type)
             update_obj_date(last_seen, self.type)
             self._add_create()
