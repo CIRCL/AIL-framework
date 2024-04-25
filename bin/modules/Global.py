@@ -132,7 +132,7 @@ class Global(AbstractModule):
             # TODO send to specific object queue => image, ...
             self.add_message_to_queue(obj=self.obj, queue='Item')
         elif self.obj.type == 'image':
-            self.add_message_to_queue(obj=self.obj, queue='Image')
+            self.add_message_to_queue(obj=self.obj, queue='Image', message=message)
         else:
             self.logger.critical(f"Empty obj: {self.obj} {message} not processed")
 

@@ -15,7 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.objects.abstract_object import AbstractObject
+from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from lib.ConfigLoader import ConfigLoader
 from packages import Date
 # from lib import Language
@@ -32,7 +32,7 @@ config_loader = None
 
 # SET x1,y1:x2,y2:x3,y3:x4,y4:extracted_text
 
-class Ocr(AbstractObject):
+class Ocr(AbstractDaterangeObject):
     """
     AIL Message Object. (strings)
     """
@@ -147,7 +147,7 @@ class Ocr(AbstractObject):
         """
         if options is None:
             options = set()
-        meta = self.get_default_meta(tags=True)
+        meta = self._get_meta(options=options)
         meta['content'] = self.get_content()
 
         # optional meta fields
@@ -218,17 +218,19 @@ class Ocr(AbstractObject):
             coords.append((f'{x1},{y1},{x2},{y2},{x3},{y3},{x4},{y4}', extract[4]))
         return coords
 
-    def edit(self, coordinates, text, new_text, new_coordinates=None):
+    def edit_text(self, coordinates, text, new_text, new_coordinates=None):
         pass
 
-    def add(self, coordinates, text):
+    def add_text(self, coordinates, text):
         val = f'{coordinates}:{text}'
         return r_object.sadd(f'ocr:{self.id}', val)
 
-    def remove(self, val):
+    def remove_text(self, val):
         return r_object.srem(f'ocr:{self.id}', val)
 
-    def update_correlation(self):
+    def update_correlation(self, date=None):
+        if date:
+            self.add(date, None)
         image_correl = self.get_obj_correlations('image', '', self.id)
         for obj_type in image_correl:
             if obj_type != 'ocr':
@@ -237,19 +239,24 @@ class Ocr(AbstractObject):
                     self.add_correlation(obj_type, obj_subtype, obj_id)
 
     def create(self, extracted_texts, tags=[]):
-        r_object.sadd(f'{self.type}:all', self.id)
+        # r_object.sadd(f'{self.type}:all', self.id)
+        created = False
         for extracted in extracted_texts:
             bbox, text = extracted
             if len(text) > 1:
                 str_coords = self.create_coord_str(bbox)
-                self.add(str_coords, text)
+                self.add_text(str_coords, text)
+                created = True
 
-        # Correlations
-        self.update_correlation()
-        self.add_correlation('image', '', self.id)
+        if created:
+            # Correlations
+            self._copy_from('image', self.id)
+            self.update_correlation()
+            self.add_correlation('image', '', self.id)
 
-        for tag in tags:
-            self.add_tag(tag)
+            for tag in tags:
+                self.add_tag(tag)
+            return self.id
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
@@ -273,9 +280,9 @@ class Ocr(AbstractObject):
 def create(obj_id, detections, tags=[]):
     obj = Ocr(obj_id)
     if not obj.exists():
-        obj.create(detections, tags=tags)
-    # TODO Edit
-    return obj
+        obj_id = obj.create(detections, tags=tags)
+        if obj_id:
+            return obj
 
 # TODO preload languages
 def extract_text(image_path, languages, threshold=0.2):
@@ -298,6 +305,16 @@ def get_all_ocrs_objects(filters={}):
     for obj_id in get_ids():
         yield Ocr(obj_id)
 
+class Ocrs(AbstractDaterangeObjects):
+    """
+        OCR Objects
+    """
+    def __init__(self):
+        super().__init__('ocr', Ocr)
+
+    def sanitize_id_to_search(self, name_to_search):
+        return name_to_search  # TODO
+
 
 #### API ####
 def api_get_ocr(obj_id, translation_target=None):
@@ -306,6 +323,3 @@ def api_get_ocr(obj_id, translation_target=None):
         return {"status": "error", "reason": "Unknown ocr"}, 404
     meta = ocr.get_meta({'content', 'icon', 'img', 'language', 'link', 'map', 'translation'}, translation_target=translation_target)
     return meta, 200
-
-
-

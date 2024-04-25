@@ -218,7 +218,7 @@ class Mixer(AbstractModule):
             if self.obj.type == 'item':
                 self.add_message_to_queue(obj=self.obj, message=gzip64encoded)
             else:
-                self.add_message_to_queue(obj=self.obj)
+                self.add_message_to_queue(obj=self.obj, message=gzip64encoded)
 
 
 if __name__ == "__main__":

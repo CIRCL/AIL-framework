@@ -83,7 +83,7 @@ class OcrExtractor(AbstractModule):
 
     def compute(self, message):
         image = self.get_obj()
-        print(image.id)
+        date = message
 
         ocr = Ocrs.Ocr(image.id)
         if self.is_cached():
@@ -96,19 +96,24 @@ class OcrExtractor(AbstractModule):
         if not ocr.exists():
             path = image.get_filepath()
             languages = get_model_languages(image)
-            print(languages)
+            print(image.id, languages)
             texts = Ocrs.extract_text(path, languages)
             if texts:
                 print('create')
                 ocr = Ocrs.create(image.id, texts)
-                self.add_message_to_queue(ocr)
+                if ocr:
+                    self.add_message_to_queue(ocr)
+                else:
+                    print('no text')
+                    self.add_to_cache()
             # Save in cache
             else:
                 print('no text detected')
                 self.add_to_cache()
         else:
-            print('update correlation')
-            ocr.update_correlation()
+            # print(image.id)
+            # print('update correlation', date)
+            ocr.update_correlation(date=date)
 
 
 if __name__ == '__main__':

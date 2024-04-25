@@ -71,7 +71,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         else:
             return last_seen
 
-    def get_nb_seen(self): # TODO REPLACE ME -> correlation image
+    def get_nb_seen(self): # TODO REPLACE ME -> correlation image chats
         return self.get_nb_correlation('item') + self.get_nb_correlation('message')
 
     def get_nb_seen_by_date(self, date):
@@ -126,6 +126,19 @@ class AbstractDaterangeObject(AbstractObject, ABC):
 
     def _add_create(self):
         r_object.sadd(f'{self.type}:all', self.id)
+
+    def _copy_from(self, obj_type, obj_id):
+        first_seen = r_object.hget(f'meta:{obj_type}:{obj_id}', 'first_seen')
+        last_seen = r_object.hget(f'meta:{obj_type}:{obj_id}', 'last_seen')
+        if first_seen and last_seen:
+            for date in Date.get_daterange(first_seen, last_seen):
+                nb = r_object.zscore(f'{obj_type}:date:{date}', self.id)
+                r_object.zincrby(f'{self.type}:date:{date}', nb, self.id)
+            update_obj_date(first_seen, self.type)
+            update_obj_date(last_seen, self.type)
+            self._add_create()
+            self.set_first_seen(first_seen)
+            self.set_last_seen(last_seen)
 
     def _add(self, date, obj): # TODO OBJ=None
         if not self.exists():

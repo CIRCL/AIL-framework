@@ -109,6 +109,9 @@ class FeederImporter(AbstractImporter):
                 gzip64_content = feeder.get_gzip64_content()
                 relay_message = f'{feeder_name} {gzip64_content}'
                 objs_messages.append({'obj': obj, 'message': relay_message})
+            elif obj.type == 'image':
+                date = feeder.get_date()
+                objs_messages.append({'obj': obj, 'message': f'{feeder_name} {date}'})
             else:  # Messages save on DB
                 if obj.exists() and obj.type != 'chat':
                     objs_messages.append({'obj': obj, 'message': feeder_name})

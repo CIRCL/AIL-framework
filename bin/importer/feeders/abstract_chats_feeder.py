@@ -92,6 +92,14 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     def get_reactions(self):
         return self.json_data['meta'].get('reactions', [])
 
+    def get_date(self):
+        if self.json_data['meta'].get('date'):
+            date = datetime.datetime.fromtimestamp( self.json_data['meta']['date']['timestamp'])
+            date = date.strftime('%Y%m%d')
+        else:
+            date = datetime.date.today().strftime("%Y%m%d")
+        return date
+
     def get_message_timestamp(self):
         if not self.json_data['meta'].get('date'):
             return None

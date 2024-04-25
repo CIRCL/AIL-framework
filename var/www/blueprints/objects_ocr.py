@@ -25,6 +25,8 @@ from lib import Language
 from lib import Tag
 from lib.objects import Ocrs
 
+from packages import Date
+
 # ============ BLUEPRINT ============
 objects_ocr = Blueprint('objects_ocr', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/ocr'))
 
@@ -47,6 +49,48 @@ def ocr_image(filename):
     filename = filename.replace('/', '')
     ocr = Ocrs.Ocr(filename)
     return send_file(BytesIO(ocr.draw_bounding_boxs()), mimetype='image/png')
+
+
+@objects_ocr.route("/objects/ocrs", methods=['GET'])
+@login_required
+@login_read_only
+def objects_ocrs():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    show_objects = request.args.get('show_objects')
+    date = Date.sanitise_date_range(date_from, date_to)
+    date_from = date['date_from']
+    date_to = date['date_to']
+
+    if show_objects:
+        dict_objects = Ocrs.Ocrs().api_get_meta_by_daterange(date_from, date_to)
+    else:
+        dict_objects = {}
+
+    return render_template("OcrDaterange.html", date_from=date_from, date_to=date_to,
+                           dict_objects=dict_objects, show_objects=show_objects)
+
+
+@objects_ocr.route("/objects/ocrs/post", methods=['POST'])
+@login_required
+@login_read_only
+def objects_ocrs_post():
+    date_from = request.form.get('date_from')
+    date_to = request.form.get('date_to')
+    show_objects = request.form.get('show_objects')
+    return redirect(url_for('objects_ocr.objects_ocrs', date_from=date_from, date_to=date_to, show_objects=show_objects))
+
+
+@objects_ocr.route("/objects/ocrs/range/json", methods=['GET'])
+@login_required
+@login_read_only
+def objects_ocrs_range_json():
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    date = Date.sanitise_date_range(date_from, date_to)
+    date_from = date['date_from']
+    date_to = date['date_to']
+    return jsonify(Ocrs.Ocrs().api_get_chart_nb_by_daterange(date_from, date_to))
 
 
 @objects_ocr.route("/objects/ocr", methods=['GET'])

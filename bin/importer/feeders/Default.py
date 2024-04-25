@@ -41,6 +41,9 @@ class DefaultFeeder:
     def get_source(self):
         return self.json_data.get('source')
 
+    def get_date(self):
+        return datetime.date.today().strftime("%Y%m%d")
+
     def get_json_data(self):
         """
         Return the JSON data,
