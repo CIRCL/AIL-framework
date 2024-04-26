@@ -108,6 +108,7 @@ def object_ocr():
         meta = meta[0]
         languages = Language.get_translation_languages()
         return render_template("ShowOcr.html", meta=meta,
+                               bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(meta['id'], meta['type'], meta['subtype']),
                                translation_languages=languages, translation_target=target)
 

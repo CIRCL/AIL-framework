@@ -733,9 +733,14 @@ if (d.popover) {
 								desc = desc + "fa-times-circle\"></i>DOWN"
 							}
 							desc = desc + "</div></dd>"
-						} else if (key!="tags" && key!="id" && key!="img" && key!="icon" && key!="link" && key!="type") {
+						} else if (key!=="tags" && key!=="id" && key!=="img" && key!=="svg_icon" && key!=="icon" && key!=="link" && key!=="type") {
                             if (data[key]) {
-							    desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+                                if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
+                                    let date = sanitize_text(data[key])
+                                    desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8) + "</dd>"
+                                } else {
+							        desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+                                }
                             }
 						}
 					});

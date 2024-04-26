@@ -148,6 +148,7 @@ class Ocr(AbstractDaterangeObject):
         if options is None:
             options = set()
         meta = self._get_meta(options=options)
+        meta['tags'] = self.get_tags()
         meta['content'] = self.get_content()
 
         # optional meta fields
