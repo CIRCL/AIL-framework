@@ -125,7 +125,27 @@
                         </div>
                       </td>
                     </tr>
-                   {% endfor %}
+                  {% endfor %}
+                    {%elif dict_tagged["object_type"]=="screenshot"%}
+
+                {%elif dict_tagged["object_type"]=="image" or dict_tagged["object_type"]=="ocr"%}
+                    {% for dict_obj in dict_tagged["tagged_obj"] %}
+                        <tr>
+                            <td class="pb-0">
+                                <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type={{dict_tagged['object_type']}}&id={{dict_obj['id']}}" class="text-secondary">
+                                    <div style="line-height:0.9;">{{ dict_obj['id'] }}</div>
+                                </a>
+                                <div class="mb-2">
+                                    {% for tag in dict_obj['tags'] %}
+                                        <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type={{dict_tagged['object_type']}}&ltags={{ tag }}">
+                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                        </a>
+                                    {%  endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+
                 {%elif dict_tagged["object_type"]=="message"%}
                   {% for dict_obj in dict_tagged["tagged_obj"] %}
                     <tr>

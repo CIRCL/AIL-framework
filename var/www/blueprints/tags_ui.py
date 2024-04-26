@@ -293,6 +293,24 @@ def tags_search_messages():
     dict_tagged['date'] = Date.sanitise_date_range('', '', separator='-')
     return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
 
+@tags_ui.route('/tag/search/image')
+@login_required
+@login_read_only
+def tags_search_images():
+    object_type = 'image'
+    dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
+    dict_tagged['date'] = Date.sanitise_date_range('', '', separator='-')
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
+@tags_ui.route('/tag/search/ocr')
+@login_required
+@login_read_only
+def tags_search_ocrs():
+    object_type = 'ocr'
+    dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
+    dict_tagged['date'] = Date.sanitise_date_range('', '', separator='-')
+    return render_template("tags/search_obj_by_tags.html", bootstrap_label=bootstrap_label, dict_tagged=dict_tagged)
+
 @tags_ui.route('/tag/search/domain')
 @login_required
 @login_read_only

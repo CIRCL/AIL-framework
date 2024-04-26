@@ -101,7 +101,12 @@ class OcrExtractor(AbstractModule):
             languages = get_model_languages(image)
             languages = Ocrs.sanityze_ocr_languages(languages, ocr_languages=self.ocr_languages)
             print(image.id, languages)
-            texts = Ocrs.extract_text(path, languages)
+            try:
+                texts = Ocrs.extract_text(path, languages)
+            except ValueError as e:
+                self.logger.warning(e)
+                self.obj.add_tag('infoleak:confirmed="false-positive"')
+                texts = None
             if texts:
                 print('create')
                 ocr = Ocrs.create(image.id, texts)
