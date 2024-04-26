@@ -22,8 +22,9 @@ from lib import chats_viewer
 from lib.objects import Messages
 from lib.objects import Ocrs
 
+
 # Default to eng
-def get_model_languages(obj, add_en=True):
+def get_model_languages(obj, ocr_languages, add_en=True):
     if add_en:
         model_languages = {'en'}
     else:
@@ -53,6 +54,8 @@ def get_model_languages(obj, add_en=True):
             model_languages.add(lang)
             return model_languages
 
+    model_languages = Ocrs.sanityze_ocr_languages(model_languages, ocr_languages=ocr_languages)
+
     return model_languages
 
     #  TODO thread
@@ -71,6 +74,8 @@ class OcrExtractor(AbstractModule):
 
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
+
+        self.ocr_languages = Ocrs.get_ocr_languages()
 
         # Send module state to logs
         self.logger.info(f'Module {self.module_name} initialized')
@@ -95,7 +100,7 @@ class OcrExtractor(AbstractModule):
 
         if not ocr.exists():
             path = image.get_filepath()
-            languages = get_model_languages(image)
+            languages = get_model_languages(image, self.ocr_languages)
             print(image.id, languages)
             texts = Ocrs.extract_text(path, languages)
             if texts:

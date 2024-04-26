@@ -296,14 +296,24 @@ def extract_text(image_path, languages, threshold=0.2):
             extracted.append((bbox, text))
     return extracted
 
-# TODO OCRS Class
 
-def get_ids():
-    return r_object.smembers(f'ocr:all')
+def get_ocr_languages():
+    return {'af', 'ar', 'as', 'az', 'be', 'bg', 'bh', 'bs', 'cs', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fr', 'ga', 'hi', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'kn', 'ko', 'ku', 'la', 'lt', 'lv', 'mi', 'mn', 'mr', 'ms', 'mt', 'ne', 'nl', 'no', 'oc', 'pi', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sq', 'sr', 'sv', 'sw', 'ta', 'te', 'th', 'tl', 'tr', 'ug', 'uk', 'ur', 'uz', 'vi', 'zh'}
 
-def get_all_ocrs_objects(filters={}):
-    for obj_id in get_ids():
-        yield Ocr(obj_id)
+
+def sanityze_ocr_languages(languages, ocr_languages=None):
+    langs = set()
+    if not ocr_languages:
+        ocr_languages = get_ocr_languages()
+    for lang in languages:
+        if lang in ocr_languages:
+            if lang == 'zh':
+                langs.add('ch_sim')
+            elif lang == 'sr':
+                langs.add('rs_latin')
+            else:
+                langs.add(lang)
+    return langs
 
 class Ocrs(AbstractDaterangeObjects):
     """

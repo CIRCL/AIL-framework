@@ -81,10 +81,10 @@ def get_default_correlation_objects():
     return AIL_OBJECTS_CORRELATIONS_DEFAULT
 
 def get_obj_queued():
-    return ['item', 'image']
+    return ['item', 'image', 'message', 'ocr']
 
 def get_objects_tracked():
-    return ['decoded', 'item', 'pgp', 'message', 'title']
+    return ['decoded', 'item', 'pgp', 'message', 'ocr', 'title']
 
 def get_objects_retro_hunted():
     return ['decoded', 'item', 'message']
