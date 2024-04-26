@@ -493,10 +493,10 @@ class LanguagesDetector:
 
     def detect(self, content, force_gcld3=False):  # TODO detect length between 20-200 ????
         if not content:
-            return None
+            return []
         content = _clean_text_to_translate(content, html=True)
         if not content:
-            return None
+            return []
         # DEBUG
         # print('-------------------------------------------------------')
         # print(content)
