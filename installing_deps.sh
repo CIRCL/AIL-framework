@@ -72,6 +72,7 @@ popd
 # pgpdump
 test ! -d pgpdump && git clone https://github.com/kazu-yamamoto/pgpdump.git
 pushd pgpdump/
+autoreconf -fiW all
 ./configure
 make
 sudo make install
