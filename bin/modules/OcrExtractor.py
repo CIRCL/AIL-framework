@@ -103,7 +103,7 @@ class OcrExtractor(AbstractModule):
             print(image.id, languages)
             try:
                 texts = Ocrs.extract_text(path, languages)
-            except ValueError as e:
+            except (OSError, ValueError) as e:
                 self.logger.warning(e)
                 self.obj.add_tag('infoleak:confirmed="false-positive"')
                 texts = None
