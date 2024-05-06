@@ -9,6 +9,7 @@ The OcrExtractor Module
 ##################################
 # Import External packages
 ##################################
+import cv2
 import os
 import sys
 
@@ -103,7 +104,7 @@ class OcrExtractor(AbstractModule):
             print(image.id, languages)
             try:
                 texts = Ocrs.extract_text(path, languages)
-            except ValueError as e:
+            except (OSError, ValueError, cv2.error) as e:
                 self.logger.warning(e)
                 self.obj.add_tag('infoleak:confirmed="false-positive"')
                 texts = None

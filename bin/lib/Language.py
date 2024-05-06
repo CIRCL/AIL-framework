@@ -440,7 +440,11 @@ def delete_obj_translation(obj_global_id, language, field=''):
 class LanguagesDetector:
 
     def __init__(self, nb_langs=3, min_proportion=0.2, min_probability=-1, min_len=0):
-        self.lt = LibreTranslateAPI(get_translator_instance())
+        lt_url = get_translator_instance()
+        if not lt_url:
+            self.lt = None
+        else:
+            self.lt = LibreTranslateAPI(get_translator_instance())
         try:
             self.lt.languages()
         except Exception:
