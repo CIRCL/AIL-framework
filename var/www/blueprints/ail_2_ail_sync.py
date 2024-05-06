@@ -10,7 +10,7 @@ import sys
 import json
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, make_response
-from flask_login import login_required, current_user, login_user, logout_user
+from flask_login import login_required
 
 sys.path.append('modules')
 import Flask_config

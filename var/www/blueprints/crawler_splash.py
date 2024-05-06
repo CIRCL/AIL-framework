@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort
-from flask_login import login_required, current_user, login_user, logout_user
+from flask_login import login_required, current_user
 
 sys.path.append('modules')
 import Flask_config
@@ -95,7 +95,7 @@ def crawlers_dashboard_captures_delete():
 @login_required
 @login_read_only
 def manual():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     l_cookiejar = crawlers.api_get_cookiejars_selector(user_id)
     crawlers_types = crawlers.get_crawler_all_types()
     proxies = []  # TODO HANDLE PROXIES
@@ -111,7 +111,7 @@ def manual():
 @login_required
 @login_analyst
 def send_to_spider():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
 
     # POST val
     url = request.form.get('url_to_crawl')
@@ -645,7 +645,7 @@ def crawler_cookiejar_add():
 @login_required
 @login_analyst
 def crawler_cookiejar_add_post():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
 
     description = request.form.get('description')
     level = request.form.get('level')
@@ -692,7 +692,7 @@ def crawler_cookiejar_add_post():
 @login_required
 @login_read_only
 def crawler_cookiejar_all():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     user_cookiejars = crawlers.get_cookiejars_meta_by_iterator(crawlers.get_cookiejars_user(user_id))
     global_cookiejars = crawlers.get_cookiejars_meta_by_iterator(crawlers.get_cookiejars_global())
     return render_template("all_cookiejar.html", user_cookiejar=user_cookiejars, global_cookiejar=global_cookiejars)
@@ -702,7 +702,7 @@ def crawler_cookiejar_all():
 @login_required
 @login_read_only
 def crawler_cookiejar_show():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookiejar_uuid = request.args.get('uuid')
 
     res = crawlers.api_get_cookiejar(cookiejar_uuid, user_id)
@@ -718,7 +718,7 @@ def crawler_cookiejar_show():
 @login_required
 @login_analyst
 def crawler_cookiejar_cookie_delete():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookie_uuid = request.args.get('uuid')
 
     res = crawlers.api_delete_cookie(user_id, cookie_uuid)
@@ -733,7 +733,7 @@ def crawler_cookiejar_cookie_delete():
 @login_required
 @login_analyst
 def crawler_cookiejar_delete():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookiejar_uuid = request.args.get('uuid')
 
     res = crawlers.api_delete_cookiejar(user_id, cookiejar_uuid)
@@ -746,7 +746,7 @@ def crawler_cookiejar_delete():
 @login_required
 @login_read_only
 def crawler_cookiejar_edit():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookiejar_uuid = request.args.get('uuid')
     description = request.args.get('description')
 
@@ -758,7 +758,7 @@ def crawler_cookiejar_edit():
 @login_required
 @login_read_only
 def crawler_cookiejar_cookie_edit():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookie_uuid = request.args.get('uuid')
 
     cookie_dict = crawlers.api_get_cookie(user_id, cookie_uuid)
@@ -769,7 +769,7 @@ def crawler_cookiejar_cookie_edit():
 @login_required
 @login_read_only
 def crawler_cookiejar_cookie_edit_post():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookie_uuid = request.form.get('cookie_uuid')
     name = request.form.get('name')
     value = request.form.get('value')
@@ -808,7 +808,7 @@ def crawler_cookiejar_cookie_add():
 @login_required
 @login_read_only
 def crawler_cookiejar_cookie_manual_add_post():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookiejar_uuid = request.form.get('cookiejar_uuid')
     name = request.form.get('name')
     value = request.form.get('value')
@@ -838,7 +838,7 @@ def crawler_cookiejar_cookie_manual_add_post():
 @login_required
 @login_read_only
 def crawler_cookiejar_cookie_json_add_post():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     cookiejar_uuid = request.form.get('cookiejar_uuid')
 
     if 'file' in request.files:

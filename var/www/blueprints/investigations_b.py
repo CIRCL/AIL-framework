@@ -67,10 +67,10 @@ def show_investigation():
 
 @investigations_b.route("/investigation/add", methods=['GET', 'POST'])
 @login_required
-@login_read_only
+@login_analyst
 def add_investigation():
     if request.method == 'POST':
-        user_id = current_user.get_id()
+        user_id = current_user.get_user_id()
         name = request.form.get("investigation_name")
         date = request.form.get("investigation_date")
         threat_level = request.form.get("threat_level")
@@ -107,10 +107,10 @@ def add_investigation():
 
 @investigations_b.route("/investigation/edit", methods=['GET', 'POST'])
 @login_required
-@login_read_only
+@login_analyst
 def edit_investigation():
     if request.method == 'POST':
-        user_id = current_user.get_id()
+        user_id = current_user.get_user_id()
         investigation_uuid = request.form.get("investigation_uuid")
         name = request.form.get("investigation_name")
         date = request.form.get("investigation_date")
@@ -156,7 +156,7 @@ def edit_investigation():
 
 @investigations_b.route("/investigation/delete", methods=['GET'])
 @login_required
-@login_read_only
+@login_analyst
 def delete_investigation():
     investigation_uuid = request.args.get('uuid')
     input_dict = {"uuid": investigation_uuid}

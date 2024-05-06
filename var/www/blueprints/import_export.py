@@ -91,7 +91,7 @@ def import_object_file():
 @login_required
 @login_analyst
 def objects_misp_export():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     object_types = ail_core.get_all_objects_with_subtypes_tuple()
     to_export = MISPExporter.get_user_misp_objects_to_export(user_id)
     return render_template("export_object.html", object_types=object_types, to_export=to_export)
@@ -101,7 +101,7 @@ def objects_misp_export():
 @login_required
 @login_analyst
 def objects_misp_export_post():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
 
     # Get new added Object
     new_export = []
@@ -177,7 +177,7 @@ def objects_misp_export_post():
 @login_required
 @login_analyst
 def add_object_id_to_export():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     obj_type = request.args.get('type')
     obj_id = request.args.get('id')
     obj_subtype = request.args.get('subtype')
@@ -199,7 +199,7 @@ def add_object_id_to_export():
 @login_required
 @login_analyst
 def delete_object_id_to_export():
-    user_id = current_user.get_id()
+    user_id = current_user.get_user_id()
     obj_type = request.args.get('type')
     obj_id = request.args.get('id')
     obj_subtype = request.args.get('subtype')

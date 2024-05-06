@@ -24,7 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.Users import User
+from lib.ail_users import AILUser, get_session_user
 from lib import Tag
 from lib import ail_logger
 
@@ -135,8 +135,14 @@ login_manager.init_app(app)
 # ========= LOGIN MANAGER ========
 
 @login_manager.user_loader
-def load_user(user_id):
-    return User.get(user_id)
+def load_user(session_id):  # TODO USE Alternative ID
+    print(session)
+    user_id = get_session_user(session_id)
+    if user_id:
+        user = AILUser.get(user_id)
+        print(user)
+        return user
+    return None
 
 # ========= HEADER GENERATION ======== DEPRECATED
 

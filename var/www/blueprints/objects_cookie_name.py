@@ -9,7 +9,7 @@ import os
 import sys
 
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
-from flask_login import login_required, current_user
+from flask_login import login_required
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only

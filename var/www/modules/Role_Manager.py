@@ -39,7 +39,7 @@ def login_admin(func):
     def decorated_view(*args, **kwargs):
         if not current_user.is_authenticated:
             return login_manager.unauthorized()
-        elif (not current_user.is_in_role('admin')):
+        elif not current_user.is_in_role('admin'):
             return login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view
@@ -49,7 +49,7 @@ def login_analyst(func):
     def decorated_view(*args, **kwargs):
         if not current_user.is_authenticated:
             return login_manager.unauthorized()
-        elif (not current_user.is_in_role('analyst')):
+        elif not current_user.is_in_role('analyst'):
             return login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view
@@ -59,7 +59,7 @@ def login_user(func):
     def decorated_view(*args, **kwargs):
         if not current_user.is_authenticated:
             return login_manager.unauthorized()
-        elif (not current_user.is_in_role('user')):
+        elif not current_user.is_in_role('user'):
             return login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view
@@ -69,7 +69,7 @@ def login_user_no_api(func):
     def decorated_view(*args, **kwargs):
         if not current_user.is_authenticated:
             return login_manager.unauthorized()
-        elif (not current_user.is_in_role('user_no_api')):
+        elif not current_user.is_in_role('user_no_api'):
             return login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view
@@ -79,7 +79,7 @@ def login_read_only(func):
     def decorated_view(*args, **kwargs):
         if not current_user.is_authenticated:
             return login_manager.unauthorized()
-        elif (not current_user.is_in_role('read_only')):
+        elif not current_user.is_in_role('read_only'):
             return login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view
