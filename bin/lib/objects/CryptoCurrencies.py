@@ -60,7 +60,7 @@ class CryptoCurrency(AbstractSubtypeObject):
         pass
 
     def is_valid_address(self):
-        if self.type == 'bitcoin' or self.type == 'dash' or self.type == 'litecoin':
+        if self.subtype == 'bitcoin' or self.subtype == 'dash' or self.subtype == 'litecoin' or self.subtype == 'tron':
             return check_base58_address(self.id)
         else:
             return True
@@ -80,6 +80,8 @@ class CryptoCurrency(AbstractSubtypeObject):
             return 'ZEC'
         elif self.subtype == 'dash':
             return 'DASH'
+        elif self.subtype == 'tron':
+            return 'TRX'
         return None
 
     def get_link(self, flask_context=False):
@@ -140,7 +142,7 @@ class CryptoCurrency(AbstractSubtypeObject):
 
 def get_all_subtypes():
     # return ail_core.get_object_all_subtypes(self.type)
-    return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash']
+    return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'tron', 'zcash']
 
 
 # def build_crypto_regex(subtype, search_id):
@@ -172,6 +174,8 @@ def get_subtype_by_symbol(symbol):
         return 'zcash'
     elif symbol == 'DASH':
         return 'dash'
+    elif symbol == 'TRX':
+        return 'tron'
     return None
 
 
@@ -188,10 +192,6 @@ def get_all_cryptocurrencies_by_subtype(subtype):
 
 def sanitize_cryptocurrency_name_to_search(name_to_search, subtype): # TODO FILTER NAME + Key + mail
     if subtype == '':
-        pass
-    elif subtype == 'name':
-        pass
-    elif subtype == 'mail':
         pass
     return name_to_search
 

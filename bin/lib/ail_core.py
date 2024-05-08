@@ -68,7 +68,7 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
     if obj_type == 'chat-thread':
         return r_object.smembers(f'all_chat-thread:subtypes')
     if obj_type == 'cryptocurrency':
-        return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'zcash']
+        return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'tron', 'zcash']
     if obj_type == 'pgp':
         return ['key', 'mail', 'name']
     if obj_type == 'username':

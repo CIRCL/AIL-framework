@@ -92,7 +92,13 @@ CURRENCIES = {
         'regex': r'\b(?<![+/=])X[A-Za-z0-9]{33}(?![+/=])\b',
         'max_execution_time': default_max_execution_time,
         'tag': 'infoleak:automatic-detection="dash-address"',
-    }
+    },
+    'tron': {
+            'name': 'tron',  # e.g. TYdds9VLDjUshf9tbsXSfGUZNzJSbbBeat
+            'regex': r'\b(?<![+/=])T[0-9a-zA-Z]{33}(?![+/=])\b',
+            'max_execution_time': default_max_execution_time,
+            'tag': 'infoleak:automatic-detection="tron-address"',
+        },
 }
 ##################################
 ##################################
