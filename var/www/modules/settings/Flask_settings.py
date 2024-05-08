@@ -61,17 +61,6 @@ def new_token():
     Users.generate_new_token(current_user.get_id())
     return redirect(url_for('settings.edit_profile'))
 
-
-@settings.route("/settings/new_token_user", methods=['POST'])
-@login_required
-@login_admin
-def new_token_user():
-    user_id = request.form.get('user_id')
-    if Users.exists_user(user_id):
-        Users.generate_new_token(user_id)
-    return redirect(url_for('settings.users_list'))
-
-
 @settings.route("/settings/create_user", methods=['GET'])
 @login_required
 @login_admin
@@ -133,18 +122,18 @@ def create_user_post():
         return render_template("create_user.html", all_roles=all_roles, error_mail=True, admin_level=True)
 
 
-@settings.route("/settings/users_list", methods=['GET'])
-@login_required
-@login_admin
-def users_list():
-    all_users = Users.get_users_metadata(Users.get_all_users())
-    new_user = request.args.get('new_user')
-    new_user_dict = {}
-    if new_user:
-        new_user_dict['email'] = new_user
-        new_user_dict['edited'] = request.args.get('new_user_edited')
-        new_user_dict['password'] = request.args.get('new_user_password')
-    return render_template("users_list.html", all_users=all_users, new_user=new_user_dict, admin_level=True)
+# @settings.route("/settings/users_list", methods=['GET'])
+# @login_required
+# @login_admin
+# def users_list():
+#     all_users = Users.get_users_metadata(Users.get_all_users())
+#     new_user = request.args.get('new_user')
+#     new_user_dict = {}
+#     if new_user:
+#         new_user_dict['email'] = new_user
+#         new_user_dict['edited'] = request.args.get('new_user_edited')
+#         new_user_dict['password'] = request.args.get('new_user_password')
+#     return render_template("users_list.html", all_users=all_users, new_user=new_user_dict, admin_level=True)
 
 
 @settings.route("/settings/edit_user", methods=['POST'])
@@ -153,15 +142,6 @@ def users_list():
 def edit_user():
     user_id = request.form.get('user_id')
     return redirect(url_for('settings.create_user', user_id=user_id))
-
-
-@settings.route("/settings/delete_user", methods=['POST'])
-@login_required
-@login_admin
-def delete_user():
-    user_id = request.form.get('user_id')
-    Users.delete_user(user_id)
-    return redirect(url_for('settings.users_list'))
 
 
 @settings.route("/settings/passivedns", methods=['GET'])

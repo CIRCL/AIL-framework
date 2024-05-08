@@ -174,6 +174,14 @@ def exists_token(token):
 
 # TODO USER LAST LOGIN TIME
 # TODO Check if logged
+
+# TODO USER:     - Creation Date
+#                - Last Login
+#                - Last Request
+#                - Last API Usage
+#                - Organisation ???
+#                - Disabled / Lock
+
 class AILUser(UserMixin):
     def __init__(self, user_id):
         self.user_id = user_id
@@ -200,8 +208,13 @@ class AILUser(UserMixin):
     def exists(self): # TODO CHECK USAGE
         return r_serv_db.exists(f'ail:user:metadata:{self.user_id}')
 
-    def get_meta(self):
-        return {'email': self.user_id,}
+    def get_meta(self, options=set()): # TODO user creation date
+        meta = {'id': self.user_id}
+        if 'api_key' in options: # TODO add option to censor key
+            meta['api_key'] = self.get_api_key()
+        if 'role' in options:
+            meta['role'] = get_user_role(self.user_id)
+        return meta
 
     ## SESSION ##
 
@@ -253,6 +266,17 @@ class AILUser(UserMixin):
         # create new token
         generate_new_token(self.user_id)
 
+    ## TOKEN ##
+
+    def get_api_key(self):
+        return get_user_token(self.user_id)
+
+    def new_api_key(self):
+        _delete_user_token(self.user_id)
+        new_api_key = gen_token()
+        _set_user_token(self.user_id, new_api_key)
+        return new_api_key
+
     ## ROLE ##
 
     def is_in_role(self, role):  # TODO Get role via user alternative ID
@@ -266,13 +290,44 @@ class AILUser(UserMixin):
     def get_role(self):
         return r_serv_db.hget(f'ail:user:metadata:{self.user_id}', 'role')
 
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    ##  ##
 
-    def delete(self):  # TODO DESTROY SESSION
+    def delete(self):
         kill_session_user(self.user_id)
+        for role_id in get_all_roles():
+            r_serv_db.srem(f'ail:users:role:{role_id}', self.user_id)
+        user_token = self.get_api_key()
+        if user_token:
+            r_serv_db.hdel('ail:users:tokens', user_token)
+        r_serv_db.delete(f'ail:user:metadata:{self.user_id}')
+        r_serv_db.hdel('ail:users:all', self.user_id)
 
 
 # def create_user(user_id):
+
+#### API ####
+
+def api_get_users_meta():
+    meta = {'users': []}
+    options = {'api_key', 'role'}
+    for user_id in get_users():
+        user = AILUser(user_id)
+        meta['users'].append(user.get_meta(options=options))
+    return meta
+
+def api_create_user_api_key(user_id, admin_id): # TODO LOG ADMIN ID
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    print(admin_id)
+    return user.new_api_key(), 200
+
+def api_delete_user(user_id, admin_id): # TODO LOG ADMIN ID
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    print(admin_id)
+    return user.delete(), 200
 
 ########################################################################################################################
 ########################################################################################################################

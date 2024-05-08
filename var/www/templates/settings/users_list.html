@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Users Settings - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+            {% include 'settings/menu_sidebar.html' %}
+			<div class="col-12 col-lg-10" id="core_content">
+
+                {% if new_user %}
+                    <div class="text-center my-3 ">
+                        <div class="card">
+                            <div class="card-header">
+                                {% if new_user['edited']=='True' %}
+                                    <h5 class="card-title">User Edited</h5>
+                                {% else %}
+                                    <h5 class="card-title">User Created</h5>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <p>User: {{new_user['email']}}</p>
+                                <p>Password: {{new_user['password']}}</p>
+                                <a href="{{url_for('settings.users_list')}}" class="btn btn-primary"><i class="fas fa-eye-slash"></i> Hide</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <h3>AIL Users:</h3>
+                <table id="tableusers" class="table table-hover table-striped">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Api Key</th>
+                        <th></th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody_last_crawled">
+                    {% for user in meta['users'] %}
+                        <tr>
+                            <td>{{user['id']}}</td>
+                            <td>{{user['role']}}</td>
+                            <td>
+                                <span id="censored_key_{{loop.index0}}">
+                                    {{user['api_key'][:4]}}*********************************{{user['api_key'][-4:]}}
+                                </span>
+                                <span id="uncensored_key_{{loop.index0}}" style="display: none;">
+                                    {{user['api_key']}}
+                                </span>
+                            </td>
+                            <td>
+                                <a class="btn btn-outline-info ml-3 px-1 py-0" href="{{ url_for('settings_b.new_token_user', user_id=user['id']) }}">
+                                    <i class="fas fa-random"></i>
+                                </a>
+                                <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key_{{loop.index0}}" onclick="show_api_key({{loop.index0}})">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-start">
+                                    <form action="{{ url_for('settings.edit_user') }}" id="post_edit_user" method=POST>
+                                        <input type="hidden" name="user_id" value="{{user['id']}}">
+                                        <button class="btn btn-outline-primary ml-3 px-1 py-0" type="submit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                    </form>
+                                    <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+    	    </div>
+		</div>
+	</div>
+</body>
+
+<script>
+$(document).ready(function(){
+    $("#nav_users_list").addClass("active");
+	$("#nav_user_management").removeClass("text-muted");
+    $('#tableusers').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "asc" ]]
+    });
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function show_api_key(key_id) {
+    $('#censored_key_' + key_id).hide();
+    $('#btn_key_' + key_id).hide();
+    $('#uncensored_key_' + key_id).show();
+}
+
+</script>
+
+</html>

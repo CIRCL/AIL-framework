@@ -20,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_updates
+from lib import ail_users
 from packages import git_status
 
 # ============ BLUEPRINT ============
@@ -40,9 +41,9 @@ def create_json_response(data, status_code):
 def settings_page():
     git_metadata = git_status.get_git_metadata()
     ail_version = ail_updates.get_ail_version()
-    admin_level = current_user.is_in_role('admin')
+    acl_admin = current_user.is_in_role('admin')
     return render_template("settings_index.html", git_metadata=git_metadata,
-                           ail_version=ail_version, admin_level=admin_level)
+                           ail_version=ail_version, acl_admin=acl_admin)
 
 @settings_b.route("/settings/background_update/json", methods=['GET'])
 @login_required
@@ -54,12 +55,46 @@ def get_background_update_metadata_json():
 @login_required
 @login_read_only
 def settings_modules():
-    admin_level = current_user.is_in_role('admin')
-    return render_template("settings/modules.html", admin_level=admin_level)
+    acl_admin = current_user.is_in_role('admin')
+    return render_template("settings/modules.html", acl_admin=acl_admin)
 
+@settings_b.route("/settings/user/profile", methods=['GET'])
+@login_required
+@login_read_only
+def user_profile():
+    acl_admin = current_user.is_in_role('admin')
 
+@settings_b.route("/settings/new_user_api_key", methods=['GET'])
+@login_required
+@login_admin
+def new_token_user():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_create_user_api_key(user_id, admin_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
 
+@settings_b.route("/settings/delete_user", methods=['GET'])
+@login_required
+@login_admin
+def delete_user():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_delete_user(user_id, admin_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
 
+@settings_b.route("/settings/users", methods=['GET'])
+@login_required
+@login_admin
+def users_list():
+    meta = ail_users.api_get_users_meta()
+    new_user = {}
+    return render_template("users_list.html", meta=meta, new_user=new_user, acl_admin=True)
 
 
 
