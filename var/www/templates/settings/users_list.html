@@ -27,25 +27,6 @@
             {% include 'settings/menu_sidebar.html' %}
 			<div class="col-12 col-lg-10" id="core_content">
 
-                {% if new_user %}
-                    <div class="text-center my-3 ">
-                        <div class="card">
-                            <div class="card-header">
-                                {% if new_user['edited']=='True' %}
-                                    <h5 class="card-title">User Edited</h5>
-                                {% else %}
-                                    <h5 class="card-title">User Created</h5>
-                                {% endif %}
-                            </div>
-                            <div class="card-body">
-                                <p>User: {{new_user['email']}}</p>
-                                <p>Password: {{new_user['password']}}</p>
-                                <a href="{{url_for('settings.users_list')}}" class="btn btn-primary"><i class="fas fa-eye-slash"></i> Hide</a>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-
                 <h3>AIL Users:</h3>
                 <table id="tableusers" class="table table-hover table-striped">
                     <thead class="thead-dark">
@@ -80,12 +61,9 @@
                             </td>
                             <td>
                                 <div class="d-flex justify-content-start">
-                                    <form action="{{ url_for('settings.edit_user') }}" id="post_edit_user" method=POST>
-                                        <input type="hidden" name="user_id" value="{{user['id']}}">
-                                        <button class="btn btn-outline-primary ml-3 px-1 py-0" type="submit">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
-                                    </form>
+                                    <a class="btn btn-outline-primary ml-3 px-1 py-0" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
                                     <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>

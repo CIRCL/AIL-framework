@@ -55,13 +55,13 @@
 
 
         {% if passivedns_enabled %}
-          <a href="{{ url_for('settings.passive_dns_change_state') }}?state=disable">
+          <a href="{{ url_for('settings_b.passive_dns_change_state') }}?state=disable">
             <button class="btn btn-danger mx-4 my-2">
               Disable D4 Client
             </button>
           </a>
         {% else %}
-          <a href="{{ url_for('settings.passive_dns_change_state') }}?state=enable">
+          <a href="{{ url_for('settings_b.passive_dns_change_state') }}?state=enable">
             <button class="btn btn-primary mx-4 my-2">
               Enable D4 Client
             </button>

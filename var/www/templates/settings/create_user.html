@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Create User - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+	<div class="container-fluid">
+        <div class="row">
+            {% include 'settings/menu_sidebar.html' %}
+            <div class="col-12 col-lg-10" id="core_content">
+
+                {% if new_user %}
+                    <div class="text-center my-3 ">
+                        <div class="card">
+                            <div class="card-header">
+                                {% if new_user['edited']=='True' %}
+                                    <h5 class="card-title">User Edited</h5>
+                                {% else %}
+                                    <h5 class="card-title">User Created</h5>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <p>User: {{new_user['email']}}</p>
+                                <p>Password: {{new_user['password']}}</p>
+                                <a href="{{url_for('settings_b.users_list')}}" class="btn btn-primary"><i class="fas fa-eye-slash"></i> Hide</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <form class="form-signin" action="{{ url_for('settings_b.create_user_post')}}" autocomplete="off" method="post">
+
+                    <h1 class="h3 mt-1 mb-3 text-center text-secondary">{% if meta['id'] %}Edit{% else %}Create{% endif %} User</h1>
+                    <label for="inputEmail" class="sr-only">Email address</label>
+                    <input type="email" id="inputEmail" name="username" class="form-control {% if error_mail %}is-invalid{% endif %}" placeholder="Email address" autocomplete="off" required {% if meta['id'] %}value="{{ meta['id'] }}"{% endif %} {% if meta['id'] %}disabled{% endif %}>
+                    {% if error_mail %}
+                        <div class="invalid-feedback">Please provide a valid email address</div>
+                    {% endif %}
+
+                    <label  class="mt-3" for="role_selector">User Role</label>
+                    <select class="custom-select" id="role_selector" name="user_role">
+                        {% for role in all_roles %}
+                            {% if role ==  meta['role'] %}
+                                <option value="{{role}}" selected>{{role}}</option>
+                            {% else %}
+                                 <option value="{{role}}">{{role}}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+
+                    <div class="custom-control custom-switch mt-4 mb-3">
+  				        <input type="checkbox" class="custom-control-input" id="set_manual_password" value="" onclick="toggle_password_fields();">
+  				        <label class="custom-control-label" for="set_manual_password">{% if meta['id'] %}Reset{% else %}Set{% endif %} Password</label>
+				    </div>
+
+                    <div id="password-section">
+                        <h1 class="h3 mb-3 text-center text-secondary">Create Password</h1>
+                        <label for="inputPassword1" class="sr-only">Password</label>
+                        <input type="password" id="inputPassword1" name="password1" class="form-control {% if error %}is-invalid{% endif %}" placeholder="Password" autocomplete="new-password">
+                        <label for="inputPassword2" class="sr-only">Confirm Password</label>
+                        <input type="password" id="inputPassword2" name="password2" class="form-control {% if error %}is-invalid{% endif %}" placeholder="Confirm Password"  value="" autocomplete="new-password">
+                        {% if error %}
+  						    <div class="invalid-feedback">{{error}}</div>
+  					    {% endif %}
+                    </div>
+
+                    <button class="btn btn-lg btn-primary btn-block mt-3" type="submit">Submit</button>
+                </form>
+
+                {% include 'settings/block_password_requirements.html' %}
+
+    	    </div>
+		</div>
+	</div>
+</body>
+
+<script>
+$(document).ready(function(){
+  $("#password-section").hide();
+  $("#password-section-info").hide();
+  $("#nav_create_user").addClass("active");
+	$("#nav_user_management").removeClass("text-muted");
+
+  {% if error %}
+    toggle_password_fields();
+  {% endif %}
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function toggle_password_fields() {
+  var password_div = $("#password-section");
+  if(password_div.is(":visible")){
+    $("#password-section").hide();
+    $("#password-section-info").hide();
+    $("#inputPassword1").prop('required',false);
+    $("#inputPassword2").prop('required',false);
+  } else {
+    $("#password-section").show();
+    $("#password-section-info").show();
+    $("#inputPassword1").prop('required',true);
+    $("#inputPassword2").prop('required',true);
+  }
+}
+</script>
+
+</html>

@@ -44,23 +44,23 @@
       		  <span>Settings</span>
       		</h5>
           <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
-            <!-- <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('settings.ail_configs')}}" id="nav_ail_configs">
-      	        <img src="{{ url_for('static', filename='image/ail.png')}}" alt="AIL servers" style="width:25px;">
-      	        <span>AIL Configs</span>
-      	      </a>
-      	    </li> -->
-            <!-- <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('settings.passive_dns')}}" id="nav_data_retention">
-      	        <i class="fas fa-database"></i>
-                <i class="fas fa-hourglass"></i>
-                <i class="fas fa-clock"></i>
-                <i class="fas fa-stopwatch"></i>
-      	        <span>Data Retention</span>
-      	      </a>
-      	    </li> -->
+{#            <li class="nav-item">#}
+{#      	      <a class="nav-link" href="{{url_for('settings_b.ail_configs')}}" id="nav_ail_configs">#}
+{#      	        <img src="{{ url_for('static', filename='image/ail.png')}}" alt="AIL servers" style="width:25px;">#}
+{#      	        <span>AIL Configs</span>#}
+{#      	      </a>#}
+{#      	    </li>#}
+{#            <li class="nav-item">#}
+{#      	      <a class="nav-link" href="{{url_for('settings_b.passive_dns')}}" id="nav_data_retention">#}
+{#      	        <i class="fas fa-database"></i>#}
+{#                <i class="fas fa-hourglass"></i>#}
+{#                <i class="fas fa-clock"></i>#}
+{#                <i class="fas fa-stopwatch"></i>#}
+{#      	        <span>Data Retention</span>#}
+{#      	      </a>#}
+{#      	    </li>#}
             <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('settings.passive_dns')}}" id="passive_dns">
+      	      <a class="nav-link" href="{{url_for('settings_b.passive_dns')}}" id="passive_dns">
       	        <img src="{{ url_for('static', filename='image/d4-logo.png')}}" alt="D4 project" style="width:25px;">
       	        <span>Passive DNS</span>
       	      </a>
@@ -71,7 +71,7 @@
           </h5>
           <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
       	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('settings.edit_profile')}}" id="nav_edit_profile">
+      	      <a class="nav-link" href="{{url_for('settings_b.user_profile')}}" id="nav_edit_profile">
       	        <i class="fas fa-user-edit"></i>
       	        <span>My Profile</span>
       	      </a>
@@ -89,7 +89,7 @@
         		</h5>
             <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
         	    <li class="nav-item">
-        	      <a class="nav-link" href="{{url_for('settings.create_user')}}" id="nav_create_user">
+        	      <a class="nav-link" href="{{url_for('settings_b.create_user')}}" id="nav_create_user">
         	        <i class="fas fa-user-plus"></i>
         	        <span>Create User</span>
         	      </a>

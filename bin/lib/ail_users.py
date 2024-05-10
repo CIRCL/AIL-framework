@@ -85,6 +85,13 @@ def hashing_password(password):
 
 ## --PASSWORDS-- ##
 
+def check_email(email):
+    email_regex = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}')
+    result = email_regex.match(email)
+    if result:
+        return True
+    else:
+        return False
 
 #### TOKENS ####
 
@@ -315,6 +322,20 @@ def api_get_users_meta():
         meta['users'].append(user.get_meta(options=options))
     return meta
 
+def api_get_user_profile(user_id):
+    options = {'api_key', 'role'}
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    meta = user.get_meta(options=options)
+    return meta, 200
+
+def api_create_user_api_key_self(user_id): # TODO LOG USER ID
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    return user.new_api_key(), 200
+
 def api_create_user_api_key(user_id, admin_id): # TODO LOG ADMIN ID
     user = AILUser(user_id)
     if not user.exists():
@@ -348,7 +369,7 @@ def get_users_metadata(list_users):
         users.append(get_user_metadata(user))
     return users
 
-def create_user(user_id, password=None, chg_passwd=True, role=None):
+def create_user(user_id, password=None, chg_passwd=True, role=None): # TODO ###############################################################
     # # TODO: check password strength
     if password:
         new_password = password
