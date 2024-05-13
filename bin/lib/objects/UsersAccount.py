@@ -157,6 +157,7 @@ class UserAccount(AbstractSubtypeObject):
             meta['usernames'] = self.get_usernames()
         if 'icon' in options:
             meta['icon'] = self.get_icon()
+            meta['svg_icon'] = meta['icon']
         if 'info' in options:
             meta['info'] = self.get_info()
             if 'translation' in options and translation_target:

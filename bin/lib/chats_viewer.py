@@ -328,6 +328,31 @@ def get_username_meta_from_global_id(username_global_id):
     username = Usernames.Username(username_id, instance_uuid)
     return username.get_meta(options={'icon'})
 
+###############################################################################
+# TODO Pagination
+def list_messages_to_dict(l_messages_id, translation_target=None):
+    options = {'content', 'files-names', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
+    meta = {}
+    curr_date = None
+    for mess_id in l_messages_id:
+        message = Messages.Message(mess_id[1:])
+        timestamp = message.get_timestamp()
+        date_day = message.get_date()
+        date_day = f'{date_day[0:4]}/{date_day[4:6]}/{date_day[6:8]}'
+        if date_day != curr_date:
+            meta[date_day] = []
+            curr_date = date_day
+        meta_mess = message.get_meta(options=options, timestamp=timestamp, translation_target=translation_target)
+        meta[date_day].append(meta_mess)
+
+        # if mess_dict.get('tags'):
+        #     for tag in mess_dict['tags']:
+        #         if tag not in tags:
+        #             tags[tag] = 0
+        #         tags[tag] += 1
+    # return messages, pagination, tags
+    return meta
+
 # TODO Filter
 ## Instance type
 ## Chats IDS
@@ -354,7 +379,7 @@ def get_messages_iterator(filters={}):
             # threads
             for threads in chat.get_threads():
                 thread = ChatThreads.ChatThread(threads['id'], instance_uuid)
-                _, _ = thread._get_messages(nb=-1)
+                messages, _ = thread._get_messages(nb=-1)
                 for mess in messages:
                     message_id, _, message_id = mess[0].split(':', )
                     yield Messages.Message(message_id)
@@ -404,6 +429,15 @@ def get_user_account_chats_meta(user_id, chats, subchannels):
         meta.append(chat_meta)
     return meta
 
+def get_user_account_chat_message(user_id, subtype, chat_id): # TODO subchannel + threads ...
+    meta = {}
+    chat = Chats.Chat(chat_id, subtype)
+    chat_meta = chat.get_meta(options={'icon', 'info', 'nb_participants', 'tags_safe', 'username'})
+    if chat_meta['username']:
+        chat_meta['username'] = get_username_meta_from_global_id(chat_meta['username'])
+
+    meta['messages'] = list_messages_to_dict(chat.get_user_messages(user_id), translation_target=None)
+    return meta
 
 def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
     week = {}
@@ -487,12 +521,12 @@ def api_get_chat_service_instance(chat_instance_uuid):
         return {"status": "error", "reason": "Unknown uuid"}, 404
     return chat_instance.get_meta({'chats'}), 200
 
-def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1):
+def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
     # print(chat.get_obj_language_stats())
-    meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'threads', 'translation', 'username'}, translation_target=translation_target)
+    meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     if meta['subchannels']:
@@ -500,7 +534,8 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     else:
         if translation_target not in Language.get_translation_languages():
             translation_target = None
-        meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
+        if messages:
+            meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
     return meta, 200
 
 def api_get_nb_message_by_week(chat_type, chat_instance_uuid, chat_id):
@@ -600,6 +635,18 @@ def api_get_user_account(user_id, instance_uuid, translation_target=None):
     meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
     if meta['chats']:
         meta['chats'] = get_user_account_chats_meta(user_id, meta['chats'], meta['subchannels'])
+    return meta, 200
+
+def api_get_user_account_chat_messages(user_id, instance_uuid, chat_id, translation_target=None):
+    user_account = UsersAccount.UserAccount(user_id, instance_uuid)
+    if not user_account.exists():
+        return {"status": "error", "reason": "Unknown user-account"}, 404
+    meta = get_user_account_chat_message(user_id, instance_uuid, chat_id)
+    meta['user-account'] = user_account.get_meta({'icon', 'info', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
+    resp = api_get_chat(chat_id, instance_uuid, translation_target=translation_target, messages=False)
+    if resp[1] != 200:
+        return resp
+    meta['chat'] = resp[0]
     return meta, 200
 
 def api_get_user_account_nb_all_week_messages(user_id, instance_uuid):

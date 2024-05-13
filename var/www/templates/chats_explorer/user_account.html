@@ -45,7 +45,7 @@
                     <h4>User Chats:</h4>
                     {% for meta_chats in meta['chats'] %}
                         <div class="my-2">
-                            {% with meta=meta_chats  %}
+                            {% with meta=meta_chats,main_obj_id=meta['id']  %}
                                 {% include 'chats_explorer/basic_card_chat.html' %}
                             {% endwith %}
                         </div>
