@@ -316,6 +316,17 @@ def crawlers_last_domains_month_json():
     stats = crawlers.get_crawlers_stats_by_month(domain_type)
     return jsonify(stats)
 
+@crawler_splash.route('/crawlers/last/domains/month/previous/json')
+@login_required
+@login_read_only
+def crawlers_last_domains_previous_month_json():
+    domain_type = request.args.get('type')
+    if domain_type not in crawlers.get_crawler_all_types():
+        return jsonify({'error': 'Invalid domain type'}), 400
+    date = Date.get_previous_month_date()
+    stats = crawlers.get_crawlers_stats_by_month(domain_type, date=date)
+    return jsonify(stats)
+
 @crawler_splash.route('/crawlers/last/domains/status/month/json')
 @login_required
 @login_read_only

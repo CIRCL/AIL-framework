@@ -95,6 +95,10 @@
                 <div id="barchart_type_month"></div>
                 <div class="text-center" id="pie_chart_month"></div>
 
+                <h3>Previous Month Stats:</h3>
+                <div id="barchart_type_month"></div>
+                <div class="text-center" id="barchart_type_previous_month"></div>
+
 			</div>
 
 		</div>
@@ -153,6 +157,13 @@ $(document).ready(function(){
         function (data) {
                 let div_width = $("#barchart_type_month").width();
                 barchart_stack("barchart_type_month", data, {"width": div_width});
+        }
+    );
+
+    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_previous_month_json') }}?type={{type}}",
+        function (data) {
+                let div_width = $("#barchart_type_previous_month").width();
+                barchart_stack("barchart_type_previous_month", data, {"width": div_width});
         }
     );
 
