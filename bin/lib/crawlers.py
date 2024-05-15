@@ -1286,6 +1286,11 @@ def create_schedule(frequency, user, url, depth=1, har=True, screenshot=True, he
     schedule.create(frequency, user, url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar, proxy=proxy, user_agent=user_agent, tags=tags)
     return schedule_uuid
 
+def _delete_schedules():
+    for schedule_uuid in get_schedulers_uuid():
+        schedule = CrawlerSchedule(schedule_uuid)
+        schedule.delete()
+
 # TODO sanityze UUID
 def api_delete_schedule(data):
     schedule_uuid = data.get('uuid')
@@ -1672,7 +1677,6 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
                             proxy=proxy, user_agent=user_agent, tags=tags, parent=parent, priority=priority,
                             external=external)
     return task_uuid
-
 
 ## -- CRAWLER TASK -- ##
 
