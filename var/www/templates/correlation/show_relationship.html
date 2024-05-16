@@ -205,12 +205,36 @@
 								<div class="card-body text-center px-0 py-0">
 
 									<ul class="list-group">
-                                        <li class="list-group-item list-group-item-info">Relationship</li>
+                                        <li class="list-group-item list-group-item-info">Relationships</li>
                                         <form action="{{ url_for('correlation.show_relationship') }}" method="post">
+
+                                            <li class="list-group-item text-left">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_forward_Check" name="relationship_forward_Check" {%if "forward" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_forward_Check">Forward</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_mention_Check" name="relationship_mention_Check" {%if "mention" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_mention_Check">Mention</label>
+                                                </div>
+                                            </li>
 
                                             <input type="hidden" id="obj_type" name="obj_type" value="{{ dict_object["object_type"] }}">
                                             <input type="hidden" id="subtype" name="subtype" value="{{ dict_object["metadata"]["type_id"] }}">
                                             <input type="hidden" id="obj_id" name="obj_id" value="{{ dict_object["correlation_id"] }}">
+
+                                            <li class="list-group-item list-group-item-info">Objects Types</li>
+
+                                            <li class="list-group-item text-left">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="chat_Check" name="chat_Check" {%if "chat" in dict_object["filter"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="chat_Check">Chat</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="message_Check" name="message_Check" {%if "message" in dict_object["filter"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="message_Check">Message</label>
+                                                </div>
+                                            </li>
 
 {#                                        <li class="list-group-item text-left">#}
 {#                                                <div class="form-check">#}
@@ -324,7 +348,7 @@ $(document).ready(function(){
         $("#incomplete_graph").hide();
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.relationships_graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
+		all_graph.node_graph = create_graph("{{ url_for('correlation.relationships_graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&level={{ dict_object["level"] }}&relationships={{ dict_object["relationships_str"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
 		all_graph.onResize();
 });
 

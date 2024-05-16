@@ -10,6 +10,7 @@ Process Feeder Json (example: Twitter feeder)
 import datetime
 import os
 import sys
+import time
 
 from abc import ABC
 
@@ -163,6 +164,39 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             obj_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, thread_id=thread_id)
             self.obj = Messages.Message(obj_id)
         return self.obj
+
+    # TODO handle subchannel
+    def _process_chat(self, meta_chat, date, new_objs=None): #TODO NONE DATE???
+        chat = Chat(meta_chat['id'], self.get_chat_instance_uuid())
+
+        # Obj Daterange
+        chat.add(date)
+
+        if meta_chat.get('name'):
+            chat.set_name(meta_chat['name'])
+
+        if meta_chat.get('info'):
+            chat.set_info(meta_chat['info'])
+
+        if meta_chat.get('date'): # TODO check if already exists
+            chat.set_created_at(int(meta_chat['date']['timestamp']))
+
+        if meta_chat.get('icon'):
+            img = Images.create(meta_chat['icon'], b64=True)
+            img.add(date, chat)
+            chat.set_icon(img.get_global_id())
+            if new_objs:
+                new_objs.add(img)
+
+        if meta_chat.get('username'):
+            username = Username(meta_chat['username'], self.get_chat_protocol())
+            chat.update_username_timeline(username.get_global_id(), int(time.time()))
+            username.add(date, obj=chat)  # TODO TODAY DATE
+
+        return chat
+
+    ##############################################################################################################################
+
 
     def process_chat(self, new_objs, obj, date, timestamp, reply_id=None):
         meta = self.json_data['meta']['chat'] # todo replace me by function
@@ -365,73 +399,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             # CHAT
             chat_objs = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
 
-            # # TODO HANDLE OTHERS OBJECT TYPE
-            # # TODO MAKE IT GENERIC FOR OTHERS CHATS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # # Message forward + Discussion
-            # if self.get_json_meta().get('forward'):
-            #     discussion_id = self.get_json_meta().get('discussion')
-            #     forward_from = self.get_message_forward()
-            #
-            #     if discussion_id:       # TODO HANDLE FORWARDED MESSAGES FROM EXTERNAL CHANNELS
-            #         chat_forward_id = forward_from['from']['id']
-            #         message_forward_id = forward_from['from']['channel_post']
-            #
-            #         # if chat_forward_id == discussion_id:
-            #         #     linked_chat = Chat(chat_forward_id, self.get_chat_instance_uuid())
-            #         #     if linked_chat.exists():
-            #         #         # create thread
-            #         #         # add message replies for each childrens
-            #
-            # # TODO HANDLE THREAD
-            # # TODO Change FORWARD META FIELDS
-            # # meta['forward'] = {}
-            # #       # CHAT ID
-            # #       # SUBCHANNEL ID     -> can be None
-            # #       # Message ID
-            #
-            # # meta['forward']['origin']
-            # #       # same as 'forward'
-            #
-            # if self.get_json_meta().get('forward'):
-            #     forward = self.get_message_forward()
-            #     f_chat = forward['chat']
-            #     f_subchannel = forward.get('subchannel')
-            #     f_id = forward.get('id')
-            #     if not f_subchannel:
-            #         chat_forward = Chat(f_chat, self.get_chat_instance_uuid())
-            #         if chat_forward.exists():
-            #             for chat_obj in chat_objs:
-            #                 if chat_obj.type == 'chat':
-            #                     chat_forward.add_relationship(chat_obj.get_global_id(), 'forward')
-            #             # TODO LIST FORWARDED MESSAGES
-            #
-            #
-            # # Discord -> serverID + subchannel ID + message ID
-            # # Telegram -> chat ID + Message ID
-            # #                 + ORIGIN IDs
-            #
-            #
-            #
-            # # TODO create relationships graph
-            #
-            #
-            # # TODO REMOVE ME
-            # # Message forward  # TODO handle subchannel + message ID
-            # if self.get_json_meta().get('forward'):
-            #     forward_from = self.get_message_forward()
-            #     print('-----------------------------------------------------------')
-            #     print(forward_from)
-            #     if forward_from:
-            #         forward_from_type = forward_from['from']['type']
-            #         if forward_from_type == 'channel' or forward_from_type == 'chat':
-            #             chat_forward_id = forward_from['from']['id']
-            #             chat_forward = Chat(chat_forward_id, self.get_chat_instance_uuid())
-            #             if chat_forward.exists():
-            #                 for chat_obj in chat_objs:
-            #                     if chat_obj.type == 'chat':
-            #                         chat_forward.add_relationship(chat_obj.get_global_id(), 'forward')
-            #                         # chat_forward.add_relationship(obj.get_global_id(), 'forward')
-
             # SENDER # TODO HANDLE NULL SENDER
             user_account = self.process_sender(new_objs, obj, date, timestamp)
 
@@ -448,5 +415,25 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 # image
                 #       -> subchannel ?
                 #       -> thread id ?
+
+
+        #######################################################################
+
+        ## FORWARD ##
+        # chat_fwd = None
+        # if self.get_json_meta().get('forward'):
+        #     meta_fwd = self.get_message_forward()
+        #     if meta_fwd['chat']:
+        #         chat_fwd = self._process_chat(meta_fwd['chat'], date, new_objs=new_objs)
+        #         for chat_obj in chat_objs:
+        #             if chat_obj.type == 'chat':
+        #                 chat_fwd.add_relationship(chat_obj.get_global_id(), 'forward')
+        #
+        # # TODO chat_fwd -> message
+        # if chat_fwd:
+        #     for obj in objs:
+        #         if obj.type == 'message':
+        #             chat_fwd.add_relationship(obj.get_global_id(), 'forward')
+        # -FORWARD- #
 
         return new_objs | objs

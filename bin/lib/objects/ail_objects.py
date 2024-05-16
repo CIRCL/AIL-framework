@@ -562,23 +562,33 @@ def get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=[], max_
 
 # --- CORRELATION --- #
 
+#### RELATIONSHIPS ####
+
+def get_relationships():
+    return relationships_engine.get_relationships()
+
+def sanitize_relationships(relationships):
+    return relationships_engine.sanitize_relationships(relationships)
 def get_obj_nb_relationships(obj_type, subtype, obj_id, filter_types=[]):
     obj = get_object(obj_type, subtype, obj_id)
     return obj.get_nb_relationships(filter=filter_types)
 
-def get_relationships_graph_node(obj_type, subtype, obj_id, filter_types=[], max_nodes=300, level=1,
+def get_relationships_graph_node(obj_type, subtype, obj_id, relationships=[], filter_types=[], max_nodes=300, level=1,
                                  objs_hidden=set(),
                                  flask_context=False):
     obj_global_id = get_obj_global_id(obj_type, subtype, obj_id)
-    nodes, links, meta = relationships_engine.get_relationship_graph(obj_global_id,
-                                                                    filter_types=filter_types,
-                                                                    max_nodes=max_nodes, level=level,
-                                                                    objs_hidden=objs_hidden)
+    nodes, links, meta = relationships_engine.get_relationship_graph(obj_global_id, relationships=relationships,
+                                                                     filter_types=filter_types,
+                                                                     max_nodes=max_nodes, level=level,
+                                                                     objs_hidden=objs_hidden)
     # print(meta)
     meta['objs'] = list(meta['objs'])
     return {"nodes": create_correlation_graph_nodes(nodes, obj_global_id, flask_context=flask_context),
             "links": links,
             "meta": meta}
+
+
+# --- RELATIONSHIPS --- #
 
 
 # if __name__ == '__main__':
