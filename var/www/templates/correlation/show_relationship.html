@@ -755,9 +755,8 @@ if (d.popover) {
                             desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
                         }
 					}
-
                     if (additional_text) {
-                        desc = desc + "</hr>" + sanitize_text(additional_text)
+                        desc = desc + "<hr><div>" + sanitize_text(additional_text) + "</div>"
                     }
 
 					desc = desc + "</div></div>"
@@ -892,8 +891,7 @@ ${labels_meta[names[d.source.index]]}`);
         displayedText = text.length > maxCharsToShow ? text.slice(0, maxCharsToShow - 1) + "…" : text;
     }
 
-    let info_text = `OUT: ${d3.sum(matrix[d.index])} Messages
-IN: ${d3.sum(matrix, row => row[d.index])} Messages`
+    let info_text = "OUT: " + d3.sum(matrix[d.index]) + " ; IN: " + d3.sum(matrix, row => row[d.index]) + " Messages"
 
     if (displayedText) {
         group.append("text")
@@ -909,14 +907,10 @@ IN: ${d3.sum(matrix, row => row[d.index])} Messages`
     }
   });
 
-  g.append("title")
-      .text(d => `OUT: ${d3.sum(matrix[d.index])} Messages
-IN: ${d3.sum(matrix, row => row[d.index])} Messages`);
-
   return svg.node();
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
