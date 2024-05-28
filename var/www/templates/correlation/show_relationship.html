@@ -16,7 +16,8 @@
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<!--<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>-->
+        <script src="https://d3js.org/d3.v6.min.js"></script>
 
 		<style>
 		.icon_legend {
@@ -71,6 +72,7 @@
 
         .blured {
             filter: blur(5px);
+            max-width: 200px;
         }
 
 		.graph_panel {
@@ -210,8 +212,16 @@
 
                                             <li class="list-group-item text-left">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_forward_Check" name="relationship_forward_Check" {%if "forward" in dict_object["relationships"]%}checked{%endif%}>
-                                                    <label class="form-check-label" for="relationship_forward_Check">Forward</label>
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_forwarded_from_Check" name="relationship_forwarded_from_Check" {%if "forwarded_from" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_forwarded_from_Check">Forwarded From</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_forwarded_to_Check" name="relationship_forwarded_to_Check" {%if "forwarded_to" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_forwarded_to_Check">Forwarded To</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_in_Check" name="relationship_in_Check" {%if "in" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_in_Check">Forward</label>
                                                 </div>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" value="True" id="relationship_mention_Check" name="relationship_mention_Check" {%if "mention" in dict_object["relationships"]%}checked{%endif%}>
@@ -337,10 +347,17 @@
                         </div>
                     </div>
 
+                    <div id="chart_test" style="max-width: 900px"></div>
+
+
+                    <table id="table_graph_node_objects">
+                    </table>
+
+                    <div id="timeline"></div>
+
 				</div>
 			</div>
 		</div>
-
 <script>
 
 var all_graph = {};
@@ -350,6 +367,14 @@ $(document).ready(function(){
 
 		all_graph.node_graph = create_graph("{{ url_for('correlation.relationships_graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&level={{ dict_object["level"] }}&relationships={{ dict_object["relationships_str"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
 		all_graph.onResize();
+
+        let url = "{{ url_for('correlation.relationships_chord_graph_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}"
+        d3.json(url).then(function(data) {
+            const diagram = createDirectedChordDiagram(data);
+            document.getElementById('chart_test').appendChild(diagram);
+        });
+
+
 });
 
 const blur_slider_correlation = $('#blur-slider-correlation');
@@ -577,7 +602,18 @@ d3.json(url)
 
     d3.select("body").on("keypress", keypressed)
 
+    let table_obj = document.getElementById("table_graph_node_objects")
+    for (let i=0; i<data.nodes.length; i++) {
+        let newRow = table_obj.insertRow();
+        let newCell = newRow.insertCell();
+        let newText = document.createTextNode(data.nodes[i].id);
+        newCell.appendChild(newText);
 
+        //console.log(data.nodes[i])
+
+    }
+
+    //// -----------------------------------------------------------------------------------------------------------------------------
 
 })
 .catch(function(error) {
@@ -588,19 +624,19 @@ d3.json(url)
 		});
 }
 
-function zoomed() {
-	container_graph.attr("transform", d3.event.transform);
+function zoomed(event, d) {
+	container_graph.attr("transform", event.transform);
 }
 
 function doubleclick (d) {
 	window.open(d.url, '_blank');
 }
 
-function keypressed () {
-    //console.log(d3.event.keyCode)
+function keypressed (event, d) {
+    //console.log(event.keyCode)
     //console.log(currentObject.id)
     // hide node, H or h key
-    if ((d3.event.keyCode === 72 || d3.event.keyCode === 104) && currentObject) {
+    if ((event.keyCode === 72 || event.keyCode === 104) && currentObject) {
         window.location.href = correl_link + "&hide=" + currentObject.id
     }
 
@@ -610,29 +646,29 @@ function click (d) {
 console.log('clicked')
 }
 
-function drag_start(d) {
-if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+function drag_start(event, d) {
+if (!event.active) simulation.alphaTarget(0.3).restart();
 d.fx = d.x;
 d.fy = d.y;
 }
 
-function dragged(d) {
-d.fx = d3.event.x;
-d.fy = d3.event.y;
+function dragged(event, d) {
+d.fx = event.x;
+d.fy = event.y;
 }
 
-function drag_end(d) {
-if (!d3.event.active) simulation.alphaTarget(0);
+function drag_end(event, d) {
+if (!event.active) simulation.alphaTarget(0);
 d.fx = d.x;
 d.fy = d.y;
 }
 
-function mouseovered(d) {
+function mouseovered(event, d, obj_gid, obj_label, additional_text) {
 
 currentObject = d;
 
-var d3_pageX = d3.event.pageX;
-var d3_pageY = d3.event.pageY;
+var d3_pageX = event.pageX;
+var d3_pageY = event.pageY;
 
 if (d.popover) {
 	div.html(d.popover)
@@ -645,7 +681,15 @@ if (d.popover) {
     blur_tooltip();
 } else {
 
-		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"+ sanitize_text(d.text) +"</h6></div>"
+		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"
+        if (obj_label) {
+            pop_header = pop_header + sanitize_text(obj_label)
+        } else if (obj_gid) {
+            pop_header = pop_header + sanitize_text(obj_gid)
+        } else {
+            pop_header = pop_header + sanitize_text(d.text)
+        }
+        pop_header = pop_header + "</h6></div>"
 		var spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
 
 		div.html(pop_header + spinner)
@@ -656,7 +700,14 @@ if (d.popover) {
 			.duration(200)
 			.style("opacity", 1);
 
-		$.getJSON("{{ url_for('correlation.get_description') }}?object_id="+ d.id,
+        let description_url = "{{ url_for('correlation.get_description') }}?object_id="
+        if (obj_gid) {
+            description_url = description_url + obj_gid
+        } else {
+            description_url = description_url + d.id
+        }
+
+		$.getJSON(description_url,
 				function(data){
 					var desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
 					Object.keys(data).forEach(function(key) {
@@ -674,9 +725,16 @@ if (d.popover) {
 								desc = desc + "fa-times-circle\"></i>DOWN"
 							}
 							desc = desc + "</div></dd>"
-						} else if (key!="tags" && key!="id" && key!="img" && key!="icon" && key!="link" && key!="type") {
-							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
-						}
+						} else if (key!=="tags" && key!=="id" && key!="img" && key!=="icon" && key!=="svg_icon" && key!=="link" && key!=="type" && key!=="tags_safe") {
+							if (data[key]) {
+                                if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
+                                    let date = sanitize_text(data[key])
+                                    desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8) + "</dd>"
+                                } else {
+							        desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+                                }
+                            }
+                        }
 					});
 					desc = desc + "</dl>"
 
@@ -698,6 +756,10 @@ if (d.popover) {
                             desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
                         }
 					}
+
+                    if (additional_text) {
+                        desc = desc + "</hr>" + sanitize_text(additional_text)
+                    }
 
 					desc = desc + "</div></div>"
 					div.html(desc)
@@ -736,8 +798,132 @@ all_graph.onResize = function () {
 }
 
 window.all_graph = all_graph;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function getMaxCharsToShow(angle, radius) {
+  const approximateCharWidth = 7; // Approximate width of a character in pixels
+  const arcLength = angle * radius; // Length of the arc
+  return Math.floor(arcLength / approximateCharWidth); // Maximum number of characters that can fit
+}
+
+function createDirectedChordDiagram(data) {
+  const width = 900;
+  const height = width;
+  const innerRadius = Math.min(width, height) * 0.5 - 20;
+  const outerRadius = innerRadius + 6;
+
+  const labels_meta = data.meta
+  data = data.data
+
+  // Compute a dense matrix from the weighted links in data.
+  var names = Array.from(d3.union(data.flatMap(d => [d.source, d.target])));
+  const index = new Map(names.map((name, i) => [name, i]));
+  const matrix = Array.from(index, () => new Array(names.length).fill(0));
+  for (const {source, target, value} of data) matrix[index.get(source)][index.get(target)] += value;
+
+  const chord = d3.chordDirected()
+      .padAngle(12 / innerRadius)
+      .sortSubgroups(d3.descending)
+      .sortChords(d3.descending);
+
+  const arc = d3.arc()
+      .innerRadius(innerRadius)
+      .outerRadius(outerRadius);
+
+  const ribbon = d3.ribbonArrow()
+      .radius(innerRadius - 0.5)
+      .padAngle(1 / innerRadius);
+
+  const colors = d3.schemeCategory10;
+
+  const svg = d3.create("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [-width / 2, -height / 2, width, height])
+      .attr("style", "width: 100%; height: auto; font: 10px sans-serif;");
+
+  const chords = chord(matrix);
+
+  const textId = `text-${Math.random().toString(36).substring(2, 15)}`;
+
+  svg.append("path")
+      .attr("id", textId)
+      .attr("fill", "none")
+      .attr("d", d3.arc()({outerRadius, startAngle: 0, endAngle: 2 * Math.PI}));
+
+  svg.append("g")
+      .attr("fill-opacity", 0.75)
+    .selectAll("path")
+    .data(chords)
+    .enter()
+    .append("path")
+      .attr("d", ribbon)
+      .attr("fill", d => colors[d.target.index])
+      .style("mix-blend-mode", "multiply")
+    .append("title")
+      .text(d => `${labels_meta[names[d.target.index]]}
+Forwarded ${d.source.value} Messages From
+${labels_meta[names[d.source.index]]}`);
+
+  const g = svg.append("g")
+    .selectAll("g")
+    .data(chords.groups)
+    .enter()
+    .append("g");
+
+  g.append("path")
+      .attr("d", arc)
+      .attr("fill", d => colors[d.index])
+      .attr("stroke", "#fff")
+      .on("mouseover", function(event, d) {
+        mouseovered(event, d, names[d.index], labels_meta[names[d.index]]);
+      })
+	  .on("mouseout", mouseouted);
+
+  g.each(function(d) {
+    const group = d3.select(this);
+    const angle = d.endAngle - d.startAngle;
+    const text = labels_meta[names[d.index]];
+    const maxCharsToShow = getMaxCharsToShow(angle, outerRadius);
+
+    let displayedText
+    if (maxCharsToShow <= 1) {
+        displayedText = text[0];
+    } else {
+        displayedText = text.length > maxCharsToShow ? text.slice(0, maxCharsToShow - 1) + "…" : text;
+    }
+
+    let info_text = `OUT: ${d3.sum(matrix[d.index])} Messages
+IN: ${d3.sum(matrix, row => row[d.index])} Messages`
+
+    if (displayedText) {
+        group.append("text")
+            .attr("dy", -3)
+            .append("textPath")
+            .attr("xlink:href", `#${textId}`)
+            .attr("startOffset", d.startAngle * outerRadius)
+            .on("mouseover", function(event, d) {
+                mouseovered(event, d, names[d.index], labels_meta[names[d.index]], info_text);
+            })
+            .on("mouseout", mouseouted)
+            .text(displayedText);
+    }
+  });
+
+  g.append("title")
+      .text(d => `OUT: ${d3.sum(matrix[d.index])} Messages
+IN: ${d3.sum(matrix, row => row[d.index])} Messages`);
+
+  return svg.node();
+}
+
+
+
+
+
 </script>
 
-        </body>
+</body>
 
 </html>

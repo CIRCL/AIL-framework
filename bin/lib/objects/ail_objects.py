@@ -587,6 +587,12 @@ def get_relationships_graph_node(obj_type, subtype, obj_id, relationships=[], fi
             "links": links,
             "meta": meta}
 
+def get_chat_relationships_cord_graph(obj_type, subtype, obj_id):
+    if obj_type == 'chat':
+        obj_global_id = get_obj_global_id(obj_type, subtype, obj_id)
+        data = relationships_engine.get_chat_forward_stats(obj_global_id)
+        return data
+    return []
 
 # --- RELATIONSHIPS --- #
 

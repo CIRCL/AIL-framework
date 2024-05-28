@@ -24,6 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects import ail_objects
+from lib import chats_viewer
 from lib import Tag
 
 bootstrap_label = Flask_config.bootstrap_label
@@ -269,6 +270,18 @@ def relationships_graph_node_json():
     json_graph = ail_objects.get_relationships_graph_node(obj_type, subtype, obj_id, relationships=relationships, filter_types=filter_types, max_nodes=max_nodes, level=level, flask_context=True)
     return jsonify(json_graph)
 
+@correlation.route('/relationships/chord_graph_json')
+@login_required
+@login_read_only
+def relationships_chord_graph_json():
+    obj_id = request.args.get('id')
+    subtype = request.args.get('subtype')
+    obj_type = request.args.get('type')
+
+    chat_json_graph = ail_objects.get_chat_relationships_cord_graph(obj_type, subtype, obj_id)
+    meta = chats_viewer.enrich_chat_relationships_labels(chat_json_graph)
+
+    return jsonify({'meta': meta, 'data': chat_json_graph})
 
 @correlation.route('/relationship/show', methods=['GET', 'POST'])
 @login_required

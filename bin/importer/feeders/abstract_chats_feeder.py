@@ -128,7 +128,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         return self.json_data['meta'].get('reply_to', {}).get('message_id')
 
     def get_message_forward(self):
-        return self.json_data['meta'].get('forward')
+        return self.json_data['meta'].get('forward', {})
 
     def get_message_content(self):
         decoded = base64.standard_b64decode(self.json_data['data'])
@@ -291,6 +291,39 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         # else:
         #   # ADD NEW MESSAGE REF (used by discord)
 
+    ##########################################################################################
+
+    def _process_user(self, meta, date, timestamp, new_objs=None): #################33 timestamp
+        user_account = UsersAccount.UserAccount(meta['id'], self.get_chat_instance_uuid())
+        if meta.get('username'):
+            username = Username(meta['username'], self.get_chat_protocol())
+            # TODO timeline or/and correlation ????
+            user_account.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
+            user_account.update_username_timeline(username.get_global_id(), timestamp) # TODO time.time !!!! (time when meta are retrieved)
+
+            # Username---Message
+            username.add(date)  # TODO # correlation message ??? ###############################################################
+
+        # ADDITIONAL METAS
+        if meta.get('firstname'):
+            user_account.set_first_name(meta['firstname'])
+        if meta.get('lastname'):
+            user_account.set_last_name(meta['lastname'])
+        if meta.get('phone'):
+            user_account.set_phone(meta['phone'])
+
+        if meta.get('icon'):
+            img = Images.create(meta['icon'], b64=True)
+            img.add(date, user_account)
+            user_account.set_icon(img.get_global_id())
+            new_objs.add(img)
+
+        if meta.get('info'):
+            user_account.set_info(meta['info'])
+
+        user_account.add(date)
+        return user_account
+
     def process_sender(self, new_objs, obj, date, timestamp):
         meta = self.json_data['meta'].get('sender')
         if not meta:
@@ -339,6 +372,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         if self.obj:
             objs.add(self.obj)
         new_objs = set()
+        chats_objs = set()
 
         date, timestamp = self.get_message_date_timestamp()
 
@@ -397,14 +431,14 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             print(obj.id)
 
             # CHAT
-            chat_objs = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
+            curr_chats_objs = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
 
             # SENDER # TODO HANDLE NULL SENDER
             user_account = self.process_sender(new_objs, obj, date, timestamp)
 
             if user_account:
             # UserAccount---ChatObjects
-                for obj_chat in chat_objs:
+                for obj_chat in curr_chats_objs:
                     user_account.add_correlation(obj_chat.type, obj_chat.get_subtype(r_str=True), obj_chat.id)
 
             # if chat: # TODO Chat---Username correlation ???
@@ -416,24 +450,37 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 #       -> subchannel ?
                 #       -> thread id ?
 
+            chats_objs.update(curr_chats_objs)
 
         #######################################################################
 
         ## FORWARD ##
-        # chat_fwd = None
-        # if self.get_json_meta().get('forward'):
-        #     meta_fwd = self.get_message_forward()
-        #     if meta_fwd['chat']:
-        #         chat_fwd = self._process_chat(meta_fwd['chat'], date, new_objs=new_objs)
-        #         for chat_obj in chat_objs:
-        #             if chat_obj.type == 'chat':
-        #                 chat_fwd.add_relationship(chat_obj.get_global_id(), 'forward')
-        #
-        # # TODO chat_fwd -> message
-        # if chat_fwd:
-        #     for obj in objs:
-        #         if obj.type == 'message':
-        #             chat_fwd.add_relationship(obj.get_global_id(), 'forward')
+        chat_fwd = None
+        user_fwd = None
+        if self.get_json_meta().get('forward'):
+            meta_fwd = self.get_message_forward()
+            if meta_fwd.get('chat'):
+                chat_fwd = self._process_chat(meta_fwd['chat'], date, new_objs=new_objs)
+                for chat_obj in chats_objs:
+                    if chat_obj.type == 'chat':
+                        chat_fwd.add_relationship(chat_obj.get_global_id(), 'forwarded_to')
+            if meta_fwd.get('user'):
+                user_fwd = self._process_user(meta_fwd['user'], date, timestamp, new_objs=new_objs)  # TODO date, timestamp ???
+                for chat_obj in chats_objs:
+                    if chat_obj.type == 'chat':
+                        user_fwd.add_relationship(chat_obj.get_global_id(), 'forwarded_to')
+
+        # TODO chat_fwd -> message
+        if chat_fwd or user_fwd:
+            for obj in objs:
+                if obj.type == 'message':
+                    if chat_fwd:
+                        obj.add_relationship(chat_fwd.get_global_id(), 'forwarded_from')
+                    if user_fwd:
+                        obj.add_relationship(user_fwd.get_global_id(), 'forwarded_from')
+                    for chat_obj in chats_objs:
+                        if chat_obj.type == 'chat':
+                            obj.add_relationship(chat_obj.get_global_id(), 'in')
         # -FORWARD- #
 
         return new_objs | objs

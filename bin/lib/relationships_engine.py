@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-
+import json
 import os
 import sys
 
@@ -16,13 +16,23 @@ config_loader = None
 
 
 RELATIONSHIPS = {
-    "forward",  # forwarded_to
+    "forwarded_from",
+    "forwarded_to",  # forwarded_to
+    "in",
     "mention"
 }
 
 RELATIONSHIPS_OBJS = {
-    "forward": {
-        'chat': {'chat', 'message'},
+    "forwarded_from": {
+        'chat': {'message'},
+        'message': {'chat', 'user-account'}
+    },
+    "forwarded_to": {
+        'chat': {'chat'},
+        'user-account': {'chat'},
+    },
+    "in": {
+        'chat': {'message'},
         'message': {'chat'}
     },
     "mention": {}
@@ -51,10 +61,12 @@ def sanityze_obj_types(relationship, obj_type, filter_types):
     objs_types = get_relationship_objs(relationship, obj_type)
     if filter_types:
         filter_types = objs_types.intersection(filter_types)
-    if not filter_types:
+    else:
         filter_types = objs_types
-        if not filter_types:
-            return []
+    # if not filter_types:
+    #     filter_types = objs_types
+    #     if not filter_types:
+    #         return []
     return filter_types
 
 # TODO check obj_type
@@ -148,4 +160,64 @@ def _get_relationship_graph(obj_global_id, links, nodes, meta, level, max_nodes,
             _get_relationship_graph(rel['id'], links, nodes, meta, next_level, max_nodes, relationships=relationships, filter_types=filter_types, objs_hidden=objs_hidden, done=done, done_link=done_link)
 
     # done.add(rel['id'])
+
+# # # # # # # # # # # # # # # # # # # # # # # ## # # # # # # ## # # # # # # ## # # # # # # ## # # # # # # ## # # # #
+
+def get_chat_forward_stats_out(obj_global_id):
+    nb = {}
+    for rel in get_obj_relationships(obj_global_id, relationships={'forwarded_from'}, filter_types={'message'}):
+        chat_mess = rel['source'].split('/')
+
+        chat_target = f'chat:{chat_mess[0][9:]}:{chat_mess[2]}'
+        if chat_target not in nb:
+            nb[chat_target] = 0
+        nb[chat_target] += 1
+    return nb
+
+def get_chat_forward_stats_in(obj_global_id):
+    nb = {}
+    for rel in get_obj_relationships(obj_global_id, relationships={'in'}, filter_types={'message'}):
+        r = get_obj_relationships(rel['source'], relationships={'forwarded_from'}, filter_types={'chat', 'user-account'})
+        if r:
+            if not r[0]['target'] in nb:
+                nb[r[0]['target']] = 0
+            nb[r[0]['target']] += 1
+    #     chat_mess = rel['source'].split('/')
+    #
+    #     chat_target = f'chat:{chat_mess[0][9:]}:{chat_mess[2]}'
+    #     print(chat_target, chat, chat_target == chat)
+    #     if chat is None or chat_target == chat:
+    #         if chat_target not in nb:
+    #             nb[chat_target] = 0
+    #         nb[chat_target] += 1
+    #
+    # print(json.dumps(nb, indent=4))
+    return nb
+
+def get_chat_forward_stats(obj_global_id): # objs_hidden
+    data = []
+
+    # print(get_obj_relationships(obj_global_id, relationships=['forwarded_from'], filter_types=['message']))
+
+    in_mess = get_chat_forward_stats_out(obj_global_id)
+
+    out_mess = get_chat_forward_stats_in(obj_global_id)
+
+
+        # if rel['target'] == obj_global_id:
+        #     # print(rel)
+        #     nb_chats[rel['source']] = get_chat_forward_stats_out(rel['source'], chat=obj_global_id)
+    #
+    for target in in_mess:
+        data.append({'source': obj_global_id, 'target': target, 'value': in_mess[target]})
+
+    for source in out_mess:
+        data.append({'source': source, 'target': obj_global_id, 'value': out_mess[source]})
+
+    # print()
+    # print(in_mess)
+    # print()
+    # print(out_mess)
+
+    return data
 

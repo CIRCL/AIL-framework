@@ -429,7 +429,7 @@ def get_user_account_chats_meta(user_id, chats, subchannels):
         meta.append(chat_meta)
     return meta
 
-def get_user_account_chat_message(user_id, subtype, chat_id): # TODO subchannel + threads ...
+def get_user_account_chat_message(user_id, subtype, chat_id):  # TODO subchannel + threads ...
     meta = {}
     chat = Chats.Chat(chat_id, subtype)
     chat_meta = chat.get_meta(options={'icon', 'info', 'nb_participants', 'tags_safe', 'username'})
@@ -515,6 +515,53 @@ def fix_correlations_subchannel_message():
 
 #### API ####
 
+def get_chat_user_account_label(chat_gid):
+    label = None
+    obj_type, subtype, obj_id = chat_gid.split(':', 2)
+    if obj_type == 'chat':
+        obj = get_obj_chat(obj_type, subtype, obj_id)
+        username = obj.get_username()
+        if username:
+            username = username.split(':', 2)[2]
+        name = obj.get_name()
+        if username and name:
+            label = f'{username} - {name}'
+        elif username:
+            label = username
+        elif name:
+            label = name
+
+    elif obj_type == 'user-account':
+        obj = UsersAccount.UserAccount(obj_id, subtype)
+        username = obj.get_username()
+        if username:
+            username = username.split(':', 2)[2]
+        name = obj.get_name()
+        if username and name:
+            label = f'{username} - {name}'
+        elif username:
+            label = username
+        elif name:
+            label = name
+    return label
+
+def enrich_chat_relationships_labels(relationships):
+    meta = {}
+    for row in relationships:
+        if row['source'] not in meta:
+            label = get_chat_user_account_label(row['source'])
+            if label:
+                meta[row['source']] = label
+            else:
+                meta[row['source']] = row['source']
+
+        if row['target'] not in meta:
+            label = get_chat_user_account_label(row['target'])
+            if label:
+                meta[row['target']] = label
+            else:
+                meta[row['target']] = row['target']
+    return meta
 def api_get_chat_service_instance(chat_instance_uuid):
     chat_instance = ChatServiceInstance(chat_instance_uuid)
     if not chat_instance.exists():

@@ -63,6 +63,16 @@ class UserAccount(AbstractSubtypeObject):
     def get_last_name(self):
         return self._get_field('lastname')
 
+    def get_name(self):
+        first_name = self.get_first_name()
+        last_name = self.get_last_name()
+        if first_name and last_name:
+            return f'{first_name} {last_name}'
+        elif first_name:
+            return first_name
+        elif last_name:
+            return last_name
+
     def get_phone(self):
         return self._get_field('phone')
 
