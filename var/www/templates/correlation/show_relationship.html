@@ -16,8 +16,7 @@
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<!--<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>-->
-        <script src="https://d3js.org/d3.v6.min.js"></script>
+		<script src="{{ url_for('static', filename='js/d3.v7.min.js') }}"></script>
 
 		<style>
 		.icon_legend {
@@ -613,14 +612,14 @@ d3.json(url)
 
     }
 
-    //// -----------------------------------------------------------------------------------------------------------------------------
+    //// --------------------------------------------------------------------------------------------------------
 
 })
 .catch(function(error) {
 				$("#graph_loading").remove()
 				svg_node.remove();
 				d3.select("#graph").append("div")
-													 .text(error);
+                    .text(error);
 		});
 }
 
@@ -681,7 +680,7 @@ if (d.popover) {
     blur_tooltip();
 } else {
 
-		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"
+		let pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"
         if (obj_label) {
             pop_header = pop_header + sanitize_text(obj_label)
         } else if (obj_gid) {
@@ -690,7 +689,7 @@ if (d.popover) {
             pop_header = pop_header + sanitize_text(d.text)
         }
         pop_header = pop_header + "</h6></div>"
-		var spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
+		let spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
 
 		div.html(pop_header + spinner)
 			.style("left", (d3_pageX) + "px")
@@ -709,7 +708,7 @@ if (d.popover) {
 
 		$.getJSON(description_url,
 				function(data){
-					var desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
+					let desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
 					Object.keys(data).forEach(function(key) {
 						if (key=="status") {
 							desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:"
@@ -783,7 +782,6 @@ if (d.popover) {
 
 function mouseouted() {
     currentObject = null;
-
 	div.transition()
 		.duration(500)
 		.style("opacity", 0);

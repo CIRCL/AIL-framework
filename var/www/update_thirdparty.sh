@@ -9,7 +9,9 @@ wget -q http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.
 
 BOOTSTRAP_VERSION='4.2.1'
 FONT_AWESOME_VERSION='5.7.1'
+
 D3_JS_VERSION='5.16.0'
+wget https://d3js.org/d3.v7.min.js -O ./static/js/d3.v7.min.js
 
 rm -rf temp
 mkdir temp
