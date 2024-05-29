@@ -1,0 +1,136 @@
+<script>
+let tooltip_ail_obj = d3.select("body").append("div")
+    //.attr("class", "tooltip_graph")
+    .attr("id", "tooltip_graph")
+    .style("opacity", 0)
+    .style("position", "absolute")
+    .style("text-align", "center")
+    .style("padding", "2px")
+    .style("font", "12px sans-serif")
+    .style("background", "#ebf4fb")
+    .style("border", "2px solid #b7ddf2")
+    .style("border-radius", "8px")
+    .style("pointer-events", "none")
+    .style("color", "#000000");
+
+function mouseover_tooltip_ail_obj(event, d, obj_gid, obj_label, additional_text) { /// div var/const tooltip     tooltip_ail_obj
+
+    let d3_pageX = event.pageX;
+    let d3_pageY = event.pageY;
+
+    if (d.popover) {
+        tooltip_ail_obj.html(d.popover)
+            .style("left", (d3_pageX) + "px")
+            .style("top", (d3_pageY - 28) + "px");
+
+        tooltip_ail_obj.transition()
+            .duration(200)
+            .style("opacity", 1);
+        blur_images();
+    } else {
+
+		let pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"
+        if (obj_label) {
+            pop_header = pop_header + sanitize_text(obj_label)
+        } else if (obj_gid) {
+            pop_header = pop_header + sanitize_text(obj_gid)
+        } else {
+            pop_header = pop_header + sanitize_text(d.text)
+        }
+        pop_header = pop_header + "</h6></div>"
+		let spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
+
+		tooltip_ail_obj.html(pop_header + spinner)
+			.style("left", (d3_pageX) + "px")
+			.style("top", (d3_pageY - 28) + "px");
+
+		tooltip_ail_obj.transition()
+			.duration(200)
+			.style("opacity", 1);
+
+        let description_url = "{{ url_for('correlation.get_description') }}?object_id="
+        if (obj_gid) {
+            description_url = description_url + obj_gid
+        } else {
+            description_url = description_url + d.id
+        }
+
+        let desc
+        $.getJSON(description_url, function(data){
+            desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
+            Object.keys(data).forEach(function(key) {
+                if (key==="status") {
+                    desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:"
+                    if (data["status"]) {
+                        desc = desc + "Green"
+                    } else {
+                        desc = desc + "Red"
+                    }
+                    desc = desc + ";\"><i class=\"fas "
+                    if (data["status"]) {
+                        desc = desc + "fa-check-circle\"></i>UP"
+                    } else {
+                        desc = desc + "fa-times-circle\"></i>DOWN"
+                    }
+                    desc = desc + "</div></dd>"
+                } else if (key!=="tags" && key!=="id" && key!="img" && key!=="icon" && key!=="svg_icon" && key!=="link" && key!=="type" && key!=="tags_safe") {
+                    if (data[key]) {
+                        if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
+                            let date = sanitize_text(data[key])
+                            desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8) + "</dd>"
+                        } else {
+                            desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+                        }
+                    }
+                }
+            });
+            desc = desc + "</dl>"
+
+            if (data["tags"]) {
+                data["tags"].forEach(function(tag) {
+                    desc = desc + "<span class=\"badge badge-warning\">"+ sanitize_text(tag) +"</span>";
+                });
+            }
+
+            if (data["img"]) {
+                if (data["tags_safe"]) {
+                    if (data["type"] === "screenshot") {
+                        desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}"
+                    } else {
+                        desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}"
+                    }
+                    desc = desc + data["img"] +" class=\"object_image\" id=\"tooltip_screenshot_correlation\" style=\"filter: blur(5px);max-width: 200px;\"/>";
+                } else {
+                    desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
+                }
+            }
+            if (additional_text) {
+                desc = desc + "<hr><div>" + sanitize_text(additional_text) + "</div>"
+            }
+
+            desc = desc + "</div></div>"
+            tooltip_ail_obj.html(desc)
+                .style("left", (d3_pageX) + "px")
+                .style("top", (d3_pageY - 28) + "px");
+            d.popover = desc
+
+            if (data["img"]) {
+                blur_images();
+            }
+
+        })
+            .fail(function(error) {
+                desc = pop_header + "<div class=\"card-body bg-dark pt-0\"><i class=\"fas fa-3x fa-times text-danger\"></i>"+ error.statusText +"</div>"
+                tooltip_ail_obj.html(desc)
+                    .style("left", (d3_pageX) + "px")
+                    .style("top", (d3_pageY - 28) + "px");
+            });
+    }
+}
+
+function mouseout_tooltip_ail_obj(event, d) {
+    tooltip_ail_obj.transition()
+        .duration(500)
+        .style("opacity", 0);
+}
+</script>

@@ -465,6 +465,31 @@ def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
         nb_day += 1
     return stats
 
+def get_user_account_chats_chord(subtype, user_id):
+    nb = {}
+    user_account = UsersAccount.UserAccount(user_id, subtype)
+    for chat_g_id in user_account.get_chats():
+        c_subtype, c_id = chat_g_id.split(':', 1)
+        chat = Chats.Chat(c_id, c_subtype)
+        nb[f'chat:{chat_g_id}'] = len(chat.get_user_messages(user_id))
+
+    user_account_gid = user_account.get_global_id() # # #
+    chord = {'meta': {}, 'data': []}
+    label = get_chat_user_account_label(user_account_gid)
+    if label:
+        chord['meta'][user_account_gid] = label
+    else:
+        chord['meta'][user_account_gid] = user_account_gid
+
+    for chat_g_id in nb:
+        label = get_chat_user_account_label(chat_g_id)
+        if label:
+            chord['meta'][chat_g_id] = label
+        else:
+            chord['meta'][chat_g_id] = chat_g_id
+        chord['data'].append({'source': user_account_gid, 'target': chat_g_id, 'value': nb[chat_g_id]})
+    return chord
+
 def _get_chat_card_meta_options():
     return {'created_at', 'icon', 'info', 'nb_participants', 'origin_link', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
 

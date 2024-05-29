@@ -297,6 +297,15 @@ def objects_user_account():
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
                                translation_languages=languages, translation_target=target)
 
+@chats_explorer.route("/objects/user-account_chats_chord_json", methods=['GET']) # TODO API
+@login_required
+@login_read_only
+def objects_user_account_chats_chord_json():
+    subtype = request.args.get('subtype')
+    user_id = request.args.get('id')
+    json_graph = chats_viewer.get_user_account_chats_chord(subtype, user_id)
+    return jsonify(json_graph)
+
 @chats_explorer.route("/objects/user-account/chat", methods=['GET'])
 @login_required
 @login_read_only
