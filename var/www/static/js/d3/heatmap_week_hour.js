@@ -1,4 +1,4 @@
-//Requirement:	- D3v5
+//Requirement:	- D3v7
 //				- jquery
 // data input: var data = [{"count":0,"date":"2023-11-20","day":0,"hour":0}
 // based on gist nbremer/62cf60e116ae821c06602793d265eaf6
@@ -33,10 +33,12 @@ const create_heatmap_week_hour = (container_id, data, options) => {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // create a tooltip
-    const tooltip = d3.select(container_id)
+    const tooltip = d3.select("body")
         .append("div")
+        .attr("class", "tooltip_heatmap")
         .style("opacity", 0)
-        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("pointer-events", "none")
         .style("background-color", "white")
         .style("border", "solid")
         .style("border-width", "2px")
@@ -44,24 +46,28 @@ const create_heatmap_week_hour = (container_id, data, options) => {
         .style("padding", "5px")
 
     // Three function that change the tooltip when user hover / move / leave a cell
-    const mouseover = function(d) {
-        tooltip.style("opacity", 1)
-        d3.select(this)
+    const mouseover = function(event, d) {
+        d3.select(event.target)
             .style("stroke", "black")
-            //.style("stroke-opacity", 1)
+            .style("stroke-opacity", 1)
 
-        var xPosition = d3.mouse(this)[0] + margin.left;
-        var yPosition = d3.mouse(this)[1] + margin.top + window.scrollY + 100;
+        let d3_pageX = event.pageX;
+        let d3_pageY = event.pageY;
 
         tooltip.html(d.date + " " + d.hour + "-" + (d.hour + 1) + "h: <b>" + d.count + "</b> messages")
-            .style("left", xPosition + "px")
-            .style("top", yPosition + "px");
+            .style("left", (d3_pageX) + "px")
+		    .style("top", (d3_pageY - 28) + "px");
+        tooltip.transition()
+		    .duration(200)
+		    .style("opacity", 1);
     }
-    const mouseleave = function(d) {
-        tooltip.style("opacity", 0)
-        d3.select(this)
+    const mouseleave = function(event, d) {
+        d3.select(event.target)
             .style("stroke", "white")
             //.style("stroke-opacity", 0.8)
+        tooltip.transition()
+		    .duration(200)
+            .style("opacity", 0)
     }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -114,22 +120,22 @@ const create_heatmap_week_hour = (container_id, data, options) => {
     var heatMap = svg.selectAll(".hour")
         .data(data)
         .enter().append("rect")
-        .attr("x", function (d) {
-            return (d.hour - 1) * gridSize;
-        })
-        .attr("y", function (d) {
-            return (d.day - 1) * gridSize;
-        })
-        .attr("class", "hour bordered")
-        .attr("width", gridSize)
-        .attr("height", gridSize)
-        .style("stroke", "white")
-        .style("stroke-opacity", 0.6)
-        .style("fill", function (d) {
-            return colorScale(d.count);
-        })
-        .on("mouseover", mouseover)
-        .on("mouseleave", mouseleave);
+            .attr("x", function (d) {
+                return (d.hour - 1) * gridSize;
+            })
+            .attr("y", function (d) {
+                return (d.day - 1) * gridSize;
+            })
+            .attr("class", "hour bordered")
+            .attr("width", gridSize)
+            .attr("height", gridSize)
+            .style("stroke", "white")
+            .style("stroke-opacity", 0.6)
+            .style("fill", function (d) {
+                return colorScale(d.count);
+            })
+            .on("mouseover", mouseover)
+            .on("mouseleave", mouseleave);
 
 //Append title to the top
     svg.append("text")
@@ -221,8 +227,7 @@ const create_heatmap_week_hour = (container_id, data, options) => {
         .attr("class", "axis")
         .attr("transform", "translate(0," + (10) + ")")
         .call(xAxis);
-
-
+    
 // return svg ???
 	// return svg
 
