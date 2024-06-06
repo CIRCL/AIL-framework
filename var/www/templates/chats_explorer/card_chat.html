@@ -95,6 +95,10 @@
 {#                        <span class="badge badge-warning">{{ meta['nb_correlations'] }}</span>#}
                     </button>
                 </a>
+                <a href="{{ url_for('correlation.show_relationship')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-secondary"><i class="far fa-eye"></i> Relationships &nbsp;
+                    </button>
+                </a>
             {% endif %}
         </span>
 
