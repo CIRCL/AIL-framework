@@ -198,7 +198,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     ##############################################################################################################################
 
 
-    def process_chat(self, new_objs, obj, date, timestamp, reply_id=None):
+    def process_chat(self, new_objs, obj, date, timestamp, feeder_timestamp, reply_id=None):
         meta = self.json_data['meta']['chat'] # todo replace me by function
         chat = Chat(self.get_chat_id(), self.get_chat_instance_uuid())
         subchannel = None
@@ -224,7 +224,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         if meta.get('username'):
             username = Username(meta['username'], self.get_chat_protocol())
-            chat.update_username_timeline(username.get_global_id(), timestamp)
+            chat.update_username_timeline(username.get_global_id(), feeder_timestamp)
 
         if meta.get('subchannel'):
             subchannel, thread = self.process_subchannel(obj, date, timestamp, reply_id=reply_id)
@@ -293,13 +293,13 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
     ##########################################################################################
 
-    def _process_user(self, meta, date, timestamp, new_objs=None): #################33 timestamp
+    def _process_user(self, meta, date, timestamp, new_objs=None):
         user_account = UsersAccount.UserAccount(meta['id'], self.get_chat_instance_uuid())
         if meta.get('username'):
             username = Username(meta['username'], self.get_chat_protocol())
             # TODO timeline or/and correlation ????
             user_account.add_correlation(username.type, username.get_subtype(r_str=True), username.id)
-            user_account.update_username_timeline(username.get_global_id(), timestamp) # TODO time.time !!!! (time when meta are retrieved)
+            user_account.update_username_timeline(username.get_global_id(), timestamp)
 
             # Username---Message
             username.add(date)  # TODO # correlation message ??? ###############################################################
@@ -375,6 +375,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         chats_objs = set()
 
         date, timestamp = self.get_message_date_timestamp()
+        feeder_timestamp = self.get_feeder_timestamp()
+        if not feeder_timestamp:
+            feeder_timestamp = timestamp
 
         # REPLY
         reply_id = self.get_message_reply_id()
@@ -431,10 +434,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             print(obj.id)
 
             # CHAT
-            curr_chats_objs = self.process_chat(new_objs, obj, date, timestamp, reply_id=reply_id)
+            curr_chats_objs = self.process_chat(new_objs, obj, date, timestamp, feeder_timestamp, reply_id=reply_id)
 
             # SENDER # TODO HANDLE NULL SENDER
-            user_account = self.process_sender(new_objs, obj, date, timestamp)
+            user_account = self.process_sender(new_objs, obj, date, feeder_timestamp)
 
             if user_account:
             # UserAccount---ChatObjects
@@ -465,7 +468,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                     if chat_obj.type == 'chat':
                         chat_fwd.add_relationship(chat_obj.get_global_id(), 'forwarded_to')
             if meta_fwd.get('user'):
-                user_fwd = self._process_user(meta_fwd['user'], date, timestamp, new_objs=new_objs)  # TODO date, timestamp ???
+                user_fwd = self._process_user(meta_fwd['user'], date, feeder_timestamp, new_objs=new_objs)  # TODO date, timestamp ???
                 for chat_obj in chats_objs:
                     if chat_obj.type == 'chat':
                         user_fwd.add_relationship(chat_obj.get_global_id(), 'forwarded_to')
@@ -502,7 +505,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                                     obj.add_relationship(chat_obj.get_global_id(), 'in')
 
             for mention in self.get_json_meta()['mentions'].get('users', []):
-                m_obj = self._process_user(mention, date, timestamp, new_objs=new_objs)  # TODO date, timestamp ???
+                m_obj = self._process_user(mention, date, feeder_timestamp, new_objs=new_objs)  # TODO date ???
                 if m_obj:
                     for chat_obj in chats_objs:
                         if chat_obj.type == 'chat':
@@ -516,7 +519,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                             for chat_obj in chats_objs:
                                 if chat_obj.type == 'chat':
                                     obj.add_relationship(chat_obj.get_global_id(), 'in')
-
 
          # -MENTION- #
 
